@@ -1,0 +1,32 @@
+{
+  "name": "recontentapp",
+  "private": true,
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "build": "turbo run build",
+    "typecheck": "turbo run typecheck",
+    "lint": "oxlint .",
+    "lint:fix": "oxlint --fix .",
+    "format": "oxfmt .",
+    "format:check": "oxfmt --check .",
+    "prepare": "husky"
+  },
+  "devDependencies": {
+    "husky": "9.1.7",
+    "lint-staged": "17.0.8",
+    "oxfmt": "0.59.0",
+    "oxlint": "1.74.0",
+    "turbo": "2.10.5",
+    "typescript": "6.0.3"
+  },
+  "lint-staged": {
+    "*.{js,jsx,mjs,cjs,ts,tsx}": [
+      "oxlint --fix"
+    ],
+    "*": "oxfmt --no-error-on-unmatched-pattern"
+  },
+  "packageManager": "yarn@1.22.19"
+}
