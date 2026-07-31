@@ -1,13 +1,11 @@
 {
   "name": "recontent",
   "version": "0.1.0",
-  "bin": {
-    "recontent": "./dist/cli/bin.mjs"
-  },
-  "type": "module",
+  "bin": "./dist/cli/bin.mjs",
   "files": [
     "dist"
   ],
+  "type": "module",
   "types": "./dist/index.d.mts",
   "exports": {
     ".": "./dist/index.mjs",

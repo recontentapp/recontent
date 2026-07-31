@@ -28,5 +28,5 @@
     ],
     "*": "oxfmt --no-error-on-unmatched-pattern"
   },
-  "packageManager": "yarn@1.22.19"
+  "packageManager": "yarn@4.18.0"
 }
