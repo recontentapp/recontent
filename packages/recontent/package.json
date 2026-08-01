@@ -18,8 +18,9 @@
     "build": "tsdown src/index.ts src/core/generators/dtcg.ts src/core/generators/html.ts src/outputs/css.ts src/outputs/vanilla-extract.ts src/cli/bin.ts",
     "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.test.json",
     "test": "NODE_OPTIONS=--experimental-vm-modules jest",
-    "dev:tokens": "node dist/cli/bin.mjs build -c dev/recontent.config.ts",
-    "dev": "yarn dev:tokens && storybook dev -c dev/.storybook -p 6006",
+    "dev": "yarn dev:build && storybook dev -c dev/.storybook -p 6006",
+    "dev:build": "node dist/cli/bin.mjs build -c dev/recontent.config.ts",
+    "dev:visualize": "node dist/cli/bin.mjs visualize -c dev/recontent.config.ts -o dev/tokens.html",
     "dev:dtcg": "node dist/cli/bin.mjs figma-export -c dev/recontent.config.ts -o dev",
     "dev:dtcg:lint": "npx tz check dev/tokens.tokens.json && npx tz check dev/blackTheme.tokens.json"
   },

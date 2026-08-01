@@ -1,0 +1,146 @@
+:root {
+  --ref-color-blue600: #0064e0;
+  --ref-color-blue500: #2694fe;
+  --ref-color-gray950: #0a1317;
+  --ref-color-gray700: #4e606f;
+  --ref-color-gray400: #a4b0bc;
+  --ref-color-gray300: #ccd3db;
+  --ref-color-gray100: #f1f4f7;
+  --ref-color-white: #ffffff;
+  --ref-color-surfaceDark: #1f1f22;
+  --ref-color-success: #0d8626;
+  --ref-color-warning: #e9af08;
+  --ref-color-error: #e3193b;
+  --ref-color-blueMuted: #0171e3;
+  --ref-color-purpleMuted: #7952ff;
+  --ref-spacing-0: 0px;
+  --ref-spacing-1: 4px;
+  --ref-spacing-2: 8px;
+  --ref-spacing-3: 12px;
+  --ref-spacing-4: 16px;
+  --ref-spacing-5: 20px;
+  --ref-spacing-6: 24px;
+  --ref-spacing-8: 32px;
+  --ref-spacing-10: 40px;
+  --ref-spacing-12: 48px;
+  --ref-spacing-0-5: 2px;
+  --ref-spacing-1-5: 6px;
+  --ref-radius-none: 0px;
+  --ref-radius-inner: 4px;
+  --ref-radius-element: 8px;
+  --ref-radius-container: 12px;
+  --ref-radius-page: 28px;
+  --ref-radius-full: 9999px;
+  --ref-fontSize-xs: 10px;
+  --ref-fontSize-sm: 12px;
+  --ref-fontSize-base: 14px;
+  --ref-fontSize-lg: 17px;
+  --ref-fontSize-xl: 20px;
+  --ref-fontSize-2xl: 24px;
+  --ref-fontSize-3xl: 30px;
+  --ref-fontSize-4xl: 36px;
+}
+
+.blackTheme {
+  --system-colors-accent: #2694fe;
+  --system-colors-backgroundSurface: #1f1f22;
+  --system-colors-backgroundBody: #111112;
+  --system-colors-backgroundCard: #1f1f22;
+  --system-colors-textPrimary: #dfe2e5;
+  --system-colors-textSecondary: #aaafb5;
+  --system-colors-textDisabled: #6f747c;
+  --system-colors-border: #f2f4f6;
+  --system-colors-borderEmphasized: #494d53;
+  --system-colors-skeleton: #5a5e66;
+  --system-colors-secondary-200: #2694fe;
+}
+
+:root {
+  --system-colors-accent: var(--ref-color-blue600);
+  --system-colors-onAccent: var(--ref-color-white);
+  --system-colors-backgroundSurface: var(--ref-color-white);
+  --system-colors-backgroundBody: var(--ref-color-gray100);
+  --system-colors-backgroundCard: var(--ref-color-white);
+  --system-colors-backgroundMuted: var(--ref-color-blueMuted);
+  --system-colors-textPrimary: var(--ref-color-gray950);
+  --system-colors-textSecondary: var(--ref-color-gray700);
+  --system-colors-textDisabled: var(--ref-color-gray400);
+  --system-colors-border: var(--ref-color-gray300);
+  --system-colors-borderEmphasized: var(--ref-color-gray400);
+  --system-colors-skeleton: var(--ref-color-gray300);
+  --system-colors-success: var(--ref-color-success);
+  --system-colors-warning: var(--ref-color-warning);
+  --system-colors-error: var(--ref-color-error);
+  --system-colors-onSuccess: var(--ref-color-white);
+  --system-colors-onWarning: var(--ref-color-gray950);
+  --system-colors-onError: var(--ref-color-white);
+  --system-colors-secondary-200: var(--ref-color-blue600);
+  --system-spacing-0: var(--ref-spacing-0);
+  --system-spacing-1: var(--ref-spacing-1);
+  --system-spacing-2: var(--ref-spacing-2);
+  --system-spacing-3: var(--ref-spacing-3);
+  --system-spacing-4: var(--ref-spacing-4);
+  --system-spacing-5: var(--ref-spacing-5);
+  --system-spacing-6: var(--ref-spacing-6);
+  --system-spacing-8: var(--ref-spacing-8);
+  --system-spacing-10: var(--ref-spacing-10);
+  --system-spacing-12: var(--ref-spacing-12);
+  --system-spacing-0-5: var(--ref-spacing-0-5);
+  --system-spacing-1-5: var(--ref-spacing-1-5);
+  --system-radius-none: var(--ref-radius-none);
+  --system-radius-inner: var(--ref-radius-inner);
+  --system-radius-element: var(--ref-radius-element);
+  --system-radius-container: var(--ref-radius-container);
+  --system-radius-page: var(--ref-radius-page);
+  --system-radius-full: var(--ref-radius-full);
+  --system-typography-bodyFontFamily:
+    -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+  --system-typography-codeFontFamily: SF Mono, Monaco, Consolas, monospace;
+  --system-typography-supportingSize: var(--ref-fontSize-sm);
+  --system-typography-supportingLeading: 1.6667;
+  --system-typography-bodySize: var(--ref-fontSize-base);
+  --system-typography-bodyLeading: 1.4286;
+  --system-typography-heading1Size: var(--ref-fontSize-4xl);
+  --system-typography-heading1Leading: 1;
+  --system-typography-heading2Size: var(--ref-fontSize-xl);
+  --system-typography-heading2Leading: 1.4;
+  --system-typography-heading3Size: var(--ref-fontSize-2xl);
+  --system-typography-heading3Leading: 1.2;
+  --system-typography-heading4Size: var(--ref-fontSize-xl);
+  --system-typography-heading4Leading: 1.25;
+  --system-typography-heading5Size: var(--ref-fontSize-lg);
+  --system-typography-heading5Leading: 1.3;
+  --system-typography-heading6Size: var(--ref-fontSize-base);
+  --system-typography-heading6Leading: 1.35;
+  --system-typography-normalWeight: 400;
+  --system-typography-mediumWeight: 500;
+  --system-typography-semiboldWeight: 600;
+  --system-typography-boldWeight: 700;
+  --system-size-elementSm: 28px;
+  --system-size-elementMd: 32px;
+  --system-size-elementLg: 36px;
+  --system-size-borderWidth: 1px;
+  --system-motion-fast: 175ms;
+  --system-motion-medium: 410ms;
+  --system-motion-mediumMax: 550ms;
+  --system-motion-slowMin: 730ms;
+  --system-motion-standard: cubic-bezier(0.24, 1, 0.4, 1);
+  --system-elevation-sm: 0px 1px 2px 0px var(--ref-color-gray950);
+  --system-elevation-md:
+    0px 2px 4px 0px var(--ref-color-gray950), 0px 8px 16px -4px var(--ref-color-gray950);
+  --system-border-default: 1px solid var(--ref-color-gray300);
+  --system-textStyles-body-font-family:
+    -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+  --system-textStyles-body-font-size: var(--ref-fontSize-base);
+  --system-textStyles-body-font-weight: 400;
+  --system-textStyles-body-letter-spacing: 0px;
+  --system-textStyles-body-line-height: 1.4286;
+  --system-transitions-standard-transition-duration: 175ms;
+  --system-transitions-standard-transition-delay: 0ms;
+  --system-transitions-standard-transition-timing-function: cubic-bezier(0.24, 1, 0.4, 1);
+  --system-gradients-accent: linear-gradient(
+    135deg,
+    var(--ref-color-blue600) 0%,
+    var(--ref-color-blue500) 100%
+  );
+}
