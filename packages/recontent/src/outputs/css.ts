@@ -1,8 +1,8 @@
 import {
   expandedMembers,
   isExpandedComposite,
+  pathKey,
   type Config,
-  type ThemeOverride,
   type TokenEntry,
   type TokenRegistry,
   type TokenTypeMap,
@@ -90,30 +90,18 @@ function collectLayerDeclarations(
 
 function themeOverrideDeclarations(
   entry: TokenEntry,
-  override: ThemeOverride,
-  pathKey: string,
+  overridden: TokenTypeMap[typeof entry.$type],
 ): Record<string, string> {
-  const overridden = override.get(pathKey);
-
   if (!isExpandedComposite(entry.$type)) {
-    if (overridden !== undefined) {
-      return {
-        [cssVarName(entry.path)]: serializeValueCss(
-          entry.$type,
-          overridden as TokenTypeMap[typeof entry.$type],
-        ),
-      };
-    }
-    return { [cssVarName(entry.path)]: entryCssValue(entry) };
+    return {
+      [cssVarName(entry.path)]: serializeValueCss(
+        entry.$type,
+        overridden as TokenTypeMap[typeof entry.$type],
+      ),
+    };
   }
 
-  if (overridden !== undefined) {
-    return expandedEntryDeclarations(entry, overridden as TokenTypeMap[typeof entry.$type]);
-  }
-  if (entry.alias) {
-    return expandedEntryDeclarations(entry, entry.$value, entry.alias);
-  }
-  return expandedEntryDeclarations(entry, entry.$value);
+  return expandedEntryDeclarations(entry, overridden);
 }
 
 function themeSelectorFor(themeName: string, options: CssGeneratorOptions): string {
@@ -134,15 +122,17 @@ export function generateCss(config: Config, options: CssGeneratorOptions = {}): 
   }
 
   for (const [themeName, override] of Object.entries(themes)) {
-    const themeRef: Record<string, string> = {};
+    const themeDeclarations: Record<string, string> = {};
     for (const entry of registry.values()) {
-      if (entry.layer !== "ref") continue;
-      const key = entry.path.join(".");
-      if (!override.has(key)) continue;
-      Object.assign(themeRef, themeOverrideDeclarations(entry, override, key));
+      const overridden = override.get(pathKey(entry.path));
+      if (overridden === undefined) continue;
+      Object.assign(
+        themeDeclarations,
+        themeOverrideDeclarations(entry, overridden as TokenTypeMap[typeof entry.$type]),
+      );
     }
-    if (Object.keys(themeRef).length > 0) {
-      blocks.push(formatRule(themeSelectorFor(themeName, options), themeRef));
+    if (Object.keys(themeDeclarations).length > 0) {
+      blocks.push(formatRule(themeSelectorFor(themeName, options), themeDeclarations));
     }
   }
 

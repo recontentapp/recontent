@@ -1,20 +1,19 @@
-import assert from "node:assert/strict";
-import test from "node:test";
-import { defineReferenceTokens, tokens } from "../dist/index.mjs";
+import { expect, test } from "@jest/globals";
+import { defineReferenceTokens, tokens } from "../src/index.js";
 
 test("tokens.strokeStyle accepts a keyword", () => {
   const token = tokens.strokeStyle("dashed");
-  assert.equal(token.$type, "strokeStyle");
-  assert.deepEqual(token.$value, { style: "dashed" });
+  expect(token.$type).toBe("strokeStyle");
+  expect(token.$value).toEqual({ style: "dashed" });
 });
 
 test("tokens.strokeStyle rejects an unknown keyword", () => {
-  assert.throws(() => tokens.strokeStyle("squiggly"));
+  expect(() => tokens.strokeStyle("squiggly" as never)).toThrow();
 });
 
 test("tokens.strokeStyle accepts a custom dash", () => {
   const token = tokens.strokeStyle({ dashArray: ["4px", "2px"], lineCap: "round" });
-  assert.deepEqual(token.$value, {
+  expect(token.$value).toEqual({
     dashArray: [
       { value: 4, unit: "px" },
       { value: 2, unit: "px" },
@@ -24,7 +23,7 @@ test("tokens.strokeStyle accepts a custom dash", () => {
 });
 
 test("tokens.strokeStyle rejects an invalid lineCap", () => {
-  assert.throws(() => tokens.strokeStyle({ dashArray: ["4px"], lineCap: "bevel" }));
+  expect(() => tokens.strokeStyle({ dashArray: ["4px"], lineCap: "bevel" as never })).toThrow();
 });
 
 test("tokens.shadow builds a single layer from raw input", () => {
@@ -35,10 +34,10 @@ test("tokens.shadow builds a single layer from raw input", () => {
     blur: "4px",
     spread: "0px",
   });
-  assert.equal(token.$type, "shadow");
-  assert.equal(token.$value.layers.length, 1);
-  assert.equal(token.$value.layers[0].color.alias, undefined);
-  assert.deepEqual(token.$value.layers[0].offsetY.$value, { value: 2, unit: "px" });
+  expect(token.$type).toBe("shadow");
+  expect(token.$value.layers.length).toBe(1);
+  expect(token.$value.layers[0]?.color.alias).toBeUndefined();
+  expect(token.$value.layers[0]?.offsetY.$value).toEqual({ value: 2, unit: "px" });
 });
 
 test("tokens.shadow builds multiple layers and records member aliases", () => {
@@ -54,49 +53,49 @@ test("tokens.shadow builds multiple layers and records member aliases", () => {
     },
     { color: "#111111", offsetX: "0px", offsetY: "4px", blur: "8px", spread: "0px" },
   ]);
-  assert.equal(token.$value.layers.length, 2);
-  assert.deepEqual(token.$value.layers[0].color.alias, ["ref", "color", "black"]);
-  assert.equal(token.$value.layers[0].inset, true);
-  assert.equal(token.$value.layers[1].inset, undefined);
+  expect(token.$value.layers.length).toBe(2);
+  expect(token.$value.layers[0]?.color.alias).toEqual(["ref", "color", "black"]);
+  expect(token.$value.layers[0]?.inset).toBe(true);
+  expect(token.$value.layers[1]?.inset).toBeUndefined();
 });
 
 test("tokens.shadow requires all layer members", () => {
-  assert.throws(() =>
-    tokens.shadow({ color: "#000000", offsetX: "0px", offsetY: "0px", blur: "0px" }),
-  );
+  expect(() =>
+    tokens.shadow({ color: "#000000", offsetX: "0px", offsetY: "0px", blur: "0px" } as never),
+  ).toThrow();
 });
 
 test("tokens.border defaults style to solid", () => {
   const token = tokens.border({ color: "#000000", width: "1px" });
-  assert.deepEqual(token.$value.style.$value, { style: "solid" });
+  expect(token.$value.style.$value).toEqual({ style: "solid" });
 });
 
 test("tokens.border requires color and width", () => {
-  assert.throws(() => tokens.border({ width: "1px" }));
+  expect(() => tokens.border({ width: "1px" } as never)).toThrow();
 });
 
 test("tokens.transition defaults delay to 0ms", () => {
   const token = tokens.transition({ duration: "200ms", timingFunction: [0.4, 0, 0.2, 1] });
-  assert.deepEqual(token.$value.delay.$value, { value: 0, unit: "ms" });
+  expect(token.$value.delay.$value).toEqual({ value: 0, unit: "ms" });
 });
 
 test("tokens.transition requires duration and timingFunction", () => {
-  assert.throws(() => tokens.transition({ duration: "200ms" }));
+  expect(() => tokens.transition({ duration: "200ms" } as never)).toThrow();
 });
 
 test("tokens.gradient requires at least 2 stops", () => {
-  assert.throws(() => tokens.gradient({ stops: [{ color: "#000000", position: 0 }] }));
+  expect(() => tokens.gradient({ stops: [{ color: "#000000", position: 0 }] })).toThrow();
 });
 
 test("tokens.gradient validates stop positions", () => {
-  assert.throws(() =>
+  expect(() =>
     tokens.gradient({
       stops: [
         { color: "#000000", position: -0.1 },
         { color: "#ffffff", position: 1 },
       ],
     }),
-  );
+  ).toThrow();
 });
 
 test("tokens.gradient defaults kind and angle", () => {
@@ -106,18 +105,18 @@ test("tokens.gradient defaults kind and angle", () => {
       { color: "#ffffff", position: 1 },
     ],
   });
-  assert.equal(token.$value.kind, "linear");
-  assert.equal(token.$value.angle, "180deg");
+  expect(token.$value.kind).toBe("linear");
+  expect(token.$value.angle).toBe("180deg");
 });
 
 test("tokens.typography requires fontFamily, fontSize, and fontWeight", () => {
-  assert.throws(() => tokens.typography({ fontFamily: "Arial", fontSize: "16px" }));
+  expect(() => tokens.typography({ fontFamily: "Arial", fontSize: "16px" } as never)).toThrow();
 });
 
 test("tokens.typography defaults letterSpacing and lineHeight", () => {
   const token = tokens.typography({ fontFamily: "Arial", fontSize: "16px", fontWeight: "regular" });
-  assert.deepEqual(token.$value.letterSpacing.$value, { value: 0, unit: "px" });
-  assert.equal(token.$value.lineHeight.$value.value, 1.4);
+  expect(token.$value.letterSpacing.$value).toEqual({ value: 0, unit: "px" });
+  expect(token.$value.lineHeight.$value.value).toBe(1.4);
 });
 
 test("tokens.typography accepts a stamped token and records its alias", () => {
@@ -127,5 +126,5 @@ test("tokens.typography accepts a stamped token and records its alias", () => {
     fontSize: "16px",
     fontWeight: "regular",
   });
-  assert.deepEqual(token.$value.fontFamily.alias, ["ref", "fontFamily", "body"]);
+  expect(token.$value.fontFamily.alias).toEqual(["ref", "fontFamily", "body"]);
 });
