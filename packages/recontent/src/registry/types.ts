@@ -27,7 +27,13 @@ export type RegistryTokenType =
   | "duration"
   | "cubicBezier"
   | "number"
-  | "string";
+  | "string"
+  | "strokeStyle"
+  | "shadow"
+  | "border"
+  | "transition"
+  | "gradient"
+  | "typography";
 
 export type TokenContract = {
   kind: "token";

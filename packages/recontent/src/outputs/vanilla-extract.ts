@@ -323,7 +323,11 @@ function valuesTree(config: Config, themeName?: string): SourceTree {
         : {
             value: serializeValueCss(
               entry.$type,
-              resolveEntryValue(config.registry, entry, override),
+              resolveEntryValue(
+                config.registry,
+                entry,
+                override,
+              ) as TokenTypeMap[typeof entry.$type],
             ),
           };
     setTreeValue(tree, [entry.layer, ...entryPath(entry)], value);

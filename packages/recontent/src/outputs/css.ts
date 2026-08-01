@@ -97,7 +97,12 @@ function themeOverrideDeclarations(
 
   if (!isExpandedComposite(entry.$type)) {
     if (overridden !== undefined) {
-      return { [cssVarName(entry.path)]: serializeValueCss(entry.$type, overridden) };
+      return {
+        [cssVarName(entry.path)]: serializeValueCss(
+          entry.$type,
+          overridden as TokenTypeMap[typeof entry.$type],
+        ),
+      };
     }
     return { [cssVarName(entry.path)]: entryCssValue(entry) };
   }
