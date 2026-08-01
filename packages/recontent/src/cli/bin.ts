@@ -51,8 +51,9 @@ program
   .command("figma-export")
   .description("Export tokens to DTCG-Figma compatible .tokens.json files")
   .option("-c, --config <path>", "Path to config file", "recontent.config.ts")
-  .action(async (options: { config: string }) => {
-    await runFigmaExport({ config: options.config });
+  .option("-o, --output <dir>", "Output directory for .tokens.json files", ".")
+  .action(async (options: { config: string; output: string }) => {
+    await runFigmaExport({ config: options.config, output: options.output });
   });
 
 program.parseAsync(process.argv).catch((error: unknown) => {

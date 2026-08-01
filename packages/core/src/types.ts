@@ -23,6 +23,58 @@ export type CubicBezierValue = { value: [number, number, number, number] };
 export type NumberValue = { value: number };
 export type StringValue = { value: string };
 
+export type TokenMember<T extends TokenType = TokenType> = {
+  $value: TokenTypeMap[T];
+  alias?: string[];
+};
+
+export type StrokeStyleName =
+  | "solid"
+  | "dashed"
+  | "dotted"
+  | "double"
+  | "groove"
+  | "ridge"
+  | "outset"
+  | "inset";
+export type StrokeStyleValue =
+  | { style: StrokeStyleName }
+  | { dashArray: DimensionValue[]; lineCap: "round" | "butt" | "square" };
+
+export type ShadowLayer = {
+  color: TokenMember<"color">;
+  offsetX: TokenMember<"dimension">;
+  offsetY: TokenMember<"dimension">;
+  blur: TokenMember<"dimension">;
+  spread: TokenMember<"dimension">;
+  inset?: boolean;
+};
+export type ShadowValue = { layers: ShadowLayer[] };
+
+export type BorderValue = {
+  color: TokenMember<"color">;
+  width: TokenMember<"dimension">;
+  style: TokenMember<"strokeStyle">;
+};
+export type TransitionValue = {
+  duration: TokenMember<"duration">;
+  delay: TokenMember<"duration">;
+  timingFunction: TokenMember<"cubicBezier">;
+};
+export type GradientStop = { color: TokenMember<"color">; position: number };
+export type GradientValue = {
+  kind: "linear" | "radial" | "conic";
+  angle: string;
+  stops: GradientStop[];
+};
+export type TypographyValue = {
+  fontFamily: TokenMember<"fontFamily">;
+  fontSize: TokenMember<"dimension">;
+  fontWeight: TokenMember<"fontWeight">;
+  letterSpacing: TokenMember<"dimension">;
+  lineHeight: TokenMember<"number">;
+};
+
 export type TokenTypeMap = {
   color: ColorValue;
   dimension: DimensionValue;
@@ -32,6 +84,12 @@ export type TokenTypeMap = {
   cubicBezier: CubicBezierValue;
   number: NumberValue;
   string: StringValue;
+  strokeStyle: StrokeStyleValue;
+  shadow: ShadowValue;
+  border: BorderValue;
+  transition: TransitionValue;
+  gradient: GradientValue;
+  typography: TypographyValue;
 };
 
 export type TokenType = keyof TokenTypeMap;

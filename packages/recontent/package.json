@@ -20,8 +20,8 @@
     "test": "node --test test/*.mjs",
     "dev:tokens": "node dist/cli/bin.mjs build -c dev/recontent.config.ts",
     "dev": "yarn dev:tokens && storybook dev -c dev/.storybook -p 6006",
-    "storybook": "storybook dev -c dev/.storybook -p 6006",
-    "build-storybook": "storybook build -c dev/.storybook -o dev/storybook-static"
+    "dev:dtcg": "node dist/cli/bin.mjs figma-export -c dev/recontent.config.ts -o dev",
+    "dev:dtcg:lint": "npx tz check dev/tokens.tokens.json && npx tz check dev/blackTheme.tokens.json"
   },
   "dependencies": {
     "@recontentapp/core": "0.1.1",
@@ -33,6 +33,7 @@
     "@base-ui/react": "1.0.0",
     "@storybook/addon-a11y": "10.5.2",
     "@storybook/react-vite": "10.5.2",
+    "@terrazzo/cli": "2.5.0",
     "@types/node": "22.0.0",
     "@types/react": "19.0.0",
     "@types/react-dom": "19.0.0",

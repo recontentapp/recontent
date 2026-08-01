@@ -6,7 +6,36 @@ import {
   type TokenLayer,
 } from "@recontentapp/core";
 
+function looksLikeCompositeObject(value: Record<string, unknown>): string | null {
+  if ("layers" in value || "offsetX" in value || "blur" in value) {
+    return "tokens.shadow(...)";
+  }
+  if ("stops" in value) {
+    return "tokens.gradient(...)";
+  }
+  if ("fontSize" in value && "lineHeight" in value) {
+    return "tokens.typography(...)";
+  }
+  if ("timingFunction" in value || ("duration" in value && "delay" in value)) {
+    return "tokens.transition(...)";
+  }
+  if ("width" in value && "style" in value && "color" in value) {
+    return "tokens.border(...)";
+  }
+  if ("dashArray" in value || "lineCap" in value) {
+    return "tokens.strokeStyle(...)";
+  }
+  return null;
+}
+
 function tokenFactoryForValue(value: unknown): string {
+  if (typeof value === "object" && value !== null && !Array.isArray(value)) {
+    const composite = looksLikeCompositeObject(value as Record<string, unknown>);
+    if (composite) {
+      return composite;
+    }
+  }
+
   if (
     typeof value === "string" &&
     (/^#(?:[0-9a-f]{3,8})$/i.test(value.trim()) ||
@@ -64,6 +93,11 @@ function walk(
 
   if (typeof node === "object" && node !== null && !Array.isArray(node)) {
     if ("colorSpace" in node || "components" in node) {
+      diagnostics.push(diagnostic(path, node, inScale));
+      return;
+    }
+
+    if (looksLikeCompositeObject(node as Record<string, unknown>)) {
       diagnostics.push(diagnostic(path, node, inScale));
       return;
     }

@@ -1,18 +1,27 @@
 import type {
+  BorderValue,
   ColorValue,
   CubicBezierValue,
   DurationValue,
   FontFamilyValue,
   FontWeightName,
   FontWeightValue,
+  GradientValue,
   NumberValue,
   RawToken,
+  ShadowLayer,
+  ShadowValue,
   StampedToken,
   StringValue,
+  StrokeStyleName,
+  StrokeStyleValue,
+  TokenMember,
   TokenScale,
   TokenType,
+  TransitionValue,
+  TypographyValue,
 } from "@recontentapp/core";
-import { isTokenLeaf } from "@recontentapp/core";
+import { isRawToken, isStampedToken, isTokenLeaf } from "@recontentapp/core";
 
 type ColorInput =
   | string
@@ -164,6 +173,200 @@ function generic(value: string): RawToken<"string"> {
   return createRawToken("string", { value });
 }
 
+function toMember<T extends TokenType>(
+  input: unknown,
+  coerce: (raw: never) => RawToken<T>,
+): TokenMember<T> {
+  if (isStampedToken(input)) {
+    return {
+      $value: input.$value as import("@recontentapp/core").TokenTypeMap[T],
+      alias: input._path,
+    };
+  }
+  if (isRawToken(input)) {
+    return { $value: input.$value as import("@recontentapp/core").TokenTypeMap[T] };
+  }
+  return { $value: coerce(input as never).$value };
+}
+
+const STROKE_STYLE_NAMES: StrokeStyleName[] = [
+  "solid",
+  "dashed",
+  "dotted",
+  "double",
+  "groove",
+  "ridge",
+  "outset",
+  "inset",
+];
+
+type StrokeStyleInput =
+  | StrokeStyleName
+  | {
+      dashArray: Array<string | RawToken<"dimension"> | StampedToken<"dimension">>;
+      lineCap: "round" | "butt" | "square";
+    };
+
+function strokeStyle(input: StrokeStyleInput): RawToken<"strokeStyle"> {
+  if (typeof input === "string") {
+    if (!STROKE_STYLE_NAMES.includes(input)) {
+      throw new Error(
+        `Invalid strokeStyle: "${input}". Expected one of ${STROKE_STYLE_NAMES.join(", ")}.`,
+      );
+    }
+    return createRawToken("strokeStyle", { style: input });
+  }
+
+  if (!input.dashArray || input.dashArray.length === 0) {
+    throw new Error("tokens.strokeStyle(...) with a custom dash requires a non-empty dashArray.");
+  }
+  if (!["round", "butt", "square"].includes(input.lineCap)) {
+    throw new Error(`Invalid lineCap: "${input.lineCap}". Expected "round", "butt", or "square".`);
+  }
+
+  const dashArray = input.dashArray.map((item) =>
+    typeof item === "string" ? dimension(item).$value : item.$value,
+  );
+
+  const value: StrokeStyleValue = { dashArray, lineCap: input.lineCap };
+  return createRawToken("strokeStyle", value);
+}
+
+type ShadowLayerInput = {
+  color: ColorInput | RawToken<"color"> | StampedToken<"color">;
+  offsetX: string | RawToken<"dimension"> | StampedToken<"dimension">;
+  offsetY: string | RawToken<"dimension"> | StampedToken<"dimension">;
+  blur: string | RawToken<"dimension"> | StampedToken<"dimension">;
+  spread: string | RawToken<"dimension"> | StampedToken<"dimension">;
+  inset?: boolean;
+};
+
+function toShadowLayer(input: ShadowLayerInput): ShadowLayer {
+  if (!input.color || !input.offsetX || !input.offsetY || !input.blur || !input.spread) {
+    throw new Error(
+      "tokens.shadow(...) requires color, offsetX, offsetY, blur, and spread for every layer.",
+    );
+  }
+
+  return {
+    color: toMember(input.color, (raw) => color(raw as ColorInput)),
+    offsetX: toMember(input.offsetX, (raw) => dimension(raw as string)),
+    offsetY: toMember(input.offsetY, (raw) => dimension(raw as string)),
+    blur: toMember(input.blur, (raw) => dimension(raw as string)),
+    spread: toMember(input.spread, (raw) => dimension(raw as string)),
+    ...(input.inset !== undefined ? { inset: input.inset } : {}),
+  };
+}
+
+function shadow(input: ShadowLayerInput | ShadowLayerInput[]): RawToken<"shadow"> {
+  const layers = Array.isArray(input) ? input : [input];
+  if (layers.length === 0) {
+    throw new Error("tokens.shadow(...) requires at least one layer.");
+  }
+
+  const value: ShadowValue = { layers: layers.map(toShadowLayer) };
+  return createRawToken("shadow", value);
+}
+
+type BorderInput = {
+  color: ColorInput | RawToken<"color"> | StampedToken<"color">;
+  width: string | RawToken<"dimension"> | StampedToken<"dimension">;
+  style?: StrokeStyleInput | RawToken<"strokeStyle"> | StampedToken<"strokeStyle">;
+};
+
+function border(input: BorderInput): RawToken<"border"> {
+  if (!input.color || !input.width) {
+    throw new Error("tokens.border(...) requires color and width.");
+  }
+
+  const value: BorderValue = {
+    color: toMember(input.color, (raw) => color(raw as ColorInput)),
+    width: toMember(input.width, (raw) => dimension(raw as string)),
+    style: toMember(input.style ?? "solid", (raw) => strokeStyle(raw as StrokeStyleInput)),
+  };
+  return createRawToken("border", value);
+}
+
+type TransitionInput = {
+  duration: string | RawToken<"duration"> | StampedToken<"duration">;
+  delay?: string | RawToken<"duration"> | StampedToken<"duration">;
+  timingFunction:
+    | [number, number, number, number]
+    | RawToken<"cubicBezier">
+    | StampedToken<"cubicBezier">;
+};
+
+function transition(input: TransitionInput): RawToken<"transition"> {
+  if (!input.duration || !input.timingFunction) {
+    throw new Error("tokens.transition(...) requires duration and timingFunction.");
+  }
+
+  const value: TransitionValue = {
+    duration: toMember(input.duration, (raw) => duration(raw as string)),
+    delay: toMember(input.delay ?? "0ms", (raw) => duration(raw as string)),
+    timingFunction: toMember(input.timingFunction, (raw) =>
+      cubicBezier(raw as [number, number, number, number]),
+    ),
+  };
+  return createRawToken("transition", value);
+}
+
+type GradientStopInput = {
+  color: ColorInput | RawToken<"color"> | StampedToken<"color">;
+  position: number;
+};
+type GradientInput = {
+  kind?: "linear" | "radial" | "conic";
+  angle?: string;
+  stops: GradientStopInput[];
+};
+
+function gradient(input: GradientInput): RawToken<"gradient"> {
+  if (!input.stops || input.stops.length < 2) {
+    throw new Error("tokens.gradient(...) requires at least 2 stops.");
+  }
+  for (const stop of input.stops) {
+    if (typeof stop.position !== "number" || stop.position < 0 || stop.position > 1) {
+      throw new Error(
+        `Invalid gradient stop position: ${stop.position}. Expected a number between 0 and 1.`,
+      );
+    }
+  }
+
+  const value: GradientValue = {
+    kind: input.kind ?? "linear",
+    angle: input.angle ?? "180deg",
+    stops: input.stops.map((stop) => ({
+      color: toMember(stop.color, (raw) => color(raw as ColorInput)),
+      position: stop.position,
+    })),
+  };
+  return createRawToken("gradient", value);
+}
+
+type TypographyInput = {
+  fontFamily: string | RawToken<"fontFamily"> | StampedToken<"fontFamily">;
+  fontSize: string | RawToken<"dimension"> | StampedToken<"dimension">;
+  fontWeight: number | FontWeightName | RawToken<"fontWeight"> | StampedToken<"fontWeight">;
+  letterSpacing?: string | RawToken<"dimension"> | StampedToken<"dimension">;
+  lineHeight?: number | RawToken<"number"> | StampedToken<"number">;
+};
+
+function typography(input: TypographyInput): RawToken<"typography"> {
+  if (!input.fontFamily || !input.fontSize || input.fontWeight === undefined) {
+    throw new Error("tokens.typography(...) requires fontFamily, fontSize, and fontWeight.");
+  }
+
+  const value: TypographyValue = {
+    fontFamily: toMember(input.fontFamily, (raw) => fontFamily(raw as string)),
+    fontSize: toMember(input.fontSize, (raw) => dimension(raw as string)),
+    fontWeight: toMember(input.fontWeight, (raw) => fontWeight(raw as number | FontWeightName)),
+    letterSpacing: toMember(input.letterSpacing ?? "0px", (raw) => dimension(raw as string)),
+    lineHeight: toMember(input.lineHeight ?? 1.4, (raw) => number(raw as number)),
+  };
+  return createRawToken("typography", value);
+}
+
 function createScale<
   Key extends string | number,
   T extends TokenType,
@@ -211,14 +414,26 @@ export const tokens = {
   generic,
   colorScale,
   dimensionScale,
+  strokeStyle,
+  shadow,
+  border,
+  transition,
+  gradient,
+  typography,
 };
 
 export type {
+  BorderValue,
   ColorValue,
   CubicBezierValue,
   DurationValue,
   FontFamilyValue,
   FontWeightValue,
+  GradientValue,
   NumberValue,
+  ShadowValue,
   StringValue,
+  StrokeStyleValue,
+  TransitionValue,
+  TypographyValue,
 };

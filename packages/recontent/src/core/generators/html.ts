@@ -82,6 +82,95 @@ function renderFontFamilyEntry(entry: TokenEntry): string {
     </div>`;
 }
 
+function renderShadowEntry(entry: TokenEntry): string {
+  const display = serializeValueCss(
+    "shadow",
+    entry.$value as import("@recontentapp/core").TokenTypeMap["shadow"],
+  );
+
+  return `
+    <div class="token shadow-token">
+      <div class="swatch" style="box-shadow: ${escapeHtml(display)};"></div>
+      <div class="token-meta">
+        <code class="path">${escapeHtml(pathKey(entry.path))}</code>
+        <span class="value">${escapeHtml(display)}</span>
+        ${renderAlias(entry)}
+      </div>
+    </div>`;
+}
+
+function renderBorderEntry(entry: TokenEntry): string {
+  const display = serializeValueCss(
+    "border",
+    entry.$value as import("@recontentapp/core").TokenTypeMap["border"],
+  );
+
+  return `
+    <div class="token border-token">
+      <div class="swatch" style="border: ${escapeHtml(display)};"></div>
+      <div class="token-meta">
+        <code class="path">${escapeHtml(pathKey(entry.path))}</code>
+        <span class="value">${escapeHtml(display)}</span>
+        ${renderAlias(entry)}
+      </div>
+    </div>`;
+}
+
+function renderGradientEntry(entry: TokenEntry): string {
+  const display = serializeValueCss(
+    "gradient",
+    entry.$value as import("@recontentapp/core").TokenTypeMap["gradient"],
+  );
+
+  return `
+    <div class="token gradient-token">
+      <div class="swatch" style="background-image: ${escapeHtml(display)};"></div>
+      <div class="token-meta">
+        <code class="path">${escapeHtml(pathKey(entry.path))}</code>
+        <span class="value">${escapeHtml(display)}</span>
+        ${renderAlias(entry)}
+      </div>
+    </div>`;
+}
+
+function renderTypographyEntry(entry: TokenEntry): string {
+  const typography = entry.$value as import("@recontentapp/core").TokenTypeMap["typography"];
+  const style = [
+    `font-family: ${serializeValueCss("fontFamily", typography.fontFamily.$value)}`,
+    `font-size: ${serializeValueCss("dimension", typography.fontSize.$value)}`,
+    `font-weight: ${serializeValueCss("fontWeight", typography.fontWeight.$value)}`,
+    `letter-spacing: ${serializeValueCss("dimension", typography.letterSpacing.$value)}`,
+    `line-height: ${serializeValueCss("number", typography.lineHeight.$value)}`,
+  ].join("; ");
+
+  return `
+    <div class="token typography-token">
+      <div class="token-meta">
+        <code class="path">${escapeHtml(pathKey(entry.path))}</code>
+        ${renderAlias(entry)}
+      </div>
+      <p class="font-preview" style="${escapeHtml(style)}">The quick brown fox jumps over the lazy dog</p>
+    </div>`;
+}
+
+function renderTransitionEntry(entry: TokenEntry): string {
+  const transition = entry.$value as import("@recontentapp/core").TokenTypeMap["transition"];
+  const display = [
+    `duration: ${serializeValueCss("duration", transition.duration.$value)}`,
+    `delay: ${serializeValueCss("duration", transition.delay.$value)}`,
+    `timingFunction: ${serializeValueCss("cubicBezier", transition.timingFunction.$value)}`,
+  ].join(", ");
+
+  return `
+    <div class="token">
+      <div class="token-meta">
+        <code class="path">${escapeHtml(pathKey(entry.path))}</code>
+        <span class="value">${escapeHtml(display)}</span>
+        ${renderAlias(entry)}
+      </div>
+    </div>`;
+}
+
 function renderGenericEntry(entry: TokenEntry): string {
   const display = serializeValueCss(entry.$type, entry.$value);
 
@@ -101,6 +190,16 @@ function renderTokenEntry(entry: TokenEntry): string {
       return renderColorEntry(entry);
     case "fontFamily":
       return renderFontFamilyEntry(entry);
+    case "shadow":
+      return renderShadowEntry(entry);
+    case "border":
+      return renderBorderEntry(entry);
+    case "gradient":
+      return renderGradientEntry(entry);
+    case "typography":
+      return renderTypographyEntry(entry);
+    case "transition":
+      return renderTransitionEntry(entry);
     default:
       return renderGenericEntry(entry);
   }

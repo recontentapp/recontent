@@ -1,8 +1,0 @@
-import{i as e}from"./preload-helper-BdFrVu1K.js";import{n as t,t as n}from"./iframe-awRtIeCy.js";var r=e((()=>{})),i,a,o=e((()=>{t(),r(),i=`ww9y340`,a={horizontal:`ww9y341`,vertical:`ww9y342`}}));function s({orientation:e=`horizontal`,decorative:t=!0,className:n,...r}){let o=[i,a[e],n].filter(Boolean).join(` `);return(0,c.jsx)(`div`,{role:t?`none`:`separator`,"aria-orientation":t?void 0:e,"data-slot":`divider`,"data-orientation":e,...r,className:o})}var c,l=e((()=>{o(),c=n(),s.__docgenInfo={description:``,methods:[],displayName:`Divider`,props:{orientation:{required:!1,tsType:{name:`union`,raw:`"horizontal" | "vertical"`,elements:[{name:`literal`,value:`"horizontal"`},{name:`literal`,value:`"vertical"`}]},description:``,defaultValue:{value:`"horizontal"`,computed:!1}},decorative:{required:!1,tsType:{name:`boolean`},description:``,defaultValue:{value:`true`,computed:!1}}}}})),u,d,f,p;e((()=>{l(),u={title:`Display/Divider`,component:s,args:{style:{width:240}}},d={},f={args:{orientation:`vertical`,style:{height:80}}},d.parameters={...d.parameters,docs:{...d.parameters?.docs,source:{originalSource:`{}`,...d.parameters?.docs?.source}}},f.parameters={...f.parameters,docs:{...f.parameters?.docs,source:{originalSource:`{
-  args: {
-    orientation: "vertical",
-    style: {
-      height: 80
-    }
-  }
-}`,...f.parameters?.docs?.source}}},p=[`Horizontal`,`Vertical`]}))();export{d as Horizontal,f as Vertical,p as __namedExportsOrder,u as default};

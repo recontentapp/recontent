@@ -1,16 +1,25 @@
 import {
+  expandedMembers,
+  isCompositeType,
+  isExpandedComposite,
   isStampedToken,
   isTokenScale,
   type Config,
   type TokenEntry,
+  type TokenMember,
   type TokenScaleMetadata,
   type TokenType,
+  type TokenTypeMap,
   type ThemeOverride,
   type TokenRegistry,
   pathKey,
 } from "@recontentapp/core";
 import { registryComponents } from "../registry/exports.js";
-import { serializeValueCss } from "../core/generators/serialize.js";
+import {
+  serializeCompositeCss,
+  serializeValueCss,
+  type MemberResolver,
+} from "../core/generators/serialize.js";
 import {
   generateBuiltInComponentFiles,
   getBuiltInComponentDependencies,
@@ -72,6 +81,10 @@ function escapeString(value: string): string {
   return value.replace(/\\/g, "\\\\").replace(/'/g, "\\'");
 }
 
+function escapeTemplateLiteral(value: string): string {
+  return value.replace(/\\/g, "\\\\").replace(/`/g, "\\`").replace(/\$\{/g, "\\${");
+}
+
 function propertyAccess(root: string, path: readonly string[]): string {
   return path.reduce(
     (reference, segment) =>
@@ -111,6 +124,127 @@ function resolveVariableReference(registry: Config["registry"], entry: TokenEntr
   }
 
   return variableReference(current);
+}
+
+function resolveMemberConcreteValue(
+  registry: TokenRegistry,
+  type: TokenType,
+  member: TokenMember,
+  override: ThemeOverride | undefined,
+): TokenTypeMap[TokenType] {
+  if (!member.alias) {
+    return member.$value;
+  }
+  const target = registry.get(pathKey(member.alias));
+  if (!target) {
+    throw new Error(`Alias target not found: ${pathKey(member.alias)}`);
+  }
+  return resolveEntryValue(registry, target, override);
+}
+
+function setExpandedComposite(
+  config: Config,
+  tree: SourceTree,
+  entry: TokenEntry,
+  override: ThemeOverride | undefined,
+): void {
+  const type = entry.$type as "typography" | "transition";
+  const base = [entry.layer, ...entryPath(entry)];
+
+  if (override) {
+    const resolved = resolveEntryValue(
+      config.registry,
+      entry,
+      override,
+    ) as TokenTypeMap[typeof type];
+    for (const { cssProperty, type: memberType, member } of expandedMembers(type, resolved)) {
+      const value = resolveMemberConcreteValue(config.registry, memberType, member, override);
+      setTreeValue(tree, [...base, cssProperty], { value: serializeValueCss(memberType, value) });
+    }
+    return;
+  }
+
+  if (entry.alias) {
+    const target = config.registry.get(pathKey(entry.alias));
+    if (!target) {
+      throw new Error(`Alias target not found: ${pathKey(entry.alias)}`);
+    }
+    const targetRef = resolveVariableReference(config.registry, target);
+    for (const { cssProperty } of expandedMembers(
+      type,
+      entry.$value as TokenTypeMap[typeof type],
+    )) {
+      setTreeValue(tree, [...base, cssProperty], {
+        value: propertyAccess(targetRef, [cssProperty]),
+        source: true,
+      });
+    }
+    return;
+  }
+
+  for (const { cssProperty, type: memberType, member } of expandedMembers(
+    type,
+    entry.$value as TokenTypeMap[typeof type],
+  )) {
+    if (member.alias) {
+      const target = config.registry.get(pathKey(member.alias));
+      if (!target) {
+        throw new Error(`Alias target not found: ${pathKey(member.alias)}`);
+      }
+      setTreeValue(tree, [...base, cssProperty], {
+        value: resolveVariableReference(config.registry, target),
+        source: true,
+      });
+      continue;
+    }
+    setTreeValue(tree, [...base, cssProperty], {
+      value: serializeValueCss(memberType, member.$value),
+    });
+  }
+}
+
+function setInlineComposite(
+  config: Config,
+  tree: SourceTree,
+  entry: TokenEntry,
+  override: ThemeOverride | undefined,
+): void {
+  const type = entry.$type as "shadow" | "border" | "gradient";
+  const path = [entry.layer, ...entryPath(entry)];
+  type InlineValue = TokenTypeMap["shadow"] | TokenTypeMap["border"] | TokenTypeMap["gradient"];
+
+  if (override) {
+    const resolved = resolveEntryValue(config.registry, entry, override) as InlineValue;
+    const resolve: MemberResolver = (memberType, member) =>
+      serializeValueCss(
+        memberType,
+        resolveMemberConcreteValue(config.registry, memberType, member, override),
+      );
+    setTreeValue(tree, path, { value: serializeCompositeCss(type, resolved, resolve) });
+    return;
+  }
+
+  if (entry.alias) {
+    setTreeValue(tree, path, {
+      value: resolveVariableReference(config.registry, entry),
+      source: true,
+    });
+    return;
+  }
+
+  const value = entry.$value as InlineValue;
+  const resolve: MemberResolver = (memberType, member) => {
+    if (!member.alias) {
+      return escapeTemplateLiteral(serializeValueCss(memberType, member.$value));
+    }
+    const target = config.registry.get(pathKey(member.alias));
+    if (!target) {
+      throw new Error(`Alias target not found: ${pathKey(member.alias)}`);
+    }
+    return `\${${resolveVariableReference(config.registry, target)}}`;
+  };
+  const template = serializeCompositeCss(type, value, resolve);
+  setTreeValue(tree, path, { value: `\`${template}\``, source: true });
 }
 
 function setTreeValue(tree: SourceTree, path: readonly string[], value: SourceValue): void {
@@ -153,6 +287,16 @@ function formatTree(tree: SourceTree, indent = "", contract = false): string {
 function contractTree(config: Config): SourceTree {
   const tree: SourceTree = { ref: {}, system: {}, components: {} };
   for (const entry of config.registry.values()) {
+    if (isExpandedComposite(entry.$type)) {
+      const type = entry.$type as "typography" | "transition";
+      for (const { cssProperty } of expandedMembers(
+        type,
+        entry.$value as TokenTypeMap[typeof type],
+      )) {
+        setTreeValue(tree, [entry.layer, ...entryPath(entry), cssProperty], { value: "" });
+      }
+      continue;
+    }
     setTreeValue(tree, [entry.layer, ...entryPath(entry)], { value: "" });
   }
   return tree;
@@ -162,6 +306,14 @@ function valuesTree(config: Config, themeName?: string): SourceTree {
   const tree: SourceTree = { ref: {}, system: {}, components: {} };
   const override = themeName ? config.themes[themeName] : undefined;
   for (const entry of config.registry.values()) {
+    if (isExpandedComposite(entry.$type)) {
+      setExpandedComposite(config, tree, entry, override);
+      continue;
+    }
+    if (isCompositeType(entry.$type)) {
+      setInlineComposite(config, tree, entry, override);
+      continue;
+    }
     const value =
       entry.alias && !override
         ? {

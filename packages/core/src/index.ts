@@ -7,3 +7,4 @@ export {
   resolveConfigPath,
 } from "./config.js";
 export * from "./types.js";
+export * from "./composite.js";

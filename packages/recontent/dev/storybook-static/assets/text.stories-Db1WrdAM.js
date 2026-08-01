@@ -1,5 +1,0 @@
-import{i as e}from"./preload-helper-BdFrVu1K.js";import{n as t,t as n}from"./iframe-awRtIeCy.js";var r=e((()=>{})),i,a=e((()=>{t(),r(),i=`_1dfjvhd0`}));function o({as:e=`p`,className:t,...n}){let r=[i,t].filter(Boolean).join(` `);return(0,s.jsx)(e,{"data-slot":`text`,...n,className:r})}var s,c=e((()=>{a(),s=n(),o.__docgenInfo={description:``,methods:[],displayName:`Text`,props:{as:{required:!1,tsType:{name:`union`,raw:`"p" | "span" | "div"`,elements:[{name:`literal`,value:`"p"`},{name:`literal`,value:`"span"`},{name:`literal`,value:`"div"`}]},description:``,defaultValue:{value:`"p"`,computed:!1}}}}})),l,u,d,f;e((()=>{c(),l={title:`Typography/Text`,component:o,args:{children:`The quick brown fox jumps over the lazy dog.`}},u={},d={args:{as:`span`}},u.parameters={...u.parameters,docs:{...u.parameters?.docs,source:{originalSource:`{}`,...u.parameters?.docs?.source}}},d.parameters={...d.parameters,docs:{...d.parameters?.docs,source:{originalSource:`{
-  args: {
-    as: "span"
-  }
-}`,...d.parameters?.docs?.source}}},f=[`Paragraph`,`Inline`]}))();export{d as Inline,u as Paragraph,f as __namedExportsOrder,l as default};

@@ -1,4 +1,12 @@
-import type { Config, ThemeOverride, TokenEntry, TokenRegistry } from "@recontentapp/core";
+import {
+  expandedMembers,
+  isExpandedComposite,
+  type Config,
+  type ThemeOverride,
+  type TokenEntry,
+  type TokenRegistry,
+  type TokenTypeMap,
+} from "@recontentapp/core";
 import { cssVarName, serializeValueCss } from "../core/generators/serialize.js";
 import type { Output, OutputFile, OutputProcessor } from "./index.js";
 
@@ -14,20 +22,53 @@ function entryCssValue(entry: TokenEntry): string {
   return serializeValueCss(entry.$type, entry.$value);
 }
 
+function expandedEntryDeclarations(
+  entry: TokenEntry,
+  value: TokenTypeMap[typeof entry.$type],
+  aliasPath?: string[],
+): Record<string, string> {
+  const declarations: Record<string, string> = {};
+
+  for (const { varSuffix, type, member } of expandedMembers(
+    entry.$type as "typography" | "transition",
+    value as TokenTypeMap["typography"] | TokenTypeMap["transition"],
+  )) {
+    const varName = cssVarName([...entry.path, varSuffix]);
+    if (aliasPath) {
+      declarations[varName] = `var(${cssVarName([...aliasPath, varSuffix])})`;
+      continue;
+    }
+    declarations[varName] = member.alias
+      ? `var(${cssVarName(member.alias)})`
+      : serializeValueCss(type, member.$value);
+  }
+
+  return declarations;
+}
+
+function entryDeclarations(entry: TokenEntry): Record<string, string> {
+  if (!isExpandedComposite(entry.$type)) {
+    return { [cssVarName(entry.path)]: entryCssValue(entry) };
+  }
+
+  if (entry.alias) {
+    return expandedEntryDeclarations(entry, entry.$value, entry.alias);
+  }
+
+  return expandedEntryDeclarations(entry, entry.$value);
+}
+
 function formatRule(selector: string, declarations: Record<string, string>): string {
   const lines = Object.entries(declarations).map(([name, value]) => `  ${name}: ${value};`);
   return `${selector} {\n${lines.join("\n")}\n}`;
 }
 
-function collectRefDeclarations(
-  registry: TokenRegistry,
-  valueResolver: (entry: TokenEntry) => string,
-): Record<string, string> {
+function collectRefDeclarations(registry: TokenRegistry): Record<string, string> {
   const declarations: Record<string, string> = {};
 
   for (const entry of registry.values()) {
     if (entry.layer !== "ref") continue;
-    declarations[cssVarName(entry.path)] = valueResolver(entry);
+    Object.assign(declarations, entryDeclarations(entry));
   }
 
   return declarations;
@@ -41,21 +82,33 @@ function collectLayerDeclarations(
 
   for (const entry of registry.values()) {
     if (entry.layer !== layer) continue;
-    declarations[cssVarName(entry.path)] = entryCssValue(entry);
+    Object.assign(declarations, entryDeclarations(entry));
   }
 
   return declarations;
 }
 
-function themeOverrideValue(entry: TokenEntry, override: ThemeOverride, pathKey: string): string {
+function themeOverrideDeclarations(
+  entry: TokenEntry,
+  override: ThemeOverride,
+  pathKey: string,
+): Record<string, string> {
   const overridden = override.get(pathKey);
-  if (overridden) {
-    return serializeValueCss(entry.$type, overridden);
+
+  if (!isExpandedComposite(entry.$type)) {
+    if (overridden !== undefined) {
+      return { [cssVarName(entry.path)]: serializeValueCss(entry.$type, overridden) };
+    }
+    return { [cssVarName(entry.path)]: entryCssValue(entry) };
+  }
+
+  if (overridden !== undefined) {
+    return expandedEntryDeclarations(entry, overridden as TokenTypeMap[typeof entry.$type]);
   }
   if (entry.alias) {
-    return `var(${cssVarName(entry.alias)})`;
+    return expandedEntryDeclarations(entry, entry.$value, entry.alias);
   }
-  return serializeValueCss(entry.$type, entry.$value);
+  return expandedEntryDeclarations(entry, entry.$value);
 }
 
 function themeSelectorFor(themeName: string, options: CssGeneratorOptions): string {
@@ -70,9 +123,7 @@ export function generateCss(config: Config, options: CssGeneratorOptions = {}): 
   const { registry, themes } = config;
   const blocks: string[] = [];
 
-  const lightRef = collectRefDeclarations(registry, (entry) =>
-    entry.alias ? `var(${cssVarName(entry.alias)})` : serializeValueCss(entry.$type, entry.$value),
-  );
+  const lightRef = collectRefDeclarations(registry);
   if (Object.keys(lightRef).length > 0) {
     blocks.push(formatRule(":root", lightRef));
   }
@@ -83,7 +134,7 @@ export function generateCss(config: Config, options: CssGeneratorOptions = {}): 
       if (entry.layer !== "ref") continue;
       const key = entry.path.join(".");
       if (!override.has(key)) continue;
-      themeRef[cssVarName(entry.path)] = themeOverrideValue(entry, override, key);
+      Object.assign(themeRef, themeOverrideDeclarations(entry, override, key));
     }
     if (Object.keys(themeRef).length > 0) {
       blocks.push(formatRule(themeSelectorFor(themeName, options), themeRef));

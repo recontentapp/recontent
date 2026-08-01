@@ -120,6 +120,55 @@ const system = defineSystemTokens({
     slowMin: tokens.duration("730ms"),
     standard: tokens.cubicBezier([0.24, 1, 0.4, 1]),
   },
+  elevation: {
+    sm: tokens.shadow({
+      color: ref.color.gray950,
+      offsetX: "0px",
+      offsetY: "1px",
+      blur: "2px",
+      spread: "0px",
+    }),
+    md: tokens.shadow([
+      { color: ref.color.gray950, offsetX: "0px", offsetY: "2px", blur: "4px", spread: "0px" },
+      {
+        color: ref.color.gray950,
+        offsetX: "0px",
+        offsetY: "8px",
+        blur: "16px",
+        spread: "-4px",
+      },
+    ]),
+  },
+  border: {
+    default: tokens.border({
+      color: ref.color.gray300,
+      width: "1px",
+    }),
+  },
+  textStyles: {
+    body: tokens.typography({
+      fontFamily:
+        '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
+      fontSize: ref.fontSize.base,
+      fontWeight: "regular",
+      lineHeight: 1.4286,
+    }),
+  },
+  transitions: {
+    standard: tokens.transition({
+      duration: "175ms",
+      timingFunction: [0.24, 1, 0.4, 1],
+    }),
+  },
+  gradients: {
+    accent: tokens.gradient({
+      angle: "135deg",
+      stops: [
+        { color: ref.color.blue600, position: 0 },
+        { color: ref.color.blue500, position: 1 },
+      ],
+    }),
+  },
 });
 
 const blackTheme = defineTheme(system, {
