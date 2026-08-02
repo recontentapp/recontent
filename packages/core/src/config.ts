@@ -41,7 +41,7 @@ export function normalizeObservabilityConfig(
   };
 }
 
-const DEFAULT_CONFIG = "recontent.config.ts";
+export const DEFAULT_CONFIG = "recontent.config.ts";
 
 export class ConfigLoadError extends Error {
   constructor(message: string, options?: { cause?: unknown }) {

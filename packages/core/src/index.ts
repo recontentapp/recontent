@@ -3,6 +3,7 @@ export {
   normalizeObservabilityConfig,
   OBSERVABILITY_SCHEMA_VERSION,
   ConfigLoadError,
+  DEFAULT_CONFIG,
   loadConfig,
   resolveConfigPath,
 } from "./config.js";

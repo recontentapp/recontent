@@ -2,7 +2,8 @@ import path from "node:path";
 import { createLogger } from "../../core/logger.js";
 import { MissingDesignTokensError } from "../../registry/index.js";
 import { runOutput } from "../../outputs/index.js";
-import { loadConfig } from "@recontentapp/core";
+import { ensureDependencies } from "../../resolve/ensure-dependencies.js";
+import { DEFAULT_CONFIG, loadConfig, resolveConfigPath } from "@recontentapp/core";
 import { exitWithError, logSuccess, writeOutputFile } from "../utils/fs.js";
 
 export type BuildOptions = {
@@ -18,6 +19,9 @@ export async function runBuild(options: BuildOptions = {}): Promise<void> {
   logger.debug(
     `Loaded build config with ${config.output.length} output target(s), ${config.registry.size} token(s), and ${Object.keys(config.themes).length} theme(s).`,
   );
+
+  const configDir = path.dirname(resolveConfigPath(options.config ?? DEFAULT_CONFIG));
+  ensureDependencies(configDir, config.resolve, config.logLevel);
 
   if (config.output.length === 0) {
     console.log("No output targets configured in recontent.config.ts");
