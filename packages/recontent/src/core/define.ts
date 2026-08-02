@@ -23,7 +23,8 @@ import type {
 import { diagnoseTokenTrees } from "./diagnostics.js";
 import { isRawToken, isStampedToken, isTokenLeaf, isTokenScale, pathKey } from "@recontentapp/core";
 import { withStampedTokenMethods, type ChainableMethods } from "./metadata.js";
-import type { BuiltInComponentOptions, RegistryComponentName } from "../registry/manifest.js";
+import type { BuiltInComponentOptions } from "../registry/manifest.js";
+
 type TokenTree = Record<string, unknown>;
 
 type StampTree<T, Layer extends TokenLayer> =
@@ -204,7 +205,7 @@ export function defineComponentTokens<T extends TokenTree>(input: T): StampTree<
 }
 
 type VanillaExtractOutputInput = Omit<VanillaExtractOutput, "builtInComponents"> & {
-  builtInComponents?: BuiltInComponentOptions | readonly RegistryComponentName[];
+  builtInComponents?: BuiltInComponentOptions;
 };
 
 export type OutputInput = Exclude<Output, VanillaExtractOutput> | VanillaExtractOutputInput;
