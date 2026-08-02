@@ -31,6 +31,12 @@
   --ref-radius-container: 12px;
   --ref-radius-page: 28px;
   --ref-radius-full: 9999px;
+  --ref-radiusScale-none: 0px;
+  --ref-radiusScale-inner: 4px;
+  --ref-radiusScale-element: 8px;
+  --ref-radiusScale-container: 12px;
+  --ref-radiusScale-page: 28px;
+  --ref-radiusScale-full: 9999px;
   --ref-fontSize-xs: 10px;
   --ref-fontSize-sm: 12px;
   --ref-fontSize-base: 14px;
@@ -127,6 +133,9 @@
   --system-motion-standard: cubic-bezier(0.24, 1, 0.4, 1);
   --system-elevation-sm: 0px 1px 2px 0px var(--ref-color-gray950);
   --system-elevation-md:
+    0px 2px 4px 0px var(--ref-color-gray950), 0px 8px 16px -4px var(--ref-color-gray950);
+  --system-elevationScale-sm: 0px 1px 2px 0px var(--ref-color-gray950);
+  --system-elevationScale-md:
     0px 2px 4px 0px var(--ref-color-gray950), 0px 8px 16px -4px var(--ref-color-gray950);
   --system-border-default: 1px solid var(--ref-color-gray300);
   --system-borderScale-thin: 1px solid var(--ref-color-gray300);

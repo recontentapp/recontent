@@ -37,6 +37,14 @@ const themeRef = {
     page: "28px",
     full: "9999px",
   },
+  radiusScale: {
+    none: "0px",
+    inner: "4px",
+    element: "8px",
+    container: "12px",
+    page: "28px",
+    full: "9999px",
+  },
   fontSize: {
     xs: "10px",
     sm: "12px",
@@ -137,6 +145,10 @@ const themeSystem = {
     sm: `0px 1px 2px 0px ${themeRef.color.gray950}`,
     md: `0px 2px 4px 0px ${themeRef.color.gray950}, 0px 8px 16px -4px ${themeRef.color.gray950}`,
   },
+  elevationScale: {
+    sm: `0px 1px 2px 0px ${themeRef.color.gray950}`,
+    md: `0px 2px 4px 0px ${themeRef.color.gray950}, 0px 8px 16px -4px ${themeRef.color.gray950}`,
+  },
   border: {
     default: `1px solid ${themeRef.color.gray300}`,
   },
@@ -214,6 +226,14 @@ const blackThemeRef = {
     "1-5": "6px",
   },
   radius: {
+    none: "0px",
+    inner: "4px",
+    element: "8px",
+    container: "12px",
+    page: "28px",
+    full: "9999px",
+  },
+  radiusScale: {
     none: "0px",
     inner: "4px",
     element: "8px",
@@ -321,6 +341,10 @@ const blackThemeSystem = {
     sm: `0px 1px 2px 0px ${blackThemeRef.color.gray950}`,
     md: `0px 2px 4px 0px ${blackThemeRef.color.gray950}, 0px 8px 16px -4px ${blackThemeRef.color.gray950}`,
   },
+  elevationScale: {
+    sm: `0px 1px 2px 0px ${blackThemeRef.color.gray950}`,
+    md: `0px 2px 4px 0px ${blackThemeRef.color.gray950}, 0px 8px 16px -4px ${blackThemeRef.color.gray950}`,
+  },
   border: {
     default: `1px solid ${blackThemeRef.color.gray300}`,
   },
@@ -374,6 +398,10 @@ export type RefSpacing = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 8 | 10 | 12 | "0-5" | "1-5"
 
 export const refSpacing = theme.ref.spacing;
 
+export type RefRadiusScale = "none" | "inner" | "element" | "container" | "page" | "full";
+
+export const refRadiusScale = theme.ref.radiusScale;
+
 export type SystemColorsSecondary = 200;
 
 export const systemColorsSecondary = theme.system.colors.secondary;
@@ -381,6 +409,10 @@ export const systemColorsSecondary = theme.system.colors.secondary;
 export type SystemSpacing = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 8 | 10 | 12 | "0-5" | "1-5";
 
 export const systemSpacing = theme.system.spacing;
+
+export type SystemElevationScale = "sm" | "md";
+
+export const systemElevationScale = theme.system.elevationScale;
 
 export type SystemBorderScale = "thin" | "thick";
 

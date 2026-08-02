@@ -37,6 +37,14 @@ const themeRef = {
     page: 28,
     full: 9999,
   },
+  radiusScale: {
+    none: 0,
+    inner: 4,
+    element: 8,
+    container: 12,
+    page: 28,
+    full: 9999,
+  },
   fontSize: {
     xs: 10,
     sm: 12,
@@ -133,6 +141,26 @@ const themeSystem = {
     standard: [0.24, 1, 0.4, 1],
   },
   elevation: {
+    sm: {
+      shadowColor: "#0a1317",
+      shadowOffset: {
+        width: 0,
+        height: 1,
+      },
+      shadowRadius: 2,
+      shadowOpacity: 1,
+    },
+    md: {
+      shadowColor: "#0a1317",
+      shadowOffset: {
+        width: 0,
+        height: 2,
+      },
+      shadowRadius: 4,
+      shadowOpacity: 1,
+    },
+  },
+  elevationScale: {
     sm: {
       shadowColor: "#0a1317",
       shadowOffset: {
@@ -254,6 +282,14 @@ const blackThemeRef = {
     page: 28,
     full: 9999,
   },
+  radiusScale: {
+    none: 0,
+    inner: 4,
+    element: 8,
+    container: 12,
+    page: 28,
+    full: 9999,
+  },
   fontSize: {
     xs: 10,
     sm: 12,
@@ -350,6 +386,26 @@ const blackThemeSystem = {
     standard: [0.24, 1, 0.4, 1],
   },
   elevation: {
+    sm: {
+      shadowColor: "#0a1317",
+      shadowOffset: {
+        width: 0,
+        height: 1,
+      },
+      shadowRadius: 2,
+      shadowOpacity: 1,
+    },
+    md: {
+      shadowColor: "#0a1317",
+      shadowOffset: {
+        width: 0,
+        height: 2,
+      },
+      shadowRadius: 4,
+      shadowOpacity: 1,
+    },
+  },
+  elevationScale: {
     sm: {
       shadowColor: "#0a1317",
       shadowOffset: {

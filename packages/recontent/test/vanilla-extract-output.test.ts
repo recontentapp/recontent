@@ -358,13 +358,14 @@ describe("scales, errors, files", () => {
         target: "vanilla-extract",
         outDir: "dist-test",
         builtInComponents: {
-          Stack: { backgroundColor: system.colors.surface, gapScale: system.spacing },
+          Stack: { spacing: system.spacing },
         },
       },
     });
     const files = generate(config);
     const filenames = files.map((file) => file.filename);
     expect(filenames).toContain("tokens.css.ts");
+    expect(filenames).toContain("components/shared/Shared.gen.tsx");
     expect(filenames).toContain("components/stack/Stack.gen.css.ts");
     expect(filenames).toContain("components/stack/Stack.gen.tsx");
     expect(filenames).toContain("components.dependencies.json");
@@ -383,7 +384,7 @@ describe("scales, errors, files", () => {
     });
     const builtInComponents: BuiltInComponentOptions = {
       // @ts-expect-error "Stak" is not a known built-in component name
-      Stak: { backgroundColor: system.colors.surface, gapScale: system.spacing },
+      Stak: { spacing: system.spacing },
     };
     expect(builtInComponents).toBeDefined();
   });
@@ -396,9 +397,9 @@ describe("scales, errors, files", () => {
     });
     const builtInComponents: BuiltInComponentOptions = {
       Stack: {
-        // @ts-expect-error "backgroundColour" is not a valid Stack binding key
-        backgroundColour: system.colors.surface,
-        gapScale: system.spacing,
+        spacing: system.spacing,
+        // @ts-expect-error "spacingScale" is not a valid Stack binding key
+        spacingScale: system.spacing,
       },
     };
     expect(builtInComponents).toBeDefined();
@@ -416,7 +417,7 @@ describe("scales, errors, files", () => {
         target: "vanilla-extract",
         outDir: "dist-test",
         builtInComponents: {
-          Stack: { backgroundColor: system.colors.surface, gapScale: system.spacing },
+          Stack: { spacing: system.spacing },
         },
       },
     });
@@ -428,13 +429,10 @@ describe("scales, errors, files", () => {
       'import { style, styleVariants } from "@vanilla-extract/css";',
     );
     expect(styles.content).toContain("systemSpacing");
-    expect(styles.content).toContain("vars.system.colors.surface");
-    expect(styles.content).toMatch(/backgroundColor: vars\.system\.colors\.surface/);
     expect(styles.content).toMatch(/export const stackGap = styleVariants\(systemSpacing,/);
 
-    expect(component.content).toContain('import { stackGap, stackRoot } from "./Stack.gen.css";');
     expect(component.content).toContain("export function Stack(");
-    expect(component.content).toMatch(/gap\?: SystemSpacing/);
+    expect(component.content).toMatch(/gap\?: StackSpacingToken/);
   });
 
   test("a wrong-typed scale binding throws MissingDesignTokensError", () => {
@@ -449,7 +447,7 @@ describe("scales, errors, files", () => {
         target: "vanilla-extract",
         outDir: "dist-test",
         builtInComponents: {
-          Stack: { backgroundColor: system.colors.surface, gapScale: system.wrongScale },
+          Stack: { spacing: system.wrongScale },
         } as never,
       },
     });

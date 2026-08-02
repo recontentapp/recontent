@@ -45,6 +45,14 @@ const ref = defineReferenceTokens({
     page: tokens.dimension("28px"),
     full: tokens.dimension("9999px"),
   },
+  radiusScale: tokens.dimensionScale({
+    none: "0px",
+    inner: "4px",
+    element: "8px",
+    container: "12px",
+    page: "28px",
+    full: "9999px",
+  }),
   fontSize: {
     xs: tokens.dimension("10px"),
     sm: tokens.dimension("12px"),
@@ -139,6 +147,19 @@ const system = defineSystemTokens({
       },
     ]),
   },
+  elevationScale: tokens.shadowScale({
+    sm: { color: ref.color.gray950, offsetX: "0px", offsetY: "1px", blur: "2px", spread: "0px" },
+    md: [
+      { color: ref.color.gray950, offsetX: "0px", offsetY: "2px", blur: "4px", spread: "0px" },
+      {
+        color: ref.color.gray950,
+        offsetX: "0px",
+        offsetY: "8px",
+        blur: "16px",
+        spread: "-4px",
+      },
+    ],
+  }),
   border: {
     default: tokens.border({
       color: ref.color.gray300,
@@ -214,7 +235,17 @@ export default defineConfig({
     {
       target: "vanilla-extract",
       outDir: "dev/generated/vanilla-extract",
-      builtInComponents: {},
+      builtInComponents: {
+        Box: {
+          spacing: system.spacing,
+          surface: system.colors.secondary,
+          radius: ref.radiusScale,
+          border: system.borderScale,
+          boxShadow: system.elevationScale,
+        },
+        Stack: { spacing: system.spacing },
+        StackItem: { spacing: system.spacing },
+      },
     },
   ],
 });

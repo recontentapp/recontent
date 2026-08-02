@@ -40,6 +40,14 @@ export const vars = createThemeContract({
       page: null,
       full: null,
     },
+    radiusScale: {
+      none: null,
+      inner: null,
+      element: null,
+      container: null,
+      page: null,
+      full: null,
+    },
     fontSize: {
       xs: null,
       sm: null,
@@ -138,6 +146,10 @@ export const vars = createThemeContract({
       sm: null,
       md: null,
     },
+    elevationScale: {
+      sm: null,
+      md: null,
+    },
     border: {
       default: null,
     },
@@ -180,6 +192,34 @@ export const vars = createThemeContract({
   components: {},
 });
 
+export type RefSpacing = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 8 | 10 | 12 | "0-5" | "1-5";
+
+export const refSpacing = vars.ref.spacing;
+
+export type RefRadiusScale = "none" | "inner" | "element" | "container" | "page" | "full";
+
+export const refRadiusScale = vars.ref.radiusScale;
+
+export type SystemColorsSecondary = 200;
+
+export const systemColorsSecondary = vars.system.colors.secondary;
+
+export type SystemSpacing = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 8 | 10 | 12 | "0-5" | "1-5";
+
+export const systemSpacing = vars.system.spacing;
+
+export type SystemElevationScale = "sm" | "md";
+
+export const systemElevationScale = vars.system.elevationScale;
+
+export type SystemBorderScale = "thin" | "thick";
+
+export const systemBorderScale = vars.system.borderScale;
+
+export type SystemTransitionScale = "fast" | "slow";
+
+export const systemTransitionScale = vars.system.transitionScale;
+
 export const refVars = vars.ref;
 export const systemVars = vars.system;
 export const componentVars = vars.components;
@@ -217,6 +257,14 @@ export const themeClass = createTheme(vars, {
       "1-5": "6px",
     },
     radius: {
+      none: "0px",
+      inner: "4px",
+      element: "8px",
+      container: "12px",
+      page: "28px",
+      full: "9999px",
+    },
+    radiusScale: {
       none: "0px",
       inner: "4px",
       element: "8px",
@@ -323,6 +371,10 @@ export const themeClass = createTheme(vars, {
       sm: `0px 1px 2px 0px ${vars.ref.color.gray950}`,
       md: `0px 2px 4px 0px ${vars.ref.color.gray950}, 0px 8px 16px -4px ${vars.ref.color.gray950}`,
     },
+    elevationScale: {
+      sm: `0px 1px 2px 0px ${vars.ref.color.gray950}`,
+      md: `0px 2px 4px 0px ${vars.ref.color.gray950}, 0px 8px 16px -4px ${vars.ref.color.gray950}`,
+    },
     border: {
       default: `1px solid ${vars.ref.color.gray300}`,
     },
@@ -399,6 +451,14 @@ export const blackThemeThemeClass = createTheme(vars, {
       "1-5": "6px",
     },
     radius: {
+      none: "0px",
+      inner: "4px",
+      element: "8px",
+      container: "12px",
+      page: "28px",
+      full: "9999px",
+    },
+    radiusScale: {
       none: "0px",
       inner: "4px",
       element: "8px",
@@ -505,6 +565,10 @@ export const blackThemeThemeClass = createTheme(vars, {
       sm: `0px 1px 2px 0px ${vars.ref.color.gray950}`,
       md: `0px 2px 4px 0px ${vars.ref.color.gray950}, 0px 8px 16px -4px ${vars.ref.color.gray950}`,
     },
+    elevationScale: {
+      sm: `0px 1px 2px 0px ${vars.ref.color.gray950}`,
+      md: `0px 2px 4px 0px ${vars.ref.color.gray950}, 0px 8px 16px -4px ${vars.ref.color.gray950}`,
+    },
     border: {
       default: `1px solid ${vars.ref.color.gray300}`,
     },
@@ -547,23 +611,3 @@ export const blackThemeThemeClass = createTheme(vars, {
   },
   components: {},
 });
-
-export type RefSpacing = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 8 | 10 | 12 | "0-5" | "1-5";
-
-export const refSpacing = vars.ref.spacing;
-
-export type SystemColorsSecondary = 200;
-
-export const systemColorsSecondary = vars.system.colors.secondary;
-
-export type SystemSpacing = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 8 | 10 | 12 | "0-5" | "1-5";
-
-export const systemSpacing = vars.system.spacing;
-
-export type SystemBorderScale = "thin" | "thick";
-
-export const systemBorderScale = vars.system.borderScale;
-
-export type SystemTransitionScale = "fast" | "slow";
-
-export const systemTransitionScale = vars.system.transitionScale;

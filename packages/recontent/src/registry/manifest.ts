@@ -1,8 +1,11 @@
 import type { RegistryManifest } from "./types.js";
 import type { RegistryComponentDefinition } from "./define.js";
+import { sharedComponent } from "./components/shared/index.js";
+import { boxComponent } from "./components/box/index.js";
 import { stackComponent } from "./components/stack/index.js";
+import { stackItemComponent } from "./components/stack-item/index.js";
 
-const definitions = [stackComponent] as const;
+const definitions = [sharedComponent, boxComponent, stackComponent, stackItemComponent] as const;
 
 export const registryComponents = Object.fromEntries(definitions.map((d) => [d.id, d])) as Record<
   string,
