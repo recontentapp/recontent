@@ -263,22 +263,33 @@ describe("scales, errors, files", () => {
     expect(file!.content).toMatch(/export const refColors = vars\.ref\.colors;/);
   });
 
-  test("other scale types are not exported", () => {
-    const numberScale: Record<string, ReturnType<typeof tokens.number>> = {
-      a: tokens.number(1),
-      b: tokens.number(2),
-    };
-    Object.defineProperties(numberScale, {
-      _kind: { value: "scale", enumerable: false },
-      $type: { value: "number", enumerable: false },
+  test("non-dimension/color scale types are exported too", () => {
+    const ref = defineReferenceTokens({
+      labels: tokens.numberScale({ a: 1, b: 2 }),
     });
-    const ref = defineReferenceTokens({ labels: numberScale as never });
     const config = defineConfig({
       tokens: { ref, system: defineSystemTokens({}), components: {} },
       output: { target: "vanilla-extract", outDir: "dist-test" },
     });
     const [file] = generate(config);
-    expect(file!.content).not.toMatch(/Labels/);
+    expect(file!.content).toMatch(/export type RefLabels = "a" \| "b";/);
+    expect(file!.content).toMatch(/export const refLabels = vars\.ref\.labels;/);
+  });
+
+  test("a transitionScale emits its type/const exports", () => {
+    const ref = defineReferenceTokens({
+      transitions: tokens.transitionScale({
+        fast: { duration: "100ms", timingFunction: [0.4, 0, 0.2, 1] },
+        slow: { duration: "400ms", timingFunction: [0.4, 0, 0.2, 1] },
+      }),
+    });
+    const config = defineConfig({
+      tokens: { ref, system: defineSystemTokens({}), components: {} },
+      output: { target: "vanilla-extract", outDir: "dist-test" },
+    });
+    const [file] = generate(config);
+    expect(file!.content).toMatch(/export type RefTransitions = "fast" \| "slow";/);
+    expect(file!.content).toMatch(/export const refTransitions = vars\.ref\.transitions;/);
   });
 
   test("a scale referenced by many entries is exported once", () => {

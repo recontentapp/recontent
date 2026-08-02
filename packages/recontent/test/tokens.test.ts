@@ -1,5 +1,6 @@
 import { expect, test } from "@jest/globals";
 import type { ShadowLayer } from "@recontentapp/core";
+import { isTokenScale } from "@recontentapp/core";
 import { defineReferenceTokens, tokens } from "../src/index.js";
 
 test("tokens.strokeStyle accepts a keyword", () => {
@@ -134,4 +135,111 @@ test("tokens.typography accepts a stamped token and records its alias", () => {
     fontWeight: "regular",
   });
   expect(token.$value.fontFamily.alias).toEqual(["ref", "fontFamily", "body"]);
+});
+
+test("tokens.borderScale builds a TokenScale with coerced steps", () => {
+  const scale = tokens.borderScale({
+    thin: { color: "#000000", width: "1px" },
+    thick: { color: "#000000", width: "4px" },
+  });
+  expect(isTokenScale(scale)).toBe(true);
+  expect(scale.$type).toBe("border");
+  expect(Object.keys(scale)).toEqual(["thin", "thick"]);
+  expect(scale.thin.$value.style.$value).toEqual({ style: "solid" });
+});
+
+test("tokens.borderScale passes through raw/stamped tokens", () => {
+  const ref = defineReferenceTokens({
+    border: { hairline: tokens.border({ color: "#000000", width: "1px" }) },
+  });
+  const raw = tokens.border({ color: "#111111", width: "2px" });
+  const scale = tokens.borderScale({ hairline: ref.border.hairline, custom: raw });
+  expect(scale.hairline).toBe(ref.border.hairline);
+  expect(scale.custom).toBe(raw);
+});
+
+test("tokens.borderScale still throws from the singular helper on invalid input", () => {
+  expect(() => tokens.borderScale({ bad: { width: "1px" } as never })).toThrow();
+});
+
+test("tokens.cubicBezierScale builds a TokenScale with coerced steps", () => {
+  const scale = tokens.cubicBezierScale({
+    ease: [0.25, 0.1, 0.25, 1],
+    linear: [0, 0, 1, 1],
+  });
+  expect(isTokenScale(scale)).toBe(true);
+  expect(scale.$type).toBe("cubicBezier");
+  expect(Object.keys(scale)).toEqual(["ease", "linear"]);
+  expect(scale.ease.$value).toEqual({ value: [0.25, 0.1, 0.25, 1] });
+});
+
+test("tokens.cubicBezierScale passes through raw/stamped tokens", () => {
+  const ref = defineReferenceTokens({
+    cubicBezier: { ease: tokens.cubicBezier([0.25, 0.1, 0.25, 1]) },
+  });
+  const raw = tokens.cubicBezier([0, 0, 1, 1]);
+  const scale = tokens.cubicBezierScale({ ease: ref.cubicBezier.ease, linear: raw });
+  expect(scale.ease).toBe(ref.cubicBezier.ease);
+  expect(scale.linear).toBe(raw);
+});
+
+test("tokens.gradientScale builds a TokenScale with coerced steps", () => {
+  const scale = tokens.gradientScale({
+    fade: {
+      stops: [
+        { color: "#000000", position: 0 },
+        { color: "#ffffff", position: 1 },
+      ],
+    },
+  });
+  expect(isTokenScale(scale)).toBe(true);
+  expect(scale.$type).toBe("gradient");
+  expect(Object.keys(scale)).toEqual(["fade"]);
+  expect(scale.fade.$value.kind).toBe("linear");
+});
+
+test("tokens.gradientScale passes through raw/stamped tokens", () => {
+  const ref = defineReferenceTokens({
+    gradient: {
+      fade: tokens.gradient({
+        stops: [
+          { color: "#000000", position: 0 },
+          { color: "#ffffff", position: 1 },
+        ],
+      }),
+    },
+  });
+  const scale = tokens.gradientScale({ fade: ref.gradient.fade });
+  expect(scale.fade).toBe(ref.gradient.fade);
+});
+
+test("tokens.gradientScale still throws from the singular helper on invalid input", () => {
+  expect(() =>
+    tokens.gradientScale({ bad: { stops: [{ color: "#000000", position: 0 }] } }),
+  ).toThrow();
+});
+
+test("tokens.transitionScale builds a TokenScale with coerced steps and defaults delay to 0ms", () => {
+  const scale = tokens.transitionScale({
+    fast: { duration: "100ms", timingFunction: [0.4, 0, 0.2, 1] },
+    slow: { duration: "400ms", timingFunction: [0.4, 0, 0.2, 1] },
+  });
+  expect(isTokenScale(scale)).toBe(true);
+  expect(scale.$type).toBe("transition");
+  expect(Object.keys(scale)).toEqual(["fast", "slow"]);
+  expect(scale.fast.$value.delay.$value).toEqual({ value: 0, unit: "ms" });
+});
+
+test("tokens.transitionScale passes through raw/stamped tokens", () => {
+  const ref = defineReferenceTokens({
+    transition: {
+      fast: tokens.transition({ duration: "100ms", timingFunction: [0.4, 0, 0.2, 1] }),
+    },
+  });
+  const scale = tokens.transitionScale({ fast: ref.transition.fast });
+  expect(scale.fast).toBe(ref.transition.fast);
+});
+
+test("tokens.transitionScale still throws from the singular helper on invalid input", () => {
+  expect(() => tokens.transitionScale({ bad: { duration: "100ms" } as never })).toThrow();
 });

@@ -60,9 +60,7 @@ function tokenFactoryForValue(value: unknown): string {
 }
 
 function diagnostic(path: string[], value: unknown, scale: boolean): TokenDiagnostic {
-  const factory = scale
-    ? "tokens.colorScale(...) or tokens.dimensionScale(...)"
-    : tokenFactoryForValue(value);
+  const factory = scale ? "a tokens.*Scale(...) helper" : tokenFactoryForValue(value);
   return {
     path,
     message: `Unknown token value at "${path.join(".")}". Use ${factory} instead of an anonymous value.`,

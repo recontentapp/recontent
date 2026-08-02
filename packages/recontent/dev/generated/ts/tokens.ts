@@ -140,6 +140,10 @@ const themeSystem = {
   border: {
     default: `1px solid ${themeRef.color.gray300}`,
   },
+  borderScale: {
+    thin: `1px solid ${themeRef.color.gray300}`,
+    thick: `2px solid ${themeRef.color.gray300}`,
+  },
   textStyles: {
     body: {
       fontFamily:
@@ -153,6 +157,18 @@ const themeSystem = {
   transitions: {
     standard: {
       transitionDuration: "175ms",
+      transitionDelay: "0ms",
+      transitionTimingFunction: "cubic-bezier(0.24, 1, 0.4, 1)",
+    },
+  },
+  transitionScale: {
+    fast: {
+      transitionDuration: "100ms",
+      transitionDelay: "0ms",
+      transitionTimingFunction: "cubic-bezier(0.24, 1, 0.4, 1)",
+    },
+    slow: {
+      transitionDuration: "400ms",
       transitionDelay: "0ms",
       transitionTimingFunction: "cubic-bezier(0.24, 1, 0.4, 1)",
     },
@@ -308,6 +324,10 @@ const blackThemeSystem = {
   border: {
     default: `1px solid ${blackThemeRef.color.gray300}`,
   },
+  borderScale: {
+    thin: `1px solid ${blackThemeRef.color.gray300}`,
+    thick: `2px solid ${blackThemeRef.color.gray300}`,
+  },
   textStyles: {
     body: {
       fontFamily:
@@ -321,6 +341,18 @@ const blackThemeSystem = {
   transitions: {
     standard: {
       transitionDuration: "175ms",
+      transitionDelay: "0ms",
+      transitionTimingFunction: "cubic-bezier(0.24, 1, 0.4, 1)",
+    },
+  },
+  transitionScale: {
+    fast: {
+      transitionDuration: "100ms",
+      transitionDelay: "0ms",
+      transitionTimingFunction: "cubic-bezier(0.24, 1, 0.4, 1)",
+    },
+    slow: {
+      transitionDuration: "400ms",
       transitionDelay: "0ms",
       transitionTimingFunction: "cubic-bezier(0.24, 1, 0.4, 1)",
     },
@@ -349,6 +381,14 @@ export const systemColorsSecondary = theme.system.colors.secondary;
 export type SystemSpacing = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 8 | 10 | 12 | "0-5" | "1-5";
 
 export const systemSpacing = theme.system.spacing;
+
+export type SystemBorderScale = "thin" | "thick";
+
+export const systemBorderScale = theme.system.borderScale;
+
+export type SystemTransitionScale = "fast" | "slow";
+
+export const systemTransitionScale = theme.system.transitionScale;
 
 export const themes = { theme, blackTheme } as const;
 export type ThemeName = keyof typeof themes;

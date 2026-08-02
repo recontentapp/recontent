@@ -159,6 +159,18 @@ const themeSystem = {
       borderStyle: "solid",
     },
   },
+  borderScale: {
+    thin: {
+      borderColor: themeRef.color.gray300,
+      borderWidth: 1,
+      borderStyle: "solid",
+    },
+    thick: {
+      borderColor: themeRef.color.gray300,
+      borderWidth: 2,
+      borderStyle: "solid",
+    },
+  },
   textStyles: {
     body: {
       fontFamily: "-apple-system",
@@ -171,6 +183,18 @@ const themeSystem = {
   transitions: {
     standard: {
       duration: 175,
+      delay: 0,
+      timingFunction: [0.24, 1, 0.4, 1],
+    },
+  },
+  transitionScale: {
+    fast: {
+      duration: 100,
+      delay: 0,
+      timingFunction: [0.24, 1, 0.4, 1],
+    },
+    slow: {
+      duration: 400,
       delay: 0,
       timingFunction: [0.24, 1, 0.4, 1],
     },
@@ -352,6 +376,18 @@ const blackThemeSystem = {
       borderStyle: "solid",
     },
   },
+  borderScale: {
+    thin: {
+      borderColor: blackThemeRef.color.gray300,
+      borderWidth: 1,
+      borderStyle: "solid",
+    },
+    thick: {
+      borderColor: blackThemeRef.color.gray300,
+      borderWidth: 2,
+      borderStyle: "solid",
+    },
+  },
   textStyles: {
     body: {
       fontFamily: "-apple-system",
@@ -364,6 +400,18 @@ const blackThemeSystem = {
   transitions: {
     standard: {
       duration: 175,
+      delay: 0,
+      timingFunction: [0.24, 1, 0.4, 1],
+    },
+  },
+  transitionScale: {
+    fast: {
+      duration: 100,
+      delay: 0,
+      timingFunction: [0.24, 1, 0.4, 1],
+    },
+    slow: {
+      duration: 400,
       delay: 0,
       timingFunction: [0.24, 1, 0.4, 1],
     },

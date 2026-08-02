@@ -129,6 +129,8 @@
   --system-elevation-md:
     0px 2px 4px 0px var(--ref-color-gray950), 0px 8px 16px -4px var(--ref-color-gray950);
   --system-border-default: 1px solid var(--ref-color-gray300);
+  --system-borderScale-thin: 1px solid var(--ref-color-gray300);
+  --system-borderScale-thick: 2px solid var(--ref-color-gray300);
   --system-textStyles-body-font-family:
     -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
   --system-textStyles-body-font-size: var(--ref-fontSize-base);
@@ -138,6 +140,12 @@
   --system-transitions-standard-transition-duration: 175ms;
   --system-transitions-standard-transition-delay: 0ms;
   --system-transitions-standard-transition-timing-function: cubic-bezier(0.24, 1, 0.4, 1);
+  --system-transitionScale-fast-transition-duration: 100ms;
+  --system-transitionScale-fast-transition-delay: 0ms;
+  --system-transitionScale-fast-transition-timing-function: cubic-bezier(0.24, 1, 0.4, 1);
+  --system-transitionScale-slow-transition-duration: 400ms;
+  --system-transitionScale-slow-transition-delay: 0ms;
+  --system-transitionScale-slow-transition-timing-function: cubic-bezier(0.24, 1, 0.4, 1);
   --system-gradients-accent: linear-gradient(
     135deg,
     var(--ref-color-blue600) 0%,

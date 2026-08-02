@@ -484,16 +484,58 @@ function durationScale<Key extends string | number>(
   return createScale("duration", result);
 }
 
-function fontWeightScale<Key extends string | number>(
-  scale: Record<Key, number | FontWeightName | RawToken<"fontWeight"> | StampedToken<"fontWeight">>,
-): TokenScale<Key, "fontWeight", RawToken<"fontWeight"> | StampedToken<"fontWeight">> {
-  const result = {} as Record<Key, RawToken<"fontWeight"> | StampedToken<"fontWeight">>;
+function borderScale<Key extends string | number>(
+  scale: Record<Key, BorderInput | RawToken<"border"> | StampedToken<"border">>,
+): TokenScale<Key, "border", RawToken<"border"> | StampedToken<"border">> {
+  const result = {} as Record<Key, RawToken<"border"> | StampedToken<"border">>;
   for (const [step, input] of Object.entries(scale) as Array<
-    [string, number | FontWeightName | RawToken<"fontWeight"> | StampedToken<"fontWeight">]
+    [string, BorderInput | RawToken<"border"> | StampedToken<"border">]
   >) {
-    result[step as Key] = isTokenLeaf(input) ? input : fontWeight(input);
+    result[step as Key] = isTokenLeaf(input) ? input : border(input);
   }
-  return createScale("fontWeight", result);
+  return createScale("border", result);
+}
+
+function cubicBezierScale<Key extends string | number>(
+  scale: Record<
+    Key,
+    [number, number, number, number] | RawToken<"cubicBezier"> | StampedToken<"cubicBezier">
+  >,
+): TokenScale<Key, "cubicBezier", RawToken<"cubicBezier"> | StampedToken<"cubicBezier">> {
+  const result = {} as Record<Key, RawToken<"cubicBezier"> | StampedToken<"cubicBezier">>;
+  for (const [step, input] of Object.entries(scale) as Array<
+    [
+      string,
+      [number, number, number, number] | RawToken<"cubicBezier"> | StampedToken<"cubicBezier">,
+    ]
+  >) {
+    result[step as Key] = isTokenLeaf(input) ? input : cubicBezier(input);
+  }
+  return createScale("cubicBezier", result);
+}
+
+function gradientScale<Key extends string | number>(
+  scale: Record<Key, GradientInput | RawToken<"gradient"> | StampedToken<"gradient">>,
+): TokenScale<Key, "gradient", RawToken<"gradient"> | StampedToken<"gradient">> {
+  const result = {} as Record<Key, RawToken<"gradient"> | StampedToken<"gradient">>;
+  for (const [step, input] of Object.entries(scale) as Array<
+    [string, GradientInput | RawToken<"gradient"> | StampedToken<"gradient">]
+  >) {
+    result[step as Key] = isTokenLeaf(input) ? input : gradient(input);
+  }
+  return createScale("gradient", result);
+}
+
+function transitionScale<Key extends string | number>(
+  scale: Record<Key, TransitionInput | RawToken<"transition"> | StampedToken<"transition">>,
+): TokenScale<Key, "transition", RawToken<"transition"> | StampedToken<"transition">> {
+  const result = {} as Record<Key, RawToken<"transition"> | StampedToken<"transition">>;
+  for (const [step, input] of Object.entries(scale) as Array<
+    [string, TransitionInput | RawToken<"transition"> | StampedToken<"transition">]
+  >) {
+    result[step as Key] = isTokenLeaf(input) ? input : transition(input);
+  }
+  return createScale("transition", result);
 }
 
 function shadowScale<Key extends string | number>(
@@ -535,8 +577,11 @@ export const tokens = {
   dimensionScale,
   numberScale,
   durationScale,
-  fontWeightScale,
+  borderScale,
+  cubicBezierScale,
+  gradientScale,
   shadowScale,
+  transitionScale,
   typographyScale,
   strokeStyle,
   shadow,

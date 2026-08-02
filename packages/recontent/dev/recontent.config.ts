@@ -145,6 +145,10 @@ const system = defineSystemTokens({
       width: "1px",
     }),
   },
+  borderScale: tokens.borderScale({
+    thin: { color: ref.color.gray300, width: "1px" },
+    thick: { color: ref.color.gray300, width: "2px" },
+  }),
   textStyles: {
     body: tokens.typography({
       fontFamily:
@@ -160,6 +164,10 @@ const system = defineSystemTokens({
       timingFunction: [0.24, 1, 0.4, 1],
     }),
   },
+  transitionScale: tokens.transitionScale({
+    fast: { duration: "100ms", timingFunction: [0.24, 1, 0.4, 1] },
+    slow: { duration: "400ms", timingFunction: [0.24, 1, 0.4, 1] },
+  }),
   gradients: {
     accent: tokens.gradient({
       angle: "135deg",

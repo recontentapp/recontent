@@ -139,7 +139,7 @@ export function scaleExportNames(scale: TokenScaleMetadata): {
 export function scaleExportsForConfig(config: Config): ScaleExport[] {
   const scales = new Map<string, TokenScaleMetadata>();
   for (const entry of config.registry.values()) {
-    if (entry.scale && (entry.scale.type === "color" || entry.scale.type === "dimension")) {
+    if (entry.scale) {
       scales.set(`${entry.scale.layer}:${pathKey(entry.scale.path)}`, entry.scale);
     }
   }

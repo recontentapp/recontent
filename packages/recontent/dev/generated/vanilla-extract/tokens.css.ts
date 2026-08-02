@@ -141,6 +141,10 @@ export const vars = createThemeContract({
     border: {
       default: null,
     },
+    borderScale: {
+      thin: null,
+      thick: null,
+    },
     textStyles: {
       body: {
         fontFamily: null,
@@ -152,6 +156,18 @@ export const vars = createThemeContract({
     },
     transitions: {
       standard: {
+        transitionDuration: null,
+        transitionDelay: null,
+        transitionTimingFunction: null,
+      },
+    },
+    transitionScale: {
+      fast: {
+        transitionDuration: null,
+        transitionDelay: null,
+        transitionTimingFunction: null,
+      },
+      slow: {
         transitionDuration: null,
         transitionDelay: null,
         transitionTimingFunction: null,
@@ -310,6 +326,10 @@ export const themeClass = createTheme(vars, {
     border: {
       default: `1px solid ${vars.ref.color.gray300}`,
     },
+    borderScale: {
+      thin: `1px solid ${vars.ref.color.gray300}`,
+      thick: `2px solid ${vars.ref.color.gray300}`,
+    },
     textStyles: {
       body: {
         fontFamily:
@@ -323,6 +343,18 @@ export const themeClass = createTheme(vars, {
     transitions: {
       standard: {
         transitionDuration: "175ms",
+        transitionDelay: "0ms",
+        transitionTimingFunction: "cubic-bezier(0.24, 1, 0.4, 1)",
+      },
+    },
+    transitionScale: {
+      fast: {
+        transitionDuration: "100ms",
+        transitionDelay: "0ms",
+        transitionTimingFunction: "cubic-bezier(0.24, 1, 0.4, 1)",
+      },
+      slow: {
+        transitionDuration: "400ms",
         transitionDelay: "0ms",
         transitionTimingFunction: "cubic-bezier(0.24, 1, 0.4, 1)",
       },
@@ -476,6 +508,10 @@ export const blackThemeThemeClass = createTheme(vars, {
     border: {
       default: `1px solid ${vars.ref.color.gray300}`,
     },
+    borderScale: {
+      thin: `1px solid ${vars.ref.color.gray300}`,
+      thick: `2px solid ${vars.ref.color.gray300}`,
+    },
     textStyles: {
       body: {
         fontFamily:
@@ -489,6 +525,18 @@ export const blackThemeThemeClass = createTheme(vars, {
     transitions: {
       standard: {
         transitionDuration: "175ms",
+        transitionDelay: "0ms",
+        transitionTimingFunction: "cubic-bezier(0.24, 1, 0.4, 1)",
+      },
+    },
+    transitionScale: {
+      fast: {
+        transitionDuration: "100ms",
+        transitionDelay: "0ms",
+        transitionTimingFunction: "cubic-bezier(0.24, 1, 0.4, 1)",
+      },
+      slow: {
+        transitionDuration: "400ms",
         transitionDelay: "0ms",
         transitionTimingFunction: "cubic-bezier(0.24, 1, 0.4, 1)",
       },
@@ -511,3 +559,11 @@ export const systemColorsSecondary = vars.system.colors.secondary;
 export type SystemSpacing = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 8 | 10 | 12 | "0-5" | "1-5";
 
 export const systemSpacing = vars.system.spacing;
+
+export type SystemBorderScale = "thin" | "thick";
+
+export const systemBorderScale = vars.system.borderScale;
+
+export type SystemTransitionScale = "fast" | "slow";
+
+export const systemTransitionScale = vars.system.transitionScale;
