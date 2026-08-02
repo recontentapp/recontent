@@ -196,6 +196,14 @@ export default defineConfig({
       outDir: "dev/css",
     },
     {
+      target: "typescript",
+      outDir: "dev/ts",
+    },
+    {
+      target: "typescript-native",
+      outDir: "dev/native",
+    },
+    {
       target: "vanilla-extract",
       outDir: "dev/components",
       builtInComponents: {

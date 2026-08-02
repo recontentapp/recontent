@@ -1,9 +1,28 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { expect, test } from "@jest/globals";
-import { resolveDependencyDiagnostics } from "../src/resolve/check-dependencies.js";
+import {
+  computeRequiredDependencies,
+  resolveDependencyDiagnostics,
+} from "../src/resolve/check-dependencies.js";
+import { defineConfig, defineReferenceTokens, defineSystemTokens } from "../src/index.js";
 
 const configDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+
+test("a config whose only outputs are the typescript targets requires no dependencies", () => {
+  const config = defineConfig({
+    tokens: {
+      ref: defineReferenceTokens({}),
+      system: defineSystemTokens({}),
+      components: {},
+    },
+    output: [
+      { target: "typescript", outDir: "dist-test-ts" },
+      { target: "typescript-native", outDir: "dist-test-native" },
+    ],
+  });
+  expect(computeRequiredDependencies(config)).toEqual({});
+});
 
 test("resolveDependencyDiagnostics is empty when the installed version satisfies the range", () => {
   const diagnostics = resolveDependencyDiagnostics(configDir, {

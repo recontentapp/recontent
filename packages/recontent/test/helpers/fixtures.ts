@@ -1,4 +1,4 @@
-import type { Config, ThemeOverride } from "@recontentapp/core";
+import type { Config, Output, ThemeOverride } from "@recontentapp/core";
 import ts from "typescript";
 import {
   defineComponentTokens,
@@ -8,6 +8,8 @@ import {
   defineTheme,
   tokens,
 } from "../../src/index.js";
+
+const VE: Output = { target: "vanilla-extract", outDir: "dist-test" };
 
 /**
  * Parses generated vanilla-extract source with the TS parser and asserts it
@@ -25,18 +27,77 @@ export function assertParses(source: string): void {
   }
 }
 
+const libCache = new Map<string, ts.SourceFile>();
+
+const TYPECHECK_COMPILER_OPTIONS: ts.CompilerOptions = {
+  strict: true,
+  noEmit: true,
+  target: ts.ScriptTarget.ESNext,
+  module: ts.ModuleKind.ESNext,
+  moduleResolution: ts.ModuleResolutionKind.Bundler,
+  skipLibCheck: true,
+};
+
+/**
+ * Typechecks generated source in-memory (no disk I/O, no module resolution -
+ * generated files are import-free). Catches use-before-declaration
+ * (TS2448/2454) and duplicate-identifier (TS2300) bugs in the alias-ordering
+ * algorithm that assertParses (syntax-only) cannot see.
+ */
+export function assertTypechecks(source: string, fileName = "tokens.ts"): void {
+  const sourceFile = ts.createSourceFile(fileName, source, ts.ScriptTarget.ESNext, true);
+
+  const host: ts.CompilerHost = {
+    getSourceFile(name, languageVersion) {
+      if (name === fileName) return sourceFile;
+      const cached = libCache.get(name);
+      if (cached) return cached;
+      const text = ts.sys.readFile(name);
+      if (text === undefined) return undefined;
+      const lib = ts.createSourceFile(name, text, languageVersion, true);
+      libCache.set(name, lib);
+      return lib;
+    },
+    getDefaultLibFileName: (options) => ts.getDefaultLibFilePath(options),
+    writeFile: () => {},
+    getCurrentDirectory: () => "/",
+    getCanonicalFileName: (name) => name,
+    useCaseSensitiveFileNames: () => true,
+    getNewLine: () => "\n",
+    fileExists: (name) => name === fileName || ts.sys.fileExists(name),
+    readFile: (name) => (name === fileName ? source : ts.sys.readFile(name)),
+    directoryExists: (name) => ts.sys.directoryExists(name),
+    getDirectories: (name) => ts.sys.getDirectories(name),
+  };
+
+  const program = ts.createProgram([fileName], TYPECHECK_COMPILER_OPTIONS, host);
+  const diagnostics = [
+    ...program.getSyntacticDiagnostics(sourceFile),
+    ...program.getSemanticDiagnostics(sourceFile),
+  ];
+
+  if (diagnostics.length > 0) {
+    const formatted = ts.formatDiagnosticsWithColorAndContext(diagnostics, {
+      getCurrentDirectory: () => "/",
+      getCanonicalFileName: (name) => name,
+      getNewLine: () => "\n",
+    });
+    throw new Error(`Generated source failed to typecheck:\n${formatted}\n\n${source}`);
+  }
+}
+
 /**
  * A 3-hop alias chain: component -> system -> ref, all resolving to the same
  * color. Exercises reference preservation across every layer.
  */
-export function aliasChainConfig(): Config {
+export function aliasChainConfig(output: Output = VE): Config {
   const ref = defineReferenceTokens({ color: { black: tokens.color("#000000") } });
   const system = defineSystemTokens({ colors: { accent: ref.color.black } });
   const components = defineComponentTokens({ button: { background: system.colors.accent } });
 
   return defineConfig({
     tokens: { ref, system, components },
-    output: { target: "vanilla-extract", outDir: "dist-test" },
+    output,
   });
 }
 
@@ -44,7 +105,7 @@ export function aliasChainConfig(): Config {
  * One token of each of the 5 composite types (shadow, border, transition,
  * gradient, typography), each aliasing a ref color/fontFamily where relevant.
  */
-export function compositeConfig(): Config {
+export function compositeConfig(output: Output = VE): Config {
   const ref = defineReferenceTokens({
     color: { black: tokens.color("#000000") },
     fontFamily: { body: tokens.fontFamily("Arial") },
@@ -84,7 +145,7 @@ export function compositeConfig(): Config {
 
   return defineConfig({
     tokens: { ref, system, components: {} },
-    output: { target: "vanilla-extract", outDir: "dist-test" },
+    output,
   });
 }
 
@@ -92,7 +153,7 @@ export function compositeConfig(): Config {
  * A dimensionScale with a non-identifier key ("0-5") and a colorScale with a
  * numeric key (200), both at the ref layer.
  */
-export function scaleConfig(): Config {
+export function scaleConfig(output: Output = VE): Config {
   const ref = defineReferenceTokens({
     spacing: tokens.dimensionScale({ 0: "0px", "0-5": "2px", 1: "4px" }),
     colors: tokens.colorScale({ 100: "#111111", 200: "#222222" }),
@@ -100,7 +161,7 @@ export function scaleConfig(): Config {
 
   return defineConfig({
     tokens: { ref, system: defineSystemTokens({}), components: {} },
-    output: { target: "vanilla-extract", outDir: "dist-test" },
+    output,
   });
 }
 
@@ -108,7 +169,10 @@ export function scaleConfig(): Config {
  * The same 3-hop alias chain as aliasChainConfig(), plus a "dark" theme
  * overriding the requested layer's token in the chain.
  */
-export function themedConfig(options: { layer: "ref" | "system" | "components" }): Config {
+export function themedConfig(options: {
+  layer: "ref" | "system" | "components";
+  output?: Output;
+}): Config {
   const ref = defineReferenceTokens({ color: { black: tokens.color("#000000") } });
   const system = defineSystemTokens({ colors: { accent: ref.color.black } });
   const components = defineComponentTokens({ button: { background: system.colors.accent } });
@@ -125,6 +189,6 @@ export function themedConfig(options: { layer: "ref" | "system" | "components" }
   return defineConfig({
     tokens: { ref, system, components },
     themes: { dark },
-    output: { target: "vanilla-extract", outDir: "dist-test" },
+    output: options.output ?? VE,
   });
 }

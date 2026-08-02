@@ -2,6 +2,8 @@ import type { Config, Output, OutputFile, OutputTarget } from "@recontentapp/cor
 import { createLogger } from "../core/logger.js";
 import { cssOutputProcessor } from "./css.js";
 import { vanillaExtractOutputProcessor } from "./vanilla-extract.js";
+import { typescriptOutputProcessor } from "./typescript.js";
+import { typescriptNativeOutputProcessor } from "./typescript-native.js";
 
 /**
  * A scale from any token layer. `never` deliberately avoids an index signature:
@@ -39,6 +41,8 @@ export type {
   Output,
   OutputFile,
   OutputTarget,
+  TypeScriptNativeOutput,
+  TypeScriptOutput,
   VanillaExtractOutput,
 } from "@recontentapp/core";
 
@@ -50,6 +54,8 @@ export interface OutputProcessor<T extends Output = Output> {
 const outputProcessors: Record<OutputTarget, OutputProcessor> = {
   css: cssOutputProcessor,
   "vanilla-extract": vanillaExtractOutputProcessor,
+  typescript: typescriptOutputProcessor,
+  "typescript-native": typescriptNativeOutputProcessor,
 };
 
 export function getOutputProcessor(target: OutputTarget): OutputProcessor {

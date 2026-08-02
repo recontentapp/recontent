@@ -394,7 +394,7 @@ export type BuiltInComponentOptions = {
   [componentName: string]: Record<string, unknown> | undefined;
 };
 
-export type OutputTarget = "css" | "vanilla-extract";
+export type OutputTarget = "css" | "vanilla-extract" | "typescript" | "typescript-native";
 export interface CssOutput {
   target: "css";
   outDir: string;
@@ -404,7 +404,16 @@ export interface VanillaExtractOutput {
   outDir: string;
   builtInComponents?: BuiltInComponentOptions | readonly string[];
 }
-export type Output = CssOutput | VanillaExtractOutput;
+export interface TypeScriptOutput {
+  target: "typescript";
+  outDir: string;
+}
+export interface TypeScriptNativeOutput {
+  target: "typescript-native";
+  outDir: string;
+  rootFontSize?: number;
+}
+export type Output = CssOutput | VanillaExtractOutput | TypeScriptOutput | TypeScriptNativeOutput;
 export type OutputFile = { filename: string; content: string };
 
 export type PropValueKind =

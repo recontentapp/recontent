@@ -2,9 +2,28 @@ import { describe, expect, test } from "@jest/globals";
 import { defineReferenceTokens, tokens } from "../src/index.js";
 import {
   entryToDtcgNode,
+  serializeColorCss,
   serializeValueCss,
   serializeValueDtcg,
 } from "../src/core/generators/serialize.js";
+
+test("serializeColorCss keeps a bare 6-digit hex for opaque sRGB colors", () => {
+  expect(serializeColorCss(tokens.color("#0064e0").$value)).toBe("#0064e0");
+});
+
+test("serializeColorCss appends a 2-digit alpha suffix for translucent sRGB colors", () => {
+  expect(serializeColorCss(tokens.color("#0171e333").$value)).toBe("#0171e333");
+  expect(serializeColorCss(tokens.color("#00000000").$value)).toBe("#00000000");
+});
+
+test("serializeColorCss keeps the color(...) / alpha form for non-sRGB colors", () => {
+  const translucent = tokens.color({
+    colorSpace: "display-p3",
+    components: [1, 0, 0],
+    alpha: 0.5,
+  }).$value;
+  expect(serializeColorCss(translucent)).toBe("color(display-p3 1 0 0 / 0.5)");
+});
 
 test("serializeValueDtcg emits the 2025.10 dimension shape", () => {
   expect(serializeValueDtcg("dimension", tokens.dimension("16px").$value)).toEqual({

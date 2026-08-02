@@ -43,6 +43,12 @@ export function serializeColorDtcg(value: TokenTypeMap["color"]): TokenTypeMap["
 
 export function serializeColorCss(value: TokenTypeMap["color"]): string {
   if (value.colorSpace === "srgb") {
+    if (value.alpha < 1) {
+      const alphaByteHex = Math.round(value.alpha * 255)
+        .toString(16)
+        .padStart(2, "0");
+      return `${value.hex}${alphaByteHex}`;
+    }
     return value.hex;
   }
   const [r, g, b] = value.components;

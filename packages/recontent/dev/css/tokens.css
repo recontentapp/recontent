@@ -11,8 +11,8 @@
   --ref-color-success: #0d8626;
   --ref-color-warning: #e9af08;
   --ref-color-error: #e3193b;
-  --ref-color-blueMuted: #0171e3;
-  --ref-color-purpleMuted: #7952ff;
+  --ref-color-blueMuted: #0171e333;
+  --ref-color-purpleMuted: #7952ff33;
   --ref-spacing-0: 0px;
   --ref-spacing-1: 4px;
   --ref-spacing-2: 8px;
@@ -49,7 +49,7 @@
   --system-colors-textPrimary: #dfe2e5;
   --system-colors-textSecondary: #aaafb5;
   --system-colors-textDisabled: #6f747c;
-  --system-colors-border: #f2f4f6;
+  --system-colors-border: #f2f4f619;
   --system-colors-borderEmphasized: #494d53;
   --system-colors-skeleton: #5a5e66;
   --system-colors-secondary-200: #2694fe;
