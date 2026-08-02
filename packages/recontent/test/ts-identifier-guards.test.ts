@@ -5,6 +5,7 @@ import {
   defineSystemTokens,
   defineTheme,
   tokens,
+  type OutputInput,
 } from "../src/index.js";
 import { typescriptOutputProcessor } from "../src/outputs/typescript.js";
 import { typescriptNativeOutputProcessor } from "../src/outputs/typescript-native.js";
@@ -16,7 +17,7 @@ import type {
   VanillaExtractOutput,
 } from "@recontentapp/core";
 
-function configWithTheme(themeName: string, output: Config["output"][number]): Config {
+function configWithTheme(themeName: string, output: OutputInput): Config {
   const ref = defineReferenceTokens({ color: { black: tokens.color("#000000") } });
   const theme = defineTheme(ref, { color: { black: tokens.color("#111111") } });
   return defineConfig({
@@ -87,12 +88,12 @@ describe("vanilla-extract is unaffected by the new guards", () => {
   const VE: VanillaExtractOutput = { target: "vanilla-extract", outDir: "dist-test" };
 
   test('a theme named "dark-mode" does not throw for vanilla-extract', () => {
-    const config = configWithTheme("dark-mode", VE);
+    const config = configWithTheme("dark-mode", VE as OutputInput);
     expect(() => vanillaExtractOutputProcessor.generate(config, VE)).not.toThrow();
   });
 
   test('a theme named "theme" does not throw for vanilla-extract', () => {
-    const config = configWithTheme("theme", VE);
+    const config = configWithTheme("theme", VE as OutputInput);
     expect(() => vanillaExtractOutputProcessor.generate(config, VE)).not.toThrow();
   });
 });

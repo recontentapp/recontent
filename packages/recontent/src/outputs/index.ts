@@ -5,17 +5,6 @@ import { vanillaExtractOutputProcessor } from "./vanilla-extract.js";
 import { typescriptOutputProcessor } from "./typescript.js";
 import { typescriptNativeOutputProcessor } from "./typescript-native.js";
 
-/**
- * A scale from any token layer. `never` deliberately avoids an index signature:
- * a scale's `_kind` and other metadata would otherwise be required to satisfy
- * the token-leaf value type for arbitrary string keys.
- */
-export type {
-  BuiltInComponentOptions,
-  ScaleBinding,
-  TokenBinding,
-} from "../registry/built-in-components.js";
-
 export type {
   CssOutput,
   Output,

@@ -1,3 +1,6 @@
+import type { OutputFile, TokenType } from "@recontentapp/core";
+import type { RegistryComponentDefinition } from "./define.js";
+
 export type RegistryOutputTarget = "vanilla-extract";
 
 export type ScaleImport = {
@@ -14,30 +17,10 @@ export type ComponentSourceFiles = {
   component: string;
 };
 
-export type ComponentSourceGenerator = (bindings: {
-  scales: Record<string, ScaleImport>;
-  tokens: Record<string, TokenImport>;
-}) => ComponentSourceFiles;
-
-export type RegistryTokenType =
-  | "color"
-  | "dimension"
-  | "fontFamily"
-  | "fontWeight"
-  | "duration"
-  | "cubicBezier"
-  | "number"
-  | "strokeStyle"
-  | "shadow"
-  | "border"
-  | "transition"
-  | "gradient"
-  | "typography";
-
 export type TokenContract = {
   kind: "token";
   key: string;
-  type: RegistryTokenType;
+  type: TokenType;
   required?: boolean;
   description?: string;
 };
@@ -45,7 +28,7 @@ export type TokenContract = {
 export type ScaleContract = {
   kind: "scale";
   key: string;
-  type: RegistryTokenType;
+  type: TokenType;
   required?: boolean;
   description?: string;
 };
@@ -60,21 +43,12 @@ export type VariantContract = {
 
 export type ComponentContract = TokenContract | ScaleContract | VariantContract;
 
-export type OutputArtifact = {
-  path: string;
-};
-
 export type ComponentOutput = {
-  artifacts: OutputArtifact[];
   runtimeDependencies: Record<string, string>;
-};
-
-export type RegistryComponentDefinition = {
-  id: string;
-  name: string;
-  contracts: readonly ComponentContract[];
-  dependencies: readonly string[];
-  outputs: Partial<Record<RegistryOutputTarget, ComponentOutput>>;
+  generate(bindings: {
+    scales: Record<string, ScaleImport>;
+    tokens: Record<string, TokenImport>;
+  }): OutputFile[];
 };
 
 export type RegistryManifest = {

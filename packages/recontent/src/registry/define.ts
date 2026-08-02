@@ -1,42 +1,32 @@
-import type { StampedToken, TokenScale, TokenType } from "@recontentapp/core";
+import type { ScaleBinding, TokenBinding, TokenType } from "@recontentapp/core";
 import type {
   ComponentContract,
-  RegistryTokenType,
+  ComponentOutput,
+  RegistryOutputTarget,
   ScaleContract,
   TokenContract,
   VariantContract,
 } from "./types.js";
 
-export type ScaleBinding<T extends TokenType = TokenType> = TokenScale<never, T, StampedToken<T>>;
-
-export type TokenBinding<T extends TokenType = TokenType> = StampedToken<T>;
-
-export type StackComponentOptions = {
-  backgroundColor: TokenBinding<"color">;
-  gapScale: ScaleBinding<"dimension">;
-};
-
-export type BuiltInComponentOptions = {
-  Stack?: StackComponentOptions;
-  [key: string]: Record<string, unknown> | undefined;
-};
-
-type TokenSchema<T extends RegistryTokenType> = {
+type TokenSchema<T extends TokenType> = {
   kind: "token";
   type: T;
   description?: string;
+  required?: boolean;
 };
 
-type ScaleSchema<T extends RegistryTokenType> = {
+type ScaleSchema<T extends TokenType> = {
   kind: "scale";
   type: T;
   description?: string;
+  required?: boolean;
 };
 
 type VariantSchema<Fields> = {
   kind: "variants";
   fields: Fields;
   description?: string;
+  required?: boolean;
 };
 
 type BindingSchema<Value> =
@@ -52,29 +42,27 @@ type ComponentSchema<Options> = {
   [Key in keyof Options]-?: BindingSchema<Options[Key]>;
 };
 
-function defineComponentSchema<Options>() {
-  return <const Schema extends ComponentSchema<Options>>(schema: Schema) => schema;
-}
-
 function schemaContracts(
   schema: Record<
     string,
-    | TokenSchema<RegistryTokenType>
-    | ScaleSchema<RegistryTokenType>
-    | VariantSchema<Record<string, TokenSchema<RegistryTokenType>>>
+    | TokenSchema<TokenType>
+    | ScaleSchema<TokenType>
+    | VariantSchema<Record<string, TokenSchema<TokenType>>>
   >,
 ): readonly ComponentContract[] {
   return Object.entries(schema).map(([key, entry]) => {
+    const required = entry.required ?? true;
+
     if (entry.kind === "variants") {
       return {
         kind: "variants",
         key,
-        required: true,
+        required,
         fields: Object.entries(entry.fields).map(([fieldKey, field]) => ({
           kind: "token",
           key: fieldKey,
           type: field.type,
-          required: true,
+          required: field.required ?? true,
           description: field.description,
         })) as TokenContract[],
         description: entry.description,
@@ -85,21 +73,36 @@ function schemaContracts(
       kind: entry.kind,
       key,
       type: entry.type,
-      required: true,
+      required,
       description: entry.description,
     } satisfies TokenContract | ScaleContract;
   });
 }
 
-const stackSchema = defineComponentSchema<StackComponentOptions>()({
-  backgroundColor: { kind: "token", type: "color" },
-  gapScale: {
-    kind: "scale",
-    type: "dimension",
-    description: "Scale used by the Stack gap prop.",
-  },
-});
+export type RegistryComponentDefinition<Options = Record<string, unknown>> = {
+  id: string;
+  name: string;
+  contracts: readonly ComponentContract[];
+  dependencies: readonly string[];
+  outputs: Partial<Record<RegistryOutputTarget, ComponentOutput>>;
+  /** Phantom, never set at runtime — carries Options for BuiltInComponentOptions. */
+  readonly __options?: Options;
+};
 
-export const builtInComponentContracts = {
-  stack: schemaContracts(stackSchema),
-} as const satisfies Record<string, readonly ComponentContract[]>;
+export function defineRegistryComponent<Options>() {
+  return <
+    const S extends ComponentSchema<Options>,
+    const Id extends string,
+    const Name extends string,
+  >(input: {
+    id: Id;
+    name: Name;
+    schema: S;
+    dependencies?: readonly string[];
+    outputs: Partial<Record<RegistryOutputTarget, ComponentOutput>>;
+  }): RegistryComponentDefinition<Options> & { id: Id; name: Name } => ({
+    ...input,
+    dependencies: input.dependencies ?? [],
+    contracts: schemaContracts(input.schema),
+  });
+}

@@ -270,14 +270,10 @@ export type IntrospectionResult = {
 
 export type ScaleBinding<T extends TokenType = TokenType> = TokenScale<never, T, StampedToken<T>>;
 export type TokenBinding<T extends TokenType = TokenType> = StampedToken<T>;
-export type StackComponentOptions = {
-  backgroundColor: TokenBinding<"color">;
-  gapScale: ScaleBinding<"dimension">;
-};
-export type BuiltInComponentOptions = {
-  Stack?: StackComponentOptions;
-  [key: string]: Record<string, unknown> | undefined;
-};
+
+export type BuiltInComponentsInput =
+  | Record<string, Record<string, unknown> | undefined>
+  | readonly string[];
 
 export type OutputTarget = "css" | "vanilla-extract" | "typescript" | "typescript-native";
 export interface CssOutput {
@@ -287,7 +283,7 @@ export interface CssOutput {
 export interface VanillaExtractOutput {
   target: "vanilla-extract";
   outDir: string;
-  builtInComponents?: BuiltInComponentOptions | readonly string[];
+  builtInComponents?: BuiltInComponentsInput;
 }
 export interface TypeScriptOutput {
   target: "typescript";

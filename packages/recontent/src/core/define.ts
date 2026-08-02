@@ -18,10 +18,12 @@ import type {
   TokenScaleMetadata,
   TokenScale,
   TokenType,
+  VanillaExtractOutput,
 } from "@recontentapp/core";
 import { diagnoseTokenTrees } from "./diagnostics.js";
 import { isRawToken, isStampedToken, isTokenLeaf, isTokenScale, pathKey } from "@recontentapp/core";
 import { withStampedTokenMethods, type ChainableMethods } from "./metadata.js";
+import type { BuiltInComponentOptions, RegistryComponentName } from "../registry/manifest.js";
 type TokenTree = Record<string, unknown>;
 
 type StampTree<T, Layer extends TokenLayer> =
@@ -201,6 +203,12 @@ export function defineComponentTokens<T extends TokenTree>(input: T): StampTree<
   return walkAndStamp(input, [], "components") as StampTree<T, "components">;
 }
 
+type VanillaExtractOutputInput = Omit<VanillaExtractOutput, "builtInComponents"> & {
+  builtInComponents?: BuiltInComponentOptions | readonly RegistryComponentName[];
+};
+
+export type OutputInput = Exclude<Output, VanillaExtractOutput> | VanillaExtractOutputInput;
+
 export type DefineConfigInput = {
   tokens?: {
     ref: TokenTree;
@@ -208,18 +216,19 @@ export type DefineConfigInput = {
     components: TokenTree;
   };
   themes?: Record<string, ThemeOverride>;
-  output?: Output | Output[];
+  output?: OutputInput | OutputInput[];
   logLevel?: LogLevel;
   resolve?: ResolveConfigInput;
   observability?: ObservabilityConfigInput;
   introspection?: IntrospectionConfigInput;
 };
 
-function normalizeOutput(output: Output | Output[] | undefined): Output[] {
+function normalizeOutput(output: OutputInput | OutputInput[] | undefined): Output[] {
   if (!output) {
     return [];
   }
-  return Array.isArray(output) ? output : [output];
+  const outputs = Array.isArray(output) ? output : [output];
+  return outputs as Output[];
 }
 
 function normalizeLogLevel(logLevel: LogLevel | undefined): LogLevel {

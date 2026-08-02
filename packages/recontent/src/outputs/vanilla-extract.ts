@@ -12,7 +12,7 @@ import {
   type TokenRegistry,
   pathKey,
 } from "@recontentapp/core";
-import { registryComponents } from "../registry/exports.js";
+import { registryComponents } from "../registry/manifest.js";
 import {
   serializeCompositeCss,
   serializeValueCss,
@@ -317,8 +317,7 @@ export const vanillaExtractOutputProcessor: OutputProcessor<VanillaExtractOutput
     for (const id of resolvedComponentIds) {
       const component = registryComponents[id];
       if (!component) continue;
-      const componentOptions =
-        selection.options[component.name] ?? selection.options[component.id] ?? {};
+      const componentOptions = (selection.options as Record<string, unknown>)[component.name] ?? {};
       for (const contract of component.contracts) {
         const binding = (componentOptions as Record<string, unknown>)[contract.key];
         if (binding === undefined) continue;
@@ -326,14 +325,14 @@ export const vanillaExtractOutputProcessor: OutputProcessor<VanillaExtractOutput
           tokenBindings[`${id}.${contract.key}`] = resolveTokenBinding(
             config.registry,
             binding as TokenBinding<TokenType>,
-            contract.type as TokenType,
+            contract.type,
             `${component.name}.${contract.key}`,
           );
         } else if (contract.kind === "scale") {
           const scale = resolveScaleBinding(
             config.registry,
             binding as ScaleBinding<TokenType>,
-            contract.type as TokenType,
+            contract.type,
             `${component.name}.${contract.key}`,
           );
           scaleBindings[`${id}.${contract.key}`] = {
@@ -347,7 +346,7 @@ export const vanillaExtractOutputProcessor: OutputProcessor<VanillaExtractOutput
               tokenBindings[`${id}.${contract.key}.${name}.${field.key}`] = resolveTokenBinding(
                 config.registry,
                 variant[field.key] as TokenBinding<TokenType>,
-                field.type as TokenType,
+                field.type,
                 `${component.name}.${contract.key}.${name}.${field.key}`,
               );
             }

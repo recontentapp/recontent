@@ -1,4 +1,4 @@
-import type { Config, Output, ThemeOverride } from "@recontentapp/core";
+import type { Config, ThemeOverride } from "@recontentapp/core";
 import ts from "typescript";
 import {
   defineComponentTokens,
@@ -7,9 +7,10 @@ import {
   defineSystemTokens,
   defineTheme,
   tokens,
+  type OutputInput,
 } from "../../src/index.js";
 
-const VE: Output = { target: "vanilla-extract", outDir: "dist-test" };
+const VE: OutputInput = { target: "vanilla-extract", outDir: "dist-test" };
 
 /**
  * Parses generated vanilla-extract source with the TS parser and asserts it
@@ -90,7 +91,7 @@ export function assertTypechecks(source: string, fileName = "tokens.ts"): void {
  * A 3-hop alias chain: component -> system -> ref, all resolving to the same
  * color. Exercises reference preservation across every layer.
  */
-export function aliasChainConfig(output: Output = VE): Config {
+export function aliasChainConfig(output: OutputInput = VE): Config {
   const ref = defineReferenceTokens({ color: { black: tokens.color("#000000") } });
   const system = defineSystemTokens({ colors: { accent: ref.color.black } });
   const components = defineComponentTokens({ button: { background: system.colors.accent } });
@@ -105,7 +106,7 @@ export function aliasChainConfig(output: Output = VE): Config {
  * One token of each of the 5 composite types (shadow, border, transition,
  * gradient, typography), each aliasing a ref color/fontFamily where relevant.
  */
-export function compositeConfig(output: Output = VE): Config {
+export function compositeConfig(output: OutputInput = VE): Config {
   const ref = defineReferenceTokens({
     color: { black: tokens.color("#000000") },
     fontFamily: { body: tokens.fontFamily("Arial") },
@@ -153,7 +154,7 @@ export function compositeConfig(output: Output = VE): Config {
  * A dimensionScale with a non-identifier key ("0-5") and a colorScale with a
  * numeric key (200), both at the ref layer.
  */
-export function scaleConfig(output: Output = VE): Config {
+export function scaleConfig(output: OutputInput = VE): Config {
   const ref = defineReferenceTokens({
     spacing: tokens.dimensionScale({ 0: "0px", "0-5": "2px", 1: "4px" }),
     colors: tokens.colorScale({ 100: "#111111", 200: "#222222" }),
@@ -171,7 +172,7 @@ export function scaleConfig(output: Output = VE): Config {
  */
 export function themedConfig(options: {
   layer: "ref" | "system" | "components";
-  output?: Output;
+  output?: OutputInput;
 }): Config {
   const ref = defineReferenceTokens({ color: { black: tokens.color("#000000") } });
   const system = defineSystemTokens({ colors: { accent: ref.color.black } });

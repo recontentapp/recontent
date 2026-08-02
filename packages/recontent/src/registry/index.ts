@@ -1,14 +1,8 @@
-import {
-  componentSourceGenerators,
-  registryComponents,
-  type RegistryComponentDefinition,
-  type ScaleImport,
-  type TokenImport,
-  type RegistryOutputTarget,
-} from "./exports.js";
+import { registryComponents, type BuiltInComponentOptions } from "./manifest.js";
+import type { RegistryComponentDefinition } from "./define.js";
+import type { RegistryOutputTarget, ScaleImport, TokenImport } from "./types.js";
 import { isStampedToken, isTokenScale, type Config, type TokenType } from "@recontentapp/core";
-import type { BuiltInComponentOptions } from "@recontentapp/core";
-import type { OutputFile, VanillaExtractOutput } from "../outputs/index.js";
+import type { OutputFile, VanillaExtractOutput } from "@recontentapp/core";
 
 export class MissingDesignTokensError extends Error {
   readonly errors: string[];
@@ -71,7 +65,7 @@ function optionsForComponent(
   options: BuiltInComponentOptions,
   component: RegistryComponentDefinition,
 ): Record<string, unknown> {
-  return (options[component.name] ?? options[component.id] ?? {}) as Record<string, unknown>;
+  return ((options as Record<string, unknown>)[component.name] ?? {}) as Record<string, unknown>;
 }
 
 function scaleBindingDetails(
@@ -265,26 +259,18 @@ export function generateBuiltInComponentFiles(
         `Component "${component.id}" does not support the "${target}" output target.`,
       );
     }
-    return output.artifacts.map((artifact) => {
-      const generator = componentSourceGenerators[id];
-      if (!generator) {
-        throw new Error(`No generator is registered for component "${id}".`);
-      }
-      const prefix = `${id}.`;
-      const scales = Object.fromEntries(
-        Object.entries(options?.scaleBindings ?? {})
-          .filter(([key]) => key.startsWith(prefix))
-          .map(([key, value]) => [key.slice(prefix.length), value]),
-      );
-      const tokens = Object.fromEntries(
-        Object.entries(options?.tokenBindings ?? {})
-          .filter(([key]) => key.startsWith(prefix))
-          .map(([key, value]) => [key.slice(prefix.length), value]),
-      );
-      const sources = generator({ scales, tokens });
-      const content = artifact.path.endsWith(".css.ts") ? sources.styles : sources.component;
-      return { filename: artifact.path, content };
-    });
+    const prefix = `${id}.`;
+    const scales = Object.fromEntries(
+      Object.entries(options?.scaleBindings ?? {})
+        .filter(([key]) => key.startsWith(prefix))
+        .map(([key, value]) => [key.slice(prefix.length), value]),
+    );
+    const tokens = Object.fromEntries(
+      Object.entries(options?.tokenBindings ?? {})
+        .filter(([key]) => key.startsWith(prefix))
+        .map(([key, value]) => [key.slice(prefix.length), value]),
+    );
+    return output.generate({ scales, tokens });
   });
 }
 

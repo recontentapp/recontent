@@ -5,6 +5,7 @@ import {
   defineSystemTokens,
   defineTheme,
   tokens,
+  type BuiltInComponentOptions,
 } from "../src/index.js";
 import { vanillaExtractOutputProcessor } from "../src/outputs/vanilla-extract.js";
 import { MissingDesignTokensError } from "../src/registry/index.js";
@@ -372,6 +373,68 @@ describe("scales, errors, files", () => {
       "@vanilla-extract/css": "^1.17.4",
       react: ">=18",
     });
+  });
+
+  test("a typo in a built-in component name is rejected at compile time", () => {
+    const ref = defineReferenceTokens({ color: { black: tokens.color("#000000") } });
+    const system = defineSystemTokens({
+      colors: { surface: ref.color.black },
+      spacing: tokens.dimensionScale({ 0: "0px", 1: "4px" }),
+    });
+    const builtInComponents: BuiltInComponentOptions = {
+      // @ts-expect-error "Stak" is not a known built-in component name
+      Stak: { backgroundColor: system.colors.surface, gapScale: system.spacing },
+    };
+    expect(builtInComponents).toBeDefined();
+  });
+
+  test("a typo in a built-in component binding key is rejected at compile time", () => {
+    const ref = defineReferenceTokens({ color: { black: tokens.color("#000000") } });
+    const system = defineSystemTokens({
+      colors: { surface: ref.color.black },
+      spacing: tokens.dimensionScale({ 0: "0px", 1: "4px" }),
+    });
+    const builtInComponents: BuiltInComponentOptions = {
+      Stack: {
+        // @ts-expect-error "backgroundColour" is not a valid Stack binding key
+        backgroundColour: system.colors.surface,
+        gapScale: system.spacing,
+      },
+    };
+    expect(builtInComponents).toBeDefined();
+  });
+
+  test("Stack.gen.css.ts and Stack.gen.tsx content reference the resolved token/scale bindings", () => {
+    const ref = defineReferenceTokens({ color: { black: tokens.color("#000000") } });
+    const system = defineSystemTokens({
+      colors: { surface: ref.color.black },
+      spacing: tokens.dimensionScale({ 0: "0px", 1: "4px" }),
+    });
+    const config = defineConfig({
+      tokens: { ref, system, components: {} },
+      output: {
+        target: "vanilla-extract",
+        outDir: "dist-test",
+        builtInComponents: {
+          Stack: { backgroundColor: system.colors.surface, gapScale: system.spacing },
+        },
+      },
+    });
+    const files = generate(config);
+    const styles = files.find((file) => file.filename === "components/stack/Stack.gen.css.ts")!;
+    const component = files.find((file) => file.filename === "components/stack/Stack.gen.tsx")!;
+
+    expect(styles.content).toContain(
+      'import { style, styleVariants } from "@vanilla-extract/css";',
+    );
+    expect(styles.content).toContain("systemSpacing");
+    expect(styles.content).toContain("vars.system.colors.surface");
+    expect(styles.content).toMatch(/backgroundColor: vars\.system\.colors\.surface/);
+    expect(styles.content).toMatch(/export const stackGap = styleVariants\(systemSpacing,/);
+
+    expect(component.content).toContain('import { stackGap, stackRoot } from "./Stack.gen.css";');
+    expect(component.content).toContain("export function Stack(");
+    expect(component.content).toMatch(/gap\?: SystemSpacing/);
   });
 
   test("a wrong-typed scale binding throws MissingDesignTokensError", () => {
