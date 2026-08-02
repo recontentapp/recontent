@@ -5,7 +5,7 @@ import { runBuild } from "./commands/build.js";
 import { runDtcgExport } from "./commands/dtcg-export.js";
 import { runInit } from "./commands/init.js";
 import { runLint } from "./commands/lint.js";
-import { runVisualize } from "./commands/visualize.js";
+import { runHtmlExport } from "./commands/html-export.js";
 
 const program = new Command();
 
@@ -23,12 +23,12 @@ program
   });
 
 program
-  .command("visualize")
+  .command("html-export")
   .description("Generate an HTML report of all tokens defined in recontent.config.ts")
   .option("-o, --output <file>", "Output file path", "tokens.html")
   .option("-c, --config <path>", "Path to config file", "recontent.config.ts")
   .action(async (options: { output: string; config: string }) => {
-    await runVisualize({ output: options.output, config: options.config });
+    await runHtmlExport({ output: options.output, config: options.config });
   });
 
 program
@@ -53,18 +53,6 @@ program
   .option("-c, --config <path>", "Path to config file", "recontent.config.ts")
   .option("-o, --output <dir>", "Output directory for .tokens.json files", ".")
   .action(async (options: { config: string; output: string }) => {
-    await runDtcgExport({ config: options.config, output: options.output });
-  });
-
-program
-  .command("figma-export", { hidden: true })
-  .description("Deprecated alias for dtcg-export")
-  .option("-c, --config <path>", "Path to config file", "recontent.config.ts")
-  .option("-o, --output <dir>", "Output directory for .tokens.json files", ".")
-  .action(async (options: { config: string; output: string }) => {
-    console.error(
-      'Warning: "figma-export" is deprecated and will be removed in a future release. Use "dtcg-export" instead.',
-    );
     await runDtcgExport({ config: options.config, output: options.output });
   });
 

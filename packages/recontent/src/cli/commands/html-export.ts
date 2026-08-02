@@ -2,12 +2,12 @@ import { generateHtmlReport } from "../../core/generators/html.js";
 import { loadConfig } from "@recontentapp/core";
 import { logSuccess, writeOutputFile } from "../utils/fs.js";
 
-export type VisualizeOptions = {
+export type HtmlExportOptions = {
   output?: string;
   config?: string;
 };
 
-export async function runVisualize(options: VisualizeOptions = {}): Promise<void> {
+export async function runHtmlExport(options: HtmlExportOptions = {}): Promise<void> {
   const config = await loadConfig(options.config);
   const html = generateHtmlReport(config);
   const outputPath = await writeOutputFile(options.output ?? "tokens.html", html);

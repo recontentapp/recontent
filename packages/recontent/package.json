@@ -23,6 +23,7 @@
     "dev:build": "node dist/cli/bin.mjs build -c dev/recontent.config.ts",
     "dev:visualize": "node dist/cli/bin.mjs visualize -c dev/recontent.config.ts -o dev/tokens.html",
     "dev:dtcg": "node dist/cli/bin.mjs dtcg-export -c dev/recontent.config.ts -o dev",
+    "dev:lint": "node dist/cli/bin.mjs lint -c dev/recontent.config.ts",
     "dev:dtcg:lint": "npx tz check dev/tokens.tokens.json && npx tz check dev/blackTheme.tokens.json"
   },
   "dependencies": {
