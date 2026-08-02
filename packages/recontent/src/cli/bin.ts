@@ -35,8 +35,9 @@ program
   .command("build")
   .description("Generate configured output targets (css, vanilla-extract) from recontent.config.ts")
   .option("-c, --config <path>", "Path to config file", "recontent.config.ts")
-  .action(async (options: { config: string }) => {
-    await runBuild({ config: options.config });
+  .option("-w, --watch", "Rerun the build whenever the config file changes")
+  .action(async (options: { config: string; watch?: boolean }) => {
+    await runBuild({ config: options.config, watch: options.watch });
   });
 
 program

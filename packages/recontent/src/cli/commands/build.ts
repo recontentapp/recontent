@@ -1,3 +1,4 @@
+import fs from "node:fs";
 import path from "node:path";
 import { createLogger } from "../../core/logger.js";
 import { MissingDesignTokensError } from "../../registry/index.js";
@@ -8,9 +9,64 @@ import { exitWithError, logSuccess, writeOutputFile } from "../utils/fs.js";
 
 export type BuildOptions = {
   config?: string;
+  watch?: boolean;
 };
 
 export async function runBuild(options: BuildOptions = {}): Promise<void> {
+  if (options.watch) {
+    await watchBuild(options);
+    return;
+  }
+
+  await buildOnce(options, { exitOnError: true });
+}
+
+async function watchBuild(options: BuildOptions): Promise<void> {
+  const configPath = resolveConfigPath(options.config ?? DEFAULT_CONFIG);
+
+  const safeBuild = async () => {
+    try {
+      await buildOnce(options, { exitOnError: false });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      console.error(`Error: ${message}`);
+    }
+  };
+
+  await safeBuild();
+  console.log(`Watching ${configPath} for changes...`);
+
+  let building = false;
+  let rerunQueued = false;
+
+  const triggerBuild = () => {
+    if (building) {
+      rerunQueued = true;
+      return;
+    }
+    building = true;
+    safeBuild().finally(() => {
+      building = false;
+      if (rerunQueued) {
+        rerunQueued = false;
+        triggerBuild();
+      }
+    });
+  };
+
+  let debounceTimer: NodeJS.Timeout | undefined;
+  fs.watch(configPath, () => {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(triggerBuild, 100);
+  });
+
+  await new Promise<void>(() => {});
+}
+
+async function buildOnce(
+  options: BuildOptions,
+  { exitOnError }: { exitOnError: boolean },
+): Promise<void> {
   const config = await loadConfig(options.config);
   const logger = createLogger(config.logLevel);
   for (const diagnostic of config.diagnostics) {
@@ -34,7 +90,11 @@ export async function runBuild(options: BuildOptions = {}): Promise<void> {
       files = await runOutput(config, output);
     } catch (error) {
       if (error instanceof MissingDesignTokensError) {
-        exitWithError(error.message);
+        if (exitOnError) {
+          exitWithError(error.message);
+        }
+        console.error(`Error: ${error.message}`);
+        return;
       }
       throw error;
     }
