@@ -2,6 +2,7 @@
 
 import { Command } from "commander";
 import { runBuild } from "./commands/build.js";
+import { runDiff } from "./commands/diff.js";
 import { runDoctor } from "./commands/doctor.js";
 import { runDtcgExport } from "./commands/dtcg-export.js";
 import { runInit } from "./commands/init.js";
@@ -51,6 +52,19 @@ program
   .action(async (options: { config: string }) => {
     await runDoctor({ config: options.config });
   });
+
+program
+  .command("diff [rev]")
+  .description(
+    "Compare tokens in recontent.config.ts against a previous git revision (default HEAD)",
+  )
+  .option("-c, --config <path>", "Path to config file", "recontent.config.ts")
+  .option("--fail-on-breaking", "Exit with code 1 when tokens are removed, renamed, or retyped")
+  .action(
+    async (rev: string | undefined, options: { config: string; failOnBreaking?: boolean }) => {
+      await runDiff({ rev, config: options.config, failOnBreaking: options.failOnBreaking });
+    },
+  );
 
 program
   .command("dtcg-export")

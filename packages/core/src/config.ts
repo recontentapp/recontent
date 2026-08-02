@@ -109,9 +109,12 @@ export function resolveConfigPath(configArg: string): string {
   return path.resolve(process.cwd(), configArg);
 }
 
-export async function loadConfig(configPath?: string): Promise<Config> {
+export async function loadConfig(
+  configPath?: string,
+  options?: { resolveFrom?: string },
+): Promise<Config> {
   const resolved = resolveConfigPath(configPath ?? DEFAULT_CONFIG);
-  const configDir = path.dirname(resolved);
+  const configDir = options?.resolveFrom ?? path.dirname(resolved);
 
   let module: Record<string, unknown>;
   try {

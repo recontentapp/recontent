@@ -26,6 +26,7 @@
     "dev:html": "node dist/cli/bin.mjs html-export -c dev/recontent.config.ts -o dev/tokens.html",
     "dev:dtcg": "node dist/cli/bin.mjs dtcg-export -c dev/recontent.config.ts -o dev",
     "dev:doctor": "node dist/cli/bin.mjs doctor -c dev/recontent.config.ts",
+    "dev:diff": "node dist/cli/bin.mjs diff -c dev/recontent.config.ts",
     "dev:dtcg:lint": "npx tz check dev/tokens.tokens.json && npx tz check dev/blackTheme.tokens.json"
   },
   "dependencies": {
