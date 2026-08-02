@@ -260,13 +260,26 @@ function generateVanillaExtractSource(
     'import { createTheme, createThemeContract } from "@vanilla-extract/css";',
     "",
     `export const vars = createThemeContract(${formatTree(contractTree(config), "", true)});`,
+  ];
+
+  // Scale export consts (e.g. `systemSpacing`) only depend on `vars`, but they are
+  // reference-identical to nested slices of `refVars`/`systemVars` (e.g. `systemVars.spacing`).
+  // vanilla-extract's dev-mode compiler dedupes these by identity and points the nested
+  // slice at whichever declaration comes first in module order. They must therefore be
+  // declared before `refVars`/`systemVars`, or the nested slice resolves to `undefined`
+  // via `var` hoisting in the served module.
+  for (const scale of scaleExports) {
+    lines.push("", generateScaleExports(scale));
+  }
+
+  lines.push(
     "",
     "export const refVars = vars.ref;",
     "export const systemVars = vars.system;",
     "export const componentVars = vars.components;",
     "",
     `export const themeClass = createTheme(vars, ${formatTree(valuesTree(config))});`,
-  ];
+  );
 
   for (const themeName of Object.keys(config.themes).sort()) {
     lines.push(
@@ -275,9 +288,6 @@ function generateVanillaExtractSource(
     );
   }
 
-  for (const scale of scaleExports) {
-    lines.push("", generateScaleExports(scale));
-  }
   return `${lines.join("\n")}\n`;
 }
 
