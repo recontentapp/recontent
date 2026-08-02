@@ -35,26 +35,7 @@ function component(
   };
 }
 
-const components: readonly RegistryComponentDefinition[] = [
-  component("aspect-ratio", "AspectRatio"),
-  component("center", "Center"),
-  component("stack", "Stack"),
-  component("badge", "Badge"),
-  component("divider", "Divider"),
-  component("skeleton", "Skeleton"),
-  component("status-dot", "StatusDot"),
-  component("text", "Text"),
-  component("heading", "Heading"),
-  component("kbd", "Kbd"),
-  component("blockquote", "Blockquote"),
-  component("citation", "Citation"),
-  component("timestamp", "Timestamp"),
-  component("card", "Card"),
-  component("section", "Section"),
-  component("grid", "Grid"),
-  component("grid-span", "GridSpan"),
-  component("visually-hidden", "VisuallyHidden"),
-];
+const components: readonly RegistryComponentDefinition[] = [component("stack", "Stack")];
 
 export const registryComponents = Object.fromEntries(
   components.map((entry) => [entry.id, entry]),

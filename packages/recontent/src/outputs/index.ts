@@ -11,29 +11,9 @@ import { typescriptNativeOutputProcessor } from "./typescript-native.js";
  * the token-leaf value type for arbitrary string keys.
  */
 export type {
-  AspectRatioComponentOptions,
-  BadgeComponentOptions,
-  BadgeVariantOptions,
-  BlockquoteComponentOptions,
   BuiltInComponentOptions,
-  CardComponentOptions,
-  CenterComponentOptions,
-  DividerComponentOptions,
-  GridComponentOptions,
-  GridSpanComponentOptions,
-  HeadingComponentOptions,
-  HeadingLevelOptions,
-  KbdComponentOptions,
   ScaleBinding,
-  SectionComponentOptions,
-  SkeletonComponentOptions,
-  StackComponentOptions,
-  StatusDotComponentOptions,
-  StatusDotVariantOptions,
-  SupportingTextComponentOptions,
-  TextComponentOptions,
   TokenBinding,
-  VisuallyHiddenComponentOptions,
 } from "../registry/built-in-components.js";
 
 export type {
