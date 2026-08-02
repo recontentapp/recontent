@@ -1,13 +1,13 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { Citation } from "../components/components/citation/Citation.gen";
+import { Box } from "./Box";
 
 const meta = {
-  title: "Typography/Citation",
-  component: Citation,
+  title: "Source/Base/Box",
+  component: Box,
   args: {
     children: "Dieter Rams, Ten Principles for Good Design",
   },
-} satisfies Meta<typeof Citation>;
+} satisfies Meta<typeof Box>;
 
 export default meta;
 

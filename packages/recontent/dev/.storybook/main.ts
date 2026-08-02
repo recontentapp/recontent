@@ -2,7 +2,7 @@ import type { StorybookConfig } from "@storybook/react-vite";
 import { vanillaExtractPlugin } from "@vanilla-extract/vite-plugin";
 
 const config: StorybookConfig = {
-  stories: ["../stories/**/*.stories.@(ts|tsx)"],
+  stories: ["../src/**/*.story.@(ts|tsx)"],
   addons: ["@storybook/addon-a11y"],
   framework: {
     name: "@storybook/react-vite",

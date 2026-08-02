@@ -1,10 +1,11 @@
 import type { Preview } from "@storybook/react-vite";
-import { themeClass } from "../components/tokens.css";
+// import { themeClass } from "../components/tokens.css";
+import "./globalStyle.css";
 
 const preview: Preview = {
   decorators: [
     (Story) => (
-      <div className={themeClass}>
+      <div>
         <Story />
       </div>
     ),

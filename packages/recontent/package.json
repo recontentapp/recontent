@@ -23,11 +23,11 @@
     "test:dtcg": "yarn dev:build && yarn dev:dtcg && yarn dev:dtcg:lint",
     "dev": "yarn dev:build && storybook dev -c dev/.storybook -p 6006",
     "dev:build": "node dist/cli/bin.mjs build -c dev/recontent.config.ts",
-    "dev:html": "node dist/cli/bin.mjs html-export -c dev/recontent.config.ts -o dev/tokens.html",
-    "dev:dtcg": "node dist/cli/bin.mjs dtcg-export -c dev/recontent.config.ts -o dev",
+    "dev:html": "node dist/cli/bin.mjs html-export -c dev/recontent.config.ts -o dev/generated/tokens.html",
+    "dev:dtcg": "node dist/cli/bin.mjs dtcg-export -c dev/recontent.config.ts -o dev/generated/",
     "dev:doctor": "node dist/cli/bin.mjs doctor -c dev/recontent.config.ts",
     "dev:diff": "node dist/cli/bin.mjs diff -c dev/recontent.config.ts",
-    "dev:dtcg:lint": "npx tz check dev/tokens.tokens.json && npx tz check dev/blackTheme.tokens.json"
+    "dev:dtcg:lint": "npx tz check dev/generated/tokens.tokens.json && npx tz check dev/generated/blackTheme.tokens.json"
   },
   "dependencies": {
     "@recontentapp/core": "0.1.1",
