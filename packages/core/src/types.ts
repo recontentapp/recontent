@@ -1,6 +1,8 @@
+import type { ColorSpace, Component } from "./color.js";
+
 export type ColorValue = {
-  colorSpace: "srgb" | "display-p3" | "hsl" | "oklch" | (string & {});
-  components: [number, number, number];
+  colorSpace: ColorSpace;
+  components: [Component, Component, Component];
   alpha: number;
   hex: string;
 };
@@ -9,19 +11,31 @@ export type DimensionValue = { value: number; unit: "px" | "rem" };
 export type FontFamilyValue = { value: string[] };
 export type FontWeightName =
   | "thin"
+  | "hairline"
   | "extralight"
+  | "extra-light"
+  | "ultra-light"
   | "light"
   | "regular"
+  | "normal"
   | "medium"
+  | "book"
   | "semibold"
+  | "semi-bold"
+  | "demi-bold"
   | "bold"
   | "extrabold"
-  | "black";
+  | "extra-bold"
+  | "ultra-bold"
+  | "black"
+  | "heavy"
+  | "extrablack"
+  | "extra-black"
+  | "ultra-black";
 export type FontWeightValue = { value: number | FontWeightName };
 export type DurationValue = { value: number; unit: "ms" | "s" };
 export type CubicBezierValue = { value: [number, number, number, number] };
 export type NumberValue = { value: number };
-export type StringValue = { value: string };
 
 export type TokenMember<T extends TokenType = TokenType> = {
   $value: TokenTypeMap[T];
@@ -49,7 +63,7 @@ export type ShadowLayer = {
   spread: TokenMember<"dimension">;
   inset?: boolean;
 };
-export type ShadowValue = { layers: ShadowLayer[] };
+export type ShadowValue = { layers: Array<ShadowLayer | TokenMember<"shadow">> };
 
 export type BorderValue = {
   color: TokenMember<"color">;
@@ -61,11 +75,11 @@ export type TransitionValue = {
   delay: TokenMember<"duration">;
   timingFunction: TokenMember<"cubicBezier">;
 };
-export type GradientStop = { color: TokenMember<"color">; position: number };
+export type GradientStop = { color: TokenMember<"color">; position: TokenMember<"number"> };
 export type GradientValue = {
   kind: "linear" | "radial" | "conic";
   angle: string;
-  stops: GradientStop[];
+  stops: Array<GradientStop | TokenMember<"gradient">>;
 };
 export type TypographyValue = {
   fontFamily: TokenMember<"fontFamily">;
@@ -83,7 +97,6 @@ export type TokenTypeMap = {
   duration: DurationValue;
   cubicBezier: CubicBezierValue;
   number: NumberValue;
-  string: StringValue;
   strokeStyle: StrokeStyleValue;
   shadow: ShadowValue;
   border: BorderValue;
@@ -95,13 +108,22 @@ export type TokenTypeMap = {
 export type TokenType = keyof TokenTypeMap;
 export type TokenLayer = "ref" | "system" | "components";
 
-export type RawToken<T extends TokenType = TokenType> = {
+export type TokenMetadata = {
+  $description?: string;
+  $deprecated?: boolean | string;
+  $extensions?: Record<string, unknown>;
+};
+
+export type RawToken<T extends TokenType = TokenType> = TokenMetadata & {
   _kind: "raw";
   $type: T;
   $value: TokenTypeMap[T];
 };
 
-export type StampedToken<T extends TokenType = TokenType, Layer extends TokenLayer = TokenLayer> = {
+export type StampedToken<
+  T extends TokenType = TokenType,
+  Layer extends TokenLayer = TokenLayer,
+> = TokenMetadata & {
   _kind: "stamped";
   $type: T;
   $value: TokenTypeMap[T];
@@ -133,7 +155,7 @@ export type TokenScaleMetadata<T extends TokenType = TokenType> = {
   type: T;
   keys: string[];
 };
-export type TokenEntry<T extends TokenType = TokenType> = {
+export type TokenEntry<T extends TokenType = TokenType> = TokenMetadata & {
   path: string[];
   $type: T;
   $value: TokenTypeMap[T];

@@ -11,10 +11,6 @@ function resolveThemedEntry(
   entry: TokenEntry,
   themeOverride: Config["themes"][string],
 ): TokenEntry {
-  if (entry.layer !== "ref") {
-    return entry;
-  }
-
   const key = pathKey(entry.path);
   const overridden = themeOverride.get(key);
   if (!overridden) {
@@ -26,7 +22,55 @@ function resolveThemedEntry(
     $type: entry.$type,
     $value: overridden,
     layer: entry.layer,
+    ...(entry.$description !== undefined ? { $description: entry.$description } : {}),
+    ...(entry.$deprecated !== undefined ? { $deprecated: entry.$deprecated } : {}),
+    ...(entry.$extensions !== undefined ? { $extensions: entry.$extensions } : {}),
   };
+}
+
+function isTokenNode(node: unknown): node is Record<string, unknown> {
+  return typeof node === "object" && node !== null && "$value" in node;
+}
+
+function hoistNode(node: Record<string, unknown>): { types: Set<string>; count: number } {
+  const types = new Set<string>();
+  let count = 0;
+
+  for (const [key, child] of Object.entries(node)) {
+    if (key.startsWith("$")) continue;
+    if (isTokenNode(child)) {
+      types.add(child.$type as string);
+      count += 1;
+      continue;
+    }
+    if (typeof child === "object" && child !== null) {
+      const result = hoistNode(child as Record<string, unknown>);
+      count += result.count;
+      for (const type of result.types) types.add(type);
+    }
+  }
+
+  if (types.size === 1 && count >= 2) {
+    const [type] = types;
+    node.$type = type;
+    for (const [key, child] of Object.entries(node)) {
+      if (key.startsWith("$")) continue;
+      if (
+        typeof child === "object" &&
+        child !== null &&
+        (child as Record<string, unknown>).$type === type
+      ) {
+        delete (child as Record<string, unknown>).$type;
+      }
+    }
+  }
+
+  return { types, count };
+}
+
+export function hoistGroupTypes(output: DtcgOutput): DtcgOutput {
+  hoistNode(output);
+  return output;
 }
 
 export function generateDtcg(input: TokenRegistry | Config): DtcgOutput {
@@ -37,7 +81,7 @@ export function generateDtcg(input: TokenRegistry | Config): DtcgOutput {
     setNested(output, entry.path, entryToDtcgNode(entry));
   }
 
-  return output;
+  return hoistGroupTypes(output);
 }
 
 export function generateDtcgThemed(config: Config, themeName: string): DtcgOutput {
@@ -55,7 +99,7 @@ export function generateDtcgThemed(config: Config, themeName: string): DtcgOutpu
     setNested(output, resolved.path, entryToDtcgNode(resolved));
   }
 
-  return output;
+  return hoistGroupTypes(output);
 }
 
 export function generateDtcgJson(input: TokenRegistry | Config, space = 2): string {

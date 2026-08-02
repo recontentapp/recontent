@@ -27,7 +27,6 @@ export type RegistryTokenType =
   | "duration"
   | "cubicBezier"
   | "number"
-  | "string"
   | "strokeStyle"
   | "shadow"
   | "border"

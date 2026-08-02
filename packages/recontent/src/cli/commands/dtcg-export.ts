@@ -3,12 +3,12 @@ import { generateDtcgJson, generateDtcgThemedJson } from "../../core/generators/
 import { loadConfig } from "@recontentapp/core";
 import { logSuccess, writeOutputFile } from "../utils/fs.js";
 
-export type FigmaExportOptions = {
+export type DtcgExportOptions = {
   config?: string;
   output?: string;
 };
 
-export async function runFigmaExport(options: FigmaExportOptions = {}): Promise<void> {
+export async function runDtcgExport(options: DtcgExportOptions = {}): Promise<void> {
   const config = await loadConfig(options.config);
   const outputDir = options.output ?? ".";
   const written: string[] = [];

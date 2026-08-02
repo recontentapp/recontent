@@ -89,7 +89,7 @@ test("entryToDtcgNode records gradient kind/angle under $extensions", () => {
   expect(node.$extensions).toEqual({ "com.recontent": { kind: "radial", angle: "180deg" } });
 });
 
-test("entryToDtcgNode records inset layers under $extensions", () => {
+test("entryToDtcgNode records inset layers inside $value", () => {
   const shadow = tokens.shadow([
     { color: "#000000", offsetX: "0px", offsetY: "1px", blur: "2px", spread: "0px", inset: true },
   ]);
@@ -99,10 +99,11 @@ test("entryToDtcgNode records inset layers under $extensions", () => {
     $value: shadow.$value,
     layer: "system",
   });
-  expect(node.$extensions).toEqual({ "com.recontent": { inset: [true] } });
+  expect(node.$value).toMatchObject({ inset: true });
+  expect(node.$extensions).toBeUndefined();
 });
 
-test("entryToDtcgNode omits $extensions for shadows without inset layers", () => {
+test("entryToDtcgNode omits inset for shadows without inset layers", () => {
   const shadow = tokens.shadow({
     color: "#000000",
     offsetX: "0px",
@@ -116,6 +117,7 @@ test("entryToDtcgNode omits $extensions for shadows without inset layers", () =>
     $value: shadow.$value,
     layer: "system",
   });
+  expect(node.$value).not.toHaveProperty("inset");
   expect(node.$extensions).toBeUndefined();
 });
 

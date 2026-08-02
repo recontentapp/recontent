@@ -21,13 +21,14 @@ import type {
 } from "@recontentapp/core";
 import { diagnoseTokenTrees } from "./diagnostics.js";
 import { isRawToken, isStampedToken, isTokenLeaf, isTokenScale, pathKey } from "@recontentapp/core";
+import { withStampedTokenMethods, type ChainableMethods } from "./metadata.js";
 type TokenTree = Record<string, unknown>;
 
 type StampTree<T, Layer extends TokenLayer> =
   T extends TokenScale<infer Key, infer Token, infer _Value>
     ? TokenScale<Key, Token, StampedToken<Token, Layer>>
     : T extends RawToken<infer U> | StampedToken<infer U, TokenLayer>
-      ? StampedToken<U, Layer>
+      ? StampedToken<U, Layer> & ChainableMethods<StampedToken<U, Layer>>
       : T extends object
         ? { [K in keyof T]: StampTree<T[K], Layer> }
         : T;
@@ -43,13 +44,16 @@ function stampToken<T extends TokenType, Layer extends TokenLayer>(
     $value: token.$value,
     _path: path,
     _layer: layer,
+    ...(token.$description !== undefined ? { $description: token.$description } : {}),
+    ...(token.$deprecated !== undefined ? { $deprecated: token.$deprecated } : {}),
+    ...(token.$extensions !== undefined ? { $extensions: token.$extensions } : {}),
   };
 
   if (isStampedToken(token)) {
     stamped._alias = token._path;
   }
 
-  return stamped;
+  return withStampedTokenMethods(stamped);
 }
 
 function stampScale<T extends TokenType, Layer extends TokenLayer>(
@@ -96,6 +100,22 @@ function walkAndStamp<Layer extends TokenLayer>(
   return result;
 }
 
+const INVALID_NAME_CHARS = /[.{}]/;
+
+function validateTokenName(name: string, path: string[]): void {
+  const match = name.match(INVALID_NAME_CHARS);
+  if (match) {
+    throw new Error(
+      `Invalid token/group name "${name}" at "${[...path, name].join(".")}": names cannot contain "${match[0]}".`,
+    );
+  }
+  if (name.startsWith("$")) {
+    throw new Error(
+      `Invalid token/group name "${name}" at "${[...path, name].join(".")}": names cannot start with "$".`,
+    );
+  }
+}
+
 function collectEntries(
   node: unknown,
   path: string[],
@@ -114,6 +134,7 @@ function collectEntries(
     };
 
     for (const [key, value] of Object.entries(node)) {
+      validateTokenName(key, scalePath);
       collectEntries(value, [...scalePath, key], scaleLayer, registry, scaleMetadata);
     }
     return;
@@ -126,6 +147,9 @@ function collectEntries(
       $value: node.$value,
       layer,
       ...(scale ? { scale } : {}),
+      ...(node.$description !== undefined ? { $description: node.$description } : {}),
+      ...(node.$deprecated !== undefined ? { $deprecated: node.$deprecated } : {}),
+      ...(node.$extensions !== undefined ? { $extensions: node.$extensions } : {}),
     });
     return;
   }
@@ -138,6 +162,9 @@ function collectEntries(
       ...(node._alias ? { alias: node._alias } : {}),
       layer,
       ...(scale ? { scale } : {}),
+      ...(node.$description !== undefined ? { $description: node.$description } : {}),
+      ...(node.$deprecated !== undefined ? { $deprecated: node.$deprecated } : {}),
+      ...(node.$extensions !== undefined ? { $extensions: node.$extensions } : {}),
     });
     return;
   }
@@ -147,6 +174,7 @@ function collectEntries(
   }
 
   for (const [key, value] of Object.entries(node)) {
+    validateTokenName(key, path);
     collectEntries(value, [...path, key], layer, registry);
   }
 }

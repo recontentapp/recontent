@@ -58,34 +58,60 @@ function entryDeclarations(entry: TokenEntry): Record<string, string> {
   return expandedEntryDeclarations(entry, entry.$value);
 }
 
-function formatRule(selector: string, declarations: Record<string, string>): string {
-  const lines = Object.entries(declarations).map(([name, value]) => `  ${name}: ${value};`);
+function entryComment(entry: TokenEntry): string | undefined {
+  if (!entry.$description) return undefined;
+  return entry.$description;
+}
+
+function formatRule(
+  selector: string,
+  declarations: Record<string, string>,
+  comments: Record<string, string> = {},
+): string {
+  const lines = Object.entries(declarations).flatMap(([name, value]) => {
+    const comment = comments[name];
+    return [...(comment ? [`  /* ${comment} */`] : []), `  ${name}: ${value};`];
+  });
   return `${selector} {\n${lines.join("\n")}\n}`;
 }
 
-function collectRefDeclarations(registry: TokenRegistry): Record<string, string> {
+function collectRefDeclarations(registry: TokenRegistry): {
+  declarations: Record<string, string>;
+  comments: Record<string, string>;
+} {
   const declarations: Record<string, string> = {};
+  const comments: Record<string, string> = {};
 
   for (const entry of registry.values()) {
     if (entry.layer !== "ref") continue;
-    Object.assign(declarations, entryDeclarations(entry));
+    const entryDecl = entryDeclarations(entry);
+    Object.assign(declarations, entryDecl);
+    const comment = entryComment(entry);
+    if (comment) {
+      comments[cssVarName(entry.path)] = comment;
+    }
   }
 
-  return declarations;
+  return { declarations, comments };
 }
 
 function collectLayerDeclarations(
   registry: TokenRegistry,
   layer: "system" | "components",
-): Record<string, string> {
+): { declarations: Record<string, string>; comments: Record<string, string> } {
   const declarations: Record<string, string> = {};
+  const comments: Record<string, string> = {};
 
   for (const entry of registry.values()) {
     if (entry.layer !== layer) continue;
     Object.assign(declarations, entryDeclarations(entry));
+    const comment = entryComment(entry);
+    if (comment) {
+      comments[cssVarName(entry.path)] = comment;
+    }
   }
 
-  return declarations;
+  return { declarations, comments };
 }
 
 function themeOverrideDeclarations(
@@ -117,8 +143,8 @@ export function generateCss(config: Config, options: CssGeneratorOptions = {}): 
   const blocks: string[] = [];
 
   const lightRef = collectRefDeclarations(registry);
-  if (Object.keys(lightRef).length > 0) {
-    blocks.push(formatRule(":root", lightRef));
+  if (Object.keys(lightRef.declarations).length > 0) {
+    blocks.push(formatRule(":root", lightRef.declarations, lightRef.comments));
   }
 
   for (const [themeName, override] of Object.entries(themes)) {
@@ -137,13 +163,13 @@ export function generateCss(config: Config, options: CssGeneratorOptions = {}): 
   }
 
   const system = collectLayerDeclarations(registry, "system");
-  if (Object.keys(system).length > 0) {
-    blocks.push(formatRule(":root", system));
+  if (Object.keys(system.declarations).length > 0) {
+    blocks.push(formatRule(":root", system.declarations, system.comments));
   }
 
   const components = collectLayerDeclarations(registry, "components");
-  if (Object.keys(components).length > 0) {
-    blocks.push(formatRule(":root", components));
+  if (Object.keys(components.declarations).length > 0) {
+    blocks.push(formatRule(":root", components.declarations, components.comments));
   }
 
   return blocks.join("\n\n");

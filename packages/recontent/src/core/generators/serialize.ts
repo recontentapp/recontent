@@ -14,14 +14,27 @@ import type {
 
 const FONT_WEIGHT_NUMERIC: Record<FontWeightName, number> = {
   thin: 100,
+  hairline: 100,
   extralight: 200,
+  "extra-light": 200,
+  "ultra-light": 200,
   light: 300,
+  book: 350,
   regular: 400,
+  normal: 400,
   medium: 500,
   semibold: 600,
+  "semi-bold": 600,
+  "demi-bold": 600,
   bold: 700,
   extrabold: 800,
+  "extra-bold": 800,
+  "ultra-bold": 800,
   black: 900,
+  heavy: 900,
+  extrablack: 950,
+  "extra-black": 950,
+  "ultra-black": 950,
 };
 
 export function serializeColorDtcg(value: TokenTypeMap["color"]): TokenTypeMap["color"] {
@@ -64,13 +77,19 @@ function serializeCompositeDtcg(type: TokenType, value: unknown): unknown {
   switch (type) {
     case "shadow": {
       const shadow = value as ShadowValue;
-      const layerNode = (layer: ShadowLayer) => ({
-        color: serializeMemberDtcg("color", layer.color),
-        offsetX: serializeMemberDtcg("dimension", layer.offsetX),
-        offsetY: serializeMemberDtcg("dimension", layer.offsetY),
-        blur: serializeMemberDtcg("dimension", layer.blur),
-        spread: serializeMemberDtcg("dimension", layer.spread),
-      });
+      const layerNode = (layer: ShadowLayer | TokenMember<"shadow">) => {
+        if (!("color" in layer)) {
+          return serializeMemberDtcg("shadow", layer);
+        }
+        return {
+          color: serializeMemberDtcg("color", layer.color),
+          offsetX: serializeMemberDtcg("dimension", layer.offsetX),
+          offsetY: serializeMemberDtcg("dimension", layer.offsetY),
+          blur: serializeMemberDtcg("dimension", layer.blur),
+          spread: serializeMemberDtcg("dimension", layer.spread),
+          ...(layer.inset ? { inset: true } : {}),
+        };
+      };
       return shadow.layers.length === 1
         ? layerNode(shadow.layers[0]!)
         : shadow.layers.map(layerNode);
@@ -93,10 +112,15 @@ function serializeCompositeDtcg(type: TokenType, value: unknown): unknown {
     }
     case "gradient": {
       const gradient = value as GradientValue;
-      return gradient.stops.map((stop) => ({
-        color: serializeMemberDtcg("color", stop.color),
-        position: stop.position,
-      }));
+      return gradient.stops.map((stop) => {
+        if (!("color" in stop)) {
+          return serializeMemberDtcg("gradient", stop);
+        }
+        return {
+          color: serializeMemberDtcg("color", stop.color),
+          position: serializeMemberDtcg("number", stop.position),
+        };
+      });
     }
     case "typography": {
       const typography = value as TypographyValue;
@@ -129,8 +153,6 @@ export function serializeValueDtcg<T extends TokenType>(type: T, value: TokenTyp
       return (value as TokenTypeMap["cubicBezier"]).value;
     case "number":
       return (value as TokenTypeMap["number"]).value;
-    case "string":
-      return (value as TokenTypeMap["string"]).value;
     case "strokeStyle":
       return serializeStrokeStyleDtcg(value as TokenTypeMap["strokeStyle"]);
     case "shadow":
@@ -150,6 +172,27 @@ export function serializeMemberDtcg<T extends TokenType>(type: T, member: TokenM
 
 export type MemberResolver = (type: TokenType, member: TokenMember) => string;
 
+function flattenGradientStops(
+  stops: GradientValue["stops"],
+): Array<{ color: TokenMember<"color">; position: TokenMember<"number"> }> {
+  const result: Array<{ color: TokenMember<"color">; position: TokenMember<"number"> }> = [];
+  for (const stop of stops) {
+    if ("color" in stop) {
+      result.push(stop);
+      continue;
+    }
+    result.push(...flattenGradientStops((stop.$value as GradientValue).stops));
+  }
+  return result;
+}
+
+function resolvePositionPercent(resolve: MemberResolver, position: TokenMember<"number">): string {
+  if (position.alias) {
+    return `calc(${resolve("number", position)} * 100%)`;
+  }
+  return `${position.$value.value * 100}%`;
+}
+
 export function serializeCompositeCss(
   type: "shadow" | "border" | "gradient",
   value: TokenTypeMap["shadow"] | TokenTypeMap["border"] | TokenTypeMap["gradient"],
@@ -160,6 +203,9 @@ export function serializeCompositeCss(
       const shadow = value as ShadowValue;
       return shadow.layers
         .map((layer) => {
+          if (!("color" in layer)) {
+            return resolve("shadow", layer);
+          }
           const inset = layer.inset ? "inset " : "";
           return `${inset}${resolve("dimension", layer.offsetX)} ${resolve("dimension", layer.offsetY)} ${resolve("dimension", layer.blur)} ${resolve("dimension", layer.spread)} ${resolve("color", layer.color)}`;
         })
@@ -171,8 +217,11 @@ export function serializeCompositeCss(
     }
     case "gradient": {
       const gradient = value as GradientValue;
-      const stops = gradient.stops
-        .map((stop) => `${resolve("color", stop.color)} ${stop.position * 100}%`)
+      const stops = flattenGradientStops(gradient.stops)
+        .map(
+          (stop) =>
+            `${resolve("color", stop.color)} ${resolvePositionPercent(resolve, stop.position)}`,
+        )
         .join(", ");
       if (gradient.kind === "radial") {
         return `radial-gradient(${stops})`;
@@ -209,8 +258,6 @@ export function serializeValueCss<T extends TokenType>(type: T, value: TokenType
     }
     case "number":
       return String((value as TokenTypeMap["number"]).value);
-    case "string":
-      return (value as TokenTypeMap["string"]).value;
     case "strokeStyle":
       return serializeStrokeStyleCss(value as TokenTypeMap["strokeStyle"]);
     case "shadow":
@@ -256,29 +303,49 @@ export function setNested(target: Record<string, unknown>, path: string[], value
   current[path[path.length - 1]!] = value;
 }
 
+function metadataFields(entry: TokenEntry): Record<string, unknown> {
+  const fields: Record<string, unknown> = {};
+  if (entry.$description !== undefined) {
+    fields.$description = entry.$description;
+  }
+  if (entry.$deprecated !== undefined) {
+    fields.$deprecated = entry.$deprecated;
+  }
+  return fields;
+}
+
 export function entryToDtcgNode(entry: TokenEntry): Record<string, unknown> {
   if (entry.alias) {
     return {
       $type: entry.$type,
       $value: dtcgAliasReference(entry.alias),
+      ...metadataFields(entry),
+      ...(entry.$extensions ? { $extensions: entry.$extensions } : {}),
     };
   }
 
   const node: Record<string, unknown> = {
     $type: entry.$type,
     $value: serializeValueDtcg(entry.$type, entry.$value),
+    ...metadataFields(entry),
   };
 
+  const comRecontent: Record<string, unknown> = {};
   if (entry.$type === "gradient") {
     const gradient = entry.$value as TokenTypeMap["gradient"];
-    node.$extensions = { "com.recontent": { kind: gradient.kind, angle: gradient.angle } };
-  } else if (entry.$type === "shadow") {
-    const shadow = entry.$value as TokenTypeMap["shadow"];
-    if (shadow.layers.some((layer) => layer.inset)) {
-      node.$extensions = {
-        "com.recontent": { inset: shadow.layers.map((layer) => layer.inset ?? false) },
-      };
-    }
+    Object.assign(comRecontent, { kind: gradient.kind, angle: gradient.angle });
+  }
+  const userComRecontent = entry.$extensions?.["com.recontent"];
+  if (userComRecontent && typeof userComRecontent === "object") {
+    Object.assign(comRecontent, userComRecontent);
+  }
+
+  const extensions: Record<string, unknown> = { ...entry.$extensions };
+  if (Object.keys(comRecontent).length > 0) {
+    extensions["com.recontent"] = comRecontent;
+  }
+  if (Object.keys(extensions).length > 0) {
+    node.$extensions = extensions;
   }
 
   return node;

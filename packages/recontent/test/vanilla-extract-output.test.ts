@@ -93,7 +93,7 @@ describe("base themeClass", () => {
 
   test("plain values are single-quoted; values containing ' or \\ are escaped", () => {
     const ref = defineReferenceTokens({});
-    const system = defineSystemTokens({ meta: { name: tokens.generic("O'Brien \\ Co") } });
+    const system = defineSystemTokens({ meta: { name: tokens.fontFamily("O'Brien \\ Co") } });
     const config = defineConfig({
       tokens: { ref, system, components: {} },
       output: { target: "vanilla-extract", outDir: "dist-test" },
@@ -106,15 +106,31 @@ describe("base themeClass", () => {
     const ref = defineReferenceTokens({});
     const system = defineSystemTokens({
       border: {
-        weird: tokens.border({
-          color: { colorSpace: "custom`${x}", components: [0, 0, 0] },
-          width: "1px",
-        }),
+        weird: tokens.border({ color: "#000000", width: "1px" }),
       },
     });
     const config = defineConfig({
       tokens: { ref, system, components: {} },
       output: { target: "vanilla-extract", outDir: "dist-test" },
+    });
+    // Bypass tokens.color(...) validation to exercise escapeTemplateLiteral directly:
+    // a colorSpace value is otherwise never attacker/author-controlled free text.
+    config.registry.set("system.border.weird", {
+      path: ["system", "border", "weird"],
+      $type: "border",
+      $value: {
+        color: {
+          $value: {
+            colorSpace: "custom`${x}" as never,
+            components: [0, 0, 0],
+            alpha: 1,
+            hex: "#000000",
+          },
+        },
+        width: { $value: { value: 1, unit: "px" } },
+        style: { $value: { style: "solid" } },
+      },
+      layer: "system",
     });
     const [file] = generate(config);
     expect(file!.content).toMatch(/color\(custom\\`\\\$\{x\} 0 0 0\)/);
@@ -248,15 +264,15 @@ describe("scales, errors, files", () => {
   });
 
   test("other scale types are not exported", () => {
-    const stringScale: Record<string, ReturnType<typeof tokens.generic>> = {
-      a: tokens.generic("a"),
-      b: tokens.generic("b"),
+    const numberScale: Record<string, ReturnType<typeof tokens.number>> = {
+      a: tokens.number(1),
+      b: tokens.number(2),
     };
-    Object.defineProperties(stringScale, {
+    Object.defineProperties(numberScale, {
       _kind: { value: "scale", enumerable: false },
-      $type: { value: "string", enumerable: false },
+      $type: { value: "number", enumerable: false },
     });
-    const ref = defineReferenceTokens({ labels: stringScale as never });
+    const ref = defineReferenceTokens({ labels: numberScale as never });
     const config = defineConfig({
       tokens: { ref, system: defineSystemTokens({}), components: {} },
       output: { target: "vanilla-extract", outDir: "dist-test" },

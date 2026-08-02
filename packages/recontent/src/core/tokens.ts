@@ -1,6 +1,7 @@
 import type {
   BorderValue,
   ColorValue,
+  Component,
   CubicBezierValue,
   DurationValue,
   FontFamilyValue,
@@ -12,7 +13,6 @@ import type {
   ShadowLayer,
   ShadowValue,
   StampedToken,
-  StringValue,
   StrokeStyleName,
   StrokeStyleValue,
   TokenMember,
@@ -21,33 +21,53 @@ import type {
   TransitionValue,
   TypographyValue,
 } from "@recontentapp/core";
-import { isRawToken, isStampedToken, isTokenLeaf } from "@recontentapp/core";
+import {
+  componentRanges,
+  isRawToken,
+  isStampedToken,
+  isTokenLeaf,
+  toSrgbHex,
+} from "@recontentapp/core";
+import { withRawTokenMethods, type ChainableMethods } from "./metadata.js";
 
 type ColorInput =
   | string
   | {
       colorSpace: ColorValue["colorSpace"];
-      components: [number, number, number];
+      components: [Component, Component, Component];
       alpha?: number;
     };
 
 const FONT_WEIGHT_MAP: Record<FontWeightName, number> = {
   thin: 100,
+  hairline: 100,
   extralight: 200,
+  "extra-light": 200,
+  "ultra-light": 200,
   light: 300,
+  book: 350,
   regular: 400,
+  normal: 400,
   medium: 500,
   semibold: 600,
+  "semi-bold": 600,
+  "demi-bold": 600,
   bold: 700,
   extrabold: 800,
+  "extra-bold": 800,
+  "ultra-bold": 800,
   black: 900,
+  heavy: 900,
+  extrablack: 950,
+  "extra-black": 950,
+  "ultra-black": 950,
 };
 
 function createRawToken<T extends TokenType>(
   type: T,
   value: import("@recontentapp/core").TokenTypeMap[T],
-): RawToken<T> {
-  return { _kind: "raw", $type: type, $value: value };
+): RawToken<T> & ChainableMethods<RawToken<T>> {
+  return withRawTokenMethods({ _kind: "raw", $type: type, $value: value });
 }
 
 function parseHex(hex: string): ColorValue {
@@ -91,36 +111,40 @@ function parseHex(hex: string): ColorValue {
   };
 }
 
-function componentsToHex(components: [number, number, number], alpha = 1): string {
-  const toByte = (n: number) =>
-    Math.round(Math.min(255, Math.max(0, n * 255)))
-      .toString(16)
-      .padStart(2, "0");
-
-  const hex = `#${toByte(components[0])}${toByte(components[1])}${toByte(components[2])}`;
-  if (alpha < 1) {
-    return `${hex}${toByte(alpha)}`;
-  }
-  return hex;
+function validateComponentRanges(
+  colorSpace: ColorValue["colorSpace"],
+  components: [Component, Component, Component],
+): void {
+  const ranges = componentRanges(colorSpace);
+  components.forEach((component, index) => {
+    if (component === "none") return;
+    const range = ranges[index]!;
+    if (component < range.min || component > range.max) {
+      throw new Error(
+        `Invalid component ${index} for colorSpace "${colorSpace}": ${component}. Expected a value between ${range.min} and ${range.max}.`,
+      );
+    }
+  });
 }
 
-function color(input: ColorInput): RawToken<"color"> {
+function color(input: ColorInput): RawToken<"color"> & ChainableMethods<RawToken<"color">> {
   if (typeof input === "string") {
     return createRawToken("color", parseHex(input));
   }
 
+  validateComponentRanges(input.colorSpace, input.components);
   const alpha = input.alpha ?? 1;
   const value: ColorValue = {
     colorSpace: input.colorSpace,
     components: input.components,
     alpha,
-    hex: componentsToHex(input.components, alpha),
+    hex: toSrgbHex(input.colorSpace, input.components),
   };
 
   return createRawToken("color", value);
 }
 
-function dimension(input: string): RawToken<"dimension"> {
+function dimension(input: string): RawToken<"dimension"> & ChainableMethods<RawToken<"dimension">> {
   const match = input.trim().match(/^(-?\d*\.?\d+)(px|rem)$/);
   if (!match) {
     throw new Error(`Invalid dimension: ${input}. Expected format like "16px" or "1rem".`);
@@ -132,7 +156,9 @@ function dimension(input: string): RawToken<"dimension"> {
   });
 }
 
-function fontFamily(input: string): RawToken<"fontFamily"> {
+function fontFamily(
+  input: string,
+): RawToken<"fontFamily"> & ChainableMethods<RawToken<"fontFamily">> {
   const families = input
     .split(",")
     .map((f) => f.trim().replace(/^['"]|['"]$/g, ""))
@@ -141,15 +167,20 @@ function fontFamily(input: string): RawToken<"fontFamily"> {
   return createRawToken("fontFamily", { value: families });
 }
 
-function fontWeight(input: number | FontWeightName): RawToken<"fontWeight"> {
+function fontWeight(
+  input: number | FontWeightName,
+): RawToken<"fontWeight"> & ChainableMethods<RawToken<"fontWeight">> {
   if (typeof input === "number") {
+    if (input < 1 || input > 1000) {
+      throw new Error(`Invalid fontWeight: ${input}. Expected a number between 1 and 1000.`);
+    }
     return createRawToken("fontWeight", { value: input });
   }
 
   return createRawToken("fontWeight", { value: FONT_WEIGHT_MAP[input] });
 }
 
-function duration(input: string): RawToken<"duration"> {
+function duration(input: string): RawToken<"duration"> & ChainableMethods<RawToken<"duration">> {
   const match = input.trim().match(/^(-?\d*\.?\d+)(ms|s)$/);
   if (!match) {
     throw new Error(`Invalid duration: ${input}. Expected format like "200ms" or "1s".`);
@@ -161,16 +192,14 @@ function duration(input: string): RawToken<"duration"> {
   });
 }
 
-function cubicBezier(value: [number, number, number, number]): RawToken<"cubicBezier"> {
+function cubicBezier(
+  value: [number, number, number, number],
+): RawToken<"cubicBezier"> & ChainableMethods<RawToken<"cubicBezier">> {
   return createRawToken("cubicBezier", { value });
 }
 
-function number(value: number): RawToken<"number"> {
+function number(value: number): RawToken<"number"> & ChainableMethods<RawToken<"number">> {
   return createRawToken("number", { value });
-}
-
-function generic(value: string): RawToken<"string"> {
-  return createRawToken("string", { value });
 }
 
 function toMember<T extends TokenType>(
@@ -207,7 +236,9 @@ type StrokeStyleInput =
       lineCap: "round" | "butt" | "square";
     };
 
-function strokeStyle(input: StrokeStyleInput): RawToken<"strokeStyle"> {
+function strokeStyle(
+  input: StrokeStyleInput,
+): RawToken<"strokeStyle"> & ChainableMethods<RawToken<"strokeStyle">> {
   if (typeof input === "string") {
     if (!STROKE_STYLE_NAMES.includes(input)) {
       throw new Error(
@@ -232,16 +263,25 @@ function strokeStyle(input: StrokeStyleInput): RawToken<"strokeStyle"> {
   return createRawToken("strokeStyle", value);
 }
 
-type ShadowLayerInput = {
-  color: ColorInput | RawToken<"color"> | StampedToken<"color">;
-  offsetX: string | RawToken<"dimension"> | StampedToken<"dimension">;
-  offsetY: string | RawToken<"dimension"> | StampedToken<"dimension">;
-  blur: string | RawToken<"dimension"> | StampedToken<"dimension">;
-  spread: string | RawToken<"dimension"> | StampedToken<"dimension">;
-  inset?: boolean;
-};
+type ShadowLayerInput =
+  | {
+      color: ColorInput | RawToken<"color"> | StampedToken<"color">;
+      offsetX: string | RawToken<"dimension"> | StampedToken<"dimension">;
+      offsetY: string | RawToken<"dimension"> | StampedToken<"dimension">;
+      blur: string | RawToken<"dimension"> | StampedToken<"dimension">;
+      spread: string | RawToken<"dimension"> | StampedToken<"dimension">;
+      inset?: boolean;
+    }
+  | RawToken<"shadow">
+  | StampedToken<"shadow">;
 
-function toShadowLayer(input: ShadowLayerInput): ShadowLayer {
+function toShadowLayer(input: ShadowLayerInput): ShadowLayer | TokenMember<"shadow"> {
+  if (isStampedToken(input) || isRawToken(input)) {
+    return toMember<"shadow">(input, () => {
+      throw new Error("Unreachable");
+    });
+  }
+
   if (!input.color || !input.offsetX || !input.offsetY || !input.blur || !input.spread) {
     throw new Error(
       "tokens.shadow(...) requires color, offsetX, offsetY, blur, and spread for every layer.",
@@ -258,7 +298,9 @@ function toShadowLayer(input: ShadowLayerInput): ShadowLayer {
   };
 }
 
-function shadow(input: ShadowLayerInput | ShadowLayerInput[]): RawToken<"shadow"> {
+function shadow(
+  input: ShadowLayerInput | ShadowLayerInput[],
+): RawToken<"shadow"> & ChainableMethods<RawToken<"shadow">> {
   const layers = Array.isArray(input) ? input : [input];
   if (layers.length === 0) {
     throw new Error("tokens.shadow(...) requires at least one layer.");
@@ -274,7 +316,7 @@ type BorderInput = {
   style?: StrokeStyleInput | RawToken<"strokeStyle"> | StampedToken<"strokeStyle">;
 };
 
-function border(input: BorderInput): RawToken<"border"> {
+function border(input: BorderInput): RawToken<"border"> & ChainableMethods<RawToken<"border">> {
   if (!input.color || !input.width) {
     throw new Error("tokens.border(...) requires color and width.");
   }
@@ -296,7 +338,9 @@ type TransitionInput = {
     | StampedToken<"cubicBezier">;
 };
 
-function transition(input: TransitionInput): RawToken<"transition"> {
+function transition(
+  input: TransitionInput,
+): RawToken<"transition"> & ChainableMethods<RawToken<"transition">> {
   if (!input.duration || !input.timingFunction) {
     throw new Error("tokens.transition(...) requires duration and timingFunction.");
   }
@@ -313,33 +357,44 @@ function transition(input: TransitionInput): RawToken<"transition"> {
 
 type GradientStopInput = {
   color: ColorInput | RawToken<"color"> | StampedToken<"color">;
-  position: number;
+  position: number | RawToken<"number"> | StampedToken<"number">;
 };
 type GradientInput = {
   kind?: "linear" | "radial" | "conic";
   angle?: string;
-  stops: GradientStopInput[];
+  stops: Array<GradientStopInput | RawToken<"gradient"> | StampedToken<"gradient">>;
 };
 
-function gradient(input: GradientInput): RawToken<"gradient"> {
+function clampPosition(position: number): number {
+  return Math.min(1, Math.max(0, position));
+}
+
+function toGradientStop(
+  input: GradientStopInput | RawToken<"gradient"> | StampedToken<"gradient">,
+): { color: TokenMember<"color">; position: TokenMember<"number"> } | TokenMember<"gradient"> {
+  if (isStampedToken(input) || isRawToken(input)) {
+    return toMember<"gradient">(input, () => {
+      throw new Error("Unreachable");
+    });
+  }
+
+  return {
+    color: toMember(input.color, (raw) => color(raw as ColorInput)),
+    position: toMember(input.position, (raw) => number(clampPosition(raw as number))),
+  };
+}
+
+function gradient(
+  input: GradientInput,
+): RawToken<"gradient"> & ChainableMethods<RawToken<"gradient">> {
   if (!input.stops || input.stops.length < 2) {
     throw new Error("tokens.gradient(...) requires at least 2 stops.");
-  }
-  for (const stop of input.stops) {
-    if (typeof stop.position !== "number" || stop.position < 0 || stop.position > 1) {
-      throw new Error(
-        `Invalid gradient stop position: ${stop.position}. Expected a number between 0 and 1.`,
-      );
-    }
   }
 
   const value: GradientValue = {
     kind: input.kind ?? "linear",
     angle: input.angle ?? "180deg",
-    stops: input.stops.map((stop) => ({
-      color: toMember(stop.color, (raw) => color(raw as ColorInput)),
-      position: stop.position,
-    })),
+    stops: input.stops.map(toGradientStop),
   };
   return createRawToken("gradient", value);
 }
@@ -352,7 +407,9 @@ type TypographyInput = {
   lineHeight?: number | RawToken<"number"> | StampedToken<"number">;
 };
 
-function typography(input: TypographyInput): RawToken<"typography"> {
+function typography(
+  input: TypographyInput,
+): RawToken<"typography"> & ChainableMethods<RawToken<"typography">> {
   if (!input.fontFamily || !input.fontSize || input.fontWeight === undefined) {
     throw new Error("tokens.typography(...) requires fontFamily, fontSize, and fontWeight.");
   }
@@ -403,6 +460,69 @@ function dimensionScale<Key extends string | number>(
   return createScale("dimension", result);
 }
 
+function numberScale<Key extends string | number>(
+  scale: Record<Key, number | RawToken<"number"> | StampedToken<"number">>,
+): TokenScale<Key, "number", RawToken<"number"> | StampedToken<"number">> {
+  const result = {} as Record<Key, RawToken<"number"> | StampedToken<"number">>;
+  for (const [step, input] of Object.entries(scale) as Array<
+    [string, number | RawToken<"number"> | StampedToken<"number">]
+  >) {
+    result[step as Key] = isTokenLeaf(input) ? input : number(input);
+  }
+  return createScale("number", result);
+}
+
+function durationScale<Key extends string | number>(
+  scale: Record<Key, string | RawToken<"duration"> | StampedToken<"duration">>,
+): TokenScale<Key, "duration", RawToken<"duration"> | StampedToken<"duration">> {
+  const result = {} as Record<Key, RawToken<"duration"> | StampedToken<"duration">>;
+  for (const [step, input] of Object.entries(scale) as Array<
+    [string, string | RawToken<"duration"> | StampedToken<"duration">]
+  >) {
+    result[step as Key] = typeof input === "string" ? duration(input) : input;
+  }
+  return createScale("duration", result);
+}
+
+function fontWeightScale<Key extends string | number>(
+  scale: Record<Key, number | FontWeightName | RawToken<"fontWeight"> | StampedToken<"fontWeight">>,
+): TokenScale<Key, "fontWeight", RawToken<"fontWeight"> | StampedToken<"fontWeight">> {
+  const result = {} as Record<Key, RawToken<"fontWeight"> | StampedToken<"fontWeight">>;
+  for (const [step, input] of Object.entries(scale) as Array<
+    [string, number | FontWeightName | RawToken<"fontWeight"> | StampedToken<"fontWeight">]
+  >) {
+    result[step as Key] = isTokenLeaf(input) ? input : fontWeight(input);
+  }
+  return createScale("fontWeight", result);
+}
+
+function shadowScale<Key extends string | number>(
+  scale: Record<
+    Key,
+    ShadowLayerInput | ShadowLayerInput[] | RawToken<"shadow"> | StampedToken<"shadow">
+  >,
+): TokenScale<Key, "shadow", RawToken<"shadow"> | StampedToken<"shadow">> {
+  const result = {} as Record<Key, RawToken<"shadow"> | StampedToken<"shadow">>;
+  for (const [step, input] of Object.entries(scale) as Array<
+    [string, ShadowLayerInput | ShadowLayerInput[] | RawToken<"shadow"> | StampedToken<"shadow">]
+  >) {
+    result[step as Key] = isTokenLeaf(input) ? input : shadow(input);
+  }
+  return createScale("shadow", result);
+}
+
+function typographyScale<Key extends string | number>(
+  scale: Record<Key, TypographyInput | RawToken<"typography"> | StampedToken<"typography">>,
+): TokenScale<Key, "typography", RawToken<"typography"> | StampedToken<"typography">> {
+  const result = {} as Record<Key, RawToken<"typography"> | StampedToken<"typography">>;
+  for (const [step, input] of Object.entries(scale) as Array<
+    [string, TypographyInput | RawToken<"typography"> | StampedToken<"typography">]
+  >) {
+    result[step as Key] = isTokenLeaf(input) ? input : typography(input);
+  }
+  return createScale("typography", result);
+}
+
 export const tokens = {
   color,
   dimension,
@@ -411,9 +531,13 @@ export const tokens = {
   duration,
   cubicBezier,
   number,
-  generic,
   colorScale,
   dimensionScale,
+  numberScale,
+  durationScale,
+  fontWeightScale,
+  shadowScale,
+  typographyScale,
   strokeStyle,
   shadow,
   border,
@@ -432,7 +556,6 @@ export type {
   GradientValue,
   NumberValue,
   ShadowValue,
-  StringValue,
   StrokeStyleValue,
   TransitionValue,
   TypographyValue,

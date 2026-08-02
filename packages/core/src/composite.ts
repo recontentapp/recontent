@@ -45,6 +45,10 @@ export function compositeMembers(
       const shadow = value as ShadowValue;
       const members: CompositeMember[] = [];
       shadow.layers.forEach((layer, index) => {
+        if (!("color" in layer)) {
+          members.push({ key: `layers.${index}`, type: "shadow", member: layer });
+          return;
+        }
         members.push(
           { key: `layers.${index}.color`, type: "color", member: layer.color },
           { key: `layers.${index}.offsetX`, type: "dimension", member: layer.offsetX },
@@ -73,11 +77,18 @@ export function compositeMembers(
     }
     case "gradient": {
       const gradient = value as GradientValue;
-      return gradient.stops.map((stop, index) => ({
-        key: `stops.${index}.color`,
-        type: "color" as TokenType,
-        member: stop.color,
-      }));
+      const members: CompositeMember[] = [];
+      gradient.stops.forEach((stop, index) => {
+        if (!("color" in stop)) {
+          members.push({ key: `stops.${index}`, type: "gradient", member: stop });
+          return;
+        }
+        members.push(
+          { key: `stops.${index}.color`, type: "color", member: stop.color },
+          { key: `stops.${index}.position`, type: "number", member: stop.position },
+        );
+      });
+      return members;
     }
     case "typography": {
       const typography = value as TypographyValue;

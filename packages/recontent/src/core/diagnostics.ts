@@ -74,6 +74,39 @@ function looksLikeScaleObject(value: Record<string, unknown>): boolean {
   return keys.length > 0 && keys.every((key) => /^-?(?:0|[1-9]\d*)(?:\.\d+)?$/.test(key));
 }
 
+function checkNameCollisions(
+  node: Record<string, unknown>,
+  path: string[],
+  diagnostics: TokenDiagnostic[],
+): void {
+  const seenByLowercase = new Map<string, string[]>();
+  for (const key of Object.keys(node)) {
+    const lower = key.toLowerCase();
+    const existing = seenByLowercase.get(lower);
+    if (existing) {
+      existing.push(key);
+    } else {
+      seenByLowercase.set(lower, [key]);
+    }
+  }
+
+  for (const [, keys] of seenByLowercase) {
+    if (keys.length < 2) continue;
+    const uniqueKeys = [...new Set(keys)];
+    if (uniqueKeys.length === 1) {
+      diagnostics.push({
+        path: [...path, uniqueKeys[0]!],
+        message: `Token/group name collision at "${[...path, uniqueKeys[0]!].join(".")}": defined more than once.`,
+      });
+    } else {
+      diagnostics.push({
+        path: [...path, uniqueKeys[0]!],
+        message: `Token/group names differing only by case at "${path.join(".")}": ${uniqueKeys.join(", ")}.`,
+      });
+    }
+  }
+}
+
 function walk(
   node: unknown,
   path: string[],
@@ -85,6 +118,7 @@ function walk(
   }
 
   if (isTokenScale(node)) {
+    checkNameCollisions(node, path, diagnostics);
     for (const [key, value] of Object.entries(node)) {
       walk(value, [...path, key], diagnostics, true);
     }
@@ -102,6 +136,7 @@ function walk(
       return;
     }
 
+    checkNameCollisions(node as Record<string, unknown>, path, diagnostics);
     const childInScale = inScale || looksLikeScaleObject(node as Record<string, unknown>);
     for (const [key, value] of Object.entries(node)) {
       walk(value, [...path, key], diagnostics, childInScale);

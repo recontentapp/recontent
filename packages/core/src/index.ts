@@ -8,3 +8,4 @@ export {
 } from "./config.js";
 export * from "./types.js";
 export * from "./composite.js";
+export * from "./color.js";

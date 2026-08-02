@@ -1,4 +1,5 @@
 import { expect, test } from "@jest/globals";
+import type { ShadowLayer } from "@recontentapp/core";
 import { defineReferenceTokens, tokens } from "../src/index.js";
 
 test("tokens.strokeStyle accepts a keyword", () => {
@@ -36,8 +37,9 @@ test("tokens.shadow builds a single layer from raw input", () => {
   });
   expect(token.$type).toBe("shadow");
   expect(token.$value.layers.length).toBe(1);
-  expect(token.$value.layers[0]?.color.alias).toBeUndefined();
-  expect(token.$value.layers[0]?.offsetY.$value).toEqual({ value: 2, unit: "px" });
+  const layer = token.$value.layers[0] as ShadowLayer;
+  expect(layer.color.alias).toBeUndefined();
+  expect(layer.offsetY.$value).toEqual({ value: 2, unit: "px" });
 });
 
 test("tokens.shadow builds multiple layers and records member aliases", () => {
@@ -54,9 +56,10 @@ test("tokens.shadow builds multiple layers and records member aliases", () => {
     { color: "#111111", offsetX: "0px", offsetY: "4px", blur: "8px", spread: "0px" },
   ]);
   expect(token.$value.layers.length).toBe(2);
-  expect(token.$value.layers[0]?.color.alias).toEqual(["ref", "color", "black"]);
-  expect(token.$value.layers[0]?.inset).toBe(true);
-  expect(token.$value.layers[1]?.inset).toBeUndefined();
+  const [layer0, layer1] = token.$value.layers as [ShadowLayer, ShadowLayer];
+  expect(layer0.color.alias).toEqual(["ref", "color", "black"]);
+  expect(layer0.inset).toBe(true);
+  expect(layer1.inset).toBeUndefined();
 });
 
 test("tokens.shadow requires all layer members", () => {
@@ -87,15 +90,19 @@ test("tokens.gradient requires at least 2 stops", () => {
   expect(() => tokens.gradient({ stops: [{ color: "#000000", position: 0 }] })).toThrow();
 });
 
-test("tokens.gradient validates stop positions", () => {
-  expect(() =>
-    tokens.gradient({
-      stops: [
-        { color: "#000000", position: -0.1 },
-        { color: "#ffffff", position: 1 },
-      ],
-    }),
-  ).toThrow();
+test("tokens.gradient clamps out-of-range stop positions", () => {
+  const token = tokens.gradient({
+    stops: [
+      { color: "#000000", position: -0.1 },
+      { color: "#ffffff", position: 1.5 },
+    ],
+  });
+  const [first, second] = token.$value.stops as unknown as [
+    { position: { $value: { value: number } } },
+    { position: { $value: { value: number } } },
+  ];
+  expect(first.position.$value.value).toBe(0);
+  expect(second.position.$value.value).toBe(1);
 });
 
 test("tokens.gradient defaults kind and angle", () => {

@@ -52,6 +52,18 @@ function renderAlias(entry: TokenEntry): string {
   return `<span class="alias">→ ${escapeHtml(pathKey(entry.alias))}</span>`;
 }
 
+function renderMetadata(entry: TokenEntry): string {
+  const parts: string[] = [];
+  if (entry.$deprecated) {
+    const reason = typeof entry.$deprecated === "string" ? `: ${entry.$deprecated}` : "";
+    parts.push(`<span class="badge deprecated">Deprecated${escapeHtml(reason)}</span>`);
+  }
+  if (entry.$description) {
+    parts.push(`<p class="description">${escapeHtml(entry.$description)}</p>`);
+  }
+  return parts.join("\n");
+}
+
 function renderColorEntry(entry: TokenEntry): string {
   const color = entry.$value as import("@recontentapp/core").TokenTypeMap["color"];
   const display = serializeValueCss("color", color);
@@ -63,6 +75,7 @@ function renderColorEntry(entry: TokenEntry): string {
         <code class="path">${escapeHtml(pathKey(entry.path))}</code>
         <span class="value">${escapeHtml(display)}</span>
         ${renderAlias(entry)}
+        ${renderMetadata(entry)}
       </div>
     </div>`;
 }
@@ -77,6 +90,7 @@ function renderFontFamilyEntry(entry: TokenEntry): string {
         <code class="path">${escapeHtml(pathKey(entry.path))}</code>
         <span class="value">${escapeHtml(families)}</span>
         ${renderAlias(entry)}
+        ${renderMetadata(entry)}
       </div>
       <p class="font-preview" style="font-family: ${escapeHtml(families)}">The quick brown fox jumps over the lazy dog</p>
     </div>`;
@@ -95,6 +109,7 @@ function renderShadowEntry(entry: TokenEntry): string {
         <code class="path">${escapeHtml(pathKey(entry.path))}</code>
         <span class="value">${escapeHtml(display)}</span>
         ${renderAlias(entry)}
+        ${renderMetadata(entry)}
       </div>
     </div>`;
 }
@@ -112,6 +127,7 @@ function renderBorderEntry(entry: TokenEntry): string {
         <code class="path">${escapeHtml(pathKey(entry.path))}</code>
         <span class="value">${escapeHtml(display)}</span>
         ${renderAlias(entry)}
+        ${renderMetadata(entry)}
       </div>
     </div>`;
 }
@@ -129,6 +145,7 @@ function renderGradientEntry(entry: TokenEntry): string {
         <code class="path">${escapeHtml(pathKey(entry.path))}</code>
         <span class="value">${escapeHtml(display)}</span>
         ${renderAlias(entry)}
+        ${renderMetadata(entry)}
       </div>
     </div>`;
 }
@@ -148,6 +165,7 @@ function renderTypographyEntry(entry: TokenEntry): string {
       <div class="token-meta">
         <code class="path">${escapeHtml(pathKey(entry.path))}</code>
         ${renderAlias(entry)}
+        ${renderMetadata(entry)}
       </div>
       <p class="font-preview" style="${escapeHtml(style)}">The quick brown fox jumps over the lazy dog</p>
     </div>`;
@@ -167,6 +185,7 @@ function renderTransitionEntry(entry: TokenEntry): string {
         <code class="path">${escapeHtml(pathKey(entry.path))}</code>
         <span class="value">${escapeHtml(display)}</span>
         ${renderAlias(entry)}
+        ${renderMetadata(entry)}
       </div>
     </div>`;
 }
@@ -180,6 +199,7 @@ function renderGenericEntry(entry: TokenEntry): string {
         <code class="path">${escapeHtml(pathKey(entry.path))}</code>
         <span class="value">${escapeHtml(display)}</span>
         ${renderAlias(entry)}
+        ${renderMetadata(entry)}
       </div>
     </div>`;
 }
@@ -344,6 +364,15 @@ export function generateHtmlReport(config: Config): string {
     .path { font-size: 0.875rem; color: var(--accent); }
     .value { font-size: 0.875rem; color: var(--muted); }
     .alias { font-size: 0.8125rem; color: var(--muted); font-style: italic; }
+    .description { flex-basis: 100%; margin: 0; font-size: 0.8125rem; color: var(--muted); }
+    .badge.deprecated {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #b45309;
+      background: #fef3c7;
+      border-radius: 0.25rem;
+      padding: 0.125rem 0.4rem;
+    }
     .font-preview { margin: 0.5rem 0 0; font-size: 1.125rem; }
     .themes ul { margin: 0; padding-left: 1.25rem; }
     .themes li { margin-bottom: 0.25rem; }

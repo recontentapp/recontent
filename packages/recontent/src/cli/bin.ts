@@ -2,7 +2,7 @@
 
 import { Command } from "commander";
 import { runBuild } from "./commands/build.js";
-import { runFigmaExport } from "./commands/figma-export.js";
+import { runDtcgExport } from "./commands/dtcg-export.js";
 import { runInit } from "./commands/init.js";
 import { runLint } from "./commands/lint.js";
 import { runVisualize } from "./commands/visualize.js";
@@ -48,12 +48,24 @@ program
   });
 
 program
-  .command("figma-export")
-  .description("Export tokens to DTCG-Figma compatible .tokens.json files")
+  .command("dtcg-export")
+  .description("Export tokens to DTCG-compatible .tokens.json files")
   .option("-c, --config <path>", "Path to config file", "recontent.config.ts")
   .option("-o, --output <dir>", "Output directory for .tokens.json files", ".")
   .action(async (options: { config: string; output: string }) => {
-    await runFigmaExport({ config: options.config, output: options.output });
+    await runDtcgExport({ config: options.config, output: options.output });
+  });
+
+program
+  .command("figma-export", { hidden: true })
+  .description("Deprecated alias for dtcg-export")
+  .option("-c, --config <path>", "Path to config file", "recontent.config.ts")
+  .option("-o, --output <dir>", "Output directory for .tokens.json files", ".")
+  .action(async (options: { config: string; output: string }) => {
+    console.error(
+      'Warning: "figma-export" is deprecated and will be removed in a future release. Use "dtcg-export" instead.',
+    );
+    await runDtcgExport({ config: options.config, output: options.output });
   });
 
 program.parseAsync(process.argv).catch((error: unknown) => {

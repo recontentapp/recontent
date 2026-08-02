@@ -1,0 +1,152 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`generateDtcg produces a full snapshot for a mixed-type tree 1`] = `
+{
+  "button": {
+    "background": {
+      "$deprecated": "Use system.colors.surface instead.",
+      "$description": "Primary accent color.",
+      "$type": "color",
+      "$value": "{system.colors.accent}",
+    },
+  },
+  "ref": {
+    "color": {
+      "$type": "color",
+      "black": {
+        "$value": {
+          "alpha": 1,
+          "colorSpace": "srgb",
+          "components": [
+            0,
+            0,
+            0,
+          ],
+          "hex": "#000000",
+        },
+      },
+      "white": {
+        "$value": {
+          "alpha": 1,
+          "colorSpace": "srgb",
+          "components": [
+            1,
+            1,
+            1,
+          ],
+          "hex": "#ffffff",
+        },
+      },
+    },
+    "spacing": {
+      "$type": "dimension",
+      "0": {
+        "$value": {
+          "unit": "px",
+          "value": 0,
+        },
+      },
+      "1": {
+        "$value": {
+          "unit": "px",
+          "value": 4,
+        },
+      },
+      "2": {
+        "$value": {
+          "unit": "px",
+          "value": 8,
+        },
+      },
+    },
+  },
+  "system": {
+    "colors": {
+      "$type": "color",
+      "accent": {
+        "$description": "Primary accent color.",
+        "$value": "{ref.color.black}",
+      },
+      "surface": {
+        "$value": "{ref.color.white}",
+      },
+    },
+    "gradient": {
+      "accent": {
+        "$extensions": {
+          "com.recontent": {
+            "angle": "90deg",
+            "kind": "linear",
+          },
+        },
+        "$type": "gradient",
+        "$value": [
+          {
+            "color": "{ref.color.black}",
+            "position": 0,
+          },
+          {
+            "color": "{ref.color.white}",
+            "position": 1,
+          },
+        ],
+      },
+    },
+    "shadow": {
+      "elevated": {
+        "$type": "shadow",
+        "$value": [
+          {
+            "blur": {
+              "unit": "px",
+              "value": 4,
+            },
+            "color": "{ref.color.black}",
+            "inset": true,
+            "offsetX": {
+              "unit": "px",
+              "value": 0,
+            },
+            "offsetY": {
+              "unit": "px",
+              "value": 2,
+            },
+            "spread": {
+              "unit": "px",
+              "value": 0,
+            },
+          },
+          {
+            "blur": {
+              "unit": "px",
+              "value": 2,
+            },
+            "color": {
+              "alpha": 1,
+              "colorSpace": "srgb",
+              "components": [
+                0.06666666666666667,
+                0.06666666666666667,
+                0.06666666666666667,
+              ],
+              "hex": "#111111",
+            },
+            "offsetX": {
+              "unit": "px",
+              "value": 0,
+            },
+            "offsetY": {
+              "unit": "px",
+              "value": 1,
+            },
+            "spread": {
+              "unit": "px",
+              "value": 0,
+            },
+          },
+        ],
+      },
+    },
+  },
+}
+`;
