@@ -2,9 +2,9 @@
 
 import { Command } from "commander";
 import { runBuild } from "./commands/build.js";
+import { runDoctor } from "./commands/doctor.js";
 import { runDtcgExport } from "./commands/dtcg-export.js";
 import { runInit } from "./commands/init.js";
-import { runLint } from "./commands/lint.js";
 import { runHtmlExport } from "./commands/html-export.js";
 
 const program = new Command();
@@ -41,11 +41,13 @@ program
   });
 
 program
-  .command("lint")
-  .description("Warn about unknown or anonymous token values")
+  .command("doctor")
+  .description(
+    "Validate config, registry, and resolvable dependencies (unknown token values, broken aliases, missing/mismatched runtime dependencies)",
+  )
   .option("-c, --config <path>", "Path to config file", "recontent.config.ts")
   .action(async (options: { config: string }) => {
-    await runLint({ config: options.config });
+    await runDoctor({ config: options.config });
   });
 
 program
