@@ -5,5 +5,5 @@
     "noEmit": true,
     "strict": true
   },
-  "include": ["dev/ts/tokens.ts", "dev/native/tokens.ts"]
+  "include": ["dev/generated/ts/tokens.ts", "dev/generated/native/tokens.ts"]
 }
