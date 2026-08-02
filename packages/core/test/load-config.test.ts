@@ -1,8 +1,8 @@
-import assert from "node:assert/strict";
-import { mkdtemp, mkdir, rm, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
+import os from "node:os";
 import path from "node:path";
-import test from "node:test";
-import { ConfigLoadError, loadConfig, resolveConfigPath } from "../dist/index.mjs";
+import { expect, test } from "@jest/globals";
+import { ConfigLoadError, loadConfig, resolveConfigPath } from "../src/config.js";
 
 const configSource = `
   import { defineConfig, tokens } from "recontent";
@@ -15,7 +15,10 @@ const configSource = `
   });
 `;
 
-async function withFixture(files, run) {
+async function withFixture(
+  files: Record<string, string>,
+  run: (directory: string) => Promise<void>,
+) {
   const directory = await mkdtemp(path.join(process.cwd(), "test/fixture-"));
   try {
     await Promise.all(
@@ -34,7 +37,7 @@ async function withFixture(files, run) {
 test("loads a default config exporting recontent definitions", async () => {
   await withFixture({ "recontent.config.ts": configSource }, async (directory) => {
     const config = await loadConfig(path.join(directory, "recontent.config.ts"));
-    assert.equal(config.registry.size, 1);
+    expect(config.registry.size).toBe(1);
   });
 });
 
@@ -48,7 +51,7 @@ test("loads a named config export", async () => {
     },
     async (directory) => {
       const config = await loadConfig(path.join(directory, "recontent.config.ts"));
-      assert.equal(config.registry.size, 1);
+      expect(config.registry.size).toBe(1);
     },
   );
 });
@@ -64,25 +67,40 @@ test("honors TypeScript path aliases", async () => {
     },
     async (directory) => {
       const config = await loadConfig(path.join(directory, "recontent.config.ts"));
-      assert.equal(config.registry.size, 1);
+      expect(config.registry.size).toBe(1);
     },
   );
 });
 
 test("rejects invalid configuration exports", async () => {
   await withFixture({ "recontent.config.ts": "export default {};" }, async (directory) => {
-    await assert.rejects(loadConfig(path.join(directory, "recontent.config.ts")), ConfigLoadError);
+    await expect(loadConfig(path.join(directory, "recontent.config.ts"))).rejects.toBeInstanceOf(
+      ConfigLoadError,
+    );
   });
 });
 
-test("resolves relative, absolute, and home config paths", () => {
-  assert.equal(resolveConfigPath("/tmp/recontent.config.ts"), "/tmp/recontent.config.ts");
-  assert.equal(
-    resolveConfigPath("~/recontent.config.ts"),
-    path.join(process.env.HOME, "recontent.config.ts"),
+test("wraps loader failures in a ConfigLoadError", async () => {
+  await withFixture(
+    { "recontent.config.ts": "export default from syntax error(" },
+    async (directory) => {
+      await expect(loadConfig(path.join(directory, "recontent.config.ts"))).rejects.toBeInstanceOf(
+        ConfigLoadError,
+      );
+    },
   );
-  assert.equal(
-    resolveConfigPath("recontent.config.ts"),
+});
+
+test("resolves relative, absolute, and home config paths", () => {
+  expect(resolveConfigPath("/tmp/recontent.config.ts")).toBe("/tmp/recontent.config.ts");
+  expect(resolveConfigPath("~/recontent.config.ts")).toBe(
+    path.join(os.homedir(), "recontent.config.ts"),
+  );
+  expect(resolveConfigPath("recontent.config.ts")).toBe(
     path.resolve(process.cwd(), "recontent.config.ts"),
   );
+});
+
+test("resolves a path starting with a bare ~", () => {
+  expect(resolveConfigPath("~config.ts")).toBe(path.join(os.homedir(), "config.ts"));
 });

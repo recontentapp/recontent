@@ -1,33 +1,34 @@
-import assert from "node:assert/strict";
-import test from "node:test";
-import { componentRanges, isColorSpace, toSrgbHex } from "../dist/index.mjs";
+import { expect, test } from "@jest/globals";
+import { componentRanges, isColorSpace, toSrgbHex } from "../src/color.js";
 
-function assertHexClose(actual, expected) {
+function assertHexClose(actual: string, expected: string) {
   // Allow +/-1 per channel for rounding across conversion matrices.
   const a = actual.match(/^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i);
   const e = expected.match(/^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i);
-  assert.ok(a && e, `expected 6-digit hex strings, got ${actual} / ${expected}`);
+  expect(a).toBeTruthy();
+  expect(e).toBeTruthy();
   for (let i = 1; i <= 3; i++) {
-    const diff = Math.abs(parseInt(a[i], 16) - parseInt(e[i], 16));
-    assert.ok(diff <= 1, `channel ${i} differs too much: ${actual} vs ${expected}`);
+    const diff = Math.abs(parseInt(a![i]!, 16) - parseInt(e![i]!, 16));
+    expect(diff).toBeLessThanOrEqual(1);
   }
 }
 
 test("toSrgbHex is a no-op passthrough for srgb", () => {
-  assert.equal(toSrgbHex("srgb", [1, 0, 0]), "#ff0000");
-  assert.equal(toSrgbHex("srgb", [0, 1, 0]), "#00ff00");
-  assert.equal(toSrgbHex("srgb", [0, 0, 1]), "#0000ff");
+  expect(toSrgbHex("srgb", [1, 0, 0])).toBe("#ff0000");
+  expect(toSrgbHex("srgb", [0, 1, 0])).toBe("#00ff00");
+  expect(toSrgbHex("srgb", [0, 0, 1])).toBe("#0000ff");
 });
 
 test("toSrgbHex always returns a 6-digit hex string", () => {
-  for (const [space, components] of [
+  const cases: Array<[Parameters<typeof toSrgbHex>[0], Parameters<typeof toSrgbHex>[1]]> = [
     ["srgb", [0.5, 0.2, 0.9]],
     ["hsl", [210, 50, 50]],
     ["oklch", [0.7, 0.1, 250]],
     ["lab", [50, 20, -30]],
-  ]) {
+  ];
+  for (const [space, components] of cases) {
     const hex = toSrgbHex(space, components);
-    assert.match(hex, /^#[0-9a-f]{6}$/);
+    expect(hex).toMatch(/^#[0-9a-f]{6}$/);
   }
 });
 
@@ -88,27 +89,46 @@ test("toSrgbHex converts xyz-d65 and xyz-d50 white points to srgb white", () => 
 });
 
 test('toSrgbHex treats "none" components as 0', () => {
-  assert.equal(toSrgbHex("srgb", ["none", "none", "none"]), "#000000");
-  assert.equal(toSrgbHex("srgb", ["none", 1, "none"]), "#00ff00");
+  expect(toSrgbHex("srgb", ["none", "none", "none"])).toBe("#000000");
+  expect(toSrgbHex("srgb", ["none", 1, "none"])).toBe("#00ff00");
 });
 
 test("toSrgbHex clamps out-of-gamut values instead of throwing", () => {
   const hex = toSrgbHex("srgb", [1.5, -0.5, 0.5]);
-  assert.match(hex, /^#[0-9a-f]{6}$/);
-  assert.equal(hex, "#ff0080");
+  expect(hex).toMatch(/^#[0-9a-f]{6}$/);
+  expect(hex).toBe("#ff0080");
 });
 
 test("componentRanges returns the expected ranges for angle/percentage spaces", () => {
-  assert.deepEqual(componentRanges("hsl"), [
+  expect(componentRanges("hsl")).toEqual([
     { min: 0, max: 360 },
     { min: 0, max: 100 },
     { min: 0, max: 100 },
   ]);
-  assert.deepEqual(componentRanges("oklch"), [
+  expect(componentRanges("oklch")).toEqual([
     { min: 0, max: 1 },
     { min: 0, max: 0.4 },
     { min: 0, max: 360 },
   ]);
+});
+
+test("componentRanges returns unit ranges for xyz and rgb-like spaces", () => {
+  for (const space of [
+    "srgb",
+    "srgb-linear",
+    "display-p3",
+    "a98-rgb",
+    "prophoto-rgb",
+    "rec2020",
+    "xyz-d65",
+    "xyz-d50",
+  ] as const) {
+    expect(componentRanges(space)).toEqual([
+      { min: 0, max: 1 },
+      { min: 0, max: 1 },
+      { min: 0, max: 1 },
+    ]);
+  }
 });
 
 test("isColorSpace recognizes all 14 spec spaces and rejects unknown strings", () => {
@@ -128,7 +148,7 @@ test("isColorSpace recognizes all 14 spec spaces and rejects unknown strings", (
     "xyz-d65",
     "xyz-d50",
   ]) {
-    assert.equal(isColorSpace(space), true, space);
+    expect(isColorSpace(space)).toBe(true);
   }
-  assert.equal(isColorSpace("not-a-space"), false);
+  expect(isColorSpace("not-a-space")).toBe(false);
 });
