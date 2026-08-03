@@ -10,6 +10,6 @@ export type HtmlExportOptions = {
 export async function runHtmlExport(options: HtmlExportOptions = {}): Promise<void> {
   const config = await loadConfig(options.config);
   const html = generateHtmlReport(config);
-  const outputPath = await writeOutputFile(options.output ?? "tokens.html", html);
+  const { path: outputPath } = await writeOutputFile(options.output ?? "tokens.html", html);
   logSuccess(`Wrote token report to ${outputPath}`);
 }

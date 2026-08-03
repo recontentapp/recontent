@@ -55,6 +55,16 @@ const themeRef = {
     "3xl": "30px",
     "4xl": "36px",
   },
+  fontSizeScale: {
+    xs: "10px",
+    sm: "12px",
+    base: "14px",
+    lg: "17px",
+    xl: "20px",
+    "2xl": "24px",
+    "3xl": "30px",
+    "4xl": "36px",
+  },
 } as const;
 
 const themeSystem = {
@@ -79,6 +89,12 @@ const themeSystem = {
     onError: themeRef.color.white,
     secondary: {
       "200": themeRef.color.blue600,
+    },
+    textScale: {
+      primary: themeRef.color.gray950,
+      secondary: themeRef.color.gray700,
+      disabled: themeRef.color.gray400,
+      accent: themeRef.color.blue600,
     },
   },
   spacing: {
@@ -166,6 +182,48 @@ const themeSystem = {
       lineHeight: 1.4286,
     },
   },
+  textScale: {
+    supporting: {
+      fontFamily:
+        "-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif",
+      fontSize: themeRef.fontSize.sm,
+      fontWeight: 400,
+      letterSpacing: "0px",
+      lineHeight: 1.6667,
+    },
+    body: {
+      fontFamily:
+        "-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif",
+      fontSize: themeRef.fontSize.base,
+      fontWeight: 400,
+      letterSpacing: "0px",
+      lineHeight: 1.4286,
+    },
+    heading1: {
+      fontFamily:
+        "-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif",
+      fontSize: themeRef.fontSize["4xl"],
+      fontWeight: 700,
+      letterSpacing: "0px",
+      lineHeight: 1,
+    },
+    heading2: {
+      fontFamily:
+        "-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif",
+      fontSize: themeRef.fontSize.xl,
+      fontWeight: 600,
+      letterSpacing: "0px",
+      lineHeight: 1.4,
+    },
+    heading3: {
+      fontFamily:
+        "-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif",
+      fontSize: themeRef.fontSize["2xl"],
+      fontWeight: 600,
+      letterSpacing: "0px",
+      lineHeight: 1.2,
+    },
+  },
   transitions: {
     standard: {
       transitionDuration: "175ms",
@@ -251,6 +309,16 @@ const blackThemeRef = {
     "3xl": "30px",
     "4xl": "36px",
   },
+  fontSizeScale: {
+    xs: "10px",
+    sm: "12px",
+    base: "14px",
+    lg: "17px",
+    xl: "20px",
+    "2xl": "24px",
+    "3xl": "30px",
+    "4xl": "36px",
+  },
 } as const;
 
 const blackThemeSystem = {
@@ -275,6 +343,12 @@ const blackThemeSystem = {
     onError: blackThemeRef.color.white,
     secondary: {
       "200": "#2694fe",
+    },
+    textScale: {
+      primary: blackThemeRef.color.gray950,
+      secondary: blackThemeRef.color.gray700,
+      disabled: blackThemeRef.color.gray400,
+      accent: blackThemeRef.color.blue600,
     },
   },
   spacing: {
@@ -362,6 +436,48 @@ const blackThemeSystem = {
       lineHeight: 1.4286,
     },
   },
+  textScale: {
+    supporting: {
+      fontFamily:
+        "-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif",
+      fontSize: blackThemeRef.fontSize.sm,
+      fontWeight: 400,
+      letterSpacing: "0px",
+      lineHeight: 1.6667,
+    },
+    body: {
+      fontFamily:
+        "-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif",
+      fontSize: blackThemeRef.fontSize.base,
+      fontWeight: 400,
+      letterSpacing: "0px",
+      lineHeight: 1.4286,
+    },
+    heading1: {
+      fontFamily:
+        "-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif",
+      fontSize: blackThemeRef.fontSize["4xl"],
+      fontWeight: 700,
+      letterSpacing: "0px",
+      lineHeight: 1,
+    },
+    heading2: {
+      fontFamily:
+        "-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif",
+      fontSize: blackThemeRef.fontSize.xl,
+      fontWeight: 600,
+      letterSpacing: "0px",
+      lineHeight: 1.4,
+    },
+    heading3: {
+      fontFamily:
+        "-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif",
+      fontSize: blackThemeRef.fontSize["2xl"],
+      fontWeight: 600,
+      letterSpacing: "0px",
+      lineHeight: 1.2,
+    },
+  },
   transitions: {
     standard: {
       transitionDuration: "175ms",
@@ -402,9 +518,17 @@ export type RefRadiusScale = "none" | "inner" | "element" | "container" | "page"
 
 export const refRadiusScale = theme.ref.radiusScale;
 
+export type RefFontSizeScale = "xs" | "sm" | "base" | "lg" | "xl" | "2xl" | "3xl" | "4xl";
+
+export const refFontSizeScale = theme.ref.fontSizeScale;
+
 export type SystemColorsSecondary = 200;
 
 export const systemColorsSecondary = theme.system.colors.secondary;
+
+export type SystemColorsTextScale = "primary" | "secondary" | "disabled" | "accent";
+
+export const systemColorsTextScale = theme.system.colors.textScale;
 
 export type SystemSpacing = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 8 | 10 | 12 | "0-5" | "1-5";
 
@@ -417,6 +541,10 @@ export const systemElevationScale = theme.system.elevationScale;
 export type SystemBorderScale = "thin" | "thick";
 
 export const systemBorderScale = theme.system.borderScale;
+
+export type SystemTextScale = "supporting" | "body" | "heading1" | "heading2" | "heading3";
+
+export const systemTextScale = theme.system.textScale;
 
 export type SystemTransitionScale = "fast" | "slow";
 

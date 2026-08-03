@@ -63,6 +63,16 @@ const ref = defineReferenceTokens({
     "3xl": tokens.dimension("30px"),
     "4xl": tokens.dimension("36px"),
   },
+  fontSizeScale: tokens.dimensionScale({
+    xs: "10px",
+    sm: "12px",
+    base: "14px",
+    lg: "17px",
+    xl: "20px",
+    "2xl": "24px",
+    "3xl": "30px",
+    "4xl": "36px",
+  }),
 });
 
 const system = defineSystemTokens({
@@ -86,6 +96,12 @@ const system = defineSystemTokens({
     onWarning: ref.color.gray950,
     onError: ref.color.white,
     secondary: tokens.colorScale({ 200: ref.color.blue600 }),
+    textScale: tokens.colorScale({
+      primary: ref.color.gray950,
+      secondary: ref.color.gray700,
+      disabled: ref.color.gray400,
+      accent: ref.color.blue600,
+    }),
   },
   spacing: ref.spacing,
   radius: ref.radius,
@@ -179,6 +195,43 @@ const system = defineSystemTokens({
       lineHeight: 1.4286,
     }),
   },
+  textScale: tokens.typographyScale({
+    supporting: {
+      fontFamily:
+        '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
+      fontSize: ref.fontSize.sm,
+      fontWeight: "regular",
+      lineHeight: 1.6667,
+    },
+    body: {
+      fontFamily:
+        '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
+      fontSize: ref.fontSize.base,
+      fontWeight: "regular",
+      lineHeight: 1.4286,
+    },
+    heading1: {
+      fontFamily:
+        '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
+      fontSize: ref.fontSize["4xl"],
+      fontWeight: "bold",
+      lineHeight: 1,
+    },
+    heading2: {
+      fontFamily:
+        '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
+      fontSize: ref.fontSize.xl,
+      fontWeight: "semibold",
+      lineHeight: 1.4,
+    },
+    heading3: {
+      fontFamily:
+        '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
+      fontSize: ref.fontSize["2xl"],
+      fontWeight: "semibold",
+      lineHeight: 1.2,
+    },
+  }),
   transitions: {
     standard: tokens.transition({
       duration: "175ms",
@@ -246,6 +299,9 @@ export default defineConfig({
         },
         Stack: { spacing: system.spacing },
         StackItem: { spacing: system.spacing },
+        Grid: { spacing: system.spacing },
+        Text: { typography: system.textScale, color: system.colors.textScale },
+        Icon: { size: ref.fontSizeScale, color: system.colors.textScale },
       },
     },
   ],

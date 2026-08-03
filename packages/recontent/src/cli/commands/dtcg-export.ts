@@ -13,14 +13,14 @@ export async function runDtcgExport(options: DtcgExportOptions = {}): Promise<vo
   const outputDir = options.output ?? ".";
   const written: string[] = [];
 
-  const basePath = await writeOutputFile(
+  const { path: basePath } = await writeOutputFile(
     path.join(outputDir, "tokens.tokens.json"),
     generateDtcgJson(config),
   );
   written.push(basePath);
 
   for (const themeName of Object.keys(config.themes).sort()) {
-    const themePath = await writeOutputFile(
+    const { path: themePath } = await writeOutputFile(
       path.join(outputDir, `${themeName}.tokens.json`),
       generateDtcgThemedJson(config, themeName),
     );

@@ -58,6 +58,16 @@ export const vars = createThemeContract({
       "3xl": null,
       "4xl": null,
     },
+    fontSizeScale: {
+      xs: null,
+      sm: null,
+      base: null,
+      lg: null,
+      xl: null,
+      "2xl": null,
+      "3xl": null,
+      "4xl": null,
+    },
   },
   system: {
     colors: {
@@ -81,6 +91,12 @@ export const vars = createThemeContract({
       onError: null,
       secondary: {
         "200": null,
+      },
+      textScale: {
+        primary: null,
+        secondary: null,
+        disabled: null,
+        accent: null,
       },
     },
     spacing: {
@@ -166,6 +182,43 @@ export const vars = createThemeContract({
         lineHeight: null,
       },
     },
+    textScale: {
+      supporting: {
+        fontFamily: null,
+        fontSize: null,
+        fontWeight: null,
+        letterSpacing: null,
+        lineHeight: null,
+      },
+      body: {
+        fontFamily: null,
+        fontSize: null,
+        fontWeight: null,
+        letterSpacing: null,
+        lineHeight: null,
+      },
+      heading1: {
+        fontFamily: null,
+        fontSize: null,
+        fontWeight: null,
+        letterSpacing: null,
+        lineHeight: null,
+      },
+      heading2: {
+        fontFamily: null,
+        fontSize: null,
+        fontWeight: null,
+        letterSpacing: null,
+        lineHeight: null,
+      },
+      heading3: {
+        fontFamily: null,
+        fontSize: null,
+        fontWeight: null,
+        letterSpacing: null,
+        lineHeight: null,
+      },
+    },
     transitions: {
       standard: {
         transitionDuration: null,
@@ -200,9 +253,17 @@ export type RefRadiusScale = "none" | "inner" | "element" | "container" | "page"
 
 export const refRadiusScale = vars.ref.radiusScale;
 
+export type RefFontSizeScale = "xs" | "sm" | "base" | "lg" | "xl" | "2xl" | "3xl" | "4xl";
+
+export const refFontSizeScale = vars.ref.fontSizeScale;
+
 export type SystemColorsSecondary = 200;
 
 export const systemColorsSecondary = vars.system.colors.secondary;
+
+export type SystemColorsTextScale = "primary" | "secondary" | "disabled" | "accent";
+
+export const systemColorsTextScale = vars.system.colors.textScale;
 
 export type SystemSpacing = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 8 | 10 | 12 | "0-5" | "1-5";
 
@@ -215,6 +276,10 @@ export const systemElevationScale = vars.system.elevationScale;
 export type SystemBorderScale = "thin" | "thick";
 
 export const systemBorderScale = vars.system.borderScale;
+
+export type SystemTextScale = "supporting" | "body" | "heading1" | "heading2" | "heading3";
+
+export const systemTextScale = vars.system.textScale;
 
 export type SystemTransitionScale = "fast" | "slow";
 
@@ -282,6 +347,16 @@ export const themeClass = createTheme(vars, {
       "3xl": "30px",
       "4xl": "36px",
     },
+    fontSizeScale: {
+      xs: "10px",
+      sm: "12px",
+      base: "14px",
+      lg: "17px",
+      xl: "20px",
+      "2xl": "24px",
+      "3xl": "30px",
+      "4xl": "36px",
+    },
   },
   system: {
     colors: {
@@ -305,6 +380,12 @@ export const themeClass = createTheme(vars, {
       onError: vars.ref.color.white,
       secondary: {
         "200": vars.ref.color.blue600,
+      },
+      textScale: {
+        primary: vars.ref.color.gray950,
+        secondary: vars.ref.color.gray700,
+        disabled: vars.ref.color.gray400,
+        accent: vars.ref.color.blue600,
       },
     },
     spacing: {
@@ -390,6 +471,48 @@ export const themeClass = createTheme(vars, {
         fontWeight: "400",
         letterSpacing: "0px",
         lineHeight: "1.4286",
+      },
+    },
+    textScale: {
+      supporting: {
+        fontFamily:
+          "-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif",
+        fontSize: vars.ref.fontSize.sm,
+        fontWeight: "400",
+        letterSpacing: "0px",
+        lineHeight: "1.6667",
+      },
+      body: {
+        fontFamily:
+          "-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif",
+        fontSize: vars.ref.fontSize.base,
+        fontWeight: "400",
+        letterSpacing: "0px",
+        lineHeight: "1.4286",
+      },
+      heading1: {
+        fontFamily:
+          "-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif",
+        fontSize: vars.ref.fontSize["4xl"],
+        fontWeight: "700",
+        letterSpacing: "0px",
+        lineHeight: "1",
+      },
+      heading2: {
+        fontFamily:
+          "-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif",
+        fontSize: vars.ref.fontSize.xl,
+        fontWeight: "600",
+        letterSpacing: "0px",
+        lineHeight: "1.4",
+      },
+      heading3: {
+        fontFamily:
+          "-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif",
+        fontSize: vars.ref.fontSize["2xl"],
+        fontWeight: "600",
+        letterSpacing: "0px",
+        lineHeight: "1.2",
       },
     },
     transitions: {
@@ -476,6 +599,16 @@ export const blackThemeThemeClass = createTheme(vars, {
       "3xl": "30px",
       "4xl": "36px",
     },
+    fontSizeScale: {
+      xs: "10px",
+      sm: "12px",
+      base: "14px",
+      lg: "17px",
+      xl: "20px",
+      "2xl": "24px",
+      "3xl": "30px",
+      "4xl": "36px",
+    },
   },
   system: {
     colors: {
@@ -499,6 +632,12 @@ export const blackThemeThemeClass = createTheme(vars, {
       onError: vars.ref.color.white,
       secondary: {
         "200": "#2694fe",
+      },
+      textScale: {
+        primary: vars.ref.color.gray950,
+        secondary: vars.ref.color.gray700,
+        disabled: vars.ref.color.gray400,
+        accent: vars.ref.color.blue600,
       },
     },
     spacing: {
@@ -584,6 +723,48 @@ export const blackThemeThemeClass = createTheme(vars, {
         fontWeight: "400",
         letterSpacing: "0px",
         lineHeight: "1.4286",
+      },
+    },
+    textScale: {
+      supporting: {
+        fontFamily:
+          "-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif",
+        fontSize: vars.ref.fontSize.sm,
+        fontWeight: "400",
+        letterSpacing: "0px",
+        lineHeight: "1.6667",
+      },
+      body: {
+        fontFamily:
+          "-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif",
+        fontSize: vars.ref.fontSize.base,
+        fontWeight: "400",
+        letterSpacing: "0px",
+        lineHeight: "1.4286",
+      },
+      heading1: {
+        fontFamily:
+          "-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif",
+        fontSize: vars.ref.fontSize["4xl"],
+        fontWeight: "700",
+        letterSpacing: "0px",
+        lineHeight: "1",
+      },
+      heading2: {
+        fontFamily:
+          "-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif",
+        fontSize: vars.ref.fontSize.xl,
+        fontWeight: "600",
+        letterSpacing: "0px",
+        lineHeight: "1.4",
+      },
+      heading3: {
+        fontFamily:
+          "-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif",
+        fontSize: vars.ref.fontSize["2xl"],
+        fontWeight: "600",
+        letterSpacing: "0px",
+        lineHeight: "1.2",
       },
     },
     transitions: {

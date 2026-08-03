@@ -318,6 +318,57 @@
         }
       },
       "$type": "dimension"
+    },
+    "fontSizeScale": {
+      "xs": {
+        "$value": {
+          "value": 10,
+          "unit": "px"
+        }
+      },
+      "sm": {
+        "$value": {
+          "value": 12,
+          "unit": "px"
+        }
+      },
+      "base": {
+        "$value": {
+          "value": 14,
+          "unit": "px"
+        }
+      },
+      "lg": {
+        "$value": {
+          "value": 17,
+          "unit": "px"
+        }
+      },
+      "xl": {
+        "$value": {
+          "value": 20,
+          "unit": "px"
+        }
+      },
+      "2xl": {
+        "$value": {
+          "value": 24,
+          "unit": "px"
+        }
+      },
+      "3xl": {
+        "$value": {
+          "value": 30,
+          "unit": "px"
+        }
+      },
+      "4xl": {
+        "$value": {
+          "value": 36,
+          "unit": "px"
+        }
+      },
+      "$type": "dimension"
     }
   },
   "system": {
@@ -379,6 +430,20 @@
       "secondary": {
         "200": {
           "$type": "color",
+          "$value": "{ref.color.blue600}"
+        }
+      },
+      "textScale": {
+        "primary": {
+          "$value": "{ref.color.gray950}"
+        },
+        "secondary": {
+          "$value": "{ref.color.gray700}"
+        },
+        "disabled": {
+          "$value": "{ref.color.gray400}"
+        },
+        "accent": {
           "$value": "{ref.color.blue600}"
         }
       },
@@ -793,6 +858,109 @@
           "lineHeight": 1.4286
         }
       }
+    },
+    "textScale": {
+      "supporting": {
+        "$value": {
+          "fontFamily": [
+            "-apple-system",
+            "BlinkMacSystemFont",
+            "Segoe UI",
+            "Roboto",
+            "Helvetica",
+            "Arial",
+            "sans-serif"
+          ],
+          "fontSize": "{ref.fontSize.sm}",
+          "fontWeight": 400,
+          "letterSpacing": {
+            "value": 0,
+            "unit": "px"
+          },
+          "lineHeight": 1.6667
+        }
+      },
+      "body": {
+        "$value": {
+          "fontFamily": [
+            "-apple-system",
+            "BlinkMacSystemFont",
+            "Segoe UI",
+            "Roboto",
+            "Helvetica",
+            "Arial",
+            "sans-serif"
+          ],
+          "fontSize": "{ref.fontSize.base}",
+          "fontWeight": 400,
+          "letterSpacing": {
+            "value": 0,
+            "unit": "px"
+          },
+          "lineHeight": 1.4286
+        }
+      },
+      "heading1": {
+        "$value": {
+          "fontFamily": [
+            "-apple-system",
+            "BlinkMacSystemFont",
+            "Segoe UI",
+            "Roboto",
+            "Helvetica",
+            "Arial",
+            "sans-serif"
+          ],
+          "fontSize": "{ref.fontSize.4xl}",
+          "fontWeight": 700,
+          "letterSpacing": {
+            "value": 0,
+            "unit": "px"
+          },
+          "lineHeight": 1
+        }
+      },
+      "heading2": {
+        "$value": {
+          "fontFamily": [
+            "-apple-system",
+            "BlinkMacSystemFont",
+            "Segoe UI",
+            "Roboto",
+            "Helvetica",
+            "Arial",
+            "sans-serif"
+          ],
+          "fontSize": "{ref.fontSize.xl}",
+          "fontWeight": 600,
+          "letterSpacing": {
+            "value": 0,
+            "unit": "px"
+          },
+          "lineHeight": 1.4
+        }
+      },
+      "heading3": {
+        "$value": {
+          "fontFamily": [
+            "-apple-system",
+            "BlinkMacSystemFont",
+            "Segoe UI",
+            "Roboto",
+            "Helvetica",
+            "Arial",
+            "sans-serif"
+          ],
+          "fontSize": "{ref.fontSize.2xl}",
+          "fontWeight": 600,
+          "letterSpacing": {
+            "value": 0,
+            "unit": "px"
+          },
+          "lineHeight": 1.2
+        }
+      },
+      "$type": "typography"
     },
     "transitions": {
       "standard": {

@@ -502,3 +502,160 @@ describe("scales, errors, files", () => {
     }
   });
 });
+
+describe("Grid, Text, Icon built-in components", () => {
+  function gridTextIconConfig() {
+    const ref = defineReferenceTokens({ color: { black: tokens.color("#000000") } });
+    const system = defineSystemTokens({
+      spacing: tokens.dimensionScale({ 0: "0px", 1: "4px" }),
+      textColors: tokens.colorScale({ primary: ref.color.black }),
+      textStyles: tokens.typographyScale({
+        body: { fontFamily: "Arial", fontSize: "14px", fontWeight: "regular" },
+      }),
+      iconSizes: tokens.dimensionScale({ sm: "12px", lg: "24px" }),
+    });
+    return defineConfig({
+      tokens: { ref, system, components: {} },
+      output: {
+        target: "vanilla-extract",
+        outDir: "dist-test",
+        builtInComponents: {
+          Grid: { spacing: system.spacing },
+          Text: { typography: system.textStyles, color: system.textColors },
+          Icon: { size: system.iconSizes, color: system.textColors },
+        },
+      },
+    });
+  }
+
+  test("selecting Grid emits Grid.gen.css.ts and Grid.gen.tsx", () => {
+    const ref = defineReferenceTokens({});
+    const system = defineSystemTokens({
+      spacing: tokens.dimensionScale({ 0: "0px", 1: "4px" }),
+    });
+    const config = defineConfig({
+      tokens: { ref, system, components: {} },
+      output: {
+        target: "vanilla-extract",
+        outDir: "dist-test",
+        builtInComponents: { Grid: { spacing: system.spacing } },
+      },
+    });
+    const files = generate(config);
+    const filenames = files.map((file) => file.filename);
+    expect(filenames).toContain("components/grid/Grid.gen.css.ts");
+    expect(filenames).toContain("components/grid/Grid.gen.tsx");
+    expect(filenames).not.toContain("iconMap.tsx");
+  });
+
+  test("selecting Text emits Text.gen.css.ts and Text.gen.tsx", () => {
+    const ref = defineReferenceTokens({ color: { black: tokens.color("#000000") } });
+    const system = defineSystemTokens({
+      textColors: tokens.colorScale({ primary: ref.color.black }),
+      textStyles: tokens.typographyScale({
+        body: { fontFamily: "Arial", fontSize: "14px", fontWeight: "regular" },
+      }),
+    });
+    const config = defineConfig({
+      tokens: { ref, system, components: {} },
+      output: {
+        target: "vanilla-extract",
+        outDir: "dist-test",
+        builtInComponents: {
+          Text: { typography: system.textStyles, color: system.textColors },
+        },
+      },
+    });
+    const files = generate(config);
+    const filenames = files.map((file) => file.filename);
+    expect(filenames).toContain("components/text/Text.gen.css.ts");
+    expect(filenames).toContain("components/text/Text.gen.tsx");
+  });
+
+  test("selecting Icon emits Icon.gen.css.ts, Icon.gen.tsx, and iconMap.tsx with writeMode once", () => {
+    const config = gridTextIconConfig();
+    const files = generate(config);
+    const filenames = files.map((file) => file.filename);
+    expect(filenames).toContain("components/icon/Icon.gen.css.ts");
+    expect(filenames).toContain("components/icon/Icon.gen.tsx");
+    expect(filenames).toContain("iconMap.tsx");
+
+    const iconMap = files.find((file) => file.filename === "iconMap.tsx")!;
+    expect(iconMap.writeMode).toBe("once");
+    expect(iconMap.content).toMatch(/export const icons = \{/);
+    expect(iconMap.content).toMatch(/export type IconType = keyof typeof icons;/);
+  });
+
+  test("Grid, Text and Icon together still emit exactly one renderElement.gen.tsx and one iconMap.tsx", () => {
+    const config = gridTextIconConfig();
+    const files = generate(config);
+    expect(files.filter((file) => file.filename === "renderElement.gen.tsx").length).toBe(1);
+    expect(files.filter((file) => file.filename === "iconMap.tsx").length).toBe(1);
+  });
+
+  test("a wrong-typed Grid spacing binding throws MissingDesignTokensError", () => {
+    const ref = defineReferenceTokens({ color: { black: tokens.color("#000000") } });
+    const system = defineSystemTokens({
+      wrongScale: tokens.colorScale({ 0: ref.color.black }),
+    });
+    const config = defineConfig({
+      tokens: { ref, system, components: {} },
+      output: {
+        target: "vanilla-extract",
+        outDir: "dist-test",
+        builtInComponents: { Grid: { spacing: system.wrongScale } } as never,
+      },
+    });
+    expect(() => generate(config)).toThrow(MissingDesignTokensError);
+    expect(() => generate(config)).toThrow(/must be a dimension TokenScale/);
+  });
+
+  test("missing Icon bindings throw MissingDesignTokensError", () => {
+    const ref = defineReferenceTokens({});
+    const config = defineConfig({
+      tokens: { ref, system: defineSystemTokens({}), components: {} },
+      output: {
+        target: "vanilla-extract",
+        outDir: "dist-test",
+        builtInComponents: { Icon: {} } as never,
+      },
+    });
+    expect(() => generate(config)).toThrow(MissingDesignTokensError);
+  });
+
+  test("Text.gen.tsx/Icon.gen.tsx/Grid.gen.tsx reference the resolved bindings", () => {
+    const config = gridTextIconConfig();
+    const files = generate(config);
+
+    const gridComponent = files.find((file) => file.filename === "components/grid/Grid.gen.tsx")!;
+    expect(gridComponent.content).toMatch(/gap\?: GridSpacingToken/);
+
+    const textStyles = files.find((file) => file.filename === "components/text/Text.gen.css.ts")!;
+    expect(textStyles.content).toMatch(
+      /export const textVariant = styleVariants\(systemTextStyles,/,
+    );
+
+    const iconComponent = files.find((file) => file.filename === "components/icon/Icon.gen.tsx")!;
+    expect(iconComponent.content).toContain(
+      'import { icons, type IconType } from "../../iconMap";',
+    );
+  });
+
+  test("every Grid/Text/Icon generated source passes assertParses", () => {
+    const config = gridTextIconConfig();
+    const files = generate(config);
+    for (const suffix of [
+      "components/grid/Grid.gen.css.ts",
+      "components/grid/Grid.gen.tsx",
+      "components/text/Text.gen.css.ts",
+      "components/text/Text.gen.tsx",
+      "components/icon/Icon.gen.css.ts",
+      "components/icon/Icon.gen.tsx",
+      "iconMap.tsx",
+    ]) {
+      const file = files.find((f) => f.filename === suffix)!;
+      expect(file).toBeDefined();
+      assertParses(file.content, suffix);
+    }
+  });
+});

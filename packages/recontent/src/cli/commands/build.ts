@@ -100,12 +100,17 @@ async function buildOnce(
     }
 
     for (const file of files) {
-      const outputPath = await writeOutputFile(
+      const { path: outputPath, written } = await writeOutputFile(
         path.join(output.outDir, file.filename),
         file.content,
+        { writeMode: file.writeMode },
       );
-      logSuccess(`Wrote ${outputPath}`);
-      logger.debug(`Wrote ${file.content.length.toLocaleString()} bytes to ${outputPath}.`);
+      if (written) {
+        logSuccess(`Wrote ${outputPath}`);
+        logger.debug(`Wrote ${file.content.length.toLocaleString()} bytes to ${outputPath}.`);
+      } else {
+        logSuccess(`Skipped ${outputPath} (already exists)`);
+      }
     }
   }
 }

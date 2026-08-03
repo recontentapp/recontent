@@ -55,6 +55,16 @@ const themeRef = {
     "3xl": 30,
     "4xl": 36,
   },
+  fontSizeScale: {
+    xs: 10,
+    sm: 12,
+    base: 14,
+    lg: 17,
+    xl: 20,
+    "2xl": 24,
+    "3xl": 30,
+    "4xl": 36,
+  },
 } as const;
 
 const themeSystem = {
@@ -79,6 +89,12 @@ const themeSystem = {
     onError: themeRef.color.white,
     secondary: {
       "200": themeRef.color.blue600,
+    },
+    textScale: {
+      primary: themeRef.color.gray950,
+      secondary: themeRef.color.gray700,
+      disabled: themeRef.color.gray400,
+      accent: themeRef.color.blue600,
     },
   },
   spacing: {
@@ -208,6 +224,43 @@ const themeSystem = {
       lineHeight: 20.0004,
     },
   },
+  textScale: {
+    supporting: {
+      fontFamily: "-apple-system",
+      fontSize: themeRef.fontSize.sm,
+      fontWeight: "400",
+      letterSpacing: 0,
+      lineHeight: 20.0004,
+    },
+    body: {
+      fontFamily: "-apple-system",
+      fontSize: themeRef.fontSize.base,
+      fontWeight: "400",
+      letterSpacing: 0,
+      lineHeight: 20.0004,
+    },
+    heading1: {
+      fontFamily: "-apple-system",
+      fontSize: themeRef.fontSize["4xl"],
+      fontWeight: "700",
+      letterSpacing: 0,
+      lineHeight: 36,
+    },
+    heading2: {
+      fontFamily: "-apple-system",
+      fontSize: themeRef.fontSize.xl,
+      fontWeight: "600",
+      letterSpacing: 0,
+      lineHeight: 28,
+    },
+    heading3: {
+      fontFamily: "-apple-system",
+      fontSize: themeRef.fontSize["2xl"],
+      fontWeight: "600",
+      letterSpacing: 0,
+      lineHeight: 28.8,
+    },
+  },
   transitions: {
     standard: {
       duration: 175,
@@ -300,6 +353,16 @@ const blackThemeRef = {
     "3xl": 30,
     "4xl": 36,
   },
+  fontSizeScale: {
+    xs: 10,
+    sm: 12,
+    base: 14,
+    lg: 17,
+    xl: 20,
+    "2xl": 24,
+    "3xl": 30,
+    "4xl": 36,
+  },
 } as const;
 
 const blackThemeSystem = {
@@ -324,6 +387,12 @@ const blackThemeSystem = {
     onError: blackThemeRef.color.white,
     secondary: {
       "200": "#2694fe",
+    },
+    textScale: {
+      primary: blackThemeRef.color.gray950,
+      secondary: blackThemeRef.color.gray700,
+      disabled: blackThemeRef.color.gray400,
+      accent: blackThemeRef.color.blue600,
     },
   },
   spacing: {
@@ -451,6 +520,43 @@ const blackThemeSystem = {
       fontWeight: "400",
       letterSpacing: 0,
       lineHeight: 20.0004,
+    },
+  },
+  textScale: {
+    supporting: {
+      fontFamily: "-apple-system",
+      fontSize: blackThemeRef.fontSize.sm,
+      fontWeight: "400",
+      letterSpacing: 0,
+      lineHeight: 20.0004,
+    },
+    body: {
+      fontFamily: "-apple-system",
+      fontSize: blackThemeRef.fontSize.base,
+      fontWeight: "400",
+      letterSpacing: 0,
+      lineHeight: 20.0004,
+    },
+    heading1: {
+      fontFamily: "-apple-system",
+      fontSize: blackThemeRef.fontSize["4xl"],
+      fontWeight: "700",
+      letterSpacing: 0,
+      lineHeight: 36,
+    },
+    heading2: {
+      fontFamily: "-apple-system",
+      fontSize: blackThemeRef.fontSize.xl,
+      fontWeight: "600",
+      letterSpacing: 0,
+      lineHeight: 28,
+    },
+    heading3: {
+      fontFamily: "-apple-system",
+      fontSize: blackThemeRef.fontSize["2xl"],
+      fontWeight: "600",
+      letterSpacing: 0,
+      lineHeight: 28.8,
     },
   },
   transitions: {

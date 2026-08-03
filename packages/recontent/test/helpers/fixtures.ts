@@ -17,8 +17,8 @@ const VE: OutputInput = { target: "vanilla-extract", outDir: "dist-test" };
  * has no syntax errors - catches quoting/escaping regressions the content
  * regexes in individual tests would miss.
  */
-export function assertParses(source: string): void {
-  const file = ts.createSourceFile("tokens.css.ts", source, ts.ScriptTarget.ESNext, true);
+export function assertParses(source: string, fileName = "tokens.css.ts"): void {
+  const file = ts.createSourceFile(fileName, source, ts.ScriptTarget.ESNext, true);
   const diagnostics = (file as unknown as { parseDiagnostics?: readonly unknown[] })
     .parseDiagnostics;
   if (diagnostics && diagnostics.length > 0) {

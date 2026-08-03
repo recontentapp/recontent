@@ -296,7 +296,7 @@ export interface TypeScriptNativeOutput {
   rootFontSize?: number;
 }
 export type Output = CssOutput | VanillaExtractOutput | TypeScriptOutput | TypeScriptNativeOutput;
-export type OutputFile = { filename: string; content: string };
+export type OutputFile = { filename: string; content: string; writeMode?: "always" | "once" };
 
 export type PropValueKind =
   | "literal-string"
