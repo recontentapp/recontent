@@ -40,8 +40,7 @@ export default defineConfig({
     outDir: "src/design-system",
     builtInComponents: {
       Stack: {
-        backgroundColor: system.color.primary200,
-        gapScale: system.spacing,
+        spacing: system.spacing,
       },
     },
   },
