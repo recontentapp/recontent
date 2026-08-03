@@ -1,5 +1,4 @@
 import type { OutputFile, TokenType } from "@recontentapp/core";
-import type { RegistryComponentDefinition } from "./define.js";
 
 export type RegistryOutputTarget = "vanilla-extract";
 
@@ -51,12 +50,7 @@ export type ComponentOutput = {
   }): OutputFile[];
 };
 
-export type RegistryManifest = {
-  version: 1;
-  components: Record<string, RegistryComponentDefinition>;
-};
-
-export type InternalModuleOutput = {
+type InternalModuleOutput = {
   runtimeDependencies: Record<string, string>;
   generate(): OutputFile[];
 };

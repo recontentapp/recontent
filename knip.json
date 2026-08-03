@@ -1,0 +1,22 @@
+{
+  "$schema": "https://unpkg.com/knip@6/schema.json",
+  "workspaces": {
+    "packages/core": {
+      "project": ["src/**/*.ts"]
+    },
+    "packages/recontent": {
+      "entry": ["dev/recontent.config.ts", "dev/.storybook/preview.tsx"],
+      "project": ["src/**/*.{ts,tsx}", "dev/**/*.{ts,tsx}"],
+      "ignore": ["dev/generated/**"],
+      "ignoreDependencies": ["@base-ui/react"],
+      "storybook": {
+        "config": ["dev/.storybook/main.ts"]
+      }
+    },
+    "apps/playground": {
+      "entry": ["recontent.config.ts"],
+      "project": ["src/**/*.{ts,tsx}", "*.ts"],
+      "ignore": ["src/design-system/**"]
+    }
+  }
+}

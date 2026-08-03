@@ -279,7 +279,7 @@ export function generateBuiltInComponentFiles(
  * resolved component ids, deduplicated in dependency-first order. Internal
  * modules are never user-selectable and are emitted at the output root.
  */
-export function resolveInternalModuleIds(componentIds: readonly string[]): string[] {
+function resolveInternalModuleIds(componentIds: readonly string[]): string[] {
   const resolved: string[] = [];
   const seen = new Set<string>();
 

@@ -1,4 +1,4 @@
-import type { InternalModuleDefinition, RegistryManifest } from "./types.js";
+import type { InternalModuleDefinition } from "./types.js";
 import type { RegistryComponentDefinition } from "./define.js";
 import { boxComponent } from "./components/box/index.js";
 import { stackComponent } from "./components/stack/index.js";
@@ -23,18 +23,12 @@ export const registryComponents = Object.fromEntries(definitions.map((d) => [d.i
   RegistryComponentDefinition
 >;
 
-export const registryManifest: RegistryManifest = {
-  version: 1,
-  components: registryComponents,
-};
-
 const internalModuleDefinitions = [renderElementModule, iconMapModule] as const;
 
 export const internalModules = Object.fromEntries(
   internalModuleDefinitions.map((d) => [d.id, d]),
 ) as Record<string, InternalModuleDefinition>;
 
-export type RegistryComponentId = (typeof definitions)[number]["id"];
 export type RegistryComponentName = (typeof definitions)[number]["name"];
 
 export type BuiltInComponentOptions = {

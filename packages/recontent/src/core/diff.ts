@@ -17,13 +17,13 @@ import type {
 } from "@recontentapp/core";
 import { compositeMembers, isCompositeType, pathKey } from "@recontentapp/core";
 
-export type ThemeOverrideDiff = {
+type ThemeOverrideDiff = {
   added: { key: string; value: unknown }[];
   removed: { key: string; value: unknown }[];
   changed: { key: string; from: unknown; to: unknown }[];
 };
 
-export type ThemeDiff = {
+type ThemeDiff = {
   addedThemes: string[];
   removedThemes: string[];
   changedThemes: Record<string, ThemeOverrideDiff>;

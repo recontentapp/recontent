@@ -145,7 +145,7 @@ function walk(
   diagnostics.push(diagnostic(path, node, inScale));
 }
 
-export function diagnoseTokenTree(tree: unknown, layer: TokenLayer): TokenDiagnostic[] {
+function diagnoseTokenTree(tree: unknown, layer: TokenLayer): TokenDiagnostic[] {
   const diagnostics: TokenDiagnostic[] = [];
   walk(tree, [layer], diagnostics);
   return diagnostics;

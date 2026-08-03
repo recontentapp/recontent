@@ -6,10 +6,8 @@ import { typescriptOutputProcessor } from "./typescript.js";
 import { typescriptNativeOutputProcessor } from "./typescript-native.js";
 
 export type {
-  CssOutput,
   Output,
   OutputFile,
-  OutputTarget,
   TypeScriptNativeOutput,
   TypeScriptOutput,
   VanillaExtractOutput,
@@ -27,7 +25,7 @@ const outputProcessors: Record<OutputTarget, OutputProcessor> = {
   "typescript-native": typescriptNativeOutputProcessor,
 };
 
-export function getOutputProcessor(target: OutputTarget): OutputProcessor {
+function getOutputProcessor(target: OutputTarget): OutputProcessor {
   const processor = outputProcessors[target];
   if (!processor) {
     throw new Error(`Unknown output target: ${target}`);

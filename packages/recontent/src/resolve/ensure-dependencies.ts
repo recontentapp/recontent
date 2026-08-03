@@ -4,7 +4,7 @@ import path from "node:path";
 import { type LogLevel, type ResolveConfigInput } from "@recontentapp/core";
 import { createLogger } from "../core/logger.js";
 
-export function hasReachableNodeModules(configDir: string): boolean {
+function hasReachableNodeModules(configDir: string): boolean {
   let current = path.resolve(configDir);
 
   while (true) {

@@ -1,6 +1,6 @@
 import type { ScaleBinding } from "@recontentapp/core";
 import { defineRegistryComponent } from "../../define.js";
-import { componentArtifactPath } from "../../paths.js";
+import { vanillaExtractComponentOutput } from "../shared.js";
 import { generateTextSources } from "./vanilla-extract.js";
 
 export type TextComponentOptions = {
@@ -25,24 +25,11 @@ export const textComponent = defineRegistryComponent<TextComponentOptions>()({
     },
   },
   outputs: {
-    "vanilla-extract": {
-      runtimeDependencies: { "@vanilla-extract/css": "^1.17.4", react: ">=18" },
-      generate: ({ scales }) => {
-        const sources = generateTextSources({
-          typography: scales.typography!,
-          color: scales.color!,
-        });
-        return [
-          {
-            filename: componentArtifactPath("text", "Text", ".gen.css.ts"),
-            content: sources.styles,
-          },
-          {
-            filename: componentArtifactPath("text", "Text", ".gen.tsx"),
-            content: sources.component,
-          },
-        ];
-      },
-    },
+    "vanilla-extract": vanillaExtractComponentOutput("text", "Text", (scales) =>
+      generateTextSources({
+        typography: scales.typography!,
+        color: scales.color!,
+      }),
+    ),
   },
 });

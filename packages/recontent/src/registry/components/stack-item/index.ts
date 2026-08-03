@@ -1,6 +1,6 @@
 import type { ScaleBinding } from "@recontentapp/core";
 import { defineRegistryComponent } from "../../define.js";
-import { componentArtifactPath } from "../../paths.js";
+import { vanillaExtractComponentOutput } from "../shared.js";
 import { generateStackItemSources } from "./vanilla-extract.js";
 
 export type StackItemComponentOptions = {
@@ -19,21 +19,8 @@ export const stackItemComponent = defineRegistryComponent<StackItemComponentOpti
     },
   },
   outputs: {
-    "vanilla-extract": {
-      runtimeDependencies: { "@vanilla-extract/css": "^1.17.4", react: ">=18" },
-      generate: ({ scales }) => {
-        const sources = generateStackItemSources({ spacing: scales.spacing! });
-        return [
-          {
-            filename: componentArtifactPath("stack-item", "StackItem", ".gen.css.ts"),
-            content: sources.styles,
-          },
-          {
-            filename: componentArtifactPath("stack-item", "StackItem", ".gen.tsx"),
-            content: sources.component,
-          },
-        ];
-      },
-    },
+    "vanilla-extract": vanillaExtractComponentOutput("stack-item", "StackItem", (scales) =>
+      generateStackItemSources({ spacing: scales.spacing! }),
+    ),
   },
 });

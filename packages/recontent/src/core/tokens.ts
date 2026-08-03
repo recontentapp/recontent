@@ -2,13 +2,8 @@ import type {
   BorderValue,
   ColorValue,
   Component,
-  CubicBezierValue,
-  DurationValue,
-  FontFamilyValue,
   FontWeightName,
-  FontWeightValue,
   GradientValue,
-  NumberValue,
   RawToken,
   ShadowLayer,
   ShadowValue,
@@ -589,19 +584,4 @@ export const tokens = {
   transition,
   gradient,
   typography,
-};
-
-export type {
-  BorderValue,
-  ColorValue,
-  CubicBezierValue,
-  DurationValue,
-  FontFamilyValue,
-  FontWeightValue,
-  GradientValue,
-  NumberValue,
-  ShadowValue,
-  StrokeStyleValue,
-  TransitionValue,
-  TypographyValue,
 };

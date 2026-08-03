@@ -1,6 +1,6 @@
 import type { ScaleBinding } from "@recontentapp/core";
 import { defineRegistryComponent } from "../../define.js";
-import { componentArtifactPath } from "../../paths.js";
+import { vanillaExtractComponentOutput } from "../shared.js";
 import { generateIconSources } from "./vanilla-extract.js";
 
 export type IconComponentOptions = {
@@ -25,21 +25,8 @@ export const iconComponent = defineRegistryComponent<IconComponentOptions>()({
     },
   },
   outputs: {
-    "vanilla-extract": {
-      runtimeDependencies: { "@vanilla-extract/css": "^1.17.4", react: ">=18" },
-      generate: ({ scales }) => {
-        const sources = generateIconSources({ size: scales.size!, color: scales.color! });
-        return [
-          {
-            filename: componentArtifactPath("icon", "Icon", ".gen.css.ts"),
-            content: sources.styles,
-          },
-          {
-            filename: componentArtifactPath("icon", "Icon", ".gen.tsx"),
-            content: sources.component,
-          },
-        ];
-      },
-    },
+    "vanilla-extract": vanillaExtractComponentOutput("icon", "Icon", (scales) =>
+      generateIconSources({ size: scales.size!, color: scales.color! }),
+    ),
   },
 });

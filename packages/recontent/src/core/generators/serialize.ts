@@ -37,7 +37,7 @@ const FONT_WEIGHT_NUMERIC: Record<FontWeightName, number> = {
   "ultra-black": 950,
 };
 
-export function serializeColorDtcg(value: TokenTypeMap["color"]): TokenTypeMap["color"] {
+function serializeColorDtcg(value: TokenTypeMap["color"]): TokenTypeMap["color"] {
   return value;
 }
 
@@ -172,7 +172,7 @@ export function serializeValueDtcg<T extends TokenType>(type: T, value: TokenTyp
   }
 }
 
-export function serializeMemberDtcg<T extends TokenType>(type: T, member: TokenMember<T>): unknown {
+function serializeMemberDtcg<T extends TokenType>(type: T, member: TokenMember<T>): unknown {
   return member.alias ? dtcgAliasReference(member.alias) : serializeValueDtcg(type, member.$value);
 }
 
@@ -293,7 +293,7 @@ export function cssVarName(path: string[]): string {
   return `--${path.join("-")}`;
 }
 
-export function dtcgAliasReference(path: string[]): string {
+function dtcgAliasReference(path: string[]): string {
   return `{${path.join(".")}}`;
 }
 

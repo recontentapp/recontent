@@ -13,10 +13,12 @@
     "lint:fix": "oxlint --fix .",
     "format": "oxfmt .",
     "format:check": "oxfmt --check .",
+    "knip": "knip",
     "prepare": "husky"
   },
   "devDependencies": {
     "husky": "9.1.7",
+    "knip": "6.31.0",
     "lint-staged": "17.0.8",
     "oxfmt": "0.59.0",
     "oxlint": "1.74.0",

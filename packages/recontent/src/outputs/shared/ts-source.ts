@@ -5,7 +5,6 @@ import type {
   TokenLayer,
   TokenRegistry,
   TokenScaleMetadata,
-  TokenType,
 } from "@recontentapp/core";
 import { pathKey } from "@recontentapp/core";
 
@@ -116,11 +115,11 @@ export function formatTree(tree: SourceTree, indent = "", contract = false): str
   return `{\n${lines.join("\n")}\n${indent}}`;
 }
 
-export function scaleNameSegments(scale: TokenScaleMetadata): string[] {
+function scaleNameSegments(scale: TokenScaleMetadata): string[] {
   return scale.path[0] === scale.layer ? scale.path : [scale.layer, ...scale.path];
 }
 
-export function capitalizeSegment(segment: string): string {
+function capitalizeSegment(segment: string): string {
   const normalized = segment.replace(/[^a-zA-Z0-9_$]/g, "");
   return normalized ? normalized.charAt(0).toUpperCase() + normalized.slice(1) : "";
 }
@@ -155,5 +154,3 @@ export function generateScaleExports(scale: ScaleExport, root = "vars"): string 
     .join(" | ");
   return `export type ${scale.typeName} = ${type};\n\nexport const ${scale.exportName} = ${propertyAccess(root, [scale.metadata.layer, ...entryPath({ path: scale.metadata.path, layer: scale.metadata.layer })])};`;
 }
-
-export type { TokenType };

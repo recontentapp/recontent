@@ -1,6 +1,6 @@
 import type { ScaleBinding } from "@recontentapp/core";
 import { defineRegistryComponent } from "../../define.js";
-import { componentArtifactPath } from "../../paths.js";
+import { vanillaExtractComponentOutput } from "../shared.js";
 import { generateGridSources } from "./vanilla-extract.js";
 
 export type GridComponentOptions = {
@@ -19,21 +19,8 @@ export const gridComponent = defineRegistryComponent<GridComponentOptions>()({
     },
   },
   outputs: {
-    "vanilla-extract": {
-      runtimeDependencies: { "@vanilla-extract/css": "^1.17.4", react: ">=18" },
-      generate: ({ scales }) => {
-        const sources = generateGridSources({ spacing: scales.spacing! });
-        return [
-          {
-            filename: componentArtifactPath("grid", "Grid", ".gen.css.ts"),
-            content: sources.styles,
-          },
-          {
-            filename: componentArtifactPath("grid", "Grid", ".gen.tsx"),
-            content: sources.component,
-          },
-        ];
-      },
-    },
+    "vanilla-extract": vanillaExtractComponentOutput("grid", "Grid", (scales) =>
+      generateGridSources({ spacing: scales.spacing! }),
+    ),
   },
 });

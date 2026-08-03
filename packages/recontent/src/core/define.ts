@@ -1,17 +1,12 @@
 import { normalizeObservabilityConfig, type ObservabilityConfigInput } from "@recontentapp/core";
 import type {
-  CompInput,
-  CompToken,
   Config,
   IntrospectionConfigInput,
   LogLevel,
   Output,
   RawToken,
-  RefToken,
   ResolveConfigInput,
   StampedToken,
-  SystemInput,
-  SystemToken,
   ThemeOverride,
   TokenLayer,
   TokenRegistry,
@@ -182,16 +177,6 @@ function collectEntries(
   }
 }
 
-export function flattenTree(
-  tree: unknown,
-  layer: TokenLayer,
-  prefix: string[] = [layer],
-): TokenRegistry {
-  const registry: TokenRegistry = new Map();
-  collectEntries(tree, prefix, layer, registry);
-  return registry;
-}
-
 export function defineReferenceTokens<T extends TokenTree>(input: T): StampTree<T, "ref"> {
   return walkAndStamp(input, ["ref"], "ref") as StampTree<T, "ref">;
 }
@@ -271,5 +256,3 @@ export function defineConfig(input: DefineConfigInput): Config {
     introspection: input.introspection,
   };
 }
-
-export type { SystemInput, CompInput, RefToken, SystemToken, CompToken };

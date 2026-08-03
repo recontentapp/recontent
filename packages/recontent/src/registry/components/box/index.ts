@@ -1,6 +1,6 @@
 import type { ScaleBinding } from "@recontentapp/core";
 import { defineRegistryComponent } from "../../define.js";
-import { componentArtifactPath } from "../../paths.js";
+import { vanillaExtractComponentOutput } from "../shared.js";
 import { generateBoxSources } from "./vanilla-extract.js";
 
 export type BoxComponentOptions = {
@@ -43,27 +43,14 @@ export const boxComponent = defineRegistryComponent<BoxComponentOptions>()({
     },
   },
   outputs: {
-    "vanilla-extract": {
-      runtimeDependencies: { "@vanilla-extract/css": "^1.17.4", react: ">=18" },
-      generate: ({ scales }) => {
-        const sources = generateBoxSources({
-          spacing: scales.spacing!,
-          surface: scales.surface!,
-          radius: scales.radius!,
-          border: scales.border!,
-          boxShadow: scales.boxShadow!,
-        });
-        return [
-          {
-            filename: componentArtifactPath("box", "Box", ".gen.css.ts"),
-            content: sources.styles,
-          },
-          {
-            filename: componentArtifactPath("box", "Box", ".gen.tsx"),
-            content: sources.component,
-          },
-        ];
-      },
-    },
+    "vanilla-extract": vanillaExtractComponentOutput("box", "Box", (scales) =>
+      generateBoxSources({
+        spacing: scales.spacing!,
+        surface: scales.surface!,
+        radius: scales.radius!,
+        border: scales.border!,
+        boxShadow: scales.boxShadow!,
+      }),
+    ),
   },
 });
