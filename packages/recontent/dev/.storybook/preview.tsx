@@ -1,6 +1,6 @@
 import type { Preview } from "@storybook/react-vite";
 import { themeClass } from "../generated/vanilla-extract/tokens.css";
-import "./globalStyle.css";
+import "../generated/vanilla-extract/reset.gen.css";
 
 const preview: Preview = {
   decorators: [

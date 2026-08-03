@@ -20,13 +20,16 @@ import {
 } from "../core/generators/serialize.js";
 import {
   generateBuiltInComponentFiles,
+  generateInternalModuleFiles,
   getBuiltInComponentDependencies,
+  getInternalModuleDependencies,
   MissingDesignTokensError,
   normalizeBuiltInComponents,
   resolveBuiltInComponentIds,
   validateBuiltInComponents,
 } from "../registry/index.js";
 import type { OutputFile, OutputProcessor, VanillaExtractOutput } from "./index.js";
+import { generateCssResetSource } from "./shared/reset.js";
 import type { ScaleBinding, TokenBinding } from "@recontentapp/core";
 import {
   entryPath,
@@ -361,16 +364,26 @@ export const vanillaExtractOutputProcessor: OutputProcessor<VanillaExtractOutput
         content: generateVanillaExtractSource(config, scaleExports),
       },
     ];
+    if (output.cssReset) {
+      files.push({
+        filename: "reset.gen.css.ts",
+        content: generateCssResetSource(),
+      });
+    }
     if (builtInComponents.length > 0) {
       files.push(
         ...generateBuiltInComponentFiles(builtInComponents, "vanilla-extract", {
           scaleBindings,
           tokenBindings,
         }),
+        ...generateInternalModuleFiles(resolvedComponentIds, "vanilla-extract"),
         {
           filename: "components.dependencies.json",
           content: `${JSON.stringify(
-            getBuiltInComponentDependencies(builtInComponents, "vanilla-extract"),
+            {
+              ...getBuiltInComponentDependencies(builtInComponents, "vanilla-extract"),
+              ...getInternalModuleDependencies(resolvedComponentIds, "vanilla-extract"),
+            },
             null,
             2,
           )}\n`,

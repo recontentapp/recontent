@@ -34,7 +34,7 @@ import {
   stackItemRoot,
 } from "./StackItem.gen.css";
 import type { ${spacing.typeName} as StackItemSpacingToken } from "../../tokens.css";
-import { renderElement, type CommonComponentProps, type RenderProp } from "../shared/Shared.gen";
+import { renderElement, type CommonComponentProps, type RenderProp } from "../../renderElement.gen";
 
 export interface StackItemProps extends CommonComponentProps {
   grow?: boolean | number;

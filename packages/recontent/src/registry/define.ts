@@ -84,6 +84,7 @@ export type RegistryComponentDefinition<Options = Record<string, unknown>> = {
   name: string;
   contracts: readonly ComponentContract[];
   dependencies: readonly string[];
+  internalDependencies: readonly string[];
   outputs: Partial<Record<RegistryOutputTarget, ComponentOutput>>;
   /** Phantom, never set at runtime — carries Options for BuiltInComponentOptions. */
   readonly __options?: Options;
@@ -99,10 +100,12 @@ export function defineRegistryComponent<Options>() {
     name: Name;
     schema: S;
     dependencies?: readonly string[];
+    internalDependencies?: readonly string[];
     outputs: Partial<Record<RegistryOutputTarget, ComponentOutput>>;
   }): RegistryComponentDefinition<Options> & { id: Id; name: Name } => ({
     ...input,
     dependencies: input.dependencies ?? [],
+    internalDependencies: input.internalDependencies ?? [],
     contracts: schemaContracts(input.schema),
   });
 }

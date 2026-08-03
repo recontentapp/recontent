@@ -55,3 +55,13 @@ export type RegistryManifest = {
   version: 1;
   components: Record<string, RegistryComponentDefinition>;
 };
+
+export type InternalModuleOutput = {
+  runtimeDependencies: Record<string, string>;
+  generate(): OutputFile[];
+};
+
+export type InternalModuleDefinition = {
+  id: string;
+  outputs: Partial<Record<RegistryOutputTarget, InternalModuleOutput>>;
+};

@@ -10,7 +10,7 @@ export type StackComponentOptions = {
 export const stackComponent = defineRegistryComponent<StackComponentOptions>()({
   id: "stack",
   name: "Stack",
-  dependencies: ["shared"],
+  internalDependencies: ["render-element"],
   schema: {
     spacing: {
       kind: "scale",

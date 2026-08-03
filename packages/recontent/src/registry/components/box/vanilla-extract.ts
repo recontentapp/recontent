@@ -86,7 +86,7 @@ ${SPACING_VARIANTS.map((variant) => `  box${capitalize(variant.name)},`).join("\
   boxRoot,
 } from "./Box.gen.css";
 import type { ${typeImports} } from "../../tokens.css";
-import { renderElement, type CommonComponentProps, type RenderProp } from "../shared/Shared.gen";
+import { renderElement, type CommonComponentProps, type RenderProp } from "../../renderElement.gen";
 
 export interface BoxProps extends CommonComponentProps {
 ${SPACING_VARIANTS.map((variant) => `  ${variant.name}?: BoxSpacingToken;`).join("\n")}

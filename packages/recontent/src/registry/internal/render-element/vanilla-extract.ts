@@ -1,4 +1,4 @@
-export function generateSharedSources(): string {
+export function generateRenderElementSource(): string {
   return `import { cloneElement } from "react";
 import type { AriaAttributes, ComponentPropsWithoutRef, ElementType, ReactElement } from "react";
 

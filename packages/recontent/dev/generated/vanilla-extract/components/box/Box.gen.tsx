@@ -22,7 +22,7 @@ import {
   boxRoot,
 } from "./Box.gen.css";
 import type { SystemSpacing as BoxSpacingToken, SystemColorsSecondary as BoxSurfaceToken, RefRadiusScale as BoxRadiusToken, SystemBorderScale as BoxBorderToken, SystemElevationScale as BoxElevationToken } from "../../tokens.css";
-import { renderElement, type CommonComponentProps, type RenderProp } from "../shared/Shared.gen";
+import { renderElement, type CommonComponentProps, type RenderProp } from "../../renderElement.gen";
 
 export interface BoxProps extends CommonComponentProps {
   padding?: BoxSpacingToken;

@@ -229,6 +229,45 @@
       },
       "$type": "dimension"
     },
+    "radiusScale": {
+      "none": {
+        "$value": {
+          "value": 0,
+          "unit": "px"
+        }
+      },
+      "inner": {
+        "$value": {
+          "value": 4,
+          "unit": "px"
+        }
+      },
+      "element": {
+        "$value": {
+          "value": 8,
+          "unit": "px"
+        }
+      },
+      "container": {
+        "$value": {
+          "value": 12,
+          "unit": "px"
+        }
+      },
+      "page": {
+        "$value": {
+          "value": 28,
+          "unit": "px"
+        }
+      },
+      "full": {
+        "$value": {
+          "value": 9999,
+          "unit": "px"
+        }
+      },
+      "$type": "dimension"
+    },
     "fontSize": {
       "xs": {
         "$value": {
@@ -565,6 +604,72 @@
       }
     },
     "elevation": {
+      "sm": {
+        "$value": {
+          "color": "{ref.color.gray950}",
+          "offsetX": {
+            "value": 0,
+            "unit": "px"
+          },
+          "offsetY": {
+            "value": 1,
+            "unit": "px"
+          },
+          "blur": {
+            "value": 2,
+            "unit": "px"
+          },
+          "spread": {
+            "value": 0,
+            "unit": "px"
+          }
+        }
+      },
+      "md": {
+        "$value": [
+          {
+            "color": "{ref.color.gray950}",
+            "offsetX": {
+              "value": 0,
+              "unit": "px"
+            },
+            "offsetY": {
+              "value": 2,
+              "unit": "px"
+            },
+            "blur": {
+              "value": 4,
+              "unit": "px"
+            },
+            "spread": {
+              "value": 0,
+              "unit": "px"
+            }
+          },
+          {
+            "color": "{ref.color.gray950}",
+            "offsetX": {
+              "value": 0,
+              "unit": "px"
+            },
+            "offsetY": {
+              "value": 8,
+              "unit": "px"
+            },
+            "blur": {
+              "value": 16,
+              "unit": "px"
+            },
+            "spread": {
+              "value": -4,
+              "unit": "px"
+            }
+          }
+        ]
+      },
+      "$type": "shadow"
+    },
+    "elevationScale": {
       "sm": {
         "$value": {
           "color": "{ref.color.gray950}",

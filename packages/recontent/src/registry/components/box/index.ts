@@ -14,7 +14,7 @@ export type BoxComponentOptions = {
 export const boxComponent = defineRegistryComponent<BoxComponentOptions>()({
   id: "box",
   name: "Box",
-  dependencies: ["shared"],
+  internalDependencies: ["render-element"],
   schema: {
     spacing: {
       kind: "scale",

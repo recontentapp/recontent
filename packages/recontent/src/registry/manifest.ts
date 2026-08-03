@@ -1,11 +1,11 @@
-import type { RegistryManifest } from "./types.js";
+import type { InternalModuleDefinition, RegistryManifest } from "./types.js";
 import type { RegistryComponentDefinition } from "./define.js";
-import { sharedComponent } from "./components/shared/index.js";
 import { boxComponent } from "./components/box/index.js";
 import { stackComponent } from "./components/stack/index.js";
 import { stackItemComponent } from "./components/stack-item/index.js";
+import { renderElementModule } from "./internal/render-element/index.js";
 
-const definitions = [sharedComponent, boxComponent, stackComponent, stackItemComponent] as const;
+const definitions = [boxComponent, stackComponent, stackItemComponent] as const;
 
 export const registryComponents = Object.fromEntries(definitions.map((d) => [d.id, d])) as Record<
   string,
@@ -16,6 +16,12 @@ export const registryManifest: RegistryManifest = {
   version: 1,
   components: registryComponents,
 };
+
+const internalModuleDefinitions = [renderElementModule] as const;
+
+export const internalModules = Object.fromEntries(
+  internalModuleDefinitions.map((d) => [d.id, d]),
+) as Record<string, InternalModuleDefinition>;
 
 export type RegistryComponentId = (typeof definitions)[number]["id"];
 export type RegistryComponentName = (typeof definitions)[number]["name"];

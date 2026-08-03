@@ -235,6 +235,7 @@ export default defineConfig({
     {
       target: "vanilla-extract",
       outDir: "dev/generated/vanilla-extract",
+      cssReset: true,
       builtInComponents: {
         Box: {
           spacing: system.spacing,

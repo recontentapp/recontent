@@ -1,4 +1,4 @@
-import { registryComponents, type BuiltInComponentOptions } from "./manifest.js";
+import { internalModules, registryComponents, type BuiltInComponentOptions } from "./manifest.js";
 import type { RegistryComponentDefinition } from "./define.js";
 import type { RegistryOutputTarget, ScaleImport, TokenImport } from "./types.js";
 import { isStampedToken, isTokenScale, type Config, type TokenType } from "@recontentapp/core";
@@ -272,6 +272,56 @@ export function generateBuiltInComponentFiles(
     );
     return output.generate({ scales, tokens });
   });
+}
+
+/**
+ * Resolves the internal modules (e.g. `renderElement`) required by the given
+ * resolved component ids, deduplicated in dependency-first order. Internal
+ * modules are never user-selectable and are emitted at the output root.
+ */
+export function resolveInternalModuleIds(componentIds: readonly string[]): string[] {
+  const resolved: string[] = [];
+  const seen = new Set<string>();
+
+  for (const componentId of componentIds) {
+    const component = registryComponents[componentId];
+    if (!component) continue;
+    for (const moduleId of component.internalDependencies) {
+      if (seen.has(moduleId)) continue;
+      seen.add(moduleId);
+      resolved.push(moduleId);
+    }
+  }
+
+  return resolved;
+}
+
+export function generateInternalModuleFiles(
+  componentIds: readonly string[],
+  target: RegistryOutputTarget = "vanilla-extract",
+): OutputFile[] {
+  return resolveInternalModuleIds(componentIds).flatMap((id) => {
+    const module = internalModules[id];
+    const output = module?.outputs[target];
+    if (!output) {
+      throw new Error(`Internal module "${id}" does not support the "${target}" output target.`);
+    }
+    return output.generate();
+  });
+}
+
+export function getInternalModuleDependencies(
+  componentIds: readonly string[],
+  target: RegistryOutputTarget = "vanilla-extract",
+): Record<string, string> {
+  const dependencies: Record<string, string> = {};
+  for (const id of resolveInternalModuleIds(componentIds)) {
+    const output = internalModules[id]?.outputs[target];
+    if (output) {
+      Object.assign(dependencies, output.runtimeDependencies);
+    }
+  }
+  return dependencies;
 }
 
 export function getBuiltInComponentDependencies(

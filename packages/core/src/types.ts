@@ -284,6 +284,7 @@ export interface VanillaExtractOutput {
   target: "vanilla-extract";
   outDir: string;
   builtInComponents?: BuiltInComponentsInput;
+  cssReset?: boolean;
 }
 export interface TypeScriptOutput {
   target: "typescript";

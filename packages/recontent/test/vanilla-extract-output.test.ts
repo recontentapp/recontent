@@ -346,6 +346,25 @@ describe("scales, errors, files", () => {
     expect(files[0]!.filename).toBe("tokens.css.ts");
   });
 
+  test("cssReset: true additionally emits reset.gen.css.ts using globalStyle()", () => {
+    const config = aliasChainConfig({
+      target: "vanilla-extract",
+      outDir: "dist-test",
+      cssReset: true,
+    });
+    const files = generate(config);
+    const resetFile = files.find((file) => file.filename === "reset.gen.css.ts");
+    expect(resetFile).toBeDefined();
+    expect(resetFile!.content).toMatch(/import \{ globalStyle \} from "@vanilla-extract\/css";/);
+    expect(resetFile!.content).toMatch(/globalStyle\("\*, \*::before, \*::after", \{/);
+  });
+
+  test("cssReset unset omits reset.gen.css.ts", () => {
+    const config = aliasChainConfig();
+    const files = generate(config);
+    expect(files.some((file) => file.filename === "reset.gen.css.ts")).toBe(false);
+  });
+
   test("generate with components additionally emits component files and components.dependencies.json", () => {
     const ref = defineReferenceTokens({ color: { black: tokens.color("#000000") } });
     const system = defineSystemTokens({
@@ -365,7 +384,7 @@ describe("scales, errors, files", () => {
     const files = generate(config);
     const filenames = files.map((file) => file.filename);
     expect(filenames).toContain("tokens.css.ts");
-    expect(filenames).toContain("components/shared/Shared.gen.tsx");
+    expect(filenames).toContain("renderElement.gen.tsx");
     expect(filenames).toContain("components/stack/Stack.gen.css.ts");
     expect(filenames).toContain("components/stack/Stack.gen.tsx");
     expect(filenames).toContain("components.dependencies.json");
