@@ -1,22 +1,34 @@
-import type { CSSProperties, ComponentPropsWithoutRef, ReactNode } from "react";
+import type { ComponentPropsWithoutRef, ReactNode } from "react";
 import {
   stackItemAlignSelf,
   stackItemBasis,
-  stackItemBasisAuto,
-  stackItemBasisFull,
+  stackItemGrow,
+  stackItemOrder,
   stackItemRoot,
+  stackItemShrink,
 } from "./StackItem.gen.css";
-import type { SystemSpacing as StackItemSpacingToken } from "../../tokens.css";
+import { systemSpacing, type SystemSpacing as StackItemSpacingToken } from "../../tokens.css";
 import { renderElement, type CommonComponentProps, type RenderProp } from "../../renderElement.gen";
+import { responsiveVars, type Responsive } from "../../responsive.gen";
 
 export interface StackItemProps extends CommonComponentProps {
-  grow?: boolean | number;
-  shrink?: boolean | number;
-  basis?: StackItemSpacingToken | "auto" | "full";
+  grow?: Responsive<boolean | number>;
+  shrink?: Responsive<boolean | number>;
+  basis?: Responsive<StackItemSpacingToken | "auto" | "full">;
   alignSelf?: "auto" | "start" | "center" | "end" | "stretch" | "baseline";
-  order?: number;
+  order?: Responsive<number>;
   children?: ReactNode;
   render?: RenderProp;
+}
+
+function basisValue(value: StackItemSpacingToken | "auto" | "full"): string {
+  if (value === "auto") return "auto";
+  if (value === "full") return "100%";
+  return systemSpacing[value];
+}
+
+function flexValue(value: boolean | number): number {
+  return value === true ? 1 : value === false ? 0 : value;
 }
 
 export function StackItem({
@@ -32,19 +44,21 @@ export function StackItem({
 }: StackItemProps) {
   const classes = [
     stackItemRoot,
-    basis === "auto" && stackItemBasisAuto,
-    basis === "full" && stackItemBasisFull,
-    basis !== undefined && basis !== "auto" && basis !== "full" && stackItemBasis[basis],
+    basis !== undefined && stackItemBasis,
+    grow !== undefined && stackItemGrow,
+    shrink !== undefined && stackItemShrink,
+    order !== undefined && stackItemOrder,
     alignSelf !== undefined && stackItemAlignSelf[alignSelf],
     className,
   ]
     .filter(Boolean)
     .join(" ");
 
-  const style: CSSProperties = {
-    flexGrow: grow === true ? 1 : grow === false ? 0 : grow,
-    flexShrink: shrink === true ? 1 : shrink === false ? 0 : shrink,
-    order,
+  const style: Record<string, unknown> = {
+    ...responsiveVars("rc-stack-item-basis", basis, basisValue),
+    ...responsiveVars("rc-stack-item-grow", grow, flexValue),
+    ...responsiveVars("rc-stack-item-shrink", shrink, flexValue),
+    ...responsiveVars("rc-stack-item-order", order, (value: number) => value),
   };
 
   const rootProps: Record<string, unknown> = {

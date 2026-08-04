@@ -11,7 +11,7 @@ export type TextComponentOptions = {
 export const textComponent = defineRegistryComponent<TextComponentOptions>()({
   id: "text",
   name: "Text",
-  internalDependencies: ["render-element"],
+  internalDependencies: ["render-element", "responsive"],
   schema: {
     typography: {
       kind: "scale",
@@ -25,11 +25,14 @@ export const textComponent = defineRegistryComponent<TextComponentOptions>()({
     },
   },
   outputs: {
-    "vanilla-extract": vanillaExtractComponentOutput("text", "Text", (scales) =>
-      generateTextSources({
-        typography: scales.typography!,
-        color: scales.color!,
-      }),
+    "vanilla-extract": vanillaExtractComponentOutput("text", "Text", (scales, breakpoints) =>
+      generateTextSources(
+        {
+          typography: scales.typography!,
+          color: scales.color!,
+        },
+        breakpoints,
+      ),
     ),
   },
 });

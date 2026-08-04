@@ -62,6 +62,13 @@ export const JustifyBetween: Story = {
   },
 };
 
+export const Responsive: Story = {
+  args: {
+    direction: { base: "column", md: "row" },
+    gap: { base: 2, md: 4, lg: 6 },
+  },
+};
+
 export const Wrapping: Story = {
   args: {
     wrap: true,

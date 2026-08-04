@@ -10,7 +10,7 @@ export type StackComponentOptions = {
 export const stackComponent = defineRegistryComponent<StackComponentOptions>()({
   id: "stack",
   name: "Stack",
-  internalDependencies: ["render-element"],
+  internalDependencies: ["render-element", "responsive"],
   schema: {
     spacing: {
       kind: "scale",
@@ -19,8 +19,8 @@ export const stackComponent = defineRegistryComponent<StackComponentOptions>()({
     },
   },
   outputs: {
-    "vanilla-extract": vanillaExtractComponentOutput("stack", "Stack", (scales) =>
-      generateStackSources({ spacing: scales.spacing! }),
+    "vanilla-extract": vanillaExtractComponentOutput("stack", "Stack", (scales, breakpoints) =>
+      generateStackSources({ spacing: scales.spacing! }, breakpoints),
     ),
   },
 });

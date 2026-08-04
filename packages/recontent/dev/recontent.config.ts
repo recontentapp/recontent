@@ -289,6 +289,7 @@ export default defineConfig({
       target: "vanilla-extract",
       outDir: "dev/generated/vanilla-extract",
       cssReset: true,
+      breakpoints: tokens.dimensionScale({ base: "0px", md: "48rem", lg: "80rem" }),
       builtInComponents: {
         Box: {
           spacing: system.spacing,

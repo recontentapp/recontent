@@ -10,7 +10,7 @@ export type GridComponentOptions = {
 export const gridComponent = defineRegistryComponent<GridComponentOptions>()({
   id: "grid",
   name: "Grid",
-  internalDependencies: ["render-element"],
+  internalDependencies: ["render-element", "responsive"],
   schema: {
     spacing: {
       kind: "scale",
@@ -19,8 +19,8 @@ export const gridComponent = defineRegistryComponent<GridComponentOptions>()({
     },
   },
   outputs: {
-    "vanilla-extract": vanillaExtractComponentOutput("grid", "Grid", (scales) =>
-      generateGridSources({ spacing: scales.spacing! }),
+    "vanilla-extract": vanillaExtractComponentOutput("grid", "Grid", (scales, breakpoints) =>
+      generateGridSources({ spacing: scales.spacing! }, breakpoints),
     ),
   },
 });

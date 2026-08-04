@@ -8,6 +8,8 @@ import { textComponent } from "./components/text/index.js";
 import { iconComponent } from "./components/icon/index.js";
 import { renderElementModule } from "./internal/render-element/index.js";
 import { iconMapModule } from "./internal/icon-map/index.js";
+import { responsiveModule } from "./internal/responsive/index.js";
+import { useBreakpointModule } from "./internal/use-breakpoint/index.js";
 
 const definitions = [
   boxComponent,
@@ -23,7 +25,12 @@ export const registryComponents = Object.fromEntries(definitions.map((d) => [d.i
   RegistryComponentDefinition
 >;
 
-const internalModuleDefinitions = [renderElementModule, iconMapModule] as const;
+const internalModuleDefinitions = [
+  renderElementModule,
+  iconMapModule,
+  responsiveModule,
+  useBreakpointModule,
+] as const;
 
 export const internalModules = Object.fromEntries(
   internalModuleDefinitions.map((d) => [d.id, d]),

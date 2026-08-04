@@ -61,3 +61,23 @@ export const Sizing: Story = {
     display: "flex",
   },
 };
+
+export const Responsive: Story = {
+  args: {
+    padding: { base: 2, md: 6, lg: 10 },
+    display: { base: "block", md: "flex" },
+    backgroundColor: 200,
+    borderRadius: "element",
+  },
+};
+
+// No `base` key: padding computes to `unset` (= 0, padding is non-inherited)
+// below `md`. This is documented behaviour, not a bug — see the responsive
+// support design notes.
+export const ResponsiveWithoutBase: Story = {
+  args: {
+    padding: { md: 6 },
+    backgroundColor: 200,
+    borderRadius: "element",
+  },
+};

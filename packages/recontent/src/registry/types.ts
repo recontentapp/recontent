@@ -11,6 +11,16 @@ export type TokenImport = {
   reference: string;
 };
 
+/**
+ * A single resolved breakpoint condition. `query` is `null` for the base
+ * condition (the first breakpoint, which must resolve to `0`) and a literal
+ * `@media` condition string for every other breakpoint.
+ */
+export type BreakpointBinding = {
+  name: string;
+  query: string | null;
+};
+
 export type ComponentSourceFiles = {
   styles: string;
   component: string;
@@ -47,12 +57,13 @@ export type ComponentOutput = {
   generate(bindings: {
     scales: Record<string, ScaleImport>;
     tokens: Record<string, TokenImport>;
+    breakpoints?: readonly BreakpointBinding[];
   }): OutputFile[];
 };
 
 type InternalModuleOutput = {
   runtimeDependencies: Record<string, string>;
-  generate(): OutputFile[];
+  generate(breakpoints?: readonly BreakpointBinding[]): OutputFile[];
 };
 
 export type InternalModuleDefinition = {

@@ -42,6 +42,13 @@ export const Default: Story = {
   ),
 };
 
+export const Responsive: Story = {
+  args: {
+    columns: { base: 1, md: 2, lg: 3 },
+    gap: { base: 2, md: 4, lg: 6 },
+  },
+};
+
 export const AsymmetricColumns: Story = {
   args: { columns: "1fr 2fr", gap: 2 },
   render: (args) => (

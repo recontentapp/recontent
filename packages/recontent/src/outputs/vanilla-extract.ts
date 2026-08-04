@@ -2,9 +2,12 @@ import {
   expandedMembers,
   isCompositeType,
   isExpandedComposite,
+  isRawToken,
   isStampedToken,
   isTokenScale,
   type Config,
+  type RawToken,
+  type StampedToken,
   type TokenEntry,
   type TokenType,
   type TokenTypeMap,
@@ -21,13 +24,16 @@ import {
 import {
   generateBuiltInComponentFiles,
   generateInternalModuleFiles,
+  generateUseBreakpointFiles,
   getBuiltInComponentDependencies,
   getInternalModuleDependencies,
+  getUseBreakpointDependencies,
   MissingDesignTokensError,
   normalizeBuiltInComponents,
   resolveBuiltInComponentIds,
   validateBuiltInComponents,
 } from "../registry/index.js";
+import type { BreakpointBinding } from "../registry/types.js";
 import type { OutputFile, OutputProcessor, VanillaExtractOutput } from "./index.js";
 import { generateCssResetSource } from "./shared/reset.js";
 import type { ScaleBinding, TokenBinding } from "@recontentapp/core";
@@ -255,6 +261,83 @@ function resolveTokenBinding<T extends TokenType>(
   return { reference: variableReference(entry) };
 }
 
+/**
+ * Resolves the `breakpoints` output binding to literal `@media` conditions.
+ * Media queries cannot read CSS custom properties, so — unlike every other
+ * component binding — this does not emit a reference into `tokens.css.ts`;
+ * it resolves straight to literal values at generation time and therefore
+ * cannot be themed.
+ */
+function resolveBreakpoints(
+  config: Config,
+  breakpoints: ScaleBinding<"dimension"> | undefined,
+): readonly BreakpointBinding[] | undefined {
+  if (breakpoints === undefined) {
+    return undefined;
+  }
+
+  if (!isTokenScale(breakpoints) || breakpoints.$type !== "dimension") {
+    throw new Error('Output "breakpoints" must be a dimension TokenScale.');
+  }
+
+  const entries = Object.entries(breakpoints) as Array<
+    [string, RawToken<"dimension"> | StampedToken<"dimension">]
+  >;
+  if (entries.length === 0) {
+    throw new Error('Output "breakpoints" must declare at least one breakpoint.');
+  }
+
+  for (const [name, token] of entries) {
+    if (isStampedToken(token) && token._path) {
+      for (const [themeName, override] of Object.entries(config.themes)) {
+        if (override.has(pathKey(token._path))) {
+          throw new Error(
+            `Output "breakpoints.${name}" cannot be overridden by theme "${themeName}": ` +
+              "breakpoints resolve to literal values baked into media queries at build time, " +
+              "so they cannot vary by theme.",
+          );
+        }
+      }
+    } else if (!isRawToken(token) && !isStampedToken(token)) {
+      throw new Error(`Output "breakpoints.${name}" must be a dimension token.`);
+    }
+  }
+
+  const [firstName, firstToken] = entries[0]!;
+  if (firstToken.$value.value !== 0) {
+    throw new Error(
+      `Output "breakpoints" first entry ("${firstName}") must resolve to 0 — it is the base ` +
+        "condition and emits no media query.",
+    );
+  }
+
+  const rest = entries.slice(1);
+  const unit = rest[0]?.[1].$value.unit;
+  let previousValue = firstToken.$value.value;
+  for (const [name, token] of rest) {
+    const { value, unit: tokenUnit } = token.$value;
+    if (tokenUnit !== unit) {
+      throw new Error(
+        `Output "breakpoints.${name}" uses unit "${tokenUnit}", but every breakpoint after the ` +
+          `base condition must share the same unit ("${unit}"). Media queries are evaluated as ` +
+          "literal CSS lengths and cannot mix units meaningfully.",
+      );
+    }
+    if (value <= previousValue) {
+      throw new Error(
+        `Output "breakpoints" entries must be in strictly ascending order; "${name}" ` +
+          `(${value}${tokenUnit}) does not exceed the previous breakpoint (${previousValue}${tokenUnit}).`,
+      );
+    }
+    previousValue = value;
+  }
+
+  return entries.map(([name, token], index) => ({
+    name,
+    query: index === 0 ? null : `screen and (min-width: ${token.$value.value}${token.$value.unit})`,
+  }));
+}
+
 function generateVanillaExtractSource(
   config: Config,
   scaleExports: readonly ScaleExport[],
@@ -312,6 +395,8 @@ export const vanillaExtractOutputProcessor: OutputProcessor<VanillaExtractOutput
         throw new MissingDesignTokensError(errors);
       }
     }
+
+    const resolvedBreakpoints = resolveBreakpoints(config, output.breakpoints);
 
     const scaleExports = scaleExportsForConfig(config);
     const scaleBindings: Record<string, { typeName: string; exportName: string }> = {};
@@ -375,14 +460,24 @@ export const vanillaExtractOutputProcessor: OutputProcessor<VanillaExtractOutput
         ...generateBuiltInComponentFiles(builtInComponents, "vanilla-extract", {
           scaleBindings,
           tokenBindings,
+          breakpoints: resolvedBreakpoints,
         }),
-        ...generateInternalModuleFiles(resolvedComponentIds, "vanilla-extract"),
+        ...generateInternalModuleFiles(
+          resolvedComponentIds,
+          "vanilla-extract",
+          resolvedBreakpoints,
+        ),
         {
           filename: "components.dependencies.json",
           content: `${JSON.stringify(
             {
               ...getBuiltInComponentDependencies(builtInComponents, "vanilla-extract"),
-              ...getInternalModuleDependencies(resolvedComponentIds, "vanilla-extract"),
+              ...getInternalModuleDependencies(
+                resolvedComponentIds,
+                "vanilla-extract",
+                resolvedBreakpoints,
+              ),
+              ...getUseBreakpointDependencies(resolvedBreakpoints, "vanilla-extract"),
             },
             null,
             2,
@@ -390,6 +485,7 @@ export const vanillaExtractOutputProcessor: OutputProcessor<VanillaExtractOutput
         },
       );
     }
+    files.push(...generateUseBreakpointFiles(resolvedBreakpoints, "vanilla-extract"));
     return files;
   },
 };

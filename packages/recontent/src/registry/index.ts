@@ -1,6 +1,6 @@
 import { internalModules, registryComponents, type BuiltInComponentOptions } from "./manifest.js";
 import type { RegistryComponentDefinition } from "./define.js";
-import type { RegistryOutputTarget, ScaleImport, TokenImport } from "./types.js";
+import type { BreakpointBinding, RegistryOutputTarget, ScaleImport, TokenImport } from "./types.js";
 import { isStampedToken, isTokenScale, type Config, type TokenType } from "@recontentapp/core";
 import type { OutputFile, VanillaExtractOutput } from "@recontentapp/core";
 
@@ -249,6 +249,7 @@ export function generateBuiltInComponentFiles(
   options?: {
     scaleBindings?: Record<string, ScaleImport>;
     tokenBindings?: Record<string, TokenImport>;
+    breakpoints?: readonly BreakpointBinding[];
   },
 ): OutputFile[] {
   return resolveBuiltInComponentIds(names).flatMap((id) => {
@@ -270,7 +271,7 @@ export function generateBuiltInComponentFiles(
         .filter(([key]) => key.startsWith(prefix))
         .map(([key, value]) => [key.slice(prefix.length), value]),
     );
-    return output.generate({ scales, tokens });
+    return output.generate({ scales, tokens, breakpoints: options?.breakpoints });
   });
 }
 
@@ -296,32 +297,79 @@ function resolveInternalModuleIds(componentIds: readonly string[]): string[] {
   return resolved;
 }
 
+/**
+ * Internal modules that only make sense when `breakpoints` is configured.
+ * They are skipped even if a component statically declares a dependency on
+ * them, so unconfigured projects keep byte-identical output.
+ */
+const BREAKPOINT_GATED_MODULES = new Set(["responsive"]);
+
 export function generateInternalModuleFiles(
   componentIds: readonly string[],
   target: RegistryOutputTarget = "vanilla-extract",
+  breakpoints?: readonly BreakpointBinding[],
 ): OutputFile[] {
   return resolveInternalModuleIds(componentIds).flatMap((id) => {
+    if (BREAKPOINT_GATED_MODULES.has(id) && breakpoints === undefined) {
+      return [];
+    }
     const module = internalModules[id];
     const output = module?.outputs[target];
     if (!output) {
       throw new Error(`Internal module "${id}" does not support the "${target}" output target.`);
     }
-    return output.generate();
+    return output.generate(breakpoints);
   });
 }
 
 export function getInternalModuleDependencies(
   componentIds: readonly string[],
   target: RegistryOutputTarget = "vanilla-extract",
+  breakpoints?: readonly BreakpointBinding[],
 ): Record<string, string> {
   const dependencies: Record<string, string> = {};
   for (const id of resolveInternalModuleIds(componentIds)) {
+    if (BREAKPOINT_GATED_MODULES.has(id) && breakpoints === undefined) {
+      continue;
+    }
     const output = internalModules[id]?.outputs[target];
     if (output) {
       Object.assign(dependencies, output.runtimeDependencies);
     }
   }
   return dependencies;
+}
+
+/**
+ * `useBreakpoint`/`useMediaQuery` are consumer-facing utilities, not a
+ * dependency of any generated component body, so they are not wired into the
+ * component dependency graph above. They are emitted directly whenever
+ * `breakpoints` is configured.
+ */
+export function generateUseBreakpointFiles(
+  breakpoints: readonly BreakpointBinding[] | undefined,
+  target: RegistryOutputTarget = "vanilla-extract",
+): OutputFile[] {
+  if (breakpoints === undefined) {
+    return [];
+  }
+  const output = internalModules["use-breakpoint"]?.outputs[target];
+  if (!output) {
+    throw new Error(
+      `Internal module "use-breakpoint" does not support the "${target}" output target.`,
+    );
+  }
+  return output.generate(breakpoints);
+}
+
+export function getUseBreakpointDependencies(
+  breakpoints: readonly BreakpointBinding[] | undefined,
+  target: RegistryOutputTarget = "vanilla-extract",
+): Record<string, string> {
+  if (breakpoints === undefined) {
+    return {};
+  }
+  return internalModules["use-breakpoint"]?.outputs[target]?.runtimeDependencies ?? {};
 }
 
 export function getBuiltInComponentDependencies(

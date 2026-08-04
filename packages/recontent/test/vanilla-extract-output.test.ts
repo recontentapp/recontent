@@ -16,7 +16,7 @@ import {
   scaleConfig,
   themedConfig,
 } from "./helpers/fixtures.js";
-import type { OutputFile, VanillaExtractOutput } from "@recontentapp/core";
+import type { OutputFile, ScaleBinding, VanillaExtractOutput } from "@recontentapp/core";
 
 function generate(config: ReturnType<typeof aliasChainConfig>): OutputFile[] {
   const output = config.output[0] as VanillaExtractOutput;
@@ -500,6 +500,110 @@ describe("scales, errors, files", () => {
       const [file] = generate(config);
       assertParses(file!.content);
     }
+  });
+});
+
+describe("breakpoints", () => {
+  function baseConfig(breakpoints?: ScaleBinding<"dimension">) {
+    const ref = defineReferenceTokens({});
+    const system = defineSystemTokens({
+      spacing: tokens.dimensionScale({ 0: "0px", 1: "4px", 2: "8px" }),
+    });
+    return defineConfig({
+      tokens: { ref, system, components: {} },
+      output: {
+        target: "vanilla-extract",
+        outDir: "dist-test",
+        ...(breakpoints ? { breakpoints } : {}),
+        builtInComponents: { Grid: { spacing: system.spacing } },
+      },
+    });
+  }
+
+  test("omitting breakpoints keeps output byte-identical to before responsive support existed", () => {
+    const withoutBreakpoints = generate(baseConfig());
+    const filenames = withoutBreakpoints.map((file) => file.filename);
+    expect(filenames).not.toContain("responsive.gen.ts");
+    expect(filenames).not.toContain("useBreakpoint.gen.ts");
+
+    const gridComponent = withoutBreakpoints.find(
+      (file) => file.filename === "components/grid/Grid.gen.tsx",
+    )!;
+    expect(gridComponent.content).toMatch(/columns\?: number \| string;/);
+    expect(gridComponent.content).not.toMatch(/Responsive</);
+  });
+
+  test("configuring breakpoints emits responsive.gen.ts and useBreakpoint.gen.ts", () => {
+    const breakpoints = tokens.dimensionScale({ base: "0px", md: "48rem" });
+    const files = generate(baseConfig(breakpoints));
+    const filenames = files.map((file) => file.filename);
+    expect(filenames).toContain("responsive.gen.ts");
+    expect(filenames).toContain("useBreakpoint.gen.ts");
+
+    const responsive = files.find((file) => file.filename === "responsive.gen.ts")!;
+    expect(responsive.content).toMatch(/export type Breakpoint = "base" \| "md";/);
+
+    const useBreakpoint = files.find((file) => file.filename === "useBreakpoint.gen.ts")!;
+    expect(useBreakpoint.content).toMatch(/screen and \(min-width: 48rem\)/);
+  });
+
+  test("Grid.gen.css.ts emits an ascending fallback chain through every lower breakpoint", () => {
+    const breakpoints = tokens.dimensionScale({ base: "0px", md: "48rem", lg: "80rem" });
+    const files = generate(baseConfig(breakpoints));
+    const styles = files.find((file) => file.filename === "components/grid/Grid.gen.css.ts")!;
+    expect(styles.content).toMatch(/gap: "var\(--rc-grid-gap-base\)",/);
+    expect(styles.content).toMatch(/gap: "var\(--rc-grid-gap-md, var\(--rc-grid-gap-base\)\)",/);
+    expect(styles.content).toMatch(
+      /gap: "var\(--rc-grid-gap-lg, var\(--rc-grid-gap-md, var\(--rc-grid-gap-base\)\)\)",/,
+    );
+    assertParses(styles.content, "components/grid/Grid.gen.css.ts");
+
+    const component = files.find((file) => file.filename === "components/grid/Grid.gen.tsx")!;
+    expect(component.content).toMatch(/columns\?: Responsive<number \| string>;/);
+    assertParses(component.content, "components/grid/Grid.gen.tsx");
+  });
+
+  test("a non-dimension breakpoints scale throws", () => {
+    const config = baseConfig(tokens.colorScale({ base: "#000000" }) as never);
+    expect(() => generate(config)).toThrow(/breakpoints" must be a dimension TokenScale/);
+  });
+
+  test("a first breakpoint that isn't 0 throws", () => {
+    const config = baseConfig(tokens.dimensionScale({ base: "1px", md: "48rem" }));
+    expect(() => generate(config)).toThrow(/first entry \("base"\) must resolve to 0/);
+  });
+
+  test("non-ascending breakpoints throw", () => {
+    const config = baseConfig(tokens.dimensionScale({ base: "0px", md: "80rem", lg: "48rem" }));
+    expect(() => generate(config)).toThrow(/strictly ascending order/);
+  });
+
+  test("mismatched units across non-base breakpoints throw", () => {
+    const config = baseConfig(tokens.dimensionScale({ base: "0px", md: "48rem", lg: "1280px" }));
+    expect(() => generate(config)).toThrow(/must share the same unit/);
+  });
+
+  test("a theme-overridden breakpoint token throws", () => {
+    const ref = defineReferenceTokens({
+      breakpoints: tokens.dimensionScale({ base: "0px", md: "48rem" }),
+    });
+    const system = defineSystemTokens({
+      spacing: tokens.dimensionScale({ 0: "0px", 1: "4px" }),
+    });
+    const dark = defineTheme(ref, {
+      breakpoints: tokens.dimensionScale({ base: "0px", md: "64rem" }),
+    });
+    const config = defineConfig({
+      tokens: { ref, system, components: {} },
+      themes: { dark },
+      output: {
+        target: "vanilla-extract",
+        outDir: "dist-test",
+        breakpoints: ref.breakpoints,
+        builtInComponents: { Grid: { spacing: system.spacing } },
+      },
+    });
+    expect(() => generate(config)).toThrow(/cannot be overridden by theme "dark"/);
   });
 });
 

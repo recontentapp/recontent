@@ -14,7 +14,7 @@ export type BoxComponentOptions = {
 export const boxComponent = defineRegistryComponent<BoxComponentOptions>()({
   id: "box",
   name: "Box",
-  internalDependencies: ["render-element"],
+  internalDependencies: ["render-element", "responsive"],
   schema: {
     spacing: {
       kind: "scale",
@@ -43,14 +43,17 @@ export const boxComponent = defineRegistryComponent<BoxComponentOptions>()({
     },
   },
   outputs: {
-    "vanilla-extract": vanillaExtractComponentOutput("box", "Box", (scales) =>
-      generateBoxSources({
-        spacing: scales.spacing!,
-        surface: scales.surface!,
-        radius: scales.radius!,
-        border: scales.border!,
-        boxShadow: scales.boxShadow!,
-      }),
+    "vanilla-extract": vanillaExtractComponentOutput("box", "Box", (scales, breakpoints) =>
+      generateBoxSources(
+        {
+          spacing: scales.spacing!,
+          surface: scales.surface!,
+          radius: scales.radius!,
+          border: scales.border!,
+          boxShadow: scales.boxShadow!,
+        },
+        breakpoints,
+      ),
     ),
   },
 });

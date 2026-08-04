@@ -54,6 +54,13 @@ export const FixedBasis: Story = {
   },
 };
 
+export const Responsive: Story = {
+  args: {
+    basis: { base: "full", md: 6 },
+    grow: { base: true, md: false },
+  },
+};
+
 export const AlignSelfEnd: Story = {
   decorators: [
     (Story) => (

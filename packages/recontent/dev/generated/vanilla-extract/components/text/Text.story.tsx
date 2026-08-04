@@ -54,6 +54,13 @@ export const Truncated: Story = {
   ],
 };
 
+export const Responsive: Story = {
+  args: {
+    variant: { base: "supporting", md: "body", lg: "heading3" },
+    align: { base: "left", md: "center" },
+  },
+};
+
 export const ClampedToTwoLines: Story = {
   args: {
     children:

@@ -285,6 +285,7 @@ export interface VanillaExtractOutput {
   outDir: string;
   builtInComponents?: BuiltInComponentsInput;
   cssReset?: boolean;
+  breakpoints?: ScaleBinding<"dimension">;
 }
 export interface TypeScriptOutput {
   target: "typescript";
