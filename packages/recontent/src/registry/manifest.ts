@@ -6,6 +6,7 @@ import { stackItemComponent } from "./components/stack-item/index.js";
 import { gridComponent } from "./components/grid/index.js";
 import { textComponent } from "./components/text/index.js";
 import { iconComponent } from "./components/icon/index.js";
+import { buttonComponent } from "./components/button/index.js";
 import { renderElementModule } from "./internal/render-element/index.js";
 import { iconMapModule } from "./internal/icon-map/index.js";
 import { responsiveModule } from "./internal/responsive/index.js";
@@ -18,6 +19,7 @@ const definitions = [
   gridComponent,
   textComponent,
   iconComponent,
+  buttonComponent,
 ] as const;
 
 export const registryComponents = Object.fromEntries(definitions.map((d) => [d.id, d])) as Record<

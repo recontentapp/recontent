@@ -763,3 +763,98 @@ describe("Grid, Text, Icon built-in components", () => {
     }
   });
 });
+
+describe("Button built-in component", () => {
+  function buttonConfig() {
+    const ref = defineReferenceTokens({
+      color: { black: tokens.color("#000000"), white: tokens.color("#ffffff") },
+    });
+    const system = defineSystemTokens({
+      radius: { element: tokens.dimension("8px") },
+      border: { default: tokens.border({ color: ref.color.black, width: "1px" }) },
+      textStyles: {
+        body: tokens.typography({ fontFamily: "Arial", fontSize: "14px", fontWeight: "regular" }),
+      },
+      spacing: { sm: tokens.dimension("4px"), md: tokens.dimension("8px") },
+    });
+    return defineConfig({
+      tokens: { ref, system, components: {} },
+      output: {
+        target: "vanilla-extract",
+        outDir: "dist-test",
+        builtInComponents: {
+          Button: {
+            borderRadius: system.radius.element,
+            focusRingColor: ref.color.black,
+            variants: {
+              primary: {
+                backgroundColor: ref.color.black,
+                color: ref.color.white,
+                typography: system.textStyles.body,
+                border: system.border.default,
+                hoverBackgroundColor: ref.color.black,
+                hoverColor: ref.color.white,
+                hoverBorder: system.border.default,
+                disabledBackgroundColor: ref.color.black,
+                disabledColor: ref.color.white,
+                disabledBorder: system.border.default,
+              },
+            },
+            sizes: {
+              md: {
+                horizontalSpacing: system.spacing.md,
+                verticalSpacing: system.spacing.sm,
+                typography: system.textStyles.body,
+                gap: system.spacing.sm,
+              },
+            },
+          },
+        },
+      },
+    });
+  }
+
+  test("selecting Button emits Button.gen.css.ts and Button.gen.tsx", () => {
+    const files = generate(buttonConfig());
+    const filenames = files.map((file) => file.filename);
+    expect(filenames).toContain("components/button/Button.gen.css.ts");
+    expect(filenames).toContain("components/button/Button.gen.tsx");
+  });
+
+  test("variant and size keys become literal union types and styleVariants keys", () => {
+    const files = generate(buttonConfig());
+    const component = files.find((f) => f.filename === "components/button/Button.gen.tsx")!;
+    expect(component.content).toMatch(/export type ButtonVariant = "primary";/);
+    expect(component.content).toMatch(/export type ButtonSize = "md";/);
+
+    const styles = files.find((f) => f.filename === "components/button/Button.gen.css.ts")!;
+    expect(styles.content).toMatch(/"primary":\s*\{/);
+    expect(styles.content).toMatch(/"md":\s*\{/);
+  });
+
+  test("missing Button bindings throw MissingDesignTokensError", () => {
+    const ref = defineReferenceTokens({});
+    const config = defineConfig({
+      tokens: { ref, system: defineSystemTokens({}), components: {} },
+      output: {
+        target: "vanilla-extract",
+        outDir: "dist-test",
+        builtInComponents: { Button: {} } as never,
+      },
+    });
+    expect(() => generate(config)).toThrow(MissingDesignTokensError);
+    expect(() => generate(config)).toThrow(/requires config "borderRadius"/);
+  });
+
+  test("Button generated sources pass assertParses", () => {
+    const files = generate(buttonConfig());
+    for (const suffix of [
+      "components/button/Button.gen.css.ts",
+      "components/button/Button.gen.tsx",
+    ]) {
+      const file = files.find((f) => f.filename === suffix)!;
+      expect(file).toBeDefined();
+      assertParses(file.content, suffix);
+    }
+  });
+});
