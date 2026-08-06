@@ -2,7 +2,7 @@ import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { expect, test } from "@jest/globals";
-import { ConfigLoadError, loadConfig, resolveConfigPath } from "../src/config.js";
+import { ConfigLoadError, loadConfig, resolveConfigPath } from "../../src/config/load.js";
 
 const configSource = `
   import { defineConfig, tokens } from "recontent";

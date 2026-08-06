@@ -1,5 +1,5 @@
 import { expect, test } from "@jest/globals";
-import { normalizeObservabilityConfig } from "../src/config.js";
+import { normalizeObservabilityConfig } from "../../src/observability/normalize.js";
 
 const base = {
   tsConfigPath: "tsconfig.json",

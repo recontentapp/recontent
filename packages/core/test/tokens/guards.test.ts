@@ -1,5 +1,11 @@
 import { expect, test } from "@jest/globals";
-import { isRawToken, isStampedToken, isTokenLeaf, isTokenScale, pathKey } from "../src/types.js";
+import {
+  isRawToken,
+  isStampedToken,
+  isTokenLeaf,
+  isTokenScale,
+  pathKey,
+} from "../../src/tokens/guards.js";
 
 test("isRawToken recognizes raw tokens", () => {
   expect(isRawToken({ _kind: "raw", $value: 1 })).toBe(true);

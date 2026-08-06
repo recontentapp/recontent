@@ -7,7 +7,7 @@ import type {
   TokenTypeMap,
   TransitionValue,
   TypographyValue,
-} from "./types.js";
+} from "./values.js";
 
 export const COMPOSITE_TOKEN_TYPES = [
   "shadow",
