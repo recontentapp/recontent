@@ -15,7 +15,7 @@ export type TooltipComponentOptions = {
   offset: TokenBinding<"dimension">;
   maxWidth: TokenBinding<"dimension">;
   arrowSize: TokenBinding<"dimension">;
-  transitionDuration: TokenBinding<"duration">;
+  transition: TokenBinding<"transition">;
 };
 
 /**
@@ -42,7 +42,7 @@ export const tooltipComponent = defineRegistryComponent<TooltipComponentOptions>
     offset: { kind: "token", type: "dimension", description: "Gap between the trigger and the tooltip." },
     maxWidth: { kind: "token", type: "dimension", description: "Maximum width of the tooltip." },
     arrowSize: { kind: "token", type: "dimension", description: "Size of the arrow." },
-    transitionDuration: { kind: "token", type: "duration", description: "Duration of the open/close transition." },
+    transition: { kind: "token", type: "transition", description: "Transition used to open/close the tooltip." },
   },
   outputs: {
     "vanilla-extract": vanillaExtractComponentOutput(
@@ -61,7 +61,7 @@ export const tooltipComponent = defineRegistryComponent<TooltipComponentOptions>
           offset: tokens.offset!,
           maxWidth: tokens.maxWidth!,
           arrowSize: tokens.arrowSize!,
-          transitionDuration: tokens.transitionDuration!,
+          transition: tokens.transition!,
           showArrow: SHOW_ARROW,
         }),
       { "@base-ui/react": "^1.0.0" },

@@ -13,7 +13,7 @@ export type AccordionComponentOptions = {
   triggerColor: TokenBinding<"color">;
   contentHorizontalSpacing: TokenBinding<"dimension">;
   contentVerticalSpacing: TokenBinding<"dimension">;
-  transitionDuration: TokenBinding<"duration">;
+  transition: TokenBinding<"transition">;
 };
 
 /**
@@ -79,10 +79,10 @@ export const accordionComponent = defineRegistryComponent<AccordionComponentOpti
       type: "dimension",
       description: "Top/bottom padding of each panel's content.",
     },
-    transitionDuration: {
+    transition: {
       kind: "token",
-      type: "duration",
-      description: "Duration of each indicator's open/close rotation.",
+      type: "transition",
+      description: "Transition of each indicator's open/close rotation.",
     },
   },
   outputs: {
@@ -100,7 +100,7 @@ export const accordionComponent = defineRegistryComponent<AccordionComponentOpti
           triggerColor: tokens.triggerColor!,
           contentHorizontalSpacing: tokens.contentHorizontalSpacing!,
           contentVerticalSpacing: tokens.contentVerticalSpacing!,
-          transitionDuration: tokens.transitionDuration!,
+          transition: tokens.transition!,
           indicatorIcon: INDICATOR_ICON,
           borderBottomOnly: BORDER_BOTTOM_ONLY,
         }),

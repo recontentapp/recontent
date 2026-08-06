@@ -16,7 +16,7 @@ export type PopoverComponentOptions = {
   /** Only used when `modal` is true. */
   backdropColor: TokenBinding<"color">;
   arrowSize: TokenBinding<"dimension">;
-  transitionDuration: TokenBinding<"duration">;
+  transition: TokenBinding<"transition">;
 };
 
 /**
@@ -47,7 +47,7 @@ export const popoverComponent = defineRegistryComponent<PopoverComponentOptions>
       description: "Background color of the backdrop, shown only when modal.",
     },
     arrowSize: { kind: "token", type: "dimension", description: "Size of the arrow." },
-    transitionDuration: { kind: "token", type: "duration", description: "Duration of the open/close transition." },
+    transition: { kind: "token", type: "transition", description: "Transition used to open/close the popover." },
   },
   outputs: {
     "vanilla-extract": vanillaExtractComponentOutput(
@@ -66,7 +66,7 @@ export const popoverComponent = defineRegistryComponent<PopoverComponentOptions>
           maxWidth: tokens.maxWidth!,
           backdropColor: tokens.backdropColor!,
           arrowSize: tokens.arrowSize!,
-          transitionDuration: tokens.transitionDuration!,
+          transition: tokens.transition!,
           showArrow: SHOW_ARROW,
         }),
       { "@base-ui/react": "^1.0.0" },

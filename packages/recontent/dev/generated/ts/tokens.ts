@@ -236,6 +236,11 @@ const themeSystem = {
       "transitionDelay": '0ms',
       "transitionTimingFunction": 'cubic-bezier(0.24, 1, 0.4, 1)',
     },
+    "medium": {
+      "transitionDuration": '410ms',
+      "transitionDelay": '0ms',
+      "transitionTimingFunction": 'cubic-bezier(0.24, 1, 0.4, 1)',
+    },
   },
   "transitionScale": {
     "fast": {
@@ -493,6 +498,11 @@ const blackThemeSystem = {
   "transitions": {
     "standard": {
       "transitionDuration": '175ms',
+      "transitionDelay": '0ms',
+      "transitionTimingFunction": 'cubic-bezier(0.24, 1, 0.4, 1)',
+    },
+    "medium": {
+      "transitionDuration": '410ms',
       "transitionDelay": '0ms',
       "transitionTimingFunction": 'cubic-bezier(0.24, 1, 0.4, 1)',
     },

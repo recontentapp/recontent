@@ -33,7 +33,7 @@ export function generateSwitchSources(bindings: {
   labelTypography: TokenImport;
   labelColor: TokenImport;
   gap: TokenImport;
-  transitionDuration: TokenImport;
+  transition: TokenImport;
   tokens: Record<string, TokenImport>;
 }): ComponentSourceFiles {
   const {
@@ -48,7 +48,7 @@ export function generateSwitchSources(bindings: {
     labelTypography,
     labelColor,
     gap,
-    transitionDuration,
+    transition,
     tokens,
   } = bindings;
   const sizes = groupVariantTokens(tokens, "sizes", SIZE_FIELDS);
@@ -86,7 +86,8 @@ export const switchTrack = style({
   borderRadius: ${borderRadius.reference},
   backgroundColor: ${trackBackgroundColor.reference},
   transitionProperty: "background-color",
-  transitionDuration: ${transitionDuration.reference},
+  transitionDuration: ${transition.reference}.transitionDuration,
+  transitionTimingFunction: ${transition.reference}.transitionTimingFunction,
   ":focus-visible": {
     outline: \`2px solid \${${focusRingColor.reference}}\`,
     outlineOffset: "2px",
@@ -112,7 +113,8 @@ export const switchThumb = style({
   backgroundColor: ${thumbBackgroundColor.reference},
   boxShadow: ${thumbShadow.reference},
   transitionProperty: "translate",
-  transitionDuration: ${transitionDuration.reference},
+  transitionDuration: ${transition.reference}.transitionDuration,
+  transitionTimingFunction: ${transition.reference}.transitionTimingFunction,
   translate: "2px",
   selectors: {
     "[data-checked] > &": {

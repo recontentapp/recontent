@@ -18,7 +18,8 @@ export const dialogBackdrop = style({
     },
   },
   animationName: fadeIn,
-  animationDuration: vars.system.motion.fast,
+  animationDuration: vars.system.transitions.standard.transitionDuration,
+  animationTimingFunction: vars.system.transitions.standard.transitionTimingFunction,
 });
 
 export const dialogPopup = style({
@@ -49,7 +50,8 @@ export const dialogPopup = style({
     },
   },
   animationName: zoomIn,
-  animationDuration: vars.system.motion.fast,
+  animationDuration: vars.system.transitions.standard.transitionDuration,
+  animationTimingFunction: vars.system.transitions.standard.transitionTimingFunction,
 });
 
 export const dialogPopupSize = styleVariants({

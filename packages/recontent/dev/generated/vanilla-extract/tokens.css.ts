@@ -238,6 +238,11 @@ export const vars = createThemeContract({
         "transitionDelay": null,
         "transitionTimingFunction": null,
       },
+      "medium": {
+        "transitionDuration": null,
+        "transitionDelay": null,
+        "transitionTimingFunction": null,
+      },
     },
     "transitionScale": {
       "fast": {
@@ -540,6 +545,11 @@ export const themeClass = createTheme(vars, {
         "transitionDelay": '0ms',
         "transitionTimingFunction": 'cubic-bezier(0.24, 1, 0.4, 1)',
       },
+      "medium": {
+        "transitionDuration": '410ms',
+        "transitionDelay": '0ms',
+        "transitionTimingFunction": 'cubic-bezier(0.24, 1, 0.4, 1)',
+      },
     },
     "transitionScale": {
       "fast": {
@@ -795,6 +805,11 @@ export const blackThemeThemeClass = createTheme(vars, {
     "transitions": {
       "standard": {
         "transitionDuration": '175ms',
+        "transitionDelay": '0ms',
+        "transitionTimingFunction": 'cubic-bezier(0.24, 1, 0.4, 1)',
+      },
+      "medium": {
+        "transitionDuration": '410ms',
         "transitionDelay": '0ms',
         "transitionTimingFunction": 'cubic-bezier(0.24, 1, 0.4, 1)',
       },

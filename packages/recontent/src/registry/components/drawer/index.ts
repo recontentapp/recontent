@@ -17,7 +17,7 @@ export type DrawerComponentOptions = {
   titleTypography: TokenBinding<"typography">;
   titleColor: TokenBinding<"color">;
   footerBorder: TokenBinding<"border">;
-  transitionDuration: TokenBinding<"duration">;
+  transition: TokenBinding<"transition">;
 };
 
 /**
@@ -50,7 +50,7 @@ export const drawerComponent = defineRegistryComponent<DrawerComponentOptions>()
     titleTypography: { kind: "token", type: "typography", description: "Typography of the title." },
     titleColor: { kind: "token", type: "color", description: "Text color of the title." },
     footerBorder: { kind: "token", type: "border", description: "Border above the footer." },
-    transitionDuration: { kind: "token", type: "duration", description: "Duration of the slide transition." },
+    transition: { kind: "token", type: "transition", description: "Transition used to slide the drawer in/out." },
   },
   outputs: {
     "vanilla-extract": vanillaExtractComponentOutput(
@@ -69,7 +69,7 @@ export const drawerComponent = defineRegistryComponent<DrawerComponentOptions>()
           titleTypography: tokens.titleTypography!,
           titleColor: tokens.titleColor!,
           footerBorder: tokens.footerBorder!,
-          transitionDuration: tokens.transitionDuration!,
+          transition: tokens.transition!,
           closeIcon: CLOSE_ICON,
           tokens,
         }),

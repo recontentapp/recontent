@@ -25,7 +25,7 @@ export function generateDrawerSources(bindings: {
   titleTypography: TokenImport;
   titleColor: TokenImport;
   footerBorder: TokenImport;
-  transitionDuration: TokenImport;
+  transition: TokenImport;
   /** Build-time config, baked directly into the generated component. */
   closeIcon: string;
   tokens: Record<string, TokenImport>;
@@ -42,7 +42,7 @@ export function generateDrawerSources(bindings: {
     titleTypography,
     titleColor,
     footerBorder,
-    transitionDuration,
+    transition,
     closeIcon,
     tokens,
   } = bindings;
@@ -65,7 +65,8 @@ export const drawerBackdrop = style({
     },
   },
   animationName: fadeIn,
-  animationDuration: ${transitionDuration.reference},
+  animationDuration: ${transition.reference}.transitionDuration,
+  animationTimingFunction: ${transition.reference}.transitionTimingFunction,
 });
 
 export const drawerPopup = style({
@@ -83,7 +84,8 @@ export const drawerPopup = style({
   paddingTop: ${verticalSpacing.reference},
   paddingBottom: ${verticalSpacing.reference},
   transitionProperty: "translate, opacity",
-  transitionDuration: ${transitionDuration.reference},
+  transitionDuration: ${transition.reference}.transitionDuration,
+  transitionTimingFunction: ${transition.reference}.transitionTimingFunction,
   selectors: {
     "&[data-starting-style], &[data-ending-style]": {
       opacity: 0,

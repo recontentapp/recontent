@@ -191,6 +191,9 @@
   --system-transitions-standard-transition-duration: 175ms;
   --system-transitions-standard-transition-delay: 0ms;
   --system-transitions-standard-transition-timing-function: cubic-bezier(0.24, 1, 0.4, 1);
+  --system-transitions-medium-transition-duration: 410ms;
+  --system-transitions-medium-transition-delay: 0ms;
+  --system-transitions-medium-transition-timing-function: cubic-bezier(0.24, 1, 0.4, 1);
   --system-transitionScale-fast-transition-duration: 100ms;
   --system-transitionScale-fast-transition-delay: 0ms;
   --system-transitionScale-fast-transition-timing-function: cubic-bezier(0.24, 1, 0.4, 1);

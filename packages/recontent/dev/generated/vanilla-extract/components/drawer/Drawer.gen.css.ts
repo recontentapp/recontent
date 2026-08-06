@@ -14,7 +14,8 @@ export const drawerBackdrop = style({
     },
   },
   animationName: fadeIn,
-  animationDuration: vars.system.motion.medium,
+  animationDuration: vars.system.transitions.medium.transitionDuration,
+  animationTimingFunction: vars.system.transitions.medium.transitionTimingFunction,
 });
 
 export const drawerPopup = style({
@@ -32,7 +33,8 @@ export const drawerPopup = style({
   paddingTop: vars.ref.spacing[4],
   paddingBottom: vars.ref.spacing[4],
   transitionProperty: "translate, opacity",
-  transitionDuration: vars.system.motion.medium,
+  transitionDuration: vars.system.transitions.medium.transitionDuration,
+  transitionTimingFunction: vars.system.transitions.medium.transitionTimingFunction,
   selectors: {
     "&[data-starting-style], &[data-ending-style]": {
       opacity: 0,

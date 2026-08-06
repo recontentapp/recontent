@@ -19,7 +19,7 @@ export type DialogComponentOptions = {
   descriptionTypography: TokenBinding<"typography">;
   descriptionColor: TokenBinding<"color">;
   footerBorder: TokenBinding<"border">;
-  transitionDuration: TokenBinding<"duration">;
+  transition: TokenBinding<"transition">;
 };
 
 /**
@@ -54,7 +54,7 @@ export const dialogComponent = defineRegistryComponent<DialogComponentOptions>()
     descriptionTypography: { kind: "token", type: "typography", description: "Typography of the description." },
     descriptionColor: { kind: "token", type: "color", description: "Text color of the description." },
     footerBorder: { kind: "token", type: "border", description: "Border above the footer." },
-    transitionDuration: { kind: "token", type: "duration", description: "Duration of the open/close transition." },
+    transition: { kind: "token", type: "transition", description: "Transition used to open/close the dialog." },
   },
   outputs: {
     "vanilla-extract": vanillaExtractComponentOutput(
@@ -75,7 +75,7 @@ export const dialogComponent = defineRegistryComponent<DialogComponentOptions>()
           descriptionTypography: tokens.descriptionTypography!,
           descriptionColor: tokens.descriptionColor!,
           footerBorder: tokens.footerBorder!,
-          transitionDuration: tokens.transitionDuration!,
+          transition: tokens.transition!,
           closeIcon: CLOSE_ICON,
           tokens,
         }),

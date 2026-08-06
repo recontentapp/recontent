@@ -1173,7 +1173,6 @@
     },
     "transitions": {
       "standard": {
-        "$type": "transition",
         "$value": {
           "duration": {
             "value": 175,
@@ -1190,7 +1189,26 @@
             1
           ]
         }
-      }
+      },
+      "medium": {
+        "$value": {
+          "duration": {
+            "value": 410,
+            "unit": "ms"
+          },
+          "delay": {
+            "value": 0,
+            "unit": "ms"
+          },
+          "timingFunction": [
+            0.24,
+            1,
+            0.4,
+            1
+          ]
+        }
+      },
+      "$type": "transition"
     },
     "transitionScale": {
       "fast": {

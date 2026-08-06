@@ -32,7 +32,8 @@ export const toastRoot = style({
   paddingTop: vars.ref.spacing[3],
   paddingBottom: vars.ref.spacing[3],
   transitionProperty: "opacity, transform",
-  transitionDuration: vars.system.motion.fast,
+  transitionDuration: vars.system.transitions.standard.transitionDuration,
+  transitionTimingFunction: vars.system.transitions.standard.transitionTimingFunction,
   selectors: {
     "&[data-starting-style], &[data-ending-style]": {
       opacity: 0,

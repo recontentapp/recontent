@@ -22,7 +22,7 @@ export type SwitchComponentOptions = {
   labelTypography: TokenBinding<"typography">;
   labelColor: TokenBinding<"color">;
   gap: TokenBinding<"dimension">;
-  transitionDuration: TokenBinding<"duration">;
+  transition: TokenBinding<"transition">;
 };
 
 export const switchComponent = defineRegistryComponent<SwitchComponentOptions>()({
@@ -94,10 +94,10 @@ export const switchComponent = defineRegistryComponent<SwitchComponentOptions>()
       type: "dimension",
       description: "Space between the track and the label.",
     },
-    transitionDuration: {
+    transition: {
       kind: "token",
-      type: "duration",
-      description: "Duration of the thumb's slide transition.",
+      type: "transition",
+      description: "Transition of the thumb's slide.",
     },
   },
   outputs: {
@@ -117,7 +117,7 @@ export const switchComponent = defineRegistryComponent<SwitchComponentOptions>()
           labelTypography: tokens.labelTypography!,
           labelColor: tokens.labelColor!,
           gap: tokens.gap!,
-          transitionDuration: tokens.transitionDuration!,
+          transition: tokens.transition!,
           tokens,
         }),
       { "@base-ui/react": "^1.0.0" },

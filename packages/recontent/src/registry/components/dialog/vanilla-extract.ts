@@ -27,7 +27,7 @@ export function generateDialogSources(bindings: {
   descriptionTypography: TokenImport;
   descriptionColor: TokenImport;
   footerBorder: TokenImport;
-  transitionDuration: TokenImport;
+  transition: TokenImport;
   /** Build-time config, baked directly into the generated component. */
   closeIcon: string;
   tokens: Record<string, TokenImport>;
@@ -46,7 +46,7 @@ export function generateDialogSources(bindings: {
     descriptionTypography,
     descriptionColor,
     footerBorder,
-    transitionDuration,
+    transition,
     closeIcon,
     tokens,
   } = bindings;
@@ -73,7 +73,8 @@ export const dialogBackdrop = style({
     },
   },
   animationName: fadeIn,
-  animationDuration: ${transitionDuration.reference},
+  animationDuration: ${transition.reference}.transitionDuration,
+  animationTimingFunction: ${transition.reference}.transitionTimingFunction,
 });
 
 export const dialogPopup = style({
@@ -104,7 +105,8 @@ export const dialogPopup = style({
     },
   },
   animationName: zoomIn,
-  animationDuration: ${transitionDuration.reference},
+  animationDuration: ${transition.reference}.transitionDuration,
+  animationTimingFunction: ${transition.reference}.transitionTimingFunction,
 });
 
 export const dialogPopupSize = styleVariants({

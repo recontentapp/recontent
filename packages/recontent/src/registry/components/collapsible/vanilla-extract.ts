@@ -21,7 +21,7 @@ export function generateCollapsibleSources(bindings: {
   triggerColor: TokenImport;
   contentHorizontalSpacing: TokenImport;
   contentVerticalSpacing: TokenImport;
-  transitionDuration: TokenImport;
+  transition: TokenImport;
   /** Build-time config, baked directly into the generated component. */
   indicatorIcon: string;
 }): ComponentSourceFiles {
@@ -36,7 +36,7 @@ export function generateCollapsibleSources(bindings: {
     triggerColor,
     contentHorizontalSpacing,
     contentVerticalSpacing,
-    transitionDuration,
+    transition,
     indicatorIcon,
   } = bindings;
 
@@ -78,7 +78,8 @@ export const collapsibleIndicator = style({
   width: "1em",
   height: "1em",
   transitionProperty: "transform",
-  transitionDuration: ${transitionDuration.reference},
+  transitionDuration: ${transition.reference}.transitionDuration,
+  transitionTimingFunction: ${transition.reference}.transitionTimingFunction,
   selectors: {
     "[data-panel-open] &": { transform: "rotate(180deg)" },
   },

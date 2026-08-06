@@ -27,7 +27,7 @@ export type ToastComponentOptions = {
   offset: TokenBinding<"dimension">;
   width: TokenBinding<"dimension">;
   iconSize: TokenBinding<"dimension">;
-  transitionDuration: TokenBinding<"duration">;
+  transition: TokenBinding<"transition">;
 };
 
 /**
@@ -80,10 +80,10 @@ export const toastComponent = defineRegistryComponent<ToastComponentOptions>()({
     offset: { kind: "token", type: "dimension", description: "Distance from the viewport edge." },
     width: { kind: "token", type: "dimension", description: "Width of a toast." },
     iconSize: { kind: "token", type: "dimension", description: "Size of the status/close icons." },
-    transitionDuration: {
+    transition: {
       kind: "token",
-      type: "duration",
-      description: "Duration of the enter/exit transition.",
+      type: "transition",
+      description: "Transition used to enter/exit.",
     },
   },
   outputs: {
@@ -106,7 +106,7 @@ export const toastComponent = defineRegistryComponent<ToastComponentOptions>()({
           offset: tokens.offset!,
           width: tokens.width!,
           iconSize: tokens.iconSize!,
-          transitionDuration: tokens.transitionDuration!,
+          transition: tokens.transition!,
           defaultStatusIcons: DEFAULT_STATUS_ICONS,
           closeIcon: CLOSE_ICON,
           tokens,

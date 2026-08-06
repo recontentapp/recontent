@@ -22,7 +22,7 @@ export function generateTooltipSources(bindings: {
   offset: TokenImport;
   maxWidth: TokenImport;
   arrowSize: TokenImport;
-  transitionDuration: TokenImport;
+  transition: TokenImport;
   /** Build-time config, baked directly into the generated component. */
   showArrow: boolean;
 }): ComponentSourceFiles {
@@ -38,7 +38,7 @@ export function generateTooltipSources(bindings: {
     offset,
     maxWidth,
     arrowSize,
-    transitionDuration,
+    transition,
     showArrow,
   } = bindings;
 
@@ -71,7 +71,8 @@ export const tooltipPopup = style({
   paddingBottom: ${verticalSpacing.reference},
   ${typographyProps(typography.reference)},
   transitionProperty: "opacity, transform",
-  transitionDuration: ${transitionDuration.reference},
+  transitionDuration: ${transition.reference}.transitionDuration,
+  transitionTimingFunction: ${transition.reference}.transitionTimingFunction,
   selectors: {
     "&[data-starting-style], &[data-ending-style]": {
       opacity: 0,

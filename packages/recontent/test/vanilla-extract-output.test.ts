@@ -1243,7 +1243,9 @@ describe("Collapsible built-in component", () => {
       textStyles: {
         body: tokens.typography({ fontFamily: "Arial", fontSize: "14px", fontWeight: "regular" }),
       },
-      motion: { fast: tokens.duration("150ms") },
+      transitions: {
+        standard: tokens.transition({ duration: "150ms", timingFunction: [0.24, 1, 0.4, 1] }),
+      },
     });
     return defineConfig({
       tokens: { ref, system, components: {} },
@@ -1262,7 +1264,7 @@ describe("Collapsible built-in component", () => {
             triggerColor: ref.color.black,
             contentHorizontalSpacing: system.spacing.md,
             contentVerticalSpacing: system.spacing.sm,
-            transitionDuration: system.motion.fast,
+            transition: system.transitions.standard,
           },
         },
       },
@@ -1331,7 +1333,9 @@ describe("Accordion built-in component", () => {
       textStyles: {
         body: tokens.typography({ fontFamily: "Arial", fontSize: "14px", fontWeight: "regular" }),
       },
-      motion: { fast: tokens.duration("150ms") },
+      transitions: {
+        standard: tokens.transition({ duration: "150ms", timingFunction: [0.24, 1, 0.4, 1] }),
+      },
     });
     return defineConfig({
       tokens: { ref, system, components: {} },
@@ -1349,7 +1353,7 @@ describe("Accordion built-in component", () => {
             triggerColor: ref.color.black,
             contentHorizontalSpacing: system.spacing.md,
             contentVerticalSpacing: system.spacing.sm,
-            transitionDuration: system.motion.fast,
+            transition: system.transitions.standard,
           },
         },
       },
@@ -2567,7 +2571,9 @@ describe("Switch built-in component", () => {
       textStyles: {
         body: tokens.typography({ fontFamily: "Arial", fontSize: "14px", fontWeight: "regular" }),
       },
-      motion: { fast: tokens.duration("150ms") },
+      transitions: {
+        standard: tokens.transition({ duration: "150ms", timingFunction: [0.24, 1, 0.4, 1] }),
+      },
       elevation: {
         sm: tokens.shadow({
           color: ref.color.black,
@@ -2596,7 +2602,7 @@ describe("Switch built-in component", () => {
             labelTypography: system.textStyles.body,
             labelColor: ref.color.black,
             gap: system.spacing.sm,
-            transitionDuration: system.motion.fast,
+            transition: system.transitions.standard,
             sizes: {
               md: {
                 trackWidth: system.spacing.md,
@@ -4124,7 +4130,9 @@ describe("Dialog built-in component", () => {
         body: tokens.typography({ fontFamily: "Arial", fontSize: "14px", fontWeight: "regular" }),
         title: tokens.typography({ fontFamily: "Arial", fontSize: "20px", fontWeight: "bold" }),
       },
-      motion: { fast: tokens.duration("150ms") },
+      transitions: {
+        standard: tokens.transition({ duration: "150ms", timingFunction: [0.24, 1, 0.4, 1] }),
+      },
       elevation: {
         md: tokens.shadow({
           color: ref.color.black,
@@ -4155,7 +4163,7 @@ describe("Dialog built-in component", () => {
             descriptionTypography: system.textStyles.body,
             descriptionColor: ref.color.black,
             footerBorder: system.border.default,
-            transitionDuration: system.motion.fast,
+            transition: system.transitions.standard,
             sizes: {
               sm: { maxWidth: ref.overlayWidth.sm },
               md: { maxWidth: ref.overlayWidth.md },
@@ -4233,7 +4241,9 @@ describe("Drawer built-in component", () => {
       textStyles: {
         title: tokens.typography({ fontFamily: "Arial", fontSize: "20px", fontWeight: "bold" }),
       },
-      motion: { medium: tokens.duration("300ms") },
+      transitions: {
+        medium: tokens.transition({ duration: "300ms", timingFunction: [0.24, 1, 0.4, 1] }),
+      },
       elevation: {
         md: tokens.shadow({
           color: ref.color.black,
@@ -4262,7 +4272,7 @@ describe("Drawer built-in component", () => {
             titleTypography: system.textStyles.title,
             titleColor: ref.color.black,
             footerBorder: system.border.default,
-            transitionDuration: system.motion.medium,
+            transition: system.transitions.medium,
             sizes: {
               sm: { size: ref.overlayWidth.sm },
               md: { size: ref.overlayWidth.md },
@@ -4336,7 +4346,9 @@ describe("Tooltip built-in component", () => {
           fontWeight: "regular",
         }),
       },
-      motion: { fast: tokens.duration("150ms") },
+      transitions: {
+        standard: tokens.transition({ duration: "150ms", timingFunction: [0.24, 1, 0.4, 1] }),
+      },
       elevation: {
         sm: tokens.shadow({
           color: ref.color.black,
@@ -4365,7 +4377,7 @@ describe("Tooltip built-in component", () => {
             offset: system.spacing.sm,
             maxWidth: system.spacing.md,
             arrowSize: system.spacing.sm,
-            transitionDuration: system.motion.fast,
+            transition: system.transitions.standard,
           },
         },
       },
@@ -4425,7 +4437,9 @@ describe("Popover built-in component", () => {
       radius: { element: tokens.dimension("8px") },
       border: { default: tokens.border({ color: ref.color.black, width: "1px" }) },
       spacing: { sm: tokens.dimension("4px"), md: tokens.dimension("8px") },
-      motion: { fast: tokens.duration("150ms") },
+      transitions: {
+        standard: tokens.transition({ duration: "150ms", timingFunction: [0.24, 1, 0.4, 1] }),
+      },
       elevation: {
         md: tokens.shadow({
           color: ref.color.black,
@@ -4454,7 +4468,7 @@ describe("Popover built-in component", () => {
             maxWidth: system.spacing.md,
             backdropColor: ref.color.black,
             arrowSize: system.spacing.sm,
-            transitionDuration: system.motion.fast,
+            transition: system.transitions.standard,
           },
         },
       },
@@ -4522,7 +4536,9 @@ describe("Toast built-in component", () => {
           fontWeight: "regular",
         }),
       },
-      motion: { fast: tokens.duration("150ms") },
+      transitions: {
+        standard: tokens.transition({ duration: "150ms", timingFunction: [0.24, 1, 0.4, 1] }),
+      },
       elevation: {
         md: tokens.shadow({
           color: ref.color.black,
@@ -4554,7 +4570,7 @@ describe("Toast built-in component", () => {
             offset: system.spacing.md,
             width: system.spacing.md,
             iconSize: system.spacing.sm,
-            transitionDuration: system.motion.fast,
+            transition: system.transitions.standard,
             statuses: {
               info: {
                 color: ref.color.black,

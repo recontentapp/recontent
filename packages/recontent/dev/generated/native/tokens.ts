@@ -280,6 +280,11 @@ const themeSystem = {
       "delay": 0,
       "timingFunction": [0.24, 1, 0.4, 1],
     },
+    "medium": {
+      "duration": 410,
+      "delay": 0,
+      "timingFunction": [0.24, 1, 0.4, 1],
+    },
   },
   "transitionScale": {
     "fast": {
@@ -585,6 +590,11 @@ const blackThemeSystem = {
   "transitions": {
     "standard": {
       "duration": 175,
+      "delay": 0,
+      "timingFunction": [0.24, 1, 0.4, 1],
+    },
+    "medium": {
+      "duration": 410,
       "delay": 0,
       "timingFunction": [0.24, 1, 0.4, 1],
     },

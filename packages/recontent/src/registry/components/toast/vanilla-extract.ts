@@ -44,7 +44,7 @@ export function generateToastSources(bindings: {
   offset: TokenImport;
   width: TokenImport;
   iconSize: TokenImport;
-  transitionDuration: TokenImport;
+  transition: TokenImport;
   defaultStatusIcons: Record<string, string>;
   /** Build-time config, baked directly into the generated component. */
   closeIcon: string;
@@ -65,7 +65,7 @@ export function generateToastSources(bindings: {
     offset,
     width,
     iconSize,
-    transitionDuration,
+    transition,
     defaultStatusIcons,
     closeIcon,
     tokens,
@@ -108,7 +108,8 @@ export const toastRoot = style({
   paddingTop: ${verticalSpacing.reference},
   paddingBottom: ${verticalSpacing.reference},
   transitionProperty: "opacity, transform",
-  transitionDuration: ${transitionDuration.reference},
+  transitionDuration: ${transition.reference}.transitionDuration,
+  transitionTimingFunction: ${transition.reference}.transitionTimingFunction,
   selectors: {
     "&[data-starting-style], &[data-ending-style]": {
       opacity: 0,

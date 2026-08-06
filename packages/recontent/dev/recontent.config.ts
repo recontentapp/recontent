@@ -249,6 +249,10 @@ const system = defineSystemTokens({
       duration: "175ms",
       timingFunction: [0.24, 1, 0.4, 1],
     }),
+    medium: tokens.transition({
+      duration: "410ms",
+      timingFunction: [0.24, 1, 0.4, 1],
+    }),
   },
   transitionScale: tokens.transitionScale({
     fast: { duration: "100ms", timingFunction: [0.24, 1, 0.4, 1] },
@@ -412,7 +416,7 @@ export default defineConfig({
           triggerColor: system.colors.textPrimary,
           contentHorizontalSpacing: ref.spacing[4],
           contentVerticalSpacing: ref.spacing[3],
-          transitionDuration: system.motion.fast,
+          transition: system.transitions.standard,
         },
         Accordion: {
           border: system.border.default,
@@ -424,7 +428,7 @@ export default defineConfig({
           triggerColor: system.colors.textPrimary,
           contentHorizontalSpacing: ref.spacing[4],
           contentVerticalSpacing: ref.spacing[3],
-          transitionDuration: system.motion.fast,
+          transition: system.transitions.standard,
         },
         Link: {
           color: system.colors.accent,
@@ -751,7 +755,7 @@ export default defineConfig({
           labelTypography: system.textStyles.body,
           labelColor: system.colors.textPrimary,
           gap: ref.spacing[2],
-          transitionDuration: system.motion.fast,
+          transition: system.transitions.standard,
           sizes: {
             sm: {
               trackWidth: ref.spacing[6],
@@ -1177,7 +1181,7 @@ export default defineConfig({
           descriptionTypography: system.textStyles.body,
           descriptionColor: system.colors.textSecondary,
           footerBorder: system.border.default,
-          transitionDuration: system.motion.fast,
+          transition: system.transitions.standard,
           sizes: {
             sm: { maxWidth: ref.overlayWidth.sm },
             md: { maxWidth: ref.overlayWidth.md },
@@ -1197,7 +1201,7 @@ export default defineConfig({
           titleTypography: system.textScale.heading3,
           titleColor: system.colors.textPrimary,
           footerBorder: system.border.default,
-          transitionDuration: system.motion.medium,
+          transition: system.transitions.medium,
           sizes: {
             sm: { size: ref.overlayWidth.sm },
             md: { size: ref.overlayWidth.md },
@@ -1217,7 +1221,7 @@ export default defineConfig({
           offset: ref.spacing[1],
           maxWidth: ref.overlayWidth.sm,
           arrowSize: ref.spacing[2],
-          transitionDuration: system.motion.fast,
+          transition: system.transitions.standard,
         },
         Popover: {
           backgroundColor: system.colors.backgroundSurface,
@@ -1231,7 +1235,7 @@ export default defineConfig({
           maxWidth: ref.overlayWidth.sm,
           backdropColor: ref.color.gray950,
           arrowSize: ref.spacing[2],
-          transitionDuration: system.motion.fast,
+          transition: system.transitions.standard,
         },
         Toast: {
           backgroundColor: system.colors.backgroundSurface,
@@ -1248,7 +1252,7 @@ export default defineConfig({
           offset: ref.spacing[4],
           width: ref.overlayWidth.sm,
           iconSize: ref.fontSize.lg,
-          transitionDuration: system.motion.fast,
+          transition: system.transitions.standard,
           statuses: {
             info: {
               color: system.colors.textPrimary,

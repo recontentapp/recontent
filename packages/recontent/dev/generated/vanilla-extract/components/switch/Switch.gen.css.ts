@@ -29,7 +29,8 @@ export const switchTrack = style({
   borderRadius: vars.ref.radius.full,
   backgroundColor: vars.system.colors.backgroundMuted,
   transitionProperty: "background-color",
-  transitionDuration: vars.system.motion.fast,
+  transitionDuration: vars.system.transitions.standard.transitionDuration,
+  transitionTimingFunction: vars.system.transitions.standard.transitionTimingFunction,
   ":focus-visible": {
     outline: `2px solid ${vars.system.colors.accent}`,
     outlineOffset: "2px",
@@ -56,7 +57,8 @@ export const switchThumb = style({
   backgroundColor: vars.ref.color.white,
   boxShadow: vars.system.elevation.sm,
   transitionProperty: "translate",
-  transitionDuration: vars.system.motion.fast,
+  transitionDuration: vars.system.transitions.standard.transitionDuration,
+  transitionTimingFunction: vars.system.transitions.standard.transitionTimingFunction,
   translate: "2px",
   selectors: {
     "[data-checked] > &": {

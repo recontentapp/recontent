@@ -50,7 +50,8 @@ export const accordionIndicator = style({
   width: "1em",
   height: "1em",
   transitionProperty: "transform",
-  transitionDuration: vars.system.motion.fast,
+  transitionDuration: vars.system.transitions.standard.transitionDuration,
+  transitionTimingFunction: vars.system.transitions.standard.transitionTimingFunction,
   selectors: {
     "[data-panel-open] &": { transform: "rotate(180deg)" },
   },

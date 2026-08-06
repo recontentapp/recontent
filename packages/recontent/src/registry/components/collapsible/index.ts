@@ -14,7 +14,7 @@ export type CollapsibleComponentOptions = {
   triggerColor: TokenBinding<"color">;
   contentHorizontalSpacing: TokenBinding<"dimension">;
   contentVerticalSpacing: TokenBinding<"dimension">;
-  transitionDuration: TokenBinding<"duration">;
+  transition: TokenBinding<"transition">;
 };
 
 /**
@@ -79,10 +79,10 @@ export const collapsibleComponent = defineRegistryComponent<CollapsibleComponent
       type: "dimension",
       description: "Top/bottom padding of the panel content.",
     },
-    transitionDuration: {
+    transition: {
       kind: "token",
-      type: "duration",
-      description: "Duration of the indicator's open/close rotation.",
+      type: "transition",
+      description: "Transition of the indicator's open/close rotation.",
     },
   },
   outputs: {
@@ -101,7 +101,7 @@ export const collapsibleComponent = defineRegistryComponent<CollapsibleComponent
           triggerColor: tokens.triggerColor!,
           contentHorizontalSpacing: tokens.contentHorizontalSpacing!,
           contentVerticalSpacing: tokens.contentVerticalSpacing!,
-          transitionDuration: tokens.transitionDuration!,
+          transition: tokens.transition!,
           indicatorIcon: INDICATOR_ICON,
         }),
       { "@base-ui/react": "^1.0.0" },

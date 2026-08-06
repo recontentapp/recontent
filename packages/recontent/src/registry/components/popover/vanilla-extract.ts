@@ -12,7 +12,7 @@ export function generatePopoverSources(bindings: {
   maxWidth: TokenImport;
   backdropColor: TokenImport;
   arrowSize: TokenImport;
-  transitionDuration: TokenImport;
+  transition: TokenImport;
   /** Build-time config, baked directly into the generated component. */
   showArrow: boolean;
 }): ComponentSourceFiles {
@@ -28,7 +28,7 @@ export function generatePopoverSources(bindings: {
     maxWidth,
     backdropColor,
     arrowSize,
-    transitionDuration,
+    transition,
     showArrow,
   } = bindings;
 
@@ -47,7 +47,8 @@ export const popoverBackdrop = style({
     },
   },
   transitionProperty: "opacity",
-  transitionDuration: ${transitionDuration.reference},
+  transitionDuration: ${transition.reference}.transitionDuration,
+  transitionTimingFunction: ${transition.reference}.transitionTimingFunction,
 });
 
 export const popoverPositioner = style({
@@ -75,7 +76,8 @@ export const popoverPopup = style({
   paddingBottom: ${verticalSpacing.reference},
   outline: "none",
   transitionProperty: "opacity, transform",
-  transitionDuration: ${transitionDuration.reference},
+  transitionDuration: ${transition.reference}.transitionDuration,
+  transitionTimingFunction: ${transition.reference}.transitionTimingFunction,
   selectors: {
     "&[data-starting-style], &[data-ending-style]": {
       opacity: 0,

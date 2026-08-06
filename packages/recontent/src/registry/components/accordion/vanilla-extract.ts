@@ -20,7 +20,7 @@ export function generateAccordionSources(bindings: {
   triggerColor: TokenImport;
   contentHorizontalSpacing: TokenImport;
   contentVerticalSpacing: TokenImport;
-  transitionDuration: TokenImport;
+  transition: TokenImport;
   /** Build-time config, baked directly into the generated component. */
   indicatorIcon: string;
   /**
@@ -39,7 +39,7 @@ export function generateAccordionSources(bindings: {
     triggerColor,
     contentHorizontalSpacing,
     contentVerticalSpacing,
-    transitionDuration,
+    transition,
     indicatorIcon,
     borderBottomOnly,
   } = bindings;
@@ -97,7 +97,8 @@ export const accordionIndicator = style({
   width: "1em",
   height: "1em",
   transitionProperty: "transform",
-  transitionDuration: ${transitionDuration.reference},
+  transitionDuration: ${transition.reference}.transitionDuration,
+  transitionTimingFunction: ${transition.reference}.transitionTimingFunction,
   selectors: {
     "[data-panel-open] &": { transform: "rotate(180deg)" },
   },
