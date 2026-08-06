@@ -1,8 +1,8 @@
 import path from "node:path";
 import { DEFAULT_CONFIG, loadConfig, resolveConfigPath } from "@recontentapp/core";
-import { createLogger } from "../../core/logger.js";
-import { diagnoseRegistry } from "../../core/registry-diagnostics.js";
-import { checkDependencies } from "../../resolve/check-dependencies.js";
+import { createLogger } from "../../logger.js";
+import { diagnoseRegistry } from "../doctor/registry-diagnostics.js";
+import { checkDependencies } from "../doctor/check-dependencies.js";
 
 export type DoctorOptions = {
   config?: string;

@@ -20,7 +20,7 @@ import {
   serializeCompositeCss,
   serializeValueCss,
   type MemberResolver,
-} from "../core/generators/serialize.js";
+} from "../serialize/values.js";
 import {
   generateBuiltInComponentFiles,
   generateInternalModuleFiles,

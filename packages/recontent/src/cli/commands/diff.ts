@@ -2,9 +2,9 @@ import { promises as fsp } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { DEFAULT_CONFIG, loadConfig, resolveConfigPath } from "@recontentapp/core";
-import { findExternalImports } from "../../core/config-imports.js";
-import { diffConfigs, formatDiff, hasBreakingChanges } from "../../core/diff.js";
-import { createLogger } from "../../core/logger.js";
+import { findExternalImports } from "../diff/config-imports.js";
+import { diffConfigs, formatDiff, hasBreakingChanges } from "../diff/diff.js";
+import { createLogger } from "../../logger.js";
 import { assertRevision, readFileAtRevision, resolveGitRoot } from "../utils/git.js";
 
 export type DiffOptions = {

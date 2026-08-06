@@ -14,7 +14,7 @@ import {
   type TransitionValue,
   type TypographyValue,
 } from "@recontentapp/core";
-import { createLogger } from "../core/logger.js";
+import { createLogger } from "../logger.js";
 import {
   roundTo,
   serializeColorNative,
@@ -24,7 +24,7 @@ import {
   serializeFontFamilyNative,
   serializeFontWeightNative,
   serializeStrokeStyleNative,
-} from "../core/generators/serialize-native.js";
+} from "../serialize/native.js";
 import { escapeString } from "./shared/ts-source.js";
 import {
   generateThemeSource,

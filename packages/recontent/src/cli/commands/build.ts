@@ -1,9 +1,9 @@
 import fs from "node:fs";
 import path from "node:path";
-import { createLogger } from "../../core/logger.js";
+import { createLogger } from "../../logger.js";
 import { MissingDesignTokensError } from "../../registry/index.js";
 import { runOutput } from "../../outputs/index.js";
-import { ensureDependencies } from "../../resolve/ensure-dependencies.js";
+import { ensureDependencies } from "../install-dependencies.js";
 import { DEFAULT_CONFIG, loadConfig, resolveConfigPath } from "@recontentapp/core";
 import { exitWithError, logSuccess, writeOutputFile } from "../utils/fs.js";
 

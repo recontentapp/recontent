@@ -18,7 +18,7 @@ import type {
 import { diagnoseTokenTrees } from "./diagnostics.js";
 import { isRawToken, isStampedToken, isTokenLeaf, isTokenScale, pathKey } from "@recontentapp/core";
 import { withStampedTokenMethods, type ChainableMethods } from "./metadata.js";
-import type { BuiltInComponentOptions } from "../registry/manifest.js";
+import type { BuiltInComponentOptions } from "./registry/manifest.js";
 
 type TokenTree = Record<string, unknown>;
 

@@ -2,7 +2,7 @@ import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 import { type LogLevel, type ResolveConfigInput } from "@recontentapp/core";
-import { createLogger } from "../core/logger.js";
+import { createLogger } from "../logger.js";
 
 function hasReachableNodeModules(configDir: string): boolean {
   let current = path.resolve(configDir);

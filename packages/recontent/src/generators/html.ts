@@ -5,7 +5,7 @@ import {
   type TokenLayer,
   type TokenType,
 } from "@recontentapp/core";
-import { serializeValueCss } from "./serialize.js";
+import { serializeValueCss } from "../serialize/values.js";
 
 const LAYERS: TokenLayer[] = ["ref", "system", "components"];
 

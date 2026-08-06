@@ -1,5 +1,5 @@
 import type { StrokeStyleName, TokenTypeMap } from "@recontentapp/core";
-import { serializeColorCss, serializeFontWeight } from "./serialize.js";
+import { serializeColorCss, serializeFontWeight } from "./values.js";
 
 export function roundTo(value: number, decimals: number): number {
   const factor = 10 ** decimals;

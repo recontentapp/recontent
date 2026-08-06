@@ -5,7 +5,7 @@ import {
   serializeColorCss,
   serializeValueCss,
   serializeValueDtcg,
-} from "../src/core/generators/serialize.js";
+} from "../src/serialize/values.js";
 
 test("serializeColorCss keeps a bare 6-digit hex for opaque sRGB colors", () => {
   expect(serializeColorCss(tokens.color("#0064e0").$value)).toBe("#0064e0");

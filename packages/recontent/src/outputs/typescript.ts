@@ -7,13 +7,13 @@ import {
   type TokenType,
   type TokenTypeMap,
 } from "@recontentapp/core";
-import { createLogger } from "../core/logger.js";
+import { createLogger } from "../logger.js";
 import {
   serializeCompositeCss,
   serializeFontWeight,
   serializeValueCss,
   type MemberResolver,
-} from "../core/generators/serialize.js";
+} from "../serialize/values.js";
 import {
   escapeTemplateLiteral,
   generateScaleExports,

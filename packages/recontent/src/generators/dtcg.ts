@@ -1,5 +1,5 @@
 import { pathKey, type Config, type TokenEntry, type TokenRegistry } from "@recontentapp/core";
-import { entryToDtcgNode, setNested } from "./serialize.js";
+import { entryToDtcgNode, setNested } from "../serialize/values.js";
 
 export type DtcgOutput = Record<string, unknown>;
 

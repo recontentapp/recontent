@@ -7,7 +7,7 @@ import {
   type TokenRegistry,
   type TokenTypeMap,
 } from "@recontentapp/core";
-import { cssVarName, serializeValueCss } from "../core/generators/serialize.js";
+import { cssVarName, serializeValueCss } from "../serialize/values.js";
 import type { Output, OutputFile, OutputProcessor } from "./index.js";
 
 export type CssGeneratorOptions = {

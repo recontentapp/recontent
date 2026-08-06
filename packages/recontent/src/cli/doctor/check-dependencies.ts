@@ -3,7 +3,7 @@ import path from "node:path";
 import { pathToFileURL } from "node:url";
 import semver from "semver";
 import type { Config } from "@recontentapp/core";
-import { getBuiltInComponentDependencies, normalizeBuiltInComponents } from "../registry/index.js";
+import { getBuiltInComponentDependencies, normalizeBuiltInComponents } from "../../registry/index.js";
 
 export type DependencyDiagnostic = {
   packageName: string;

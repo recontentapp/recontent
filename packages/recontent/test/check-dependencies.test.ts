@@ -4,7 +4,7 @@ import { expect, test } from "@jest/globals";
 import {
   computeRequiredDependencies,
   resolveDependencyDiagnostics,
-} from "../src/resolve/check-dependencies.js";
+} from "../src/cli/doctor/check-dependencies.js";
 import { defineConfig, defineReferenceTokens, defineSystemTokens } from "../src/index.js";
 
 const configDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");

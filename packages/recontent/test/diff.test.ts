@@ -1,7 +1,7 @@
 import { expect, test } from "@jest/globals";
 import type { Config, ThemeOverride, TokenEntry, TokenRegistry } from "@recontentapp/core";
-import { diffConfigs, formatDiff, hasBreakingChanges } from "../src/core/diff.js";
-import { findExternalImports } from "../src/core/config-imports.js";
+import { diffConfigs, formatDiff, hasBreakingChanges } from "../src/cli/diff/diff.js";
+import { findExternalImports } from "../src/cli/diff/config-imports.js";
 
 function entry(path: string[], overrides: Partial<TokenEntry> = {}): TokenEntry {
   return {

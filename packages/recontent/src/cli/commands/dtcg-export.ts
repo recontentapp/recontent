@@ -1,5 +1,5 @@
 import path from "node:path";
-import { generateDtcgJson, generateDtcgThemedJson } from "../../core/generators/dtcg.js";
+import { generateDtcgJson, generateDtcgThemedJson } from "../../generators/dtcg.js";
 import { loadConfig } from "@recontentapp/core";
 import { logSuccess, writeOutputFile } from "../utils/fs.js";
 

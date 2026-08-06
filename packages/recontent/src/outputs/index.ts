@@ -1,5 +1,5 @@
 import type { Config, Output, OutputFile, OutputTarget } from "@recontentapp/core";
-import { createLogger } from "../core/logger.js";
+import { createLogger } from "../logger.js";
 import { cssOutputProcessor } from "./css.js";
 import { vanillaExtractOutputProcessor } from "./vanilla-extract.js";
 import { typescriptOutputProcessor } from "./typescript.js";

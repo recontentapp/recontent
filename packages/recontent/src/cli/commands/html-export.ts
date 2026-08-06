@@ -1,4 +1,4 @@
-import { generateHtmlReport } from "../../core/generators/html.js";
+import { generateHtmlReport } from "../../generators/html.js";
 import { loadConfig } from "@recontentapp/core";
 import { logSuccess, writeOutputFile } from "../utils/fs.js";
 
