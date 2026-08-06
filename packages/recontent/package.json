@@ -18,7 +18,7 @@
   },
   "scripts": {
     "build": "tsdown src/index.ts src/core/generators/dtcg.ts src/core/generators/html.ts src/outputs/css.ts src/outputs/vanilla-extract.ts src/outputs/typescript.ts src/outputs/typescript-native.ts src/cli/bin.ts",
-    "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.test.json && tsc --noEmit -p tsconfig.dev.json",
+    "typecheck": "tsc --noEmit",
     "test": "NODE_OPTIONS=--experimental-vm-modules jest && yarn test:dtcg",
     "test:dtcg": "yarn dev:build && yarn dev:dtcg && yarn dev:dtcg:lint",
     "dev": "yarn dev:build && storybook dev -c dev/.storybook -p 6006",

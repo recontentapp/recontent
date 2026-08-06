@@ -4,7 +4,11 @@
       "blue600": {
         "$value": {
           "colorSpace": "srgb",
-          "components": [0, 0.39215686274509803, 0.8784313725490196],
+          "components": [
+            0,
+            0.39215686274509803,
+            0.8784313725490196
+          ],
           "alpha": 1,
           "hex": "#0064e0"
         }
@@ -12,7 +16,11 @@
       "blue500": {
         "$value": {
           "colorSpace": "srgb",
-          "components": [0.14901960784313725, 0.5803921568627451, 0.996078431372549],
+          "components": [
+            0.14901960784313725,
+            0.5803921568627451,
+            0.996078431372549
+          ],
           "alpha": 1,
           "hex": "#2694fe"
         }
@@ -20,7 +28,11 @@
       "gray950": {
         "$value": {
           "colorSpace": "srgb",
-          "components": [0.0392156862745098, 0.07450980392156863, 0.09019607843137255],
+          "components": [
+            0.0392156862745098,
+            0.07450980392156863,
+            0.09019607843137255
+          ],
           "alpha": 1,
           "hex": "#0a1317"
         }
@@ -28,7 +40,11 @@
       "gray700": {
         "$value": {
           "colorSpace": "srgb",
-          "components": [0.3058823529411765, 0.3764705882352941, 0.43529411764705883],
+          "components": [
+            0.3058823529411765,
+            0.3764705882352941,
+            0.43529411764705883
+          ],
           "alpha": 1,
           "hex": "#4e606f"
         }
@@ -36,7 +52,11 @@
       "gray400": {
         "$value": {
           "colorSpace": "srgb",
-          "components": [0.6431372549019608, 0.6901960784313725, 0.7372549019607844],
+          "components": [
+            0.6431372549019608,
+            0.6901960784313725,
+            0.7372549019607844
+          ],
           "alpha": 1,
           "hex": "#a4b0bc"
         }
@@ -44,7 +64,11 @@
       "gray300": {
         "$value": {
           "colorSpace": "srgb",
-          "components": [0.8, 0.8274509803921568, 0.8588235294117647],
+          "components": [
+            0.8,
+            0.8274509803921568,
+            0.8588235294117647
+          ],
           "alpha": 1,
           "hex": "#ccd3db"
         }
@@ -52,7 +76,11 @@
       "gray100": {
         "$value": {
           "colorSpace": "srgb",
-          "components": [0.9450980392156862, 0.9568627450980393, 0.9686274509803922],
+          "components": [
+            0.9450980392156862,
+            0.9568627450980393,
+            0.9686274509803922
+          ],
           "alpha": 1,
           "hex": "#f1f4f7"
         }
@@ -60,7 +88,11 @@
       "white": {
         "$value": {
           "colorSpace": "srgb",
-          "components": [1, 1, 1],
+          "components": [
+            1,
+            1,
+            1
+          ],
           "alpha": 1,
           "hex": "#ffffff"
         }
@@ -68,7 +100,11 @@
       "surfaceDark": {
         "$value": {
           "colorSpace": "srgb",
-          "components": [0.12156862745098039, 0.12156862745098039, 0.13333333333333333],
+          "components": [
+            0.12156862745098039,
+            0.12156862745098039,
+            0.13333333333333333
+          ],
           "alpha": 1,
           "hex": "#1f1f22"
         }
@@ -76,7 +112,11 @@
       "success": {
         "$value": {
           "colorSpace": "srgb",
-          "components": [0.050980392156862744, 0.5254901960784314, 0.14901960784313725],
+          "components": [
+            0.050980392156862744,
+            0.5254901960784314,
+            0.14901960784313725
+          ],
           "alpha": 1,
           "hex": "#0d8626"
         }
@@ -84,7 +124,11 @@
       "warning": {
         "$value": {
           "colorSpace": "srgb",
-          "components": [0.9137254901960784, 0.6862745098039216, 0.03137254901960784],
+          "components": [
+            0.9137254901960784,
+            0.6862745098039216,
+            0.03137254901960784
+          ],
           "alpha": 1,
           "hex": "#e9af08"
         }
@@ -92,7 +136,11 @@
       "error": {
         "$value": {
           "colorSpace": "srgb",
-          "components": [0.8901960784313725, 0.09803921568627451, 0.23137254901960785],
+          "components": [
+            0.8901960784313725,
+            0.09803921568627451,
+            0.23137254901960785
+          ],
           "alpha": 1,
           "hex": "#e3193b"
         }
@@ -100,7 +148,11 @@
       "blueMuted": {
         "$value": {
           "colorSpace": "srgb",
-          "components": [0.00392156862745098, 0.44313725490196076, 0.8901960784313725],
+          "components": [
+            0.00392156862745098,
+            0.44313725490196076,
+            0.8901960784313725
+          ],
           "alpha": 0.2,
           "hex": "#0171e3"
         }
@@ -108,7 +160,11 @@
       "purpleMuted": {
         "$value": {
           "colorSpace": "srgb",
-          "components": [0.4745098039215686, 0.3215686274509804, 1],
+          "components": [
+            0.4745098039215686,
+            0.3215686274509804,
+            1
+          ],
           "alpha": 0.2,
           "hex": "#7952ff"
         }
@@ -319,6 +375,33 @@
       },
       "$type": "dimension"
     },
+    "overlayWidth": {
+      "sm": {
+        "$value": {
+          "value": 24,
+          "unit": "rem"
+        }
+      },
+      "md": {
+        "$value": {
+          "value": 32,
+          "unit": "rem"
+        }
+      },
+      "lg": {
+        "$value": {
+          "value": 48,
+          "unit": "rem"
+        }
+      },
+      "fullscreen": {
+        "$value": {
+          "value": 96,
+          "unit": "rem"
+        }
+      },
+      "$type": "dimension"
+    },
     "fontSizeScale": {
       "xs": {
         "$value": {
@@ -524,7 +607,12 @@
       },
       "codeFontFamily": {
         "$type": "fontFamily",
-        "$value": ["SF Mono", "Monaco", "Consolas", "monospace"]
+        "$value": [
+          "SF Mono",
+          "Monaco",
+          "Consolas",
+          "monospace"
+        ]
       },
       "supportingSize": {
         "$type": "dimension",
@@ -665,7 +753,12 @@
       },
       "standard": {
         "$type": "cubicBezier",
-        "$value": [0.24, 1, 0.4, 1]
+        "$value": [
+          0.24,
+          1,
+          0.4,
+          1
+        ]
       }
     },
     "elevation": {
@@ -838,7 +931,6 @@
     },
     "textStyles": {
       "body": {
-        "$type": "typography",
         "$value": {
           "fontFamily": [
             "-apple-system",
@@ -857,7 +949,25 @@
           },
           "lineHeight": 1.4286
         }
-      }
+      },
+      "code": {
+        "$value": {
+          "fontFamily": [
+            "SF Mono",
+            "Monaco",
+            "Consolas",
+            "monospace"
+          ],
+          "fontSize": "{ref.fontSize.sm}",
+          "fontWeight": 400,
+          "letterSpacing": {
+            "value": 0,
+            "unit": "px"
+          },
+          "lineHeight": 1.4286
+        }
+      },
+      "$type": "typography"
     },
     "textScale": {
       "supporting": {
@@ -974,7 +1084,12 @@
             "value": 0,
             "unit": "ms"
           },
-          "timingFunction": [0.24, 1, 0.4, 1]
+          "timingFunction": [
+            0.24,
+            1,
+            0.4,
+            1
+          ]
         }
       }
     },
@@ -989,7 +1104,12 @@
             "value": 0,
             "unit": "ms"
           },
-          "timingFunction": [0.24, 1, 0.4, 1]
+          "timingFunction": [
+            0.24,
+            1,
+            0.4,
+            1
+          ]
         }
       },
       "slow": {
@@ -1002,7 +1122,12 @@
             "value": 0,
             "unit": "ms"
           },
-          "timingFunction": [0.24, 1, 0.4, 1]
+          "timingFunction": [
+            0.24,
+            1,
+            0.4,
+            1
+          ]
         }
       },
       "$type": "transition"

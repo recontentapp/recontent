@@ -858,3 +858,4029 @@ describe("Button built-in component", () => {
     }
   });
 });
+
+describe("Avatar built-in component", () => {
+  function avatarConfig() {
+    const ref = defineReferenceTokens({
+      color: { black: tokens.color("#000000"), white: tokens.color("#ffffff") },
+      sizeScale: tokens.dimensionScale({ sm: "24px", md: "32px" }),
+    });
+    const system = defineSystemTokens({
+      radius: { element: tokens.dimension("8px") },
+      textStyles: {
+        body: tokens.typography({ fontFamily: "Arial", fontSize: "14px", fontWeight: "regular" }),
+      },
+    });
+    return defineConfig({
+      tokens: { ref, system, components: {} },
+      output: {
+        target: "vanilla-extract",
+        outDir: "dist-test",
+        builtInComponents: {
+          Avatar: {
+            sizes: ref.sizeScale,
+            color: ref.color.white,
+            backgroundColor: ref.color.black,
+            borderRadius: system.radius.element,
+            typography: system.textStyles.body,
+          },
+        },
+      },
+    });
+  }
+
+  test("selecting Avatar emits Avatar.gen.css.ts and Avatar.gen.tsx", () => {
+    const files = generate(avatarConfig());
+    const filenames = files.map((file) => file.filename);
+    expect(filenames).toContain("components/avatar/Avatar.gen.css.ts");
+    expect(filenames).toContain("components/avatar/Avatar.gen.tsx");
+  });
+
+  test("size scale keys become a literal union type and a styleVariants map", () => {
+    const files = generate(avatarConfig());
+    const component = files.find((f) => f.filename === "components/avatar/Avatar.gen.tsx")!;
+    expect(component.content).toMatch(/import type \{ RefSizeScale as AvatarSizeToken \}/);
+    expect(component.content).toMatch(/size\?: AvatarSizeToken/);
+
+    const styles = files.find((f) => f.filename === "components/avatar/Avatar.gen.css.ts")!;
+    expect(styles.content).toMatch(/export const avatarSize = styleVariants\(refSizeScale,/);
+  });
+
+  test("missing Avatar bindings throw MissingDesignTokensError", () => {
+    const ref = defineReferenceTokens({});
+    const config = defineConfig({
+      tokens: { ref, system: defineSystemTokens({}), components: {} },
+      output: {
+        target: "vanilla-extract",
+        outDir: "dist-test",
+        builtInComponents: { Avatar: {} } as never,
+      },
+    });
+    expect(() => generate(config)).toThrow(MissingDesignTokensError);
+    expect(() => generate(config)).toThrow(/requires config "sizes"/);
+  });
+
+  test("Avatar generated sources pass assertParses", () => {
+    const files = generate(avatarConfig());
+    for (const suffix of ["components/avatar/Avatar.gen.css.ts", "components/avatar/Avatar.gen.tsx"]) {
+      const file = files.find((f) => f.filename === suffix)!;
+      expect(file).toBeDefined();
+      assertParses(file.content, suffix);
+    }
+  });
+});
+
+describe("QuoteBlock built-in component", () => {
+  function quoteBlockConfig() {
+    const ref = defineReferenceTokens({
+      color: { black: tokens.color("#000000"), gray: tokens.color("#666666") },
+    });
+    const system = defineSystemTokens({
+      spacing: { sm: tokens.dimension("4px"), md: tokens.dimension("8px") },
+      border: { default: tokens.border({ color: ref.color.black, width: "1px" }) },
+      textStyles: {
+        body: tokens.typography({ fontFamily: "Arial", fontSize: "14px", fontWeight: "regular" }),
+        supporting: tokens.typography({
+          fontFamily: "Arial",
+          fontSize: "12px",
+          fontWeight: "regular",
+        }),
+      },
+    });
+    return defineConfig({
+      tokens: { ref, system, components: {} },
+      output: {
+        target: "vanilla-extract",
+        outDir: "dist-test",
+        builtInComponents: {
+          QuoteBlock: {
+            color: ref.color.black,
+            typography: system.textStyles.body,
+            citationColor: ref.color.gray,
+            citationTypography: system.textStyles.supporting,
+            border: system.border.default,
+            horizontalSpacing: system.spacing.md,
+            verticalSpacing: system.spacing.sm,
+            gap: system.spacing.sm,
+          },
+        },
+      },
+    });
+  }
+
+  test("selecting QuoteBlock emits QuoteBlock.gen.css.ts and QuoteBlock.gen.tsx", () => {
+    const files = generate(quoteBlockConfig());
+    const filenames = files.map((file) => file.filename);
+    expect(filenames).toContain("components/quote-block/QuoteBlock.gen.css.ts");
+    expect(filenames).toContain("components/quote-block/QuoteBlock.gen.tsx");
+  });
+
+  test("QuoteBlock.gen.tsx renders a figure with a blockquote and optional figcaption", () => {
+    const files = generate(quoteBlockConfig());
+    const component = files.find(
+      (f) => f.filename === "components/quote-block/QuoteBlock.gen.tsx",
+    )!;
+    expect(component.content).toMatch(/<blockquote className={quoteBlockQuote}>/);
+    expect(component.content).toMatch(/<figcaption className={quoteBlockCitation}>/);
+    expect(component.content).toMatch(/renderElement\("figure", render, rootProps/);
+  });
+
+  test("missing QuoteBlock bindings throw MissingDesignTokensError", () => {
+    const ref = defineReferenceTokens({});
+    const config = defineConfig({
+      tokens: { ref, system: defineSystemTokens({}), components: {} },
+      output: {
+        target: "vanilla-extract",
+        outDir: "dist-test",
+        builtInComponents: { QuoteBlock: {} } as never,
+      },
+    });
+    expect(() => generate(config)).toThrow(MissingDesignTokensError);
+    expect(() => generate(config)).toThrow(/requires config "color"/);
+  });
+
+  test("QuoteBlock generated sources pass assertParses", () => {
+    const files = generate(quoteBlockConfig());
+    for (const suffix of [
+      "components/quote-block/QuoteBlock.gen.css.ts",
+      "components/quote-block/QuoteBlock.gen.tsx",
+    ]) {
+      const file = files.find((f) => f.filename === suffix)!;
+      expect(file).toBeDefined();
+      assertParses(file.content, suffix);
+    }
+  });
+});
+
+describe("Code built-in component", () => {
+  function codeConfig() {
+    const ref = defineReferenceTokens({
+      color: { black: tokens.color("#000000"), gray: tokens.color("#eeeeee") },
+    });
+    const system = defineSystemTokens({
+      spacing: { sm: tokens.dimension("2px"), md: tokens.dimension("4px") },
+      radius: { inner: tokens.dimension("4px") },
+      border: { default: tokens.border({ color: ref.color.black, width: "1px" }) },
+      textStyles: {
+        code: tokens.typography({ fontFamily: "monospace", fontSize: "12px", fontWeight: "regular" }),
+      },
+    });
+    return defineConfig({
+      tokens: { ref, system, components: {} },
+      output: {
+        target: "vanilla-extract",
+        outDir: "dist-test",
+        builtInComponents: {
+          Code: {
+            color: ref.color.black,
+            backgroundColor: ref.color.gray,
+            border: system.border.default,
+            borderRadius: system.radius.inner,
+            typography: system.textStyles.code,
+            horizontalSpacing: system.spacing.md,
+            verticalSpacing: system.spacing.sm,
+          },
+        },
+      },
+    });
+  }
+
+  test("selecting Code emits Code.gen.css.ts and Code.gen.tsx", () => {
+    const files = generate(codeConfig());
+    const filenames = files.map((file) => file.filename);
+    expect(filenames).toContain("components/code/Code.gen.css.ts");
+    expect(filenames).toContain("components/code/Code.gen.tsx");
+  });
+
+  test("Code.gen.css.ts references every resolved binding", () => {
+    const files = generate(codeConfig());
+    const styles = files.find((f) => f.filename === "components/code/Code.gen.css.ts")!;
+    expect(styles.content).toMatch(/color: vars\.ref\.color\.black/);
+    expect(styles.content).toMatch(/backgroundColor: vars\.ref\.color\.gray/);
+  });
+
+  test("missing Code bindings throw MissingDesignTokensError", () => {
+    const ref = defineReferenceTokens({});
+    const config = defineConfig({
+      tokens: { ref, system: defineSystemTokens({}), components: {} },
+      output: {
+        target: "vanilla-extract",
+        outDir: "dist-test",
+        builtInComponents: { Code: {} } as never,
+      },
+    });
+    expect(() => generate(config)).toThrow(MissingDesignTokensError);
+    expect(() => generate(config)).toThrow(/requires config "color"/);
+  });
+
+  test("Code generated sources pass assertParses", () => {
+    const files = generate(codeConfig());
+    for (const suffix of ["components/code/Code.gen.css.ts", "components/code/Code.gen.tsx"]) {
+      const file = files.find((f) => f.filename === suffix)!;
+      expect(file).toBeDefined();
+      assertParses(file.content, suffix);
+    }
+  });
+});
+
+describe("KeyboardShortcut built-in component", () => {
+  function keyboardShortcutConfig() {
+    const ref = defineReferenceTokens({
+      color: { black: tokens.color("#000000"), gray: tokens.color("#eeeeee") },
+    });
+    const system = defineSystemTokens({
+      spacing: { xs: tokens.dimension("2px"), sm: tokens.dimension("4px") },
+      radius: { inner: tokens.dimension("4px") },
+      border: { default: tokens.border({ color: ref.color.black, width: "1px" }) },
+      textStyles: {
+        code: tokens.typography({ fontFamily: "monospace", fontSize: "12px", fontWeight: "regular" }),
+      },
+    });
+    return defineConfig({
+      tokens: { ref, system, components: {} },
+      output: {
+        target: "vanilla-extract",
+        outDir: "dist-test",
+        builtInComponents: {
+          KeyboardShortcut: {
+            color: ref.color.black,
+            backgroundColor: ref.color.gray,
+            border: system.border.default,
+            borderRadius: system.radius.inner,
+            typography: system.textStyles.code,
+            horizontalSpacing: system.spacing.sm,
+            verticalSpacing: system.spacing.xs,
+            gap: system.spacing.xs,
+          },
+        },
+      },
+    });
+  }
+
+  test("selecting KeyboardShortcut emits KeyboardShortcut.gen.css.ts and KeyboardShortcut.gen.tsx", () => {
+    const files = generate(keyboardShortcutConfig());
+    const filenames = files.map((file) => file.filename);
+    expect(filenames).toContain("components/keyboard-shortcut/KeyboardShortcut.gen.css.ts");
+    expect(filenames).toContain("components/keyboard-shortcut/KeyboardShortcut.gen.tsx");
+  });
+
+  test("KeyboardShortcut.gen.tsx renders one <kbd> per key with an optional separator", () => {
+    const files = generate(keyboardShortcutConfig());
+    const component = files.find(
+      (f) => f.filename === "components/keyboard-shortcut/KeyboardShortcut.gen.tsx",
+    )!;
+    expect(component.content).toMatch(/<kbd className={keyboardShortcutKey}>{key}<\/kbd>/);
+    expect(component.content).toMatch(/keys\.map\(\(key, index\)/);
+  });
+
+  test("missing KeyboardShortcut bindings throw MissingDesignTokensError", () => {
+    const ref = defineReferenceTokens({});
+    const config = defineConfig({
+      tokens: { ref, system: defineSystemTokens({}), components: {} },
+      output: {
+        target: "vanilla-extract",
+        outDir: "dist-test",
+        builtInComponents: { KeyboardShortcut: {} } as never,
+      },
+    });
+    expect(() => generate(config)).toThrow(MissingDesignTokensError);
+    expect(() => generate(config)).toThrow(/requires config "color"/);
+  });
+
+  test("KeyboardShortcut generated sources pass assertParses", () => {
+    const files = generate(keyboardShortcutConfig());
+    for (const suffix of [
+      "components/keyboard-shortcut/KeyboardShortcut.gen.css.ts",
+      "components/keyboard-shortcut/KeyboardShortcut.gen.tsx",
+    ]) {
+      const file = files.find((f) => f.filename === suffix)!;
+      expect(file).toBeDefined();
+      assertParses(file.content, suffix);
+    }
+  });
+});
+
+describe("Divider built-in component", () => {
+  function dividerConfig() {
+    const ref = defineReferenceTokens({
+      color: { black: tokens.color("#000000"), gray: tokens.color("#cccccc") },
+    });
+    const system = defineSystemTokens({
+      spacing: { sm: tokens.dimension("8px") },
+      radius: { none: tokens.dimension("0px") },
+      border: { default: tokens.border({ color: ref.color.black, width: "1px" }) },
+    });
+    return defineConfig({
+      tokens: { ref, system, components: {} },
+      output: {
+        target: "vanilla-extract",
+        outDir: "dist-test",
+        builtInComponents: {
+          Divider: {
+            border: system.border.default,
+            borderRadius: system.radius.none,
+            color: ref.color.gray,
+            spacing: system.spacing.sm,
+          },
+        },
+      },
+    });
+  }
+
+  test("selecting Divider emits Divider.gen.css.ts and Divider.gen.tsx", () => {
+    const files = generate(dividerConfig());
+    const filenames = files.map((file) => file.filename);
+    expect(filenames).toContain("components/divider/Divider.gen.css.ts");
+    expect(filenames).toContain("components/divider/Divider.gen.tsx");
+  });
+
+  test("Divider.gen.tsx wraps Base UI's Separator and forwards orientation/render", () => {
+    const files = generate(dividerConfig());
+    const component = files.find((f) => f.filename === "components/divider/Divider.gen.tsx")!;
+    expect(component.content).toMatch(
+      /import { Separator as BaseSeparator } from "@base-ui\/react\/separator";/,
+    );
+    expect(component.content).toMatch(/orientation={orientation}/);
+    expect(component.content).toMatch(/render={render}/);
+  });
+
+  test("missing Divider bindings throw MissingDesignTokensError", () => {
+    const ref = defineReferenceTokens({});
+    const config = defineConfig({
+      tokens: { ref, system: defineSystemTokens({}), components: {} },
+      output: {
+        target: "vanilla-extract",
+        outDir: "dist-test",
+        builtInComponents: { Divider: {} } as never,
+      },
+    });
+    expect(() => generate(config)).toThrow(MissingDesignTokensError);
+    expect(() => generate(config)).toThrow(/requires config "border"/);
+  });
+
+  test("Divider generated sources pass assertParses", () => {
+    const files = generate(dividerConfig());
+    for (const suffix of [
+      "components/divider/Divider.gen.css.ts",
+      "components/divider/Divider.gen.tsx",
+    ]) {
+      const file = files.find((f) => f.filename === suffix)!;
+      expect(file).toBeDefined();
+      assertParses(file.content, suffix);
+    }
+  });
+});
+
+describe("Collapsible built-in component", () => {
+  function collapsibleConfig() {
+    const ref = defineReferenceTokens({
+      color: { black: tokens.color("#000000"), white: tokens.color("#ffffff") },
+    });
+    const system = defineSystemTokens({
+      spacing: { sm: tokens.dimension("4px"), md: tokens.dimension("8px") },
+      radius: { element: tokens.dimension("8px") },
+      border: { default: tokens.border({ color: ref.color.black, width: "1px" }) },
+      textStyles: {
+        body: tokens.typography({ fontFamily: "Arial", fontSize: "14px", fontWeight: "regular" }),
+      },
+      motion: { fast: tokens.duration("150ms") },
+    });
+    return defineConfig({
+      tokens: { ref, system, components: {} },
+      output: {
+        target: "vanilla-extract",
+        outDir: "dist-test",
+        builtInComponents: {
+          Collapsible: {
+            borderRadius: system.radius.element,
+            border: system.border.default,
+            backgroundColor: ref.color.white,
+            hoverBackgroundColor: ref.color.white,
+            triggerHorizontalSpacing: system.spacing.md,
+            triggerVerticalSpacing: system.spacing.sm,
+            triggerTypography: system.textStyles.body,
+            triggerColor: ref.color.black,
+            contentHorizontalSpacing: system.spacing.md,
+            contentVerticalSpacing: system.spacing.sm,
+            transitionDuration: system.motion.fast,
+          },
+        },
+      },
+    });
+  }
+
+  test("selecting Collapsible emits Collapsible.gen.css.ts and Collapsible.gen.tsx", () => {
+    const files = generate(collapsibleConfig());
+    const filenames = files.map((file) => file.filename);
+    expect(filenames).toContain("components/collapsible/Collapsible.gen.css.ts");
+    expect(filenames).toContain("components/collapsible/Collapsible.gen.tsx");
+  });
+
+  test("Collapsible.gen.tsx wraps Base UI's Collapsible and bakes in an indicator icon", () => {
+    const files = generate(collapsibleConfig());
+    const component = files.find(
+      (f) => f.filename === "components/collapsible/Collapsible.gen.tsx",
+    )!;
+    expect(component.content).toMatch(
+      /import { Collapsible as BaseCollapsible } from "@base-ui\/react\/collapsible";/,
+    );
+    expect(component.content).toMatch(/const IndicatorIcon = icons\["chevronDown"\];/);
+
+    const styles = files.find(
+      (f) => f.filename === "components/collapsible/Collapsible.gen.css.ts",
+    )!;
+    expect(styles.content).toMatch(/"\[data-panel-open\] &": \{ transform: "rotate\(180deg\)" \}/);
+  });
+
+  test("missing Collapsible bindings throw MissingDesignTokensError", () => {
+    const ref = defineReferenceTokens({});
+    const config = defineConfig({
+      tokens: { ref, system: defineSystemTokens({}), components: {} },
+      output: {
+        target: "vanilla-extract",
+        outDir: "dist-test",
+        builtInComponents: { Collapsible: {} } as never,
+      },
+    });
+    expect(() => generate(config)).toThrow(MissingDesignTokensError);
+    expect(() => generate(config)).toThrow(/requires config "borderRadius"/);
+  });
+
+  test("Collapsible generated sources pass assertParses", () => {
+    const files = generate(collapsibleConfig());
+    for (const suffix of [
+      "components/collapsible/Collapsible.gen.css.ts",
+      "components/collapsible/Collapsible.gen.tsx",
+    ]) {
+      const file = files.find((f) => f.filename === suffix)!;
+      expect(file).toBeDefined();
+      assertParses(file.content, suffix);
+    }
+  });
+});
+
+describe("Accordion built-in component", () => {
+  function accordionConfig() {
+    const ref = defineReferenceTokens({
+      color: { black: tokens.color("#000000"), white: tokens.color("#ffffff") },
+    });
+    const system = defineSystemTokens({
+      spacing: { sm: tokens.dimension("4px"), md: tokens.dimension("8px") },
+      radius: { element: tokens.dimension("8px") },
+      border: { default: tokens.border({ color: ref.color.black, width: "1px" }) },
+      textStyles: {
+        body: tokens.typography({ fontFamily: "Arial", fontSize: "14px", fontWeight: "regular" }),
+      },
+      motion: { fast: tokens.duration("150ms") },
+    });
+    return defineConfig({
+      tokens: { ref, system, components: {} },
+      output: {
+        target: "vanilla-extract",
+        outDir: "dist-test",
+        builtInComponents: {
+          Accordion: {
+            border: system.border.default,
+            borderRadius: system.radius.element,
+            hoverBackgroundColor: ref.color.white,
+            triggerHorizontalSpacing: system.spacing.md,
+            triggerVerticalSpacing: system.spacing.sm,
+            triggerTypography: system.textStyles.body,
+            triggerColor: ref.color.black,
+            contentHorizontalSpacing: system.spacing.md,
+            contentVerticalSpacing: system.spacing.sm,
+            transitionDuration: system.motion.fast,
+          },
+        },
+      },
+    });
+  }
+
+  test("selecting Accordion emits Accordion.gen.css.ts and Accordion.gen.tsx", () => {
+    const files = generate(accordionConfig());
+    const filenames = files.map((file) => file.filename);
+    expect(filenames).toContain("components/accordion/Accordion.gen.css.ts");
+    expect(filenames).toContain("components/accordion/Accordion.gen.tsx");
+  });
+
+  test("Accordion.gen.tsx wraps Base UI's Accordion and maps items to Accordion.Item", () => {
+    const files = generate(accordionConfig());
+    const component = files.find((f) => f.filename === "components/accordion/Accordion.gen.tsx")!;
+    expect(component.content).toMatch(
+      /import { Accordion as BaseAccordion } from "@base-ui\/react\/accordion";/,
+    );
+    expect(component.content).toMatch(/items\.map\(\(item\) =>/);
+    expect(component.content).toMatch(/const IndicatorIcon = icons\["chevronDown"\];/);
+  });
+
+  test("missing Accordion bindings throw MissingDesignTokensError", () => {
+    const ref = defineReferenceTokens({});
+    const config = defineConfig({
+      tokens: { ref, system: defineSystemTokens({}), components: {} },
+      output: {
+        target: "vanilla-extract",
+        outDir: "dist-test",
+        builtInComponents: { Accordion: {} } as never,
+      },
+    });
+    expect(() => generate(config)).toThrow(MissingDesignTokensError);
+    expect(() => generate(config)).toThrow(/requires config "border"/);
+  });
+
+  test("Accordion generated sources pass assertParses", () => {
+    const files = generate(accordionConfig());
+    for (const suffix of [
+      "components/accordion/Accordion.gen.css.ts",
+      "components/accordion/Accordion.gen.tsx",
+    ]) {
+      const file = files.find((f) => f.filename === suffix)!;
+      expect(file).toBeDefined();
+      assertParses(file.content, suffix);
+    }
+  });
+});
+
+describe("Link built-in component", () => {
+  function linkConfig() {
+    const ref = defineReferenceTokens({
+      color: { black: tokens.color("#000000"), blue: tokens.color("#0064e0") },
+    });
+    const system = defineSystemTokens({
+      textStyles: {
+        body: tokens.typography({ fontFamily: "Arial", fontSize: "14px", fontWeight: "regular" }),
+      },
+    });
+    return defineConfig({
+      tokens: { ref, system, components: {} },
+      output: {
+        target: "vanilla-extract",
+        outDir: "dist-test",
+        builtInComponents: {
+          Link: {
+            color: ref.color.blue,
+            hoverColor: ref.color.black,
+            typography: system.textStyles.body,
+            visitedColor: ref.color.blue,
+          },
+        },
+      },
+    });
+  }
+
+  test("selecting Link emits Link.gen.css.ts and Link.gen.tsx", () => {
+    const files = generate(linkConfig());
+    const filenames = files.map((file) => file.filename);
+    expect(filenames).toContain("components/link/Link.gen.css.ts");
+    expect(filenames).toContain("components/link/Link.gen.tsx");
+  });
+
+  test("Link.gen.tsx renders an anchor through renderElement with underline variants", () => {
+    const files = generate(linkConfig());
+    const component = files.find((f) => f.filename === "components/link/Link.gen.tsx")!;
+    expect(component.content).toMatch(/renderElement\("a", render, rootProps/);
+    expect(component.content).toMatch(/underline\?: "always" \| "hover" \| "none"/);
+
+    const styles = files.find((f) => f.filename === "components/link/Link.gen.css.ts")!;
+    expect(styles.content).toMatch(/always:\s*\{/);
+    expect(styles.content).toMatch(/hover:\s*\{/);
+    expect(styles.content).toMatch(/none:\s*\{/);
+  });
+
+  test("missing Link bindings throw MissingDesignTokensError", () => {
+    const ref = defineReferenceTokens({});
+    const config = defineConfig({
+      tokens: { ref, system: defineSystemTokens({}), components: {} },
+      output: {
+        target: "vanilla-extract",
+        outDir: "dist-test",
+        builtInComponents: { Link: {} } as never,
+      },
+    });
+    expect(() => generate(config)).toThrow(MissingDesignTokensError);
+    expect(() => generate(config)).toThrow(/requires config "color"/);
+  });
+
+  test("Link generated sources pass assertParses", () => {
+    const files = generate(linkConfig());
+    for (const suffix of ["components/link/Link.gen.css.ts", "components/link/Link.gen.tsx"]) {
+      const file = files.find((f) => f.filename === suffix)!;
+      expect(file).toBeDefined();
+      assertParses(file.content, suffix);
+    }
+  });
+});
+
+describe("IconButton built-in component", () => {
+  function iconButtonConfig() {
+    const ref = defineReferenceTokens({
+      color: { black: tokens.color("#000000"), white: tokens.color("#ffffff") },
+    });
+    const system = defineSystemTokens({
+      radius: { element: tokens.dimension("8px") },
+      border: { default: tokens.border({ color: ref.color.black, width: "1px" }) },
+      textStyles: {
+        body: tokens.typography({ fontFamily: "Arial", fontSize: "14px", fontWeight: "regular" }),
+      },
+      spacing: { sm: tokens.dimension("4px"), md: tokens.dimension("8px") },
+    });
+    return defineConfig({
+      tokens: { ref, system, components: {} },
+      output: {
+        target: "vanilla-extract",
+        outDir: "dist-test",
+        builtInComponents: {
+          IconButton: {
+            borderRadius: system.radius.element,
+            focusRingColor: ref.color.black,
+            variants: {
+              primary: {
+                backgroundColor: ref.color.black,
+                color: ref.color.white,
+                typography: system.textStyles.body,
+                border: system.border.default,
+                hoverBackgroundColor: ref.color.black,
+                hoverColor: ref.color.white,
+                hoverBorder: system.border.default,
+                disabledBackgroundColor: ref.color.black,
+                disabledColor: ref.color.white,
+                disabledBorder: system.border.default,
+              },
+            },
+            sizes: {
+              md: {
+                horizontalSpacing: system.spacing.md,
+                verticalSpacing: system.spacing.sm,
+                iconSize: system.spacing.md,
+              },
+            },
+          },
+        },
+      },
+    });
+  }
+
+  test("selecting IconButton emits IconButton.gen.css.ts and IconButton.gen.tsx", () => {
+    const files = generate(iconButtonConfig());
+    const filenames = files.map((file) => file.filename);
+    expect(filenames).toContain("components/icon-button/IconButton.gen.css.ts");
+    expect(filenames).toContain("components/icon-button/IconButton.gen.tsx");
+  });
+
+  test("variant and size keys become literal union types, label is mandatory", () => {
+    const files = generate(iconButtonConfig());
+    const component = files.find(
+      (f) => f.filename === "components/icon-button/IconButton.gen.tsx",
+    )!;
+    expect(component.content).toMatch(/export type IconButtonVariant = "primary";/);
+    expect(component.content).toMatch(/export type IconButtonSize = "md";/);
+    expect(component.content).toMatch(/label: string;/);
+    expect(component.content).toMatch(/aria-label={label}/);
+
+    const styles = files.find((f) => f.filename === "components/icon-button/IconButton.gen.css.ts")!;
+    expect(styles.content).toMatch(/"primary":\s*\{/);
+    expect(styles.content).toMatch(/"md":\s*\{/);
+  });
+
+  test("missing IconButton bindings throw MissingDesignTokensError", () => {
+    const ref = defineReferenceTokens({});
+    const config = defineConfig({
+      tokens: { ref, system: defineSystemTokens({}), components: {} },
+      output: {
+        target: "vanilla-extract",
+        outDir: "dist-test",
+        builtInComponents: { IconButton: {} } as never,
+      },
+    });
+    expect(() => generate(config)).toThrow(MissingDesignTokensError);
+    expect(() => generate(config)).toThrow(/requires config "borderRadius"/);
+  });
+
+  test("IconButton generated sources pass assertParses", () => {
+    const files = generate(iconButtonConfig());
+    for (const suffix of [
+      "components/icon-button/IconButton.gen.css.ts",
+      "components/icon-button/IconButton.gen.tsx",
+    ]) {
+      const file = files.find((f) => f.filename === suffix)!;
+      expect(file).toBeDefined();
+      assertParses(file.content, suffix);
+    }
+  });
+});
+
+describe("DropdownButton built-in component", () => {
+  function dropdownButtonConfig() {
+    const ref = defineReferenceTokens({
+      color: { black: tokens.color("#000000"), white: tokens.color("#ffffff") },
+    });
+    const system = defineSystemTokens({
+      radius: { element: tokens.dimension("8px") },
+      border: { default: tokens.border({ color: ref.color.black, width: "1px" }) },
+      textStyles: {
+        body: tokens.typography({ fontFamily: "Arial", fontSize: "14px", fontWeight: "regular" }),
+      },
+      spacing: { sm: tokens.dimension("4px"), md: tokens.dimension("8px") },
+      elevation: {
+        md: tokens.shadow({
+          color: ref.color.black,
+          offsetX: "0px",
+          offsetY: "2px",
+          blur: "4px",
+          spread: "0px",
+        }),
+      },
+    });
+    return defineConfig({
+      tokens: { ref, system, components: {} },
+      output: {
+        target: "vanilla-extract",
+        outDir: "dist-test",
+        builtInComponents: {
+          DropdownButton: {
+            borderRadius: system.radius.element,
+            variants: {
+              primary: {
+                backgroundColor: ref.color.black,
+                color: ref.color.white,
+                typography: system.textStyles.body,
+                border: system.border.default,
+                hoverBackgroundColor: ref.color.black,
+                hoverColor: ref.color.white,
+                hoverBorder: system.border.default,
+                disabledBackgroundColor: ref.color.black,
+                disabledColor: ref.color.white,
+                disabledBorder: system.border.default,
+              },
+            },
+            sizes: {
+              md: {
+                horizontalSpacing: system.spacing.md,
+                verticalSpacing: system.spacing.sm,
+                typography: system.textStyles.body,
+                gap: system.spacing.sm,
+              },
+            },
+            popupBackgroundColor: ref.color.white,
+            popupBorder: system.border.default,
+            popupBorderRadius: system.radius.element,
+            popupShadow: system.elevation.md,
+            popupSpacing: system.spacing.sm,
+            popupOffset: system.spacing.sm,
+            itemColor: ref.color.black,
+            itemTypography: system.textStyles.body,
+            itemHoverBackgroundColor: ref.color.white,
+            itemDisabledColor: ref.color.black,
+            itemHorizontalSpacing: system.spacing.md,
+            itemVerticalSpacing: system.spacing.sm,
+            itemIconSize: system.spacing.md,
+          },
+        },
+      },
+    });
+  }
+
+  test("selecting DropdownButton emits DropdownButton.gen.css.ts and DropdownButton.gen.tsx", () => {
+    const files = generate(dropdownButtonConfig());
+    const filenames = files.map((file) => file.filename);
+    expect(filenames).toContain("components/dropdown-button/DropdownButton.gen.css.ts");
+    expect(filenames).toContain("components/dropdown-button/DropdownButton.gen.tsx");
+  });
+
+  test("DropdownButton.gen.tsx wraps Base UI's Menu and maps items to Menu.Item", () => {
+    const files = generate(dropdownButtonConfig());
+    const component = files.find(
+      (f) => f.filename === "components/dropdown-button/DropdownButton.gen.tsx",
+    )!;
+    expect(component.content).toMatch(
+      /import { Menu as BaseMenu } from "@base-ui\/react\/menu";/,
+    );
+    expect(component.content).toMatch(/items\.map\(\(item\) =>/);
+    expect(component.content).toMatch(/const IndicatorIcon = icons\["chevronDown"\];/);
+    expect(component.content).toMatch(/export type DropdownButtonVariant = "primary";/);
+  });
+
+  test("missing DropdownButton bindings throw MissingDesignTokensError", () => {
+    const ref = defineReferenceTokens({});
+    const config = defineConfig({
+      tokens: { ref, system: defineSystemTokens({}), components: {} },
+      output: {
+        target: "vanilla-extract",
+        outDir: "dist-test",
+        builtInComponents: { DropdownButton: {} } as never,
+      },
+    });
+    expect(() => generate(config)).toThrow(MissingDesignTokensError);
+    expect(() => generate(config)).toThrow(/requires config "borderRadius"/);
+  });
+
+  test("DropdownButton generated sources pass assertParses", () => {
+    const files = generate(dropdownButtonConfig());
+    for (const suffix of [
+      "components/dropdown-button/DropdownButton.gen.css.ts",
+      "components/dropdown-button/DropdownButton.gen.tsx",
+    ]) {
+      const file = files.find((f) => f.filename === suffix)!;
+      expect(file).toBeDefined();
+      assertParses(file.content, suffix);
+    }
+  });
+});
+
+describe("SegmentedControls built-in component", () => {
+  function segmentedControlsConfig() {
+    const ref = defineReferenceTokens({
+      color: { black: tokens.color("#000000"), white: tokens.color("#ffffff") },
+    });
+    const system = defineSystemTokens({
+      radius: { element: tokens.dimension("8px"), inner: tokens.dimension("4px") },
+      border: { default: tokens.border({ color: ref.color.black, width: "1px" }) },
+      textStyles: {
+        body: tokens.typography({ fontFamily: "Arial", fontSize: "14px", fontWeight: "regular" }),
+      },
+      spacing: { sm: tokens.dimension("4px"), md: tokens.dimension("8px") },
+    });
+    return defineConfig({
+      tokens: { ref, system, components: {} },
+      output: {
+        target: "vanilla-extract",
+        outDir: "dist-test",
+        builtInComponents: {
+          SegmentedControls: {
+            borderRadius: system.radius.element,
+            optionBorderRadius: system.radius.inner,
+            border: system.border.default,
+            borderColor: ref.color.black,
+            typography: system.textStyles.body,
+            color: ref.color.black,
+            backgroundColor: ref.color.white,
+            hoverColor: ref.color.black,
+            activeColor: ref.color.white,
+            activeBackgroundColor: ref.color.black,
+            disabledColor: ref.color.black,
+            horizontalSpacing: system.spacing.sm,
+            verticalSpacing: system.spacing.sm,
+            optionHorizontalSpacing: system.spacing.md,
+            optionVerticalSpacing: system.spacing.sm,
+            optionGap: system.spacing.sm,
+            iconSize: system.spacing.md,
+          },
+        },
+      },
+    });
+  }
+
+  test("selecting SegmentedControls emits SegmentedControls.gen.css.ts and SegmentedControls.gen.tsx", () => {
+    const files = generate(segmentedControlsConfig());
+    const filenames = files.map((file) => file.filename);
+    expect(filenames).toContain("components/segmented-controls/SegmentedControls.gen.css.ts");
+    expect(filenames).toContain("components/segmented-controls/SegmentedControls.gen.tsx");
+  });
+
+  test("SegmentedControls.gen.tsx wraps Base UI's ToggleGroup/Toggle as a single-select group", () => {
+    const files = generate(segmentedControlsConfig());
+    const component = files.find(
+      (f) => f.filename === "components/segmented-controls/SegmentedControls.gen.tsx",
+    )!;
+    expect(component.content).toMatch(
+      /import { ToggleGroup as BaseToggleGroup } from "@base-ui\/react\/toggle-group";/,
+    );
+    expect(component.content).toMatch(
+      /import { Toggle as BaseToggle } from "@base-ui\/react\/toggle";/,
+    );
+    expect(component.content).toMatch(/multiple={false}/);
+    expect(component.content).toMatch(/options\.map\(\(option\) =>/);
+  });
+
+  test("missing SegmentedControls bindings throw MissingDesignTokensError", () => {
+    const ref = defineReferenceTokens({});
+    const config = defineConfig({
+      tokens: { ref, system: defineSystemTokens({}), components: {} },
+      output: {
+        target: "vanilla-extract",
+        outDir: "dist-test",
+        builtInComponents: { SegmentedControls: {} } as never,
+      },
+    });
+    expect(() => generate(config)).toThrow(MissingDesignTokensError);
+    expect(() => generate(config)).toThrow(/requires config "borderRadius"/);
+  });
+
+  test("SegmentedControls generated sources pass assertParses", () => {
+    const files = generate(segmentedControlsConfig());
+    for (const suffix of [
+      "components/segmented-controls/SegmentedControls.gen.css.ts",
+      "components/segmented-controls/SegmentedControls.gen.tsx",
+    ]) {
+      const file = files.find((f) => f.filename === suffix)!;
+      expect(file).toBeDefined();
+      assertParses(file.content, suffix);
+    }
+  });
+});
+
+describe("SelectableCard built-in component", () => {
+  function selectableCardConfig() {
+    const ref = defineReferenceTokens({
+      color: { black: tokens.color("#000000"), white: tokens.color("#ffffff") },
+    });
+    const system = defineSystemTokens({
+      radius: { container: tokens.dimension("12px") },
+      border: { default: tokens.border({ color: ref.color.black, width: "1px" }) },
+      spacing: { sm: tokens.dimension("4px"), md: tokens.dimension("8px") },
+    });
+    return defineConfig({
+      tokens: { ref, system, components: {} },
+      output: {
+        target: "vanilla-extract",
+        outDir: "dist-test",
+        builtInComponents: {
+          SelectableCard: {
+            borderRadius: system.radius.container,
+            border: system.border.default,
+            backgroundColor: ref.color.white,
+            activeBackgroundColor: ref.color.white,
+            activeBorderColor: ref.color.black,
+            hoverBorderColor: ref.color.black,
+            disabledBackgroundColor: ref.color.white,
+            disabledColor: ref.color.black,
+            horizontalSpacing: system.spacing.md,
+            verticalSpacing: system.spacing.sm,
+            focusRingColor: ref.color.black,
+          },
+        },
+      },
+    });
+  }
+
+  test("selecting SelectableCard emits SelectableCard.gen.css.ts and SelectableCard.gen.tsx", () => {
+    const files = generate(selectableCardConfig());
+    const filenames = files.map((file) => file.filename);
+    expect(filenames).toContain("components/selectable-card/SelectableCard.gen.css.ts");
+    expect(filenames).toContain("components/selectable-card/SelectableCard.gen.tsx");
+  });
+
+  test("SelectableCard.gen.tsx manages controlled/uncontrolled selection with radio/checkbox roles", () => {
+    const files = generate(selectableCardConfig());
+    const component = files.find(
+      (f) => f.filename === "components/selectable-card/SelectableCard.gen.tsx",
+    )!;
+    expect(component.content).toMatch(/const \[uncontrolledSelected, setUncontrolledSelected\]/);
+    expect(component.content).toMatch(/role: control === "radio" \? "radio" : "checkbox"/);
+    expect(component.content).toMatch(/renderElement\("button", render, rootProps/);
+  });
+
+  test("missing SelectableCard bindings throw MissingDesignTokensError", () => {
+    const ref = defineReferenceTokens({});
+    const config = defineConfig({
+      tokens: { ref, system: defineSystemTokens({}), components: {} },
+      output: {
+        target: "vanilla-extract",
+        outDir: "dist-test",
+        builtInComponents: { SelectableCard: {} } as never,
+      },
+    });
+    expect(() => generate(config)).toThrow(MissingDesignTokensError);
+    expect(() => generate(config)).toThrow(/requires config "borderRadius"/);
+  });
+
+  test("SelectableCard generated sources pass assertParses", () => {
+    const files = generate(selectableCardConfig());
+    for (const suffix of [
+      "components/selectable-card/SelectableCard.gen.css.ts",
+      "components/selectable-card/SelectableCard.gen.tsx",
+    ]) {
+      const file = files.find((f) => f.filename === suffix)!;
+      expect(file).toBeDefined();
+      assertParses(file.content, suffix);
+    }
+  });
+});
+
+describe("ActionBar built-in component", () => {
+  function actionBarConfig() {
+    const ref = defineReferenceTokens({
+      color: { black: tokens.color("#000000"), white: tokens.color("#ffffff") },
+    });
+    const system = defineSystemTokens({
+      radius: { container: tokens.dimension("12px") },
+      border: { default: tokens.border({ color: ref.color.black, width: "1px" }) },
+      spacing: { sm: tokens.dimension("4px"), md: tokens.dimension("8px") },
+      elevation: {
+        md: tokens.shadow({
+          color: ref.color.black,
+          offsetX: "0px",
+          offsetY: "2px",
+          blur: "4px",
+          spread: "0px",
+        }),
+      },
+    });
+    return defineConfig({
+      tokens: { ref, system, components: {} },
+      output: {
+        target: "vanilla-extract",
+        outDir: "dist-test",
+        builtInComponents: {
+          ActionBar: {
+            backgroundColor: ref.color.white,
+            color: ref.color.black,
+            border: system.border.default,
+            borderRadius: system.radius.container,
+            shadow: system.elevation.md,
+            horizontalSpacing: system.spacing.md,
+            verticalSpacing: system.spacing.sm,
+            gap: system.spacing.sm,
+            offset: system.spacing.md,
+          },
+        },
+      },
+    });
+  }
+
+  test("selecting ActionBar emits ActionBar.gen.css.ts and ActionBar.gen.tsx", () => {
+    const files = generate(actionBarConfig());
+    const filenames = files.map((file) => file.filename);
+    expect(filenames).toContain("components/action-bar/ActionBar.gen.css.ts");
+    expect(filenames).toContain("components/action-bar/ActionBar.gen.tsx");
+  });
+
+  test("ActionBar.gen.tsx wraps Base UI's Toolbar and hides via CSS instead of unmounting", () => {
+    const files = generate(actionBarConfig());
+    const component = files.find((f) => f.filename === "components/action-bar/ActionBar.gen.tsx")!;
+    expect(component.content).toMatch(
+      /import { Toolbar as BaseToolbar } from "@base-ui\/react\/toolbar";/,
+    );
+    expect(component.content).toMatch(/!open && actionBarHidden/);
+
+    const styles = files.find((f) => f.filename === "components/action-bar/ActionBar.gen.css.ts")!;
+    expect(styles.content).toMatch(/"bottom-start":\s*\{/);
+    expect(styles.content).toMatch(/"bottom-end":\s*\{/);
+  });
+
+  test("missing ActionBar bindings throw MissingDesignTokensError", () => {
+    const ref = defineReferenceTokens({});
+    const config = defineConfig({
+      tokens: { ref, system: defineSystemTokens({}), components: {} },
+      output: {
+        target: "vanilla-extract",
+        outDir: "dist-test",
+        builtInComponents: { ActionBar: {} } as never,
+      },
+    });
+    expect(() => generate(config)).toThrow(MissingDesignTokensError);
+    expect(() => generate(config)).toThrow(/requires config "backgroundColor"/);
+  });
+
+  test("ActionBar generated sources pass assertParses", () => {
+    const files = generate(actionBarConfig());
+    for (const suffix of [
+      "components/action-bar/ActionBar.gen.css.ts",
+      "components/action-bar/ActionBar.gen.tsx",
+    ]) {
+      const file = files.find((f) => f.filename === suffix)!;
+      expect(file).toBeDefined();
+      assertParses(file.content, suffix);
+    }
+  });
+});
+
+describe("Badge built-in component", () => {
+  function badgeConfig() {
+    const ref = defineReferenceTokens({
+      color: { black: tokens.color("#000000"), white: tokens.color("#ffffff") },
+    });
+    const system = defineSystemTokens({
+      radius: { full: tokens.dimension("9999px") },
+      border: { default: tokens.border({ color: ref.color.black, width: "1px" }) },
+      spacing: { xs: tokens.dimension("2px"), sm: tokens.dimension("4px") },
+      textStyles: {
+        body: tokens.typography({ fontFamily: "Arial", fontSize: "12px", fontWeight: "regular" }),
+      },
+    });
+    return defineConfig({
+      tokens: { ref, system, components: {} },
+      output: {
+        target: "vanilla-extract",
+        outDir: "dist-test",
+        builtInComponents: {
+          Badge: {
+            borderRadius: system.radius.full,
+            dotSize: system.spacing.xs,
+            statuses: {
+              info: {
+                color: ref.color.black,
+                backgroundColor: ref.color.white,
+                border: system.border.default,
+                dotColor: ref.color.black,
+              },
+            },
+            sizes: {
+              sm: {
+                typography: system.textStyles.body,
+                horizontalSpacing: system.spacing.sm,
+                verticalSpacing: system.spacing.xs,
+                gap: system.spacing.xs,
+                iconSize: system.spacing.sm,
+              },
+            },
+          },
+        },
+      },
+    });
+  }
+
+  test("selecting Badge emits Badge.gen.css.ts and Badge.gen.tsx", () => {
+    const files = generate(badgeConfig());
+    const filenames = files.map((file) => file.filename);
+    expect(filenames).toContain("components/badge/Badge.gen.css.ts");
+    expect(filenames).toContain("components/badge/Badge.gen.tsx");
+  });
+
+  test("statuses and sizes keys become literal union types, dot renders with variant color", () => {
+    const files = generate(badgeConfig());
+    const component = files.find((f) => f.filename === "components/badge/Badge.gen.tsx")!;
+    expect(component.content).toMatch(/export type BadgeStatusToken = "info";/);
+    expect(component.content).toMatch(/export type BadgeSize = "sm";/);
+    expect(component.content).toMatch(/badgeDotColor\[variant\]/);
+
+    const styles = files.find((f) => f.filename === "components/badge/Badge.gen.css.ts")!;
+    expect(styles.content).toMatch(/export const badgeDotColor = styleVariants/);
+  });
+
+  test("missing Badge bindings throw MissingDesignTokensError", () => {
+    const ref = defineReferenceTokens({});
+    const config = defineConfig({
+      tokens: { ref, system: defineSystemTokens({}), components: {} },
+      output: {
+        target: "vanilla-extract",
+        outDir: "dist-test",
+        builtInComponents: { Badge: {} } as never,
+      },
+    });
+    expect(() => generate(config)).toThrow(MissingDesignTokensError);
+    expect(() => generate(config)).toThrow(/requires config "borderRadius"/);
+  });
+
+  test("Badge generated sources pass assertParses", () => {
+    const files = generate(badgeConfig());
+    for (const suffix of ["components/badge/Badge.gen.css.ts", "components/badge/Badge.gen.tsx"]) {
+      const file = files.find((f) => f.filename === suffix)!;
+      expect(file).toBeDefined();
+      assertParses(file.content, suffix);
+    }
+  });
+});
+
+describe("Banner built-in component", () => {
+  function bannerConfig() {
+    const ref = defineReferenceTokens({
+      color: { black: tokens.color("#000000"), white: tokens.color("#ffffff") },
+    });
+    const system = defineSystemTokens({
+      radius: { element: tokens.dimension("8px") },
+      border: { default: tokens.border({ color: ref.color.black, width: "1px" }) },
+      spacing: { sm: tokens.dimension("4px"), md: tokens.dimension("8px") },
+      textStyles: {
+        body: tokens.typography({ fontFamily: "Arial", fontSize: "14px", fontWeight: "regular" }),
+        title: tokens.typography({ fontFamily: "Arial", fontSize: "16px", fontWeight: "bold" }),
+      },
+    });
+    return defineConfig({
+      tokens: { ref, system, components: {} },
+      output: {
+        target: "vanilla-extract",
+        outDir: "dist-test",
+        builtInComponents: {
+          Banner: {
+            border: system.border.default,
+            borderRadius: system.radius.element,
+            typography: system.textStyles.body,
+            titleTypography: system.textStyles.title,
+            horizontalSpacing: system.spacing.md,
+            verticalSpacing: system.spacing.sm,
+            gap: system.spacing.sm,
+            iconSize: system.spacing.md,
+            statuses: {
+              info: {
+                color: ref.color.black,
+                backgroundColor: ref.color.white,
+                borderColor: ref.color.black,
+                iconColor: ref.color.black,
+                titleColor: ref.color.black,
+              },
+              danger: {
+                color: ref.color.black,
+                backgroundColor: ref.color.white,
+                borderColor: ref.color.black,
+                iconColor: ref.color.black,
+                titleColor: ref.color.black,
+              },
+            },
+          },
+        },
+      },
+    });
+  }
+
+  test("selecting Banner emits Banner.gen.css.ts and Banner.gen.tsx", () => {
+    const files = generate(bannerConfig());
+    const filenames = files.map((file) => file.filename);
+    expect(filenames).toContain("components/banner/Banner.gen.css.ts");
+    expect(filenames).toContain("components/banner/Banner.gen.tsx");
+  });
+
+  test("Banner.gen.tsx builds a per-status default icon map covering every status key", () => {
+    const files = generate(bannerConfig());
+    const component = files.find((f) => f.filename === "components/banner/Banner.gen.tsx")!;
+    expect(component.content).toMatch(/export type BannerStatusToken = "info" \| "danger";/);
+    expect(component.content).toMatch(/const STATUS_ICONS: Record<BannerStatusToken, IconType>/);
+    expect(component.content).toMatch(/"info": "info" as IconType,/);
+    expect(component.content).toMatch(/"danger": "alert" as IconType,/);
+    expect(component.content).toMatch(/icon === false \? undefined : \(icon \?\? STATUS_ICONS\[status\]\)/);
+  });
+
+  test("missing Banner bindings throw MissingDesignTokensError", () => {
+    const ref = defineReferenceTokens({});
+    const config = defineConfig({
+      tokens: { ref, system: defineSystemTokens({}), components: {} },
+      output: {
+        target: "vanilla-extract",
+        outDir: "dist-test",
+        builtInComponents: { Banner: {} } as never,
+      },
+    });
+    expect(() => generate(config)).toThrow(MissingDesignTokensError);
+    expect(() => generate(config)).toThrow(/requires config "border"/);
+  });
+
+  test("Banner generated sources pass assertParses", () => {
+    const files = generate(bannerConfig());
+    for (const suffix of [
+      "components/banner/Banner.gen.css.ts",
+      "components/banner/Banner.gen.tsx",
+    ]) {
+      const file = files.find((f) => f.filename === suffix)!;
+      expect(file).toBeDefined();
+      assertParses(file.content, suffix);
+    }
+  });
+});
+
+describe("Skeleton built-in component", () => {
+  function skeletonConfig() {
+    const ref = defineReferenceTokens({
+      color: { black: tokens.color("#000000"), white: tokens.color("#ffffff") },
+      radiusScale: tokens.dimensionScale({ sm: "4px", md: "8px" }),
+    });
+    const system = defineSystemTokens({
+      spacing: { sm: tokens.dimension("4px") },
+      radius: { full: tokens.dimension("9999px") },
+      motion: { fast: tokens.duration("150ms") },
+    });
+    return defineConfig({
+      tokens: { ref, system, components: {} },
+      output: {
+        target: "vanilla-extract",
+        outDir: "dist-test",
+        builtInComponents: {
+          Skeleton: {
+            backgroundColor: ref.color.black,
+            highlightColor: ref.color.white,
+            radii: ref.radiusScale,
+            circularRadius: system.radius.full,
+            lineGap: system.spacing.sm,
+            animationDuration: system.motion.fast,
+          },
+        },
+      },
+    });
+  }
+
+  test("selecting Skeleton emits Skeleton.gen.css.ts and Skeleton.gen.tsx", () => {
+    const files = generate(skeletonConfig());
+    const filenames = files.map((file) => file.filename);
+    expect(filenames).toContain("components/skeleton/Skeleton.gen.css.ts");
+    expect(filenames).toContain("components/skeleton/Skeleton.gen.tsx");
+  });
+
+  test("Skeleton.gen.tsx renders stacked lines for the text variant and a shimmer keyframe", () => {
+    const files = generate(skeletonConfig());
+    const component = files.find((f) => f.filename === "components/skeleton/Skeleton.gen.tsx")!;
+    expect(component.content).toMatch(/variant === "text" && lines && lines > 1/);
+    expect(component.content).toMatch(/radius !== undefined && skeletonRadius\[radius\]/);
+
+    const styles = files.find((f) => f.filename === "components/skeleton/Skeleton.gen.css.ts")!;
+    expect(styles.content).toMatch(/const shimmer = keyframes\(/);
+    expect(styles.content).toMatch(/export const skeletonRadius = styleVariants\(/);
+  });
+
+  test("missing Skeleton bindings throw MissingDesignTokensError", () => {
+    const ref = defineReferenceTokens({});
+    const config = defineConfig({
+      tokens: { ref, system: defineSystemTokens({}), components: {} },
+      output: {
+        target: "vanilla-extract",
+        outDir: "dist-test",
+        builtInComponents: { Skeleton: {} } as never,
+      },
+    });
+    expect(() => generate(config)).toThrow(MissingDesignTokensError);
+    expect(() => generate(config)).toThrow(/requires config "backgroundColor"/);
+  });
+
+  test("Skeleton generated sources pass assertParses", () => {
+    const files = generate(skeletonConfig());
+    for (const suffix of [
+      "components/skeleton/Skeleton.gen.css.ts",
+      "components/skeleton/Skeleton.gen.tsx",
+    ]) {
+      const file = files.find((f) => f.filename === suffix)!;
+      expect(file).toBeDefined();
+      assertParses(file.content, suffix);
+    }
+  });
+});
+
+describe("Spinner built-in component", () => {
+  function spinnerConfig() {
+    const ref = defineReferenceTokens({
+      color: { black: tokens.color("#000000"), white: tokens.color("#ffffff") },
+      fontSizeScale: tokens.dimensionScale({ sm: "12px", md: "16px" }),
+      colorScale: tokens.colorScale({ primary: tokens.color("#000000") }),
+    });
+    const system = defineSystemTokens({
+      spacing: { xs: tokens.dimension("2px") },
+      motion: { fast: tokens.duration("600ms") },
+    });
+    return defineConfig({
+      tokens: { ref, system, components: {} },
+      output: {
+        target: "vanilla-extract",
+        outDir: "dist-test",
+        builtInComponents: {
+          Spinner: {
+            sizes: ref.fontSizeScale,
+            colors: ref.colorScale,
+            trackColor: ref.color.white,
+            thickness: system.spacing.xs,
+            animationDuration: system.motion.fast,
+          },
+        },
+      },
+    });
+  }
+
+  test("selecting Spinner emits Spinner.gen.css.ts and Spinner.gen.tsx", () => {
+    const files = generate(spinnerConfig());
+    const filenames = files.map((file) => file.filename);
+    expect(filenames).toContain("components/spinner/Spinner.gen.css.ts");
+    expect(filenames).toContain("components/spinner/Spinner.gen.tsx");
+  });
+
+  test("Spinner.gen.tsx spins via a keyframe and colors the top border per the color scale", () => {
+    const files = generate(spinnerConfig());
+    const component = files.find((f) => f.filename === "components/spinner/Spinner.gen.tsx")!;
+    expect(component.content).toMatch(/renderElement\("span", render, rootProps/);
+    expect(component.content).toMatch(/typeof size === "number" \? \{ width: size, height: size \} : \{\}/);
+
+    const styles = files.find((f) => f.filename === "components/spinner/Spinner.gen.css.ts")!;
+    expect(styles.content).toMatch(/const spin = keyframes\(/);
+    expect(styles.content).toMatch(/borderTopColor: value,/);
+  });
+
+  test("missing Spinner bindings throw MissingDesignTokensError", () => {
+    const ref = defineReferenceTokens({});
+    const config = defineConfig({
+      tokens: { ref, system: defineSystemTokens({}), components: {} },
+      output: {
+        target: "vanilla-extract",
+        outDir: "dist-test",
+        builtInComponents: { Spinner: {} } as never,
+      },
+    });
+    expect(() => generate(config)).toThrow(MissingDesignTokensError);
+    expect(() => generate(config)).toThrow(/requires config "sizes"/);
+  });
+
+  test("Spinner generated sources pass assertParses", () => {
+    const files = generate(spinnerConfig());
+    for (const suffix of [
+      "components/spinner/Spinner.gen.css.ts",
+      "components/spinner/Spinner.gen.tsx",
+    ]) {
+      const file = files.find((f) => f.filename === suffix)!;
+      expect(file).toBeDefined();
+      assertParses(file.content, suffix);
+    }
+  });
+});
+
+describe("ProgressBar built-in component", () => {
+  function progressBarConfig() {
+    const ref = defineReferenceTokens({
+      color: { black: tokens.color("#000000"), white: tokens.color("#ffffff") },
+    });
+    const system = defineSystemTokens({
+      radius: { full: tokens.dimension("9999px") },
+      spacing: { xs: tokens.dimension("2px"), sm: tokens.dimension("4px") },
+      textStyles: {
+        supporting: tokens.typography({
+          fontFamily: "Arial",
+          fontSize: "12px",
+          fontWeight: "regular",
+        }),
+      },
+      motion: { fast: tokens.duration("600ms") },
+    });
+    return defineConfig({
+      tokens: { ref, system, components: {} },
+      output: {
+        target: "vanilla-extract",
+        outDir: "dist-test",
+        builtInComponents: {
+          ProgressBar: {
+            borderRadius: system.radius.full,
+            trackBackgroundColor: ref.color.white,
+            labelTypography: system.textStyles.supporting,
+            labelGap: system.spacing.xs,
+            animationDuration: system.motion.fast,
+            statuses: {
+              default: {
+                indicatorBackgroundColor: ref.color.black,
+                labelColor: ref.color.black,
+              },
+            },
+            sizes: {
+              md: {
+                height: system.spacing.sm,
+                typography: system.textStyles.supporting,
+              },
+            },
+          },
+        },
+      },
+    });
+  }
+
+  test("selecting ProgressBar emits ProgressBar.gen.css.ts and ProgressBar.gen.tsx", () => {
+    const files = generate(progressBarConfig());
+    const filenames = files.map((file) => file.filename);
+    expect(filenames).toContain("components/progress-bar/ProgressBar.gen.css.ts");
+    expect(filenames).toContain("components/progress-bar/ProgressBar.gen.tsx");
+  });
+
+  test("ProgressBar.gen.tsx wraps Base UI's Progress and animates the indeterminate state via CSS", () => {
+    const files = generate(progressBarConfig());
+    const component = files.find(
+      (f) => f.filename === "components/progress-bar/ProgressBar.gen.tsx",
+    )!;
+    expect(component.content).toMatch(
+      /import { Progress as BaseProgress } from "@base-ui\/react\/progress";/,
+    );
+    expect(component.content).toMatch(/export type ProgressBarStatusToken = "default";/);
+
+    const styles = files.find(
+      (f) => f.filename === "components/progress-bar/ProgressBar.gen.css.ts",
+    )!;
+    expect(styles.content).toMatch(/const indeterminateSweep = keyframes\(/);
+    expect(styles.content).toMatch(/\[data-indeterminate\] &/);
+  });
+
+  test("missing ProgressBar bindings throw MissingDesignTokensError", () => {
+    const ref = defineReferenceTokens({});
+    const config = defineConfig({
+      tokens: { ref, system: defineSystemTokens({}), components: {} },
+      output: {
+        target: "vanilla-extract",
+        outDir: "dist-test",
+        builtInComponents: { ProgressBar: {} } as never,
+      },
+    });
+    expect(() => generate(config)).toThrow(MissingDesignTokensError);
+    expect(() => generate(config)).toThrow(/requires config "borderRadius"/);
+  });
+
+  test("ProgressBar generated sources pass assertParses", () => {
+    const files = generate(progressBarConfig());
+    for (const suffix of [
+      "components/progress-bar/ProgressBar.gen.css.ts",
+      "components/progress-bar/ProgressBar.gen.tsx",
+    ]) {
+      const file = files.find((f) => f.filename === suffix)!;
+      expect(file).toBeDefined();
+      assertParses(file.content, suffix);
+    }
+  });
+});
+
+describe("Checkbox built-in component", () => {
+  function checkboxConfig() {
+    const ref = defineReferenceTokens({
+      color: { black: tokens.color("#000000"), white: tokens.color("#ffffff") },
+      fontSizeScale: tokens.dimensionScale({ sm: "12px", md: "16px" }),
+    });
+    const system = defineSystemTokens({
+      border: { default: tokens.border({ color: ref.color.black, width: "1px" }) },
+      radius: { inner: tokens.dimension("4px") },
+      spacing: { sm: tokens.dimension("4px") },
+      textStyles: {
+        body: tokens.typography({ fontFamily: "Arial", fontSize: "14px", fontWeight: "regular" }),
+      },
+    });
+    return defineConfig({
+      tokens: { ref, system, components: {} },
+      output: {
+        target: "vanilla-extract",
+        outDir: "dist-test",
+        builtInComponents: {
+          Checkbox: {
+            sizes: ref.fontSizeScale,
+            border: system.border.default,
+            borderRadius: system.radius.inner,
+            backgroundColor: ref.color.white,
+            checkedBackgroundColor: ref.color.black,
+            checkedColor: ref.color.white,
+            hoverBorderColor: ref.color.black,
+            focusRingColor: ref.color.black,
+            invalidBorderColor: ref.color.black,
+            disabledBackgroundColor: ref.color.white,
+            disabledColor: ref.color.black,
+            labelTypography: system.textStyles.body,
+            labelColor: ref.color.black,
+            gap: system.spacing.sm,
+          },
+        },
+      },
+    });
+  }
+
+  test("selecting Checkbox emits Checkbox.gen.css.ts and Checkbox.gen.tsx", () => {
+    const files = generate(checkboxConfig());
+    const filenames = files.map((file) => file.filename);
+    expect(filenames).toContain("components/checkbox/Checkbox.gen.css.ts");
+    expect(filenames).toContain("components/checkbox/Checkbox.gen.tsx");
+  });
+
+  test("Checkbox.gen.tsx wraps Base UI's Checkbox and extends FieldableInputProps", () => {
+    const files = generate(checkboxConfig());
+    const component = files.find((f) => f.filename === "components/checkbox/Checkbox.gen.tsx")!;
+    expect(component.content).toMatch(
+      /import { Checkbox as BaseCheckbox } from "@base-ui\/react\/checkbox";/,
+    );
+    expect(component.content).toMatch(
+      /extends CommonComponentProps, FieldableInputProps/,
+    );
+    expect(component.content).toMatch(/indeterminate \? <IndeterminateIcon \/> : <CheckedIcon \/>/);
+
+    const renderElementModule = files.find((f) => f.filename === "renderElement.gen.tsx")!;
+    expect(renderElementModule.content).toMatch(/export interface FieldableInputProps/);
+  });
+
+  test("missing Checkbox bindings throw MissingDesignTokensError", () => {
+    const ref = defineReferenceTokens({});
+    const config = defineConfig({
+      tokens: { ref, system: defineSystemTokens({}), components: {} },
+      output: {
+        target: "vanilla-extract",
+        outDir: "dist-test",
+        builtInComponents: { Checkbox: {} } as never,
+      },
+    });
+    expect(() => generate(config)).toThrow(MissingDesignTokensError);
+    expect(() => generate(config)).toThrow(/requires config "sizes"/);
+  });
+
+  test("Checkbox generated sources pass assertParses", () => {
+    const files = generate(checkboxConfig());
+    for (const suffix of [
+      "components/checkbox/Checkbox.gen.css.ts",
+      "components/checkbox/Checkbox.gen.tsx",
+    ]) {
+      const file = files.find((f) => f.filename === suffix)!;
+      expect(file).toBeDefined();
+      assertParses(file.content, suffix);
+    }
+  });
+});
+
+describe("RadioList built-in component", () => {
+  function radioListConfig() {
+    const ref = defineReferenceTokens({
+      color: { black: tokens.color("#000000"), white: tokens.color("#ffffff") },
+      fontSizeScale: tokens.dimensionScale({ sm: "12px", md: "16px" }),
+    });
+    const system = defineSystemTokens({
+      border: { default: tokens.border({ color: ref.color.black, width: "1px" }) },
+      spacing: { sm: tokens.dimension("4px"), md: tokens.dimension("8px") },
+      textStyles: {
+        body: tokens.typography({ fontFamily: "Arial", fontSize: "14px", fontWeight: "regular" }),
+        supporting: tokens.typography({
+          fontFamily: "Arial",
+          fontSize: "12px",
+          fontWeight: "regular",
+        }),
+      },
+    });
+    return defineConfig({
+      tokens: { ref, system, components: {} },
+      output: {
+        target: "vanilla-extract",
+        outDir: "dist-test",
+        builtInComponents: {
+          RadioList: {
+            sizes: ref.fontSizeScale,
+            border: system.border.default,
+            backgroundColor: ref.color.white,
+            checkedBorderColor: ref.color.black,
+            checkedColor: ref.color.black,
+            hoverBorderColor: ref.color.black,
+            focusRingColor: ref.color.black,
+            invalidBorderColor: ref.color.black,
+            disabledBackgroundColor: ref.color.white,
+            disabledColor: ref.color.black,
+            labelTypography: system.textStyles.body,
+            labelColor: ref.color.black,
+            descriptionTypography: system.textStyles.supporting,
+            descriptionColor: ref.color.black,
+            gap: system.spacing.sm,
+            optionGap: system.spacing.md,
+          },
+        },
+      },
+    });
+  }
+
+  test("selecting RadioList emits RadioList.gen.css.ts and RadioList.gen.tsx", () => {
+    const files = generate(radioListConfig());
+    const filenames = files.map((file) => file.filename);
+    expect(filenames).toContain("components/radio-list/RadioList.gen.css.ts");
+    expect(filenames).toContain("components/radio-list/RadioList.gen.tsx");
+  });
+
+  test("RadioList.gen.tsx wraps Base UI's RadioGroup/Radio and maps options", () => {
+    const files = generate(radioListConfig());
+    const component = files.find((f) => f.filename === "components/radio-list/RadioList.gen.tsx")!;
+    expect(component.content).toMatch(
+      /import { RadioGroup as BaseRadioGroup } from "@base-ui\/react\/radio-group";/,
+    );
+    expect(component.content).toMatch(/import { Radio as BaseRadio } from "@base-ui\/react\/radio";/);
+    expect(component.content).toMatch(/options\.map\(\(option\) =>/);
+    expect(component.content).toMatch(/extends CommonComponentProps, FieldableInputProps/);
+  });
+
+  test("missing RadioList bindings throw MissingDesignTokensError", () => {
+    const ref = defineReferenceTokens({});
+    const config = defineConfig({
+      tokens: { ref, system: defineSystemTokens({}), components: {} },
+      output: {
+        target: "vanilla-extract",
+        outDir: "dist-test",
+        builtInComponents: { RadioList: {} } as never,
+      },
+    });
+    expect(() => generate(config)).toThrow(MissingDesignTokensError);
+    expect(() => generate(config)).toThrow(/requires config "sizes"/);
+  });
+
+  test("RadioList generated sources pass assertParses", () => {
+    const files = generate(radioListConfig());
+    for (const suffix of [
+      "components/radio-list/RadioList.gen.css.ts",
+      "components/radio-list/RadioList.gen.tsx",
+    ]) {
+      const file = files.find((f) => f.filename === suffix)!;
+      expect(file).toBeDefined();
+      assertParses(file.content, suffix);
+    }
+  });
+});
+
+describe("Switch built-in component", () => {
+  function switchConfig() {
+    const ref = defineReferenceTokens({
+      color: { black: tokens.color("#000000"), white: tokens.color("#ffffff") },
+    });
+    const system = defineSystemTokens({
+      radius: { full: tokens.dimension("9999px") },
+      border: { default: tokens.border({ color: ref.color.black, width: "1px" }) },
+      spacing: { sm: tokens.dimension("4px"), md: tokens.dimension("8px") },
+      textStyles: {
+        body: tokens.typography({ fontFamily: "Arial", fontSize: "14px", fontWeight: "regular" }),
+      },
+      motion: { fast: tokens.duration("150ms") },
+      elevation: {
+        sm: tokens.shadow({
+          color: ref.color.black,
+          offsetX: "0px",
+          offsetY: "1px",
+          blur: "2px",
+          spread: "0px",
+        }),
+      },
+    });
+    return defineConfig({
+      tokens: { ref, system, components: {} },
+      output: {
+        target: "vanilla-extract",
+        outDir: "dist-test",
+        builtInComponents: {
+          Switch: {
+            borderRadius: system.radius.full,
+            trackBackgroundColor: ref.color.white,
+            trackCheckedBackgroundColor: ref.color.black,
+            trackBorder: system.border.default,
+            thumbBackgroundColor: ref.color.white,
+            thumbShadow: system.elevation.sm,
+            focusRingColor: ref.color.black,
+            disabledTrackBackgroundColor: ref.color.white,
+            labelTypography: system.textStyles.body,
+            labelColor: ref.color.black,
+            gap: system.spacing.sm,
+            transitionDuration: system.motion.fast,
+            sizes: {
+              md: {
+                trackWidth: system.spacing.md,
+                trackHeight: system.spacing.sm,
+                thumbSize: system.spacing.sm,
+              },
+            },
+          },
+        },
+      },
+    });
+  }
+
+  test("selecting Switch emits Switch.gen.css.ts and Switch.gen.tsx", () => {
+    const files = generate(switchConfig());
+    const filenames = files.map((file) => file.filename);
+    expect(filenames).toContain("components/switch/Switch.gen.css.ts");
+    expect(filenames).toContain("components/switch/Switch.gen.tsx");
+  });
+
+  test("Switch.gen.tsx wraps Base UI's Switch and slides the thumb via data-checked", () => {
+    const files = generate(switchConfig());
+    const component = files.find((f) => f.filename === "components/switch/Switch.gen.tsx")!;
+    expect(component.content).toMatch(
+      /import { Switch as BaseSwitch } from "@base-ui\/react\/switch";/,
+    );
+    expect(component.content).toMatch(/export type SwitchSize = "md";/);
+
+    const styles = files.find((f) => f.filename === "components/switch/Switch.gen.css.ts")!;
+    expect(styles.content).toMatch(/\[data-checked\] > &/);
+  });
+
+  test("missing Switch bindings throw MissingDesignTokensError", () => {
+    const ref = defineReferenceTokens({});
+    const config = defineConfig({
+      tokens: { ref, system: defineSystemTokens({}), components: {} },
+      output: {
+        target: "vanilla-extract",
+        outDir: "dist-test",
+        builtInComponents: { Switch: {} } as never,
+      },
+    });
+    expect(() => generate(config)).toThrow(MissingDesignTokensError);
+    expect(() => generate(config)).toThrow(/requires config "sizes"/);
+  });
+
+  test("Switch generated sources pass assertParses", () => {
+    const files = generate(switchConfig());
+    for (const suffix of [
+      "components/switch/Switch.gen.css.ts",
+      "components/switch/Switch.gen.tsx",
+    ]) {
+      const file = files.find((f) => f.filename === suffix)!;
+      expect(file).toBeDefined();
+      assertParses(file.content, suffix);
+    }
+  });
+});
+
+describe("Toggle built-in component", () => {
+  function toggleConfig() {
+    const ref = defineReferenceTokens({
+      color: { black: tokens.color("#000000"), white: tokens.color("#ffffff") },
+    });
+    const system = defineSystemTokens({
+      radius: { element: tokens.dimension("8px"), inner: tokens.dimension("4px") },
+      border: { default: tokens.border({ color: ref.color.black, width: "1px" }) },
+      spacing: { sm: tokens.dimension("4px"), md: tokens.dimension("8px") },
+      textStyles: {
+        body: tokens.typography({ fontFamily: "Arial", fontSize: "14px", fontWeight: "regular" }),
+      },
+    });
+    return defineConfig({
+      tokens: { ref, system, components: {} },
+      output: {
+        target: "vanilla-extract",
+        outDir: "dist-test",
+        builtInComponents: {
+          Toggle: {
+            borderRadius: system.radius.element,
+            optionBorderRadius: system.radius.inner,
+            border: system.border.default,
+            backgroundColor: ref.color.white,
+            color: ref.color.black,
+            typography: system.textStyles.body,
+            hoverColor: ref.color.black,
+            activeColor: ref.color.white,
+            activeBackgroundColor: ref.color.black,
+            disabledColor: ref.color.black,
+            sizes: {
+              md: {
+                horizontalSpacing: system.spacing.md,
+                verticalSpacing: system.spacing.sm,
+                typography: system.textStyles.body,
+              },
+            },
+          },
+        },
+      },
+    });
+  }
+
+  test("selecting Toggle emits Toggle.gen.css.ts and Toggle.gen.tsx", () => {
+    const files = generate(toggleConfig());
+    const filenames = files.map((file) => file.filename);
+    expect(filenames).toContain("components/toggle/Toggle.gen.css.ts");
+    expect(filenames).toContain("components/toggle/Toggle.gen.tsx");
+  });
+
+  test("Toggle.gen.tsx wraps Base UI's ToggleGroup/Toggle with a two-option tuple", () => {
+    const files = generate(toggleConfig());
+    const component = files.find((f) => f.filename === "components/toggle/Toggle.gen.tsx")!;
+    expect(component.content).toMatch(
+      /import { ToggleGroup as BaseToggleGroup } from "@base-ui\/react\/toggle-group";/,
+    );
+    expect(component.content).toMatch(
+      /options: readonly \[ToggleOption<Value>, ToggleOption<Value>\];/,
+    );
+    expect(component.content).toMatch(/multiple={false}/);
+  });
+
+  test("missing Toggle bindings throw MissingDesignTokensError", () => {
+    const ref = defineReferenceTokens({});
+    const config = defineConfig({
+      tokens: { ref, system: defineSystemTokens({}), components: {} },
+      output: {
+        target: "vanilla-extract",
+        outDir: "dist-test",
+        builtInComponents: { Toggle: {} } as never,
+      },
+    });
+    expect(() => generate(config)).toThrow(MissingDesignTokensError);
+    expect(() => generate(config)).toThrow(/requires config "borderRadius"/);
+  });
+
+  test("Toggle generated sources pass assertParses", () => {
+    const files = generate(toggleConfig());
+    for (const suffix of [
+      "components/toggle/Toggle.gen.css.ts",
+      "components/toggle/Toggle.gen.tsx",
+    ]) {
+      const file = files.find((f) => f.filename === suffix)!;
+      expect(file).toBeDefined();
+      assertParses(file.content, suffix);
+    }
+  });
+});
+
+describe("Select built-in component", () => {
+  function selectConfig() {
+    const ref = defineReferenceTokens({
+      color: { black: tokens.color("#000000"), white: tokens.color("#ffffff") },
+    });
+    const system = defineSystemTokens({
+      radius: { element: tokens.dimension("8px") },
+      border: { default: tokens.border({ color: ref.color.black, width: "1px" }) },
+      spacing: { sm: tokens.dimension("4px"), md: tokens.dimension("8px") },
+      textStyles: {
+        body: tokens.typography({ fontFamily: "Arial", fontSize: "14px", fontWeight: "regular" }),
+      },
+      elevation: {
+        md: tokens.shadow({
+          color: ref.color.black,
+          offsetX: "0px",
+          offsetY: "2px",
+          blur: "4px",
+          spread: "0px",
+        }),
+      },
+    });
+    return defineConfig({
+      tokens: { ref, system, components: {} },
+      output: {
+        target: "vanilla-extract",
+        outDir: "dist-test",
+        builtInComponents: {
+          Select: {
+            borderRadius: system.radius.element,
+            border: system.border.default,
+            backgroundColor: ref.color.white,
+            color: ref.color.black,
+            typography: system.textStyles.body,
+            placeholderColor: ref.color.black,
+            horizontalSpacing: system.spacing.md,
+            verticalSpacing: system.spacing.sm,
+            hoverBorderColor: ref.color.black,
+            focusBorderColor: ref.color.black,
+            focusRingColor: ref.color.black,
+            invalidBorderColor: ref.color.black,
+            disabledBackgroundColor: ref.color.white,
+            disabledColor: ref.color.black,
+            iconSize: system.spacing.md,
+            popupBackgroundColor: ref.color.white,
+            popupBorder: system.border.default,
+            popupBorderRadius: system.radius.element,
+            popupShadow: system.elevation.md,
+            popupSpacing: system.spacing.sm,
+            popupOffset: system.spacing.sm,
+            itemColor: ref.color.black,
+            itemTypography: system.textStyles.body,
+            itemHoverBackgroundColor: ref.color.white,
+            itemSelectedBackgroundColor: ref.color.white,
+            itemSelectedColor: ref.color.black,
+            itemDisabledColor: ref.color.black,
+            itemHorizontalSpacing: system.spacing.md,
+            itemVerticalSpacing: system.spacing.sm,
+          },
+        },
+      },
+    });
+  }
+
+  test("selecting Select emits Select.gen.css.ts and Select.gen.tsx", () => {
+    const files = generate(selectConfig());
+    const filenames = files.map((file) => file.filename);
+    expect(filenames).toContain("components/select/Select.gen.css.ts");
+    expect(filenames).toContain("components/select/Select.gen.tsx");
+  });
+
+  test("Select.gen.tsx wraps Base UI's Select and maps options to Select.Item", () => {
+    const files = generate(selectConfig());
+    const component = files.find((f) => f.filename === "components/select/Select.gen.tsx")!;
+    expect(component.content).toMatch(
+      /import { Select as BaseSelect } from "@base-ui\/react\/select";/,
+    );
+    expect(component.content).toMatch(/options\.map\(\(option\) =>/);
+    expect(component.content).toMatch(/const IndicatorIcon = icons\["chevronDown"\];/);
+    expect(component.content).toMatch(/const SelectedIcon = icons\["check"\];/);
+    expect(component.content).toMatch(/extends CommonComponentProps, FieldableInputProps/);
+  });
+
+  test("missing Select bindings throw MissingDesignTokensError", () => {
+    const ref = defineReferenceTokens({});
+    const config = defineConfig({
+      tokens: { ref, system: defineSystemTokens({}), components: {} },
+      output: {
+        target: "vanilla-extract",
+        outDir: "dist-test",
+        builtInComponents: { Select: {} } as never,
+      },
+    });
+    expect(() => generate(config)).toThrow(MissingDesignTokensError);
+    expect(() => generate(config)).toThrow(/requires config "borderRadius"/);
+  });
+
+  test("Select generated sources pass assertParses", () => {
+    const files = generate(selectConfig());
+    for (const suffix of [
+      "components/select/Select.gen.css.ts",
+      "components/select/Select.gen.tsx",
+    ]) {
+      const file = files.find((f) => f.filename === suffix)!;
+      expect(file).toBeDefined();
+      assertParses(file.content, suffix);
+    }
+  });
+});
+
+describe("Autocomplete built-in component", () => {
+  function autocompleteConfig() {
+    const ref = defineReferenceTokens({
+      color: { black: tokens.color("#000000"), white: tokens.color("#ffffff") },
+    });
+    const system = defineSystemTokens({
+      radius: { element: tokens.dimension("8px"), inner: tokens.dimension("4px") },
+      border: { default: tokens.border({ color: ref.color.black, width: "1px" }) },
+      spacing: { sm: tokens.dimension("4px"), md: tokens.dimension("8px") },
+      textStyles: {
+        body: tokens.typography({ fontFamily: "Arial", fontSize: "14px", fontWeight: "regular" }),
+        supporting: tokens.typography({
+          fontFamily: "Arial",
+          fontSize: "12px",
+          fontWeight: "regular",
+        }),
+      },
+      elevation: {
+        md: tokens.shadow({
+          color: ref.color.black,
+          offsetX: "0px",
+          offsetY: "2px",
+          blur: "4px",
+          spread: "0px",
+        }),
+      },
+    });
+    return defineConfig({
+      tokens: { ref, system, components: {} },
+      output: {
+        target: "vanilla-extract",
+        outDir: "dist-test",
+        builtInComponents: {
+          Autocomplete: {
+            borderRadius: system.radius.element,
+            border: system.border.default,
+            backgroundColor: ref.color.white,
+            color: ref.color.black,
+            typography: system.textStyles.body,
+            placeholderColor: ref.color.black,
+            horizontalSpacing: system.spacing.md,
+            verticalSpacing: system.spacing.sm,
+            hoverBorderColor: ref.color.black,
+            focusBorderColor: ref.color.black,
+            focusRingColor: ref.color.black,
+            invalidBorderColor: ref.color.black,
+            disabledBackgroundColor: ref.color.white,
+            disabledColor: ref.color.black,
+            iconSize: system.spacing.md,
+            popupBackgroundColor: ref.color.white,
+            popupBorder: system.border.default,
+            popupBorderRadius: system.radius.element,
+            popupShadow: system.elevation.md,
+            popupSpacing: system.spacing.sm,
+            popupOffset: system.spacing.sm,
+            itemColor: ref.color.black,
+            itemTypography: system.textStyles.body,
+            itemHoverBackgroundColor: ref.color.white,
+            itemSelectedBackgroundColor: ref.color.white,
+            itemSelectedColor: ref.color.black,
+            itemDisabledColor: ref.color.black,
+            itemHorizontalSpacing: system.spacing.md,
+            itemVerticalSpacing: system.spacing.sm,
+            tagBackgroundColor: ref.color.white,
+            tagColor: ref.color.black,
+            tagBorderRadius: system.radius.inner,
+            tagTypography: system.textStyles.supporting,
+            tagGap: system.spacing.sm,
+            emptyStateColor: ref.color.black,
+            emptyStateTypography: system.textStyles.supporting,
+            emptyStateSpacing: system.spacing.md,
+            highlightColor: ref.color.white,
+          },
+        },
+      },
+    });
+  }
+
+  test("selecting Autocomplete emits Autocomplete.gen.css.ts and Autocomplete.gen.tsx", () => {
+    const files = generate(autocompleteConfig());
+    const filenames = files.map((file) => file.filename);
+    expect(filenames).toContain("components/autocomplete/Autocomplete.gen.css.ts");
+    expect(filenames).toContain("components/autocomplete/Autocomplete.gen.tsx");
+  });
+
+  test("Autocomplete.gen.tsx wraps Base UI's Combobox with chips, search icon and highlight", () => {
+    const files = generate(autocompleteConfig());
+    const component = files.find(
+      (f) => f.filename === "components/autocomplete/Autocomplete.gen.tsx",
+    )!;
+    expect(component.content).toMatch(
+      /import { Combobox as BaseCombobox } from "@base-ui\/react\/combobox";/,
+    );
+    expect(component.content).toMatch(/const SearchIcon = icons\["search"\];/);
+    expect(component.content).toMatch(/function highlightMatch\(/);
+    expect(component.content).toMatch(/extends CommonComponentProps, FieldableInputProps/);
+  });
+
+  test("missing Autocomplete bindings throw MissingDesignTokensError", () => {
+    const ref = defineReferenceTokens({});
+    const config = defineConfig({
+      tokens: { ref, system: defineSystemTokens({}), components: {} },
+      output: {
+        target: "vanilla-extract",
+        outDir: "dist-test",
+        builtInComponents: { Autocomplete: {} } as never,
+      },
+    });
+    expect(() => generate(config)).toThrow(MissingDesignTokensError);
+    expect(() => generate(config)).toThrow(/requires config "borderRadius"/);
+  });
+
+  test("Autocomplete generated sources pass assertParses", () => {
+    const files = generate(autocompleteConfig());
+    for (const suffix of [
+      "components/autocomplete/Autocomplete.gen.css.ts",
+      "components/autocomplete/Autocomplete.gen.tsx",
+    ]) {
+      const file = files.find((f) => f.filename === suffix)!;
+      expect(file).toBeDefined();
+      assertParses(file.content, suffix);
+    }
+  });
+});
+
+describe("FileInput built-in component", () => {
+  function fileInputConfig() {
+    const ref = defineReferenceTokens({
+      color: { black: tokens.color("#000000"), white: tokens.color("#ffffff") },
+    });
+    const system = defineSystemTokens({
+      radius: { element: tokens.dimension("8px"), inner: tokens.dimension("4px") },
+      border: { default: tokens.border({ color: ref.color.black, width: "1px" }) },
+      spacing: { sm: tokens.dimension("4px"), md: tokens.dimension("8px") },
+      textStyles: {
+        body: tokens.typography({ fontFamily: "Arial", fontSize: "14px", fontWeight: "regular" }),
+        supporting: tokens.typography({
+          fontFamily: "Arial",
+          fontSize: "12px",
+          fontWeight: "regular",
+        }),
+      },
+    });
+    return defineConfig({
+      tokens: { ref, system, components: {} },
+      output: {
+        target: "vanilla-extract",
+        outDir: "dist-test",
+        builtInComponents: {
+          FileInput: {
+            border: system.border.default,
+            borderRadius: system.radius.element,
+            backgroundColor: ref.color.white,
+            color: ref.color.black,
+            typography: system.textStyles.body,
+            hoverBorderColor: ref.color.black,
+            draggingBorderColor: ref.color.black,
+            draggingBackgroundColor: ref.color.white,
+            invalidBorderColor: ref.color.black,
+            disabledBackgroundColor: ref.color.white,
+            disabledColor: ref.color.black,
+            horizontalSpacing: system.spacing.md,
+            verticalSpacing: system.spacing.sm,
+            gap: system.spacing.sm,
+            iconSize: system.spacing.md,
+            fileTypography: system.textStyles.supporting,
+            fileColor: ref.color.black,
+            fileBorderRadius: system.radius.inner,
+          },
+        },
+      },
+    });
+  }
+
+  test("selecting FileInput emits FileInput.gen.css.ts and FileInput.gen.tsx", () => {
+    const files = generate(fileInputConfig());
+    const filenames = files.map((file) => file.filename);
+    expect(filenames).toContain("components/file-input/FileInput.gen.css.ts");
+    expect(filenames).toContain("components/file-input/FileInput.gen.tsx");
+  });
+
+  test("FileInput.gen.tsx manages controlled/uncontrolled files with drag/drop and accept/size validation", () => {
+    const files = generate(fileInputConfig());
+    const component = files.find(
+      (f) => f.filename === "components/file-input/FileInput.gen.tsx",
+    )!;
+    expect(component.content).toMatch(/function matchesAccept\(/);
+    expect(component.content).toMatch(/onRejected\?\.\("type", rejectedByType\)/);
+    expect(component.content).toMatch(/onRejected\?\.\("size", rejectedBySize\)/);
+    expect(component.content).toMatch(/onDrop={handleDrop}/);
+  });
+
+  test("missing FileInput bindings throw MissingDesignTokensError", () => {
+    const ref = defineReferenceTokens({});
+    const config = defineConfig({
+      tokens: { ref, system: defineSystemTokens({}), components: {} },
+      output: {
+        target: "vanilla-extract",
+        outDir: "dist-test",
+        builtInComponents: { FileInput: {} } as never,
+      },
+    });
+    expect(() => generate(config)).toThrow(MissingDesignTokensError);
+    expect(() => generate(config)).toThrow(/requires config "border"/);
+  });
+
+  test("FileInput generated sources pass assertParses", () => {
+    const files = generate(fileInputConfig());
+    for (const suffix of [
+      "components/file-input/FileInput.gen.css.ts",
+      "components/file-input/FileInput.gen.tsx",
+    ]) {
+      const file = files.find((f) => f.filename === suffix)!;
+      expect(file).toBeDefined();
+      assertParses(file.content, suffix);
+    }
+  });
+});
+
+describe("Slider built-in component", () => {
+  function sliderConfig() {
+    const ref = defineReferenceTokens({
+      color: { black: tokens.color("#000000"), white: tokens.color("#ffffff") },
+    });
+    const system = defineSystemTokens({
+      radius: { full: tokens.dimension("9999px") },
+      border: { default: tokens.border({ color: ref.color.black, width: "1px" }) },
+      spacing: { sm: tokens.dimension("4px"), md: tokens.dimension("8px") },
+      textStyles: {
+        supporting: tokens.typography({
+          fontFamily: "Arial",
+          fontSize: "12px",
+          fontWeight: "regular",
+        }),
+      },
+      elevation: {
+        sm: tokens.shadow({
+          color: ref.color.black,
+          offsetX: "0px",
+          offsetY: "1px",
+          blur: "2px",
+          spread: "0px",
+        }),
+      },
+    });
+    return defineConfig({
+      tokens: { ref, system, components: {} },
+      output: {
+        target: "vanilla-extract",
+        outDir: "dist-test",
+        builtInComponents: {
+          Slider: {
+            trackBackgroundColor: ref.color.white,
+            trackHeight: system.spacing.sm,
+            borderRadius: system.radius.full,
+            indicatorBackgroundColor: ref.color.black,
+            thumbSize: system.spacing.md,
+            thumbBackgroundColor: ref.color.white,
+            thumbBorder: system.border.default,
+            thumbShadow: system.elevation.sm,
+            hoverThumbBackgroundColor: ref.color.white,
+            focusRingColor: ref.color.black,
+            disabledTrackBackgroundColor: ref.color.white,
+            disabledThumbBackgroundColor: ref.color.white,
+            markColor: ref.color.black,
+            markTypography: system.textStyles.supporting,
+            valueLabelTypography: system.textStyles.supporting,
+            valueLabelColor: ref.color.white,
+            valueLabelBackgroundColor: ref.color.black,
+          },
+        },
+      },
+    });
+  }
+
+  test("selecting Slider emits Slider.gen.css.ts and Slider.gen.tsx", () => {
+    const files = generate(sliderConfig());
+    const filenames = files.map((file) => file.filename);
+    expect(filenames).toContain("components/slider/Slider.gen.css.ts");
+    expect(filenames).toContain("components/slider/Slider.gen.tsx");
+  });
+
+  test("Slider.gen.tsx wraps Base UI's Slider, rendering one Thumb per value and positioning marks", () => {
+    const files = generate(sliderConfig());
+    const component = files.find((f) => f.filename === "components/slider/Slider.gen.tsx")!;
+    expect(component.content).toMatch(
+      /import { Slider as BaseSlider } from "@base-ui\/react\/slider";/,
+    );
+    expect(component.content).toMatch(/Array\.from\(\{ length: thumbCount \}/);
+    expect(component.content).toMatch(/marks\.map\(\(mark\) =>/);
+  });
+
+  test("missing Slider bindings throw MissingDesignTokensError", () => {
+    const ref = defineReferenceTokens({});
+    const config = defineConfig({
+      tokens: { ref, system: defineSystemTokens({}), components: {} },
+      output: {
+        target: "vanilla-extract",
+        outDir: "dist-test",
+        builtInComponents: { Slider: {} } as never,
+      },
+    });
+    expect(() => generate(config)).toThrow(MissingDesignTokensError);
+    expect(() => generate(config)).toThrow(/requires config "trackBackgroundColor"/);
+  });
+
+  test("Slider generated sources pass assertParses", () => {
+    const files = generate(sliderConfig());
+    for (const suffix of [
+      "components/slider/Slider.gen.css.ts",
+      "components/slider/Slider.gen.tsx",
+    ]) {
+      const file = files.find((f) => f.filename === suffix)!;
+      expect(file).toBeDefined();
+      assertParses(file.content, suffix);
+    }
+  });
+});
+
+describe("TextInput built-in component", () => {
+  function textInputConfig() {
+    const ref = defineReferenceTokens({
+      color: { black: tokens.color("#000000"), white: tokens.color("#ffffff") },
+    });
+    const system = defineSystemTokens({
+      radius: { element: tokens.dimension("8px") },
+      border: { default: tokens.border({ color: ref.color.black, width: "1px" }) },
+      spacing: { sm: tokens.dimension("4px"), md: tokens.dimension("8px") },
+      textStyles: {
+        body: tokens.typography({ fontFamily: "Arial", fontSize: "14px", fontWeight: "regular" }),
+      },
+    });
+    return defineConfig({
+      tokens: { ref, system, components: {} },
+      output: {
+        target: "vanilla-extract",
+        outDir: "dist-test",
+        builtInComponents: {
+          TextInput: {
+            borderRadius: system.radius.element,
+            border: system.border.default,
+            backgroundColor: ref.color.white,
+            color: ref.color.black,
+            typography: system.textStyles.body,
+            placeholderColor: ref.color.black,
+            horizontalSpacing: system.spacing.md,
+            verticalSpacing: system.spacing.sm,
+            gap: system.spacing.sm,
+            hoverBorderColor: ref.color.black,
+            focusBorderColor: ref.color.black,
+            focusRingColor: ref.color.black,
+            invalidBorderColor: ref.color.black,
+            disabledBackgroundColor: ref.color.white,
+            disabledColor: ref.color.black,
+            readOnlyBackgroundColor: ref.color.white,
+            iconColor: ref.color.black,
+            iconSize: system.spacing.md,
+            affixColor: ref.color.black,
+            affixBackgroundColor: ref.color.white,
+          },
+        },
+      },
+    });
+  }
+
+  test("selecting TextInput emits TextInput.gen.css.ts and TextInput.gen.tsx", () => {
+    const files = generate(textInputConfig());
+    const filenames = files.map((file) => file.filename);
+    expect(filenames).toContain("components/text-input/TextInput.gen.css.ts");
+    expect(filenames).toContain("components/text-input/TextInput.gen.tsx");
+  });
+
+  test("TextInput.gen.tsx renders affixes/icons around a renderElement-driven input", () => {
+    const files = generate(textInputConfig());
+    const component = files.find((f) => f.filename === "components/text-input/TextInput.gen.tsx")!;
+    expect(component.content).toMatch(/renderElement\("input", render, fieldProps/);
+    expect(component.content).toMatch(/extends CommonComponentProps, FieldableInputProps/);
+    expect(component.content).toMatch(/const ClearIcon = icons\["close"\];/);
+  });
+
+  test("missing TextInput bindings throw MissingDesignTokensError", () => {
+    const ref = defineReferenceTokens({});
+    const config = defineConfig({
+      tokens: { ref, system: defineSystemTokens({}), components: {} },
+      output: {
+        target: "vanilla-extract",
+        outDir: "dist-test",
+        builtInComponents: { TextInput: {} } as never,
+      },
+    });
+    expect(() => generate(config)).toThrow(MissingDesignTokensError);
+    expect(() => generate(config)).toThrow(/requires config "borderRadius"/);
+  });
+
+  test("TextInput generated sources pass assertParses", () => {
+    const files = generate(textInputConfig());
+    for (const suffix of [
+      "components/text-input/TextInput.gen.css.ts",
+      "components/text-input/TextInput.gen.tsx",
+    ]) {
+      const file = files.find((f) => f.filename === suffix)!;
+      expect(file).toBeDefined();
+      assertParses(file.content, suffix);
+    }
+  });
+});
+
+describe("NumberInput built-in component", () => {
+  function numberInputConfig() {
+    const ref = defineReferenceTokens({
+      color: { black: tokens.color("#000000"), white: tokens.color("#ffffff") },
+    });
+    const system = defineSystemTokens({
+      radius: { element: tokens.dimension("8px") },
+      border: { default: tokens.border({ color: ref.color.black, width: "1px" }) },
+      spacing: { sm: tokens.dimension("4px"), md: tokens.dimension("8px"), lg: tokens.dimension("24px") },
+      textStyles: {
+        body: tokens.typography({ fontFamily: "Arial", fontSize: "14px", fontWeight: "regular" }),
+      },
+    });
+    return defineConfig({
+      tokens: { ref, system, components: {} },
+      output: {
+        target: "vanilla-extract",
+        outDir: "dist-test",
+        builtInComponents: {
+          NumberInput: {
+            borderRadius: system.radius.element,
+            border: system.border.default,
+            backgroundColor: ref.color.white,
+            color: ref.color.black,
+            typography: system.textStyles.body,
+            placeholderColor: ref.color.black,
+            horizontalSpacing: system.spacing.md,
+            verticalSpacing: system.spacing.sm,
+            gap: system.spacing.sm,
+            hoverBorderColor: ref.color.black,
+            focusBorderColor: ref.color.black,
+            focusRingColor: ref.color.black,
+            invalidBorderColor: ref.color.black,
+            disabledBackgroundColor: ref.color.white,
+            disabledColor: ref.color.black,
+            readOnlyBackgroundColor: ref.color.white,
+            iconColor: ref.color.black,
+            iconSize: system.spacing.sm,
+            affixColor: ref.color.black,
+            affixBackgroundColor: ref.color.white,
+            stepperBackgroundColor: ref.color.white,
+            stepperColor: ref.color.black,
+            stepperHoverBackgroundColor: ref.color.white,
+            stepperBorder: system.border.default,
+            stepperWidth: system.spacing.lg,
+          },
+        },
+      },
+    });
+  }
+
+  test("selecting NumberInput emits NumberInput.gen.css.ts and NumberInput.gen.tsx", () => {
+    const files = generate(numberInputConfig());
+    const filenames = files.map((file) => file.filename);
+    expect(filenames).toContain("components/number-input/NumberInput.gen.css.ts");
+    expect(filenames).toContain("components/number-input/NumberInput.gen.tsx");
+  });
+
+  test("NumberInput.gen.tsx wraps Base UI's NumberField with a stepper", () => {
+    const files = generate(numberInputConfig());
+    const component = files.find(
+      (f) => f.filename === "components/number-input/NumberInput.gen.tsx",
+    )!;
+    expect(component.content).toMatch(
+      /import { NumberField as BaseNumberField } from "@base-ui\/react\/number-field";/,
+    );
+    expect(component.content).toMatch(/<BaseNumberField.Increment/);
+    expect(component.content).toMatch(/<BaseNumberField.Decrement/);
+  });
+
+  test("missing NumberInput bindings throw MissingDesignTokensError", () => {
+    const ref = defineReferenceTokens({});
+    const config = defineConfig({
+      tokens: { ref, system: defineSystemTokens({}), components: {} },
+      output: {
+        target: "vanilla-extract",
+        outDir: "dist-test",
+        builtInComponents: { NumberInput: {} } as never,
+      },
+    });
+    expect(() => generate(config)).toThrow(MissingDesignTokensError);
+    expect(() => generate(config)).toThrow(/requires config "borderRadius"/);
+  });
+
+  test("NumberInput generated sources pass assertParses", () => {
+    const files = generate(numberInputConfig());
+    for (const suffix of [
+      "components/number-input/NumberInput.gen.css.ts",
+      "components/number-input/NumberInput.gen.tsx",
+    ]) {
+      const file = files.find((f) => f.filename === suffix)!;
+      expect(file).toBeDefined();
+      assertParses(file.content, suffix);
+    }
+  });
+});
+
+describe("DateInput built-in component", () => {
+  function dateInputConfig() {
+    const ref = defineReferenceTokens({
+      color: { black: tokens.color("#000000"), white: tokens.color("#ffffff") },
+    });
+    const system = defineSystemTokens({
+      radius: { element: tokens.dimension("8px"), inner: tokens.dimension("4px") },
+      border: { default: tokens.border({ color: ref.color.black, width: "1px" }) },
+      spacing: { sm: tokens.dimension("4px"), md: tokens.dimension("8px") },
+      textStyles: {
+        body: tokens.typography({ fontFamily: "Arial", fontSize: "14px", fontWeight: "regular" }),
+        supporting: tokens.typography({
+          fontFamily: "Arial",
+          fontSize: "12px",
+          fontWeight: "regular",
+        }),
+      },
+      elevation: {
+        md: tokens.shadow({
+          color: ref.color.black,
+          offsetX: "0px",
+          offsetY: "2px",
+          blur: "4px",
+          spread: "0px",
+        }),
+      },
+    });
+    return defineConfig({
+      tokens: { ref, system, components: {} },
+      output: {
+        target: "vanilla-extract",
+        outDir: "dist-test",
+        builtInComponents: {
+          DateInput: {
+            borderRadius: system.radius.element,
+            border: system.border.default,
+            backgroundColor: ref.color.white,
+            color: ref.color.black,
+            typography: system.textStyles.body,
+            placeholderColor: ref.color.black,
+            horizontalSpacing: system.spacing.md,
+            verticalSpacing: system.spacing.sm,
+            gap: system.spacing.sm,
+            hoverBorderColor: ref.color.black,
+            focusBorderColor: ref.color.black,
+            focusRingColor: ref.color.black,
+            invalidBorderColor: ref.color.black,
+            disabledBackgroundColor: ref.color.white,
+            disabledColor: ref.color.black,
+            readOnlyBackgroundColor: ref.color.white,
+            iconColor: ref.color.black,
+            iconSize: system.spacing.md,
+            affixColor: ref.color.black,
+            affixBackgroundColor: ref.color.white,
+            popupBackgroundColor: ref.color.white,
+            popupBorder: system.border.default,
+            popupBorderRadius: system.radius.element,
+            popupShadow: system.elevation.md,
+            popupSpacing: system.spacing.md,
+            popupOffset: system.spacing.sm,
+            dayTypography: system.textStyles.body,
+            dayColor: ref.color.black,
+            dayBorderRadius: system.radius.inner,
+            dayHoverBackgroundColor: ref.color.white,
+            daySelectedBackgroundColor: ref.color.black,
+            daySelectedColor: ref.color.white,
+            dayTodayBorderColor: ref.color.black,
+            dayOutsideMonthColor: ref.color.black,
+            dayDisabledColor: ref.color.black,
+            weekdayTypography: system.textStyles.supporting,
+            weekdayColor: ref.color.black,
+          },
+        },
+      },
+    });
+  }
+
+  test("selecting DateInput emits DateInput.gen.css.ts and DateInput.gen.tsx", () => {
+    const files = generate(dateInputConfig());
+    const filenames = files.map((file) => file.filename);
+    expect(filenames).toContain("components/date-input/DateInput.gen.css.ts");
+    expect(filenames).toContain("components/date-input/DateInput.gen.tsx");
+  });
+
+  test("DateInput.gen.tsx wraps Base UI's Popover around a hand-built calendar grid", () => {
+    const files = generate(dateInputConfig());
+    const component = files.find((f) => f.filename === "components/date-input/DateInput.gen.tsx")!;
+    expect(component.content).toMatch(
+      /import { Popover as BasePopover } from "@base-ui\/react\/popover";/,
+    );
+    expect(component.content).toMatch(/function getMonthMatrix\(/);
+    expect(component.content).toMatch(/getMonthMatrix\(viewDate\)\.flat\(\)\.map\(\(date\) =>/);
+  });
+
+  test("missing DateInput bindings throw MissingDesignTokensError", () => {
+    const ref = defineReferenceTokens({});
+    const config = defineConfig({
+      tokens: { ref, system: defineSystemTokens({}), components: {} },
+      output: {
+        target: "vanilla-extract",
+        outDir: "dist-test",
+        builtInComponents: { DateInput: {} } as never,
+      },
+    });
+    expect(() => generate(config)).toThrow(MissingDesignTokensError);
+    expect(() => generate(config)).toThrow(/requires config "borderRadius"/);
+  });
+
+  test("DateInput generated sources pass assertParses", () => {
+    const files = generate(dateInputConfig());
+    for (const suffix of [
+      "components/date-input/DateInput.gen.css.ts",
+      "components/date-input/DateInput.gen.tsx",
+    ]) {
+      const file = files.find((f) => f.filename === suffix)!;
+      expect(file).toBeDefined();
+      assertParses(file.content, suffix);
+    }
+  });
+});
+
+describe("Textarea built-in component", () => {
+  function textareaConfig() {
+    const ref = defineReferenceTokens({
+      color: { black: tokens.color("#000000"), white: tokens.color("#ffffff") },
+    });
+    const system = defineSystemTokens({
+      radius: { element: tokens.dimension("8px") },
+      border: { default: tokens.border({ color: ref.color.black, width: "1px" }) },
+      spacing: { sm: tokens.dimension("4px"), md: tokens.dimension("8px") },
+      textStyles: {
+        body: tokens.typography({ fontFamily: "Arial", fontSize: "14px", fontWeight: "regular" }),
+        supporting: tokens.typography({
+          fontFamily: "Arial",
+          fontSize: "12px",
+          fontWeight: "regular",
+        }),
+      },
+    });
+    return defineConfig({
+      tokens: { ref, system, components: {} },
+      output: {
+        target: "vanilla-extract",
+        outDir: "dist-test",
+        builtInComponents: {
+          Textarea: {
+            borderRadius: system.radius.element,
+            border: system.border.default,
+            backgroundColor: ref.color.white,
+            color: ref.color.black,
+            typography: system.textStyles.body,
+            placeholderColor: ref.color.black,
+            horizontalSpacing: system.spacing.md,
+            verticalSpacing: system.spacing.sm,
+            gap: system.spacing.sm,
+            hoverBorderColor: ref.color.black,
+            focusBorderColor: ref.color.black,
+            focusRingColor: ref.color.black,
+            invalidBorderColor: ref.color.black,
+            disabledBackgroundColor: ref.color.white,
+            disabledColor: ref.color.black,
+            readOnlyBackgroundColor: ref.color.white,
+            iconColor: ref.color.black,
+            iconSize: system.spacing.md,
+            affixColor: ref.color.black,
+            affixBackgroundColor: ref.color.white,
+            counterTypography: system.textStyles.supporting,
+            counterColor: ref.color.black,
+            counterExceededColor: ref.color.black,
+            counterGap: system.spacing.sm,
+            resizeHandleColor: ref.color.black,
+          },
+        },
+      },
+    });
+  }
+
+  test("selecting Textarea emits Textarea.gen.css.ts and Textarea.gen.tsx", () => {
+    const files = generate(textareaConfig());
+    const filenames = files.map((file) => file.filename);
+    expect(filenames).toContain("components/textarea/Textarea.gen.css.ts");
+    expect(filenames).toContain("components/textarea/Textarea.gen.tsx");
+  });
+
+  test("Textarea.gen.tsx tracks value locally for the character counter and supports autoResize", () => {
+    const files = generate(textareaConfig());
+    const component = files.find((f) => f.filename === "components/textarea/Textarea.gen.tsx")!;
+    expect(component.content).toMatch(/const \[uncontrolledValue, setUncontrolledValue\]/);
+    expect(component.content).toMatch(/renderElement\("textarea", render, fieldProps/);
+    expect(component.content).toMatch(/fieldSizing: "content"/);
+  });
+
+  test("missing Textarea bindings throw MissingDesignTokensError", () => {
+    const ref = defineReferenceTokens({});
+    const config = defineConfig({
+      tokens: { ref, system: defineSystemTokens({}), components: {} },
+      output: {
+        target: "vanilla-extract",
+        outDir: "dist-test",
+        builtInComponents: { Textarea: {} } as never,
+      },
+    });
+    expect(() => generate(config)).toThrow(MissingDesignTokensError);
+    expect(() => generate(config)).toThrow(/requires config "borderRadius"/);
+  });
+
+  test("Textarea generated sources pass assertParses", () => {
+    const files = generate(textareaConfig());
+    for (const suffix of [
+      "components/textarea/Textarea.gen.css.ts",
+      "components/textarea/Textarea.gen.tsx",
+    ]) {
+      const file = files.find((f) => f.filename === suffix)!;
+      expect(file).toBeDefined();
+      assertParses(file.content, suffix);
+    }
+  });
+});
+
+describe("Field built-in component", () => {
+  function fieldConfig() {
+    const ref = defineReferenceTokens({
+      color: { black: tokens.color("#000000"), white: tokens.color("#ffffff") },
+    });
+    const system = defineSystemTokens({
+      spacing: { sm: tokens.dimension("4px") },
+      textStyles: {
+        body: tokens.typography({ fontFamily: "Arial", fontSize: "14px", fontWeight: "regular" }),
+        supporting: tokens.typography({
+          fontFamily: "Arial",
+          fontSize: "12px",
+          fontWeight: "regular",
+        }),
+      },
+    });
+    return defineConfig({
+      tokens: { ref, system, components: {} },
+      output: {
+        target: "vanilla-extract",
+        outDir: "dist-test",
+        builtInComponents: {
+          Field: {
+            labelTypography: system.textStyles.body,
+            labelColor: ref.color.black,
+            descriptionTypography: system.textStyles.supporting,
+            descriptionColor: ref.color.black,
+            errorTypography: system.textStyles.supporting,
+            errorColor: ref.color.black,
+            requiredIndicatorColor: ref.color.black,
+            optionalTypography: system.textStyles.supporting,
+            optionalColor: ref.color.black,
+            gap: system.spacing.sm,
+            iconSize: system.spacing.sm,
+          },
+        },
+      },
+    });
+  }
+
+  test("selecting Field emits Field.gen.css.ts and Field.gen.tsx", () => {
+    const files = generate(fieldConfig());
+    const filenames = files.map((file) => file.filename);
+    expect(filenames).toContain("components/field/Field.gen.css.ts");
+    expect(filenames).toContain("components/field/Field.gen.tsx");
+  });
+
+  test("Field.gen.tsx wraps Base UI's Field with label/description/error rows", () => {
+    const files = generate(fieldConfig());
+    const component = files.find((f) => f.filename === "components/field/Field.gen.tsx")!;
+    expect(component.content).toMatch(/import { Field as BaseField } from "@base-ui\/react\/field";/);
+    expect(component.content).toMatch(/<BaseField.Label/);
+    expect(component.content).toMatch(/<BaseField.Description/);
+    expect(component.content).toMatch(/<BaseField.Error/);
+  });
+
+  test("missing Field bindings throw MissingDesignTokensError", () => {
+    const ref = defineReferenceTokens({});
+    const config = defineConfig({
+      tokens: { ref, system: defineSystemTokens({}), components: {} },
+      output: {
+        target: "vanilla-extract",
+        outDir: "dist-test",
+        builtInComponents: { Field: {} } as never,
+      },
+    });
+    expect(() => generate(config)).toThrow(MissingDesignTokensError);
+    expect(() => generate(config)).toThrow(/requires config "labelTypography"/);
+  });
+
+  test("Field generated sources pass assertParses", () => {
+    const files = generate(fieldConfig());
+    for (const suffix of ["components/field/Field.gen.css.ts", "components/field/Field.gen.tsx"]) {
+      const file = files.find((f) => f.filename === suffix)!;
+      expect(file).toBeDefined();
+      assertParses(file.content, suffix);
+    }
+  });
+});
+
+describe("Breadcrumb built-in component", () => {
+  function breadcrumbConfig() {
+    const ref = defineReferenceTokens({
+      color: { black: tokens.color("#000000"), white: tokens.color("#ffffff") },
+    });
+    const system = defineSystemTokens({
+      spacing: { sm: tokens.dimension("4px") },
+      textStyles: {
+        supporting: tokens.typography({
+          fontFamily: "Arial",
+          fontSize: "12px",
+          fontWeight: "regular",
+        }),
+      },
+    });
+    return defineConfig({
+      tokens: { ref, system, components: {} },
+      output: {
+        target: "vanilla-extract",
+        outDir: "dist-test",
+        builtInComponents: {
+          Breadcrumb: {
+            typography: system.textStyles.supporting,
+            color: ref.color.black,
+            hoverColor: ref.color.black,
+            currentColor: ref.color.black,
+            currentTypography: system.textStyles.supporting,
+            separatorColor: ref.color.black,
+            gap: system.spacing.sm,
+            iconSize: system.spacing.sm,
+          },
+        },
+      },
+    });
+  }
+
+  test("selecting Breadcrumb emits Breadcrumb.gen.css.ts and Breadcrumb.gen.tsx", () => {
+    const files = generate(breadcrumbConfig());
+    const filenames = files.map((file) => file.filename);
+    expect(filenames).toContain("components/breadcrumb/Breadcrumb.gen.css.ts");
+    expect(filenames).toContain("components/breadcrumb/Breadcrumb.gen.tsx");
+  });
+
+  test("Breadcrumb.gen.tsx renders an ordered list with a collapsible overflow trigger", () => {
+    const files = generate(breadcrumbConfig());
+    const component = files.find(
+      (f) => f.filename === "components/breadcrumb/Breadcrumb.gen.tsx",
+    )!;
+    expect(component.content).toMatch(/renderElement\("nav", render, rootProps/);
+    expect(component.content).toMatch(/visibleItems\.map\(\(item, index\) =>/);
+    expect(component.content).toMatch(/aria-current="page"/);
+  });
+
+  test("missing Breadcrumb bindings throw MissingDesignTokensError", () => {
+    const ref = defineReferenceTokens({});
+    const config = defineConfig({
+      tokens: { ref, system: defineSystemTokens({}), components: {} },
+      output: {
+        target: "vanilla-extract",
+        outDir: "dist-test",
+        builtInComponents: { Breadcrumb: {} } as never,
+      },
+    });
+    expect(() => generate(config)).toThrow(MissingDesignTokensError);
+    expect(() => generate(config)).toThrow(/requires config "typography"/);
+  });
+
+  test("Breadcrumb generated sources pass assertParses", () => {
+    const files = generate(breadcrumbConfig());
+    for (const suffix of [
+      "components/breadcrumb/Breadcrumb.gen.css.ts",
+      "components/breadcrumb/Breadcrumb.gen.tsx",
+    ]) {
+      const file = files.find((f) => f.filename === suffix)!;
+      expect(file).toBeDefined();
+      assertParses(file.content, suffix);
+    }
+  });
+});
+
+describe("Outline built-in component", () => {
+  function outlineConfig() {
+    const ref = defineReferenceTokens({
+      color: { black: tokens.color("#000000"), white: tokens.color("#ffffff") },
+    });
+    const system = defineSystemTokens({
+      border: { default: tokens.border({ color: ref.color.black, width: "1px" }) },
+      spacing: { sm: tokens.dimension("4px"), md: tokens.dimension("8px") },
+      textStyles: {
+        supporting: tokens.typography({
+          fontFamily: "Arial",
+          fontSize: "12px",
+          fontWeight: "regular",
+        }),
+      },
+    });
+    return defineConfig({
+      tokens: { ref, system, components: {} },
+      output: {
+        target: "vanilla-extract",
+        outDir: "dist-test",
+        builtInComponents: {
+          Outline: {
+            typography: system.textStyles.supporting,
+            color: ref.color.black,
+            hoverColor: ref.color.black,
+            activeColor: ref.color.black,
+            activeTypography: system.textStyles.supporting,
+            border: system.border.default,
+            activeIndicatorColor: ref.color.black,
+            indentSpacing: system.spacing.md,
+            itemHorizontalSpacing: system.spacing.md,
+            itemVerticalSpacing: system.spacing.sm,
+          },
+        },
+      },
+    });
+  }
+
+  test("selecting Outline emits Outline.gen.css.ts and Outline.gen.tsx", () => {
+    const files = generate(outlineConfig());
+    const filenames = files.map((file) => file.filename);
+    expect(filenames).toContain("components/outline/Outline.gen.css.ts");
+    expect(filenames).toContain("components/outline/Outline.gen.tsx");
+  });
+
+  test("Outline.gen.tsx recursively renders nested items and observes scroll with IntersectionObserver", () => {
+    const files = generate(outlineConfig());
+    const component = files.find((f) => f.filename === "components/outline/Outline.gen.tsx")!;
+    expect(component.content).toMatch(/function OutlineList\(/);
+    expect(component.content).toMatch(/new IntersectionObserver\(/);
+    expect(component.content).toMatch(/renderElement\("nav", render, rootProps/);
+  });
+
+  test("missing Outline bindings throw MissingDesignTokensError", () => {
+    const ref = defineReferenceTokens({});
+    const config = defineConfig({
+      tokens: { ref, system: defineSystemTokens({}), components: {} },
+      output: {
+        target: "vanilla-extract",
+        outDir: "dist-test",
+        builtInComponents: { Outline: {} } as never,
+      },
+    });
+    expect(() => generate(config)).toThrow(MissingDesignTokensError);
+    expect(() => generate(config)).toThrow(/requires config "typography"/);
+  });
+
+  test("Outline generated sources pass assertParses", () => {
+    const files = generate(outlineConfig());
+    for (const suffix of [
+      "components/outline/Outline.gen.css.ts",
+      "components/outline/Outline.gen.tsx",
+    ]) {
+      const file = files.find((f) => f.filename === suffix)!;
+      expect(file).toBeDefined();
+      assertParses(file.content, suffix);
+    }
+  });
+});
+
+describe("Pagination built-in component", () => {
+  function paginationConfig() {
+    const ref = defineReferenceTokens({
+      color: { black: tokens.color("#000000"), white: tokens.color("#ffffff") },
+    });
+    const system = defineSystemTokens({
+      radius: { inner: tokens.dimension("4px") },
+      border: { default: tokens.border({ color: ref.color.black, width: "1px" }) },
+      spacing: { sm: tokens.dimension("4px"), md: tokens.dimension("8px"), lg: tokens.dimension("32px") },
+      textStyles: {
+        body: tokens.typography({ fontFamily: "Arial", fontSize: "14px", fontWeight: "regular" }),
+        supporting: tokens.typography({
+          fontFamily: "Arial",
+          fontSize: "12px",
+          fontWeight: "regular",
+        }),
+      },
+    });
+    return defineConfig({
+      tokens: { ref, system, components: {} },
+      output: {
+        target: "vanilla-extract",
+        outDir: "dist-test",
+        builtInComponents: {
+          Pagination: {
+            borderRadius: system.radius.inner,
+            border: system.border.default,
+            typography: system.textStyles.supporting,
+            color: ref.color.black,
+            backgroundColor: ref.color.white,
+            hoverColor: ref.color.black,
+            hoverBackgroundColor: ref.color.white,
+            activeColor: ref.color.white,
+            activeBackgroundColor: ref.color.black,
+            disabledColor: ref.color.black,
+            ellipsisColor: ref.color.black,
+            gap: system.spacing.sm,
+            iconSize: system.spacing.sm,
+            sizes: {
+              md: {
+                minSize: system.spacing.lg,
+                horizontalSpacing: system.spacing.md,
+                verticalSpacing: system.spacing.sm,
+                typography: system.textStyles.body,
+              },
+            },
+          },
+        },
+      },
+    });
+  }
+
+  test("selecting Pagination emits Pagination.gen.css.ts and Pagination.gen.tsx", () => {
+    const files = generate(paginationConfig());
+    const filenames = files.map((file) => file.filename);
+    expect(filenames).toContain("components/pagination/Pagination.gen.css.ts");
+    expect(filenames).toContain("components/pagination/Pagination.gen.tsx");
+  });
+
+  test("Pagination.gen.tsx computes a sibling/boundary range with ellipses", () => {
+    const files = generate(paginationConfig());
+    const component = files.find(
+      (f) => f.filename === "components/pagination/Pagination.gen.tsx",
+    )!;
+    expect(component.content).toMatch(/function getPaginationRange\(/);
+    expect(component.content).toMatch(/"start-ellipsis"/);
+    expect(component.content).toMatch(/"end-ellipsis"/);
+    expect(component.content).toMatch(/renderElement\("nav", render, rootProps/);
+  });
+
+  test("missing Pagination bindings throw MissingDesignTokensError", () => {
+    const ref = defineReferenceTokens({});
+    const config = defineConfig({
+      tokens: { ref, system: defineSystemTokens({}), components: {} },
+      output: {
+        target: "vanilla-extract",
+        outDir: "dist-test",
+        builtInComponents: { Pagination: {} } as never,
+      },
+    });
+    expect(() => generate(config)).toThrow(MissingDesignTokensError);
+    expect(() => generate(config)).toThrow(/requires config "borderRadius"/);
+  });
+
+  test("Pagination generated sources pass assertParses", () => {
+    const files = generate(paginationConfig());
+    for (const suffix of [
+      "components/pagination/Pagination.gen.css.ts",
+      "components/pagination/Pagination.gen.tsx",
+    ]) {
+      const file = files.find((f) => f.filename === suffix)!;
+      expect(file).toBeDefined();
+      assertParses(file.content, suffix);
+    }
+  });
+});
+
+describe("Tabs built-in component", () => {
+  function tabsConfig() {
+    const ref = defineReferenceTokens({
+      color: { black: tokens.color("#000000"), white: tokens.color("#ffffff") },
+    });
+    const system = defineSystemTokens({
+      radius: { none: tokens.dimension("0px") },
+      border: { default: tokens.border({ color: ref.color.black, width: "1px" }) },
+      spacing: { sm: tokens.dimension("4px"), md: tokens.dimension("8px") },
+      textStyles: {
+        body: tokens.typography({ fontFamily: "Arial", fontSize: "14px", fontWeight: "regular" }),
+      },
+    });
+    return defineConfig({
+      tokens: { ref, system, components: {} },
+      output: {
+        target: "vanilla-extract",
+        outDir: "dist-test",
+        builtInComponents: {
+          Tabs: {
+            typography: system.textStyles.body,
+            activeTypography: system.textStyles.body,
+            disabledColor: ref.color.black,
+            indicatorThickness: system.spacing.sm,
+            horizontalSpacing: system.spacing.md,
+            verticalSpacing: system.spacing.sm,
+            gap: system.spacing.sm,
+            tabGap: system.spacing.sm,
+            panelSpacing: system.spacing.md,
+            iconSize: system.spacing.md,
+            focusRingColor: ref.color.black,
+            variants: {
+              line: {
+                color: ref.color.black,
+                activeColor: ref.color.black,
+                hoverColor: ref.color.black,
+                backgroundColor: ref.color.white,
+                activeBackgroundColor: ref.color.white,
+                indicatorColor: ref.color.black,
+                border: system.border.default,
+                borderRadius: system.radius.none,
+              },
+            },
+          },
+        },
+      },
+    });
+  }
+
+  test("selecting Tabs emits Tabs.gen.css.ts and Tabs.gen.tsx", () => {
+    const files = generate(tabsConfig());
+    const filenames = files.map((file) => file.filename);
+    expect(filenames).toContain("components/tabs/Tabs.gen.css.ts");
+    expect(filenames).toContain("components/tabs/Tabs.gen.tsx");
+  });
+
+  test("Tabs.gen.tsx wraps Base UI's Tabs and positions the indicator via CSS vars", () => {
+    const files = generate(tabsConfig());
+    const component = files.find((f) => f.filename === "components/tabs/Tabs.gen.tsx")!;
+    expect(component.content).toMatch(/import { Tabs as BaseTabs } from "@base-ui\/react\/tabs";/);
+    expect(component.content).toMatch(/export type TabsVariant = "line";/);
+    expect(component.content).toMatch(/<BaseTabs.Indicator/);
+
+    const styles = files.find((f) => f.filename === "components/tabs/Tabs.gen.css.ts")!;
+    expect(styles.content).toMatch(/var\(--active-tab-width\)/);
+  });
+
+  test("missing Tabs bindings throw MissingDesignTokensError", () => {
+    const ref = defineReferenceTokens({});
+    const config = defineConfig({
+      tokens: { ref, system: defineSystemTokens({}), components: {} },
+      output: {
+        target: "vanilla-extract",
+        outDir: "dist-test",
+        builtInComponents: { Tabs: {} } as never,
+      },
+    });
+    expect(() => generate(config)).toThrow(MissingDesignTokensError);
+    expect(() => generate(config)).toThrow(/requires config "typography"/);
+  });
+
+  test("Tabs generated sources pass assertParses", () => {
+    const files = generate(tabsConfig());
+    for (const suffix of ["components/tabs/Tabs.gen.css.ts", "components/tabs/Tabs.gen.tsx"]) {
+      const file = files.find((f) => f.filename === suffix)!;
+      expect(file).toBeDefined();
+      assertParses(file.content, suffix);
+    }
+  });
+});
+
+describe("Steps built-in component", () => {
+  function stepsConfig() {
+    const ref = defineReferenceTokens({
+      color: { black: tokens.color("#000000"), white: tokens.color("#ffffff") },
+    });
+    const system = defineSystemTokens({
+      radius: { full: tokens.dimension("9999px") },
+      border: { default: tokens.border({ color: ref.color.black, width: "1px" }) },
+      spacing: { sm: tokens.dimension("4px"), md: tokens.dimension("8px") },
+      textStyles: {
+        body: tokens.typography({ fontFamily: "Arial", fontSize: "14px", fontWeight: "regular" }),
+        supporting: tokens.typography({
+          fontFamily: "Arial",
+          fontSize: "12px",
+          fontWeight: "regular",
+        }),
+      },
+    });
+    const statusFields = {
+      indicatorBackgroundColor: ref.color.black,
+      indicatorColor: ref.color.white,
+      indicatorBorder: system.border.default,
+      labelColor: ref.color.black,
+      connectorColor: ref.color.black,
+    };
+    return defineConfig({
+      tokens: { ref, system, components: {} },
+      output: {
+        target: "vanilla-extract",
+        outDir: "dist-test",
+        builtInComponents: {
+          Steps: {
+            labelTypography: system.textStyles.body,
+            descriptionTypography: system.textStyles.supporting,
+            descriptionColor: ref.color.black,
+            connectorThickness: system.spacing.sm,
+            connectorSpacing: system.spacing.sm,
+            indicatorBorderRadius: system.radius.full,
+            statuses: {
+              complete: statusFields,
+              current: statusFields,
+              upcoming: statusFields,
+              error: statusFields,
+            },
+            sizes: {
+              md: {
+                indicatorSize: system.spacing.md,
+                typography: system.textStyles.body,
+                gap: system.spacing.sm,
+              },
+            },
+          },
+        },
+      },
+    });
+  }
+
+  test("selecting Steps emits Steps.gen.css.ts and Steps.gen.tsx", () => {
+    const files = generate(stepsConfig());
+    const filenames = files.map((file) => file.filename);
+    expect(filenames).toContain("components/steps/Steps.gen.css.ts");
+    expect(filenames).toContain("components/steps/Steps.gen.tsx");
+  });
+
+  test("Steps.gen.tsx derives status from activeStep with a fixed complete/current/upcoming/error union", () => {
+    const files = generate(stepsConfig());
+    const component = files.find((f) => f.filename === "components/steps/Steps.gen.tsx")!;
+    expect(component.content).toMatch(
+      /export type StepStatus = "complete" \| "current" \| "upcoming" \| "error";/,
+    );
+    expect(component.content).toMatch(/function deriveStatus\(/);
+    expect(component.content).toMatch(/renderElement\("ol", render, rootProps/);
+  });
+
+  test("missing Steps bindings throw MissingDesignTokensError", () => {
+    const ref = defineReferenceTokens({});
+    const config = defineConfig({
+      tokens: { ref, system: defineSystemTokens({}), components: {} },
+      output: {
+        target: "vanilla-extract",
+        outDir: "dist-test",
+        builtInComponents: { Steps: {} } as never,
+      },
+    });
+    expect(() => generate(config)).toThrow(MissingDesignTokensError);
+    expect(() => generate(config)).toThrow(/requires config "statuses"/);
+  });
+
+  test("Steps generated sources pass assertParses", () => {
+    const files = generate(stepsConfig());
+    for (const suffix of ["components/steps/Steps.gen.css.ts", "components/steps/Steps.gen.tsx"]) {
+      const file = files.find((f) => f.filename === suffix)!;
+      expect(file).toBeDefined();
+      assertParses(file.content, suffix);
+    }
+  });
+});
+
+describe("Dialog built-in component", () => {
+  function dialogConfig() {
+    const ref = defineReferenceTokens({
+      color: { black: tokens.color("#000000"), white: tokens.color("#ffffff") },
+      overlayWidth: {
+        sm: tokens.dimension("24rem"),
+        md: tokens.dimension("32rem"),
+        lg: tokens.dimension("48rem"),
+        fullscreen: tokens.dimension("96rem"),
+      },
+    });
+    const system = defineSystemTokens({
+      radius: { container: tokens.dimension("12px") },
+      border: { default: tokens.border({ color: ref.color.black, width: "1px" }) },
+      spacing: { sm: tokens.dimension("4px"), md: tokens.dimension("8px") },
+      textStyles: {
+        body: tokens.typography({ fontFamily: "Arial", fontSize: "14px", fontWeight: "regular" }),
+        title: tokens.typography({ fontFamily: "Arial", fontSize: "20px", fontWeight: "bold" }),
+      },
+      motion: { fast: tokens.duration("150ms") },
+      elevation: {
+        md: tokens.shadow({
+          color: ref.color.black,
+          offsetX: "0px",
+          offsetY: "2px",
+          blur: "4px",
+          spread: "0px",
+        }),
+      },
+    });
+    return defineConfig({
+      tokens: { ref, system, components: {} },
+      output: {
+        target: "vanilla-extract",
+        outDir: "dist-test",
+        builtInComponents: {
+          Dialog: {
+            backdropColor: ref.color.black,
+            backgroundColor: ref.color.white,
+            border: system.border.default,
+            borderRadius: system.radius.container,
+            shadow: system.elevation.md,
+            horizontalSpacing: system.spacing.md,
+            verticalSpacing: system.spacing.sm,
+            gap: system.spacing.sm,
+            titleTypography: system.textStyles.title,
+            titleColor: ref.color.black,
+            descriptionTypography: system.textStyles.body,
+            descriptionColor: ref.color.black,
+            footerBorder: system.border.default,
+            transitionDuration: system.motion.fast,
+            sizes: {
+              sm: { maxWidth: ref.overlayWidth.sm },
+              md: { maxWidth: ref.overlayWidth.md },
+              lg: { maxWidth: ref.overlayWidth.lg },
+              fullscreen: { maxWidth: ref.overlayWidth.fullscreen },
+            },
+          },
+        },
+      },
+    });
+  }
+
+  test("selecting Dialog emits Dialog.gen.css.ts and Dialog.gen.tsx", () => {
+    const files = generate(dialogConfig());
+    const filenames = files.map((file) => file.filename);
+    expect(filenames).toContain("components/dialog/Dialog.gen.css.ts");
+    expect(filenames).toContain("components/dialog/Dialog.gen.tsx");
+  });
+
+  test("Dialog.gen.tsx wraps Base UI's Dialog with a fixed sm/md/lg/fullscreen size union", () => {
+    const files = generate(dialogConfig());
+    const component = files.find((f) => f.filename === "components/dialog/Dialog.gen.tsx")!;
+    expect(component.content).toMatch(/import { Dialog as BaseDialog } from "@base-ui\/react\/dialog";/);
+    expect(component.content).toMatch(
+      /export type DialogSize = "sm" \| "md" \| "lg" \| "fullscreen";/,
+    );
+    expect(component.content).toMatch(/disablePointerDismissal={!dismissible}/);
+
+    const styles = files.find((f) => f.filename === "components/dialog/Dialog.gen.css.ts")!;
+    expect(styles.content).toMatch(/"fullscreen":\s*\{/);
+  });
+
+  test("missing Dialog bindings throw MissingDesignTokensError", () => {
+    const ref = defineReferenceTokens({});
+    const config = defineConfig({
+      tokens: { ref, system: defineSystemTokens({}), components: {} },
+      output: {
+        target: "vanilla-extract",
+        outDir: "dist-test",
+        builtInComponents: { Dialog: {} } as never,
+      },
+    });
+    expect(() => generate(config)).toThrow(MissingDesignTokensError);
+    expect(() => generate(config)).toThrow(/requires config "backdropColor"/);
+  });
+
+  test("Dialog generated sources pass assertParses", () => {
+    const files = generate(dialogConfig());
+    for (const suffix of [
+      "components/dialog/Dialog.gen.css.ts",
+      "components/dialog/Dialog.gen.tsx",
+    ]) {
+      const file = files.find((f) => f.filename === suffix)!;
+      expect(file).toBeDefined();
+      assertParses(file.content, suffix);
+    }
+  });
+});
+
+describe("Drawer built-in component", () => {
+  function drawerConfig() {
+    const ref = defineReferenceTokens({
+      color: { black: tokens.color("#000000"), white: tokens.color("#ffffff") },
+      overlayWidth: {
+        sm: tokens.dimension("16rem"),
+        md: tokens.dimension("24rem"),
+        lg: tokens.dimension("32rem"),
+        full: tokens.dimension("100rem"),
+      },
+    });
+    const system = defineSystemTokens({
+      radius: { container: tokens.dimension("12px") },
+      border: { default: tokens.border({ color: ref.color.black, width: "1px" }) },
+      spacing: { sm: tokens.dimension("4px"), md: tokens.dimension("8px") },
+      textStyles: {
+        title: tokens.typography({ fontFamily: "Arial", fontSize: "20px", fontWeight: "bold" }),
+      },
+      motion: { medium: tokens.duration("300ms") },
+      elevation: {
+        md: tokens.shadow({
+          color: ref.color.black,
+          offsetX: "0px",
+          offsetY: "2px",
+          blur: "4px",
+          spread: "0px",
+        }),
+      },
+    });
+    return defineConfig({
+      tokens: { ref, system, components: {} },
+      output: {
+        target: "vanilla-extract",
+        outDir: "dist-test",
+        builtInComponents: {
+          Drawer: {
+            backdropColor: ref.color.black,
+            backgroundColor: ref.color.white,
+            border: system.border.default,
+            borderRadius: system.radius.container,
+            shadow: system.elevation.md,
+            horizontalSpacing: system.spacing.md,
+            verticalSpacing: system.spacing.sm,
+            gap: system.spacing.sm,
+            titleTypography: system.textStyles.title,
+            titleColor: ref.color.black,
+            footerBorder: system.border.default,
+            transitionDuration: system.motion.medium,
+            sizes: {
+              sm: { size: ref.overlayWidth.sm },
+              md: { size: ref.overlayWidth.md },
+              lg: { size: ref.overlayWidth.lg },
+              full: { size: ref.overlayWidth.full },
+            },
+          },
+        },
+      },
+    });
+  }
+
+  test("selecting Drawer emits Drawer.gen.css.ts and Drawer.gen.tsx", () => {
+    const files = generate(drawerConfig());
+    const filenames = files.map((file) => file.filename);
+    expect(filenames).toContain("components/drawer/Drawer.gen.css.ts");
+    expect(filenames).toContain("components/drawer/Drawer.gen.tsx");
+  });
+
+  test("Drawer.gen.tsx wraps Base UI's Dialog with edge placement and a fixed sm/md/lg/full size union", () => {
+    const files = generate(drawerConfig());
+    const component = files.find((f) => f.filename === "components/drawer/Drawer.gen.tsx")!;
+    expect(component.content).toMatch(/import { Dialog as BaseDialog } from "@base-ui\/react\/dialog";/);
+    expect(component.content).toMatch(/export type DrawerSize = "sm" \| "md" \| "lg" \| "full";/);
+    expect(component.content).toMatch(/placement === "left" \|\| placement === "right"/);
+
+    const styles = files.find((f) => f.filename === "components/drawer/Drawer.gen.css.ts")!;
+    expect(styles.content).toMatch(/export const drawerPlacement = styleVariants/);
+  });
+
+  test("missing Drawer bindings throw MissingDesignTokensError", () => {
+    const ref = defineReferenceTokens({});
+    const config = defineConfig({
+      tokens: { ref, system: defineSystemTokens({}), components: {} },
+      output: {
+        target: "vanilla-extract",
+        outDir: "dist-test",
+        builtInComponents: { Drawer: {} } as never,
+      },
+    });
+    expect(() => generate(config)).toThrow(MissingDesignTokensError);
+    expect(() => generate(config)).toThrow(/requires config "backdropColor"/);
+  });
+
+  test("Drawer generated sources pass assertParses", () => {
+    const files = generate(drawerConfig());
+    for (const suffix of [
+      "components/drawer/Drawer.gen.css.ts",
+      "components/drawer/Drawer.gen.tsx",
+    ]) {
+      const file = files.find((f) => f.filename === suffix)!;
+      expect(file).toBeDefined();
+      assertParses(file.content, suffix);
+    }
+  });
+});
+
+describe("Tooltip built-in component", () => {
+  function tooltipConfig() {
+    const ref = defineReferenceTokens({
+      color: { black: tokens.color("#000000"), white: tokens.color("#ffffff") },
+    });
+    const system = defineSystemTokens({
+      radius: { inner: tokens.dimension("4px") },
+      border: { default: tokens.border({ color: ref.color.black, width: "1px" }) },
+      spacing: { sm: tokens.dimension("4px"), md: tokens.dimension("8px") },
+      textStyles: {
+        supporting: tokens.typography({
+          fontFamily: "Arial",
+          fontSize: "12px",
+          fontWeight: "regular",
+        }),
+      },
+      motion: { fast: tokens.duration("150ms") },
+      elevation: {
+        sm: tokens.shadow({
+          color: ref.color.black,
+          offsetX: "0px",
+          offsetY: "1px",
+          blur: "2px",
+          spread: "0px",
+        }),
+      },
+    });
+    return defineConfig({
+      tokens: { ref, system, components: {} },
+      output: {
+        target: "vanilla-extract",
+        outDir: "dist-test",
+        builtInComponents: {
+          Tooltip: {
+            backgroundColor: ref.color.black,
+            color: ref.color.white,
+            typography: system.textStyles.supporting,
+            borderRadius: system.radius.inner,
+            border: system.border.default,
+            shadow: system.elevation.sm,
+            horizontalSpacing: system.spacing.md,
+            verticalSpacing: system.spacing.sm,
+            offset: system.spacing.sm,
+            maxWidth: system.spacing.md,
+            arrowSize: system.spacing.sm,
+            transitionDuration: system.motion.fast,
+          },
+        },
+      },
+    });
+  }
+
+  test("selecting Tooltip emits Tooltip.gen.css.ts and Tooltip.gen.tsx", () => {
+    const files = generate(tooltipConfig());
+    const filenames = files.map((file) => file.filename);
+    expect(filenames).toContain("components/tooltip/Tooltip.gen.css.ts");
+    expect(filenames).toContain("components/tooltip/Tooltip.gen.tsx");
+  });
+
+  test("Tooltip.gen.tsx wraps Base UI's Tooltip, using children as the render-prop trigger and no render prop of its own", () => {
+    const files = generate(tooltipConfig());
+    const component = files.find((f) => f.filename === "components/tooltip/Tooltip.gen.tsx")!;
+    expect(component.content).toMatch(
+      /import { Tooltip as BaseTooltip } from "@base-ui\/react\/tooltip";/,
+    );
+    expect(component.content).toMatch(/<BaseTooltip.Trigger render={children}/);
+    expect(component.content).not.toMatch(/render\?:\s*RenderProp/);
+  });
+
+  test("missing Tooltip bindings throw MissingDesignTokensError", () => {
+    const ref = defineReferenceTokens({});
+    const config = defineConfig({
+      tokens: { ref, system: defineSystemTokens({}), components: {} },
+      output: {
+        target: "vanilla-extract",
+        outDir: "dist-test",
+        builtInComponents: { Tooltip: {} } as never,
+      },
+    });
+    expect(() => generate(config)).toThrow(MissingDesignTokensError);
+    expect(() => generate(config)).toThrow(/requires config "backgroundColor"/);
+  });
+
+  test("Tooltip generated sources pass assertParses", () => {
+    const files = generate(tooltipConfig());
+    for (const suffix of [
+      "components/tooltip/Tooltip.gen.css.ts",
+      "components/tooltip/Tooltip.gen.tsx",
+    ]) {
+      const file = files.find((f) => f.filename === suffix)!;
+      expect(file).toBeDefined();
+      assertParses(file.content, suffix);
+    }
+  });
+});
+
+describe("Popover built-in component", () => {
+  function popoverConfig() {
+    const ref = defineReferenceTokens({
+      color: { black: tokens.color("#000000"), white: tokens.color("#ffffff") },
+    });
+    const system = defineSystemTokens({
+      radius: { element: tokens.dimension("8px") },
+      border: { default: tokens.border({ color: ref.color.black, width: "1px" }) },
+      spacing: { sm: tokens.dimension("4px"), md: tokens.dimension("8px") },
+      motion: { fast: tokens.duration("150ms") },
+      elevation: {
+        md: tokens.shadow({
+          color: ref.color.black,
+          offsetX: "0px",
+          offsetY: "2px",
+          blur: "4px",
+          spread: "0px",
+        }),
+      },
+    });
+    return defineConfig({
+      tokens: { ref, system, components: {} },
+      output: {
+        target: "vanilla-extract",
+        outDir: "dist-test",
+        builtInComponents: {
+          Popover: {
+            backgroundColor: ref.color.white,
+            color: ref.color.black,
+            border: system.border.default,
+            borderRadius: system.radius.element,
+            shadow: system.elevation.md,
+            horizontalSpacing: system.spacing.md,
+            verticalSpacing: system.spacing.sm,
+            offset: system.spacing.sm,
+            maxWidth: system.spacing.md,
+            backdropColor: ref.color.black,
+            arrowSize: system.spacing.sm,
+            transitionDuration: system.motion.fast,
+          },
+        },
+      },
+    });
+  }
+
+  test("selecting Popover emits Popover.gen.css.ts and Popover.gen.tsx", () => {
+    const files = generate(popoverConfig());
+    const filenames = files.map((file) => file.filename);
+    expect(filenames).toContain("components/popover/Popover.gen.css.ts");
+    expect(filenames).toContain("components/popover/Popover.gen.tsx");
+  });
+
+  test("Popover.gen.tsx wraps Base UI's Popover, rendering the backdrop only when modal", () => {
+    const files = generate(popoverConfig());
+    const component = files.find((f) => f.filename === "components/popover/Popover.gen.tsx")!;
+    expect(component.content).toMatch(
+      /import { Popover as BasePopover } from "@base-ui\/react\/popover";/,
+    );
+    expect(component.content).toMatch(/\{modal && <BasePopover.Backdrop/);
+    expect(component.content).toMatch(/<BasePopover.Trigger render={trigger} \/>/);
+  });
+
+  test("missing Popover bindings throw MissingDesignTokensError", () => {
+    const ref = defineReferenceTokens({});
+    const config = defineConfig({
+      tokens: { ref, system: defineSystemTokens({}), components: {} },
+      output: {
+        target: "vanilla-extract",
+        outDir: "dist-test",
+        builtInComponents: { Popover: {} } as never,
+      },
+    });
+    expect(() => generate(config)).toThrow(MissingDesignTokensError);
+    expect(() => generate(config)).toThrow(/requires config "backgroundColor"/);
+  });
+
+  test("Popover generated sources pass assertParses", () => {
+    const files = generate(popoverConfig());
+    for (const suffix of [
+      "components/popover/Popover.gen.css.ts",
+      "components/popover/Popover.gen.tsx",
+    ]) {
+      const file = files.find((f) => f.filename === suffix)!;
+      expect(file).toBeDefined();
+      assertParses(file.content, suffix);
+    }
+  });
+});
+
+describe("Toast built-in component", () => {
+  function toastConfig() {
+    const ref = defineReferenceTokens({
+      color: { black: tokens.color("#000000"), white: tokens.color("#ffffff") },
+    });
+    const system = defineSystemTokens({
+      radius: { element: tokens.dimension("8px") },
+      border: { default: tokens.border({ color: ref.color.black, width: "1px" }) },
+      spacing: { sm: tokens.dimension("4px"), md: tokens.dimension("8px") },
+      textStyles: {
+        body: tokens.typography({ fontFamily: "Arial", fontSize: "14px", fontWeight: "regular" }),
+        supporting: tokens.typography({
+          fontFamily: "Arial",
+          fontSize: "12px",
+          fontWeight: "regular",
+        }),
+      },
+      motion: { fast: tokens.duration("150ms") },
+      elevation: {
+        md: tokens.shadow({
+          color: ref.color.black,
+          offsetX: "0px",
+          offsetY: "2px",
+          blur: "4px",
+          spread: "0px",
+        }),
+      },
+    });
+    return defineConfig({
+      tokens: { ref, system, components: {} },
+      output: {
+        target: "vanilla-extract",
+        outDir: "dist-test",
+        builtInComponents: {
+          Toast: {
+            backgroundColor: ref.color.white,
+            border: system.border.default,
+            borderRadius: system.radius.element,
+            shadow: system.elevation.md,
+            titleTypography: system.textStyles.body,
+            descriptionTypography: system.textStyles.supporting,
+            descriptionColor: ref.color.black,
+            horizontalSpacing: system.spacing.md,
+            verticalSpacing: system.spacing.sm,
+            gap: system.spacing.sm,
+            stackGap: system.spacing.sm,
+            offset: system.spacing.md,
+            width: system.spacing.md,
+            iconSize: system.spacing.sm,
+            transitionDuration: system.motion.fast,
+            statuses: {
+              info: {
+                color: ref.color.black,
+                backgroundColor: ref.color.white,
+                borderColor: ref.color.black,
+                iconColor: ref.color.black,
+                titleColor: ref.color.black,
+              },
+              danger: {
+                color: ref.color.black,
+                backgroundColor: ref.color.white,
+                borderColor: ref.color.black,
+                iconColor: ref.color.black,
+                titleColor: ref.color.black,
+              },
+            },
+          },
+        },
+      },
+    });
+  }
+
+  test("selecting Toast emits Toast.gen.css.ts and Toast.gen.tsx", () => {
+    const files = generate(toastConfig());
+    const filenames = files.map((file) => file.filename);
+    expect(filenames).toContain("components/toast/Toast.gen.css.ts");
+    expect(filenames).toContain("components/toast/Toast.gen.tsx");
+  });
+
+  test("Toast.gen.tsx exports both ToastProvider and a useToast hook wrapping Base UI's toast manager", () => {
+    const files = generate(toastConfig());
+    const component = files.find((f) => f.filename === "components/toast/Toast.gen.tsx")!;
+    expect(component.content).toMatch(/import { Toast as BaseToast } from "@base-ui\/react\/toast";/);
+    expect(component.content).toMatch(/export function ToastProvider\(/);
+    expect(component.content).toMatch(/export function useToast\(\): UseToastReturn/);
+    expect(component.content).toMatch(/BaseToast\.useToastManager\(\)/);
+    expect(component.content).toMatch(/"info": "info" as IconType,/);
+    expect(component.content).toMatch(/"danger": "alert" as IconType,/);
+  });
+
+  test("missing Toast bindings throw MissingDesignTokensError", () => {
+    const ref = defineReferenceTokens({});
+    const config = defineConfig({
+      tokens: { ref, system: defineSystemTokens({}), components: {} },
+      output: {
+        target: "vanilla-extract",
+        outDir: "dist-test",
+        builtInComponents: { Toast: {} } as never,
+      },
+    });
+    expect(() => generate(config)).toThrow(MissingDesignTokensError);
+    expect(() => generate(config)).toThrow(/requires config "backgroundColor"/);
+  });
+
+  test("Toast generated sources pass assertParses", () => {
+    const files = generate(toastConfig());
+    for (const suffix of ["components/toast/Toast.gen.css.ts", "components/toast/Toast.gen.tsx"]) {
+      const file = files.find((f) => f.filename === suffix)!;
+      expect(file).toBeDefined();
+      assertParses(file.content, suffix);
+    }
+  });
+});
+
+describe("MetadataList built-in component", () => {
+  function metadataListConfig() {
+    const ref = defineReferenceTokens({
+      color: { black: tokens.color("#000000"), white: tokens.color("#ffffff") },
+      gapScale: tokens.dimensionScale({ sm: "4px", md: "8px" }),
+    });
+    const system = defineSystemTokens({
+      border: { default: tokens.border({ color: ref.color.black, width: "1px" }) },
+      spacing: { sm: tokens.dimension("4px") },
+      textStyles: {
+        body: tokens.typography({ fontFamily: "Arial", fontSize: "14px", fontWeight: "regular" }),
+        supporting: tokens.typography({
+          fontFamily: "Arial",
+          fontSize: "12px",
+          fontWeight: "regular",
+        }),
+      },
+    });
+    return defineConfig({
+      tokens: { ref, system, components: {} },
+      output: {
+        target: "vanilla-extract",
+        outDir: "dist-test",
+        builtInComponents: {
+          MetadataList: {
+            gaps: ref.gapScale,
+            labelTypography: system.textStyles.supporting,
+            labelColor: ref.color.black,
+            valueTypography: system.textStyles.body,
+            valueColor: ref.color.black,
+            pairGap: system.spacing.sm,
+            iconSize: system.spacing.sm,
+            iconColor: ref.color.black,
+            divider: system.border.default,
+          },
+        },
+      },
+    });
+  }
+
+  test("selecting MetadataList emits MetadataList.gen.css.ts and MetadataList.gen.tsx", () => {
+    const files = generate(metadataListConfig());
+    const filenames = files.map((file) => file.filename);
+    expect(filenames).toContain("components/metadata-list/MetadataList.gen.css.ts");
+    expect(filenames).toContain("components/metadata-list/MetadataList.gen.tsx");
+  });
+
+  test("MetadataList.gen.tsx renders dt/dd pairs inside a dl, columns driven by a CSS var", () => {
+    const files = generate(metadataListConfig());
+    const component = files.find(
+      (f) => f.filename === "components/metadata-list/MetadataList.gen.tsx",
+    )!;
+    expect(component.content).toMatch(/renderElement\("dl", render, rootProps/);
+    expect(component.content).toMatch(/<dt className={metadataListLabel}>/);
+    expect(component.content).toMatch(/<dd className={metadataListValue}>/);
+    expect(component.content).toMatch(/"--metadata-list-columns": columns/);
+  });
+
+  test("missing MetadataList bindings throw MissingDesignTokensError", () => {
+    const ref = defineReferenceTokens({});
+    const config = defineConfig({
+      tokens: { ref, system: defineSystemTokens({}), components: {} },
+      output: {
+        target: "vanilla-extract",
+        outDir: "dist-test",
+        builtInComponents: { MetadataList: {} } as never,
+      },
+    });
+    expect(() => generate(config)).toThrow(MissingDesignTokensError);
+    expect(() => generate(config)).toThrow(/requires config "gaps"/);
+  });
+
+  test("MetadataList generated sources pass assertParses", () => {
+    const files = generate(metadataListConfig());
+    for (const suffix of [
+      "components/metadata-list/MetadataList.gen.css.ts",
+      "components/metadata-list/MetadataList.gen.tsx",
+    ]) {
+      const file = files.find((f) => f.filename === suffix)!;
+      expect(file).toBeDefined();
+      assertParses(file.content, suffix);
+    }
+  });
+});
+
+describe("TreeList built-in component", () => {
+  function treeListConfig() {
+    const ref = defineReferenceTokens({
+      color: { black: tokens.color("#000000"), white: tokens.color("#ffffff") },
+    });
+    const system = defineSystemTokens({
+      radius: { inner: tokens.dimension("4px") },
+      spacing: { sm: tokens.dimension("4px"), md: tokens.dimension("8px") },
+      textStyles: {
+        body: tokens.typography({ fontFamily: "Arial", fontSize: "14px", fontWeight: "regular" }),
+      },
+    });
+    return defineConfig({
+      tokens: { ref, system, components: {} },
+      output: {
+        target: "vanilla-extract",
+        outDir: "dist-test",
+        builtInComponents: {
+          TreeList: {
+            typography: system.textStyles.body,
+            color: ref.color.black,
+            hoverBackgroundColor: ref.color.white,
+            selectedBackgroundColor: ref.color.white,
+            selectedColor: ref.color.black,
+            focusRingColor: ref.color.black,
+            borderRadius: system.radius.inner,
+            indentSpacing: system.spacing.md,
+            rowHorizontalSpacing: system.spacing.md,
+            rowVerticalSpacing: system.spacing.sm,
+            rowGap: system.spacing.sm,
+            guideColor: ref.color.black,
+            iconSize: system.spacing.md,
+            iconColor: ref.color.black,
+          },
+        },
+      },
+    });
+  }
+
+  test("selecting TreeList emits TreeList.gen.css.ts and TreeList.gen.tsx", () => {
+    const files = generate(treeListConfig());
+    const filenames = files.map((file) => file.filename);
+    expect(filenames).toContain("components/tree-list/TreeList.gen.css.ts");
+    expect(filenames).toContain("components/tree-list/TreeList.gen.tsx");
+  });
+
+  test("TreeList.gen.tsx recursively renders a treeitem/group ARIA tree with controlled/uncontrolled expansion", () => {
+    const files = generate(treeListConfig());
+    const component = files.find((f) => f.filename === "components/tree-list/TreeList.gen.tsx")!;
+    expect(component.content).toMatch(/role: "tree",/);
+    expect(component.content).toMatch(/role="treeitem"/);
+    expect(component.content).toMatch(/const \[uncontrolledExpandedIds, setUncontrolledExpandedIds\]/);
+    expect(component.content).toMatch(/function TreeListGroup<Value>\(/);
+  });
+
+  test("missing TreeList bindings throw MissingDesignTokensError", () => {
+    const ref = defineReferenceTokens({});
+    const config = defineConfig({
+      tokens: { ref, system: defineSystemTokens({}), components: {} },
+      output: {
+        target: "vanilla-extract",
+        outDir: "dist-test",
+        builtInComponents: { TreeList: {} } as never,
+      },
+    });
+    expect(() => generate(config)).toThrow(MissingDesignTokensError);
+    expect(() => generate(config)).toThrow(/requires config "typography"/);
+  });
+
+  test("TreeList generated sources pass assertParses", () => {
+    const files = generate(treeListConfig());
+    for (const suffix of [
+      "components/tree-list/TreeList.gen.css.ts",
+      "components/tree-list/TreeList.gen.tsx",
+    ]) {
+      const file = files.find((f) => f.filename === suffix)!;
+      expect(file).toBeDefined();
+      assertParses(file.content, suffix);
+    }
+  });
+});
+
+describe("Timeline built-in component", () => {
+  function timelineConfig() {
+    const ref = defineReferenceTokens({
+      color: { black: tokens.color("#000000"), white: tokens.color("#ffffff") },
+    });
+    const system = defineSystemTokens({
+      border: { default: tokens.border({ color: ref.color.black, width: "1px" }) },
+      spacing: { sm: tokens.dimension("4px"), md: tokens.dimension("8px") },
+      textStyles: {
+        body: tokens.typography({ fontFamily: "Arial", fontSize: "14px", fontWeight: "regular" }),
+        supporting: tokens.typography({
+          fontFamily: "Arial",
+          fontSize: "12px",
+          fontWeight: "regular",
+        }),
+      },
+    });
+    const statusFields = {
+      indicatorColor: ref.color.black,
+      indicatorBackgroundColor: ref.color.white,
+      indicatorBorder: system.border.default,
+    };
+    return defineConfig({
+      tokens: { ref, system, components: {} },
+      output: {
+        target: "vanilla-extract",
+        outDir: "dist-test",
+        builtInComponents: {
+          Timeline: {
+            connectorColor: ref.color.black,
+            connectorThickness: system.spacing.sm,
+            connectorSpacing: system.spacing.sm,
+            labelTypography: system.textStyles.body,
+            labelColor: ref.color.black,
+            descriptionTypography: system.textStyles.supporting,
+            descriptionColor: ref.color.black,
+            timestampTypography: system.textStyles.supporting,
+            timestampColor: ref.color.black,
+            itemGap: system.spacing.sm,
+            iconSize: system.spacing.md,
+            statuses: {
+              neutral: statusFields,
+            },
+            sizes: {
+              md: {
+                indicatorSize: system.spacing.md,
+                gap: system.spacing.sm,
+                typography: system.textStyles.body,
+              },
+            },
+          },
+        },
+      },
+    });
+  }
+
+  test("selecting Timeline emits Timeline.gen.css.ts and Timeline.gen.tsx", () => {
+    const files = generate(timelineConfig());
+    const filenames = files.map((file) => file.filename);
+    expect(filenames).toContain("components/timeline/Timeline.gen.css.ts");
+    expect(filenames).toContain("components/timeline/Timeline.gen.tsx");
+  });
+
+  test("Timeline.gen.tsx derives status/size union types from consumer-defined variant keys and formats timestamps", () => {
+    const files = generate(timelineConfig());
+    const component = files.find((f) => f.filename === "components/timeline/Timeline.gen.tsx")!;
+    expect(component.content).toMatch(/export type TimelineStatusToken = "neutral";/);
+    expect(component.content).toMatch(/export type TimelineSize = "md";/);
+    expect(component.content).toMatch(/function defaultFormatTimestamp\(/);
+    expect(component.content).toMatch(/renderElement\("ol", render, rootProps/);
+  });
+
+  test("missing Timeline bindings throw MissingDesignTokensError", () => {
+    const ref = defineReferenceTokens({});
+    const config = defineConfig({
+      tokens: { ref, system: defineSystemTokens({}), components: {} },
+      output: {
+        target: "vanilla-extract",
+        outDir: "dist-test",
+        builtInComponents: { Timeline: {} } as never,
+      },
+    });
+    expect(() => generate(config)).toThrow(MissingDesignTokensError);
+    expect(() => generate(config)).toThrow(/requires config "statuses"/);
+  });
+
+  test("Timeline generated sources pass assertParses", () => {
+    const files = generate(timelineConfig());
+    for (const suffix of [
+      "components/timeline/Timeline.gen.css.ts",
+      "components/timeline/Timeline.gen.tsx",
+    ]) {
+      const file = files.find((f) => f.filename === suffix)!;
+      expect(file).toBeDefined();
+      assertParses(file.content, suffix);
+    }
+  });
+});

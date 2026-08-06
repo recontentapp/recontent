@@ -1,11 +1,14 @@
 {
   "extends": "../../tsconfig.json",
   "compilerOptions": {
-    "rootDir": "src",
-    "outDir": "dist",
-    "types": ["node"],
-    "sourceMap": false,
-    "declarationMap": false
+    "types": ["node"]
   },
-  "include": ["src"]
+  "include": [
+    "src",
+    "test",
+    "dev/generated/ts/tokens.ts",
+    "dev/generated/native/tokens.ts",
+    "dev/generated/vanilla-extract/**/*.ts",
+    "dev/generated/vanilla-extract/**/*.tsx"
+  ]
 }

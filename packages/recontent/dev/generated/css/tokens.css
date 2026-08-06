@@ -45,6 +45,10 @@
   --ref-fontSize-2xl: 24px;
   --ref-fontSize-3xl: 30px;
   --ref-fontSize-4xl: 36px;
+  --ref-overlayWidth-sm: 24rem;
+  --ref-overlayWidth-md: 32rem;
+  --ref-overlayWidth-lg: 48rem;
+  --ref-overlayWidth-fullscreen: 96rem;
   --ref-fontSizeScale-xs: 10px;
   --ref-fontSizeScale-sm: 12px;
   --ref-fontSizeScale-base: 14px;
@@ -111,8 +115,7 @@
   --system-radius-container: var(--ref-radius-container);
   --system-radius-page: var(--ref-radius-page);
   --system-radius-full: var(--ref-radius-full);
-  --system-typography-bodyFontFamily:
-    -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+  --system-typography-bodyFontFamily: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
   --system-typography-codeFontFamily: SF Mono, Monaco, Consolas, monospace;
   --system-typography-supportingSize: var(--ref-fontSize-sm);
   --system-typography-supportingLeading: 1.6667;
@@ -144,46 +147,43 @@
   --system-motion-slowMin: 730ms;
   --system-motion-standard: cubic-bezier(0.24, 1, 0.4, 1);
   --system-elevation-sm: 0px 1px 2px 0px var(--ref-color-gray950);
-  --system-elevation-md:
-    0px 2px 4px 0px var(--ref-color-gray950), 0px 8px 16px -4px var(--ref-color-gray950);
+  --system-elevation-md: 0px 2px 4px 0px var(--ref-color-gray950), 0px 8px 16px -4px var(--ref-color-gray950);
   --system-elevationScale-sm: 0px 1px 2px 0px var(--ref-color-gray950);
-  --system-elevationScale-md:
-    0px 2px 4px 0px var(--ref-color-gray950), 0px 8px 16px -4px var(--ref-color-gray950);
+  --system-elevationScale-md: 0px 2px 4px 0px var(--ref-color-gray950), 0px 8px 16px -4px var(--ref-color-gray950);
   --system-border-default: 1px solid var(--ref-color-gray300);
   --system-borderScale-thin: 1px solid var(--ref-color-gray300);
   --system-borderScale-thick: 2px solid var(--ref-color-gray300);
-  --system-textStyles-body-font-family:
-    -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+  --system-textStyles-body-font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
   --system-textStyles-body-font-size: var(--ref-fontSize-base);
   --system-textStyles-body-font-weight: 400;
   --system-textStyles-body-letter-spacing: 0px;
   --system-textStyles-body-line-height: 1.4286;
-  --system-textScale-supporting-font-family:
-    -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+  --system-textStyles-code-font-family: SF Mono, Monaco, Consolas, monospace;
+  --system-textStyles-code-font-size: var(--ref-fontSize-sm);
+  --system-textStyles-code-font-weight: 400;
+  --system-textStyles-code-letter-spacing: 0px;
+  --system-textStyles-code-line-height: 1.4286;
+  --system-textScale-supporting-font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
   --system-textScale-supporting-font-size: var(--ref-fontSize-sm);
   --system-textScale-supporting-font-weight: 400;
   --system-textScale-supporting-letter-spacing: 0px;
   --system-textScale-supporting-line-height: 1.6667;
-  --system-textScale-body-font-family:
-    -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+  --system-textScale-body-font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
   --system-textScale-body-font-size: var(--ref-fontSize-base);
   --system-textScale-body-font-weight: 400;
   --system-textScale-body-letter-spacing: 0px;
   --system-textScale-body-line-height: 1.4286;
-  --system-textScale-heading1-font-family:
-    -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+  --system-textScale-heading1-font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
   --system-textScale-heading1-font-size: var(--ref-fontSize-4xl);
   --system-textScale-heading1-font-weight: 700;
   --system-textScale-heading1-letter-spacing: 0px;
   --system-textScale-heading1-line-height: 1;
-  --system-textScale-heading2-font-family:
-    -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+  --system-textScale-heading2-font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
   --system-textScale-heading2-font-size: var(--ref-fontSize-xl);
   --system-textScale-heading2-font-weight: 600;
   --system-textScale-heading2-letter-spacing: 0px;
   --system-textScale-heading2-line-height: 1.4;
-  --system-textScale-heading3-font-family:
-    -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+  --system-textScale-heading3-font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
   --system-textScale-heading3-font-size: var(--ref-fontSize-2xl);
   --system-textScale-heading3-font-weight: 600;
   --system-textScale-heading3-letter-spacing: 0px;
@@ -197,9 +197,5 @@
   --system-transitionScale-slow-transition-duration: 400ms;
   --system-transitionScale-slow-transition-delay: 0ms;
   --system-transitionScale-slow-transition-timing-function: cubic-bezier(0.24, 1, 0.4, 1);
-  --system-gradients-accent: linear-gradient(
-    135deg,
-    var(--ref-color-blue600) 0%,
-    var(--ref-color-blue500) 100%
-  );
+  --system-gradients-accent: linear-gradient(135deg, var(--ref-color-blue600) 0%, var(--ref-color-blue500) 100%);
 }

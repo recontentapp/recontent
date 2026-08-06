@@ -1,5 +1,5 @@
 import { cloneElement } from "react";
-import type { AriaAttributes, ComponentPropsWithoutRef, ElementType, ReactElement } from "react";
+import type { AriaAttributes, ComponentPropsWithoutRef, ElementType, FocusEventHandler, ReactElement } from "react";
 
 export interface CommonComponentProps extends AriaAttributes {
   className?: string;
@@ -11,6 +11,21 @@ export interface CommonComponentProps extends AriaAttributes {
 export type RenderProp<DefaultElement extends ElementType = "div"> =
   | ReactElement
   | ((props: ComponentPropsWithoutRef<DefaultElement>) => ReactElement);
+
+/**
+ * Shared by every form control that can sit inside a `Field`. `Field` owns
+ * the label, description and error copy; controls only report their own
+ * state so they can style themselves and wire up `aria-invalid` /
+ * `aria-describedby`.
+ */
+export interface FieldableInputProps {
+  name?: string;
+  disabled?: boolean;
+  required?: boolean;
+  invalid?: boolean;
+  onFocus?: FocusEventHandler;
+  onBlur?: FocusEventHandler;
+}
 
 /**
  * Renders `Tag` with `props`, or defers to `render` (a Base UI-style escape
