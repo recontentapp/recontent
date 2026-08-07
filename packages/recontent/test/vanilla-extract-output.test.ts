@@ -54,13 +54,21 @@ describe("contract", () => {
 
   test('numeric and non-identifier path segments are emitted as [200] / ["0-5"], never .0-5', () => {
     const ref = defineReferenceTokens({
+      __veColor: tokens.color("#000000"),
+      __veFontFamily: tokens.fontFamily("Arial"),
       spacing: tokens.dimensionScale({ 0: "0px", "0-5": "2px" }),
       colors: tokens.colorScale({ 100: "#111111", 200: "#222222" }),
     });
     const system = defineSystemTokens({ gap: ref.spacing["0-5"], accent: ref.colors[200] });
     const config = defineConfig({
       tokens: { ref, system, components: {} },
-      output: { target: "vanilla-extract", outDir: "dist-test" },
+      output: {
+        target: "vanilla-extract",
+        outDir: "dist-test",
+        outlineColor: ref.__veColor,
+        fontFamily: ref.__veFontFamily,
+        placeholderColor: ref.__veColor,
+      },
     });
     const [file] = generate(config);
     expect(file!.content).toMatch(/"gap": vars\.ref\.spacing\["0-5"\],/);
@@ -93,18 +101,30 @@ describe("base themeClass", () => {
   });
 
   test("plain values are single-quoted; values containing ' or \\ are escaped", () => {
-    const ref = defineReferenceTokens({});
+    const ref = defineReferenceTokens({
+      __veColor: tokens.color("#000000"),
+      __veFontFamily: tokens.fontFamily("Arial"),
+    });
     const system = defineSystemTokens({ meta: { name: tokens.fontFamily("O'Brien \\ Co") } });
     const config = defineConfig({
       tokens: { ref, system, components: {} },
-      output: { target: "vanilla-extract", outDir: "dist-test" },
+      output: {
+        target: "vanilla-extract",
+        outDir: "dist-test",
+        outlineColor: ref.__veColor,
+        fontFamily: ref.__veFontFamily,
+        placeholderColor: ref.__veColor,
+      },
     });
     const [file] = generate(config);
     expect(file!.content).toMatch(/"name": 'O\\'Brien \\\\ Co',/);
   });
 
   test("`` and ${ are escaped inside template literals", () => {
-    const ref = defineReferenceTokens({});
+    const ref = defineReferenceTokens({
+      __veColor: tokens.color("#000000"),
+      __veFontFamily: tokens.fontFamily("Arial"),
+    });
     const system = defineSystemTokens({
       border: {
         weird: tokens.border({ color: "#000000", width: "1px" }),
@@ -112,7 +132,13 @@ describe("base themeClass", () => {
     });
     const config = defineConfig({
       tokens: { ref, system, components: {} },
-      output: { target: "vanilla-extract", outDir: "dist-test" },
+      output: {
+        target: "vanilla-extract",
+        outDir: "dist-test",
+        outlineColor: ref.__veColor,
+        fontFamily: ref.__veFontFamily,
+        placeholderColor: ref.__veColor,
+      },
     });
     // Bypass tokens.color(...) validation to exercise escapeTemplateLiteral directly:
     // a colorSpace value is otherwise never attacker/author-controlled free text.
@@ -139,6 +165,8 @@ describe("base themeClass", () => {
 
   test("an aliased expanded composite emits vars.ref.typography.body.fontSize per member", () => {
     const ref = defineReferenceTokens({
+      __veColor: tokens.color("#000000"),
+      __veFontFamily: tokens.fontFamily("Arial"),
       typography: {
         base: tokens.typography({ fontFamily: "Arial", fontSize: "16px", fontWeight: "regular" }),
       },
@@ -146,7 +174,13 @@ describe("base themeClass", () => {
     const system = defineSystemTokens({ typography: { body: ref.typography.base } });
     const config = defineConfig({
       tokens: { ref, system, components: {} },
-      output: { target: "vanilla-extract", outDir: "dist-test" },
+      output: {
+        target: "vanilla-extract",
+        outDir: "dist-test",
+        outlineColor: ref.__veColor,
+        fontFamily: ref.__veFontFamily,
+        placeholderColor: ref.__veColor,
+      },
     });
     const [file] = generate(config);
     expect(file!.content).toMatch(/"fontSize": vars\.ref\.typography\.base\.fontSize,/);
@@ -156,14 +190,24 @@ describe("base themeClass", () => {
 
 describe("theme classes (Fix B + C)", () => {
   test("one <name>ThemeClass per theme, exported in Object.keys(...).sort() order", () => {
-    const ref = defineReferenceTokens({ color: { black: tokens.color("#000000") } });
+    const ref = defineReferenceTokens({
+      __veColor: tokens.color("#000000"),
+      __veFontFamily: tokens.fontFamily("Arial"),
+      color: { black: tokens.color("#000000") },
+    });
     const system = defineSystemTokens({ colors: { accent: ref.color.black } });
     const bravo = defineTheme(ref, { color: { black: tokens.color("#111111") } });
     const alpha = defineTheme(ref, { color: { black: tokens.color("#222222") } });
     const config = defineConfig({
       tokens: { ref, system, components: {} },
       themes: { bravo, alpha },
-      output: { target: "vanilla-extract", outDir: "dist-test" },
+      output: {
+        target: "vanilla-extract",
+        outDir: "dist-test",
+        outlineColor: ref.__veColor,
+        fontFamily: ref.__veFontFamily,
+        placeholderColor: ref.__veColor,
+      },
     });
     const [file] = generate(config);
     expect(file!.content).toMatch(/export const alphaThemeClass = createTheme/);
@@ -198,7 +242,11 @@ describe("theme classes (Fix B + C)", () => {
   });
 
   test("a shadow whose member aliases an overridden ref color keeps its template literal", () => {
-    const ref = defineReferenceTokens({ color: { black: tokens.color("#000000") } });
+    const ref = defineReferenceTokens({
+      __veColor: tokens.color("#000000"),
+      __veFontFamily: tokens.fontFamily("Arial"),
+      color: { black: tokens.color("#000000") },
+    });
     const dark = defineTheme(ref, { color: { black: tokens.color("#111111") } });
     const system = defineSystemTokens({
       shadow: {
@@ -214,7 +262,13 @@ describe("theme classes (Fix B + C)", () => {
     const config = defineConfig({
       tokens: { ref, system, components: {} },
       themes: { dark },
-      output: { target: "vanilla-extract", outDir: "dist-test" },
+      output: {
+        target: "vanilla-extract",
+        outDir: "dist-test",
+        outlineColor: ref.__veColor,
+        fontFamily: ref.__veFontFamily,
+        placeholderColor: ref.__veColor,
+      },
     });
     const [file] = generate(config);
     const darkBlock = file!.content.slice(file!.content.indexOf("darkThemeClass"));
@@ -222,12 +276,22 @@ describe("theme classes (Fix B + C)", () => {
   });
 
   test("an override whose value is 0 is applied (Fix C)", () => {
-    const ref = defineReferenceTokens({ spacing: { none: tokens.dimension("4px") } });
+    const ref = defineReferenceTokens({
+      __veColor: tokens.color("#000000"),
+      __veFontFamily: tokens.fontFamily("Arial"),
+      spacing: { none: tokens.dimension("4px") },
+    });
     const dark = defineTheme(ref, { spacing: { none: tokens.dimension("0px") } });
     const config = defineConfig({
       tokens: { ref, system: defineSystemTokens({}), components: {} },
       themes: { dark },
-      output: { target: "vanilla-extract", outDir: "dist-test" },
+      output: {
+        target: "vanilla-extract",
+        outDir: "dist-test",
+        outlineColor: ref.__veColor,
+        fontFamily: ref.__veFontFamily,
+        placeholderColor: ref.__veColor,
+      },
     });
     const [file] = generate(config);
     const darkBlock = file!.content.slice(file!.content.indexOf("darkThemeClass"));
@@ -236,6 +300,8 @@ describe("theme classes (Fix B + C)", () => {
 
   test("a theme overriding one scale member replaces only that member", () => {
     const ref = defineReferenceTokens({
+      __veColor: tokens.color("#000000"),
+      __veFontFamily: tokens.fontFamily("Arial"),
       spacing: tokens.dimensionScale({ 0: "0px", 1: "4px", 2: "8px" }),
     });
     const dark = defineTheme(ref, {
@@ -244,7 +310,13 @@ describe("theme classes (Fix B + C)", () => {
     const config = defineConfig({
       tokens: { ref, system: defineSystemTokens({}), components: {} },
       themes: { dark },
-      output: { target: "vanilla-extract", outDir: "dist-test" },
+      output: {
+        target: "vanilla-extract",
+        outDir: "dist-test",
+        outlineColor: ref.__veColor,
+        fontFamily: ref.__veFontFamily,
+        placeholderColor: ref.__veColor,
+      },
     });
     const [file] = generate(config);
     const darkBlock = file!.content.slice(file!.content.indexOf("darkThemeClass"));
@@ -266,11 +338,19 @@ describe("scales, errors, files", () => {
 
   test("non-dimension/color scale types are exported too", () => {
     const ref = defineReferenceTokens({
+      __veColor: tokens.color("#000000"),
+      __veFontFamily: tokens.fontFamily("Arial"),
       labels: tokens.numberScale({ a: 1, b: 2 }),
     });
     const config = defineConfig({
       tokens: { ref, system: defineSystemTokens({}), components: {} },
-      output: { target: "vanilla-extract", outDir: "dist-test" },
+      output: {
+        target: "vanilla-extract",
+        outDir: "dist-test",
+        outlineColor: ref.__veColor,
+        fontFamily: ref.__veFontFamily,
+        placeholderColor: ref.__veColor,
+      },
     });
     const [file] = generate(config);
     expect(file!.content).toMatch(/export type RefLabels = "a" \| "b";/);
@@ -279,6 +359,8 @@ describe("scales, errors, files", () => {
 
   test("a transitionScale emits its type/const exports", () => {
     const ref = defineReferenceTokens({
+      __veColor: tokens.color("#000000"),
+      __veFontFamily: tokens.fontFamily("Arial"),
       transitions: tokens.transitionScale({
         fast: { duration: "100ms", timingFunction: [0.4, 0, 0.2, 1] },
         slow: { duration: "400ms", timingFunction: [0.4, 0, 0.2, 1] },
@@ -286,7 +368,13 @@ describe("scales, errors, files", () => {
     });
     const config = defineConfig({
       tokens: { ref, system: defineSystemTokens({}), components: {} },
-      output: { target: "vanilla-extract", outDir: "dist-test" },
+      output: {
+        target: "vanilla-extract",
+        outDir: "dist-test",
+        outlineColor: ref.__veColor,
+        fontFamily: ref.__veFontFamily,
+        placeholderColor: ref.__veColor,
+      },
     });
     const [file] = generate(config);
     expect(file!.content).toMatch(/export type RefTransitions = "fast" \| "slow";/);
@@ -300,11 +388,21 @@ describe("scales, errors, files", () => {
   });
 
   test("a circular alias throws", () => {
-    const a = defineReferenceTokens({ color: { a: tokens.color("#000000") } });
+    const a = defineReferenceTokens({
+      __veColor: tokens.color("#000000"),
+      __veFontFamily: tokens.fontFamily("Arial"),
+      color: { a: tokens.color("#000000") },
+    });
     // Manually construct a registry with a circular alias: a -> b -> a.
     const config = defineConfig({
       tokens: { ref: a, system: defineSystemTokens({}), components: {} },
-      output: { target: "vanilla-extract", outDir: "dist-test" },
+      output: {
+        target: "vanilla-extract",
+        outDir: "dist-test",
+        outlineColor: a.__veColor,
+        fontFamily: a.__veFontFamily,
+        placeholderColor: a.__veColor,
+      },
     });
     config.registry.set("ref.color.a", {
       path: ["ref", "color", "a"],
@@ -324,10 +422,20 @@ describe("scales, errors, files", () => {
   });
 
   test("a missing alias target throws", () => {
-    const a = defineReferenceTokens({ color: { a: tokens.color("#000000") } });
+    const a = defineReferenceTokens({
+      __veColor: tokens.color("#000000"),
+      __veFontFamily: tokens.fontFamily("Arial"),
+      color: { a: tokens.color("#000000") },
+    });
     const config = defineConfig({
       tokens: { ref: a, system: defineSystemTokens({}), components: {} },
-      output: { target: "vanilla-extract", outDir: "dist-test" },
+      output: {
+        target: "vanilla-extract",
+        outDir: "dist-test",
+        outlineColor: a.__veColor,
+        fontFamily: a.__veFontFamily,
+        placeholderColor: a.__veColor,
+      },
     });
     config.registry.set("ref.color.a", {
       path: ["ref", "color", "a"],
@@ -339,19 +447,16 @@ describe("scales, errors, files", () => {
     expect(() => generate(config)).toThrow("Alias target not found: ref.color.missing");
   });
 
-  test("generate with no builtInComponents returns exactly one tokens.css.ts", () => {
+  test("generate with no builtInComponents returns tokens.css.ts and reset.gen.css.ts", () => {
     const config = aliasChainConfig();
     const files = generate(config);
-    expect(files.length).toBe(1);
-    expect(files[0]!.filename).toBe("tokens.css.ts");
+    expect(files.length).toBe(2);
+    expect(files.some((file) => file.filename === "tokens.css.ts")).toBe(true);
+    expect(files.some((file) => file.filename === "reset.gen.css.ts")).toBe(true);
   });
 
-  test("cssReset: true additionally emits reset.gen.css.ts using globalStyle()", () => {
-    const config = aliasChainConfig({
-      target: "vanilla-extract",
-      outDir: "dist-test",
-      cssReset: true,
-    });
+  test("reset.gen.css.ts is always emitted using globalStyle()", () => {
+    const config = aliasChainConfig();
     const files = generate(config);
     const resetFile = files.find((file) => file.filename === "reset.gen.css.ts");
     expect(resetFile).toBeDefined();
@@ -359,14 +464,12 @@ describe("scales, errors, files", () => {
     expect(resetFile!.content).toMatch(/globalStyle\("\*, \*::before, \*::after", \{/);
   });
 
-  test("cssReset unset omits reset.gen.css.ts", () => {
-    const config = aliasChainConfig();
-    const files = generate(config);
-    expect(files.some((file) => file.filename === "reset.gen.css.ts")).toBe(false);
-  });
-
   test("generate with components additionally emits component files and components.dependencies.json", () => {
-    const ref = defineReferenceTokens({ color: { black: tokens.color("#000000") } });
+    const ref = defineReferenceTokens({
+      __veColor: tokens.color("#000000"),
+      __veFontFamily: tokens.fontFamily("Arial"),
+      color: { black: tokens.color("#000000") },
+    });
     const system = defineSystemTokens({
       colors: { surface: ref.color.black },
       spacing: tokens.dimensionScale({ 0: "0px", 1: "4px" }),
@@ -379,6 +482,9 @@ describe("scales, errors, files", () => {
         builtInComponents: {
           Stack: { spacing: system.spacing },
         },
+        outlineColor: ref.__veColor,
+        fontFamily: ref.__veFontFamily,
+        placeholderColor: ref.__veColor,
       },
     });
     const files = generate(config);
@@ -425,7 +531,11 @@ describe("scales, errors, files", () => {
   });
 
   test("Stack.gen.css.ts and Stack.gen.tsx content reference the resolved token/scale bindings", () => {
-    const ref = defineReferenceTokens({ color: { black: tokens.color("#000000") } });
+    const ref = defineReferenceTokens({
+      __veColor: tokens.color("#000000"),
+      __veFontFamily: tokens.fontFamily("Arial"),
+      color: { black: tokens.color("#000000") },
+    });
     const system = defineSystemTokens({
       colors: { surface: ref.color.black },
       spacing: tokens.dimensionScale({ 0: "0px", 1: "4px" }),
@@ -438,6 +548,9 @@ describe("scales, errors, files", () => {
         builtInComponents: {
           Stack: { spacing: system.spacing },
         },
+        outlineColor: ref.__veColor,
+        fontFamily: ref.__veFontFamily,
+        placeholderColor: ref.__veColor,
       },
     });
     const files = generate(config);
@@ -455,7 +568,11 @@ describe("scales, errors, files", () => {
   });
 
   test("a wrong-typed scale binding throws MissingDesignTokensError", () => {
-    const ref = defineReferenceTokens({ color: { black: tokens.color("#000000") } });
+    const ref = defineReferenceTokens({
+      __veColor: tokens.color("#000000"),
+      __veFontFamily: tokens.fontFamily("Arial"),
+      color: { black: tokens.color("#000000") },
+    });
     const system = defineSystemTokens({
       colors: { surface: ref.color.black },
       wrongScale: tokens.colorScale({ 0: ref.color.black }),
@@ -468,6 +585,9 @@ describe("scales, errors, files", () => {
         builtInComponents: {
           Stack: { spacing: system.wrongScale },
         } as never,
+        outlineColor: ref.__veColor,
+        fontFamily: ref.__veFontFamily,
+        placeholderColor: ref.__veColor,
       },
     });
     expect(() => generate(config)).toThrow(MissingDesignTokensError);
@@ -475,13 +595,20 @@ describe("scales, errors, files", () => {
   });
 
   test("missing tokens throw MissingDesignTokensError", () => {
-    const ref = defineReferenceTokens({ color: { black: tokens.color("#000000") } });
+    const ref = defineReferenceTokens({
+      __veColor: tokens.color("#000000"),
+      __veFontFamily: tokens.fontFamily("Arial"),
+      color: { black: tokens.color("#000000") },
+    });
     const config = defineConfig({
       tokens: { ref, system: defineSystemTokens({}), components: {} },
       output: {
         target: "vanilla-extract",
         outDir: "dist-test",
         builtInComponents: { Stack: {} } as never,
+        outlineColor: ref.__veColor,
+        fontFamily: ref.__veFontFamily,
+        placeholderColor: ref.__veColor,
       },
     });
     expect(() => generate(config)).toThrow(MissingDesignTokensError);
@@ -505,7 +632,10 @@ describe("scales, errors, files", () => {
 
 describe("breakpoints", () => {
   function baseConfig(breakpoints?: ScaleBinding<"dimension">) {
-    const ref = defineReferenceTokens({});
+    const ref = defineReferenceTokens({
+      __veColor: tokens.color("#000000"),
+      __veFontFamily: tokens.fontFamily("Arial"),
+    });
     const system = defineSystemTokens({
       spacing: tokens.dimensionScale({ 0: "0px", 1: "4px", 2: "8px" }),
     });
@@ -516,6 +646,9 @@ describe("breakpoints", () => {
         outDir: "dist-test",
         ...(breakpoints ? { breakpoints } : {}),
         builtInComponents: { Grid: { spacing: system.spacing } },
+        outlineColor: ref.__veColor,
+        fontFamily: ref.__veFontFamily,
+        placeholderColor: ref.__veColor,
       },
     });
   }
@@ -585,6 +718,8 @@ describe("breakpoints", () => {
 
   test("a theme-overridden breakpoint token throws", () => {
     const ref = defineReferenceTokens({
+      __veColor: tokens.color("#000000"),
+      __veFontFamily: tokens.fontFamily("Arial"),
       breakpoints: tokens.dimensionScale({ base: "0px", md: "48rem" }),
     });
     const system = defineSystemTokens({
@@ -601,6 +736,9 @@ describe("breakpoints", () => {
         outDir: "dist-test",
         breakpoints: ref.breakpoints,
         builtInComponents: { Grid: { spacing: system.spacing } },
+        outlineColor: ref.__veColor,
+        fontFamily: ref.__veFontFamily,
+        placeholderColor: ref.__veColor,
       },
     });
     expect(() => generate(config)).toThrow(/cannot be overridden by theme "dark"/);
@@ -609,7 +747,11 @@ describe("breakpoints", () => {
 
 describe("Grid, Text, Icon built-in components", () => {
   function gridTextIconConfig() {
-    const ref = defineReferenceTokens({ color: { black: tokens.color("#000000") } });
+    const ref = defineReferenceTokens({
+      __veColor: tokens.color("#000000"),
+      __veFontFamily: tokens.fontFamily("Arial"),
+      color: { black: tokens.color("#000000") },
+    });
     const system = defineSystemTokens({
       spacing: tokens.dimensionScale({ 0: "0px", 1: "4px" }),
       textColors: tokens.colorScale({ primary: ref.color.black }),
@@ -628,12 +770,18 @@ describe("Grid, Text, Icon built-in components", () => {
           Text: { typography: system.textStyles, color: system.textColors },
           Icon: { size: system.iconSizes, color: system.textColors },
         },
+        outlineColor: ref.__veColor,
+        fontFamily: ref.__veFontFamily,
+        placeholderColor: ref.__veColor,
       },
     });
   }
 
   test("selecting Grid emits Grid.gen.css.ts and Grid.gen.tsx", () => {
-    const ref = defineReferenceTokens({});
+    const ref = defineReferenceTokens({
+      __veColor: tokens.color("#000000"),
+      __veFontFamily: tokens.fontFamily("Arial"),
+    });
     const system = defineSystemTokens({
       spacing: tokens.dimensionScale({ 0: "0px", 1: "4px" }),
     });
@@ -643,6 +791,9 @@ describe("Grid, Text, Icon built-in components", () => {
         target: "vanilla-extract",
         outDir: "dist-test",
         builtInComponents: { Grid: { spacing: system.spacing } },
+        outlineColor: ref.__veColor,
+        fontFamily: ref.__veFontFamily,
+        placeholderColor: ref.__veColor,
       },
     });
     const files = generate(config);
@@ -653,7 +804,11 @@ describe("Grid, Text, Icon built-in components", () => {
   });
 
   test("selecting Text emits Text.gen.css.ts and Text.gen.tsx", () => {
-    const ref = defineReferenceTokens({ color: { black: tokens.color("#000000") } });
+    const ref = defineReferenceTokens({
+      __veColor: tokens.color("#000000"),
+      __veFontFamily: tokens.fontFamily("Arial"),
+      color: { black: tokens.color("#000000") },
+    });
     const system = defineSystemTokens({
       textColors: tokens.colorScale({ primary: ref.color.black }),
       textStyles: tokens.typographyScale({
@@ -668,6 +823,9 @@ describe("Grid, Text, Icon built-in components", () => {
         builtInComponents: {
           Text: { typography: system.textStyles, color: system.textColors },
         },
+        outlineColor: ref.__veColor,
+        fontFamily: ref.__veFontFamily,
+        placeholderColor: ref.__veColor,
       },
     });
     const files = generate(config);
@@ -698,7 +856,11 @@ describe("Grid, Text, Icon built-in components", () => {
   });
 
   test("a wrong-typed Grid spacing binding throws MissingDesignTokensError", () => {
-    const ref = defineReferenceTokens({ color: { black: tokens.color("#000000") } });
+    const ref = defineReferenceTokens({
+      __veColor: tokens.color("#000000"),
+      __veFontFamily: tokens.fontFamily("Arial"),
+      color: { black: tokens.color("#000000") },
+    });
     const system = defineSystemTokens({
       wrongScale: tokens.colorScale({ 0: ref.color.black }),
     });
@@ -708,6 +870,9 @@ describe("Grid, Text, Icon built-in components", () => {
         target: "vanilla-extract",
         outDir: "dist-test",
         builtInComponents: { Grid: { spacing: system.wrongScale } } as never,
+        outlineColor: ref.__veColor,
+        fontFamily: ref.__veFontFamily,
+        placeholderColor: ref.__veColor,
       },
     });
     expect(() => generate(config)).toThrow(MissingDesignTokensError);
@@ -715,13 +880,19 @@ describe("Grid, Text, Icon built-in components", () => {
   });
 
   test("missing Icon bindings throw MissingDesignTokensError", () => {
-    const ref = defineReferenceTokens({});
+    const ref = defineReferenceTokens({
+      __veColor: tokens.color("#000000"),
+      __veFontFamily: tokens.fontFamily("Arial"),
+    });
     const config = defineConfig({
       tokens: { ref, system: defineSystemTokens({}), components: {} },
       output: {
         target: "vanilla-extract",
         outDir: "dist-test",
         builtInComponents: { Icon: {} } as never,
+        outlineColor: ref.__veColor,
+        fontFamily: ref.__veFontFamily,
+        placeholderColor: ref.__veColor,
       },
     });
     expect(() => generate(config)).toThrow(MissingDesignTokensError);
@@ -767,6 +938,8 @@ describe("Grid, Text, Icon built-in components", () => {
 describe("Button built-in component", () => {
   function buttonConfig() {
     const ref = defineReferenceTokens({
+      __veColor: tokens.color("#000000"),
+      __veFontFamily: tokens.fontFamily("Arial"),
       color: { black: tokens.color("#000000"), white: tokens.color("#ffffff") },
     });
     const system = defineSystemTokens({
@@ -810,6 +983,9 @@ describe("Button built-in component", () => {
             },
           },
         },
+        outlineColor: ref.__veColor,
+        fontFamily: ref.__veFontFamily,
+        placeholderColor: ref.__veColor,
       },
     });
   }
@@ -833,13 +1009,19 @@ describe("Button built-in component", () => {
   });
 
   test("missing Button bindings throw MissingDesignTokensError", () => {
-    const ref = defineReferenceTokens({});
+    const ref = defineReferenceTokens({
+      __veColor: tokens.color("#000000"),
+      __veFontFamily: tokens.fontFamily("Arial"),
+    });
     const config = defineConfig({
       tokens: { ref, system: defineSystemTokens({}), components: {} },
       output: {
         target: "vanilla-extract",
         outDir: "dist-test",
         builtInComponents: { Button: {} } as never,
+        outlineColor: ref.__veColor,
+        fontFamily: ref.__veFontFamily,
+        placeholderColor: ref.__veColor,
       },
     });
     expect(() => generate(config)).toThrow(MissingDesignTokensError);
@@ -862,6 +1044,8 @@ describe("Button built-in component", () => {
 describe("Avatar built-in component", () => {
   function avatarConfig() {
     const ref = defineReferenceTokens({
+      __veColor: tokens.color("#000000"),
+      __veFontFamily: tokens.fontFamily("Arial"),
       color: { black: tokens.color("#000000"), white: tokens.color("#ffffff") },
       sizeScale: tokens.dimensionScale({ sm: "24px", md: "32px" }),
     });
@@ -885,6 +1069,9 @@ describe("Avatar built-in component", () => {
             typography: system.textStyles.body,
           },
         },
+        outlineColor: ref.__veColor,
+        fontFamily: ref.__veFontFamily,
+        placeholderColor: ref.__veColor,
       },
     });
   }
@@ -907,13 +1094,19 @@ describe("Avatar built-in component", () => {
   });
 
   test("missing Avatar bindings throw MissingDesignTokensError", () => {
-    const ref = defineReferenceTokens({});
+    const ref = defineReferenceTokens({
+      __veColor: tokens.color("#000000"),
+      __veFontFamily: tokens.fontFamily("Arial"),
+    });
     const config = defineConfig({
       tokens: { ref, system: defineSystemTokens({}), components: {} },
       output: {
         target: "vanilla-extract",
         outDir: "dist-test",
         builtInComponents: { Avatar: {} } as never,
+        outlineColor: ref.__veColor,
+        fontFamily: ref.__veFontFamily,
+        placeholderColor: ref.__veColor,
       },
     });
     expect(() => generate(config)).toThrow(MissingDesignTokensError);
@@ -922,7 +1115,10 @@ describe("Avatar built-in component", () => {
 
   test("Avatar generated sources pass assertParses", () => {
     const files = generate(avatarConfig());
-    for (const suffix of ["components/avatar/Avatar.gen.css.ts", "components/avatar/Avatar.gen.tsx"]) {
+    for (const suffix of [
+      "components/avatar/Avatar.gen.css.ts",
+      "components/avatar/Avatar.gen.tsx",
+    ]) {
       const file = files.find((f) => f.filename === suffix)!;
       expect(file).toBeDefined();
       assertParses(file.content, suffix);
@@ -933,6 +1129,8 @@ describe("Avatar built-in component", () => {
 describe("QuoteBlock built-in component", () => {
   function quoteBlockConfig() {
     const ref = defineReferenceTokens({
+      __veColor: tokens.color("#000000"),
+      __veFontFamily: tokens.fontFamily("Arial"),
       color: { black: tokens.color("#000000"), gray: tokens.color("#666666") },
     });
     const system = defineSystemTokens({
@@ -964,6 +1162,9 @@ describe("QuoteBlock built-in component", () => {
             gap: system.spacing.sm,
           },
         },
+        outlineColor: ref.__veColor,
+        fontFamily: ref.__veFontFamily,
+        placeholderColor: ref.__veColor,
       },
     });
   }
@@ -986,13 +1187,19 @@ describe("QuoteBlock built-in component", () => {
   });
 
   test("missing QuoteBlock bindings throw MissingDesignTokensError", () => {
-    const ref = defineReferenceTokens({});
+    const ref = defineReferenceTokens({
+      __veColor: tokens.color("#000000"),
+      __veFontFamily: tokens.fontFamily("Arial"),
+    });
     const config = defineConfig({
       tokens: { ref, system: defineSystemTokens({}), components: {} },
       output: {
         target: "vanilla-extract",
         outDir: "dist-test",
         builtInComponents: { QuoteBlock: {} } as never,
+        outlineColor: ref.__veColor,
+        fontFamily: ref.__veFontFamily,
+        placeholderColor: ref.__veColor,
       },
     });
     expect(() => generate(config)).toThrow(MissingDesignTokensError);
@@ -1015,6 +1222,8 @@ describe("QuoteBlock built-in component", () => {
 describe("Code built-in component", () => {
   function codeConfig() {
     const ref = defineReferenceTokens({
+      __veColor: tokens.color("#000000"),
+      __veFontFamily: tokens.fontFamily("Arial"),
       color: { black: tokens.color("#000000"), gray: tokens.color("#eeeeee") },
     });
     const system = defineSystemTokens({
@@ -1022,7 +1231,11 @@ describe("Code built-in component", () => {
       radius: { inner: tokens.dimension("4px") },
       border: { default: tokens.border({ color: ref.color.black, width: "1px" }) },
       textStyles: {
-        code: tokens.typography({ fontFamily: "monospace", fontSize: "12px", fontWeight: "regular" }),
+        code: tokens.typography({
+          fontFamily: "monospace",
+          fontSize: "12px",
+          fontWeight: "regular",
+        }),
       },
     });
     return defineConfig({
@@ -1041,6 +1254,9 @@ describe("Code built-in component", () => {
             verticalSpacing: system.spacing.sm,
           },
         },
+        outlineColor: ref.__veColor,
+        fontFamily: ref.__veFontFamily,
+        placeholderColor: ref.__veColor,
       },
     });
   }
@@ -1060,13 +1276,19 @@ describe("Code built-in component", () => {
   });
 
   test("missing Code bindings throw MissingDesignTokensError", () => {
-    const ref = defineReferenceTokens({});
+    const ref = defineReferenceTokens({
+      __veColor: tokens.color("#000000"),
+      __veFontFamily: tokens.fontFamily("Arial"),
+    });
     const config = defineConfig({
       tokens: { ref, system: defineSystemTokens({}), components: {} },
       output: {
         target: "vanilla-extract",
         outDir: "dist-test",
         builtInComponents: { Code: {} } as never,
+        outlineColor: ref.__veColor,
+        fontFamily: ref.__veFontFamily,
+        placeholderColor: ref.__veColor,
       },
     });
     expect(() => generate(config)).toThrow(MissingDesignTokensError);
@@ -1086,6 +1308,8 @@ describe("Code built-in component", () => {
 describe("KeyboardShortcut built-in component", () => {
   function keyboardShortcutConfig() {
     const ref = defineReferenceTokens({
+      __veColor: tokens.color("#000000"),
+      __veFontFamily: tokens.fontFamily("Arial"),
       color: { black: tokens.color("#000000"), gray: tokens.color("#eeeeee") },
     });
     const system = defineSystemTokens({
@@ -1093,7 +1317,11 @@ describe("KeyboardShortcut built-in component", () => {
       radius: { inner: tokens.dimension("4px") },
       border: { default: tokens.border({ color: ref.color.black, width: "1px" }) },
       textStyles: {
-        code: tokens.typography({ fontFamily: "monospace", fontSize: "12px", fontWeight: "regular" }),
+        code: tokens.typography({
+          fontFamily: "monospace",
+          fontSize: "12px",
+          fontWeight: "regular",
+        }),
       },
     });
     return defineConfig({
@@ -1113,6 +1341,9 @@ describe("KeyboardShortcut built-in component", () => {
             gap: system.spacing.xs,
           },
         },
+        outlineColor: ref.__veColor,
+        fontFamily: ref.__veFontFamily,
+        placeholderColor: ref.__veColor,
       },
     });
   }
@@ -1134,13 +1365,19 @@ describe("KeyboardShortcut built-in component", () => {
   });
 
   test("missing KeyboardShortcut bindings throw MissingDesignTokensError", () => {
-    const ref = defineReferenceTokens({});
+    const ref = defineReferenceTokens({
+      __veColor: tokens.color("#000000"),
+      __veFontFamily: tokens.fontFamily("Arial"),
+    });
     const config = defineConfig({
       tokens: { ref, system: defineSystemTokens({}), components: {} },
       output: {
         target: "vanilla-extract",
         outDir: "dist-test",
         builtInComponents: { KeyboardShortcut: {} } as never,
+        outlineColor: ref.__veColor,
+        fontFamily: ref.__veFontFamily,
+        placeholderColor: ref.__veColor,
       },
     });
     expect(() => generate(config)).toThrow(MissingDesignTokensError);
@@ -1163,6 +1400,8 @@ describe("KeyboardShortcut built-in component", () => {
 describe("Divider built-in component", () => {
   function dividerConfig() {
     const ref = defineReferenceTokens({
+      __veColor: tokens.color("#000000"),
+      __veFontFamily: tokens.fontFamily("Arial"),
       color: { black: tokens.color("#000000"), gray: tokens.color("#cccccc") },
     });
     const system = defineSystemTokens({
@@ -1183,6 +1422,9 @@ describe("Divider built-in component", () => {
             spacing: system.spacing.sm,
           },
         },
+        outlineColor: ref.__veColor,
+        fontFamily: ref.__veFontFamily,
+        placeholderColor: ref.__veColor,
       },
     });
   }
@@ -1205,13 +1447,19 @@ describe("Divider built-in component", () => {
   });
 
   test("missing Divider bindings throw MissingDesignTokensError", () => {
-    const ref = defineReferenceTokens({});
+    const ref = defineReferenceTokens({
+      __veColor: tokens.color("#000000"),
+      __veFontFamily: tokens.fontFamily("Arial"),
+    });
     const config = defineConfig({
       tokens: { ref, system: defineSystemTokens({}), components: {} },
       output: {
         target: "vanilla-extract",
         outDir: "dist-test",
         builtInComponents: { Divider: {} } as never,
+        outlineColor: ref.__veColor,
+        fontFamily: ref.__veFontFamily,
+        placeholderColor: ref.__veColor,
       },
     });
     expect(() => generate(config)).toThrow(MissingDesignTokensError);
@@ -1234,6 +1482,8 @@ describe("Divider built-in component", () => {
 describe("Collapsible built-in component", () => {
   function collapsibleConfig() {
     const ref = defineReferenceTokens({
+      __veColor: tokens.color("#000000"),
+      __veFontFamily: tokens.fontFamily("Arial"),
       color: { black: tokens.color("#000000"), white: tokens.color("#ffffff") },
     });
     const system = defineSystemTokens({
@@ -1267,6 +1517,9 @@ describe("Collapsible built-in component", () => {
             transition: system.transitions.standard,
           },
         },
+        outlineColor: ref.__veColor,
+        fontFamily: ref.__veFontFamily,
+        placeholderColor: ref.__veColor,
       },
     });
   }
@@ -1295,13 +1548,19 @@ describe("Collapsible built-in component", () => {
   });
 
   test("missing Collapsible bindings throw MissingDesignTokensError", () => {
-    const ref = defineReferenceTokens({});
+    const ref = defineReferenceTokens({
+      __veColor: tokens.color("#000000"),
+      __veFontFamily: tokens.fontFamily("Arial"),
+    });
     const config = defineConfig({
       tokens: { ref, system: defineSystemTokens({}), components: {} },
       output: {
         target: "vanilla-extract",
         outDir: "dist-test",
         builtInComponents: { Collapsible: {} } as never,
+        outlineColor: ref.__veColor,
+        fontFamily: ref.__veFontFamily,
+        placeholderColor: ref.__veColor,
       },
     });
     expect(() => generate(config)).toThrow(MissingDesignTokensError);
@@ -1324,6 +1583,8 @@ describe("Collapsible built-in component", () => {
 describe("Accordion built-in component", () => {
   function accordionConfig() {
     const ref = defineReferenceTokens({
+      __veColor: tokens.color("#000000"),
+      __veFontFamily: tokens.fontFamily("Arial"),
       color: { black: tokens.color("#000000"), white: tokens.color("#ffffff") },
     });
     const system = defineSystemTokens({
@@ -1356,6 +1617,9 @@ describe("Accordion built-in component", () => {
             transition: system.transitions.standard,
           },
         },
+        outlineColor: ref.__veColor,
+        fontFamily: ref.__veFontFamily,
+        placeholderColor: ref.__veColor,
       },
     });
   }
@@ -1378,13 +1642,19 @@ describe("Accordion built-in component", () => {
   });
 
   test("missing Accordion bindings throw MissingDesignTokensError", () => {
-    const ref = defineReferenceTokens({});
+    const ref = defineReferenceTokens({
+      __veColor: tokens.color("#000000"),
+      __veFontFamily: tokens.fontFamily("Arial"),
+    });
     const config = defineConfig({
       tokens: { ref, system: defineSystemTokens({}), components: {} },
       output: {
         target: "vanilla-extract",
         outDir: "dist-test",
         builtInComponents: { Accordion: {} } as never,
+        outlineColor: ref.__veColor,
+        fontFamily: ref.__veFontFamily,
+        placeholderColor: ref.__veColor,
       },
     });
     expect(() => generate(config)).toThrow(MissingDesignTokensError);
@@ -1407,6 +1677,8 @@ describe("Accordion built-in component", () => {
 describe("Link built-in component", () => {
   function linkConfig() {
     const ref = defineReferenceTokens({
+      __veColor: tokens.color("#000000"),
+      __veFontFamily: tokens.fontFamily("Arial"),
       color: { black: tokens.color("#000000"), blue: tokens.color("#0064e0") },
     });
     const system = defineSystemTokens({
@@ -1427,6 +1699,9 @@ describe("Link built-in component", () => {
             visitedColor: ref.color.blue,
           },
         },
+        outlineColor: ref.__veColor,
+        fontFamily: ref.__veFontFamily,
+        placeholderColor: ref.__veColor,
       },
     });
   }
@@ -1451,13 +1726,19 @@ describe("Link built-in component", () => {
   });
 
   test("missing Link bindings throw MissingDesignTokensError", () => {
-    const ref = defineReferenceTokens({});
+    const ref = defineReferenceTokens({
+      __veColor: tokens.color("#000000"),
+      __veFontFamily: tokens.fontFamily("Arial"),
+    });
     const config = defineConfig({
       tokens: { ref, system: defineSystemTokens({}), components: {} },
       output: {
         target: "vanilla-extract",
         outDir: "dist-test",
         builtInComponents: { Link: {} } as never,
+        outlineColor: ref.__veColor,
+        fontFamily: ref.__veFontFamily,
+        placeholderColor: ref.__veColor,
       },
     });
     expect(() => generate(config)).toThrow(MissingDesignTokensError);
@@ -1477,6 +1758,8 @@ describe("Link built-in component", () => {
 describe("IconButton built-in component", () => {
   function iconButtonConfig() {
     const ref = defineReferenceTokens({
+      __veColor: tokens.color("#000000"),
+      __veFontFamily: tokens.fontFamily("Arial"),
       color: { black: tokens.color("#000000"), white: tokens.color("#ffffff") },
     });
     const system = defineSystemTokens({
@@ -1519,6 +1802,9 @@ describe("IconButton built-in component", () => {
             },
           },
         },
+        outlineColor: ref.__veColor,
+        fontFamily: ref.__veFontFamily,
+        placeholderColor: ref.__veColor,
       },
     });
   }
@@ -1540,19 +1826,27 @@ describe("IconButton built-in component", () => {
     expect(component.content).toMatch(/label: string;/);
     expect(component.content).toMatch(/aria-label={label}/);
 
-    const styles = files.find((f) => f.filename === "components/icon-button/IconButton.gen.css.ts")!;
+    const styles = files.find(
+      (f) => f.filename === "components/icon-button/IconButton.gen.css.ts",
+    )!;
     expect(styles.content).toMatch(/"primary":\s*\{/);
     expect(styles.content).toMatch(/"md":\s*\{/);
   });
 
   test("missing IconButton bindings throw MissingDesignTokensError", () => {
-    const ref = defineReferenceTokens({});
+    const ref = defineReferenceTokens({
+      __veColor: tokens.color("#000000"),
+      __veFontFamily: tokens.fontFamily("Arial"),
+    });
     const config = defineConfig({
       tokens: { ref, system: defineSystemTokens({}), components: {} },
       output: {
         target: "vanilla-extract",
         outDir: "dist-test",
         builtInComponents: { IconButton: {} } as never,
+        outlineColor: ref.__veColor,
+        fontFamily: ref.__veFontFamily,
+        placeholderColor: ref.__veColor,
       },
     });
     expect(() => generate(config)).toThrow(MissingDesignTokensError);
@@ -1575,6 +1869,8 @@ describe("IconButton built-in component", () => {
 describe("DropdownButton built-in component", () => {
   function dropdownButtonConfig() {
     const ref = defineReferenceTokens({
+      __veColor: tokens.color("#000000"),
+      __veFontFamily: tokens.fontFamily("Arial"),
       color: { black: tokens.color("#000000"), white: tokens.color("#ffffff") },
     });
     const system = defineSystemTokens({
@@ -1639,6 +1935,9 @@ describe("DropdownButton built-in component", () => {
             itemIconSize: system.spacing.md,
           },
         },
+        outlineColor: ref.__veColor,
+        fontFamily: ref.__veFontFamily,
+        placeholderColor: ref.__veColor,
       },
     });
   }
@@ -1655,22 +1954,26 @@ describe("DropdownButton built-in component", () => {
     const component = files.find(
       (f) => f.filename === "components/dropdown-button/DropdownButton.gen.tsx",
     )!;
-    expect(component.content).toMatch(
-      /import { Menu as BaseMenu } from "@base-ui\/react\/menu";/,
-    );
+    expect(component.content).toMatch(/import { Menu as BaseMenu } from "@base-ui\/react\/menu";/);
     expect(component.content).toMatch(/items\.map\(\(item\) =>/);
     expect(component.content).toMatch(/const IndicatorIcon = icons\["chevronDown"\];/);
     expect(component.content).toMatch(/export type DropdownButtonVariant = "primary";/);
   });
 
   test("missing DropdownButton bindings throw MissingDesignTokensError", () => {
-    const ref = defineReferenceTokens({});
+    const ref = defineReferenceTokens({
+      __veColor: tokens.color("#000000"),
+      __veFontFamily: tokens.fontFamily("Arial"),
+    });
     const config = defineConfig({
       tokens: { ref, system: defineSystemTokens({}), components: {} },
       output: {
         target: "vanilla-extract",
         outDir: "dist-test",
         builtInComponents: { DropdownButton: {} } as never,
+        outlineColor: ref.__veColor,
+        fontFamily: ref.__veFontFamily,
+        placeholderColor: ref.__veColor,
       },
     });
     expect(() => generate(config)).toThrow(MissingDesignTokensError);
@@ -1693,6 +1996,8 @@ describe("DropdownButton built-in component", () => {
 describe("SegmentedControls built-in component", () => {
   function segmentedControlsConfig() {
     const ref = defineReferenceTokens({
+      __veColor: tokens.color("#000000"),
+      __veFontFamily: tokens.fontFamily("Arial"),
       color: { black: tokens.color("#000000"), white: tokens.color("#ffffff") },
     });
     const system = defineSystemTokens({
@@ -1729,6 +2034,9 @@ describe("SegmentedControls built-in component", () => {
             iconSize: system.spacing.md,
           },
         },
+        outlineColor: ref.__veColor,
+        fontFamily: ref.__veFontFamily,
+        placeholderColor: ref.__veColor,
       },
     });
   }
@@ -1756,13 +2064,19 @@ describe("SegmentedControls built-in component", () => {
   });
 
   test("missing SegmentedControls bindings throw MissingDesignTokensError", () => {
-    const ref = defineReferenceTokens({});
+    const ref = defineReferenceTokens({
+      __veColor: tokens.color("#000000"),
+      __veFontFamily: tokens.fontFamily("Arial"),
+    });
     const config = defineConfig({
       tokens: { ref, system: defineSystemTokens({}), components: {} },
       output: {
         target: "vanilla-extract",
         outDir: "dist-test",
         builtInComponents: { SegmentedControls: {} } as never,
+        outlineColor: ref.__veColor,
+        fontFamily: ref.__veFontFamily,
+        placeholderColor: ref.__veColor,
       },
     });
     expect(() => generate(config)).toThrow(MissingDesignTokensError);
@@ -1785,6 +2099,8 @@ describe("SegmentedControls built-in component", () => {
 describe("SelectableCard built-in component", () => {
   function selectableCardConfig() {
     const ref = defineReferenceTokens({
+      __veColor: tokens.color("#000000"),
+      __veFontFamily: tokens.fontFamily("Arial"),
       color: { black: tokens.color("#000000"), white: tokens.color("#ffffff") },
     });
     const system = defineSystemTokens({
@@ -1812,6 +2128,9 @@ describe("SelectableCard built-in component", () => {
             focusRingColor: ref.color.black,
           },
         },
+        outlineColor: ref.__veColor,
+        fontFamily: ref.__veFontFamily,
+        placeholderColor: ref.__veColor,
       },
     });
   }
@@ -1834,13 +2153,19 @@ describe("SelectableCard built-in component", () => {
   });
 
   test("missing SelectableCard bindings throw MissingDesignTokensError", () => {
-    const ref = defineReferenceTokens({});
+    const ref = defineReferenceTokens({
+      __veColor: tokens.color("#000000"),
+      __veFontFamily: tokens.fontFamily("Arial"),
+    });
     const config = defineConfig({
       tokens: { ref, system: defineSystemTokens({}), components: {} },
       output: {
         target: "vanilla-extract",
         outDir: "dist-test",
         builtInComponents: { SelectableCard: {} } as never,
+        outlineColor: ref.__veColor,
+        fontFamily: ref.__veFontFamily,
+        placeholderColor: ref.__veColor,
       },
     });
     expect(() => generate(config)).toThrow(MissingDesignTokensError);
@@ -1863,6 +2188,8 @@ describe("SelectableCard built-in component", () => {
 describe("ActionBar built-in component", () => {
   function actionBarConfig() {
     const ref = defineReferenceTokens({
+      __veColor: tokens.color("#000000"),
+      __veFontFamily: tokens.fontFamily("Arial"),
       color: { black: tokens.color("#000000"), white: tokens.color("#ffffff") },
     });
     const system = defineSystemTokens({
@@ -1897,6 +2224,9 @@ describe("ActionBar built-in component", () => {
             offset: system.spacing.md,
           },
         },
+        outlineColor: ref.__veColor,
+        fontFamily: ref.__veFontFamily,
+        placeholderColor: ref.__veColor,
       },
     });
   }
@@ -1922,13 +2252,19 @@ describe("ActionBar built-in component", () => {
   });
 
   test("missing ActionBar bindings throw MissingDesignTokensError", () => {
-    const ref = defineReferenceTokens({});
+    const ref = defineReferenceTokens({
+      __veColor: tokens.color("#000000"),
+      __veFontFamily: tokens.fontFamily("Arial"),
+    });
     const config = defineConfig({
       tokens: { ref, system: defineSystemTokens({}), components: {} },
       output: {
         target: "vanilla-extract",
         outDir: "dist-test",
         builtInComponents: { ActionBar: {} } as never,
+        outlineColor: ref.__veColor,
+        fontFamily: ref.__veFontFamily,
+        placeholderColor: ref.__veColor,
       },
     });
     expect(() => generate(config)).toThrow(MissingDesignTokensError);
@@ -1951,6 +2287,8 @@ describe("ActionBar built-in component", () => {
 describe("Badge built-in component", () => {
   function badgeConfig() {
     const ref = defineReferenceTokens({
+      __veColor: tokens.color("#000000"),
+      __veFontFamily: tokens.fontFamily("Arial"),
       color: { black: tokens.color("#000000"), white: tokens.color("#ffffff") },
     });
     const system = defineSystemTokens({
@@ -1989,6 +2327,9 @@ describe("Badge built-in component", () => {
             },
           },
         },
+        outlineColor: ref.__veColor,
+        fontFamily: ref.__veFontFamily,
+        placeholderColor: ref.__veColor,
       },
     });
   }
@@ -2012,13 +2353,19 @@ describe("Badge built-in component", () => {
   });
 
   test("missing Badge bindings throw MissingDesignTokensError", () => {
-    const ref = defineReferenceTokens({});
+    const ref = defineReferenceTokens({
+      __veColor: tokens.color("#000000"),
+      __veFontFamily: tokens.fontFamily("Arial"),
+    });
     const config = defineConfig({
       tokens: { ref, system: defineSystemTokens({}), components: {} },
       output: {
         target: "vanilla-extract",
         outDir: "dist-test",
         builtInComponents: { Badge: {} } as never,
+        outlineColor: ref.__veColor,
+        fontFamily: ref.__veFontFamily,
+        placeholderColor: ref.__veColor,
       },
     });
     expect(() => generate(config)).toThrow(MissingDesignTokensError);
@@ -2038,6 +2385,8 @@ describe("Badge built-in component", () => {
 describe("Banner built-in component", () => {
   function bannerConfig() {
     const ref = defineReferenceTokens({
+      __veColor: tokens.color("#000000"),
+      __veFontFamily: tokens.fontFamily("Arial"),
       color: { black: tokens.color("#000000"), white: tokens.color("#ffffff") },
     });
     const system = defineSystemTokens({
@@ -2082,6 +2431,9 @@ describe("Banner built-in component", () => {
             },
           },
         },
+        outlineColor: ref.__veColor,
+        fontFamily: ref.__veFontFamily,
+        placeholderColor: ref.__veColor,
       },
     });
   }
@@ -2100,17 +2452,25 @@ describe("Banner built-in component", () => {
     expect(component.content).toMatch(/const STATUS_ICONS: Record<BannerStatusToken, IconType>/);
     expect(component.content).toMatch(/"info": "info" as IconType,/);
     expect(component.content).toMatch(/"danger": "alert" as IconType,/);
-    expect(component.content).toMatch(/icon === false \? undefined : \(icon \?\? STATUS_ICONS\[status\]\)/);
+    expect(component.content).toMatch(
+      /icon === false \? undefined : \(icon \?\? STATUS_ICONS\[status\]\)/,
+    );
   });
 
   test("missing Banner bindings throw MissingDesignTokensError", () => {
-    const ref = defineReferenceTokens({});
+    const ref = defineReferenceTokens({
+      __veColor: tokens.color("#000000"),
+      __veFontFamily: tokens.fontFamily("Arial"),
+    });
     const config = defineConfig({
       tokens: { ref, system: defineSystemTokens({}), components: {} },
       output: {
         target: "vanilla-extract",
         outDir: "dist-test",
         builtInComponents: { Banner: {} } as never,
+        outlineColor: ref.__veColor,
+        fontFamily: ref.__veFontFamily,
+        placeholderColor: ref.__veColor,
       },
     });
     expect(() => generate(config)).toThrow(MissingDesignTokensError);
@@ -2133,6 +2493,8 @@ describe("Banner built-in component", () => {
 describe("Skeleton built-in component", () => {
   function skeletonConfig() {
     const ref = defineReferenceTokens({
+      __veColor: tokens.color("#000000"),
+      __veFontFamily: tokens.fontFamily("Arial"),
       color: { black: tokens.color("#000000"), white: tokens.color("#ffffff") },
       radiusScale: tokens.dimensionScale({ sm: "4px", md: "8px" }),
     });
@@ -2156,6 +2518,9 @@ describe("Skeleton built-in component", () => {
             animationDuration: system.motion.fast,
           },
         },
+        outlineColor: ref.__veColor,
+        fontFamily: ref.__veFontFamily,
+        placeholderColor: ref.__veColor,
       },
     });
   }
@@ -2179,13 +2544,19 @@ describe("Skeleton built-in component", () => {
   });
 
   test("missing Skeleton bindings throw MissingDesignTokensError", () => {
-    const ref = defineReferenceTokens({});
+    const ref = defineReferenceTokens({
+      __veColor: tokens.color("#000000"),
+      __veFontFamily: tokens.fontFamily("Arial"),
+    });
     const config = defineConfig({
       tokens: { ref, system: defineSystemTokens({}), components: {} },
       output: {
         target: "vanilla-extract",
         outDir: "dist-test",
         builtInComponents: { Skeleton: {} } as never,
+        outlineColor: ref.__veColor,
+        fontFamily: ref.__veFontFamily,
+        placeholderColor: ref.__veColor,
       },
     });
     expect(() => generate(config)).toThrow(MissingDesignTokensError);
@@ -2208,6 +2579,8 @@ describe("Skeleton built-in component", () => {
 describe("Spinner built-in component", () => {
   function spinnerConfig() {
     const ref = defineReferenceTokens({
+      __veColor: tokens.color("#000000"),
+      __veFontFamily: tokens.fontFamily("Arial"),
       color: { black: tokens.color("#000000"), white: tokens.color("#ffffff") },
       fontSizeScale: tokens.dimensionScale({ sm: "12px", md: "16px" }),
       colorScale: tokens.colorScale({ primary: tokens.color("#000000") }),
@@ -2230,6 +2603,9 @@ describe("Spinner built-in component", () => {
             animationDuration: system.motion.fast,
           },
         },
+        outlineColor: ref.__veColor,
+        fontFamily: ref.__veFontFamily,
+        placeholderColor: ref.__veColor,
       },
     });
   }
@@ -2245,7 +2621,9 @@ describe("Spinner built-in component", () => {
     const files = generate(spinnerConfig());
     const component = files.find((f) => f.filename === "components/spinner/Spinner.gen.tsx")!;
     expect(component.content).toMatch(/renderElement\("span", render, rootProps/);
-    expect(component.content).toMatch(/typeof size === "number" \? \{ width: size, height: size \} : \{\}/);
+    expect(component.content).toMatch(
+      /typeof size === "number" \? \{ width: size, height: size \} : \{\}/,
+    );
 
     const styles = files.find((f) => f.filename === "components/spinner/Spinner.gen.css.ts")!;
     expect(styles.content).toMatch(/const spin = keyframes\(/);
@@ -2253,13 +2631,19 @@ describe("Spinner built-in component", () => {
   });
 
   test("missing Spinner bindings throw MissingDesignTokensError", () => {
-    const ref = defineReferenceTokens({});
+    const ref = defineReferenceTokens({
+      __veColor: tokens.color("#000000"),
+      __veFontFamily: tokens.fontFamily("Arial"),
+    });
     const config = defineConfig({
       tokens: { ref, system: defineSystemTokens({}), components: {} },
       output: {
         target: "vanilla-extract",
         outDir: "dist-test",
         builtInComponents: { Spinner: {} } as never,
+        outlineColor: ref.__veColor,
+        fontFamily: ref.__veFontFamily,
+        placeholderColor: ref.__veColor,
       },
     });
     expect(() => generate(config)).toThrow(MissingDesignTokensError);
@@ -2282,6 +2666,8 @@ describe("Spinner built-in component", () => {
 describe("ProgressBar built-in component", () => {
   function progressBarConfig() {
     const ref = defineReferenceTokens({
+      __veColor: tokens.color("#000000"),
+      __veFontFamily: tokens.fontFamily("Arial"),
       color: { black: tokens.color("#000000"), white: tokens.color("#ffffff") },
     });
     const system = defineSystemTokens({
@@ -2322,6 +2708,9 @@ describe("ProgressBar built-in component", () => {
             },
           },
         },
+        outlineColor: ref.__veColor,
+        fontFamily: ref.__veFontFamily,
+        placeholderColor: ref.__veColor,
       },
     });
   }
@@ -2351,13 +2740,19 @@ describe("ProgressBar built-in component", () => {
   });
 
   test("missing ProgressBar bindings throw MissingDesignTokensError", () => {
-    const ref = defineReferenceTokens({});
+    const ref = defineReferenceTokens({
+      __veColor: tokens.color("#000000"),
+      __veFontFamily: tokens.fontFamily("Arial"),
+    });
     const config = defineConfig({
       tokens: { ref, system: defineSystemTokens({}), components: {} },
       output: {
         target: "vanilla-extract",
         outDir: "dist-test",
         builtInComponents: { ProgressBar: {} } as never,
+        outlineColor: ref.__veColor,
+        fontFamily: ref.__veFontFamily,
+        placeholderColor: ref.__veColor,
       },
     });
     expect(() => generate(config)).toThrow(MissingDesignTokensError);
@@ -2380,6 +2775,8 @@ describe("ProgressBar built-in component", () => {
 describe("Checkbox built-in component", () => {
   function checkboxConfig() {
     const ref = defineReferenceTokens({
+      __veColor: tokens.color("#000000"),
+      __veFontFamily: tokens.fontFamily("Arial"),
       color: { black: tokens.color("#000000"), white: tokens.color("#ffffff") },
       fontSizeScale: tokens.dimensionScale({ sm: "12px", md: "16px" }),
     });
@@ -2414,6 +2811,9 @@ describe("Checkbox built-in component", () => {
             gap: system.spacing.sm,
           },
         },
+        outlineColor: ref.__veColor,
+        fontFamily: ref.__veFontFamily,
+        placeholderColor: ref.__veColor,
       },
     });
   }
@@ -2431,9 +2831,7 @@ describe("Checkbox built-in component", () => {
     expect(component.content).toMatch(
       /import { Checkbox as BaseCheckbox } from "@base-ui\/react\/checkbox";/,
     );
-    expect(component.content).toMatch(
-      /extends CommonComponentProps, FieldableInputProps/,
-    );
+    expect(component.content).toMatch(/extends CommonComponentProps, FieldableInputProps/);
     expect(component.content).toMatch(/indeterminate \? <IndeterminateIcon \/> : <CheckedIcon \/>/);
 
     const renderElementModule = files.find((f) => f.filename === "renderElement.gen.tsx")!;
@@ -2441,13 +2839,19 @@ describe("Checkbox built-in component", () => {
   });
 
   test("missing Checkbox bindings throw MissingDesignTokensError", () => {
-    const ref = defineReferenceTokens({});
+    const ref = defineReferenceTokens({
+      __veColor: tokens.color("#000000"),
+      __veFontFamily: tokens.fontFamily("Arial"),
+    });
     const config = defineConfig({
       tokens: { ref, system: defineSystemTokens({}), components: {} },
       output: {
         target: "vanilla-extract",
         outDir: "dist-test",
         builtInComponents: { Checkbox: {} } as never,
+        outlineColor: ref.__veColor,
+        fontFamily: ref.__veFontFamily,
+        placeholderColor: ref.__veColor,
       },
     });
     expect(() => generate(config)).toThrow(MissingDesignTokensError);
@@ -2470,6 +2874,8 @@ describe("Checkbox built-in component", () => {
 describe("RadioList built-in component", () => {
   function radioListConfig() {
     const ref = defineReferenceTokens({
+      __veColor: tokens.color("#000000"),
+      __veFontFamily: tokens.fontFamily("Arial"),
       color: { black: tokens.color("#000000"), white: tokens.color("#ffffff") },
       fontSizeScale: tokens.dimensionScale({ sm: "12px", md: "16px" }),
     });
@@ -2510,6 +2916,9 @@ describe("RadioList built-in component", () => {
             optionGap: system.spacing.md,
           },
         },
+        outlineColor: ref.__veColor,
+        fontFamily: ref.__veFontFamily,
+        placeholderColor: ref.__veColor,
       },
     });
   }
@@ -2527,19 +2936,27 @@ describe("RadioList built-in component", () => {
     expect(component.content).toMatch(
       /import { RadioGroup as BaseRadioGroup } from "@base-ui\/react\/radio-group";/,
     );
-    expect(component.content).toMatch(/import { Radio as BaseRadio } from "@base-ui\/react\/radio";/);
+    expect(component.content).toMatch(
+      /import { Radio as BaseRadio } from "@base-ui\/react\/radio";/,
+    );
     expect(component.content).toMatch(/options\.map\(\(option\) =>/);
     expect(component.content).toMatch(/extends CommonComponentProps, FieldableInputProps/);
   });
 
   test("missing RadioList bindings throw MissingDesignTokensError", () => {
-    const ref = defineReferenceTokens({});
+    const ref = defineReferenceTokens({
+      __veColor: tokens.color("#000000"),
+      __veFontFamily: tokens.fontFamily("Arial"),
+    });
     const config = defineConfig({
       tokens: { ref, system: defineSystemTokens({}), components: {} },
       output: {
         target: "vanilla-extract",
         outDir: "dist-test",
         builtInComponents: { RadioList: {} } as never,
+        outlineColor: ref.__veColor,
+        fontFamily: ref.__veFontFamily,
+        placeholderColor: ref.__veColor,
       },
     });
     expect(() => generate(config)).toThrow(MissingDesignTokensError);
@@ -2562,6 +2979,8 @@ describe("RadioList built-in component", () => {
 describe("Switch built-in component", () => {
   function switchConfig() {
     const ref = defineReferenceTokens({
+      __veColor: tokens.color("#000000"),
+      __veFontFamily: tokens.fontFamily("Arial"),
       color: { black: tokens.color("#000000"), white: tokens.color("#ffffff") },
     });
     const system = defineSystemTokens({
@@ -2612,6 +3031,9 @@ describe("Switch built-in component", () => {
             },
           },
         },
+        outlineColor: ref.__veColor,
+        fontFamily: ref.__veFontFamily,
+        placeholderColor: ref.__veColor,
       },
     });
   }
@@ -2636,13 +3058,19 @@ describe("Switch built-in component", () => {
   });
 
   test("missing Switch bindings throw MissingDesignTokensError", () => {
-    const ref = defineReferenceTokens({});
+    const ref = defineReferenceTokens({
+      __veColor: tokens.color("#000000"),
+      __veFontFamily: tokens.fontFamily("Arial"),
+    });
     const config = defineConfig({
       tokens: { ref, system: defineSystemTokens({}), components: {} },
       output: {
         target: "vanilla-extract",
         outDir: "dist-test",
         builtInComponents: { Switch: {} } as never,
+        outlineColor: ref.__veColor,
+        fontFamily: ref.__veFontFamily,
+        placeholderColor: ref.__veColor,
       },
     });
     expect(() => generate(config)).toThrow(MissingDesignTokensError);
@@ -2665,6 +3093,8 @@ describe("Switch built-in component", () => {
 describe("Toggle built-in component", () => {
   function toggleConfig() {
     const ref = defineReferenceTokens({
+      __veColor: tokens.color("#000000"),
+      __veFontFamily: tokens.fontFamily("Arial"),
       color: { black: tokens.color("#000000"), white: tokens.color("#ffffff") },
     });
     const system = defineSystemTokens({
@@ -2701,6 +3131,9 @@ describe("Toggle built-in component", () => {
             },
           },
         },
+        outlineColor: ref.__veColor,
+        fontFamily: ref.__veFontFamily,
+        placeholderColor: ref.__veColor,
       },
     });
   }
@@ -2725,13 +3158,19 @@ describe("Toggle built-in component", () => {
   });
 
   test("missing Toggle bindings throw MissingDesignTokensError", () => {
-    const ref = defineReferenceTokens({});
+    const ref = defineReferenceTokens({
+      __veColor: tokens.color("#000000"),
+      __veFontFamily: tokens.fontFamily("Arial"),
+    });
     const config = defineConfig({
       tokens: { ref, system: defineSystemTokens({}), components: {} },
       output: {
         target: "vanilla-extract",
         outDir: "dist-test",
         builtInComponents: { Toggle: {} } as never,
+        outlineColor: ref.__veColor,
+        fontFamily: ref.__veFontFamily,
+        placeholderColor: ref.__veColor,
       },
     });
     expect(() => generate(config)).toThrow(MissingDesignTokensError);
@@ -2754,6 +3193,8 @@ describe("Toggle built-in component", () => {
 describe("Select built-in component", () => {
   function selectConfig() {
     const ref = defineReferenceTokens({
+      __veColor: tokens.color("#000000"),
+      __veFontFamily: tokens.fontFamily("Arial"),
       color: { black: tokens.color("#000000"), white: tokens.color("#ffffff") },
     });
     const system = defineSystemTokens({
@@ -2811,6 +3252,9 @@ describe("Select built-in component", () => {
             itemVerticalSpacing: system.spacing.sm,
           },
         },
+        outlineColor: ref.__veColor,
+        fontFamily: ref.__veFontFamily,
+        placeholderColor: ref.__veColor,
       },
     });
   }
@@ -2835,13 +3279,19 @@ describe("Select built-in component", () => {
   });
 
   test("missing Select bindings throw MissingDesignTokensError", () => {
-    const ref = defineReferenceTokens({});
+    const ref = defineReferenceTokens({
+      __veColor: tokens.color("#000000"),
+      __veFontFamily: tokens.fontFamily("Arial"),
+    });
     const config = defineConfig({
       tokens: { ref, system: defineSystemTokens({}), components: {} },
       output: {
         target: "vanilla-extract",
         outDir: "dist-test",
         builtInComponents: { Select: {} } as never,
+        outlineColor: ref.__veColor,
+        fontFamily: ref.__veFontFamily,
+        placeholderColor: ref.__veColor,
       },
     });
     expect(() => generate(config)).toThrow(MissingDesignTokensError);
@@ -2864,6 +3314,8 @@ describe("Select built-in component", () => {
 describe("Autocomplete built-in component", () => {
   function autocompleteConfig() {
     const ref = defineReferenceTokens({
+      __veColor: tokens.color("#000000"),
+      __veFontFamily: tokens.fontFamily("Arial"),
       color: { black: tokens.color("#000000"), white: tokens.color("#ffffff") },
     });
     const system = defineSystemTokens({
@@ -2935,6 +3387,9 @@ describe("Autocomplete built-in component", () => {
             highlightColor: ref.color.white,
           },
         },
+        outlineColor: ref.__veColor,
+        fontFamily: ref.__veFontFamily,
+        placeholderColor: ref.__veColor,
       },
     });
   }
@@ -2960,13 +3415,19 @@ describe("Autocomplete built-in component", () => {
   });
 
   test("missing Autocomplete bindings throw MissingDesignTokensError", () => {
-    const ref = defineReferenceTokens({});
+    const ref = defineReferenceTokens({
+      __veColor: tokens.color("#000000"),
+      __veFontFamily: tokens.fontFamily("Arial"),
+    });
     const config = defineConfig({
       tokens: { ref, system: defineSystemTokens({}), components: {} },
       output: {
         target: "vanilla-extract",
         outDir: "dist-test",
         builtInComponents: { Autocomplete: {} } as never,
+        outlineColor: ref.__veColor,
+        fontFamily: ref.__veFontFamily,
+        placeholderColor: ref.__veColor,
       },
     });
     expect(() => generate(config)).toThrow(MissingDesignTokensError);
@@ -2989,6 +3450,8 @@ describe("Autocomplete built-in component", () => {
 describe("FileInput built-in component", () => {
   function fileInputConfig() {
     const ref = defineReferenceTokens({
+      __veColor: tokens.color("#000000"),
+      __veFontFamily: tokens.fontFamily("Arial"),
       color: { black: tokens.color("#000000"), white: tokens.color("#ffffff") },
     });
     const system = defineSystemTokens({
@@ -3031,6 +3494,9 @@ describe("FileInput built-in component", () => {
             fileBorderRadius: system.radius.inner,
           },
         },
+        outlineColor: ref.__veColor,
+        fontFamily: ref.__veFontFamily,
+        placeholderColor: ref.__veColor,
       },
     });
   }
@@ -3044,9 +3510,7 @@ describe("FileInput built-in component", () => {
 
   test("FileInput.gen.tsx manages controlled/uncontrolled files with drag/drop and accept/size validation", () => {
     const files = generate(fileInputConfig());
-    const component = files.find(
-      (f) => f.filename === "components/file-input/FileInput.gen.tsx",
-    )!;
+    const component = files.find((f) => f.filename === "components/file-input/FileInput.gen.tsx")!;
     expect(component.content).toMatch(/function matchesAccept\(/);
     expect(component.content).toMatch(/onRejected\?\.\("type", rejectedByType\)/);
     expect(component.content).toMatch(/onRejected\?\.\("size", rejectedBySize\)/);
@@ -3054,13 +3518,19 @@ describe("FileInput built-in component", () => {
   });
 
   test("missing FileInput bindings throw MissingDesignTokensError", () => {
-    const ref = defineReferenceTokens({});
+    const ref = defineReferenceTokens({
+      __veColor: tokens.color("#000000"),
+      __veFontFamily: tokens.fontFamily("Arial"),
+    });
     const config = defineConfig({
       tokens: { ref, system: defineSystemTokens({}), components: {} },
       output: {
         target: "vanilla-extract",
         outDir: "dist-test",
         builtInComponents: { FileInput: {} } as never,
+        outlineColor: ref.__veColor,
+        fontFamily: ref.__veFontFamily,
+        placeholderColor: ref.__veColor,
       },
     });
     expect(() => generate(config)).toThrow(MissingDesignTokensError);
@@ -3083,6 +3553,8 @@ describe("FileInput built-in component", () => {
 describe("Slider built-in component", () => {
   function sliderConfig() {
     const ref = defineReferenceTokens({
+      __veColor: tokens.color("#000000"),
+      __veFontFamily: tokens.fontFamily("Arial"),
       color: { black: tokens.color("#000000"), white: tokens.color("#ffffff") },
     });
     const system = defineSystemTokens({
@@ -3132,6 +3604,9 @@ describe("Slider built-in component", () => {
             valueLabelBackgroundColor: ref.color.black,
           },
         },
+        outlineColor: ref.__veColor,
+        fontFamily: ref.__veFontFamily,
+        placeholderColor: ref.__veColor,
       },
     });
   }
@@ -3154,13 +3629,19 @@ describe("Slider built-in component", () => {
   });
 
   test("missing Slider bindings throw MissingDesignTokensError", () => {
-    const ref = defineReferenceTokens({});
+    const ref = defineReferenceTokens({
+      __veColor: tokens.color("#000000"),
+      __veFontFamily: tokens.fontFamily("Arial"),
+    });
     const config = defineConfig({
       tokens: { ref, system: defineSystemTokens({}), components: {} },
       output: {
         target: "vanilla-extract",
         outDir: "dist-test",
         builtInComponents: { Slider: {} } as never,
+        outlineColor: ref.__veColor,
+        fontFamily: ref.__veFontFamily,
+        placeholderColor: ref.__veColor,
       },
     });
     expect(() => generate(config)).toThrow(MissingDesignTokensError);
@@ -3183,6 +3664,8 @@ describe("Slider built-in component", () => {
 describe("TextInput built-in component", () => {
   function textInputConfig() {
     const ref = defineReferenceTokens({
+      __veColor: tokens.color("#000000"),
+      __veFontFamily: tokens.fontFamily("Arial"),
       color: { black: tokens.color("#000000"), white: tokens.color("#ffffff") },
     });
     const system = defineSystemTokens({
@@ -3222,6 +3705,9 @@ describe("TextInput built-in component", () => {
             affixBackgroundColor: ref.color.white,
           },
         },
+        outlineColor: ref.__veColor,
+        fontFamily: ref.__veFontFamily,
+        placeholderColor: ref.__veColor,
       },
     });
   }
@@ -3242,13 +3728,19 @@ describe("TextInput built-in component", () => {
   });
 
   test("missing TextInput bindings throw MissingDesignTokensError", () => {
-    const ref = defineReferenceTokens({});
+    const ref = defineReferenceTokens({
+      __veColor: tokens.color("#000000"),
+      __veFontFamily: tokens.fontFamily("Arial"),
+    });
     const config = defineConfig({
       tokens: { ref, system: defineSystemTokens({}), components: {} },
       output: {
         target: "vanilla-extract",
         outDir: "dist-test",
         builtInComponents: { TextInput: {} } as never,
+        outlineColor: ref.__veColor,
+        fontFamily: ref.__veFontFamily,
+        placeholderColor: ref.__veColor,
       },
     });
     expect(() => generate(config)).toThrow(MissingDesignTokensError);
@@ -3271,12 +3763,18 @@ describe("TextInput built-in component", () => {
 describe("NumberInput built-in component", () => {
   function numberInputConfig() {
     const ref = defineReferenceTokens({
+      __veColor: tokens.color("#000000"),
+      __veFontFamily: tokens.fontFamily("Arial"),
       color: { black: tokens.color("#000000"), white: tokens.color("#ffffff") },
     });
     const system = defineSystemTokens({
       radius: { element: tokens.dimension("8px") },
       border: { default: tokens.border({ color: ref.color.black, width: "1px" }) },
-      spacing: { sm: tokens.dimension("4px"), md: tokens.dimension("8px"), lg: tokens.dimension("24px") },
+      spacing: {
+        sm: tokens.dimension("4px"),
+        md: tokens.dimension("8px"),
+        lg: tokens.dimension("24px"),
+      },
       textStyles: {
         body: tokens.typography({ fontFamily: "Arial", fontSize: "14px", fontWeight: "regular" }),
       },
@@ -3315,6 +3813,9 @@ describe("NumberInput built-in component", () => {
             stepperWidth: system.spacing.lg,
           },
         },
+        outlineColor: ref.__veColor,
+        fontFamily: ref.__veFontFamily,
+        placeholderColor: ref.__veColor,
       },
     });
   }
@@ -3339,13 +3840,19 @@ describe("NumberInput built-in component", () => {
   });
 
   test("missing NumberInput bindings throw MissingDesignTokensError", () => {
-    const ref = defineReferenceTokens({});
+    const ref = defineReferenceTokens({
+      __veColor: tokens.color("#000000"),
+      __veFontFamily: tokens.fontFamily("Arial"),
+    });
     const config = defineConfig({
       tokens: { ref, system: defineSystemTokens({}), components: {} },
       output: {
         target: "vanilla-extract",
         outDir: "dist-test",
         builtInComponents: { NumberInput: {} } as never,
+        outlineColor: ref.__veColor,
+        fontFamily: ref.__veFontFamily,
+        placeholderColor: ref.__veColor,
       },
     });
     expect(() => generate(config)).toThrow(MissingDesignTokensError);
@@ -3368,6 +3875,8 @@ describe("NumberInput built-in component", () => {
 describe("DateInput built-in component", () => {
   function dateInputConfig() {
     const ref = defineReferenceTokens({
+      __veColor: tokens.color("#000000"),
+      __veFontFamily: tokens.fontFamily("Arial"),
       color: { black: tokens.color("#000000"), white: tokens.color("#ffffff") },
     });
     const system = defineSystemTokens({
@@ -3438,6 +3947,9 @@ describe("DateInput built-in component", () => {
             weekdayColor: ref.color.black,
           },
         },
+        outlineColor: ref.__veColor,
+        fontFamily: ref.__veFontFamily,
+        placeholderColor: ref.__veColor,
       },
     });
   }
@@ -3460,13 +3972,19 @@ describe("DateInput built-in component", () => {
   });
 
   test("missing DateInput bindings throw MissingDesignTokensError", () => {
-    const ref = defineReferenceTokens({});
+    const ref = defineReferenceTokens({
+      __veColor: tokens.color("#000000"),
+      __veFontFamily: tokens.fontFamily("Arial"),
+    });
     const config = defineConfig({
       tokens: { ref, system: defineSystemTokens({}), components: {} },
       output: {
         target: "vanilla-extract",
         outDir: "dist-test",
         builtInComponents: { DateInput: {} } as never,
+        outlineColor: ref.__veColor,
+        fontFamily: ref.__veFontFamily,
+        placeholderColor: ref.__veColor,
       },
     });
     expect(() => generate(config)).toThrow(MissingDesignTokensError);
@@ -3489,6 +4007,8 @@ describe("DateInput built-in component", () => {
 describe("Textarea built-in component", () => {
   function textareaConfig() {
     const ref = defineReferenceTokens({
+      __veColor: tokens.color("#000000"),
+      __veFontFamily: tokens.fontFamily("Arial"),
       color: { black: tokens.color("#000000"), white: tokens.color("#ffffff") },
     });
     const system = defineSystemTokens({
@@ -3538,6 +4058,9 @@ describe("Textarea built-in component", () => {
             resizeHandleColor: ref.color.black,
           },
         },
+        outlineColor: ref.__veColor,
+        fontFamily: ref.__veFontFamily,
+        placeholderColor: ref.__veColor,
       },
     });
   }
@@ -3558,13 +4081,19 @@ describe("Textarea built-in component", () => {
   });
 
   test("missing Textarea bindings throw MissingDesignTokensError", () => {
-    const ref = defineReferenceTokens({});
+    const ref = defineReferenceTokens({
+      __veColor: tokens.color("#000000"),
+      __veFontFamily: tokens.fontFamily("Arial"),
+    });
     const config = defineConfig({
       tokens: { ref, system: defineSystemTokens({}), components: {} },
       output: {
         target: "vanilla-extract",
         outDir: "dist-test",
         builtInComponents: { Textarea: {} } as never,
+        outlineColor: ref.__veColor,
+        fontFamily: ref.__veFontFamily,
+        placeholderColor: ref.__veColor,
       },
     });
     expect(() => generate(config)).toThrow(MissingDesignTokensError);
@@ -3587,6 +4116,8 @@ describe("Textarea built-in component", () => {
 describe("Field built-in component", () => {
   function fieldConfig() {
     const ref = defineReferenceTokens({
+      __veColor: tokens.color("#000000"),
+      __veFontFamily: tokens.fontFamily("Arial"),
       color: { black: tokens.color("#000000"), white: tokens.color("#ffffff") },
     });
     const system = defineSystemTokens({
@@ -3620,6 +4151,9 @@ describe("Field built-in component", () => {
             iconSize: system.spacing.sm,
           },
         },
+        outlineColor: ref.__veColor,
+        fontFamily: ref.__veFontFamily,
+        placeholderColor: ref.__veColor,
       },
     });
   }
@@ -3634,20 +4168,28 @@ describe("Field built-in component", () => {
   test("Field.gen.tsx wraps Base UI's Field with label/description/error rows", () => {
     const files = generate(fieldConfig());
     const component = files.find((f) => f.filename === "components/field/Field.gen.tsx")!;
-    expect(component.content).toMatch(/import { Field as BaseField } from "@base-ui\/react\/field";/);
+    expect(component.content).toMatch(
+      /import { Field as BaseField } from "@base-ui\/react\/field";/,
+    );
     expect(component.content).toMatch(/<BaseField.Label/);
     expect(component.content).toMatch(/<BaseField.Description/);
     expect(component.content).toMatch(/<BaseField.Error/);
   });
 
   test("missing Field bindings throw MissingDesignTokensError", () => {
-    const ref = defineReferenceTokens({});
+    const ref = defineReferenceTokens({
+      __veColor: tokens.color("#000000"),
+      __veFontFamily: tokens.fontFamily("Arial"),
+    });
     const config = defineConfig({
       tokens: { ref, system: defineSystemTokens({}), components: {} },
       output: {
         target: "vanilla-extract",
         outDir: "dist-test",
         builtInComponents: { Field: {} } as never,
+        outlineColor: ref.__veColor,
+        fontFamily: ref.__veFontFamily,
+        placeholderColor: ref.__veColor,
       },
     });
     expect(() => generate(config)).toThrow(MissingDesignTokensError);
@@ -3667,6 +4209,8 @@ describe("Field built-in component", () => {
 describe("Breadcrumb built-in component", () => {
   function breadcrumbConfig() {
     const ref = defineReferenceTokens({
+      __veColor: tokens.color("#000000"),
+      __veFontFamily: tokens.fontFamily("Arial"),
       color: { black: tokens.color("#000000"), white: tokens.color("#ffffff") },
     });
     const system = defineSystemTokens({
@@ -3696,6 +4240,9 @@ describe("Breadcrumb built-in component", () => {
             iconSize: system.spacing.sm,
           },
         },
+        outlineColor: ref.__veColor,
+        fontFamily: ref.__veFontFamily,
+        placeholderColor: ref.__veColor,
       },
     });
   }
@@ -3709,22 +4256,26 @@ describe("Breadcrumb built-in component", () => {
 
   test("Breadcrumb.gen.tsx renders an ordered list with a collapsible overflow trigger", () => {
     const files = generate(breadcrumbConfig());
-    const component = files.find(
-      (f) => f.filename === "components/breadcrumb/Breadcrumb.gen.tsx",
-    )!;
+    const component = files.find((f) => f.filename === "components/breadcrumb/Breadcrumb.gen.tsx")!;
     expect(component.content).toMatch(/renderElement\("nav", render, rootProps/);
     expect(component.content).toMatch(/visibleItems\.map\(\(item, index\) =>/);
     expect(component.content).toMatch(/aria-current="page"/);
   });
 
   test("missing Breadcrumb bindings throw MissingDesignTokensError", () => {
-    const ref = defineReferenceTokens({});
+    const ref = defineReferenceTokens({
+      __veColor: tokens.color("#000000"),
+      __veFontFamily: tokens.fontFamily("Arial"),
+    });
     const config = defineConfig({
       tokens: { ref, system: defineSystemTokens({}), components: {} },
       output: {
         target: "vanilla-extract",
         outDir: "dist-test",
         builtInComponents: { Breadcrumb: {} } as never,
+        outlineColor: ref.__veColor,
+        fontFamily: ref.__veFontFamily,
+        placeholderColor: ref.__veColor,
       },
     });
     expect(() => generate(config)).toThrow(MissingDesignTokensError);
@@ -3747,6 +4298,8 @@ describe("Breadcrumb built-in component", () => {
 describe("Outline built-in component", () => {
   function outlineConfig() {
     const ref = defineReferenceTokens({
+      __veColor: tokens.color("#000000"),
+      __veFontFamily: tokens.fontFamily("Arial"),
       color: { black: tokens.color("#000000"), white: tokens.color("#ffffff") },
     });
     const system = defineSystemTokens({
@@ -3779,6 +4332,9 @@ describe("Outline built-in component", () => {
             itemVerticalSpacing: system.spacing.sm,
           },
         },
+        outlineColor: ref.__veColor,
+        fontFamily: ref.__veFontFamily,
+        placeholderColor: ref.__veColor,
       },
     });
   }
@@ -3799,13 +4355,19 @@ describe("Outline built-in component", () => {
   });
 
   test("missing Outline bindings throw MissingDesignTokensError", () => {
-    const ref = defineReferenceTokens({});
+    const ref = defineReferenceTokens({
+      __veColor: tokens.color("#000000"),
+      __veFontFamily: tokens.fontFamily("Arial"),
+    });
     const config = defineConfig({
       tokens: { ref, system: defineSystemTokens({}), components: {} },
       output: {
         target: "vanilla-extract",
         outDir: "dist-test",
         builtInComponents: { Outline: {} } as never,
+        outlineColor: ref.__veColor,
+        fontFamily: ref.__veFontFamily,
+        placeholderColor: ref.__veColor,
       },
     });
     expect(() => generate(config)).toThrow(MissingDesignTokensError);
@@ -3828,12 +4390,18 @@ describe("Outline built-in component", () => {
 describe("Pagination built-in component", () => {
   function paginationConfig() {
     const ref = defineReferenceTokens({
+      __veColor: tokens.color("#000000"),
+      __veFontFamily: tokens.fontFamily("Arial"),
       color: { black: tokens.color("#000000"), white: tokens.color("#ffffff") },
     });
     const system = defineSystemTokens({
       radius: { inner: tokens.dimension("4px") },
       border: { default: tokens.border({ color: ref.color.black, width: "1px" }) },
-      spacing: { sm: tokens.dimension("4px"), md: tokens.dimension("8px"), lg: tokens.dimension("32px") },
+      spacing: {
+        sm: tokens.dimension("4px"),
+        md: tokens.dimension("8px"),
+        lg: tokens.dimension("32px"),
+      },
       textStyles: {
         body: tokens.typography({ fontFamily: "Arial", fontSize: "14px", fontWeight: "regular" }),
         supporting: tokens.typography({
@@ -3873,6 +4441,9 @@ describe("Pagination built-in component", () => {
             },
           },
         },
+        outlineColor: ref.__veColor,
+        fontFamily: ref.__veFontFamily,
+        placeholderColor: ref.__veColor,
       },
     });
   }
@@ -3886,9 +4457,7 @@ describe("Pagination built-in component", () => {
 
   test("Pagination.gen.tsx computes a sibling/boundary range with ellipses", () => {
     const files = generate(paginationConfig());
-    const component = files.find(
-      (f) => f.filename === "components/pagination/Pagination.gen.tsx",
-    )!;
+    const component = files.find((f) => f.filename === "components/pagination/Pagination.gen.tsx")!;
     expect(component.content).toMatch(/function getPaginationRange\(/);
     expect(component.content).toMatch(/"start-ellipsis"/);
     expect(component.content).toMatch(/"end-ellipsis"/);
@@ -3896,13 +4465,19 @@ describe("Pagination built-in component", () => {
   });
 
   test("missing Pagination bindings throw MissingDesignTokensError", () => {
-    const ref = defineReferenceTokens({});
+    const ref = defineReferenceTokens({
+      __veColor: tokens.color("#000000"),
+      __veFontFamily: tokens.fontFamily("Arial"),
+    });
     const config = defineConfig({
       tokens: { ref, system: defineSystemTokens({}), components: {} },
       output: {
         target: "vanilla-extract",
         outDir: "dist-test",
         builtInComponents: { Pagination: {} } as never,
+        outlineColor: ref.__veColor,
+        fontFamily: ref.__veFontFamily,
+        placeholderColor: ref.__veColor,
       },
     });
     expect(() => generate(config)).toThrow(MissingDesignTokensError);
@@ -3925,6 +4500,8 @@ describe("Pagination built-in component", () => {
 describe("Tabs built-in component", () => {
   function tabsConfig() {
     const ref = defineReferenceTokens({
+      __veColor: tokens.color("#000000"),
+      __veFontFamily: tokens.fontFamily("Arial"),
       color: { black: tokens.color("#000000"), white: tokens.color("#ffffff") },
     });
     const system = defineSystemTokens({
@@ -3967,6 +4544,9 @@ describe("Tabs built-in component", () => {
             },
           },
         },
+        outlineColor: ref.__veColor,
+        fontFamily: ref.__veFontFamily,
+        placeholderColor: ref.__veColor,
       },
     });
   }
@@ -3990,13 +4570,19 @@ describe("Tabs built-in component", () => {
   });
 
   test("missing Tabs bindings throw MissingDesignTokensError", () => {
-    const ref = defineReferenceTokens({});
+    const ref = defineReferenceTokens({
+      __veColor: tokens.color("#000000"),
+      __veFontFamily: tokens.fontFamily("Arial"),
+    });
     const config = defineConfig({
       tokens: { ref, system: defineSystemTokens({}), components: {} },
       output: {
         target: "vanilla-extract",
         outDir: "dist-test",
         builtInComponents: { Tabs: {} } as never,
+        outlineColor: ref.__veColor,
+        fontFamily: ref.__veFontFamily,
+        placeholderColor: ref.__veColor,
       },
     });
     expect(() => generate(config)).toThrow(MissingDesignTokensError);
@@ -4016,6 +4602,8 @@ describe("Tabs built-in component", () => {
 describe("Steps built-in component", () => {
   function stepsConfig() {
     const ref = defineReferenceTokens({
+      __veColor: tokens.color("#000000"),
+      __veFontFamily: tokens.fontFamily("Arial"),
       color: { black: tokens.color("#000000"), white: tokens.color("#ffffff") },
     });
     const system = defineSystemTokens({
@@ -4066,6 +4654,9 @@ describe("Steps built-in component", () => {
             },
           },
         },
+        outlineColor: ref.__veColor,
+        fontFamily: ref.__veFontFamily,
+        placeholderColor: ref.__veColor,
       },
     });
   }
@@ -4088,13 +4679,19 @@ describe("Steps built-in component", () => {
   });
 
   test("missing Steps bindings throw MissingDesignTokensError", () => {
-    const ref = defineReferenceTokens({});
+    const ref = defineReferenceTokens({
+      __veColor: tokens.color("#000000"),
+      __veFontFamily: tokens.fontFamily("Arial"),
+    });
     const config = defineConfig({
       tokens: { ref, system: defineSystemTokens({}), components: {} },
       output: {
         target: "vanilla-extract",
         outDir: "dist-test",
         builtInComponents: { Steps: {} } as never,
+        outlineColor: ref.__veColor,
+        fontFamily: ref.__veFontFamily,
+        placeholderColor: ref.__veColor,
       },
     });
     expect(() => generate(config)).toThrow(MissingDesignTokensError);
@@ -4114,6 +4711,8 @@ describe("Steps built-in component", () => {
 describe("Dialog built-in component", () => {
   function dialogConfig() {
     const ref = defineReferenceTokens({
+      __veColor: tokens.color("#000000"),
+      __veFontFamily: tokens.fontFamily("Arial"),
       color: { black: tokens.color("#000000"), white: tokens.color("#ffffff") },
       overlayWidth: {
         sm: tokens.dimension("24rem"),
@@ -4172,6 +4771,9 @@ describe("Dialog built-in component", () => {
             },
           },
         },
+        outlineColor: ref.__veColor,
+        fontFamily: ref.__veFontFamily,
+        placeholderColor: ref.__veColor,
       },
     });
   }
@@ -4186,7 +4788,9 @@ describe("Dialog built-in component", () => {
   test("Dialog.gen.tsx wraps Base UI's Dialog with a fixed sm/md/lg/fullscreen size union", () => {
     const files = generate(dialogConfig());
     const component = files.find((f) => f.filename === "components/dialog/Dialog.gen.tsx")!;
-    expect(component.content).toMatch(/import { Dialog as BaseDialog } from "@base-ui\/react\/dialog";/);
+    expect(component.content).toMatch(
+      /import { Dialog as BaseDialog } from "@base-ui\/react\/dialog";/,
+    );
     expect(component.content).toMatch(
       /export type DialogSize = "sm" \| "md" \| "lg" \| "fullscreen";/,
     );
@@ -4197,13 +4801,19 @@ describe("Dialog built-in component", () => {
   });
 
   test("missing Dialog bindings throw MissingDesignTokensError", () => {
-    const ref = defineReferenceTokens({});
+    const ref = defineReferenceTokens({
+      __veColor: tokens.color("#000000"),
+      __veFontFamily: tokens.fontFamily("Arial"),
+    });
     const config = defineConfig({
       tokens: { ref, system: defineSystemTokens({}), components: {} },
       output: {
         target: "vanilla-extract",
         outDir: "dist-test",
         builtInComponents: { Dialog: {} } as never,
+        outlineColor: ref.__veColor,
+        fontFamily: ref.__veFontFamily,
+        placeholderColor: ref.__veColor,
       },
     });
     expect(() => generate(config)).toThrow(MissingDesignTokensError);
@@ -4226,6 +4836,8 @@ describe("Dialog built-in component", () => {
 describe("Drawer built-in component", () => {
   function drawerConfig() {
     const ref = defineReferenceTokens({
+      __veColor: tokens.color("#000000"),
+      __veFontFamily: tokens.fontFamily("Arial"),
       color: { black: tokens.color("#000000"), white: tokens.color("#ffffff") },
       overlayWidth: {
         sm: tokens.dimension("16rem"),
@@ -4281,6 +4893,9 @@ describe("Drawer built-in component", () => {
             },
           },
         },
+        outlineColor: ref.__veColor,
+        fontFamily: ref.__veFontFamily,
+        placeholderColor: ref.__veColor,
       },
     });
   }
@@ -4295,7 +4910,9 @@ describe("Drawer built-in component", () => {
   test("Drawer.gen.tsx wraps Base UI's Dialog with edge placement and a fixed sm/md/lg/full size union", () => {
     const files = generate(drawerConfig());
     const component = files.find((f) => f.filename === "components/drawer/Drawer.gen.tsx")!;
-    expect(component.content).toMatch(/import { Dialog as BaseDialog } from "@base-ui\/react\/dialog";/);
+    expect(component.content).toMatch(
+      /import { Dialog as BaseDialog } from "@base-ui\/react\/dialog";/,
+    );
     expect(component.content).toMatch(/export type DrawerSize = "sm" \| "md" \| "lg" \| "full";/);
     expect(component.content).toMatch(/placement === "left" \|\| placement === "right"/);
 
@@ -4304,13 +4921,19 @@ describe("Drawer built-in component", () => {
   });
 
   test("missing Drawer bindings throw MissingDesignTokensError", () => {
-    const ref = defineReferenceTokens({});
+    const ref = defineReferenceTokens({
+      __veColor: tokens.color("#000000"),
+      __veFontFamily: tokens.fontFamily("Arial"),
+    });
     const config = defineConfig({
       tokens: { ref, system: defineSystemTokens({}), components: {} },
       output: {
         target: "vanilla-extract",
         outDir: "dist-test",
         builtInComponents: { Drawer: {} } as never,
+        outlineColor: ref.__veColor,
+        fontFamily: ref.__veFontFamily,
+        placeholderColor: ref.__veColor,
       },
     });
     expect(() => generate(config)).toThrow(MissingDesignTokensError);
@@ -4333,6 +4956,8 @@ describe("Drawer built-in component", () => {
 describe("Tooltip built-in component", () => {
   function tooltipConfig() {
     const ref = defineReferenceTokens({
+      __veColor: tokens.color("#000000"),
+      __veFontFamily: tokens.fontFamily("Arial"),
       color: { black: tokens.color("#000000"), white: tokens.color("#ffffff") },
     });
     const system = defineSystemTokens({
@@ -4380,6 +5005,9 @@ describe("Tooltip built-in component", () => {
             transition: system.transitions.standard,
           },
         },
+        outlineColor: ref.__veColor,
+        fontFamily: ref.__veFontFamily,
+        placeholderColor: ref.__veColor,
       },
     });
   }
@@ -4402,13 +5030,19 @@ describe("Tooltip built-in component", () => {
   });
 
   test("missing Tooltip bindings throw MissingDesignTokensError", () => {
-    const ref = defineReferenceTokens({});
+    const ref = defineReferenceTokens({
+      __veColor: tokens.color("#000000"),
+      __veFontFamily: tokens.fontFamily("Arial"),
+    });
     const config = defineConfig({
       tokens: { ref, system: defineSystemTokens({}), components: {} },
       output: {
         target: "vanilla-extract",
         outDir: "dist-test",
         builtInComponents: { Tooltip: {} } as never,
+        outlineColor: ref.__veColor,
+        fontFamily: ref.__veFontFamily,
+        placeholderColor: ref.__veColor,
       },
     });
     expect(() => generate(config)).toThrow(MissingDesignTokensError);
@@ -4431,6 +5065,8 @@ describe("Tooltip built-in component", () => {
 describe("Popover built-in component", () => {
   function popoverConfig() {
     const ref = defineReferenceTokens({
+      __veColor: tokens.color("#000000"),
+      __veFontFamily: tokens.fontFamily("Arial"),
       color: { black: tokens.color("#000000"), white: tokens.color("#ffffff") },
     });
     const system = defineSystemTokens({
@@ -4471,6 +5107,9 @@ describe("Popover built-in component", () => {
             transition: system.transitions.standard,
           },
         },
+        outlineColor: ref.__veColor,
+        fontFamily: ref.__veFontFamily,
+        placeholderColor: ref.__veColor,
       },
     });
   }
@@ -4493,13 +5132,19 @@ describe("Popover built-in component", () => {
   });
 
   test("missing Popover bindings throw MissingDesignTokensError", () => {
-    const ref = defineReferenceTokens({});
+    const ref = defineReferenceTokens({
+      __veColor: tokens.color("#000000"),
+      __veFontFamily: tokens.fontFamily("Arial"),
+    });
     const config = defineConfig({
       tokens: { ref, system: defineSystemTokens({}), components: {} },
       output: {
         target: "vanilla-extract",
         outDir: "dist-test",
         builtInComponents: { Popover: {} } as never,
+        outlineColor: ref.__veColor,
+        fontFamily: ref.__veFontFamily,
+        placeholderColor: ref.__veColor,
       },
     });
     expect(() => generate(config)).toThrow(MissingDesignTokensError);
@@ -4522,6 +5167,8 @@ describe("Popover built-in component", () => {
 describe("Toast built-in component", () => {
   function toastConfig() {
     const ref = defineReferenceTokens({
+      __veColor: tokens.color("#000000"),
+      __veFontFamily: tokens.fontFamily("Arial"),
       color: { black: tokens.color("#000000"), white: tokens.color("#ffffff") },
     });
     const system = defineSystemTokens({
@@ -4589,6 +5236,9 @@ describe("Toast built-in component", () => {
             },
           },
         },
+        outlineColor: ref.__veColor,
+        fontFamily: ref.__veFontFamily,
+        placeholderColor: ref.__veColor,
       },
     });
   }
@@ -4603,7 +5253,9 @@ describe("Toast built-in component", () => {
   test("Toast.gen.tsx exports both ToastProvider and a useToast hook wrapping Base UI's toast manager", () => {
     const files = generate(toastConfig());
     const component = files.find((f) => f.filename === "components/toast/Toast.gen.tsx")!;
-    expect(component.content).toMatch(/import { Toast as BaseToast } from "@base-ui\/react\/toast";/);
+    expect(component.content).toMatch(
+      /import { Toast as BaseToast } from "@base-ui\/react\/toast";/,
+    );
     expect(component.content).toMatch(/export function ToastProvider\(/);
     expect(component.content).toMatch(/export function useToast\(\): UseToastReturn/);
     expect(component.content).toMatch(/BaseToast\.useToastManager\(\)/);
@@ -4612,13 +5264,19 @@ describe("Toast built-in component", () => {
   });
 
   test("missing Toast bindings throw MissingDesignTokensError", () => {
-    const ref = defineReferenceTokens({});
+    const ref = defineReferenceTokens({
+      __veColor: tokens.color("#000000"),
+      __veFontFamily: tokens.fontFamily("Arial"),
+    });
     const config = defineConfig({
       tokens: { ref, system: defineSystemTokens({}), components: {} },
       output: {
         target: "vanilla-extract",
         outDir: "dist-test",
         builtInComponents: { Toast: {} } as never,
+        outlineColor: ref.__veColor,
+        fontFamily: ref.__veFontFamily,
+        placeholderColor: ref.__veColor,
       },
     });
     expect(() => generate(config)).toThrow(MissingDesignTokensError);
@@ -4638,6 +5296,8 @@ describe("Toast built-in component", () => {
 describe("MetadataList built-in component", () => {
   function metadataListConfig() {
     const ref = defineReferenceTokens({
+      __veColor: tokens.color("#000000"),
+      __veFontFamily: tokens.fontFamily("Arial"),
       color: { black: tokens.color("#000000"), white: tokens.color("#ffffff") },
       gapScale: tokens.dimensionScale({ sm: "4px", md: "8px" }),
     });
@@ -4671,6 +5331,9 @@ describe("MetadataList built-in component", () => {
             divider: system.border.default,
           },
         },
+        outlineColor: ref.__veColor,
+        fontFamily: ref.__veFontFamily,
+        placeholderColor: ref.__veColor,
       },
     });
   }
@@ -4694,13 +5357,19 @@ describe("MetadataList built-in component", () => {
   });
 
   test("missing MetadataList bindings throw MissingDesignTokensError", () => {
-    const ref = defineReferenceTokens({});
+    const ref = defineReferenceTokens({
+      __veColor: tokens.color("#000000"),
+      __veFontFamily: tokens.fontFamily("Arial"),
+    });
     const config = defineConfig({
       tokens: { ref, system: defineSystemTokens({}), components: {} },
       output: {
         target: "vanilla-extract",
         outDir: "dist-test",
         builtInComponents: { MetadataList: {} } as never,
+        outlineColor: ref.__veColor,
+        fontFamily: ref.__veFontFamily,
+        placeholderColor: ref.__veColor,
       },
     });
     expect(() => generate(config)).toThrow(MissingDesignTokensError);
@@ -4723,6 +5392,8 @@ describe("MetadataList built-in component", () => {
 describe("TreeList built-in component", () => {
   function treeListConfig() {
     const ref = defineReferenceTokens({
+      __veColor: tokens.color("#000000"),
+      __veFontFamily: tokens.fontFamily("Arial"),
       color: { black: tokens.color("#000000"), white: tokens.color("#ffffff") },
     });
     const system = defineSystemTokens({
@@ -4755,6 +5426,9 @@ describe("TreeList built-in component", () => {
             iconColor: ref.color.black,
           },
         },
+        outlineColor: ref.__veColor,
+        fontFamily: ref.__veFontFamily,
+        placeholderColor: ref.__veColor,
       },
     });
   }
@@ -4771,18 +5445,26 @@ describe("TreeList built-in component", () => {
     const component = files.find((f) => f.filename === "components/tree-list/TreeList.gen.tsx")!;
     expect(component.content).toMatch(/role: "tree",/);
     expect(component.content).toMatch(/role="treeitem"/);
-    expect(component.content).toMatch(/const \[uncontrolledExpandedIds, setUncontrolledExpandedIds\]/);
+    expect(component.content).toMatch(
+      /const \[uncontrolledExpandedIds, setUncontrolledExpandedIds\]/,
+    );
     expect(component.content).toMatch(/function TreeListGroup<Value>\(/);
   });
 
   test("missing TreeList bindings throw MissingDesignTokensError", () => {
-    const ref = defineReferenceTokens({});
+    const ref = defineReferenceTokens({
+      __veColor: tokens.color("#000000"),
+      __veFontFamily: tokens.fontFamily("Arial"),
+    });
     const config = defineConfig({
       tokens: { ref, system: defineSystemTokens({}), components: {} },
       output: {
         target: "vanilla-extract",
         outDir: "dist-test",
         builtInComponents: { TreeList: {} } as never,
+        outlineColor: ref.__veColor,
+        fontFamily: ref.__veFontFamily,
+        placeholderColor: ref.__veColor,
       },
     });
     expect(() => generate(config)).toThrow(MissingDesignTokensError);
@@ -4805,6 +5487,8 @@ describe("TreeList built-in component", () => {
 describe("Timeline built-in component", () => {
   function timelineConfig() {
     const ref = defineReferenceTokens({
+      __veColor: tokens.color("#000000"),
+      __veFontFamily: tokens.fontFamily("Arial"),
       color: { black: tokens.color("#000000"), white: tokens.color("#ffffff") },
     });
     const system = defineSystemTokens({
@@ -4854,6 +5538,9 @@ describe("Timeline built-in component", () => {
             },
           },
         },
+        outlineColor: ref.__veColor,
+        fontFamily: ref.__veFontFamily,
+        placeholderColor: ref.__veColor,
       },
     });
   }
@@ -4875,13 +5562,19 @@ describe("Timeline built-in component", () => {
   });
 
   test("missing Timeline bindings throw MissingDesignTokensError", () => {
-    const ref = defineReferenceTokens({});
+    const ref = defineReferenceTokens({
+      __veColor: tokens.color("#000000"),
+      __veFontFamily: tokens.fontFamily("Arial"),
+    });
     const config = defineConfig({
       tokens: { ref, system: defineSystemTokens({}), components: {} },
       output: {
         target: "vanilla-extract",
         outDir: "dist-test",
         builtInComponents: { Timeline: {} } as never,
+        outlineColor: ref.__veColor,
+        fontFamily: ref.__veFontFamily,
+        placeholderColor: ref.__veColor,
       },
     });
     expect(() => generate(config)).toThrow(MissingDesignTokensError);

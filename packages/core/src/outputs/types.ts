@@ -1,4 +1,4 @@
-import type { ScaleBinding } from "../tokens/model.js";
+import type { ScaleBinding, TokenBinding } from "../tokens/model.js";
 
 export type BuiltInComponentsInput =
   | Record<string, Record<string, unknown> | undefined>
@@ -13,7 +13,9 @@ export interface VanillaExtractOutput {
   target: "vanilla-extract";
   outDir: string;
   builtInComponents?: BuiltInComponentsInput;
-  cssReset?: boolean;
+  outlineColor: false | TokenBinding<"color">;
+  fontFamily: TokenBinding<"fontFamily">;
+  placeholderColor: TokenBinding<"color">;
   breakpoints?: ScaleBinding<"dimension">;
 }
 export interface TypeScriptOutput {

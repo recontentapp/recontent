@@ -443,18 +443,37 @@ export const vanillaExtractOutputProcessor: OutputProcessor<VanillaExtractOutput
       }
     }
 
+    const fontFamilyBinding = resolveTokenBinding(
+      config.registry,
+      output.fontFamily,
+      "fontFamily",
+      "fontFamily",
+    );
+    const placeholderColorBinding = resolveTokenBinding(
+      config.registry,
+      output.placeholderColor,
+      "color",
+      "placeholderColor",
+    );
+    const outlineColorBinding =
+      output.outlineColor === false
+        ? false
+        : resolveTokenBinding(config.registry, output.outlineColor, "color", "outlineColor");
+
     const files: OutputFile[] = [
       {
         filename: "tokens.css.ts",
         content: generateVanillaExtractSource(config, scaleExports),
       },
-    ];
-    if (output.cssReset) {
-      files.push({
+      {
         filename: "reset.gen.css.ts",
-        content: generateCssResetSource(),
-      });
-    }
+        content: generateCssResetSource({
+          outlineColor: outlineColorBinding === false ? false : outlineColorBinding.reference,
+          fontFamily: fontFamilyBinding.reference,
+          placeholderColor: placeholderColorBinding.reference,
+        }),
+      },
+    ];
     if (builtInComponents.length > 0) {
       files.push(
         ...generateBuiltInComponentFiles(builtInComponents, "vanilla-extract", {

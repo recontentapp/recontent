@@ -1,5 +1,14 @@
-export function generateCssResetSource(): string {
+export interface CssResetOptions {
+  outlineColor: string | false;
+  fontFamily: string;
+  placeholderColor: string;
+}
+
+export function generateCssResetSource(options: CssResetOptions): string {
+  const { outlineColor, fontFamily, placeholderColor } = options;
+
   return `import { globalStyle } from "@vanilla-extract/css";
+import { vars } from "./tokens.css";
 
 globalStyle("*, *::before, *::after", {
   boxSizing: "border-box",
@@ -20,6 +29,7 @@ globalStyle("html", {
 globalStyle("body", {
   lineHeight: 1.5,
   WebkitFontSmoothing: "antialiased",
+  fontFamily: ${fontFamily},
 });
 
 globalStyle("img, picture, video, canvas, svg", {
@@ -42,5 +52,17 @@ globalStyle("p", {
 globalStyle("h1, h2, h3, h4, h5, h6", {
   textWrap: "balance",
 });
-`;
+
+globalStyle("::placeholder", {
+  color: ${placeholderColor},
+});
+${
+  outlineColor === false
+    ? ""
+    : `
+globalStyle(":focus-visible", {
+  outlineColor: ${outlineColor},
+});
+`
+}`;
 }

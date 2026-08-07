@@ -10,8 +10,6 @@ import {
   type OutputInput,
 } from "../../src/index.js";
 
-const VE: OutputInput = { target: "vanilla-extract", outDir: "dist-test" };
-
 /**
  * Parses generated vanilla-extract source with the TS parser and asserts it
  * has no syntax errors - catches quoting/escaping regressions the content
@@ -91,14 +89,25 @@ export function assertTypechecks(source: string, fileName = "tokens.ts"): void {
  * A 3-hop alias chain: component -> system -> ref, all resolving to the same
  * color. Exercises reference preservation across every layer.
  */
-export function aliasChainConfig(output: OutputInput = VE): Config {
-  const ref = defineReferenceTokens({ color: { black: tokens.color("#000000") } });
+export function aliasChainConfig(output?: OutputInput): Config {
+  const ref = defineReferenceTokens({
+    color: { black: tokens.color("#000000") },
+    fontFamily: { body: tokens.fontFamily("Arial") },
+  });
   const system = defineSystemTokens({ colors: { accent: ref.color.black } });
   const components = defineComponentTokens({ button: { background: system.colors.accent } });
 
+  const resolvedOutput: OutputInput = output ?? {
+    target: "vanilla-extract",
+    outDir: "dist-test",
+    outlineColor: ref.color.black,
+    fontFamily: ref.fontFamily.body,
+    placeholderColor: ref.color.black,
+  };
+
   return defineConfig({
     tokens: { ref, system, components },
-    output,
+    output: resolvedOutput,
   });
 }
 
@@ -106,7 +115,7 @@ export function aliasChainConfig(output: OutputInput = VE): Config {
  * One token of each of the 5 composite types (shadow, border, transition,
  * gradient, typography), each aliasing a ref color/fontFamily where relevant.
  */
-export function compositeConfig(output: OutputInput = VE): Config {
+export function compositeConfig(output?: OutputInput): Config {
   const ref = defineReferenceTokens({
     color: { black: tokens.color("#000000") },
     fontFamily: { body: tokens.fontFamily("Arial") },
@@ -144,9 +153,17 @@ export function compositeConfig(output: OutputInput = VE): Config {
     },
   });
 
+  const resolvedOutput: OutputInput = output ?? {
+    target: "vanilla-extract",
+    outDir: "dist-test",
+    outlineColor: ref.color.black,
+    fontFamily: ref.fontFamily.body,
+    placeholderColor: ref.color.black,
+  };
+
   return defineConfig({
     tokens: { ref, system, components: {} },
-    output,
+    output: resolvedOutput,
   });
 }
 
@@ -154,15 +171,25 @@ export function compositeConfig(output: OutputInput = VE): Config {
  * A dimensionScale with a non-identifier key ("0-5") and a colorScale with a
  * numeric key (200), both at the ref layer.
  */
-export function scaleConfig(output: OutputInput = VE): Config {
+export function scaleConfig(output?: OutputInput): Config {
   const ref = defineReferenceTokens({
     spacing: tokens.dimensionScale({ 0: "0px", "0-5": "2px", 1: "4px" }),
     colors: tokens.colorScale({ 100: "#111111", 200: "#222222" }),
+    color: { black: tokens.color("#000000") },
+    fontFamily: { body: tokens.fontFamily("Arial") },
   });
+
+  const resolvedOutput: OutputInput = output ?? {
+    target: "vanilla-extract",
+    outDir: "dist-test",
+    outlineColor: ref.color.black,
+    fontFamily: ref.fontFamily.body,
+    placeholderColor: ref.color.black,
+  };
 
   return defineConfig({
     tokens: { ref, system: defineSystemTokens({}), components: {} },
-    output,
+    output: resolvedOutput,
   });
 }
 
@@ -174,7 +201,10 @@ export function themedConfig(options: {
   layer: "ref" | "system" | "components";
   output?: OutputInput;
 }): Config {
-  const ref = defineReferenceTokens({ color: { black: tokens.color("#000000") } });
+  const ref = defineReferenceTokens({
+    color: { black: tokens.color("#000000") },
+    fontFamily: { body: tokens.fontFamily("Arial") },
+  });
   const system = defineSystemTokens({ colors: { accent: ref.color.black } });
   const components = defineComponentTokens({ button: { background: system.colors.accent } });
 
@@ -187,9 +217,17 @@ export function themedConfig(options: {
     dark = defineTheme(components, { button: { background: tokens.color("#111111") } });
   }
 
+  const resolvedOutput: OutputInput = options.output ?? {
+    target: "vanilla-extract",
+    outDir: "dist-test",
+    outlineColor: ref.color.black,
+    fontFamily: ref.fontFamily.body,
+    placeholderColor: ref.color.black,
+  };
+
   return defineConfig({
     tokens: { ref, system, components },
     themes: { dark },
-    output: options.output ?? VE,
+    output: resolvedOutput,
   });
 }

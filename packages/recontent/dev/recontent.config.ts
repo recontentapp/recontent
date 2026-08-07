@@ -304,7 +304,9 @@ export default defineConfig({
     {
       target: "vanilla-extract",
       outDir: "dev/generated/vanilla-extract",
-      cssReset: true,
+      outlineColor: system.colors.accent,
+      fontFamily: system.typography.bodyFontFamily,
+      placeholderColor: system.colors.textSecondary,
       breakpoints: tokens.dimensionScale({ base: "0px", md: "48rem", lg: "80rem" }),
       builtInComponents: {
         Box: {

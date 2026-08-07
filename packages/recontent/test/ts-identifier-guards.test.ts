@@ -18,7 +18,10 @@ import type {
 } from "@recontentapp/core";
 
 function configWithTheme(themeName: string, output: OutputInput): Config {
-  const ref = defineReferenceTokens({ color: { black: tokens.color("#000000") } });
+  const ref = defineReferenceTokens({
+    color: { black: tokens.color("#000000") },
+    fontFamily: { body: tokens.fontFamily("Arial") },
+  });
   const theme = defineTheme(ref, { color: { black: tokens.color("#111111") } });
   return defineConfig({
     tokens: { ref, system: defineSystemTokens({}), components: {} },
@@ -85,7 +88,17 @@ describe("typescript-native target", () => {
 });
 
 describe("vanilla-extract is unaffected by the new guards", () => {
-  const VE: VanillaExtractOutput = { target: "vanilla-extract", outDir: "dist-test" };
+  const veRef = defineReferenceTokens({
+    color: { black: tokens.color("#000000") },
+    fontFamily: { body: tokens.fontFamily("Arial") },
+  });
+  const VE: VanillaExtractOutput = {
+    target: "vanilla-extract",
+    outDir: "dist-test",
+    outlineColor: veRef.color.black,
+    fontFamily: veRef.fontFamily.body,
+    placeholderColor: veRef.color.black,
+  };
 
   test('a theme named "dark-mode" does not throw for vanilla-extract', () => {
     const config = configWithTheme("dark-mode", VE as OutputInput);
