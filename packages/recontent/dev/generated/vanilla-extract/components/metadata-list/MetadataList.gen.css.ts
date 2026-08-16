@@ -25,39 +25,39 @@ export const metadataListItemHorizontal = style({
   display: "flex",
   alignItems: "baseline",
   justifyContent: "space-between",
-  gap: vars.ref.spacing[1],
+  gap: vars.ref.spacing[4],
 });
 
 export const metadataListItemVertical = style({
   display: "flex",
   flexDirection: "column",
-  gap: vars.ref.spacing[1],
+  gap: vars.ref.spacing[4],
 });
 
 export const metadataListLabelRow = style({
   display: "inline-flex",
   alignItems: "center",
-  gap: vars.ref.spacing[1],
+  gap: vars.ref.spacing[4],
 });
 
 export const metadataListLabel = style({
   margin: 0,
   color: vars.system.colors.textSecondary,
-  fontFamily: vars.system.textScale.supporting.fontFamily,
-      fontSize: vars.system.textScale.supporting.fontSize,
-      fontWeight: vars.system.textScale.supporting.fontWeight,
-      letterSpacing: vars.system.textScale.supporting.letterSpacing,
-      lineHeight: vars.system.textScale.supporting.lineHeight,
+  fontFamily: vars.system.textScale["tiny-caption"].fontFamily,
+      fontSize: vars.system.textScale["tiny-caption"].fontSize,
+      fontWeight: vars.system.textScale["tiny-caption"].fontWeight,
+      letterSpacing: vars.system.textScale["tiny-caption"].letterSpacing,
+      lineHeight: vars.system.textScale["tiny-caption"].lineHeight,
 });
 
 export const metadataListValue = style({
   margin: 0,
   color: vars.system.colors.textPrimary,
-  fontFamily: vars.system.textStyles.body.fontFamily,
-      fontSize: vars.system.textStyles.body.fontSize,
-      fontWeight: vars.system.textStyles.body.fontWeight,
-      letterSpacing: vars.system.textStyles.body.letterSpacing,
-      lineHeight: vars.system.textStyles.body.lineHeight,
+  fontFamily: vars.system.textScale["paragraph-body-m"].fontFamily,
+      fontSize: vars.system.textScale["paragraph-body-m"].fontSize,
+      fontWeight: vars.system.textScale["paragraph-body-m"].fontWeight,
+      letterSpacing: vars.system.textScale["paragraph-body-m"].letterSpacing,
+      lineHeight: vars.system.textScale["paragraph-body-m"].lineHeight,
 });
 
 export const metadataListIcon = style({

@@ -6,7 +6,7 @@ const fadeIn = keyframes({ from: { opacity: 0 }, to: { opacity: 1 } });
 export const drawerBackdrop = style({
   position: "fixed",
   inset: 0,
-  backgroundColor: vars.ref.color.gray950,
+  backgroundColor: vars.ref.color.secondary[900],
   zIndex: 60,
   selectors: {
     "&[data-starting-style], &[data-ending-style]": {
@@ -14,8 +14,8 @@ export const drawerBackdrop = style({
     },
   },
   animationName: fadeIn,
-  animationDuration: vars.system.transitions.medium.transitionDuration,
-  animationTimingFunction: vars.system.transitions.medium.transitionTimingFunction,
+  animationDuration: vars.system.transitionScale.fast.transitionDuration,
+  animationTimingFunction: vars.system.transitionScale.fast.transitionTimingFunction,
 });
 
 export const drawerPopup = style({
@@ -24,17 +24,17 @@ export const drawerPopup = style({
   display: "flex",
   flexDirection: "column",
   zIndex: 60,
-  gap: vars.ref.spacing[2],
+  gap: vars.ref.spacing[8],
   backgroundColor: vars.system.colors.backgroundSurface,
   border: vars.system.border.default,
-  boxShadow: vars.system.elevation.md,
-  paddingLeft: vars.ref.spacing[6],
-  paddingRight: vars.ref.spacing[6],
-  paddingTop: vars.ref.spacing[4],
-  paddingBottom: vars.ref.spacing[4],
+  boxShadow: vars.system.elevationScale.md,
+  paddingLeft: vars.ref.spacing[24],
+  paddingRight: vars.ref.spacing[24],
+  paddingTop: vars.ref.spacing[16],
+  paddingBottom: vars.ref.spacing[16],
   transitionProperty: "translate, opacity",
-  transitionDuration: vars.system.transitions.medium.transitionDuration,
-  transitionTimingFunction: vars.system.transitions.medium.transitionTimingFunction,
+  transitionDuration: vars.system.transitionScale.fast.transitionDuration,
+  transitionTimingFunction: vars.system.transitionScale.fast.transitionTimingFunction,
   selectors: {
     "&[data-starting-style], &[data-ending-style]": {
       opacity: 0,
@@ -119,17 +119,17 @@ export const drawerHeader = style({
   display: "flex",
   alignItems: "flex-start",
   justifyContent: "space-between",
-  gap: vars.ref.spacing[2],
+  gap: vars.ref.spacing[8],
 });
 
 export const drawerTitle = style({
   margin: 0,
   color: vars.system.colors.textPrimary,
-  fontFamily: vars.system.textScale.heading3.fontFamily,
-      fontSize: vars.system.textScale.heading3.fontSize,
-      fontWeight: vars.system.textScale.heading3.fontWeight,
-      letterSpacing: vars.system.textScale.heading3.letterSpacing,
-      lineHeight: vars.system.textScale.heading3.lineHeight,
+  fontFamily: vars.system.textScale["heading-page-l"].fontFamily,
+      fontSize: vars.system.textScale["heading-page-l"].fontSize,
+      fontWeight: vars.system.textScale["heading-page-l"].fontWeight,
+      letterSpacing: vars.system.textScale["heading-page-l"].letterSpacing,
+      lineHeight: vars.system.textScale["heading-page-l"].lineHeight,
 });
 
 export const drawerClose = style({
@@ -159,7 +159,7 @@ export const drawerBody = style({
 export const drawerFooter = style({
   display: "flex",
   justifyContent: "flex-end",
-  gap: vars.ref.spacing[2],
+  gap: vars.ref.spacing[8],
   borderTop: vars.system.border.default,
-  paddingTop: vars.ref.spacing[4],
+  paddingTop: vars.ref.spacing[16],
 });

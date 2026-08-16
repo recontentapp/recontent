@@ -8,7 +8,7 @@ export const timelineRoot = style({
   listStyle: "none",
   margin: 0,
   padding: 0,
-  gap: vars.ref.spacing[1],
+  gap: vars.ref.spacing[4],
   selectors: {
     '&[data-orientation="horizontal"]': {
       flexDirection: "row",
@@ -49,8 +49,8 @@ export const timelineIndicator = style({
 });
 
 export const timelineIndicatorSize = styleVariants({
-  "sm": { width: vars.ref.spacing[4], height: vars.ref.spacing[4] },
-  "md": { width: vars.ref.spacing[5], height: vars.ref.spacing[5] },
+  "sm": { width: vars.ref.spacing[16], height: vars.ref.spacing[16] },
+  "md": { width: vars.ref.spacing[20], height: vars.ref.spacing[20] },
 });
 
 export const timelineIndicatorStatus = styleVariants({
@@ -60,13 +60,13 @@ export const timelineIndicatorStatus = styleVariants({
       border: vars.system.border.default,
     },
   "success": {
-      color: vars.ref.color.white,
-      backgroundColor: vars.ref.color.success,
+      color: vars.ref.color.white[100],
+      backgroundColor: vars.ref.color.success[500],
       border: vars.system.border.default,
     },
   "error": {
-      color: vars.ref.color.white,
-      backgroundColor: vars.ref.color.error,
+      color: vars.ref.color.white[100],
+      backgroundColor: vars.ref.color.danger[500],
       border: vars.system.border.default,
     },
 });
@@ -82,14 +82,14 @@ export const timelineConnector = style({
   backgroundColor: vars.system.colors.border,
   selectors: {
     '[data-orientation="vertical"] &': {
-      width: vars.ref.spacing["0-5"],
-      marginTop: vars.ref.spacing[1],
-      marginBottom: vars.ref.spacing[1],
+      width: vars.ref.spacing[2],
+      marginTop: vars.ref.spacing[4],
+      marginBottom: vars.ref.spacing[4],
     },
     '[data-orientation="horizontal"] &': {
-      height: vars.ref.spacing["0-5"],
-      marginLeft: vars.ref.spacing[1],
-      marginRight: vars.ref.spacing[1],
+      height: vars.ref.spacing[2],
+      marginLeft: vars.ref.spacing[4],
+      marginRight: vars.ref.spacing[4],
     },
   },
 });
@@ -103,44 +103,44 @@ export const timelineContent = style({
 });
 
 export const timelineContentSize = styleVariants({
-  "sm": { gap: vars.ref.spacing[1], fontFamily: vars.system.textScale.supporting.fontFamily,
-      fontSize: vars.system.textScale.supporting.fontSize,
-      fontWeight: vars.system.textScale.supporting.fontWeight,
-      letterSpacing: vars.system.textScale.supporting.letterSpacing,
-      lineHeight: vars.system.textScale.supporting.lineHeight },
-  "md": { gap: vars.ref.spacing[2], fontFamily: vars.system.textStyles.body.fontFamily,
-      fontSize: vars.system.textStyles.body.fontSize,
-      fontWeight: vars.system.textStyles.body.fontWeight,
-      letterSpacing: vars.system.textStyles.body.letterSpacing,
-      lineHeight: vars.system.textStyles.body.lineHeight },
+  "sm": { gap: vars.ref.spacing[4], fontFamily: vars.system.textScale["tiny-caption"].fontFamily,
+      fontSize: vars.system.textScale["tiny-caption"].fontSize,
+      fontWeight: vars.system.textScale["tiny-caption"].fontWeight,
+      letterSpacing: vars.system.textScale["tiny-caption"].letterSpacing,
+      lineHeight: vars.system.textScale["tiny-caption"].lineHeight },
+  "md": { gap: vars.ref.spacing[8], fontFamily: vars.system.textScale["paragraph-body-m"].fontFamily,
+      fontSize: vars.system.textScale["paragraph-body-m"].fontSize,
+      fontWeight: vars.system.textScale["paragraph-body-m"].fontWeight,
+      letterSpacing: vars.system.textScale["paragraph-body-m"].letterSpacing,
+      lineHeight: vars.system.textScale["paragraph-body-m"].lineHeight },
 });
 
 export const timelineLabel = style({
   margin: 0,
   color: vars.system.colors.textPrimary,
-  fontFamily: vars.system.textStyles.body.fontFamily,
-      fontSize: vars.system.textStyles.body.fontSize,
-      fontWeight: vars.system.textStyles.body.fontWeight,
-      letterSpacing: vars.system.textStyles.body.letterSpacing,
-      lineHeight: vars.system.textStyles.body.lineHeight,
+  fontFamily: vars.system.textScale["paragraph-body-m"].fontFamily,
+      fontSize: vars.system.textScale["paragraph-body-m"].fontSize,
+      fontWeight: vars.system.textScale["paragraph-body-m"].fontWeight,
+      letterSpacing: vars.system.textScale["paragraph-body-m"].letterSpacing,
+      lineHeight: vars.system.textScale["paragraph-body-m"].lineHeight,
 });
 
 export const timelineTimestamp = style({
   margin: 0,
   color: vars.system.colors.textDisabled,
-  fontFamily: vars.system.textScale.supporting.fontFamily,
-      fontSize: vars.system.textScale.supporting.fontSize,
-      fontWeight: vars.system.textScale.supporting.fontWeight,
-      letterSpacing: vars.system.textScale.supporting.letterSpacing,
-      lineHeight: vars.system.textScale.supporting.lineHeight,
+  fontFamily: vars.system.textScale["tiny-caption"].fontFamily,
+      fontSize: vars.system.textScale["tiny-caption"].fontSize,
+      fontWeight: vars.system.textScale["tiny-caption"].fontWeight,
+      letterSpacing: vars.system.textScale["tiny-caption"].letterSpacing,
+      lineHeight: vars.system.textScale["tiny-caption"].lineHeight,
 });
 
 export const timelineDescription = style({
   margin: 0,
   color: vars.system.colors.textSecondary,
-  fontFamily: vars.system.textScale.supporting.fontFamily,
-      fontSize: vars.system.textScale.supporting.fontSize,
-      fontWeight: vars.system.textScale.supporting.fontWeight,
-      letterSpacing: vars.system.textScale.supporting.letterSpacing,
-      lineHeight: vars.system.textScale.supporting.lineHeight,
+  fontFamily: vars.system.textScale["tiny-caption"].fontFamily,
+      fontSize: vars.system.textScale["tiny-caption"].fontSize,
+      fontWeight: vars.system.textScale["tiny-caption"].fontWeight,
+      letterSpacing: vars.system.textScale["tiny-caption"].letterSpacing,
+      lineHeight: vars.system.textScale["tiny-caption"].lineHeight,
 });

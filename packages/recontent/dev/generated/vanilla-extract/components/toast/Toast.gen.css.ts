@@ -5,16 +5,16 @@ export const toastViewport = style({
   position: "fixed",
   display: "flex",
   flexDirection: "column",
-  gap: vars.ref.spacing[2],
+  gap: vars.ref.spacing[8],
   zIndex: 80,
   outline: "none",
 });
 
 export const toastViewportPlacement = styleVariants({
-  "top-left": { top: vars.ref.spacing[4], left: vars.ref.spacing[4] },
-  "top-right": { top: vars.ref.spacing[4], right: vars.ref.spacing[4] },
-  "bottom-left": { bottom: vars.ref.spacing[4], left: vars.ref.spacing[4] },
-  "bottom-right": { bottom: vars.ref.spacing[4], right: vars.ref.spacing[4] },
+  "top-left": { top: vars.ref.spacing[16], left: vars.ref.spacing[16] },
+  "top-right": { top: vars.ref.spacing[16], right: vars.ref.spacing[16] },
+  "bottom-left": { bottom: vars.ref.spacing[16], left: vars.ref.spacing[16] },
+  "bottom-right": { bottom: vars.ref.spacing[16], right: vars.ref.spacing[16] },
 });
 
 export const toastRoot = style({
@@ -22,18 +22,18 @@ export const toastRoot = style({
   display: "flex",
   alignItems: "flex-start",
   width: vars.ref.overlayWidth.sm,
-  gap: vars.ref.spacing[2],
+  gap: vars.ref.spacing[8],
   border: vars.system.border.default,
   borderRadius: vars.ref.radius.element,
   backgroundColor: vars.system.colors.backgroundSurface,
-  boxShadow: vars.system.elevation.md,
-  paddingLeft: vars.ref.spacing[4],
-  paddingRight: vars.ref.spacing[4],
-  paddingTop: vars.ref.spacing[3],
-  paddingBottom: vars.ref.spacing[3],
+  boxShadow: vars.system.elevationScale.md,
+  paddingLeft: vars.ref.spacing[16],
+  paddingRight: vars.ref.spacing[16],
+  paddingTop: vars.ref.spacing[12],
+  paddingBottom: vars.ref.spacing[12],
   transitionProperty: "opacity, transform",
-  transitionDuration: vars.system.transitions.standard.transitionDuration,
-  transitionTimingFunction: vars.system.transitions.standard.transitionTimingFunction,
+  transitionDuration: vars.system.transitionScale.fast.transitionDuration,
+  transitionTimingFunction: vars.system.transitionScale.fast.transitionTimingFunction,
   selectors: {
     "&[data-starting-style], &[data-ending-style]": {
       opacity: 0,
@@ -50,17 +50,17 @@ export const toastRootStatus = styleVariants({
   "success": {
       color: vars.system.colors.textPrimary,
       backgroundColor: vars.system.colors.backgroundSurface,
-      borderColor: vars.ref.color.success,
+      borderColor: vars.ref.color.success[500],
     },
   "warning": {
       color: vars.system.colors.textPrimary,
       backgroundColor: vars.system.colors.backgroundSurface,
-      borderColor: vars.ref.color.warning,
+      borderColor: vars.ref.color.warning[500],
     },
   "danger": {
       color: vars.system.colors.textPrimary,
       backgroundColor: vars.system.colors.backgroundSurface,
-      borderColor: vars.ref.color.error,
+      borderColor: vars.ref.color.danger[500],
     },
 });
 
@@ -73,9 +73,9 @@ export const toastIcon = style({
 
 export const toastIconStatus = styleVariants({
   "info": { color: vars.system.colors.accent },
-  "success": { color: vars.ref.color.success },
-  "warning": { color: vars.ref.color.warning },
-  "danger": { color: vars.ref.color.error },
+  "success": { color: vars.ref.color.success[500] },
+  "warning": { color: vars.ref.color.warning[500] },
+  "danger": { color: vars.ref.color.danger[500] },
 });
 
 export const toastContent = style({
@@ -83,16 +83,16 @@ export const toastContent = style({
   minWidth: 0,
   display: "flex",
   flexDirection: "column",
-  gap: vars.ref.spacing[2],
+  gap: vars.ref.spacing[8],
 });
 
 export const toastTitle = style({
   margin: 0,
-  fontFamily: vars.system.textStyles.body.fontFamily,
-      fontSize: vars.system.textStyles.body.fontSize,
-      fontWeight: vars.system.textStyles.body.fontWeight,
-      letterSpacing: vars.system.textStyles.body.letterSpacing,
-      lineHeight: vars.system.textStyles.body.lineHeight,
+  fontFamily: vars.system.textScale["paragraph-body-m"].fontFamily,
+      fontSize: vars.system.textScale["paragraph-body-m"].fontSize,
+      fontWeight: vars.system.textScale["paragraph-body-m"].fontWeight,
+      letterSpacing: vars.system.textScale["paragraph-body-m"].letterSpacing,
+      lineHeight: vars.system.textScale["paragraph-body-m"].lineHeight,
 });
 
 export const toastTitleStatus = styleVariants({
@@ -105,18 +105,18 @@ export const toastTitleStatus = styleVariants({
 export const toastDescription = style({
   margin: 0,
   color: vars.system.colors.textSecondary,
-  fontFamily: vars.system.textScale.supporting.fontFamily,
-      fontSize: vars.system.textScale.supporting.fontSize,
-      fontWeight: vars.system.textScale.supporting.fontWeight,
-      letterSpacing: vars.system.textScale.supporting.letterSpacing,
-      lineHeight: vars.system.textScale.supporting.lineHeight,
+  fontFamily: vars.system.textScale["tiny-caption"].fontFamily,
+      fontSize: vars.system.textScale["tiny-caption"].fontSize,
+      fontWeight: vars.system.textScale["tiny-caption"].fontWeight,
+      letterSpacing: vars.system.textScale["tiny-caption"].letterSpacing,
+      lineHeight: vars.system.textScale["tiny-caption"].lineHeight,
 });
 
 export const toastActions = style({
   display: "flex",
   alignItems: "center",
   flexShrink: 0,
-  gap: vars.ref.spacing[2],
+  gap: vars.ref.spacing[8],
 });
 
 export const toastActionButton = style({

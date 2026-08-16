@@ -6,12 +6,12 @@ export const dateInputRoot = style({
   alignItems: "center",
   boxSizing: "border-box",
   width: "100%",
-  gap: vars.ref.spacing[2],
+  gap: vars.ref.spacing[8],
   border: vars.system.border.default,
   borderRadius: vars.ref.radius.element,
   backgroundColor: vars.system.colors.backgroundCard,
-  paddingLeft: vars.ref.spacing[3],
-  paddingRight: vars.ref.spacing[3],
+  paddingLeft: vars.ref.spacing[12],
+  paddingRight: vars.ref.spacing[12],
   ":hover": {
     borderColor: vars.system.colors.borderEmphasized,
   },
@@ -22,7 +22,7 @@ export const dateInputRoot = style({
   },
   selectors: {
     "&[data-invalid]": {
-      borderColor: vars.ref.color.error,
+      borderColor: vars.ref.color.danger[500],
     },
     "&[data-readonly]": {
       backgroundColor: vars.system.colors.backgroundBody,
@@ -43,13 +43,13 @@ export const dateInputField = style({
   outline: "none",
   background: "none",
   color: vars.system.colors.textPrimary,
-  paddingTop: vars.ref.spacing[2],
-  paddingBottom: vars.ref.spacing[2],
-  fontFamily: vars.system.textStyles.body.fontFamily,
-      fontSize: vars.system.textStyles.body.fontSize,
-      fontWeight: vars.system.textStyles.body.fontWeight,
-      letterSpacing: vars.system.textStyles.body.letterSpacing,
-      lineHeight: vars.system.textStyles.body.lineHeight,
+  paddingTop: vars.ref.spacing[8],
+  paddingBottom: vars.ref.spacing[8],
+  fontFamily: vars.system.textScale["paragraph-body-m"].fontFamily,
+      fontSize: vars.system.textScale["paragraph-body-m"].fontSize,
+      fontWeight: vars.system.textScale["paragraph-body-m"].fontWeight,
+      letterSpacing: vars.system.textScale["paragraph-body-m"].letterSpacing,
+      lineHeight: vars.system.textScale["paragraph-body-m"].lineHeight,
   "::placeholder": {
     color: vars.system.colors.textSecondary,
   },
@@ -76,8 +76,8 @@ export const dateInputPositioner = style({
   outline: "none",
   zIndex: 50,
   selectors: {
-    '&[data-side="top"]': { marginBottom: vars.ref.spacing["0-5"] },
-    '&[data-side="bottom"]': { marginTop: vars.ref.spacing["0-5"] },
+    '&[data-side="top"]': { marginBottom: vars.ref.spacing[2] },
+    '&[data-side="bottom"]': { marginTop: vars.ref.spacing[2] },
   },
 });
 
@@ -86,8 +86,8 @@ export const dateInputPopup = style({
   backgroundColor: vars.system.colors.backgroundCard,
   border: vars.system.border.default,
   borderRadius: vars.ref.radius.element,
-  boxShadow: vars.system.elevation.md,
-  padding: vars.ref.spacing[3],
+  boxShadow: vars.system.elevationScale.md,
+  padding: vars.ref.spacing[12],
   outline: "none",
 });
 
@@ -95,7 +95,7 @@ export const dateInputHeader = style({
   display: "flex",
   alignItems: "center",
   justifyContent: "space-between",
-  marginBottom: vars.ref.spacing[3],
+  marginBottom: vars.ref.spacing[12],
 });
 
 export const dateInputNavButton = style({
@@ -116,11 +116,11 @@ export const dateInputNavButton = style({
 });
 
 export const dateInputMonthLabel = style({
-  fontFamily: vars.system.textStyles.body.fontFamily,
-      fontSize: vars.system.textStyles.body.fontSize,
-      fontWeight: vars.system.textStyles.body.fontWeight,
-      letterSpacing: vars.system.textStyles.body.letterSpacing,
-      lineHeight: vars.system.textStyles.body.lineHeight,
+  fontFamily: vars.system.textScale["paragraph-body-m"].fontFamily,
+      fontSize: vars.system.textScale["paragraph-body-m"].fontSize,
+      fontWeight: vars.system.textScale["paragraph-body-m"].fontWeight,
+      letterSpacing: vars.system.textScale["paragraph-body-m"].letterSpacing,
+      lineHeight: vars.system.textScale["paragraph-body-m"].lineHeight,
   color: vars.system.colors.textPrimary,
 });
 
@@ -133,11 +133,11 @@ export const dateInputGrid = style({
 export const dateInputWeekday = style({
   textAlign: "center",
   color: vars.system.colors.textSecondary,
-  fontFamily: vars.system.textScale.supporting.fontFamily,
-      fontSize: vars.system.textScale.supporting.fontSize,
-      fontWeight: vars.system.textScale.supporting.fontWeight,
-      letterSpacing: vars.system.textScale.supporting.letterSpacing,
-      lineHeight: vars.system.textScale.supporting.lineHeight,
+  fontFamily: vars.system.textScale["tiny-caption"].fontFamily,
+      fontSize: vars.system.textScale["tiny-caption"].fontSize,
+      fontWeight: vars.system.textScale["tiny-caption"].fontWeight,
+      letterSpacing: vars.system.textScale["tiny-caption"].letterSpacing,
+      lineHeight: vars.system.textScale["tiny-caption"].lineHeight,
 });
 
 export const dateInputDay = style({
@@ -151,11 +151,11 @@ export const dateInputDay = style({
   borderRadius: vars.ref.radius.inner,
   color: vars.system.colors.textPrimary,
   backgroundColor: "transparent",
-  fontFamily: vars.system.textStyles.body.fontFamily,
-      fontSize: vars.system.textStyles.body.fontSize,
-      fontWeight: vars.system.textStyles.body.fontWeight,
-      letterSpacing: vars.system.textStyles.body.letterSpacing,
-      lineHeight: vars.system.textStyles.body.lineHeight,
+  fontFamily: vars.system.textScale["paragraph-body-m"].fontFamily,
+      fontSize: vars.system.textScale["paragraph-body-m"].fontSize,
+      fontWeight: vars.system.textScale["paragraph-body-m"].fontWeight,
+      letterSpacing: vars.system.textScale["paragraph-body-m"].letterSpacing,
+      lineHeight: vars.system.textScale["paragraph-body-m"].lineHeight,
   ":hover": {
     backgroundColor: vars.system.colors.backgroundBody,
   },

@@ -5,7 +5,7 @@ export const fieldRoot = style({
   display: "flex",
   flexDirection: "column",
   boxSizing: "border-box",
-  gap: vars.ref.spacing[1],
+  gap: vars.ref.spacing[4],
 });
 
 export const fieldLabelRow = style({
@@ -16,46 +16,46 @@ export const fieldLabelRow = style({
 
 export const fieldLabel = style({
   color: vars.system.colors.textPrimary,
-  fontFamily: vars.system.textStyles.body.fontFamily,
-      fontSize: vars.system.textStyles.body.fontSize,
-      fontWeight: vars.system.textStyles.body.fontWeight,
-      letterSpacing: vars.system.textStyles.body.letterSpacing,
-      lineHeight: vars.system.textStyles.body.lineHeight,
+  fontFamily: vars.system.textScale["paragraph-body-m"].fontFamily,
+      fontSize: vars.system.textScale["paragraph-body-m"].fontSize,
+      fontWeight: vars.system.textScale["paragraph-body-m"].fontWeight,
+      letterSpacing: vars.system.textScale["paragraph-body-m"].letterSpacing,
+      lineHeight: vars.system.textScale["paragraph-body-m"].lineHeight,
 });
 
 export const fieldRequiredIndicator = style({
-  color: vars.ref.color.error,
+  color: vars.ref.color.danger[500],
 });
 
 export const fieldOptionalText = style({
   color: vars.system.colors.textSecondary,
-  fontFamily: vars.system.textScale.supporting.fontFamily,
-      fontSize: vars.system.textScale.supporting.fontSize,
-      fontWeight: vars.system.textScale.supporting.fontWeight,
-      letterSpacing: vars.system.textScale.supporting.letterSpacing,
-      lineHeight: vars.system.textScale.supporting.lineHeight,
+  fontFamily: vars.system.textScale["tiny-caption"].fontFamily,
+      fontSize: vars.system.textScale["tiny-caption"].fontSize,
+      fontWeight: vars.system.textScale["tiny-caption"].fontWeight,
+      letterSpacing: vars.system.textScale["tiny-caption"].letterSpacing,
+      lineHeight: vars.system.textScale["tiny-caption"].lineHeight,
 });
 
 export const fieldDescription = style({
   margin: 0,
   color: vars.system.colors.textSecondary,
-  fontFamily: vars.system.textScale.supporting.fontFamily,
-      fontSize: vars.system.textScale.supporting.fontSize,
-      fontWeight: vars.system.textScale.supporting.fontWeight,
-      letterSpacing: vars.system.textScale.supporting.letterSpacing,
-      lineHeight: vars.system.textScale.supporting.lineHeight,
+  fontFamily: vars.system.textScale["tiny-caption"].fontFamily,
+      fontSize: vars.system.textScale["tiny-caption"].fontSize,
+      fontWeight: vars.system.textScale["tiny-caption"].fontWeight,
+      letterSpacing: vars.system.textScale["tiny-caption"].letterSpacing,
+      lineHeight: vars.system.textScale["tiny-caption"].lineHeight,
 });
 
 export const fieldErrorRow = style({
   display: "flex",
   alignItems: "center",
   gap: "0.25em",
-  color: vars.ref.color.error,
-  fontFamily: vars.system.textScale.supporting.fontFamily,
-      fontSize: vars.system.textScale.supporting.fontSize,
-      fontWeight: vars.system.textScale.supporting.fontWeight,
-      letterSpacing: vars.system.textScale.supporting.letterSpacing,
-      lineHeight: vars.system.textScale.supporting.lineHeight,
+  color: vars.ref.color.danger[500],
+  fontFamily: vars.system.textScale["tiny-caption"].fontFamily,
+      fontSize: vars.system.textScale["tiny-caption"].fontSize,
+      fontWeight: vars.system.textScale["tiny-caption"].fontWeight,
+      letterSpacing: vars.system.textScale["tiny-caption"].letterSpacing,
+      lineHeight: vars.system.textScale["tiny-caption"].lineHeight,
 });
 
 export const fieldErrorIcon = style({

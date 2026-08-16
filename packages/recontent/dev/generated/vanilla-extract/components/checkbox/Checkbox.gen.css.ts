@@ -1,5 +1,5 @@
 import { style, styleVariants } from "@vanilla-extract/css";
-import { refFontSizeScale } from "../../tokens.css";
+import { refIconScale } from "../../tokens.css";
 import { vars } from "../../tokens.css";
 
 export const checkboxRoot = style({
@@ -7,7 +7,7 @@ export const checkboxRoot = style({
   alignItems: "center",
   boxSizing: "border-box",
   cursor: "pointer",
-  gap: vars.ref.spacing[2],
+  gap: vars.ref.spacing[8],
   selectors: {
     "&[data-disabled]": {
       cursor: "not-allowed",
@@ -38,7 +38,7 @@ export const checkboxBox = style({
       backgroundColor: vars.system.colors.accent,
     },
     "&[data-invalid]": {
-      borderColor: vars.ref.color.error,
+      borderColor: vars.ref.color.danger[500],
     },
     "&[data-disabled]": {
       backgroundColor: vars.system.colors.backgroundMuted,
@@ -47,7 +47,7 @@ export const checkboxBox = style({
   },
 });
 
-export const checkboxSize = styleVariants(refFontSizeScale, (value) => ({
+export const checkboxSize = styleVariants(refIconScale, (value) => ({
   width: value,
   height: value,
 }));
@@ -68,9 +68,9 @@ export const checkboxIndicator = style({
 
 export const checkboxLabel = style({
   color: vars.system.colors.textPrimary,
-  fontFamily: vars.system.textStyles.body.fontFamily,
-  fontSize: vars.system.textStyles.body.fontSize,
-  fontWeight: vars.system.textStyles.body.fontWeight,
-  letterSpacing: vars.system.textStyles.body.letterSpacing,
-  lineHeight: vars.system.textStyles.body.lineHeight,
+  fontFamily: vars.system.textScale["paragraph-body-m"].fontFamily,
+  fontSize: vars.system.textScale["paragraph-body-m"].fontSize,
+  fontWeight: vars.system.textScale["paragraph-body-m"].fontWeight,
+  letterSpacing: vars.system.textScale["paragraph-body-m"].letterSpacing,
+  lineHeight: vars.system.textScale["paragraph-body-m"].lineHeight,
 });

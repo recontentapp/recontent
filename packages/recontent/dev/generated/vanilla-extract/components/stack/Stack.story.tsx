@@ -4,7 +4,7 @@ import { Stack } from "./Stack.gen";
 
 function Swatch({ label }: { label: string }) {
   return (
-    <Box padding={4} borderRadius="element" backgroundColor={200}>
+    <Box padding={16} borderRadius="element" backgroundColor={200}>
       {label}
     </Box>
   );
@@ -20,7 +20,7 @@ const meta = {
     },
     gap: {
       control: "select",
-      options: [0, "0-5", 1, "1-5", 2, 3, 4, 5, 6, 8, 10, 12],
+      options: [0, 2, 4, 8, 12, 16, 20, 24, 32, 40, 48, 56, 64, 72, 80],
     },
     align: {
       control: "select",
@@ -33,7 +33,7 @@ const meta = {
   },
   args: {
     direction: "row",
-    gap: 4,
+    gap: 16,
     children: (
       <>
         <Swatch label="One" />
@@ -64,15 +64,15 @@ export const JustifyBetween: Story = {
 
 export const Responsive: Story = {
   args: {
-    direction: { base: "column", md: "row" },
-    gap: { base: 2, md: 4, lg: 6 },
+    direction: { xs: "column", md: "row" },
+    gap: { xs: 8, md: 16, lg: 24 },
   },
 };
 
 export const Wrapping: Story = {
   args: {
     wrap: true,
-    gap: 2,
+    gap: 8,
     children: Array.from({ length: 10 }, (_, index) => (
       <Swatch key={index} label={`Item ${index + 1}`} />
     )),

@@ -1,5 +1,5 @@
 import { keyframes, style, styleVariants } from "@vanilla-extract/css";
-import { refRadiusScale, vars } from "../../tokens.css";
+import { refRadius, vars } from "../../tokens.css";
 
 const shimmer = keyframes({
   "0%": { backgroundPosition: "150% 0" },
@@ -13,7 +13,7 @@ export const skeletonRoot = style({
 });
 
 export const skeletonAnimate = style({
-  backgroundImage: `linear-gradient(90deg, transparent, ${vars.ref.color.gray100}, transparent)`,
+  backgroundImage: `linear-gradient(90deg, transparent, ${vars.ref.color.secondary[50]}, transparent)`,
   backgroundSize: "200% 100%",
   animationName: shimmer,
   animationDuration: vars.system.motion.slowMin,
@@ -31,12 +31,12 @@ export const skeletonVariant = styleVariants({
   rectangular: {},
 });
 
-export const skeletonRadius = styleVariants(refRadiusScale, (value) => ({ borderRadius: value }));
+export const skeletonRadius = styleVariants(refRadius, (value) => ({ borderRadius: value }));
 
 export const skeletonLines = style({
   display: "flex",
   flexDirection: "column",
-  gap: vars.ref.spacing[2],
+  gap: vars.ref.spacing[8],
 });
 
 export const skeletonLastLine = style({

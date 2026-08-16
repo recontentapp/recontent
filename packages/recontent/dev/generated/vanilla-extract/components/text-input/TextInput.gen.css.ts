@@ -6,12 +6,12 @@ export const textInputRoot = style({
   alignItems: "center",
   boxSizing: "border-box",
   width: "100%",
-  gap: vars.ref.spacing[2],
+  gap: vars.ref.spacing[8],
   border: vars.system.border.default,
   borderRadius: vars.ref.radius.element,
   backgroundColor: vars.system.colors.backgroundCard,
-  paddingLeft: vars.ref.spacing[3],
-  paddingRight: vars.ref.spacing[3],
+  paddingLeft: vars.ref.spacing[12],
+  paddingRight: vars.ref.spacing[12],
   ":hover": {
     borderColor: vars.system.colors.borderEmphasized,
   },
@@ -22,7 +22,7 @@ export const textInputRoot = style({
   },
   selectors: {
     "&[data-invalid]": {
-      borderColor: vars.ref.color.error,
+      borderColor: vars.ref.color.danger[500],
     },
     "&[data-readonly]": {
       backgroundColor: vars.system.colors.backgroundBody,
@@ -43,13 +43,13 @@ export const textInputField = style({
   outline: "none",
   background: "none",
   color: vars.system.colors.textPrimary,
-  paddingTop: vars.ref.spacing[2],
-  paddingBottom: vars.ref.spacing[2],
-  fontFamily: vars.system.textStyles.body.fontFamily,
-      fontSize: vars.system.textStyles.body.fontSize,
-      fontWeight: vars.system.textStyles.body.fontWeight,
-      letterSpacing: vars.system.textStyles.body.letterSpacing,
-      lineHeight: vars.system.textStyles.body.lineHeight,
+  paddingTop: vars.ref.spacing[8],
+  paddingBottom: vars.ref.spacing[8],
+  fontFamily: vars.system.textScale["paragraph-body-m"].fontFamily,
+      fontSize: vars.system.textScale["paragraph-body-m"].fontSize,
+      fontWeight: vars.system.textScale["paragraph-body-m"].fontWeight,
+      letterSpacing: vars.system.textScale["paragraph-body-m"].letterSpacing,
+      lineHeight: vars.system.textScale["paragraph-body-m"].lineHeight,
   "::placeholder": {
     color: vars.system.colors.textSecondary,
   },
@@ -77,11 +77,11 @@ export const textInputAffix = style({
   height: "100%",
   color: vars.system.colors.textSecondary,
   backgroundColor: vars.system.colors.backgroundBody,
-  fontFamily: vars.system.textStyles.body.fontFamily,
-      fontSize: vars.system.textStyles.body.fontSize,
-      fontWeight: vars.system.textStyles.body.fontWeight,
-      letterSpacing: vars.system.textStyles.body.letterSpacing,
-      lineHeight: vars.system.textStyles.body.lineHeight,
+  fontFamily: vars.system.textScale["paragraph-body-m"].fontFamily,
+      fontSize: vars.system.textScale["paragraph-body-m"].fontSize,
+      fontWeight: vars.system.textScale["paragraph-body-m"].fontWeight,
+      letterSpacing: vars.system.textScale["paragraph-body-m"].letterSpacing,
+      lineHeight: vars.system.textScale["paragraph-body-m"].lineHeight,
 });
 
 export const textInputClear = style({

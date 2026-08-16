@@ -29,7 +29,7 @@ import {
   boxRoot,
 } from "./Box.gen.css";
 import { systemSpacing } from "../../tokens.css";
-import type { SystemSpacing as BoxSpacingToken, SystemColorsSecondary as BoxSurfaceToken, RefRadiusScale as BoxRadiusToken, SystemBorderScale as BoxBorderToken, SystemElevationScale as BoxElevationToken } from "../../tokens.css";
+import type { SystemSpacing as BoxSpacingToken, SystemColorsSecondary as BoxSurfaceToken, RefRadius as BoxRadiusToken, SystemBorderScale as BoxBorderToken, SystemElevationScale as BoxElevationToken } from "../../tokens.css";
 import { renderElement, type CommonComponentProps, type RenderProp } from "../../renderElement.gen";
 import { responsiveVars, type Responsive } from "../../responsive.gen";
 

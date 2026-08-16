@@ -15,8 +15,8 @@ export const stepsRoot = style({
 });
 
 export const stepsRootSize = styleVariants({
-  "sm": { gap: vars.ref.spacing[2] },
-  "md": { gap: vars.ref.spacing[3] },
+  "sm": { gap: vars.ref.spacing[8] },
+  "md": { gap: vars.ref.spacing[12] },
 });
 
 export const stepsStep = style({
@@ -53,8 +53,8 @@ export const stepsIndicator = style({
 });
 
 export const stepsIndicatorSize = styleVariants({
-  "sm": { width: vars.ref.spacing[5], height: vars.ref.spacing[5] },
-  "md": { width: vars.ref.spacing[6], height: vars.ref.spacing[6] },
+  "sm": { width: vars.ref.spacing[20], height: vars.ref.spacing[20] },
+  "md": { width: vars.ref.spacing[24], height: vars.ref.spacing[24] },
 });
 
 export const stepsIndicatorStatus = styleVariants({
@@ -74,8 +74,8 @@ export const stepsIndicatorStatus = styleVariants({
       border: vars.system.border.default,
     },
   "error": {
-      backgroundColor: vars.ref.color.error,
-      color: vars.ref.color.white,
+      backgroundColor: vars.ref.color.danger[500],
+      color: vars.ref.color.white[100],
       border: vars.system.border.default,
     },
 });
@@ -83,17 +83,17 @@ export const stepsIndicatorStatus = styleVariants({
 export const stepsConnector = style({
   flex: 1,
   boxSizing: "border-box",
-  height: vars.ref.spacing["0-5"],
-  marginLeft: vars.ref.spacing[1],
-  marginRight: vars.ref.spacing[1],
+  height: vars.ref.spacing[2],
+  marginLeft: vars.ref.spacing[4],
+  marginRight: vars.ref.spacing[4],
   selectors: {
     '[data-orientation="vertical"] &': {
-      width: vars.ref.spacing["0-5"],
+      width: vars.ref.spacing[2],
       height: "auto",
       marginLeft: 0,
       marginRight: 0,
-      marginTop: vars.ref.spacing[1],
-      marginBottom: vars.ref.spacing[1],
+      marginTop: vars.ref.spacing[4],
+      marginBottom: vars.ref.spacing[4],
     },
   },
 });
@@ -112,26 +112,26 @@ export const stepsContent = style({
 
 export const stepsLabel = style({
   margin: 0,
-  fontFamily: vars.system.textStyles.body.fontFamily,
-      fontSize: vars.system.textStyles.body.fontSize,
-      fontWeight: vars.system.textStyles.body.fontWeight,
-      letterSpacing: vars.system.textStyles.body.letterSpacing,
-      lineHeight: vars.system.textStyles.body.lineHeight,
+  fontFamily: vars.system.textScale["paragraph-body-m"].fontFamily,
+      fontSize: vars.system.textScale["paragraph-body-m"].fontSize,
+      fontWeight: vars.system.textScale["paragraph-body-m"].fontWeight,
+      letterSpacing: vars.system.textScale["paragraph-body-m"].letterSpacing,
+      lineHeight: vars.system.textScale["paragraph-body-m"].lineHeight,
 });
 
 export const stepsLabelStatus = styleVariants({
   "complete": { color: vars.system.colors.textPrimary },
   "current": { color: vars.system.colors.textPrimary },
   "upcoming": { color: vars.system.colors.textSecondary },
-  "error": { color: vars.ref.color.error },
+  "error": { color: vars.ref.color.danger[500] },
 });
 
 export const stepsDescription = style({
   margin: 0,
   color: vars.system.colors.textSecondary,
-  fontFamily: vars.system.textScale.supporting.fontFamily,
-      fontSize: vars.system.textScale.supporting.fontSize,
-      fontWeight: vars.system.textScale.supporting.fontWeight,
-      letterSpacing: vars.system.textScale.supporting.letterSpacing,
-      lineHeight: vars.system.textScale.supporting.lineHeight,
+  fontFamily: vars.system.textScale["tiny-caption"].fontFamily,
+      fontSize: vars.system.textScale["tiny-caption"].fontSize,
+      fontWeight: vars.system.textScale["tiny-caption"].fontWeight,
+      letterSpacing: vars.system.textScale["tiny-caption"].letterSpacing,
+      lineHeight: vars.system.textScale["tiny-caption"].lineHeight,
 });

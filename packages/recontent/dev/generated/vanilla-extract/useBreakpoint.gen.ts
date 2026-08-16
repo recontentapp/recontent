@@ -1,13 +1,16 @@
 import { useSyncExternalStore } from "react";
 
-export type Breakpoint = "base" | "md" | "lg";
+export type Breakpoint = "xs" | "sm" | "md" | "lg" | "xl" | "xxl";
 
 const QUERIES: Partial<Record<Breakpoint, string>> = {
-  "md": "screen and (min-width: 48rem)",
-  "lg": "screen and (min-width: 80rem)",
+  "sm": "screen and (min-width: 576px)",
+  "md": "screen and (min-width: 768px)",
+  "lg": "screen and (min-width: 992px)",
+  "xl": "screen and (min-width: 1200px)",
+  "xxl": "screen and (min-width: 1800px)",
 };
 
-const ORDER = ["base", "md", "lg"] as const;
+const ORDER = ["xs", "sm", "md", "lg", "xl", "xxl"] as const;
 
 function subscribeAll(onChange: () => void): () => void {
   const queries = Object.values(QUERIES).map((query) => matchMedia(query));
@@ -22,7 +25,7 @@ function subscribeAll(onChange: () => void): () => void {
 }
 
 function currentBreakpoint(): Breakpoint {
-  let current: Breakpoint = "base";
+  let current: Breakpoint = "xs";
   for (const breakpoint of ORDER) {
     const query = QUERIES[breakpoint];
     if (query && matchMedia(query).matches) {
@@ -33,7 +36,7 @@ function currentBreakpoint(): Breakpoint {
 }
 
 function getServerSnapshot(): Breakpoint {
-  return "base";
+  return "xs";
 }
 
 /**

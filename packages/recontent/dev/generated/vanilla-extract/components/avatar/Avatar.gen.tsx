@@ -6,7 +6,7 @@ import {
   avatarShapeSquare,
   avatarSize,
 } from "./Avatar.gen.css";
-import type { RefFontSizeScale as AvatarSizeToken } from "../../tokens.css";
+import type { RefIconScale as AvatarSizeToken } from "../../tokens.css";
 import type { CommonComponentProps, RenderProp } from "../../renderElement.gen";
 
 export interface AvatarProps extends CommonComponentProps {

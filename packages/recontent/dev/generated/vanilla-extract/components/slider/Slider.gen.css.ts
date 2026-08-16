@@ -19,11 +19,11 @@ export const sliderControl = style({
   display: "flex",
   alignItems: "center",
   boxSizing: "border-box",
-  height: vars.ref.spacing[3],
+  height: vars.ref.spacing[12],
   selectors: {
     '&[data-orientation="vertical"]': {
       flexDirection: "column",
-      width: vars.ref.spacing[3],
+      width: vars.ref.spacing[12],
       height: "100%",
     },
   },
@@ -32,12 +32,12 @@ export const sliderControl = style({
 export const sliderTrack = style({
   position: "relative",
   width: "100%",
-  height: vars.ref.spacing["0-5"],
+  height: vars.ref.spacing[2],
   borderRadius: vars.ref.radius.full,
   backgroundColor: vars.system.colors.backgroundBody,
   selectors: {
     '[data-orientation="vertical"] &': {
-      width: vars.ref.spacing["0-5"],
+      width: vars.ref.spacing[2],
       height: "100%",
     },
     "[data-disabled] &": {
@@ -58,14 +58,14 @@ export const sliderIndicator = style({
 
 export const sliderThumb = style({
   boxSizing: "border-box",
-  width: vars.ref.spacing[3],
-  height: vars.ref.spacing[3],
+  width: vars.ref.spacing[12],
+  height: vars.ref.spacing[12],
   borderRadius: "50%",
   border: vars.system.border.default,
-  backgroundColor: vars.ref.color.white,
-  boxShadow: vars.system.elevation.sm,
+  backgroundColor: vars.ref.color.white[100],
+  boxShadow: vars.system.elevationScale.sm,
   ":hover": {
-    backgroundColor: vars.ref.color.white,
+    backgroundColor: vars.ref.color.white[100],
   },
   ":focus-visible": {
     outline: `2px solid ${vars.system.colors.accent}`,
@@ -87,11 +87,11 @@ export const sliderMark = style({
   position: "absolute",
   transform: "translateX(-50%)",
   color: vars.system.colors.textSecondary,
-  fontFamily: vars.system.textScale.supporting.fontFamily,
-      fontSize: vars.system.textScale.supporting.fontSize,
-      fontWeight: vars.system.textScale.supporting.fontWeight,
-      letterSpacing: vars.system.textScale.supporting.letterSpacing,
-      lineHeight: vars.system.textScale.supporting.lineHeight,
+  fontFamily: vars.system.textScale["tiny-caption"].fontFamily,
+      fontSize: vars.system.textScale["tiny-caption"].fontSize,
+      fontWeight: vars.system.textScale["tiny-caption"].fontWeight,
+      letterSpacing: vars.system.textScale["tiny-caption"].letterSpacing,
+      lineHeight: vars.system.textScale["tiny-caption"].lineHeight,
 });
 
 export const sliderValueLabel = style({
@@ -109,9 +109,9 @@ export const sliderValueLabel = style({
   paddingRight: "0.375rem",
   paddingTop: "0.125rem",
   paddingBottom: "0.125rem",
-  fontFamily: vars.system.textScale.supporting.fontFamily,
-      fontSize: vars.system.textScale.supporting.fontSize,
-      fontWeight: vars.system.textScale.supporting.fontWeight,
-      letterSpacing: vars.system.textScale.supporting.letterSpacing,
-      lineHeight: vars.system.textScale.supporting.lineHeight,
+  fontFamily: vars.system.textScale["tiny-caption"].fontFamily,
+      fontSize: vars.system.textScale["tiny-caption"].fontSize,
+      fontWeight: vars.system.textScale["tiny-caption"].fontWeight,
+      letterSpacing: vars.system.textScale["tiny-caption"].letterSpacing,
+      lineHeight: vars.system.textScale["tiny-caption"].lineHeight,
 });

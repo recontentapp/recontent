@@ -13,7 +13,7 @@ import {
   radioListRootOrientation,
 } from "./RadioList.gen.css";
 import type { CommonComponentProps, FieldableInputProps, RenderProp } from "../../renderElement.gen";
-import type { RefFontSizeScale as RadioListSizeToken } from "../../tokens.css";
+import type { RefIconScale as RadioListSizeToken } from "../../tokens.css";
 
 export interface RadioListOption<Value extends string> {
   value: Value;

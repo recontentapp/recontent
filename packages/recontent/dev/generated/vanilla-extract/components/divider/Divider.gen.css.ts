@@ -13,8 +13,8 @@ export const dividerOrientation = styleVariants({
     height: 0,
     borderTop: vars.system.border.default,
     borderColor: vars.system.colors.border,
-    marginTop: vars.ref.spacing[2],
-    marginBottom: vars.ref.spacing[2],
+    marginTop: vars.ref.spacing[8],
+    marginBottom: vars.ref.spacing[8],
   },
   vertical: {
     height: "100%",
@@ -22,7 +22,7 @@ export const dividerOrientation = styleVariants({
     alignSelf: "stretch",
     borderLeft: vars.system.border.default,
     borderColor: vars.system.colors.border,
-    marginLeft: vars.ref.spacing[2],
-    marginRight: vars.ref.spacing[2],
+    marginLeft: vars.ref.spacing[8],
+    marginRight: vars.ref.spacing[8],
   },
 });

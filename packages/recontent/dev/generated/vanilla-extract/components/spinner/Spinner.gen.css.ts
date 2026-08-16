@@ -1,5 +1,5 @@
 import { keyframes, style, styleVariants } from "@vanilla-extract/css";
-import { refFontSizeScale, systemColorsTextScale, vars } from "../../tokens.css";
+import { refIconScale, systemColorsTextScale, vars } from "../../tokens.css";
 
 const spin = keyframes({
   from: { transform: "rotate(0deg)" },
@@ -12,7 +12,7 @@ export const spinnerRoot = style({
   flexShrink: 0,
   borderRadius: "50%",
   borderStyle: "solid",
-  borderWidth: vars.ref.spacing["0-5"],
+  borderWidth: vars.ref.spacing[2],
   borderColor: vars.system.colors.backgroundMuted,
   animationName: spin,
   animationDuration: vars.system.motion.mediumMax,
@@ -20,7 +20,7 @@ export const spinnerRoot = style({
   animationTimingFunction: "linear",
 });
 
-export const spinnerSize = styleVariants(refFontSizeScale, (value) => ({
+export const spinnerSize = styleVariants(refIconScale, (value) => ({
   width: value,
   height: value,
 }));

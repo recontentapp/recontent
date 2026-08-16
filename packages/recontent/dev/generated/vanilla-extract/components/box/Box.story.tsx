@@ -7,7 +7,7 @@ const meta = {
   argTypes: {
     padding: {
       control: "select",
-      options: [0, "0-5", 1, "1-5", 2, 3, 4, 5, 6, 8, 10, 12],
+      options: [0, 2, 4, 8, 12, 16, 20, 24, 32, 40, 48, 56, 64, 72, 80],
     },
     borderRadius: {
       control: "select",
@@ -19,7 +19,7 @@ const meta = {
     },
     boxShadow: {
       control: "select",
-      options: ["sm", "md"],
+      options: ["sm", "md", "lg", "inset"],
     },
     backgroundColor: {
       control: "select",
@@ -31,7 +31,7 @@ const meta = {
     },
   },
   args: {
-    padding: 4,
+    padding: 16,
     borderRadius: "element",
     backgroundColor: 200,
     children: "Box content",
@@ -46,7 +46,7 @@ export const Default: Story = {};
 
 export const WithBorderAndShadow: Story = {
   args: {
-    padding: 6,
+    padding: 24,
     border: "thin",
     boxShadow: "md",
     borderRadius: "container",
@@ -55,7 +55,7 @@ export const WithBorderAndShadow: Story = {
 
 export const Sizing: Story = {
   args: {
-    padding: 4,
+    padding: 16,
     width: 240,
     height: 120,
     display: "flex",
@@ -64,19 +64,19 @@ export const Sizing: Story = {
 
 export const Responsive: Story = {
   args: {
-    padding: { base: 2, md: 6, lg: 10 },
-    display: { base: "block", md: "flex" },
+    padding: { xs: 8, md: 24, lg: 40 },
+    display: { xs: "block", md: "flex" },
     backgroundColor: 200,
     borderRadius: "element",
   },
 };
 
-// No `base` key: padding computes to `unset` (= 0, padding is non-inherited)
+// No `xs` key: padding computes to `unset` (= 0, padding is non-inherited)
 // below `md`. This is documented behaviour, not a bug — see the responsive
 // support design notes.
 export const ResponsiveWithoutBase: Story = {
   args: {
-    padding: { md: 6 },
+    padding: { md: 24 },
     backgroundColor: 200,
     borderRadius: "element",
   },

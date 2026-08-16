@@ -1,5 +1,5 @@
 import { style, styleVariants } from "@vanilla-extract/css";
-import { refFontSizeScale, vars } from "../../tokens.css";
+import { refIconScale, vars } from "../../tokens.css";
 
 export const avatarRoot = style({
   display: "inline-flex",
@@ -12,7 +12,7 @@ export const avatarRoot = style({
   borderRadius: "9999px",
 });
 
-export const avatarSize = styleVariants(refFontSizeScale, (value) => ({
+export const avatarSize = styleVariants(refIconScale, (value) => ({
   width: value,
   height: value,
 }));
@@ -32,9 +32,9 @@ export const avatarFallback = style({
   alignItems: "center",
   justifyContent: "center",
   color: vars.system.colors.onAccent,
-  fontFamily: vars.system.textStyles.body.fontFamily,
-    fontSize: vars.system.textStyles.body.fontSize,
-    fontWeight: vars.system.textStyles.body.fontWeight,
-    letterSpacing: vars.system.textStyles.body.letterSpacing,
-    lineHeight: vars.system.textStyles.body.lineHeight,
+  fontFamily: vars.system.textScale["paragraph-body-m"].fontFamily,
+    fontSize: vars.system.textScale["paragraph-body-m"].fontSize,
+    fontWeight: vars.system.textScale["paragraph-body-m"].fontWeight,
+    letterSpacing: vars.system.textScale["paragraph-body-m"].letterSpacing,
+    lineHeight: vars.system.textScale["paragraph-body-m"].lineHeight,
 });

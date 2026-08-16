@@ -10,19 +10,19 @@ export const progressBarRoot = style({
   display: "flex",
   flexDirection: "column",
   boxSizing: "border-box",
-  gap: vars.ref.spacing[1],
+  gap: vars.ref.spacing[4],
 });
 
 export const progressBarLabelRow = style({
   display: "flex",
   alignItems: "center",
   justifyContent: "space-between",
-  gap: vars.ref.spacing[1],
-  fontFamily: vars.system.textScale.supporting.fontFamily,
-      fontSize: vars.system.textScale.supporting.fontSize,
-      fontWeight: vars.system.textScale.supporting.fontWeight,
-      letterSpacing: vars.system.textScale.supporting.letterSpacing,
-      lineHeight: vars.system.textScale.supporting.lineHeight,
+  gap: vars.ref.spacing[4],
+  fontFamily: vars.system.textScale["tiny-caption"].fontFamily,
+      fontSize: vars.system.textScale["tiny-caption"].fontSize,
+      fontWeight: vars.system.textScale["tiny-caption"].fontWeight,
+      letterSpacing: vars.system.textScale["tiny-caption"].letterSpacing,
+      lineHeight: vars.system.textScale["tiny-caption"].lineHeight,
 });
 
 export const progressBarLabelStatus = styleVariants({
@@ -41,8 +41,8 @@ export const progressBarTrack = style({
 });
 
 export const progressBarTrackSize = styleVariants({
-  "sm": { height: vars.ref.spacing[1] },
-  "md": { height: vars.ref.spacing[2] },
+  "sm": { height: vars.ref.spacing[4] },
+  "md": { height: vars.ref.spacing[8] },
 });
 
 export const progressBarIndicator = style({
@@ -64,6 +64,6 @@ export const progressBarIndicator = style({
 
 export const progressBarIndicatorStatus = styleVariants({
   "default": { backgroundColor: vars.system.colors.accent },
-  "success": { backgroundColor: vars.ref.color.success },
-  "danger": { backgroundColor: vars.ref.color.error },
+  "success": { backgroundColor: vars.ref.color.success[500] },
+  "danger": { backgroundColor: vars.ref.color.danger[500] },
 });

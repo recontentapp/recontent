@@ -25,26 +25,26 @@ export const outlineLink = style({
   boxSizing: "border-box",
   textDecoration: "none",
   color: vars.system.colors.textSecondary,
-  paddingLeft: vars.ref.spacing[3],
-  paddingRight: vars.ref.spacing[3],
-  paddingTop: vars.ref.spacing["0-5"],
-  paddingBottom: vars.ref.spacing["0-5"],
-  fontFamily: vars.system.textScale.supporting.fontFamily,
-      fontSize: vars.system.textScale.supporting.fontSize,
-      fontWeight: vars.system.textScale.supporting.fontWeight,
-      letterSpacing: vars.system.textScale.supporting.letterSpacing,
-      lineHeight: vars.system.textScale.supporting.lineHeight,
+  paddingLeft: vars.ref.spacing[12],
+  paddingRight: vars.ref.spacing[12],
+  paddingTop: vars.ref.spacing[2],
+  paddingBottom: vars.ref.spacing[2],
+  fontFamily: vars.system.textScale["tiny-caption"].fontFamily,
+      fontSize: vars.system.textScale["tiny-caption"].fontSize,
+      fontWeight: vars.system.textScale["tiny-caption"].fontWeight,
+      letterSpacing: vars.system.textScale["tiny-caption"].letterSpacing,
+      lineHeight: vars.system.textScale["tiny-caption"].lineHeight,
   ":hover": {
     color: vars.system.colors.textPrimary,
   },
   selectors: {
     "&[data-active]": {
       color: vars.system.colors.accent,
-      fontFamily: vars.system.textScale.supporting.fontFamily,
-      fontSize: vars.system.textScale.supporting.fontSize,
-      fontWeight: vars.system.textScale.supporting.fontWeight,
-      letterSpacing: vars.system.textScale.supporting.letterSpacing,
-      lineHeight: vars.system.textScale.supporting.lineHeight,
+      fontFamily: vars.system.textScale["tiny-caption"].fontFamily,
+      fontSize: vars.system.textScale["tiny-caption"].fontSize,
+      fontWeight: vars.system.textScale["tiny-caption"].fontWeight,
+      letterSpacing: vars.system.textScale["tiny-caption"].letterSpacing,
+      lineHeight: vars.system.textScale["tiny-caption"].lineHeight,
     },
     "&[data-active]::before": {
       content: '""',
@@ -59,5 +59,5 @@ export const outlineLink = style({
 });
 
 export const outlineIndent = style({
-  paddingLeft: vars.ref.spacing[3],
+  paddingLeft: vars.ref.spacing[12],
 });

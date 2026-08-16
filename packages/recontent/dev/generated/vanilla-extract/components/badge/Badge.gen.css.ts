@@ -16,17 +16,17 @@ export const badgeVariant = styleVariants({
       border: vars.system.border.default,
     },
   "success": {
-      color: vars.ref.color.success,
+      color: vars.ref.color.success[500],
       backgroundColor: vars.system.colors.backgroundMuted,
       border: vars.system.border.default,
     },
   "warning": {
-      color: vars.ref.color.warning,
+      color: vars.ref.color.warning[500],
       backgroundColor: vars.system.colors.backgroundMuted,
       border: vars.system.border.default,
     },
   "danger": {
-      color: vars.ref.color.error,
+      color: vars.ref.color.danger[500],
       backgroundColor: vars.system.colors.backgroundMuted,
       border: vars.system.border.default,
     },
@@ -34,35 +34,35 @@ export const badgeVariant = styleVariants({
 
 export const badgeDotColor = styleVariants({
   "info": { backgroundColor: vars.system.colors.accent },
-  "success": { backgroundColor: vars.ref.color.success },
-  "warning": { backgroundColor: vars.ref.color.warning },
-  "danger": { backgroundColor: vars.ref.color.error },
+  "success": { backgroundColor: vars.ref.color.success[500] },
+  "warning": { backgroundColor: vars.ref.color.warning[500] },
+  "danger": { backgroundColor: vars.ref.color.danger[500] },
 });
 
 export const badgeSize = styleVariants({
   "sm": {
-      paddingLeft: vars.ref.spacing[1],
-      paddingRight: vars.ref.spacing[1],
-      paddingTop: vars.ref.spacing["0-5"],
-      paddingBottom: vars.ref.spacing["0-5"],
-      gap: vars.ref.spacing["0-5"],
-      fontFamily: vars.system.textScale.supporting.fontFamily,
-      fontSize: vars.system.textScale.supporting.fontSize,
-      fontWeight: vars.system.textScale.supporting.fontWeight,
-      letterSpacing: vars.system.textScale.supporting.letterSpacing,
-      lineHeight: vars.system.textScale.supporting.lineHeight,
+      paddingLeft: vars.ref.spacing[4],
+      paddingRight: vars.ref.spacing[4],
+      paddingTop: vars.ref.spacing[2],
+      paddingBottom: vars.ref.spacing[2],
+      gap: vars.ref.spacing[2],
+      fontFamily: vars.system.textScale["tiny-caption"].fontFamily,
+      fontSize: vars.system.textScale["tiny-caption"].fontSize,
+      fontWeight: vars.system.textScale["tiny-caption"].fontWeight,
+      letterSpacing: vars.system.textScale["tiny-caption"].letterSpacing,
+      lineHeight: vars.system.textScale["tiny-caption"].lineHeight,
     },
   "md": {
-      paddingLeft: vars.ref.spacing["1-5"],
-      paddingRight: vars.ref.spacing["1-5"],
-      paddingTop: vars.ref.spacing[1],
-      paddingBottom: vars.ref.spacing[1],
-      gap: vars.ref.spacing[1],
-      fontFamily: vars.system.textStyles.body.fontFamily,
-      fontSize: vars.system.textStyles.body.fontSize,
-      fontWeight: vars.system.textStyles.body.fontWeight,
-      letterSpacing: vars.system.textStyles.body.letterSpacing,
-      lineHeight: vars.system.textStyles.body.lineHeight,
+      paddingLeft: vars.ref.spacing[8],
+      paddingRight: vars.ref.spacing[8],
+      paddingTop: vars.ref.spacing[4],
+      paddingBottom: vars.ref.spacing[4],
+      gap: vars.ref.spacing[4],
+      fontFamily: vars.system.textScale["paragraph-body-m"].fontFamily,
+      fontSize: vars.system.textScale["paragraph-body-m"].fontSize,
+      fontWeight: vars.system.textScale["paragraph-body-m"].fontWeight,
+      letterSpacing: vars.system.textScale["paragraph-body-m"].letterSpacing,
+      lineHeight: vars.system.textScale["paragraph-body-m"].lineHeight,
     },
 });
 
@@ -74,6 +74,6 @@ export const badgeIconSize = styleVariants({
 export const badgeDot = style({
   flexShrink: 0,
   borderRadius: "50%",
-  width: vars.ref.spacing["1-5"],
-  height: vars.ref.spacing["1-5"],
+  width: vars.ref.spacing[8],
+  height: vars.ref.spacing[8],
 });

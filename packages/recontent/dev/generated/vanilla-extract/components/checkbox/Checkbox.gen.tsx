@@ -9,7 +9,7 @@ import {
 } from "./Checkbox.gen.css";
 import type { CommonComponentProps, FieldableInputProps, RenderProp } from "../../renderElement.gen";
 import { icons } from "../../iconMap";
-import type { RefFontSizeScale as CheckboxSizeToken } from "../../tokens.css";
+import type { RefIconScale as CheckboxSizeToken } from "../../tokens.css";
 
 const CheckedIcon = icons["check"];
 const IndeterminateIcon = icons["close"];

@@ -9,7 +9,26 @@ const meta = {
   argTypes: {
     basis: {
       control: "select",
-      options: [undefined, "auto", "full", 0, "0-5", 1, "1-5", 2, 3, 4, 5, 6, 8, 10, 12],
+      options: [
+        undefined,
+        "auto",
+        "full",
+        0,
+        2,
+        4,
+        8,
+        12,
+        16,
+        20,
+        24,
+        32,
+        40,
+        48,
+        56,
+        64,
+        72,
+        80,
+      ],
     },
     alignSelf: {
       control: "select",
@@ -24,13 +43,13 @@ const meta = {
   },
   decorators: [
     (Story) => (
-      <Stack direction="row" gap={2}>
+      <Stack direction="row" gap={8}>
         <Story />
       </Stack>
     ),
   ],
   args: {
-    children: <Box padding={4} backgroundColor={200} borderRadius="element" />,
+    children: <Box padding={16} backgroundColor={200} borderRadius="element" />,
   },
 } satisfies Meta<typeof StackItem>;
 
@@ -48,7 +67,7 @@ export const Grow: Story = {
 
 export const FixedBasis: Story = {
   args: {
-    basis: 12,
+    basis: 48,
     grow: false,
     shrink: false,
   },
@@ -56,16 +75,16 @@ export const FixedBasis: Story = {
 
 export const Responsive: Story = {
   args: {
-    basis: { base: "full", md: 6 },
-    grow: { base: true, md: false },
+    basis: { xs: "full", md: 24 },
+    grow: { xs: true, md: false },
   },
 };
 
 export const AlignSelfEnd: Story = {
   decorators: [
     (Story) => (
-      <Stack direction="row" gap={2} align="stretch">
-        <Box padding={8} backgroundColor={200} borderRadius="element">
+      <Stack direction="row" gap={8} align="stretch">
+        <Box padding={32} backgroundColor={200} borderRadius="element">
           Sibling
         </Box>
         <Story />

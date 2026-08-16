@@ -4,7 +4,7 @@ import { vars } from "../../tokens.css";
 export const keyboardShortcutRoot = style({
   display: "inline-flex",
   alignItems: "center",
-  gap: vars.ref.spacing["0-5"],
+  gap: vars.ref.spacing[2],
 });
 
 export const keyboardShortcutKey = style({
@@ -16,13 +16,13 @@ export const keyboardShortcutKey = style({
   backgroundColor: vars.system.colors.backgroundBody,
   border: vars.system.border.default,
   borderRadius: vars.ref.radius.inner,
-  paddingLeft: vars.ref.spacing["1-5"],
-  paddingRight: vars.ref.spacing["1-5"],
-  paddingTop: vars.ref.spacing["0-5"],
-  paddingBottom: vars.ref.spacing["0-5"],
-  fontFamily: vars.system.textStyles.code.fontFamily,
-    fontSize: vars.system.textStyles.code.fontSize,
-    fontWeight: vars.system.textStyles.code.fontWeight,
-    letterSpacing: vars.system.textStyles.code.letterSpacing,
-    lineHeight: vars.system.textStyles.code.lineHeight,
+  paddingLeft: vars.ref.spacing[8],
+  paddingRight: vars.ref.spacing[8],
+  paddingTop: vars.ref.spacing[2],
+  paddingBottom: vars.ref.spacing[2],
+  fontFamily: vars.system.textScale["paragraph-body-m"].fontFamily,
+    fontSize: vars.system.textScale["paragraph-body-m"].fontSize,
+    fontWeight: vars.system.textScale["paragraph-body-m"].fontWeight,
+    letterSpacing: vars.system.textScale["paragraph-body-m"].letterSpacing,
+    lineHeight: vars.system.textScale["paragraph-body-m"].lineHeight,
 });

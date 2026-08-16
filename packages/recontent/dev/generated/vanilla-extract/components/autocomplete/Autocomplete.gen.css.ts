@@ -7,15 +7,15 @@ export const autocompleteTrigger = style({
   alignItems: "center",
   boxSizing: "border-box",
   width: "100%",
-  gap: vars.ref.spacing["0-5"],
+  gap: vars.ref.spacing[2],
   color: vars.system.colors.textPrimary,
   border: vars.system.border.default,
   borderRadius: vars.ref.radius.element,
   backgroundColor: vars.system.colors.backgroundCard,
-  paddingLeft: vars.ref.spacing[3],
-  paddingRight: vars.ref.spacing[3],
-  paddingTop: vars.ref.spacing[2],
-  paddingBottom: vars.ref.spacing[2],
+  paddingLeft: vars.ref.spacing[12],
+  paddingRight: vars.ref.spacing[12],
+  paddingTop: vars.ref.spacing[8],
+  paddingBottom: vars.ref.spacing[8],
   ":hover": {
     borderColor: vars.system.colors.borderEmphasized,
   },
@@ -26,7 +26,7 @@ export const autocompleteTrigger = style({
   },
   selectors: {
     "&[data-invalid]": {
-      borderColor: vars.ref.color.error,
+      borderColor: vars.ref.color.danger[500],
     },
     "&[data-disabled]": {
       backgroundColor: vars.system.colors.backgroundMuted,
@@ -43,11 +43,11 @@ export const autocompleteInput = style({
   outline: "none",
   background: "none",
   color: "inherit",
-  fontFamily: vars.system.textStyles.body.fontFamily,
-      fontSize: vars.system.textStyles.body.fontSize,
-      fontWeight: vars.system.textStyles.body.fontWeight,
-      letterSpacing: vars.system.textStyles.body.letterSpacing,
-      lineHeight: vars.system.textStyles.body.lineHeight,
+  fontFamily: vars.system.textScale["paragraph-body-m"].fontFamily,
+      fontSize: vars.system.textScale["paragraph-body-m"].fontSize,
+      fontWeight: vars.system.textScale["paragraph-body-m"].fontWeight,
+      letterSpacing: vars.system.textScale["paragraph-body-m"].letterSpacing,
+      lineHeight: vars.system.textScale["paragraph-body-m"].lineHeight,
   "::placeholder": {
     color: vars.system.colors.textSecondary,
   },
@@ -57,24 +57,24 @@ export const autocompleteChips = style({
   display: "flex",
   flexWrap: "wrap",
   alignItems: "center",
-  gap: vars.ref.spacing["0-5"],
+  gap: vars.ref.spacing[2],
 });
 
 export const autocompleteChip = style({
   display: "inline-flex",
   alignItems: "center",
   boxSizing: "border-box",
-  gap: vars.ref.spacing["0-5"],
+  gap: vars.ref.spacing[2],
   color: vars.system.colors.textPrimary,
   backgroundColor: vars.system.colors.backgroundMuted,
   borderRadius: vars.ref.radius.inner,
-  paddingLeft: vars.ref.spacing[2],
-  paddingRight: vars.ref.spacing[2],
-  fontFamily: vars.system.textScale.supporting.fontFamily,
-      fontSize: vars.system.textScale.supporting.fontSize,
-      fontWeight: vars.system.textScale.supporting.fontWeight,
-      letterSpacing: vars.system.textScale.supporting.letterSpacing,
-      lineHeight: vars.system.textScale.supporting.lineHeight,
+  paddingLeft: vars.ref.spacing[8],
+  paddingRight: vars.ref.spacing[8],
+  fontFamily: vars.system.textScale["tiny-caption"].fontFamily,
+      fontSize: vars.system.textScale["tiny-caption"].fontSize,
+      fontWeight: vars.system.textScale["tiny-caption"].fontWeight,
+      letterSpacing: vars.system.textScale["tiny-caption"].letterSpacing,
+      lineHeight: vars.system.textScale["tiny-caption"].lineHeight,
 });
 
 export const autocompleteChipRemove = style({
@@ -115,10 +115,10 @@ export const autocompletePositioner = style({
   outline: "none",
   zIndex: 50,
   selectors: {
-    '&[data-side="top"]': { marginBottom: vars.ref.spacing["0-5"] },
-    '&[data-side="bottom"]': { marginTop: vars.ref.spacing["0-5"] },
-    '&[data-side="left"]': { marginRight: vars.ref.spacing["0-5"] },
-    '&[data-side="right"]': { marginLeft: vars.ref.spacing["0-5"] },
+    '&[data-side="top"]': { marginBottom: vars.ref.spacing[2] },
+    '&[data-side="bottom"]': { marginTop: vars.ref.spacing[2] },
+    '&[data-side="left"]': { marginRight: vars.ref.spacing[2] },
+    '&[data-side="right"]': { marginLeft: vars.ref.spacing[2] },
   },
 });
 
@@ -127,8 +127,8 @@ export const autocompletePopup = style({
   backgroundColor: vars.system.colors.backgroundCard,
   border: vars.system.border.default,
   borderRadius: vars.ref.radius.element,
-  boxShadow: vars.system.elevation.md,
-  padding: vars.ref.spacing[1],
+  boxShadow: vars.system.elevationScale.md,
+  padding: vars.ref.spacing[4],
   outline: "none",
   maxHeight: "min(24rem, var(--available-height))",
   overflowY: "auto",
@@ -142,15 +142,15 @@ export const autocompleteItem = style({
   cursor: "pointer",
   gap: vars.ref.fontSize.base,
   color: vars.system.colors.textPrimary,
-  paddingLeft: vars.ref.spacing[2],
-  paddingRight: vars.ref.spacing[2],
-  paddingTop: vars.ref.spacing["1-5"],
-  paddingBottom: vars.ref.spacing["1-5"],
-  fontFamily: vars.system.textStyles.body.fontFamily,
-      fontSize: vars.system.textStyles.body.fontSize,
-      fontWeight: vars.system.textStyles.body.fontWeight,
-      letterSpacing: vars.system.textStyles.body.letterSpacing,
-      lineHeight: vars.system.textStyles.body.lineHeight,
+  paddingLeft: vars.ref.spacing[8],
+  paddingRight: vars.ref.spacing[8],
+  paddingTop: vars.ref.spacing[8],
+  paddingBottom: vars.ref.spacing[8],
+  fontFamily: vars.system.textScale["paragraph-body-m"].fontFamily,
+      fontSize: vars.system.textScale["paragraph-body-m"].fontSize,
+      fontWeight: vars.system.textScale["paragraph-body-m"].fontWeight,
+      letterSpacing: vars.system.textScale["paragraph-body-m"].letterSpacing,
+      lineHeight: vars.system.textScale["paragraph-body-m"].lineHeight,
   selectors: {
     "&[data-highlighted]": {
       backgroundColor: vars.system.colors.backgroundBody,
@@ -174,16 +174,16 @@ export const autocompleteItemStart = style({
 });
 
 export const autocompleteHighlight = style({
-  backgroundColor: vars.ref.color.purpleMuted,
+  backgroundColor: vars.ref.color.primary[500],
 });
 
 export const autocompleteEmpty = style({
   boxSizing: "border-box",
   color: vars.system.colors.textSecondary,
-  padding: vars.ref.spacing[3],
-  fontFamily: vars.system.textScale.supporting.fontFamily,
-      fontSize: vars.system.textScale.supporting.fontSize,
-      fontWeight: vars.system.textScale.supporting.fontWeight,
-      letterSpacing: vars.system.textScale.supporting.letterSpacing,
-      lineHeight: vars.system.textScale.supporting.lineHeight,
+  padding: vars.ref.spacing[12],
+  fontFamily: vars.system.textScale["tiny-caption"].fontFamily,
+      fontSize: vars.system.textScale["tiny-caption"].fontSize,
+      fontWeight: vars.system.textScale["tiny-caption"].fontWeight,
+      letterSpacing: vars.system.textScale["tiny-caption"].letterSpacing,
+      lineHeight: vars.system.textScale["tiny-caption"].lineHeight,
 });

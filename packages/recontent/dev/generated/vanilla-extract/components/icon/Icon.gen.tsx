@@ -1,6 +1,6 @@
 import type { CSSProperties } from "react";
 import { iconColor, iconRoot, iconSize } from "./Icon.gen.css";
-import type { RefFontSizeScale as IconSizeToken, SystemColorsTextScale as IconColorToken } from "../../tokens.css";
+import type { RefIconScale as IconSizeToken, SystemColorsTextScale as IconColorToken } from "../../tokens.css";
 import type { CommonComponentProps } from "../../renderElement.gen";
 import { icons, type IconType } from "../../iconMap";
 

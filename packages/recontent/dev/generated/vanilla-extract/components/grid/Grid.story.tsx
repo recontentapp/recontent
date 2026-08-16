@@ -7,7 +7,7 @@ const meta = {
   argTypes: {
     gap: {
       control: "select",
-      options: [0, "0-5", 1, "1-5", 2, 3, 4, 5, 6, 8, 10, 12],
+      options: [0, 2, 4, 8, 12, 16, 20, 24, 32, 40, 48, 56, 64, 72, 80],
     },
     align: {
       control: "select",
@@ -24,7 +24,7 @@ const meta = {
   },
   args: {
     columns: 3,
-    gap: 4,
+    gap: 16,
   },
 } satisfies Meta<typeof Grid>;
 
@@ -44,13 +44,13 @@ export const Default: Story = {
 
 export const Responsive: Story = {
   args: {
-    columns: { base: 1, md: 2, lg: 3 },
-    gap: { base: 2, md: 4, lg: 6 },
+    columns: { xs: 1, md: 2, lg: 3 },
+    gap: { xs: 8, md: 16, lg: 24 },
   },
 };
 
 export const AsymmetricColumns: Story = {
-  args: { columns: "1fr 2fr", gap: 2 },
+  args: { columns: "1fr 2fr", gap: 8 },
   render: (args) => (
     <Grid {...args}>
       <div>Sidebar</div>

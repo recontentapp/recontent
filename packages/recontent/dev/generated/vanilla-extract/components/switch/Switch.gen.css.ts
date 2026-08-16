@@ -6,7 +6,7 @@ export const switchRoot = style({
   alignItems: "center",
   boxSizing: "border-box",
   cursor: "pointer",
-  gap: vars.ref.spacing[2],
+  gap: vars.ref.spacing[8],
   selectors: {
     "&[data-disabled]": {
       cursor: "not-allowed",
@@ -29,8 +29,8 @@ export const switchTrack = style({
   borderRadius: vars.ref.radius.full,
   backgroundColor: vars.system.colors.backgroundMuted,
   transitionProperty: "background-color",
-  transitionDuration: vars.system.transitions.standard.transitionDuration,
-  transitionTimingFunction: vars.system.transitions.standard.transitionTimingFunction,
+  transitionDuration: vars.system.transitionScale.fast.transitionDuration,
+  transitionTimingFunction: vars.system.transitionScale.fast.transitionTimingFunction,
   ":focus-visible": {
     outline: `2px solid ${vars.system.colors.accent}`,
     outlineOffset: "2px",
@@ -47,18 +47,18 @@ export const switchTrack = style({
 });
 
 export const switchTrackSize = styleVariants({
-  "sm": { width: vars.ref.spacing[6], height: vars.ref.spacing[3] },
-  "md": { width: vars.ref.spacing[8], height: vars.ref.spacing[4] },
+  "sm": { width: vars.ref.spacing[24], height: vars.ref.spacing[12] },
+  "md": { width: vars.ref.spacing[32], height: vars.ref.spacing[16] },
 });
 
 export const switchThumb = style({
   boxSizing: "border-box",
   borderRadius: vars.ref.radius.full,
-  backgroundColor: vars.ref.color.white,
-  boxShadow: vars.system.elevation.sm,
+  backgroundColor: vars.ref.color.white[100],
+  boxShadow: vars.system.elevationScale.sm,
   transitionProperty: "translate",
-  transitionDuration: vars.system.transitions.standard.transitionDuration,
-  transitionTimingFunction: vars.system.transitions.standard.transitionTimingFunction,
+  transitionDuration: vars.system.transitionScale.fast.transitionDuration,
+  transitionTimingFunction: vars.system.transitionScale.fast.transitionTimingFunction,
   translate: "2px",
   selectors: {
     "[data-checked] > &": {
@@ -68,15 +68,15 @@ export const switchThumb = style({
 });
 
 export const switchThumbSize = styleVariants({
-  "sm": { width: vars.ref.spacing[2], height: vars.ref.spacing[2] },
-  "md": { width: vars.ref.spacing[3], height: vars.ref.spacing[3] },
+  "sm": { width: vars.ref.spacing[8], height: vars.ref.spacing[8] },
+  "md": { width: vars.ref.spacing[12], height: vars.ref.spacing[12] },
 });
 
 export const switchLabel = style({
   color: vars.system.colors.textPrimary,
-  fontFamily: vars.system.textStyles.body.fontFamily,
-      fontSize: vars.system.textStyles.body.fontSize,
-      fontWeight: vars.system.textStyles.body.fontWeight,
-      letterSpacing: vars.system.textStyles.body.letterSpacing,
-      lineHeight: vars.system.textStyles.body.lineHeight,
+  fontFamily: vars.system.textScale["paragraph-body-m"].fontFamily,
+      fontSize: vars.system.textScale["paragraph-body-m"].fontSize,
+      fontWeight: vars.system.textScale["paragraph-body-m"].fontWeight,
+      letterSpacing: vars.system.textScale["paragraph-body-m"].letterSpacing,
+      lineHeight: vars.system.textScale["paragraph-body-m"].lineHeight,
 });

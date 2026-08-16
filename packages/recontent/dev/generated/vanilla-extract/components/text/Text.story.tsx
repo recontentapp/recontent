@@ -7,7 +7,13 @@ const meta = {
   argTypes: {
     variant: {
       control: "select",
-      options: ["supporting", "body", "heading1", "heading2", "heading3"],
+      options: [
+        "tiny-caption",
+        "paragraph-body-m",
+        "heading-branding-page",
+        "heading-section-1",
+        "heading-page-l",
+      ],
     },
     color: {
       control: "select",
@@ -23,7 +29,7 @@ const meta = {
     },
   },
   args: {
-    variant: "body",
+    variant: "paragraph-body-m",
     color: "primary",
     children: "The quick brown fox jumps over the lazy dog.",
   },
@@ -36,7 +42,7 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {};
 
 export const Heading: Story = {
-  args: { variant: "heading1", children: "Page title" },
+  args: { variant: "heading-branding-page", children: "Page title" },
 };
 
 export const Truncated: Story = {
@@ -56,8 +62,8 @@ export const Truncated: Story = {
 
 export const Responsive: Story = {
   args: {
-    variant: { base: "supporting", md: "body", lg: "heading3" },
-    align: { base: "left", md: "center" },
+    variant: { xs: "tiny-caption", md: "paragraph-body-m", lg: "heading-page-l" },
+    align: { xs: "left", md: "center" },
   },
 };
 

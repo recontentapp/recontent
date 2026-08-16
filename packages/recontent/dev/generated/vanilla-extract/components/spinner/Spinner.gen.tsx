@@ -1,7 +1,7 @@
 import type { CSSProperties, ComponentPropsWithoutRef } from "react";
 import { spinnerColor, spinnerRoot, spinnerSize } from "./Spinner.gen.css";
 import { renderElement, type CommonComponentProps, type RenderProp } from "../../renderElement.gen";
-import type { RefFontSizeScale as SpinnerSizeToken, SystemColorsTextScale as SpinnerColorToken } from "../../tokens.css";
+import type { RefIconScale as SpinnerSizeToken, SystemColorsTextScale as SpinnerColorToken } from "../../tokens.css";
 
 export interface SpinnerProps extends CommonComponentProps {
   size?: SpinnerSizeToken | number;

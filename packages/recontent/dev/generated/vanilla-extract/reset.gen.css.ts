@@ -1,4 +1,5 @@
 import { globalStyle } from "@vanilla-extract/css";
+import { vars } from "./tokens.css";
 
 globalStyle("*, *::before, *::after", {
   boxSizing: "border-box",
@@ -19,6 +20,7 @@ globalStyle("html", {
 globalStyle("body", {
   lineHeight: 1.5,
   WebkitFontSmoothing: "antialiased",
+  fontFamily: vars.system.typography.bodyFontFamily,
 });
 
 globalStyle("img, picture, video, canvas, svg", {
@@ -40,4 +42,12 @@ globalStyle("p", {
 
 globalStyle("h1, h2, h3, h4, h5, h6", {
   textWrap: "balance",
+});
+
+globalStyle("::placeholder", {
+  color: vars.system.colors.textSecondary,
+});
+
+globalStyle(":focus-visible", {
+  outlineColor: vars.system.colors.accent,
 });

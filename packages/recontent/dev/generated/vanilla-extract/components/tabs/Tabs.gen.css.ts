@@ -1,4 +1,4 @@
-import { style, styleVariants } from "@vanilla-extract/css";
+import { globalStyle, style, styleVariants } from "@vanilla-extract/css";
 import { vars } from "../../tokens.css";
 
 export const tabsRoot = style({
@@ -18,7 +18,7 @@ export const tabsList = style({
   position: "relative",
   display: "flex",
   boxSizing: "border-box",
-  gap: vars.ref.spacing[1],
+  gap: vars.ref.spacing[4],
   selectors: {
     '&[data-orientation="vertical"]': {
       flexDirection: "column",
@@ -39,10 +39,10 @@ export const tabsListVariant = styleVariants({
     },
 });
 
-export const tabsListFitted = style({
-  selectors: {
-    '&[data-orientation="horizontal"] > *': { flex: 1 },
-  },
+export const tabsListFitted = style({});
+
+globalStyle(`${tabsListFitted}[data-orientation="horizontal"] > *`, {
+  flex: 1,
 });
 
 export const tabsTab = style({
@@ -55,27 +55,27 @@ export const tabsTab = style({
   border: "none",
   background: "none",
   zIndex: 1,
-  gap: vars.ref.spacing[1],
-  paddingLeft: vars.ref.spacing[3],
-  paddingRight: vars.ref.spacing[3],
-  paddingTop: vars.ref.spacing[2],
-  paddingBottom: vars.ref.spacing[2],
-  fontFamily: vars.system.textStyles.body.fontFamily,
-      fontSize: vars.system.textStyles.body.fontSize,
-      fontWeight: vars.system.textStyles.body.fontWeight,
-      letterSpacing: vars.system.textStyles.body.letterSpacing,
-      lineHeight: vars.system.textStyles.body.lineHeight,
+  gap: vars.ref.spacing[4],
+  paddingLeft: vars.ref.spacing[12],
+  paddingRight: vars.ref.spacing[12],
+  paddingTop: vars.ref.spacing[8],
+  paddingBottom: vars.ref.spacing[8],
+  fontFamily: vars.system.textScale["paragraph-body-m"].fontFamily,
+      fontSize: vars.system.textScale["paragraph-body-m"].fontSize,
+      fontWeight: vars.system.textScale["paragraph-body-m"].fontWeight,
+      letterSpacing: vars.system.textScale["paragraph-body-m"].letterSpacing,
+      lineHeight: vars.system.textScale["paragraph-body-m"].lineHeight,
   ":focus-visible": {
     outline: `2px solid ${vars.system.colors.accent}`,
     outlineOffset: "2px",
   },
   selectors: {
     "&[data-selected]": {
-      fontFamily: vars.system.textStyles.body.fontFamily,
-      fontSize: vars.system.textStyles.body.fontSize,
-      fontWeight: vars.system.textStyles.body.fontWeight,
-      letterSpacing: vars.system.textStyles.body.letterSpacing,
-      lineHeight: vars.system.textStyles.body.lineHeight,
+      fontFamily: vars.system.textScale["paragraph-body-m"].fontFamily,
+      fontSize: vars.system.textScale["paragraph-body-m"].fontSize,
+      fontWeight: vars.system.textScale["paragraph-body-m"].fontWeight,
+      letterSpacing: vars.system.textScale["paragraph-body-m"].letterSpacing,
+      lineHeight: vars.system.textScale["paragraph-body-m"].lineHeight,
     },
     "&[data-disabled]": {
       color: vars.system.colors.textDisabled,
@@ -127,14 +127,14 @@ export const tabsIndicator = style({
   selectors: {
     '[data-orientation="horizontal"] &': {
       bottom: 0,
-      height: vars.ref.spacing["0-5"],
+      height: vars.ref.spacing[2],
       left: 0,
       width: "var(--active-tab-width)",
       translate: "var(--active-tab-left) 0",
     },
     '[data-orientation="vertical"] &': {
       right: 0,
-      width: vars.ref.spacing["0-5"],
+      width: vars.ref.spacing[2],
       top: 0,
       height: "var(--active-tab-height)",
       translate: "0 var(--active-tab-top)",
@@ -149,5 +149,5 @@ export const tabsIndicatorVariant = styleVariants({
 
 export const tabsPanel = style({
   boxSizing: "border-box",
-  padding: vars.ref.spacing[4],
+  padding: vars.ref.spacing[16],
 });

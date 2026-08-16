@@ -4,13 +4,13 @@ import { vars } from "../../tokens.css";
 export const linkRoot = style({
   cursor: "pointer",
   color: vars.system.colors.accent,
-  fontFamily: vars.system.textStyles.body.fontFamily,
-    fontSize: vars.system.textStyles.body.fontSize,
-    fontWeight: vars.system.textStyles.body.fontWeight,
-    letterSpacing: vars.system.textStyles.body.letterSpacing,
-    lineHeight: vars.system.textStyles.body.lineHeight,
+  fontFamily: vars.system.textScale["paragraph-body-m"].fontFamily,
+    fontSize: vars.system.textScale["paragraph-body-m"].fontSize,
+    fontWeight: vars.system.textScale["paragraph-body-m"].fontWeight,
+    letterSpacing: vars.system.textScale["paragraph-body-m"].letterSpacing,
+    lineHeight: vars.system.textScale["paragraph-body-m"].lineHeight,
   ":hover": {
-    color: vars.ref.color.blue500,
+    color: vars.ref.color.primary[800],
   },
   ":visited": {
     color: vars.system.colors.accent,

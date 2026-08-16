@@ -9,13 +9,13 @@ export const breadcrumbList = style({
   margin: 0,
   padding: 0,
   boxSizing: "border-box",
-  gap: vars.ref.spacing[1],
+  gap: vars.ref.spacing[4],
 });
 
 export const breadcrumbItem = style({
   display: "inline-flex",
   alignItems: "center",
-  gap: vars.ref.spacing[1],
+  gap: vars.ref.spacing[4],
 });
 
 export const breadcrumbLink = style({
@@ -24,11 +24,11 @@ export const breadcrumbLink = style({
   gap: "0.25em",
   color: vars.system.colors.textSecondary,
   textDecoration: "none",
-  fontFamily: vars.system.textScale.supporting.fontFamily,
-      fontSize: vars.system.textScale.supporting.fontSize,
-      fontWeight: vars.system.textScale.supporting.fontWeight,
-      letterSpacing: vars.system.textScale.supporting.letterSpacing,
-      lineHeight: vars.system.textScale.supporting.lineHeight,
+  fontFamily: vars.system.textScale["tiny-caption"].fontFamily,
+      fontSize: vars.system.textScale["tiny-caption"].fontSize,
+      fontWeight: vars.system.textScale["tiny-caption"].fontWeight,
+      letterSpacing: vars.system.textScale["tiny-caption"].letterSpacing,
+      lineHeight: vars.system.textScale["tiny-caption"].lineHeight,
   ":hover": {
     color: vars.system.colors.textPrimary,
   },
@@ -39,11 +39,11 @@ export const breadcrumbCurrent = style({
   alignItems: "center",
   gap: "0.25em",
   color: vars.system.colors.textPrimary,
-  fontFamily: vars.system.textScale.supporting.fontFamily,
-      fontSize: vars.system.textScale.supporting.fontSize,
-      fontWeight: vars.system.textScale.supporting.fontWeight,
-      letterSpacing: vars.system.textScale.supporting.letterSpacing,
-      lineHeight: vars.system.textScale.supporting.lineHeight,
+  fontFamily: vars.system.textScale["tiny-caption"].fontFamily,
+      fontSize: vars.system.textScale["tiny-caption"].fontSize,
+      fontWeight: vars.system.textScale["tiny-caption"].fontWeight,
+      letterSpacing: vars.system.textScale["tiny-caption"].letterSpacing,
+      lineHeight: vars.system.textScale["tiny-caption"].lineHeight,
 });
 
 export const breadcrumbIcon = style({

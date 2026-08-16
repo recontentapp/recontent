@@ -8,7 +8,7 @@ import {
   skeletonVariant,
 } from "./Skeleton.gen.css";
 import { renderElement, type CommonComponentProps, type RenderProp } from "../../renderElement.gen";
-import type { RefRadiusScale as RadiusToken } from "../../tokens.css";
+import type { RefRadius as RadiusToken } from "../../tokens.css";
 
 export interface SkeletonProps extends CommonComponentProps {
   variant?: "text" | "circular" | "rectangular";

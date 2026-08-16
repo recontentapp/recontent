@@ -11,12 +11,12 @@ export const actionBarRoot = style({
   color: vars.system.colors.textPrimary,
   border: vars.system.border.default,
   borderRadius: vars.ref.radius.container,
-  boxShadow: vars.system.elevation.md,
-  gap: vars.ref.spacing[2],
-  paddingLeft: vars.ref.spacing[3],
-  paddingRight: vars.ref.spacing[3],
-  paddingTop: vars.ref.spacing[2],
-  paddingBottom: vars.ref.spacing[2],
+  boxShadow: vars.system.elevationScale.md,
+  gap: vars.ref.spacing[8],
+  paddingLeft: vars.ref.spacing[12],
+  paddingRight: vars.ref.spacing[12],
+  paddingTop: vars.ref.spacing[8],
+  paddingBottom: vars.ref.spacing[8],
 });
 
 export const actionBarHidden = style({
@@ -25,16 +25,16 @@ export const actionBarHidden = style({
 
 export const actionBarPlacement = styleVariants({
   "bottom-start": {
-    bottom: vars.ref.spacing[6],
-    left: vars.ref.spacing[6],
+    bottom: vars.ref.spacing[24],
+    left: vars.ref.spacing[24],
   },
   bottom: {
-    bottom: vars.ref.spacing[6],
+    bottom: vars.ref.spacing[24],
     left: "50%",
     transform: "translateX(-50%)",
   },
   "bottom-end": {
-    bottom: vars.ref.spacing[6],
-    right: vars.ref.spacing[6],
+    bottom: vars.ref.spacing[24],
+    right: vars.ref.spacing[24],
   },
 });

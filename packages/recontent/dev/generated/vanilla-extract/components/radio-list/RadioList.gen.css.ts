@@ -1,11 +1,11 @@
 import { style, styleVariants } from "@vanilla-extract/css";
-import { refFontSizeScale } from "../../tokens.css";
+import { refIconScale } from "../../tokens.css";
 import { vars } from "../../tokens.css";
 
 export const radioListRoot = style({
   display: "flex",
   boxSizing: "border-box",
-  gap: vars.ref.spacing[3],
+  gap: vars.ref.spacing[12],
 });
 
 export const radioListRootOrientation = styleVariants({
@@ -18,7 +18,7 @@ export const radioListOption = style({
   alignItems: "flex-start",
   boxSizing: "border-box",
   cursor: "pointer",
-  gap: vars.ref.spacing[2],
+  gap: vars.ref.spacing[8],
   selectors: {
     "&[data-disabled]": {
       cursor: "not-allowed",
@@ -50,7 +50,7 @@ export const radioListControl = style({
       borderColor: vars.system.colors.accent,
     },
     "&[data-invalid]": {
-      borderColor: vars.ref.color.error,
+      borderColor: vars.ref.color.danger[500],
     },
     "&[data-disabled]": {
       backgroundColor: vars.system.colors.backgroundMuted,
@@ -59,7 +59,7 @@ export const radioListControl = style({
   },
 });
 
-export const radioListControlSize = styleVariants(refFontSizeScale, (value) => ({
+export const radioListControlSize = styleVariants(refIconScale, (value) => ({
   width: value,
   height: value,
 }));
@@ -83,18 +83,18 @@ export const radioListContent = style({
 
 export const radioListLabel = style({
   color: vars.system.colors.textPrimary,
-  fontFamily: vars.system.textStyles.body.fontFamily,
-  fontSize: vars.system.textStyles.body.fontSize,
-  fontWeight: vars.system.textStyles.body.fontWeight,
-  letterSpacing: vars.system.textStyles.body.letterSpacing,
-  lineHeight: vars.system.textStyles.body.lineHeight,
+  fontFamily: vars.system.textScale["paragraph-body-m"].fontFamily,
+  fontSize: vars.system.textScale["paragraph-body-m"].fontSize,
+  fontWeight: vars.system.textScale["paragraph-body-m"].fontWeight,
+  letterSpacing: vars.system.textScale["paragraph-body-m"].letterSpacing,
+  lineHeight: vars.system.textScale["paragraph-body-m"].lineHeight,
 });
 
 export const radioListDescription = style({
   color: vars.system.colors.textSecondary,
-  fontFamily: vars.system.textScale.supporting.fontFamily,
-  fontSize: vars.system.textScale.supporting.fontSize,
-  fontWeight: vars.system.textScale.supporting.fontWeight,
-  letterSpacing: vars.system.textScale.supporting.letterSpacing,
-  lineHeight: vars.system.textScale.supporting.lineHeight,
+  fontFamily: vars.system.textScale["tiny-caption"].fontFamily,
+  fontSize: vars.system.textScale["tiny-caption"].fontSize,
+  fontWeight: vars.system.textScale["tiny-caption"].fontWeight,
+  letterSpacing: vars.system.textScale["tiny-caption"].letterSpacing,
+  lineHeight: vars.system.textScale["tiny-caption"].lineHeight,
 });

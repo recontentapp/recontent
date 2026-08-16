@@ -25,13 +25,13 @@ export const iconButtonVariant = styleVariants({
       backgroundColor: vars.system.colors.accent,
       color: vars.system.colors.onAccent,
       border: vars.system.border.default,
-      fontFamily: vars.system.textStyles.body.fontFamily,
-      fontSize: vars.system.textStyles.body.fontSize,
-      fontWeight: vars.system.textStyles.body.fontWeight,
-      letterSpacing: vars.system.textStyles.body.letterSpacing,
-      lineHeight: vars.system.textStyles.body.lineHeight,
+      fontFamily: vars.system.textScale["paragraph-body-m"].fontFamily,
+      fontSize: vars.system.textScale["paragraph-body-m"].fontSize,
+      fontWeight: vars.system.textScale["paragraph-body-m"].fontWeight,
+      letterSpacing: vars.system.textScale["paragraph-body-m"].letterSpacing,
+      lineHeight: vars.system.textScale["paragraph-body-m"].lineHeight,
       ":hover": {
-        backgroundColor: vars.ref.color.blue500,
+        backgroundColor: vars.ref.color.primary[800],
         color: vars.system.colors.onAccent,
         border: vars.system.border.default,
       },
@@ -46,11 +46,11 @@ export const iconButtonVariant = styleVariants({
       backgroundColor: vars.system.colors.backgroundCard,
       color: vars.system.colors.textPrimary,
       border: vars.system.border.default,
-      fontFamily: vars.system.textStyles.body.fontFamily,
-      fontSize: vars.system.textStyles.body.fontSize,
-      fontWeight: vars.system.textStyles.body.fontWeight,
-      letterSpacing: vars.system.textStyles.body.letterSpacing,
-      lineHeight: vars.system.textStyles.body.lineHeight,
+      fontFamily: vars.system.textScale["paragraph-body-m"].fontFamily,
+      fontSize: vars.system.textScale["paragraph-body-m"].fontSize,
+      fontWeight: vars.system.textScale["paragraph-body-m"].fontWeight,
+      letterSpacing: vars.system.textScale["paragraph-body-m"].letterSpacing,
+      lineHeight: vars.system.textScale["paragraph-body-m"].lineHeight,
       ":hover": {
         backgroundColor: vars.system.colors.backgroundBody,
         color: vars.system.colors.textPrimary,
@@ -67,12 +67,12 @@ export const iconButtonVariant = styleVariants({
 
 export const iconButtonSize = styleVariants({
   "sm": {
-      width: `calc(vars.ref.fontSize.sm + 2 * vars.ref.spacing[1])`,
-      height: `calc(vars.ref.fontSize.sm + 2 * vars.ref.spacing[1])`,
+      width: `calc(vars.ref.fontSize.sm + 2 * vars.ref.spacing[4])`,
+      height: `calc(vars.ref.fontSize.sm + 2 * vars.ref.spacing[4])`,
     },
   "md": {
-      width: `calc(vars.ref.fontSize.base + 2 * vars.ref.spacing["1-5"])`,
-      height: `calc(vars.ref.fontSize.base + 2 * vars.ref.spacing["1-5"])`,
+      width: `calc(vars.ref.fontSize.base + 2 * vars.ref.spacing[8])`,
+      height: `calc(vars.ref.fontSize.base + 2 * vars.ref.spacing[8])`,
     },
 });
 
