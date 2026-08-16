@@ -82,7 +82,7 @@ export function generateTabsSources(bindings: {
   const variantNames = Object.keys(variants);
 
   return {
-    styles: `import { style, styleVariants } from "@vanilla-extract/css";
+    styles: `import { globalStyle, style, styleVariants } from "@vanilla-extract/css";
 import { vars } from "../../tokens.css";
 
 export const tabsRoot = style({
@@ -114,10 +114,10 @@ export const tabsListVariant = styleVariants({
 ${variantNames.map((name) => `  ${JSON.stringify(name)}: ${variantListStyleBody(variants[name]!)},`).join("\n")}
 });
 
-export const tabsListFitted = style({
-  selectors: {
-    '&[data-orientation="horizontal"] > *': { flex: 1 },
-  },
+export const tabsListFitted = style({});
+
+globalStyle(\`\${tabsListFitted}[data-orientation="horizontal"] > *\`, {
+  flex: 1,
 });
 
 export const tabsTab = style({
