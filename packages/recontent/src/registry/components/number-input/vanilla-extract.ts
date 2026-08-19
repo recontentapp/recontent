@@ -22,7 +22,7 @@ export function generateNumberInputSources(bindings: {
   gap: TokenImport;
   hoverBorderColor: TokenImport;
   focusBorderColor: TokenImport;
-  focusRingColor: TokenImport;
+  focusRingColor: TokenImport | undefined;
   invalidBorderColor: TokenImport;
   disabledBackgroundColor: TokenImport;
   disabledColor: TokenImport;
@@ -89,8 +89,7 @@ export const numberInputGroup = style({
   },
   ":focus-within": {
     borderColor: ${focusBorderColor.reference},
-    outline: \`2px solid \${${focusRingColor.reference}}\`,
-    outlineOffset: "2px",
+    ${focusRingColor ? `outline: "none", boxShadow: \`0 0 0 2px \${${focusRingColor.reference}}\`,` : ""}
   },
   selectors: {
     "&[data-invalid]": {

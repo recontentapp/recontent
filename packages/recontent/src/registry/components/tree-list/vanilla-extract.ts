@@ -1,4 +1,5 @@
 import type { ComponentSourceFiles, TokenImport } from "../../types.js";
+import { focusRingBlock } from "../shared.js";
 
 function typographyProps(ref: string): string {
   return [
@@ -16,7 +17,7 @@ export function generateTreeListSources(bindings: {
   hoverBackgroundColor: TokenImport;
   selectedBackgroundColor: TokenImport;
   selectedColor: TokenImport;
-  focusRingColor: TokenImport;
+  focusRingColor: TokenImport | undefined;
   borderRadius: TokenImport;
   indentSpacing: TokenImport;
   rowHorizontalSpacing: TokenImport;
@@ -89,10 +90,7 @@ export const treeListRow = style({
   ":hover": {
     backgroundColor: ${hoverBackgroundColor.reference},
   },
-  ":focus-visible": {
-    outline: \`2px solid \${${focusRingColor.reference}}\`,
-    outlineOffset: "-2px",
-  },
+  ${focusRingBlock(focusRingColor, { inset: true })}
   selectors: {
     "&[data-selected]": {
       backgroundColor: ${selectedBackgroundColor.reference},
@@ -118,6 +116,7 @@ export const treeListExpand = style({
   width: ${iconSize.reference},
   height: ${iconSize.reference},
   transitionProperty: "transform",
+  ${focusRingBlock(focusRingColor)}
   selectors: {
     "&[data-expanded]": {
       transform: "rotate(0deg)",

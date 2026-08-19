@@ -1,5 +1,5 @@
 import type { ComponentSourceFiles, TokenImport } from "../../types.js";
-import { groupVariantTokens } from "../shared.js";
+import { focusRingBlock, groupVariantTokens } from "../shared.js";
 
 const SIZE_FIELDS = ["horizontalSpacing", "verticalSpacing", "typography"] as const;
 
@@ -35,6 +35,7 @@ export function generateToggleSources(bindings: {
   activeBackgroundColor: TokenImport;
   disabledColor: TokenImport;
   tokens: Record<string, TokenImport>;
+  focusRingColor: TokenImport | undefined;
 }): ComponentSourceFiles {
   const {
     borderRadius,
@@ -48,6 +49,7 @@ export function generateToggleSources(bindings: {
     activeBackgroundColor,
     disabledColor,
     tokens,
+    focusRingColor,
   } = bindings;
   const sizes = groupVariantTokens(tokens, "sizes", SIZE_FIELDS);
   const sizeNames = Object.keys(sizes);
@@ -91,6 +93,7 @@ export const toggleOption = style({
       cursor: "not-allowed",
     },
   },
+  ${focusRingBlock(focusRingColor)}
 });
 
 export const toggleOptionSize = styleVariants({

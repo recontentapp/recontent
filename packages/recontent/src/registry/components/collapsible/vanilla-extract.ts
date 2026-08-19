@@ -1,4 +1,5 @@
 import type { ComponentSourceFiles, TokenImport } from "../../types.js";
+import { focusRingBlock } from "../shared.js";
 
 function typographyProps(ref: string): string {
   return [
@@ -24,6 +25,7 @@ export function generateCollapsibleSources(bindings: {
   transition: TokenImport;
   /** Build-time config, baked directly into the generated component. */
   indicatorIcon: string;
+  focusRingColor: TokenImport | undefined;
 }): ComponentSourceFiles {
   const {
     borderRadius,
@@ -38,6 +40,7 @@ export function generateCollapsibleSources(bindings: {
     contentVerticalSpacing,
     transition,
     indicatorIcon,
+    focusRingColor,
   } = bindings;
 
   return {
@@ -70,6 +73,7 @@ export const collapsibleTrigger = style({
   ":hover": {
     backgroundColor: ${hoverBackgroundColor.reference},
   },
+  ${focusRingBlock(focusRingColor)}
 });
 
 export const collapsibleIndicator = style({

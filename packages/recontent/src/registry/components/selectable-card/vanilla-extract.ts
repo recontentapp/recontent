@@ -1,4 +1,5 @@
 import type { ComponentSourceFiles, TokenImport } from "../../types.js";
+import { focusRingBlock } from "../shared.js";
 
 export function generateSelectableCardSources(bindings: {
   borderRadius: TokenImport;
@@ -11,7 +12,7 @@ export function generateSelectableCardSources(bindings: {
   disabledColor: TokenImport;
   horizontalSpacing: TokenImport;
   verticalSpacing: TokenImport;
-  focusRingColor: TokenImport;
+  focusRingColor: TokenImport | undefined;
 }): ComponentSourceFiles {
   const {
     borderRadius,
@@ -47,10 +48,7 @@ export const selectableCardRoot = style({
   ":hover": {
     borderColor: ${hoverBorderColor.reference},
   },
-  ":focus-visible": {
-    outline: \`2px solid \${${focusRingColor.reference}}\`,
-    outlineOffset: "2px",
-  },
+  ${focusRingBlock(focusRingColor)}
   selectors: {
     "&[data-selected]": {
       backgroundColor: ${activeBackgroundColor.reference},

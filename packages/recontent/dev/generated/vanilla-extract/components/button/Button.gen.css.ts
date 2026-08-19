@@ -9,8 +9,8 @@ export const buttonRoot = style({
   cursor: "pointer",
   borderRadius: vars.ref.radius.element,
   ":focus-visible": {
-    outline: `2px solid ${vars.system.colors.accent}`,
-    outlineOffset: "2px",
+    outline: "none",
+    boxShadow: `0 0 0 2px ${vars.system.colors.accent}`,
   },
 });
 

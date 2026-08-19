@@ -17,7 +17,6 @@ export type SwitchComponentOptions = {
   trackBorder: TokenBinding<"border">;
   thumbBackgroundColor: TokenBinding<"color">;
   thumbShadow: TokenBinding<"shadow">;
-  focusRingColor: TokenBinding<"color">;
   disabledTrackBackgroundColor: TokenBinding<"color">;
   labelTypography: TokenBinding<"typography">;
   labelColor: TokenBinding<"color">;
@@ -69,11 +68,6 @@ export const switchComponent = defineRegistryComponent<SwitchComponentOptions>()
       type: "shadow",
       description: "Shadow applied to the thumb.",
     },
-    focusRingColor: {
-      kind: "token",
-      type: "color",
-      description: "Outline color shown on keyboard focus.",
-    },
     disabledTrackBackgroundColor: {
       kind: "token",
       type: "color",
@@ -104,7 +98,7 @@ export const switchComponent = defineRegistryComponent<SwitchComponentOptions>()
     "vanilla-extract": vanillaExtractComponentOutput(
       "switch",
       "Switch",
-      (_scales, _breakpoints, tokens) =>
+      (_scales, _breakpoints, tokens, focusRingColor) =>
         generateSwitchSources({
           borderRadius: tokens.borderRadius!,
           trackBackgroundColor: tokens.trackBackgroundColor!,
@@ -112,7 +106,7 @@ export const switchComponent = defineRegistryComponent<SwitchComponentOptions>()
           trackBorder: tokens.trackBorder!,
           thumbBackgroundColor: tokens.thumbBackgroundColor!,
           thumbShadow: tokens.thumbShadow!,
-          focusRingColor: tokens.focusRingColor!,
+          focusRingColor,
           disabledTrackBackgroundColor: tokens.disabledTrackBackgroundColor!,
           labelTypography: tokens.labelTypography!,
           labelColor: tokens.labelColor!,

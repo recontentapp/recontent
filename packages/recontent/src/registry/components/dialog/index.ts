@@ -60,7 +60,7 @@ export const dialogComponent = defineRegistryComponent<DialogComponentOptions>()
     "vanilla-extract": vanillaExtractComponentOutput(
       "dialog",
       "Dialog",
-      (_scales, _breakpoints, tokens) =>
+      (_scales, _breakpoints, tokens, focusRingColor) =>
         generateDialogSources({
           backdropColor: tokens.backdropColor!,
           backgroundColor: tokens.backgroundColor!,
@@ -78,6 +78,7 @@ export const dialogComponent = defineRegistryComponent<DialogComponentOptions>()
           transition: tokens.transition!,
           closeIcon: CLOSE_ICON,
           tokens,
+          focusRingColor,
         }),
       { "@base-ui/react": "^1.0.0" },
     ),

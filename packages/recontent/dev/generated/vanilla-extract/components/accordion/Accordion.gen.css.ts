@@ -42,6 +42,10 @@ export const accordionTrigger = style({
   ":hover": {
     backgroundColor: vars.system.colors.backgroundBody,
   },
+  ":focus-visible": {
+    outline: "none",
+    boxShadow: `0 0 0 2px ${vars.system.colors.accent}`,
+  },
 });
 
 export const accordionIndicator = style({

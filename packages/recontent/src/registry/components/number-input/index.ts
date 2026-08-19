@@ -16,7 +16,6 @@ export type NumberInputComponentOptions = {
   gap: TokenBinding<"dimension">;
   hoverBorderColor: TokenBinding<"color">;
   focusBorderColor: TokenBinding<"color">;
-  focusRingColor: TokenBinding<"color">;
   invalidBorderColor: TokenBinding<"color">;
   disabledBackgroundColor: TokenBinding<"color">;
   disabledColor: TokenBinding<"color">;
@@ -57,7 +56,6 @@ export const numberInputComponent = defineRegistryComponent<NumberInputComponent
     gap: { kind: "token", type: "dimension", description: "Space between affixes, icons and the field." },
     hoverBorderColor: { kind: "token", type: "color", description: "Border color of the input on hover." },
     focusBorderColor: { kind: "token", type: "color", description: "Border color of the input on focus." },
-    focusRingColor: { kind: "token", type: "color", description: "Outline color shown on keyboard focus." },
     invalidBorderColor: { kind: "token", type: "color", description: "Border color of the input when invalid." },
     disabledBackgroundColor: {
       kind: "token",
@@ -92,7 +90,7 @@ export const numberInputComponent = defineRegistryComponent<NumberInputComponent
     "vanilla-extract": vanillaExtractComponentOutput(
       "number-input",
       "NumberInput",
-      (_scales, _breakpoints, tokens) =>
+      (_scales, _breakpoints, tokens, focusRingColor) =>
         generateNumberInputSources({
           borderRadius: tokens.borderRadius!,
           border: tokens.border!,
@@ -105,7 +103,7 @@ export const numberInputComponent = defineRegistryComponent<NumberInputComponent
           gap: tokens.gap!,
           hoverBorderColor: tokens.hoverBorderColor!,
           focusBorderColor: tokens.focusBorderColor!,
-          focusRingColor: tokens.focusRingColor!,
+          focusRingColor,
           invalidBorderColor: tokens.invalidBorderColor!,
           disabledBackgroundColor: tokens.disabledBackgroundColor!,
           disabledColor: tokens.disabledColor!,

@@ -1,5 +1,5 @@
 import type { ComponentSourceFiles, TokenImport } from "../../types.js";
-import { groupVariantTokens } from "../shared.js";
+import { focusRingBlock, groupVariantTokens } from "../shared.js";
 
 const STATUS_FIELDS = ["color", "backgroundColor", "borderColor", "iconColor", "titleColor"] as const;
 
@@ -40,6 +40,7 @@ export function generateBannerSources(bindings: {
   iconSize: TokenImport;
   defaultStatusIcons: Record<string, string>;
   tokens: Record<string, TokenImport>;
+  focusRingColor: TokenImport | undefined;
 }): ComponentSourceFiles {
   const {
     border,
@@ -52,6 +53,7 @@ export function generateBannerSources(bindings: {
     iconSize,
     defaultStatusIcons,
     tokens,
+    focusRingColor,
   } = bindings;
   const statuses = groupVariantTokens(tokens, "statuses", STATUS_FIELDS);
   const statusNames = Object.keys(statuses);
@@ -122,6 +124,7 @@ export const bannerDismiss = style({
   background: "none",
   padding: 0,
   color: "inherit",
+  ${focusRingBlock(focusRingColor)}
 });
 `,
     component: `import type { ComponentPropsWithoutRef, ReactNode } from "react";

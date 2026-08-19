@@ -1,5 +1,5 @@
 import type { ComponentSourceFiles, TokenImport } from "../../types.js";
-import { groupVariantTokens } from "../shared.js";
+import { focusRingBlock, groupVariantTokens } from "../shared.js";
 
 const STATUS_FIELDS = ["color", "backgroundColor", "borderColor", "iconColor", "titleColor"] as const;
 
@@ -49,6 +49,7 @@ export function generateToastSources(bindings: {
   /** Build-time config, baked directly into the generated component. */
   closeIcon: string;
   tokens: Record<string, TokenImport>;
+  focusRingColor: TokenImport | undefined;
 }): ComponentSourceFiles {
   const {
     backgroundColor,
@@ -69,6 +70,7 @@ export function generateToastSources(bindings: {
     defaultStatusIcons,
     closeIcon,
     tokens,
+    focusRingColor,
   } = bindings;
   const statuses = groupVariantTokens(tokens, "statuses", STATUS_FIELDS);
   const statusNames = Object.keys(statuses);
@@ -169,6 +171,7 @@ export const toastActionButton = style({
   padding: 0,
   color: "inherit",
   textDecoration: "underline",
+  ${focusRingBlock(focusRingColor)}
 });
 
 export const toastClose = style({
@@ -181,6 +184,7 @@ export const toastClose = style({
   background: "none",
   padding: 0,
   color: "inherit",
+  ${focusRingBlock(focusRingColor)}
 });
 `,
     component: `import { useCallback, useMemo, useState, type ReactNode } from "react";

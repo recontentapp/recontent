@@ -74,7 +74,7 @@ export const paginationComponent = defineRegistryComponent<PaginationComponentOp
     "vanilla-extract": vanillaExtractComponentOutput(
       "pagination",
       "Pagination",
-      (_scales, _breakpoints, tokens) =>
+      (_scales, _breakpoints, tokens, focusRingColor) =>
         generatePaginationSources({
           borderRadius: tokens.borderRadius!,
           border: tokens.border!,
@@ -94,6 +94,7 @@ export const paginationComponent = defineRegistryComponent<PaginationComponentOp
           firstIcon: FIRST_ICON,
           lastIcon: LAST_ICON,
           tokens,
+          focusRingColor,
         }),
       { "@base-ui/react": "^1.0.0" },
     ),

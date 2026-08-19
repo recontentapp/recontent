@@ -1,4 +1,5 @@
 import type { ComponentSourceFiles, TokenImport } from "../../types.js";
+import { focusRingBlock } from "../shared.js";
 
 function typographyProps(ref: string): string {
   return [
@@ -32,6 +33,7 @@ export function generateFileInputSources(bindings: {
   /** Build-time config, baked directly into the generated component. */
   uploadIcon: string;
   removeIcon: string;
+  focusRingColor: TokenImport | undefined;
 }): ComponentSourceFiles {
   const {
     border,
@@ -54,6 +56,7 @@ export function generateFileInputSources(bindings: {
     fileBorderRadius,
     uploadIcon,
     removeIcon,
+    focusRingColor,
   } = bindings;
 
   return {
@@ -103,6 +106,7 @@ export const fileInputDropzone = style({
       cursor: "not-allowed",
     },
   },
+  ${focusRingBlock(focusRingColor)}
 });
 
 export const fileInputButton = style({
@@ -133,6 +137,7 @@ export const fileInputButton = style({
       cursor: "not-allowed",
     },
   },
+  ${focusRingBlock(focusRingColor)}
 });
 
 export const fileInputIcon = style({
@@ -191,6 +196,7 @@ export const fileInputRemove = style({
   background: "none",
   padding: 0,
   color: "inherit",
+  ${focusRingBlock(focusRingColor)}
 });
 `,
     component: `import { useRef, useState, type ComponentPropsWithoutRef, type DragEvent, type ReactNode } from "react";

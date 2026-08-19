@@ -40,7 +40,7 @@ export const outlineComponent = defineRegistryComponent<OutlineComponentOptions>
     "vanilla-extract": vanillaExtractComponentOutput(
       "outline",
       "Outline",
-      (_scales, _breakpoints, tokens) =>
+      (_scales, _breakpoints, tokens, focusRingColor) =>
         generateOutlineSources({
           typography: tokens.typography!,
           color: tokens.color!,
@@ -52,6 +52,7 @@ export const outlineComponent = defineRegistryComponent<OutlineComponentOptions>
           indentSpacing: tokens.indentSpacing!,
           itemHorizontalSpacing: tokens.itemHorizontalSpacing!,
           itemVerticalSpacing: tokens.itemVerticalSpacing!,
+          focusRingColor,
         }),
     ),
   },

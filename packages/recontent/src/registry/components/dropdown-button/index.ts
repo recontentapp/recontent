@@ -155,7 +155,7 @@ export const dropdownButtonComponent = defineRegistryComponent<DropdownButtonCom
     "vanilla-extract": vanillaExtractComponentOutput(
       "dropdown-button",
       "DropdownButton",
-      (_scales, _breakpoints, tokens) =>
+      (_scales, _breakpoints, tokens, focusRingColor) =>
         generateDropdownButtonSources({
           borderRadius: tokens.borderRadius!,
           popupBackgroundColor: tokens.popupBackgroundColor!,
@@ -173,6 +173,7 @@ export const dropdownButtonComponent = defineRegistryComponent<DropdownButtonCom
           itemIconSize: tokens.itemIconSize!,
           indicatorIcon: INDICATOR_ICON,
           tokens,
+          focusRingColor,
         }),
       { "@base-ui/react": "^1.0.0" },
     ),

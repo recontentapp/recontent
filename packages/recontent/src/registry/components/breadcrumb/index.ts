@@ -44,7 +44,7 @@ export const breadcrumbComponent = defineRegistryComponent<BreadcrumbComponentOp
     "vanilla-extract": vanillaExtractComponentOutput(
       "breadcrumb",
       "Breadcrumb",
-      (_scales, _breakpoints, tokens) =>
+      (_scales, _breakpoints, tokens, focusRingColor) =>
         generateBreadcrumbSources({
           typography: tokens.typography!,
           color: tokens.color!,
@@ -56,6 +56,7 @@ export const breadcrumbComponent = defineRegistryComponent<BreadcrumbComponentOp
           iconSize: tokens.iconSize!,
           separatorIcon: SEPARATOR_ICON,
           overflowIcon: OVERFLOW_ICON,
+          focusRingColor,
         }),
     ),
   },

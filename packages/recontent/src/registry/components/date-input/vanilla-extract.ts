@@ -1,4 +1,5 @@
 import type { ComponentSourceFiles, TokenImport } from "../../types.js";
+import { focusRingBlock } from "../shared.js";
 
 function typographyProps(ref: string): string {
   return [
@@ -22,7 +23,7 @@ export function generateDateInputSources(bindings: {
   gap: TokenImport;
   hoverBorderColor: TokenImport;
   focusBorderColor: TokenImport;
-  focusRingColor: TokenImport;
+  focusRingColor: TokenImport | undefined;
   invalidBorderColor: TokenImport;
   disabledBackgroundColor: TokenImport;
   disabledColor: TokenImport;
@@ -118,8 +119,6 @@ export const dateInputRoot = style({
   },
   ":focus-within": {
     borderColor: ${focusBorderColor.reference},
-    outline: \`2px solid \${${focusRingColor.reference}}\`,
-    outlineOffset: "2px",
   },
   selectors: {
     "&[data-invalid]": {
@@ -133,6 +132,7 @@ export const dateInputRoot = style({
       color: ${disabledColor.reference},
       cursor: "not-allowed",
     },
+    ${focusRingBlock(focusRingColor, { selector: "&:focus-within" })}
   },
 });
 
@@ -236,6 +236,7 @@ export const dateInputDay = style({
   boxSizing: "border-box",
   aspectRatio: "1",
   cursor: "pointer",
+  outline: "none",
   border: "1px solid transparent",
   borderRadius: ${dayBorderRadius.reference},
   color: ${dayColor.reference},

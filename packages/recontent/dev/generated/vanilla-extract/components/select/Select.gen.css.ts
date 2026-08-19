@@ -26,8 +26,8 @@ export const selectTrigger = style({
     borderColor: vars.system.colors.borderEmphasized,
   },
   ":focus-visible": {
-    outline: `2px solid ${vars.system.colors.accent}`,
-    outlineOffset: "2px",
+    outline: "none",
+    boxShadow: `0 0 0 2px ${vars.system.colors.accent}`,
   },
   selectors: {
     "&[data-popup-open]": {
@@ -107,6 +107,7 @@ export const selectItem = style({
   justifyContent: "space-between",
   boxSizing: "border-box",
   cursor: "pointer",
+  outline: "none",
   gap: vars.ref.fontSize.base,
   color: vars.system.colors.textPrimary,
   paddingLeft: vars.ref.spacing[8],

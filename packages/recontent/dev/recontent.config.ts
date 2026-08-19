@@ -421,7 +421,7 @@ export default defineConfig({
     {
       target: "vanilla-extract",
       outDir: "dev/generated/vanilla-extract",
-      outlineColor: system.colors.accent,
+      focusRingColor: system.colors.accent,
       fontFamily: system.typography.bodyFontFamily,
       placeholderColor: system.colors.textSecondary,
       breakpoints: tokens.dimensionScale({
@@ -447,7 +447,6 @@ export default defineConfig({
         Icon: { size: ref.iconScale, color: system.colors.textScale },
         Button: {
           borderRadius: ref.radius.element,
-          focusRingColor: system.colors.accent,
           variants: {
             primary: {
               backgroundColor: system.colors.accent,
@@ -564,7 +563,6 @@ export default defineConfig({
         },
         IconButton: {
           borderRadius: ref.radius.element,
-          focusRingColor: system.colors.accent,
           variants: {
             primary: {
               backgroundColor: system.colors.accent,
@@ -690,7 +688,6 @@ export default defineConfig({
           disabledColor: system.colors.textDisabled,
           horizontalSpacing: ref.spacing[16],
           verticalSpacing: ref.spacing[12],
-          focusRingColor: system.colors.accent,
         },
         ActionBar: {
           backgroundColor: system.colors.backgroundSurface,
@@ -843,7 +840,6 @@ export default defineConfig({
           checkedBackgroundColor: system.colors.accent,
           checkedColor: system.colors.onAccent,
           hoverBorderColor: system.colors.borderEmphasized,
-          focusRingColor: system.colors.accent,
           invalidBorderColor: ref.color.danger[500],
           disabledBackgroundColor: system.colors.backgroundMuted,
           disabledColor: system.colors.textDisabled,
@@ -858,7 +854,6 @@ export default defineConfig({
           checkedBorderColor: system.colors.accent,
           checkedColor: system.colors.accent,
           hoverBorderColor: system.colors.borderEmphasized,
-          focusRingColor: system.colors.accent,
           invalidBorderColor: ref.color.danger[500],
           disabledBackgroundColor: system.colors.backgroundMuted,
           disabledColor: system.colors.textDisabled,
@@ -876,7 +871,6 @@ export default defineConfig({
           trackBorder: system.border.default,
           thumbBackgroundColor: ref.color.white[100],
           thumbShadow: system.elevationScale.sm,
-          focusRingColor: system.colors.accent,
           disabledTrackBackgroundColor: system.colors.backgroundBody,
           labelTypography: system.textScale["paragraph-body-m"],
           labelColor: system.colors.textPrimary,
@@ -930,7 +924,6 @@ export default defineConfig({
           verticalSpacing: ref.spacing[8],
           hoverBorderColor: system.colors.borderEmphasized,
           focusBorderColor: system.colors.accent,
-          focusRingColor: system.colors.accent,
           invalidBorderColor: ref.color.danger[500],
           disabledBackgroundColor: system.colors.backgroundMuted,
           disabledColor: system.colors.textDisabled,
@@ -961,7 +954,6 @@ export default defineConfig({
           verticalSpacing: ref.spacing[8],
           hoverBorderColor: system.colors.borderEmphasized,
           focusBorderColor: system.colors.accent,
-          focusRingColor: system.colors.accent,
           invalidBorderColor: ref.color.danger[500],
           disabledBackgroundColor: system.colors.backgroundMuted,
           disabledColor: system.colors.textDisabled,
@@ -1020,7 +1012,6 @@ export default defineConfig({
           thumbBorder: system.border.default,
           thumbShadow: system.elevationScale.sm,
           hoverThumbBackgroundColor: ref.color.white[100],
-          focusRingColor: system.colors.accent,
           disabledTrackBackgroundColor: system.colors.backgroundMuted,
           disabledThumbBackgroundColor: system.colors.backgroundMuted,
           markColor: system.colors.textSecondary,
@@ -1041,7 +1032,6 @@ export default defineConfig({
           gap: ref.spacing[8],
           hoverBorderColor: system.colors.borderEmphasized,
           focusBorderColor: system.colors.accent,
-          focusRingColor: system.colors.accent,
           invalidBorderColor: ref.color.danger[500],
           disabledBackgroundColor: system.colors.backgroundMuted,
           disabledColor: system.colors.textDisabled,
@@ -1063,7 +1053,6 @@ export default defineConfig({
           gap: ref.spacing[8],
           hoverBorderColor: system.colors.borderEmphasized,
           focusBorderColor: system.colors.accent,
-          focusRingColor: system.colors.accent,
           invalidBorderColor: ref.color.danger[500],
           disabledBackgroundColor: system.colors.backgroundMuted,
           disabledColor: system.colors.textDisabled,
@@ -1090,7 +1079,6 @@ export default defineConfig({
           gap: ref.spacing[8],
           hoverBorderColor: system.colors.borderEmphasized,
           focusBorderColor: system.colors.accent,
-          focusRingColor: system.colors.accent,
           invalidBorderColor: ref.color.danger[500],
           disabledBackgroundColor: system.colors.backgroundMuted,
           disabledColor: system.colors.textDisabled,
@@ -1129,7 +1117,6 @@ export default defineConfig({
           gap: ref.spacing[8],
           hoverBorderColor: system.colors.borderEmphasized,
           focusBorderColor: system.colors.accent,
-          focusRingColor: system.colors.accent,
           invalidBorderColor: ref.color.danger[500],
           disabledBackgroundColor: system.colors.backgroundMuted,
           disabledColor: system.colors.textDisabled,
@@ -1219,7 +1206,6 @@ export default defineConfig({
           tabGap: ref.spacing[4],
           panelSpacing: ref.spacing[16],
           iconSize: ref.fontSize.base,
-          focusRingColor: system.colors.accent,
           variants: {
             line: {
               color: system.colors.textSecondary,
@@ -1427,7 +1413,6 @@ export default defineConfig({
           hoverBackgroundColor: system.colors.backgroundBody,
           selectedBackgroundColor: system.colors.backgroundMuted,
           selectedColor: system.colors.accent,
-          focusRingColor: system.colors.accent,
           borderRadius: ref.radius.inner,
           indentSpacing: ref.spacing[12],
           rowHorizontalSpacing: ref.spacing[8],

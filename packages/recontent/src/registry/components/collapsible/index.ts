@@ -89,7 +89,7 @@ export const collapsibleComponent = defineRegistryComponent<CollapsibleComponent
     "vanilla-extract": vanillaExtractComponentOutput(
       "collapsible",
       "Collapsible",
-      (_scales, _breakpoints, tokens) =>
+      (_scales, _breakpoints, tokens, focusRingColor) =>
         generateCollapsibleSources({
           borderRadius: tokens.borderRadius!,
           border: tokens.border!,
@@ -103,6 +103,7 @@ export const collapsibleComponent = defineRegistryComponent<CollapsibleComponent
           contentVerticalSpacing: tokens.contentVerticalSpacing!,
           transition: tokens.transition!,
           indicatorIcon: INDICATOR_ICON,
+          focusRingColor,
         }),
       { "@base-ui/react": "^1.0.0" },
     ),

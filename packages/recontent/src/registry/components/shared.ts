@@ -14,6 +14,7 @@ export function vanillaExtractComponentOutput(
     scales: Record<string, ScaleImport>,
     breakpoints: readonly BreakpointBinding[] | undefined,
     tokens: Record<string, TokenImport>,
+    focusRingColor: TokenImport | undefined,
   ) => ComponentSourceFiles,
   runtimeDependencies?: Record<string, string>,
 ): ComponentOutput {
@@ -23,8 +24,8 @@ export function vanillaExtractComponentOutput(
       react: ">=18",
       ...runtimeDependencies,
     },
-    generate: ({ scales, breakpoints, tokens }) => {
-      const sources = generateSources(scales, breakpoints, tokens);
+    generate: ({ scales, breakpoints, tokens, focusRingColor }) => {
+      const sources = generateSources(scales, breakpoints, tokens, focusRingColor);
       return [
         {
           filename: componentArtifactPath(id, name, ".gen.css.ts"),
@@ -37,6 +38,23 @@ export function vanillaExtractComponentOutput(
       ];
     },
   };
+}
+
+/**
+ * Focus-ring declarations for a root interactive element. Returns "" when the
+ * output has no `focusRingColor`, so unconfigured projects emit no focus CSS.
+ */
+export function focusRingBlock(
+  focusRingColor: TokenImport | undefined,
+  options: { selector?: string; inset?: boolean } = {},
+): string {
+  if (!focusRingColor) return "";
+  const selector = options.selector ?? ":focus-visible";
+  const inset = options.inset ? "inset " : "";
+  return `"${selector}": {
+    outline: "none",
+    boxShadow: \`${inset}0 0 0 2px \${${focusRingColor.reference}}\`,
+  },`;
 }
 
 /**

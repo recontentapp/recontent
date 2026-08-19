@@ -15,6 +15,10 @@ export const linkRoot = style({
   ":visited": {
     color: vars.system.colors.accent,
   },
+  ":focus-visible": {
+    outline: "none",
+    boxShadow: `0 0 0 2px ${vars.system.colors.accent}`,
+  },
 });
 
 export const linkUnderline = styleVariants({

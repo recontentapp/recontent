@@ -9,7 +9,6 @@ export type TreeListComponentOptions = {
   hoverBackgroundColor: TokenBinding<"color">;
   selectedBackgroundColor: TokenBinding<"color">;
   selectedColor: TokenBinding<"color">;
-  focusRingColor: TokenBinding<"color">;
   borderRadius: TokenBinding<"dimension">;
   indentSpacing: TokenBinding<"dimension">;
   rowHorizontalSpacing: TokenBinding<"dimension">;
@@ -41,7 +40,6 @@ export const treeListComponent = defineRegistryComponent<TreeListComponentOption
       description: "Background color of the selected row.",
     },
     selectedColor: { kind: "token", type: "color", description: "Text color of the selected row." },
-    focusRingColor: { kind: "token", type: "color", description: "Outline color shown on keyboard focus." },
     borderRadius: { kind: "token", type: "dimension", description: "Corner radius of a row." },
     indentSpacing: { kind: "token", type: "dimension", description: "Indent applied per depth level." },
     rowHorizontalSpacing: { kind: "token", type: "dimension", description: "Left/right padding of a row." },
@@ -59,14 +57,14 @@ export const treeListComponent = defineRegistryComponent<TreeListComponentOption
     "vanilla-extract": vanillaExtractComponentOutput(
       "tree-list",
       "TreeList",
-      (_scales, _breakpoints, tokens) =>
+      (_scales, _breakpoints, tokens, focusRingColor) =>
         generateTreeListSources({
           typography: tokens.typography!,
           color: tokens.color!,
           hoverBackgroundColor: tokens.hoverBackgroundColor!,
           selectedBackgroundColor: tokens.selectedBackgroundColor!,
           selectedColor: tokens.selectedColor!,
-          focusRingColor: tokens.focusRingColor!,
+          focusRingColor,
           borderRadius: tokens.borderRadius!,
           indentSpacing: tokens.indentSpacing!,
           rowHorizontalSpacing: tokens.rowHorizontalSpacing!,

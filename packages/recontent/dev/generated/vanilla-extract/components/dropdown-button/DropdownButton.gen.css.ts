@@ -9,8 +9,8 @@ export const dropdownButtonTrigger = style({
   cursor: "pointer",
   borderRadius: vars.ref.radius.element,
   ":focus-visible": {
-    outline: "2px solid currentColor",
-    outlineOffset: "2px",
+    outline: "none",
+    boxShadow: `0 0 0 2px ${vars.system.colors.accent}`,
   },
 });
 
@@ -122,6 +122,7 @@ export const dropdownButtonItem = style({
   alignItems: "center",
   boxSizing: "border-box",
   cursor: "pointer",
+  outline: "none",
   color: vars.system.colors.textPrimary,
   gap: "0.5em",
   paddingLeft: vars.ref.spacing[8],

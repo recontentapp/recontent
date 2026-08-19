@@ -1,4 +1,5 @@
 import type { ComponentSourceFiles, TokenImport } from "../../types.js";
+import { focusRingBlock } from "../shared.js";
 
 function typographyProps(ref: string): string {
   return [
@@ -21,7 +22,7 @@ export function generateAutocompleteSources(bindings: {
   verticalSpacing: TokenImport;
   hoverBorderColor: TokenImport;
   focusBorderColor: TokenImport;
-  focusRingColor: TokenImport;
+  focusRingColor: TokenImport | undefined;
   invalidBorderColor: TokenImport;
   disabledBackgroundColor: TokenImport;
   disabledColor: TokenImport;
@@ -122,8 +123,6 @@ export const autocompleteTrigger = style({
   },
   ":focus-within": {
     borderColor: ${focusBorderColor.reference},
-    outline: \`2px solid \${${focusRingColor.reference}}\`,
-    outlineOffset: "2px",
   },
   selectors: {
     "&[data-invalid]": {
@@ -134,6 +133,7 @@ export const autocompleteTrigger = style({
       color: ${disabledColor.reference},
       cursor: "not-allowed",
     },
+    ${focusRingBlock(focusRingColor, { selector: "&:focus-within" })}
   },
 });
 
@@ -233,6 +233,7 @@ export const autocompleteItem = style({
   justifyContent: "space-between",
   boxSizing: "border-box",
   cursor: "pointer",
+  outline: "none",
   gap: ${iconSize.reference},
   color: ${itemColor.reference},
   paddingLeft: ${itemHorizontalSpacing.reference},

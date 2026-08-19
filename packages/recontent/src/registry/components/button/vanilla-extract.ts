@@ -1,5 +1,5 @@
 import type { ComponentSourceFiles, TokenImport } from "../../types.js";
-import { groupVariantTokens } from "../shared.js";
+import { focusRingBlock, groupVariantTokens } from "../shared.js";
 
 const VARIANT_FIELDS = [
   "backgroundColor",
@@ -59,7 +59,7 @@ function sizeStyleBody(fields: Record<string, TokenImport>): string {
 
 export function generateButtonSources(bindings: {
   borderRadius: TokenImport;
-  focusRingColor: TokenImport;
+  focusRingColor: TokenImport | undefined;
   tokens: Record<string, TokenImport>;
 }): ComponentSourceFiles {
   const { borderRadius, focusRingColor, tokens } = bindings;
@@ -80,10 +80,7 @@ export const buttonRoot = style({
   boxSizing: "border-box",
   cursor: "pointer",
   borderRadius: ${borderRadius.reference},
-  ":focus-visible": {
-    outline: \`2px solid \${${focusRingColor.reference}}\`,
-    outlineOffset: "2px",
-  },
+  ${focusRingBlock(focusRingColor)}
 });
 
 export const buttonLoading = style({

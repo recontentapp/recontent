@@ -11,7 +11,6 @@ export type CheckboxComponentOptions = {
   checkedBackgroundColor: TokenBinding<"color">;
   checkedColor: TokenBinding<"color">;
   hoverBorderColor: TokenBinding<"color">;
-  focusRingColor: TokenBinding<"color">;
   invalidBorderColor: TokenBinding<"color">;
   disabledBackgroundColor: TokenBinding<"color">;
   disabledColor: TokenBinding<"color">;
@@ -68,11 +67,6 @@ export const checkboxComponent = defineRegistryComponent<CheckboxComponentOption
       type: "color",
       description: "Border color of the box on hover.",
     },
-    focusRingColor: {
-      kind: "token",
-      type: "color",
-      description: "Outline color shown on keyboard focus.",
-    },
     invalidBorderColor: {
       kind: "token",
       type: "color",
@@ -108,7 +102,7 @@ export const checkboxComponent = defineRegistryComponent<CheckboxComponentOption
     "vanilla-extract": vanillaExtractComponentOutput(
       "checkbox",
       "Checkbox",
-      (scales, _breakpoints, tokens) =>
+      (scales, _breakpoints, tokens, focusRingColor) =>
         generateCheckboxSources({
           sizes: scales.sizes!,
           border: tokens.border!,
@@ -117,7 +111,7 @@ export const checkboxComponent = defineRegistryComponent<CheckboxComponentOption
           checkedBackgroundColor: tokens.checkedBackgroundColor!,
           checkedColor: tokens.checkedColor!,
           hoverBorderColor: tokens.hoverBorderColor!,
-          focusRingColor: tokens.focusRingColor!,
+          focusRingColor,
           invalidBorderColor: tokens.invalidBorderColor!,
           disabledBackgroundColor: tokens.disabledBackgroundColor!,
           disabledColor: tokens.disabledColor!,

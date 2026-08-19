@@ -1,4 +1,5 @@
 import type { ComponentSourceFiles, ScaleImport, TokenImport } from "../../types.js";
+import { focusRingBlock } from "../shared.js";
 
 export function generateCheckboxSources(bindings: {
   sizes: ScaleImport;
@@ -8,7 +9,7 @@ export function generateCheckboxSources(bindings: {
   checkedBackgroundColor: TokenImport;
   checkedColor: TokenImport;
   hoverBorderColor: TokenImport;
-  focusRingColor: TokenImport;
+  focusRingColor: TokenImport | undefined;
   invalidBorderColor: TokenImport;
   disabledBackgroundColor: TokenImport;
   disabledColor: TokenImport;
@@ -70,10 +71,7 @@ export const checkboxBox = style({
   ":hover": {
     borderColor: ${hoverBorderColor.reference},
   },
-  ":focus-visible": {
-    outline: \`2px solid \${${focusRingColor.reference}}\`,
-    outlineOffset: "2px",
-  },
+  ${focusRingBlock(focusRingColor)}
   selectors: {
     "&[data-checked], &[data-indeterminate]": {
       backgroundColor: ${checkedBackgroundColor.reference},

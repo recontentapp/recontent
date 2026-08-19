@@ -68,8 +68,8 @@ export const sliderThumb = style({
     backgroundColor: vars.ref.color.white[100],
   },
   ":focus-visible": {
-    outline: `2px solid ${vars.system.colors.accent}`,
-    outlineOffset: "2px",
+    outline: "none",
+    boxShadow: `${vars.system.elevationScale.sm}, 0 0 0 2px ${vars.system.colors.accent}`,
   },
   selectors: {
     "&[data-disabled]": {

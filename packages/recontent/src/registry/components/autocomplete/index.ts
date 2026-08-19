@@ -15,7 +15,6 @@ export type AutocompleteComponentOptions = {
   verticalSpacing: TokenBinding<"dimension">;
   hoverBorderColor: TokenBinding<"color">;
   focusBorderColor: TokenBinding<"color">;
-  focusRingColor: TokenBinding<"color">;
   invalidBorderColor: TokenBinding<"color">;
   disabledBackgroundColor: TokenBinding<"color">;
   disabledColor: TokenBinding<"color">;
@@ -70,7 +69,6 @@ export const autocompleteComponent = defineRegistryComponent<AutocompleteCompone
     verticalSpacing: { kind: "token", type: "dimension", description: "Top/bottom padding of the trigger." },
     hoverBorderColor: { kind: "token", type: "color", description: "Border color of the trigger on hover." },
     focusBorderColor: { kind: "token", type: "color", description: "Border color of the trigger on focus." },
-    focusRingColor: { kind: "token", type: "color", description: "Outline color shown on keyboard focus." },
     invalidBorderColor: { kind: "token", type: "color", description: "Border color of the trigger when invalid." },
     disabledBackgroundColor: {
       kind: "token",
@@ -119,7 +117,7 @@ export const autocompleteComponent = defineRegistryComponent<AutocompleteCompone
     "vanilla-extract": vanillaExtractComponentOutput(
       "autocomplete",
       "Autocomplete",
-      (_scales, _breakpoints, tokens) =>
+      (_scales, _breakpoints, tokens, focusRingColor) =>
         generateAutocompleteSources({
           borderRadius: tokens.borderRadius!,
           border: tokens.border!,
@@ -131,7 +129,7 @@ export const autocompleteComponent = defineRegistryComponent<AutocompleteCompone
           verticalSpacing: tokens.verticalSpacing!,
           hoverBorderColor: tokens.hoverBorderColor!,
           focusBorderColor: tokens.focusBorderColor!,
-          focusRingColor: tokens.focusRingColor!,
+          focusRingColor,
           invalidBorderColor: tokens.invalidBorderColor!,
           disabledBackgroundColor: tokens.disabledBackgroundColor!,
           disabledColor: tokens.disabledColor!,

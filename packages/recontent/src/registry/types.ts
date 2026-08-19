@@ -58,6 +58,7 @@ export type ComponentOutput = {
     scales: Record<string, ScaleImport>;
     tokens: Record<string, TokenImport>;
     breakpoints?: readonly BreakpointBinding[];
+    focusRingColor?: TokenImport;
   }): OutputFile[];
 };
 

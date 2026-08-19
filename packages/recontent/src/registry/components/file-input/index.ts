@@ -76,7 +76,7 @@ export const fileInputComponent = defineRegistryComponent<FileInputComponentOpti
     "vanilla-extract": vanillaExtractComponentOutput(
       "file-input",
       "FileInput",
-      (_scales, _breakpoints, tokens) =>
+      (_scales, _breakpoints, tokens, focusRingColor) =>
         generateFileInputSources({
           border: tokens.border!,
           borderRadius: tokens.borderRadius!,
@@ -98,6 +98,7 @@ export const fileInputComponent = defineRegistryComponent<FileInputComponentOpti
           fileBorderRadius: tokens.fileBorderRadius!,
           uploadIcon: UPLOAD_ICON,
           removeIcon: REMOVE_ICON,
+          focusRingColor,
         }),
     ),
   },

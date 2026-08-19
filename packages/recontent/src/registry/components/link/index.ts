@@ -40,12 +40,13 @@ export const linkComponent = defineRegistryComponent<LinkComponentOptions>()({
     "vanilla-extract": vanillaExtractComponentOutput(
       "link",
       "Link",
-      (_scales, _breakpoints, tokens) =>
+      (_scales, _breakpoints, tokens, focusRingColor) =>
         generateLinkSources({
           color: tokens.color!,
           hoverColor: tokens.hoverColor!,
           typography: tokens.typography!,
           visitedColor: tokens.visitedColor!,
+          focusRingColor,
         }),
     ),
   },

@@ -13,7 +13,6 @@ export type SliderComponentOptions = {
   thumbBorder: TokenBinding<"border">;
   thumbShadow: TokenBinding<"shadow">;
   hoverThumbBackgroundColor: TokenBinding<"color">;
-  focusRingColor: TokenBinding<"color">;
   disabledTrackBackgroundColor: TokenBinding<"color">;
   disabledThumbBackgroundColor: TokenBinding<"color">;
   markColor: TokenBinding<"color">;
@@ -45,7 +44,6 @@ export const sliderComponent = defineRegistryComponent<SliderComponentOptions>()
       type: "color",
       description: "Background color of the thumb on hover.",
     },
-    focusRingColor: { kind: "token", type: "color", description: "Outline color shown on keyboard focus." },
     disabledTrackBackgroundColor: {
       kind: "token",
       type: "color",
@@ -70,7 +68,7 @@ export const sliderComponent = defineRegistryComponent<SliderComponentOptions>()
     "vanilla-extract": vanillaExtractComponentOutput(
       "slider",
       "Slider",
-      (_scales, _breakpoints, tokens) =>
+      (_scales, _breakpoints, tokens, focusRingColor) =>
         generateSliderSources({
           trackBackgroundColor: tokens.trackBackgroundColor!,
           trackHeight: tokens.trackHeight!,
@@ -81,7 +79,7 @@ export const sliderComponent = defineRegistryComponent<SliderComponentOptions>()
           thumbBorder: tokens.thumbBorder!,
           thumbShadow: tokens.thumbShadow!,
           hoverThumbBackgroundColor: tokens.hoverThumbBackgroundColor!,
-          focusRingColor: tokens.focusRingColor!,
+          focusRingColor,
           disabledTrackBackgroundColor: tokens.disabledTrackBackgroundColor!,
           disabledThumbBackgroundColor: tokens.disabledThumbBackgroundColor!,
           markColor: tokens.markColor!,

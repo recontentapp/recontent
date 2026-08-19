@@ -27,6 +27,10 @@ export const paginationButton = style({
     color: vars.system.colors.textPrimary,
     backgroundColor: vars.system.colors.backgroundBody,
   },
+  ":focus-visible": {
+    outline: "none",
+    boxShadow: `0 0 0 2px ${vars.system.colors.accent}`,
+  },
   selectors: {
     "&[data-active]": {
       color: vars.system.colors.onAccent,

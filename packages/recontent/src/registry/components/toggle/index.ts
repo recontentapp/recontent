@@ -92,7 +92,7 @@ export const toggleComponent = defineRegistryComponent<ToggleComponentOptions>()
     "vanilla-extract": vanillaExtractComponentOutput(
       "toggle",
       "Toggle",
-      (_scales, _breakpoints, tokens) =>
+      (_scales, _breakpoints, tokens, focusRingColor) =>
         generateToggleSources({
           borderRadius: tokens.borderRadius!,
           optionBorderRadius: tokens.optionBorderRadius!,
@@ -105,6 +105,7 @@ export const toggleComponent = defineRegistryComponent<ToggleComponentOptions>()
           activeBackgroundColor: tokens.activeBackgroundColor!,
           disabledColor: tokens.disabledColor!,
           tokens,
+          focusRingColor,
         }),
       { "@base-ui/react": "^1.0.0" },
     ),

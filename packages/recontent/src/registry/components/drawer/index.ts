@@ -56,7 +56,7 @@ export const drawerComponent = defineRegistryComponent<DrawerComponentOptions>()
     "vanilla-extract": vanillaExtractComponentOutput(
       "drawer",
       "Drawer",
-      (_scales, _breakpoints, tokens) =>
+      (_scales, _breakpoints, tokens, focusRingColor) =>
         generateDrawerSources({
           backdropColor: tokens.backdropColor!,
           backgroundColor: tokens.backgroundColor!,
@@ -72,6 +72,7 @@ export const drawerComponent = defineRegistryComponent<DrawerComponentOptions>()
           transition: tokens.transition!,
           closeIcon: CLOSE_ICON,
           tokens,
+          focusRingColor,
         }),
       { "@base-ui/react": "^1.0.0" },
     ),

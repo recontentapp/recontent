@@ -17,8 +17,6 @@ export const dateInputRoot = style({
   },
   ":focus-within": {
     borderColor: vars.system.colors.accent,
-    outline: `2px solid ${vars.system.colors.accent}`,
-    outlineOffset: "2px",
   },
   selectors: {
     "&[data-invalid]": {
@@ -32,6 +30,10 @@ export const dateInputRoot = style({
       color: vars.system.colors.textDisabled,
       cursor: "not-allowed",
     },
+    "&:focus-within": {
+    outline: "none",
+    boxShadow: `0 0 0 2px ${vars.system.colors.accent}`,
+  },
   },
 });
 
@@ -147,6 +149,7 @@ export const dateInputDay = style({
   boxSizing: "border-box",
   aspectRatio: "1",
   cursor: "pointer",
+  outline: "none",
   border: "1px solid transparent",
   borderRadius: vars.ref.radius.inner,
   color: vars.system.colors.textPrimary,

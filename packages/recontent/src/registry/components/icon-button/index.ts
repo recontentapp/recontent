@@ -26,7 +26,6 @@ export type IconButtonComponentOptions = {
   borderRadius: TokenBinding<"dimension">;
   variants: Record<string, IconButtonVariantFields>;
   sizes: Record<string, IconButtonSizeFields>;
-  focusRingColor: TokenBinding<"color">;
 };
 
 export const iconButtonComponent = defineRegistryComponent<IconButtonComponentOptions>()({
@@ -64,20 +63,15 @@ export const iconButtonComponent = defineRegistryComponent<IconButtonComponentOp
         iconSize: { kind: "token", type: "dimension" },
       },
     },
-    focusRingColor: {
-      kind: "token",
-      type: "color",
-      description: "Outline color shown on keyboard focus.",
-    },
   },
   outputs: {
     "vanilla-extract": vanillaExtractComponentOutput(
       "icon-button",
       "IconButton",
-      (_scales, _breakpoints, tokens) =>
+      (_scales, _breakpoints, tokens, focusRingColor) =>
         generateIconButtonSources({
           borderRadius: tokens.borderRadius!,
-          focusRingColor: tokens.focusRingColor!,
+          focusRingColor,
           tokens,
         }),
       { "@base-ui/react": "^1.0.0" },

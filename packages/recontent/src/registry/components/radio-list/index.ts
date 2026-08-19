@@ -10,7 +10,6 @@ export type RadioListComponentOptions = {
   checkedBorderColor: TokenBinding<"color">;
   checkedColor: TokenBinding<"color">;
   hoverBorderColor: TokenBinding<"color">;
-  focusRingColor: TokenBinding<"color">;
   invalidBorderColor: TokenBinding<"color">;
   disabledBackgroundColor: TokenBinding<"color">;
   disabledColor: TokenBinding<"color">;
@@ -56,11 +55,6 @@ export const radioListComponent = defineRegistryComponent<RadioListComponentOpti
       kind: "token",
       type: "color",
       description: "Border color of a radio control on hover.",
-    },
-    focusRingColor: {
-      kind: "token",
-      type: "color",
-      description: "Outline color shown on keyboard focus.",
     },
     invalidBorderColor: {
       kind: "token",
@@ -112,7 +106,7 @@ export const radioListComponent = defineRegistryComponent<RadioListComponentOpti
     "vanilla-extract": vanillaExtractComponentOutput(
       "radio-list",
       "RadioList",
-      (scales, _breakpoints, tokens) =>
+      (scales, _breakpoints, tokens, focusRingColor) =>
         generateRadioListSources({
           sizes: scales.sizes!,
           border: tokens.border!,
@@ -120,7 +114,7 @@ export const radioListComponent = defineRegistryComponent<RadioListComponentOpti
           checkedBorderColor: tokens.checkedBorderColor!,
           checkedColor: tokens.checkedColor!,
           hoverBorderColor: tokens.hoverBorderColor!,
-          focusRingColor: tokens.focusRingColor!,
+          focusRingColor,
           invalidBorderColor: tokens.invalidBorderColor!,
           disabledBackgroundColor: tokens.disabledBackgroundColor!,
           disabledColor: tokens.disabledColor!,

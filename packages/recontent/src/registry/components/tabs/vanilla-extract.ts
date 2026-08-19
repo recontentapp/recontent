@@ -1,5 +1,5 @@
 import type { ComponentSourceFiles, TokenImport } from "../../types.js";
-import { groupVariantTokens } from "../shared.js";
+import { focusRingBlock, groupVariantTokens } from "../shared.js";
 
 const VARIANT_FIELDS = [
   "color",
@@ -61,7 +61,7 @@ export function generateTabsSources(bindings: {
   tabGap: TokenImport;
   panelSpacing: TokenImport;
   iconSize: TokenImport;
-  focusRingColor: TokenImport;
+  focusRingColor: TokenImport | undefined;
   tokens: Record<string, TokenImport>;
 }): ComponentSourceFiles {
   const {
@@ -136,10 +136,7 @@ export const tabsTab = style({
   paddingTop: ${verticalSpacing.reference},
   paddingBottom: ${verticalSpacing.reference},
   ${typographyProps(typography.reference)},
-  ":focus-visible": {
-    outline: \`2px solid \${${focusRingColor.reference}}\`,
-    outlineOffset: "2px",
-  },
+  ${focusRingBlock(focusRingColor)}
   selectors: {
     "&[data-selected]": {
       ${typographyProps(activeTypography.reference)},

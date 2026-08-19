@@ -1,5 +1,5 @@
 import type { ComponentSourceFiles, TokenImport } from "../../types.js";
-import { groupVariantTokens } from "../shared.js";
+import { focusRingBlock, groupVariantTokens } from "../shared.js";
 
 const VARIANT_FIELDS = [
   "backgroundColor",
@@ -75,6 +75,7 @@ export function generateDropdownButtonSources(bindings: {
   /** Build-time config, baked directly into the generated component. */
   indicatorIcon: string;
   tokens: Record<string, TokenImport>;
+  focusRingColor: TokenImport | undefined;
 }): ComponentSourceFiles {
   const {
     borderRadius,
@@ -93,6 +94,7 @@ export function generateDropdownButtonSources(bindings: {
     itemIconSize,
     indicatorIcon,
     tokens,
+    focusRingColor,
   } = bindings;
   const variants = groupVariantTokens(tokens, "variants", VARIANT_FIELDS);
   const sizes = groupVariantTokens(tokens, "sizes", SIZE_FIELDS);
@@ -111,10 +113,7 @@ export const dropdownButtonTrigger = style({
   boxSizing: "border-box",
   cursor: "pointer",
   borderRadius: ${borderRadius.reference},
-  ":focus-visible": {
-    outline: "2px solid currentColor",
-    outlineOffset: "2px",
-  },
+  ${focusRingBlock(focusRingColor)}
 });
 
 export const dropdownButtonIndicator = style({
@@ -161,6 +160,7 @@ export const dropdownButtonItem = style({
   alignItems: "center",
   boxSizing: "border-box",
   cursor: "pointer",
+  outline: "none",
   color: ${itemColor.reference},
   gap: "0.5em",
   paddingLeft: ${itemHorizontalSpacing.reference},

@@ -1,11 +1,10 @@
 export interface CssResetOptions {
-  outlineColor: string | false;
   fontFamily: string;
   placeholderColor: string;
 }
 
 export function generateCssResetSource(options: CssResetOptions): string {
-  const { outlineColor, fontFamily, placeholderColor } = options;
+  const { fontFamily, placeholderColor } = options;
 
   return `import { globalStyle } from "@vanilla-extract/css";
 import { vars } from "./tokens.css";
@@ -56,13 +55,5 @@ globalStyle("h1, h2, h3, h4, h5, h6", {
 globalStyle("::placeholder", {
   color: ${placeholderColor},
 });
-${
-  outlineColor === false
-    ? ""
-    : `
-globalStyle(":focus-visible", {
-  outlineColor: ${outlineColor},
-});
-`
-}`;
+`;
 }

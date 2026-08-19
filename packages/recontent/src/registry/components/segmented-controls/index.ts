@@ -118,7 +118,7 @@ export const segmentedControlsComponent = defineRegistryComponent<SegmentedContr
     "vanilla-extract": vanillaExtractComponentOutput(
       "segmented-controls",
       "SegmentedControls",
-      (_scales, _breakpoints, tokens) =>
+      (_scales, _breakpoints, tokens, focusRingColor) =>
         generateSegmentedControlsSources({
           borderRadius: tokens.borderRadius!,
           optionBorderRadius: tokens.optionBorderRadius!,
@@ -137,6 +137,7 @@ export const segmentedControlsComponent = defineRegistryComponent<SegmentedContr
           optionVerticalSpacing: tokens.optionVerticalSpacing!,
           optionGap: tokens.optionGap!,
           iconSize: tokens.iconSize!,
+          focusRingColor,
         }),
       { "@base-ui/react": "^1.0.0" },
     ),

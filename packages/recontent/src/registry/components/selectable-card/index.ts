@@ -14,7 +14,6 @@ export type SelectableCardComponentOptions = {
   disabledColor: TokenBinding<"color">;
   horizontalSpacing: TokenBinding<"dimension">;
   verticalSpacing: TokenBinding<"dimension">;
-  focusRingColor: TokenBinding<"color">;
 };
 
 export const selectableCardComponent = defineRegistryComponent<SelectableCardComponentOptions>()({
@@ -72,17 +71,12 @@ export const selectableCardComponent = defineRegistryComponent<SelectableCardCom
       type: "dimension",
       description: "Top/bottom padding of the card.",
     },
-    focusRingColor: {
-      kind: "token",
-      type: "color",
-      description: "Outline color shown on keyboard focus.",
-    },
   },
   outputs: {
     "vanilla-extract": vanillaExtractComponentOutput(
       "selectable-card",
       "SelectableCard",
-      (_scales, _breakpoints, tokens) =>
+      (_scales, _breakpoints, tokens, focusRingColor) =>
         generateSelectableCardSources({
           borderRadius: tokens.borderRadius!,
           border: tokens.border!,
@@ -94,7 +88,7 @@ export const selectableCardComponent = defineRegistryComponent<SelectableCardCom
           disabledColor: tokens.disabledColor!,
           horizontalSpacing: tokens.horizontalSpacing!,
           verticalSpacing: tokens.verticalSpacing!,
-          focusRingColor: tokens.focusRingColor!,
+          focusRingColor,
         }),
     ),
   },

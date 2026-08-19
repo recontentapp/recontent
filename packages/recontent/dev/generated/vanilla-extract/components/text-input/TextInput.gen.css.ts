@@ -17,8 +17,8 @@ export const textInputRoot = style({
   },
   ":focus-within": {
     borderColor: vars.system.colors.accent,
-    outline: `2px solid ${vars.system.colors.accent}`,
-    outlineOffset: "2px",
+    outline: "none",
+    boxShadow: `0 0 0 2px ${vars.system.colors.accent}`,
   },
   selectors: {
     "&[data-invalid]": {

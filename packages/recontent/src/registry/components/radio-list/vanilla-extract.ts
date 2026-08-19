@@ -1,4 +1,5 @@
 import type { ComponentSourceFiles, ScaleImport, TokenImport } from "../../types.js";
+import { focusRingBlock } from "../shared.js";
 
 function typographyProps(ref: string): string {
   return [
@@ -17,7 +18,7 @@ export function generateRadioListSources(bindings: {
   checkedBorderColor: TokenImport;
   checkedColor: TokenImport;
   hoverBorderColor: TokenImport;
-  focusRingColor: TokenImport;
+  focusRingColor: TokenImport | undefined;
   invalidBorderColor: TokenImport;
   disabledBackgroundColor: TokenImport;
   disabledColor: TokenImport;
@@ -91,10 +92,7 @@ export const radioListControl = style({
   ":hover": {
     borderColor: ${hoverBorderColor.reference},
   },
-  ":focus-visible": {
-    outline: \`2px solid \${${focusRingColor.reference}}\`,
-    outlineOffset: "2px",
-  },
+  ${focusRingBlock(focusRingColor)}
   selectors: {
     "&[data-checked]": {
       borderColor: ${checkedBorderColor.reference},

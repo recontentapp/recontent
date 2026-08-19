@@ -1,4 +1,5 @@
 import type { ComponentSourceFiles, TokenImport } from "../../types.js";
+import { focusRingBlock } from "../shared.js";
 
 function typographyProps(ref: string): string {
   return [
@@ -21,7 +22,7 @@ export function generateSelectSources(bindings: {
   verticalSpacing: TokenImport;
   hoverBorderColor: TokenImport;
   focusBorderColor: TokenImport;
-  focusRingColor: TokenImport;
+  focusRingColor: TokenImport | undefined;
   invalidBorderColor: TokenImport;
   disabledBackgroundColor: TokenImport;
   disabledColor: TokenImport;
@@ -104,10 +105,7 @@ export const selectTrigger = style({
   ":hover": {
     borderColor: ${hoverBorderColor.reference},
   },
-  ":focus-visible": {
-    outline: \`2px solid \${${focusRingColor.reference}}\`,
-    outlineOffset: "2px",
-  },
+  ${focusRingBlock(focusRingColor)}
   selectors: {
     "&[data-popup-open]": {
       borderColor: ${focusBorderColor.reference},
@@ -186,6 +184,7 @@ export const selectItem = style({
   justifyContent: "space-between",
   boxSizing: "border-box",
   cursor: "pointer",
+  outline: "none",
   gap: ${iconSize.reference},
   color: ${itemColor.reference},
   paddingLeft: ${itemHorizontalSpacing.reference},

@@ -455,10 +455,10 @@ export const vanillaExtractOutputProcessor: OutputProcessor<VanillaExtractOutput
       "color",
       "placeholderColor",
     );
-    const outlineColorBinding =
-      output.outlineColor === false
-        ? false
-        : resolveTokenBinding(config.registry, output.outlineColor, "color", "outlineColor");
+    const focusRingColorBinding =
+      output.focusRingColor === undefined
+        ? undefined
+        : resolveTokenBinding(config.registry, output.focusRingColor, "color", "focusRingColor");
 
     const files: OutputFile[] = [
       {
@@ -468,7 +468,6 @@ export const vanillaExtractOutputProcessor: OutputProcessor<VanillaExtractOutput
       {
         filename: "reset.gen.css.ts",
         content: generateCssResetSource({
-          outlineColor: outlineColorBinding === false ? false : outlineColorBinding.reference,
           fontFamily: fontFamilyBinding.reference,
           placeholderColor: placeholderColorBinding.reference,
         }),
@@ -480,6 +479,7 @@ export const vanillaExtractOutputProcessor: OutputProcessor<VanillaExtractOutput
           scaleBindings,
           tokenBindings,
           breakpoints: resolvedBreakpoints,
+          focusRingColor: focusRingColorBinding,
         }),
         ...generateInternalModuleFiles(
           resolvedComponentIds,

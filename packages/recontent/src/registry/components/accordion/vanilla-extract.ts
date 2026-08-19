@@ -1,4 +1,5 @@
 import type { ComponentSourceFiles, TokenImport } from "../../types.js";
+import { focusRingBlock } from "../shared.js";
 
 function typographyProps(ref: string): string {
   return [
@@ -28,6 +29,7 @@ export function generateAccordionSources(bindings: {
    * the whole accordion and a border-bottom-only look between items.
    */
   borderBottomOnly: boolean;
+  focusRingColor: TokenImport | undefined;
 }): ComponentSourceFiles {
   const {
     border,
@@ -42,6 +44,7 @@ export function generateAccordionSources(bindings: {
     transition,
     indicatorIcon,
     borderBottomOnly,
+    focusRingColor,
   } = bindings;
 
   const rootBorderRule = borderBottomOnly
@@ -89,6 +92,7 @@ export const accordionTrigger = style({
   ":hover": {
     backgroundColor: ${hoverBackgroundColor.reference},
   },
+  ${focusRingBlock(focusRingColor)}
 });
 
 export const accordionIndicator = style({

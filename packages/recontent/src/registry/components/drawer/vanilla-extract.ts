@@ -1,5 +1,5 @@
 import type { ComponentSourceFiles, TokenImport } from "../../types.js";
-import { groupVariantTokens } from "../shared.js";
+import { focusRingBlock, groupVariantTokens } from "../shared.js";
 
 const SIZE_KEYS = ["sm", "md", "lg", "full"] as const;
 
@@ -29,6 +29,7 @@ export function generateDrawerSources(bindings: {
   /** Build-time config, baked directly into the generated component. */
   closeIcon: string;
   tokens: Record<string, TokenImport>;
+  focusRingColor: TokenImport | undefined;
 }): ComponentSourceFiles {
   const {
     backdropColor,
@@ -45,6 +46,7 @@ export function generateDrawerSources(bindings: {
     transition,
     closeIcon,
     tokens,
+    focusRingColor,
   } = bindings;
   const sizes = groupVariantTokens(tokens, "sizes", ["size"]);
 
@@ -183,6 +185,7 @@ export const drawerClose = style({
   background: "none",
   padding: 0,
   color: ${titleColor.reference},
+  ${focusRingBlock(focusRingColor)}
 });
 
 export const drawerCloseIcon = style({

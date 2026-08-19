@@ -47,7 +47,3 @@ globalStyle("h1, h2, h3, h4, h5, h6", {
 globalStyle("::placeholder", {
   color: vars.system.colors.textSecondary,
 });
-
-globalStyle(":focus-visible", {
-  outlineColor: vars.system.colors.accent,
-});

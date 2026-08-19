@@ -1,5 +1,5 @@
 import type { ComponentSourceFiles, TokenImport } from "../../types.js";
-import { groupVariantTokens } from "../shared.js";
+import { focusRingBlock, groupVariantTokens } from "../shared.js";
 
 const SIZE_FIELDS = ["trackWidth", "trackHeight", "thumbSize"] as const;
 
@@ -28,7 +28,7 @@ export function generateSwitchSources(bindings: {
   trackBorder: TokenImport;
   thumbBackgroundColor: TokenImport;
   thumbShadow: TokenImport;
-  focusRingColor: TokenImport;
+  focusRingColor: TokenImport | undefined;
   disabledTrackBackgroundColor: TokenImport;
   labelTypography: TokenImport;
   labelColor: TokenImport;
@@ -88,10 +88,7 @@ export const switchTrack = style({
   transitionProperty: "background-color",
   transitionDuration: ${transition.reference}.transitionDuration,
   transitionTimingFunction: ${transition.reference}.transitionTimingFunction,
-  ":focus-visible": {
-    outline: \`2px solid \${${focusRingColor.reference}}\`,
-    outlineOffset: "2px",
-  },
+  ${focusRingBlock(focusRingColor)}
   selectors: {
     "&[data-checked]": {
       backgroundColor: ${trackCheckedBackgroundColor.reference},

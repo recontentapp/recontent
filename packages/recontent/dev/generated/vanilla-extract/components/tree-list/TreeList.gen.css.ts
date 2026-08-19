@@ -45,8 +45,8 @@ export const treeListRow = style({
     backgroundColor: vars.system.colors.backgroundBody,
   },
   ":focus-visible": {
-    outline: `2px solid ${vars.system.colors.accent}`,
-    outlineOffset: "-2px",
+    outline: "none",
+    boxShadow: `inset 0 0 0 2px ${vars.system.colors.accent}`,
   },
   selectors: {
     "&[data-selected]": {
@@ -73,6 +73,10 @@ export const treeListExpand = style({
   width: vars.ref.fontSize.base,
   height: vars.ref.fontSize.base,
   transitionProperty: "transform",
+  ":focus-visible": {
+    outline: "none",
+    boxShadow: `0 0 0 2px ${vars.system.colors.accent}`,
+  },
   selectors: {
     "&[data-expanded]": {
       transform: "rotate(0deg)",

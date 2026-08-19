@@ -14,7 +14,6 @@ export type SelectComponentOptions = {
   verticalSpacing: TokenBinding<"dimension">;
   hoverBorderColor: TokenBinding<"color">;
   focusBorderColor: TokenBinding<"color">;
-  focusRingColor: TokenBinding<"color">;
   invalidBorderColor: TokenBinding<"color">;
   disabledBackgroundColor: TokenBinding<"color">;
   disabledColor: TokenBinding<"color">;
@@ -59,7 +58,6 @@ export const selectComponent = defineRegistryComponent<SelectComponentOptions>()
     verticalSpacing: { kind: "token", type: "dimension", description: "Top/bottom padding of the trigger." },
     hoverBorderColor: { kind: "token", type: "color", description: "Border color of the trigger on hover." },
     focusBorderColor: { kind: "token", type: "color", description: "Border color of the trigger on focus." },
-    focusRingColor: { kind: "token", type: "color", description: "Outline color shown on keyboard focus." },
     invalidBorderColor: { kind: "token", type: "color", description: "Border color of the trigger when invalid." },
     disabledBackgroundColor: {
       kind: "token",
@@ -95,7 +93,7 @@ export const selectComponent = defineRegistryComponent<SelectComponentOptions>()
     "vanilla-extract": vanillaExtractComponentOutput(
       "select",
       "Select",
-      (_scales, _breakpoints, tokens) =>
+      (_scales, _breakpoints, tokens, focusRingColor) =>
         generateSelectSources({
           borderRadius: tokens.borderRadius!,
           border: tokens.border!,
@@ -107,7 +105,7 @@ export const selectComponent = defineRegistryComponent<SelectComponentOptions>()
           verticalSpacing: tokens.verticalSpacing!,
           hoverBorderColor: tokens.hoverBorderColor!,
           focusBorderColor: tokens.focusBorderColor!,
-          focusRingColor: tokens.focusRingColor!,
+          focusRingColor,
           invalidBorderColor: tokens.invalidBorderColor!,
           disabledBackgroundColor: tokens.disabledBackgroundColor!,
           disabledColor: tokens.disabledColor!,

@@ -32,6 +32,10 @@ export const breadcrumbLink = style({
   ":hover": {
     color: vars.system.colors.textPrimary,
   },
+  ":focus-visible": {
+    outline: "none",
+    boxShadow: `0 0 0 2px ${vars.system.colors.accent}`,
+  },
 });
 
 export const breadcrumbCurrent = style({
@@ -72,5 +76,9 @@ export const breadcrumbOverflow = style({
   color: vars.system.colors.textSecondary,
   ":hover": {
     color: vars.system.colors.textPrimary,
+  },
+  ":focus-visible": {
+    outline: "none",
+    boxShadow: `0 0 0 2px ${vars.system.colors.accent}`,
   },
 });

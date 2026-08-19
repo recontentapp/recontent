@@ -20,7 +20,7 @@ export function generateSliderSources(bindings: {
   thumbBorder: TokenImport;
   thumbShadow: TokenImport;
   hoverThumbBackgroundColor: TokenImport;
-  focusRingColor: TokenImport;
+  focusRingColor: TokenImport | undefined;
   disabledTrackBackgroundColor: TokenImport;
   disabledThumbBackgroundColor: TokenImport;
   markColor: TokenImport;
@@ -119,10 +119,14 @@ export const sliderThumb = style({
   ":hover": {
     backgroundColor: ${hoverThumbBackgroundColor.reference},
   },
-  ":focus-visible": {
-    outline: \`2px solid \${${focusRingColor.reference}}\`,
-    outlineOffset: "2px",
-  },
+  ${
+    focusRingColor
+      ? `":focus-visible": {
+    outline: "none",
+    boxShadow: \`\${${thumbShadow.reference}}, 0 0 0 2px \${${focusRingColor.reference}}\`,
+  },`
+      : ""
+  }
   selectors: {
     "&[data-disabled]": {
       backgroundColor: ${disabledThumbBackgroundColor.reference},

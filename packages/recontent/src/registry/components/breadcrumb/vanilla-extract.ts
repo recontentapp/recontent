@@ -1,4 +1,5 @@
 import type { ComponentSourceFiles, TokenImport } from "../../types.js";
+import { focusRingBlock } from "../shared.js";
 
 function typographyProps(ref: string): string {
   return [
@@ -22,6 +23,7 @@ export function generateBreadcrumbSources(bindings: {
   /** Build-time config, baked directly into the generated component. */
   separatorIcon: string;
   overflowIcon: string;
+  focusRingColor: TokenImport | undefined;
 }): ComponentSourceFiles {
   const {
     typography,
@@ -34,6 +36,7 @@ export function generateBreadcrumbSources(bindings: {
     iconSize,
     separatorIcon,
     overflowIcon,
+    focusRingColor,
   } = bindings;
 
   return {
@@ -67,6 +70,7 @@ export const breadcrumbLink = style({
   ":hover": {
     color: ${hoverColor.reference},
   },
+  ${focusRingBlock(focusRingColor)}
 });
 
 export const breadcrumbCurrent = style({
@@ -104,6 +108,7 @@ export const breadcrumbOverflow = style({
   ":hover": {
     color: ${hoverColor.reference},
   },
+  ${focusRingBlock(focusRingColor)}
 });
 `,
     component: `import { useState, type ComponentPropsWithoutRef, type MouseEventHandler, type ReactNode } from "react";

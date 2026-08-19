@@ -99,7 +99,7 @@ export const bannerComponent = defineRegistryComponent<BannerComponentOptions>()
     "vanilla-extract": vanillaExtractComponentOutput(
       "banner",
       "Banner",
-      (_scales, _breakpoints, tokens) =>
+      (_scales, _breakpoints, tokens, focusRingColor) =>
         generateBannerSources({
           border: tokens.border!,
           borderRadius: tokens.borderRadius!,
@@ -111,6 +111,7 @@ export const bannerComponent = defineRegistryComponent<BannerComponentOptions>()
           iconSize: tokens.iconSize!,
           defaultStatusIcons: DEFAULT_STATUS_ICONS,
           tokens,
+          focusRingColor,
         }),
     ),
   },

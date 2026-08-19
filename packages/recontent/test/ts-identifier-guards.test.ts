@@ -95,7 +95,7 @@ describe("vanilla-extract is unaffected by the new guards", () => {
   const VE: VanillaExtractOutput = {
     target: "vanilla-extract",
     outDir: "dist-test",
-    outlineColor: veRef.color.black,
+    focusRingColor: veRef.color.black,
     fontFamily: veRef.fontFamily.body,
     placeholderColor: veRef.color.black,
   };

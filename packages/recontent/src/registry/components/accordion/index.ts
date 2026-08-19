@@ -89,7 +89,7 @@ export const accordionComponent = defineRegistryComponent<AccordionComponentOpti
     "vanilla-extract": vanillaExtractComponentOutput(
       "accordion",
       "Accordion",
-      (_scales, _breakpoints, tokens) =>
+      (_scales, _breakpoints, tokens, focusRingColor) =>
         generateAccordionSources({
           border: tokens.border!,
           borderRadius: tokens.borderRadius!,
@@ -103,6 +103,7 @@ export const accordionComponent = defineRegistryComponent<AccordionComponentOpti
           transition: tokens.transition!,
           indicatorIcon: INDICATOR_ICON,
           borderBottomOnly: BORDER_BOTTOM_ONLY,
+          focusRingColor,
         }),
       { "@base-ui/react": "^1.0.0" },
     ),

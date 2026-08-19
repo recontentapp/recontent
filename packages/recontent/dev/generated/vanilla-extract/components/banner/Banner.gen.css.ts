@@ -96,4 +96,8 @@ export const bannerDismiss = style({
   background: "none",
   padding: 0,
   color: "inherit",
+  ":focus-visible": {
+    outline: "none",
+    boxShadow: `0 0 0 2px ${vars.system.colors.accent}`,
+  },
 });

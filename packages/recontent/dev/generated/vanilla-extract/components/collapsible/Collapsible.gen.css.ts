@@ -31,6 +31,10 @@ export const collapsibleTrigger = style({
   ":hover": {
     backgroundColor: vars.system.colors.backgroundBody,
   },
+  ":focus-visible": {
+    outline: "none",
+    boxShadow: `0 0 0 2px ${vars.system.colors.accent}`,
+  },
 });
 
 export const collapsibleIndicator = style({

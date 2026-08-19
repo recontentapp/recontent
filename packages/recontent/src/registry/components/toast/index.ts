@@ -90,7 +90,7 @@ export const toastComponent = defineRegistryComponent<ToastComponentOptions>()({
     "vanilla-extract": vanillaExtractComponentOutput(
       "toast",
       "Toast",
-      (_scales, _breakpoints, tokens) =>
+      (_scales, _breakpoints, tokens, focusRingColor) =>
         generateToastSources({
           backgroundColor: tokens.backgroundColor!,
           border: tokens.border!,
@@ -110,6 +110,7 @@ export const toastComponent = defineRegistryComponent<ToastComponentOptions>()({
           defaultStatusIcons: DEFAULT_STATUS_ICONS,
           closeIcon: CLOSE_ICON,
           tokens,
+          focusRingColor,
         }),
       { "@base-ui/react": "^1.0.0" },
     ),

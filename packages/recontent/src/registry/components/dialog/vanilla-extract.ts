@@ -1,5 +1,5 @@
 import type { ComponentSourceFiles, TokenImport } from "../../types.js";
-import { groupVariantTokens } from "../shared.js";
+import { focusRingBlock, groupVariantTokens } from "../shared.js";
 
 const SIZE_KEYS = ["sm", "md", "lg", "fullscreen"] as const;
 
@@ -31,6 +31,7 @@ export function generateDialogSources(bindings: {
   /** Build-time config, baked directly into the generated component. */
   closeIcon: string;
   tokens: Record<string, TokenImport>;
+  focusRingColor: TokenImport | undefined;
 }): ComponentSourceFiles {
   const {
     backdropColor,
@@ -49,6 +50,7 @@ export function generateDialogSources(bindings: {
     transition,
     closeIcon,
     tokens,
+    focusRingColor,
   } = bindings;
   const sizes = groupVariantTokens(tokens, "sizes", ["maxWidth"]);
 
@@ -149,6 +151,7 @@ export const dialogClose = style({
   background: "none",
   padding: 0,
   color: ${titleColor.reference},
+  ${focusRingBlock(focusRingColor)}
 });
 
 export const dialogCloseIcon = style({

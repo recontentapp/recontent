@@ -1,5 +1,5 @@
 import type { ComponentSourceFiles, TokenImport } from "../../types.js";
-import { groupVariantTokens } from "../shared.js";
+import { focusRingBlock, groupVariantTokens } from "../shared.js";
 
 const SIZE_FIELDS = ["minSize", "horizontalSpacing", "verticalSpacing", "typography"] as const;
 
@@ -44,6 +44,7 @@ export function generatePaginationSources(bindings: {
   firstIcon: string;
   lastIcon: string;
   tokens: Record<string, TokenImport>;
+  focusRingColor: TokenImport | undefined;
 }): ComponentSourceFiles {
   const {
     borderRadius,
@@ -64,6 +65,7 @@ export function generatePaginationSources(bindings: {
     firstIcon,
     lastIcon,
     tokens,
+    focusRingColor,
   } = bindings;
   const sizes = groupVariantTokens(tokens, "sizes", SIZE_FIELDS);
   const sizeNames = Object.keys(sizes);
@@ -94,6 +96,7 @@ export const paginationButton = style({
     color: ${hoverColor.reference},
     backgroundColor: ${hoverBackgroundColor.reference},
   },
+  ${focusRingBlock(focusRingColor)}
   selectors: {
     "&[data-active]": {
       color: ${activeColor.reference},

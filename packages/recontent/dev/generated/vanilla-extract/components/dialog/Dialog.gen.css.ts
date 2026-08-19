@@ -105,6 +105,10 @@ export const dialogClose = style({
   background: "none",
   padding: 0,
   color: vars.system.colors.textPrimary,
+  ":focus-visible": {
+    outline: "none",
+    boxShadow: `0 0 0 2px ${vars.system.colors.accent}`,
+  },
 });
 
 export const dialogCloseIcon = style({

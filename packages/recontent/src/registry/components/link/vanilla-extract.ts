@@ -1,4 +1,5 @@
 import type { ComponentSourceFiles, TokenImport } from "../../types.js";
+import { focusRingBlock } from "../shared.js";
 
 function typographyProps(ref: string): string {
   return [
@@ -15,8 +16,9 @@ export function generateLinkSources(bindings: {
   hoverColor: TokenImport;
   typography: TokenImport;
   visitedColor: TokenImport;
+  focusRingColor: TokenImport | undefined;
 }): ComponentSourceFiles {
-  const { color, hoverColor, typography, visitedColor } = bindings;
+  const { color, hoverColor, typography, visitedColor, focusRingColor } = bindings;
 
   return {
     styles: `import { style, styleVariants } from "@vanilla-extract/css";
@@ -32,6 +34,7 @@ export const linkRoot = style({
   ":visited": {
     color: ${visitedColor.reference},
   },
+  ${focusRingBlock(focusRingColor)}
 });
 
 export const linkUnderline = styleVariants({

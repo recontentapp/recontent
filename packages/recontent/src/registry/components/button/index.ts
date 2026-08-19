@@ -27,7 +27,6 @@ export type ButtonComponentOptions = {
   borderRadius: TokenBinding<"dimension">;
   variants: Record<string, ButtonVariantFields>;
   sizes: Record<string, ButtonSizeFields>;
-  focusRingColor: TokenBinding<"color">;
 };
 
 export const buttonComponent = defineRegistryComponent<ButtonComponentOptions>()({
@@ -66,20 +65,15 @@ export const buttonComponent = defineRegistryComponent<ButtonComponentOptions>()
         gap: { kind: "token", type: "dimension" },
       },
     },
-    focusRingColor: {
-      kind: "token",
-      type: "color",
-      description: "Outline color shown on keyboard focus.",
-    },
   },
   outputs: {
     "vanilla-extract": vanillaExtractComponentOutput(
       "button",
       "Button",
-      (_scales, _breakpoints, tokens) =>
+      (_scales, _breakpoints, tokens, focusRingColor) =>
         generateButtonSources({
           borderRadius: tokens.borderRadius!,
-          focusRingColor: tokens.focusRingColor!,
+          focusRingColor,
           tokens,
         }),
       { "@base-ui/react": "^1.0.0" },

@@ -21,8 +21,6 @@ export const autocompleteTrigger = style({
   },
   ":focus-within": {
     borderColor: vars.system.colors.accent,
-    outline: `2px solid ${vars.system.colors.accent}`,
-    outlineOffset: "2px",
   },
   selectors: {
     "&[data-invalid]": {
@@ -33,6 +31,10 @@ export const autocompleteTrigger = style({
       color: vars.system.colors.textDisabled,
       cursor: "not-allowed",
     },
+    "&:focus-within": {
+    outline: "none",
+    boxShadow: `0 0 0 2px ${vars.system.colors.accent}`,
+  },
   },
 });
 
@@ -140,6 +142,7 @@ export const autocompleteItem = style({
   justifyContent: "space-between",
   boxSizing: "border-box",
   cursor: "pointer",
+  outline: "none",
   gap: vars.ref.fontSize.base,
   color: vars.system.colors.textPrimary,
   paddingLeft: vars.ref.spacing[8],

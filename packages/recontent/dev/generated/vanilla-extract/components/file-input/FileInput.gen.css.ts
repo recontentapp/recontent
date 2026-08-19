@@ -48,6 +48,10 @@ export const fileInputDropzone = style({
       cursor: "not-allowed",
     },
   },
+  ":focus-visible": {
+    outline: "none",
+    boxShadow: `0 0 0 2px ${vars.system.colors.accent}`,
+  },
 });
 
 export const fileInputButton = style({
@@ -81,6 +85,10 @@ export const fileInputButton = style({
       color: vars.system.colors.textDisabled,
       cursor: "not-allowed",
     },
+  },
+  ":focus-visible": {
+    outline: "none",
+    boxShadow: `0 0 0 2px ${vars.system.colors.accent}`,
   },
 });
 
@@ -144,4 +152,8 @@ export const fileInputRemove = style({
   background: "none",
   padding: 0,
   color: "inherit",
+  ":focus-visible": {
+    outline: "none",
+    boxShadow: `0 0 0 2px ${vars.system.colors.accent}`,
+  },
 });

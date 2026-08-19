@@ -100,7 +100,7 @@ export function aliasChainConfig(output?: OutputInput): Config {
   const resolvedOutput: OutputInput = output ?? {
     target: "vanilla-extract",
     outDir: "dist-test",
-    outlineColor: ref.color.black,
+    focusRingColor: ref.color.black,
     fontFamily: ref.fontFamily.body,
     placeholderColor: ref.color.black,
   };
@@ -156,7 +156,7 @@ export function compositeConfig(output?: OutputInput): Config {
   const resolvedOutput: OutputInput = output ?? {
     target: "vanilla-extract",
     outDir: "dist-test",
-    outlineColor: ref.color.black,
+    focusRingColor: ref.color.black,
     fontFamily: ref.fontFamily.body,
     placeholderColor: ref.color.black,
   };
@@ -182,7 +182,7 @@ export function scaleConfig(output?: OutputInput): Config {
   const resolvedOutput: OutputInput = output ?? {
     target: "vanilla-extract",
     outDir: "dist-test",
-    outlineColor: ref.color.black,
+    focusRingColor: ref.color.black,
     fontFamily: ref.fontFamily.body,
     placeholderColor: ref.color.black,
   };
@@ -220,7 +220,7 @@ export function themedConfig(options: {
   const resolvedOutput: OutputInput = options.output ?? {
     target: "vanilla-extract",
     outDir: "dist-test",
-    outlineColor: ref.color.black,
+    focusRingColor: ref.color.black,
     fontFamily: ref.fontFamily.body,
     placeholderColor: ref.color.black,
   };

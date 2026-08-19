@@ -37,6 +37,10 @@ export const outlineLink = style({
   ":hover": {
     color: vars.system.colors.textPrimary,
   },
+  ":focus-visible": {
+    outline: "none",
+    boxShadow: `0 0 0 2px ${vars.system.colors.accent}`,
+  },
   selectors: {
     "&[data-active]": {
       color: vars.system.colors.accent,

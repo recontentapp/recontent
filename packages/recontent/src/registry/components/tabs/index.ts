@@ -26,7 +26,6 @@ export type TabsComponentOptions = {
   tabGap: TokenBinding<"dimension">;
   panelSpacing: TokenBinding<"dimension">;
   iconSize: TokenBinding<"dimension">;
-  focusRingColor: TokenBinding<"color">;
 };
 
 export const tabsComponent = defineRegistryComponent<TabsComponentOptions>()({
@@ -58,13 +57,12 @@ export const tabsComponent = defineRegistryComponent<TabsComponentOptions>()({
     tabGap: { kind: "token", type: "dimension", description: "Space between a tab's icon and label." },
     panelSpacing: { kind: "token", type: "dimension", description: "Padding of the active panel." },
     iconSize: { kind: "token", type: "dimension", description: "Size of a tab's icon." },
-    focusRingColor: { kind: "token", type: "color", description: "Outline color shown on keyboard focus." },
   },
   outputs: {
     "vanilla-extract": vanillaExtractComponentOutput(
       "tabs",
       "Tabs",
-      (_scales, _breakpoints, tokens) =>
+      (_scales, _breakpoints, tokens, focusRingColor) =>
         generateTabsSources({
           typography: tokens.typography!,
           activeTypography: tokens.activeTypography!,
@@ -76,7 +74,7 @@ export const tabsComponent = defineRegistryComponent<TabsComponentOptions>()({
           tabGap: tokens.tabGap!,
           panelSpacing: tokens.panelSpacing!,
           iconSize: tokens.iconSize!,
-          focusRingColor: tokens.focusRingColor!,
+          focusRingColor,
           tokens,
         }),
       { "@base-ui/react": "^1.0.0" },

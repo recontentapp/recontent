@@ -250,6 +250,7 @@ export function generateBuiltInComponentFiles(
     scaleBindings?: Record<string, ScaleImport>;
     tokenBindings?: Record<string, TokenImport>;
     breakpoints?: readonly BreakpointBinding[];
+    focusRingColor?: TokenImport;
   },
 ): OutputFile[] {
   return resolveBuiltInComponentIds(names).flatMap((id) => {
@@ -271,7 +272,12 @@ export function generateBuiltInComponentFiles(
         .filter(([key]) => key.startsWith(prefix))
         .map(([key, value]) => [key.slice(prefix.length), value]),
     );
-    return output.generate({ scales, tokens, breakpoints: options?.breakpoints });
+    return output.generate({
+      scales,
+      tokens,
+      breakpoints: options?.breakpoints,
+      focusRingColor: options?.focusRingColor,
+    });
   });
 }
 

@@ -1,4 +1,5 @@
 import type { ComponentSourceFiles, TokenImport } from "../../types.js";
+import { focusRingBlock } from "../shared.js";
 
 function typographyProps(ref: string): string {
   return [
@@ -21,6 +22,7 @@ export function generateOutlineSources(bindings: {
   indentSpacing: TokenImport;
   itemHorizontalSpacing: TokenImport;
   itemVerticalSpacing: TokenImport;
+  focusRingColor: TokenImport | undefined;
 }): ComponentSourceFiles {
   const {
     typography,
@@ -33,6 +35,7 @@ export function generateOutlineSources(bindings: {
     indentSpacing,
     itemHorizontalSpacing,
     itemVerticalSpacing,
+    focusRingColor,
   } = bindings;
 
   return {
@@ -71,6 +74,7 @@ export const outlineLink = style({
   ":hover": {
     color: ${hoverColor.reference},
   },
+  ${focusRingBlock(focusRingColor)}
   selectors: {
     "&[data-active]": {
       color: ${activeColor.reference},

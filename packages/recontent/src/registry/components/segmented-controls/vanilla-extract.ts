@@ -1,4 +1,5 @@
 import type { ComponentSourceFiles, TokenImport } from "../../types.js";
+import { focusRingBlock } from "../shared.js";
 
 function typographyProps(ref: string): string {
   return [
@@ -28,6 +29,7 @@ export function generateSegmentedControlsSources(bindings: {
   optionVerticalSpacing: TokenImport;
   optionGap: TokenImport;
   iconSize: TokenImport;
+  focusRingColor: TokenImport | undefined;
 }): ComponentSourceFiles {
   const {
     borderRadius,
@@ -47,6 +49,7 @@ export function generateSegmentedControlsSources(bindings: {
     optionVerticalSpacing,
     optionGap,
     iconSize,
+    focusRingColor,
   } = bindings;
 
   return {
@@ -98,6 +101,7 @@ export const segmentedControlsOption = style({
       cursor: "not-allowed",
     },
   },
+  ${focusRingBlock(focusRingColor)}
 });
 
 export const segmentedControlsOptionIcon = style({

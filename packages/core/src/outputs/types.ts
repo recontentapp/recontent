@@ -13,7 +13,8 @@ export interface VanillaExtractOutput {
   target: "vanilla-extract";
   outDir: string;
   builtInComponents?: BuiltInComponentsInput;
-  outlineColor: false | TokenBinding<"color">;
+  /** Optional. When omitted, no focus-ring styles are generated. */
+  focusRingColor?: TokenBinding<"color">;
   fontFamily: TokenBinding<"fontFamily">;
   placeholderColor: TokenBinding<"color">;
   breakpoints?: ScaleBinding<"dimension">;
