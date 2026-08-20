@@ -13,14 +13,10 @@ const meta = {
       control: "select",
       options: ["sm", "md"],
     },
-    dot: {
-      control: "boolean",
-    },
   },
   args: {
     variant: "success",
     size: "sm",
-    dot: true,
     children: "Active",
   },
 } satisfies Meta<typeof Badge>;

@@ -45,18 +45,26 @@ export type ScaleContract = {
 export type VariantContract = {
   kind: "variants";
   key: string;
-  fields: readonly TokenContract[];
+  fields: readonly (TokenContract | IconContract)[];
   required?: boolean;
   description?: string;
 };
 
-export type ComponentContract = TokenContract | ScaleContract | VariantContract;
+export type IconContract = {
+  kind: "icon";
+  key: string;
+  required?: boolean;
+  description?: string;
+};
+
+export type ComponentContract = TokenContract | ScaleContract | VariantContract | IconContract;
 
 export type ComponentOutput = {
   runtimeDependencies: Record<string, string>;
   generate(bindings: {
     scales: Record<string, ScaleImport>;
     tokens: Record<string, TokenImport>;
+    icons: Record<string, string>;
     breakpoints?: readonly BreakpointBinding[];
     focusRingColor?: TokenImport;
   }): OutputFile[];
@@ -64,7 +72,10 @@ export type ComponentOutput = {
 
 type InternalModuleOutput = {
   runtimeDependencies: Record<string, string>;
-  generate(breakpoints?: readonly BreakpointBinding[]): OutputFile[];
+  generate(options?: {
+    breakpoints?: readonly BreakpointBinding[];
+    iconNames?: readonly string[];
+  }): OutputFile[];
 };
 
 export type InternalModuleDefinition = {

@@ -1,5 +1,6 @@
 import type { TokenBinding } from "@recontentapp/core";
 import { defineRegistryComponent } from "../../define.js";
+import type { IconName } from "../../internal/icon-map/icons.js";
 import { vanillaExtractComponentOutput } from "../shared.js";
 import { generatePaginationSources } from "./vanilla-extract.js";
 
@@ -25,17 +26,11 @@ export type PaginationComponentOptions = {
   sizes: Record<string, PaginationSizeFields>;
   gap: TokenBinding<"dimension">;
   iconSize: TokenBinding<"dimension">;
+  previousIcon: IconName;
+  nextIcon: IconName;
+  firstIcon: IconName;
+  lastIcon: IconName;
 };
-
-/**
- * Icons aren't token bindings (Icon isn't a `ComponentContract` kind), so —
- * like other components' icon config — these are build-time choices baked
- * directly into the generated component rather than config bindings.
- */
-const PREVIOUS_ICON = "chevronDown";
-const NEXT_ICON = "chevronDown";
-const FIRST_ICON = "chevronDown";
-const LAST_ICON = "chevronDown";
 
 export const paginationComponent = defineRegistryComponent<PaginationComponentOptions>()({
   id: "pagination",
@@ -69,12 +64,16 @@ export const paginationComponent = defineRegistryComponent<PaginationComponentOp
     },
     gap: { kind: "token", type: "dimension", description: "Space between page controls." },
     iconSize: { kind: "token", type: "dimension", description: "Size of the navigation icons." },
+    previousIcon: { kind: "icon", description: "Icon used to navigate to the previous page." },
+    nextIcon: { kind: "icon", description: "Icon used to navigate to the next page." },
+    firstIcon: { kind: "icon", description: "Icon used to navigate to the first page." },
+    lastIcon: { kind: "icon", description: "Icon used to navigate to the last page." },
   },
   outputs: {
     "vanilla-extract": vanillaExtractComponentOutput(
       "pagination",
       "Pagination",
-      (_scales, _breakpoints, tokens, focusRingColor) =>
+      (_scales, _breakpoints, tokens, focusRingColor, icons) =>
         generatePaginationSources({
           borderRadius: tokens.borderRadius!,
           border: tokens.border!,
@@ -89,10 +88,10 @@ export const paginationComponent = defineRegistryComponent<PaginationComponentOp
           ellipsisColor: tokens.ellipsisColor!,
           gap: tokens.gap!,
           iconSize: tokens.iconSize!,
-          previousIcon: PREVIOUS_ICON,
-          nextIcon: NEXT_ICON,
-          firstIcon: FIRST_ICON,
-          lastIcon: LAST_ICON,
+          previousIcon: icons.previousIcon!,
+          nextIcon: icons.nextIcon!,
+          firstIcon: icons.firstIcon!,
+          lastIcon: icons.lastIcon!,
           tokens,
           focusRingColor,
         }),

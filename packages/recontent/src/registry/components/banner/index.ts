@@ -1,5 +1,6 @@
 import type { TokenBinding } from "@recontentapp/core";
 import { defineRegistryComponent } from "../../define.js";
+import type { IconName } from "../../internal/icon-map/icons.js";
 import { vanillaExtractComponentOutput } from "../shared.js";
 import { generateBannerSources } from "./vanilla-extract.js";
 
@@ -9,6 +10,7 @@ type BannerStatusFields = {
   borderColor: TokenBinding<"color">;
   iconColor: TokenBinding<"color">;
   titleColor: TokenBinding<"color">;
+  icon: IconName;
 };
 
 export type BannerComponentOptions = {
@@ -21,21 +23,7 @@ export type BannerComponentOptions = {
   verticalSpacing: TokenBinding<"dimension">;
   gap: TokenBinding<"dimension">;
   iconSize: TokenBinding<"dimension">;
-};
-
-/**
- * Default icon per status, keyed by convention. `statusIcons` isn't a token
- * binding (Icon isn't a `ComponentContract` kind), so — like Collapsible's
- * indicator and DropdownButton's chevron — it's a build-time choice baked
- * directly into the generated component rather than a `recontent.config.ts`
- * binding. Unrecognized status keys fall back to "info".
- */
-const DEFAULT_STATUS_ICONS: Record<string, string> = {
-  info: "info",
-  success: "check",
-  warning: "alert",
-  danger: "alert",
-  error: "alert",
+  closeIcon: IconName;
 };
 
 export const bannerComponent = defineRegistryComponent<BannerComponentOptions>()({
@@ -62,6 +50,7 @@ export const bannerComponent = defineRegistryComponent<BannerComponentOptions>()
         borderColor: { kind: "token", type: "color" },
         iconColor: { kind: "token", type: "color" },
         titleColor: { kind: "token", type: "color" },
+        icon: { kind: "icon" },
       },
     },
     typography: {
@@ -94,12 +83,13 @@ export const bannerComponent = defineRegistryComponent<BannerComponentOptions>()
       type: "dimension",
       description: "Size of the status icon.",
     },
+    closeIcon: { kind: "icon", description: "Icon used by the dismiss button." },
   },
   outputs: {
     "vanilla-extract": vanillaExtractComponentOutput(
       "banner",
       "Banner",
-      (_scales, _breakpoints, tokens, focusRingColor) =>
+      (_scales, _breakpoints, tokens, focusRingColor, icons) =>
         generateBannerSources({
           border: tokens.border!,
           borderRadius: tokens.borderRadius!,
@@ -109,8 +99,9 @@ export const bannerComponent = defineRegistryComponent<BannerComponentOptions>()
           verticalSpacing: tokens.verticalSpacing!,
           gap: tokens.gap!,
           iconSize: tokens.iconSize!,
-          defaultStatusIcons: DEFAULT_STATUS_ICONS,
+          closeIcon: icons.closeIcon!,
           tokens,
+          icons,
           focusRingColor,
         }),
     ),

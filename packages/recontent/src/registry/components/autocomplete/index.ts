@@ -1,5 +1,6 @@
 import type { TokenBinding } from "@recontentapp/core";
 import { defineRegistryComponent } from "../../define.js";
+import type { IconName } from "../../internal/icon-map/icons.js";
 import { vanillaExtractComponentOutput } from "../shared.js";
 import { generateAutocompleteSources } from "./vanilla-extract.js";
 
@@ -43,48 +44,102 @@ export type AutocompleteComponentOptions = {
   emptyStateTypography: TokenBinding<"typography">;
   emptyStateSpacing: TokenBinding<"dimension">;
   highlightColor: TokenBinding<"color">;
+  selectedIcon: IconName;
+  clearIcon: IconName;
+  searchIcon: IconName;
 };
-
-/**
- * Icons aren't token bindings (Icon isn't a `ComponentContract` kind), so —
- * like Select's indicator — these are build-time choices baked directly into
- * the generated component rather than `recontent.config.ts` bindings.
- */
-const SELECTED_ICON = "check";
-const CLEAR_ICON = "close";
-const SEARCH_ICON = "search";
 
 export const autocompleteComponent = defineRegistryComponent<AutocompleteComponentOptions>()({
   id: "autocomplete",
   name: "Autocomplete",
   internalDependencies: ["render-element", "icon-map"],
   schema: {
-    borderRadius: { kind: "token", type: "dimension", description: "Corner radius of the trigger." },
+    borderRadius: {
+      kind: "token",
+      type: "dimension",
+      description: "Corner radius of the trigger.",
+    },
     border: { kind: "token", type: "border", description: "Border applied around the trigger." },
-    backgroundColor: { kind: "token", type: "color", description: "Background color of the trigger." },
+    backgroundColor: {
+      kind: "token",
+      type: "color",
+      description: "Background color of the trigger.",
+    },
     color: { kind: "token", type: "color", description: "Text color of the input." },
-    typography: { kind: "token", type: "typography", description: "Typography applied to the input." },
-    placeholderColor: { kind: "token", type: "color", description: "Text color of the placeholder." },
-    horizontalSpacing: { kind: "token", type: "dimension", description: "Left/right padding of the trigger." },
-    verticalSpacing: { kind: "token", type: "dimension", description: "Top/bottom padding of the trigger." },
-    hoverBorderColor: { kind: "token", type: "color", description: "Border color of the trigger on hover." },
-    focusBorderColor: { kind: "token", type: "color", description: "Border color of the trigger on focus." },
-    invalidBorderColor: { kind: "token", type: "color", description: "Border color of the trigger when invalid." },
+    typography: {
+      kind: "token",
+      type: "typography",
+      description: "Typography applied to the input.",
+    },
+    placeholderColor: {
+      kind: "token",
+      type: "color",
+      description: "Text color of the placeholder.",
+    },
+    horizontalSpacing: {
+      kind: "token",
+      type: "dimension",
+      description: "Left/right padding of the trigger.",
+    },
+    verticalSpacing: {
+      kind: "token",
+      type: "dimension",
+      description: "Top/bottom padding of the trigger.",
+    },
+    hoverBorderColor: {
+      kind: "token",
+      type: "color",
+      description: "Border color of the trigger on hover.",
+    },
+    focusBorderColor: {
+      kind: "token",
+      type: "color",
+      description: "Border color of the trigger on focus.",
+    },
+    invalidBorderColor: {
+      kind: "token",
+      type: "color",
+      description: "Border color of the trigger when invalid.",
+    },
     disabledBackgroundColor: {
       kind: "token",
       type: "color",
       description: "Background color of the trigger when disabled.",
     },
-    disabledColor: { kind: "token", type: "color", description: "Text color of the trigger when disabled." },
+    disabledColor: {
+      kind: "token",
+      type: "color",
+      description: "Text color of the trigger when disabled.",
+    },
     iconSize: { kind: "token", type: "dimension", description: "Size of the trigger/item icons." },
-    popupBackgroundColor: { kind: "token", type: "color", description: "Background color of the popup." },
+    popupBackgroundColor: {
+      kind: "token",
+      type: "color",
+      description: "Background color of the popup.",
+    },
     popupBorder: { kind: "token", type: "border", description: "Border applied around the popup." },
-    popupBorderRadius: { kind: "token", type: "dimension", description: "Corner radius of the popup." },
+    popupBorderRadius: {
+      kind: "token",
+      type: "dimension",
+      description: "Corner radius of the popup.",
+    },
     popupShadow: { kind: "token", type: "shadow", description: "Shadow applied to the popup." },
-    popupSpacing: { kind: "token", type: "dimension", description: "Padding around the item list." },
-    popupOffset: { kind: "token", type: "dimension", description: "Gap between the trigger and the popup." },
+    popupSpacing: {
+      kind: "token",
+      type: "dimension",
+      description: "Padding around the item list.",
+    },
+    popupOffset: {
+      kind: "token",
+      type: "dimension",
+      description: "Gap between the trigger and the popup.",
+    },
     itemColor: { kind: "token", type: "color", description: "Text color of an item." },
-    itemTypography: { kind: "token", type: "typography", description: "Typography applied to an item." },
+    itemTypography: {
+      kind: "token",
+      type: "typography",
+      description: "Typography applied to an item.",
+    },
     itemHoverBackgroundColor: {
       kind: "token",
       type: "color",
@@ -95,29 +150,68 @@ export const autocompleteComponent = defineRegistryComponent<AutocompleteCompone
       type: "color",
       description: "Background color of the selected item.",
     },
-    itemSelectedColor: { kind: "token", type: "color", description: "Text color of the selected item." },
-    itemDisabledColor: { kind: "token", type: "color", description: "Text color of a disabled item." },
-    itemHorizontalSpacing: { kind: "token", type: "dimension", description: "Left/right padding of an item." },
-    itemVerticalSpacing: { kind: "token", type: "dimension", description: "Top/bottom padding of an item." },
-    tagBackgroundColor: { kind: "token", type: "color", description: "Background color of a multi-value chip." },
+    itemSelectedColor: {
+      kind: "token",
+      type: "color",
+      description: "Text color of the selected item.",
+    },
+    itemDisabledColor: {
+      kind: "token",
+      type: "color",
+      description: "Text color of a disabled item.",
+    },
+    itemHorizontalSpacing: {
+      kind: "token",
+      type: "dimension",
+      description: "Left/right padding of an item.",
+    },
+    itemVerticalSpacing: {
+      kind: "token",
+      type: "dimension",
+      description: "Top/bottom padding of an item.",
+    },
+    tagBackgroundColor: {
+      kind: "token",
+      type: "color",
+      description: "Background color of a multi-value chip.",
+    },
     tagColor: { kind: "token", type: "color", description: "Text color of a multi-value chip." },
     tagBorderRadius: { kind: "token", type: "dimension", description: "Corner radius of a chip." },
-    tagTypography: { kind: "token", type: "typography", description: "Typography applied to a chip." },
+    tagTypography: {
+      kind: "token",
+      type: "typography",
+      description: "Typography applied to a chip.",
+    },
     tagGap: { kind: "token", type: "dimension", description: "Space between chips." },
-    emptyStateColor: { kind: "token", type: "color", description: "Text color of the empty state." },
-    emptyStateTypography: { kind: "token", type: "typography", description: "Typography of the empty state." },
-    emptyStateSpacing: { kind: "token", type: "dimension", description: "Padding around the empty state." },
+    emptyStateColor: {
+      kind: "token",
+      type: "color",
+      description: "Text color of the empty state.",
+    },
+    emptyStateTypography: {
+      kind: "token",
+      type: "typography",
+      description: "Typography of the empty state.",
+    },
+    emptyStateSpacing: {
+      kind: "token",
+      type: "dimension",
+      description: "Padding around the empty state.",
+    },
     highlightColor: {
       kind: "token",
       type: "color",
       description: "Background color behind a matched substring in an option's label.",
     },
+    selectedIcon: { kind: "icon", description: "Icon marking the selected item." },
+    clearIcon: { kind: "icon", description: "Icon used by the clear button." },
+    searchIcon: { kind: "icon", description: "Icon used by the search input." },
   },
   outputs: {
     "vanilla-extract": vanillaExtractComponentOutput(
       "autocomplete",
       "Autocomplete",
-      (_scales, _breakpoints, tokens, focusRingColor) =>
+      (_scales, _breakpoints, tokens, focusRingColor, icons) =>
         generateAutocompleteSources({
           borderRadius: tokens.borderRadius!,
           border: tokens.border!,
@@ -157,9 +251,9 @@ export const autocompleteComponent = defineRegistryComponent<AutocompleteCompone
           emptyStateTypography: tokens.emptyStateTypography!,
           emptyStateSpacing: tokens.emptyStateSpacing!,
           highlightColor: tokens.highlightColor!,
-          selectedIcon: SELECTED_ICON,
-          clearIcon: CLEAR_ICON,
-          searchIcon: SEARCH_ICON,
+          selectedIcon: icons.selectedIcon!,
+          clearIcon: icons.clearIcon!,
+          searchIcon: icons.searchIcon!,
         }),
       { "@base-ui/react": "^1.0.0" },
     ),

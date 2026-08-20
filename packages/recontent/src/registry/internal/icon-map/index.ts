@@ -6,10 +6,10 @@ export const iconMapModule: InternalModuleDefinition = {
   outputs: {
     "vanilla-extract": {
       runtimeDependencies: { react: ">=18" },
-      generate: () => [
+      generate: (options?: { iconNames?: readonly string[] }) => [
         {
           filename: "iconMap.tsx",
-          content: generateIconMapSource(),
+          content: generateIconMapSource(options?.iconNames ?? []),
           writeMode: "once",
         },
       ],

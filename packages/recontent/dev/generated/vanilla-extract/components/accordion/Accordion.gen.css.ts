@@ -39,6 +39,9 @@ export const accordionTrigger = style({
     fontWeight: vars.system.textScale["paragraph-body-m"].fontWeight,
     letterSpacing: vars.system.textScale["paragraph-body-m"].letterSpacing,
     lineHeight: vars.system.textScale["paragraph-body-m"].lineHeight,
+  transitionProperty: "background-color",
+  transitionDuration: vars.system.transitionScale.fast.transitionDuration,
+  transitionTimingFunction: vars.system.transitionScale.fast.transitionTimingFunction,
   ":hover": {
     backgroundColor: vars.system.colors.backgroundBody,
   },
@@ -63,6 +66,15 @@ export const accordionIndicator = style({
 
 export const accordionPanel = style({
   overflow: "hidden",
+  height: "var(--accordion-panel-height)",
+  transitionProperty: "height",
+  transitionDuration: vars.system.transitionScale.fast.transitionDuration,
+  transitionTimingFunction: vars.system.transitionScale.fast.transitionTimingFunction,
+  selectors: {
+    "&[data-starting-style], &[data-ending-style]": {
+      height: 0,
+    },
+  },
 });
 
 export const accordionContent = style({

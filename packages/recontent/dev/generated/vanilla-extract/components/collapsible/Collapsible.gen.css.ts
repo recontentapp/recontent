@@ -28,8 +28,13 @@ export const collapsibleTrigger = style({
     fontWeight: vars.system.textScale["paragraph-body-m"].fontWeight,
     letterSpacing: vars.system.textScale["paragraph-body-m"].letterSpacing,
     lineHeight: vars.system.textScale["paragraph-body-m"].lineHeight,
-  ":hover": {
-    backgroundColor: vars.system.colors.backgroundBody,
+  transitionProperty: "background-color",
+  transitionDuration: vars.system.transitionScale.fast.transitionDuration,
+  transitionTimingFunction: vars.system.transitionScale.fast.transitionTimingFunction,
+  selectors: {
+    "&:hover, &:focus-visible": {
+      backgroundColor: vars.system.colors.backgroundBody,
+    },
   },
   ":focus-visible": {
     outline: "none",
@@ -52,6 +57,15 @@ export const collapsibleIndicator = style({
 
 export const collapsiblePanel = style({
   overflow: "hidden",
+  height: "var(--collapsible-panel-height)",
+  transitionProperty: "height",
+  transitionDuration: vars.system.transitionScale.fast.transitionDuration,
+  transitionTimingFunction: vars.system.transitionScale.fast.transitionTimingFunction,
+  selectors: {
+    "&[data-starting-style], &[data-ending-style]": {
+      height: 0,
+    },
+  },
 });
 
 export const collapsiblePanelContent = style({

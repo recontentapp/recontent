@@ -1,5 +1,6 @@
 import type { TokenBinding } from "@recontentapp/core";
 import { defineRegistryComponent } from "../../define.js";
+import type { IconName } from "../../internal/icon-map/icons.js";
 import { vanillaExtractComponentOutput } from "../shared.js";
 import { generateStepsSources } from "./vanilla-extract.js";
 
@@ -27,15 +28,9 @@ export type StepsComponentOptions = {
   connectorThickness: TokenBinding<"dimension">;
   connectorSpacing: TokenBinding<"dimension">;
   indicatorBorderRadius: TokenBinding<"dimension">;
+  completeIcon: IconName;
+  errorIcon: IconName;
 };
-
-/**
- * Icons aren't token bindings (Icon isn't a `ComponentContract` kind), so —
- * like other components' icon config — these are build-time choices baked
- * directly into the generated component rather than config bindings.
- */
-const COMPLETE_ICON = "check";
-const ERROR_ICON = "alert";
 
 export const stepsComponent = defineRegistryComponent<StepsComponentOptions>()({
   id: "steps",
@@ -81,12 +76,14 @@ export const stepsComponent = defineRegistryComponent<StepsComponentOptions>()({
       type: "dimension",
       description: "Corner radius of a step's indicator.",
     },
+    completeIcon: { kind: "icon", description: "Icon shown by a completed step's indicator." },
+    errorIcon: { kind: "icon", description: "Icon shown by an errored step's indicator." },
   },
   outputs: {
     "vanilla-extract": vanillaExtractComponentOutput(
       "steps",
       "Steps",
-      (_scales, _breakpoints, tokens) =>
+      (_scales, _breakpoints, tokens, _focusRingColor, icons) =>
         generateStepsSources({
           labelTypography: tokens.labelTypography!,
           descriptionTypography: tokens.descriptionTypography!,
@@ -94,8 +91,8 @@ export const stepsComponent = defineRegistryComponent<StepsComponentOptions>()({
           connectorThickness: tokens.connectorThickness!,
           connectorSpacing: tokens.connectorSpacing!,
           indicatorBorderRadius: tokens.indicatorBorderRadius!,
-          completeIcon: COMPLETE_ICON,
-          errorIcon: ERROR_ICON,
+          completeIcon: icons.completeIcon!,
+          errorIcon: icons.errorIcon!,
           tokens,
         }),
     ),

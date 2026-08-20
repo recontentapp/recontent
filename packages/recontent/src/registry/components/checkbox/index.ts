@@ -1,10 +1,16 @@
-import type { ScaleBinding, TokenBinding } from "@recontentapp/core";
+import type { TokenBinding } from "@recontentapp/core";
 import { defineRegistryComponent } from "../../define.js";
+import type { IconName } from "../../internal/icon-map/icons.js";
 import { vanillaExtractComponentOutput } from "../shared.js";
 import { generateCheckboxSources } from "./vanilla-extract.js";
 
+type CheckboxSizeFields = {
+  boxSize: TokenBinding<"dimension">;
+  labelTypography: TokenBinding<"typography">;
+};
+
 export type CheckboxComponentOptions = {
-  sizes: ScaleBinding<"dimension">;
+  sizes: Record<string, CheckboxSizeFields>;
   border: TokenBinding<"border">;
   borderRadius: TokenBinding<"dimension">;
   backgroundColor: TokenBinding<"color">;
@@ -14,18 +20,11 @@ export type CheckboxComponentOptions = {
   invalidBorderColor: TokenBinding<"color">;
   disabledBackgroundColor: TokenBinding<"color">;
   disabledColor: TokenBinding<"color">;
-  labelTypography: TokenBinding<"typography">;
   labelColor: TokenBinding<"color">;
   gap: TokenBinding<"dimension">;
+  checkedIcon: IconName;
+  indeterminateIcon: IconName;
 };
-
-/**
- * Icon shown when checked/indeterminate. Not token bindings (Icon isn't a
- * `ComponentContract` kind), so — like Collapsible's indicator — these are
- * build-time choices baked directly into the generated component.
- */
-const CHECKED_ICON = "check";
-const INDETERMINATE_ICON = "close";
 
 export const checkboxComponent = defineRegistryComponent<CheckboxComponentOptions>()({
   id: "checkbox",
@@ -33,9 +32,13 @@ export const checkboxComponent = defineRegistryComponent<CheckboxComponentOption
   internalDependencies: ["render-element", "icon-map"],
   schema: {
     sizes: {
-      kind: "scale",
-      type: "dimension",
-      description: "Scale used by the size prop.",
+      kind: "variants",
+      description:
+        "Consumer-defined sizes, drives the size prop. Pairs the box dimension with the label's typography so both scale together.",
+      fields: {
+        boxSize: { kind: "token", type: "dimension" },
+        labelTypography: { kind: "token", type: "typography" },
+      },
     },
     border: {
       kind: "token",
@@ -82,11 +85,6 @@ export const checkboxComponent = defineRegistryComponent<CheckboxComponentOption
       type: "color",
       description: "Color of the check mark when disabled.",
     },
-    labelTypography: {
-      kind: "token",
-      type: "typography",
-      description: "Typography applied to the label.",
-    },
     labelColor: {
       kind: "token",
       type: "color",
@@ -97,14 +95,15 @@ export const checkboxComponent = defineRegistryComponent<CheckboxComponentOption
       type: "dimension",
       description: "Space between the box and the label.",
     },
+    checkedIcon: { kind: "icon", description: "Icon shown when checked." },
+    indeterminateIcon: { kind: "icon", description: "Icon shown when indeterminate." },
   },
   outputs: {
     "vanilla-extract": vanillaExtractComponentOutput(
       "checkbox",
       "Checkbox",
-      (scales, _breakpoints, tokens, focusRingColor) =>
+      (_scales, _breakpoints, tokens, focusRingColor, icons) =>
         generateCheckboxSources({
-          sizes: scales.sizes!,
           border: tokens.border!,
           borderRadius: tokens.borderRadius!,
           backgroundColor: tokens.backgroundColor!,
@@ -115,11 +114,11 @@ export const checkboxComponent = defineRegistryComponent<CheckboxComponentOption
           invalidBorderColor: tokens.invalidBorderColor!,
           disabledBackgroundColor: tokens.disabledBackgroundColor!,
           disabledColor: tokens.disabledColor!,
-          labelTypography: tokens.labelTypography!,
           labelColor: tokens.labelColor!,
           gap: tokens.gap!,
-          checkedIcon: CHECKED_ICON,
-          indeterminateIcon: INDETERMINATE_ICON,
+          tokens,
+          checkedIcon: icons.checkedIcon!,
+          indeterminateIcon: icons.indeterminateIcon!,
         }),
       { "@base-ui/react": "^1.0.0" },
     ),

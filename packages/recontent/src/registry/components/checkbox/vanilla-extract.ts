@@ -1,8 +1,32 @@
-import type { ComponentSourceFiles, ScaleImport, TokenImport } from "../../types.js";
-import { focusRingBlock } from "../shared.js";
+import type { ComponentSourceFiles, TokenImport } from "../../types.js";
+import { focusRingBlock, groupVariantTokens } from "../shared.js";
+
+const SIZE_FIELDS = ["boxSize", "labelTypography"] as const;
+
+function typographyProps(ref: string): string {
+  return [
+    `fontFamily: ${ref}.fontFamily`,
+    `fontSize: ${ref}.fontSize`,
+    `fontWeight: ${ref}.fontWeight`,
+    `letterSpacing: ${ref}.letterSpacing`,
+    `lineHeight: ${ref}.lineHeight`,
+  ].join(",\n    ");
+}
+
+function sizeStyleBody(fields: Record<string, TokenImport>): string {
+  return `{
+    width: ${fields.boxSize!.reference},
+    height: ${fields.boxSize!.reference},
+  }`;
+}
+
+function labelSizeStyleBody(fields: Record<string, TokenImport>): string {
+  return `{
+    ${typographyProps(fields.labelTypography!.reference)},
+  }`;
+}
 
 export function generateCheckboxSources(bindings: {
-  sizes: ScaleImport;
   border: TokenImport;
   borderRadius: TokenImport;
   backgroundColor: TokenImport;
@@ -13,15 +37,14 @@ export function generateCheckboxSources(bindings: {
   invalidBorderColor: TokenImport;
   disabledBackgroundColor: TokenImport;
   disabledColor: TokenImport;
-  labelTypography: TokenImport;
   labelColor: TokenImport;
   gap: TokenImport;
+  tokens: Record<string, TokenImport>;
   /** Build-time config, baked directly into the generated component. */
   checkedIcon: string;
   indeterminateIcon: string;
 }): ComponentSourceFiles {
   const {
-    sizes,
     border,
     borderRadius,
     backgroundColor,
@@ -32,16 +55,18 @@ export function generateCheckboxSources(bindings: {
     invalidBorderColor,
     disabledBackgroundColor,
     disabledColor,
-    labelTypography,
     labelColor,
     gap,
+    tokens,
     checkedIcon,
     indeterminateIcon,
   } = bindings;
 
+  const sizes = groupVariantTokens(tokens, "sizes", SIZE_FIELDS);
+  const sizeNames = Object.keys(sizes);
+
   return {
     styles: `import { style, styleVariants } from "@vanilla-extract/css";
-import { ${sizes.exportName} } from "../../tokens.css";
 import { vars } from "../../tokens.css";
 
 export const checkboxRoot = style({
@@ -63,6 +88,7 @@ export const checkboxBox = style({
   alignItems: "center",
   justifyContent: "center",
   flexShrink: 0,
+  overflow: "hidden",
   width: "1rem",
   height: "1rem",
   border: ${border.reference},
@@ -86,10 +112,13 @@ export const checkboxBox = style({
   },
 });
 
-export const checkboxSize = styleVariants(${sizes.exportName}, (value) => ({
-  width: value,
-  height: value,
-}));
+export const checkboxSize = styleVariants({
+${sizeNames.map((name) => `  ${JSON.stringify(name)}: ${sizeStyleBody(sizes[name]!)},`).join("\n")}
+});
+
+export const checkboxLabelSize = styleVariants({
+${sizeNames.map((name) => `  ${JSON.stringify(name)}: ${labelSizeStyleBody(sizes[name]!)},`).join("\n")}
+});
 
 export const checkboxIndicator = style({
   display: "inline-flex",
@@ -105,13 +134,13 @@ export const checkboxIndicator = style({
   },
 });
 
+export const checkboxIndicatorIcon = style({
+  width: "100%",
+  height: "100%",
+});
+
 export const checkboxLabel = style({
   color: ${labelColor.reference},
-  fontFamily: ${labelTypography.reference}.fontFamily,
-  fontSize: ${labelTypography.reference}.fontSize,
-  fontWeight: ${labelTypography.reference}.fontWeight,
-  letterSpacing: ${labelTypography.reference}.letterSpacing,
-  lineHeight: ${labelTypography.reference}.lineHeight,
 });
 `,
     component: `import type { ReactNode } from "react";
@@ -119,13 +148,16 @@ import { Checkbox as BaseCheckbox } from "@base-ui/react/checkbox";
 import {
   checkboxBox,
   checkboxIndicator,
+  checkboxIndicatorIcon,
   checkboxLabel,
+  checkboxLabelSize,
   checkboxRoot,
   checkboxSize,
 } from "./Checkbox.gen.css";
 import type { CommonComponentProps, FieldableInputProps, RenderProp } from "../../renderElement.gen";
 import { icons } from "../../iconMap";
-import type { ${sizes.typeName} as CheckboxSizeToken } from "../../tokens.css";
+
+export type CheckboxSize = ${sizeNames.map((n) => JSON.stringify(n)).join(" | ")};
 
 const CheckedIcon = icons[${JSON.stringify(checkedIcon)}];
 const IndeterminateIcon = icons[${JSON.stringify(indeterminateIcon)}];
@@ -136,7 +168,7 @@ export interface CheckboxProps extends CommonComponentProps, FieldableInputProps
   onCheckedChange?: (checked: boolean) => void;
   value?: string;
   label?: ReactNode;
-  size?: CheckboxSizeToken;
+  size?: CheckboxSize;
   indeterminate?: boolean;
   render?: RenderProp<"button">;
 }
@@ -180,10 +212,22 @@ export function Checkbox({
         className={[checkboxBox, size !== undefined && checkboxSize[size]].filter(Boolean).join(" ")}
       >
         <BaseCheckbox.Indicator className={checkboxIndicator} keepMounted={false}>
-          {indeterminate ? <IndeterminateIcon /> : <CheckedIcon />}
+          {indeterminate ? (
+            <IndeterminateIcon className={checkboxIndicatorIcon} />
+          ) : (
+            <CheckedIcon className={checkboxIndicatorIcon} />
+          )}
         </BaseCheckbox.Indicator>
       </BaseCheckbox.Root>
-      {label !== undefined && <span className={checkboxLabel}>{label}</span>}
+      {label !== undefined && (
+        <span
+          className={[checkboxLabel, size !== undefined && checkboxLabelSize[size]]
+            .filter(Boolean)
+            .join(" ")}
+        >
+          {label}
+        </span>
+      )}
     </label>
   );
 }

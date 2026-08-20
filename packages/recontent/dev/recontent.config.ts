@@ -432,6 +432,7 @@ export default defineConfig({
         xl: "1200px",
         xxl: "1800px",
       }),
+      icons: ["chevronDown", "close", "check", "search", "alert", "info"],
       builtInComponents: {
         Box: {
           spacing: system.spacing,
@@ -542,6 +543,7 @@ export default defineConfig({
           contentHorizontalSpacing: ref.spacing[16],
           contentVerticalSpacing: ref.spacing[12],
           transition: system.transitionScale.fast,
+          indicatorIcon: "chevronDown",
         },
         Accordion: {
           border: system.border.default,
@@ -554,6 +556,7 @@ export default defineConfig({
           contentHorizontalSpacing: ref.spacing[16],
           contentVerticalSpacing: ref.spacing[12],
           transition: system.transitionScale.fast,
+          indicatorIcon: "chevronDown",
         },
         Link: {
           color: system.colors.accent,
@@ -657,6 +660,7 @@ export default defineConfig({
           itemHorizontalSpacing: ref.spacing[8],
           itemVerticalSpacing: ref.spacing[8],
           itemIconSize: ref.fontSize.base,
+          indicatorIcon: "chevronDown",
         },
         SegmentedControls: {
           borderRadius: ref.radius.element,
@@ -702,31 +706,26 @@ export default defineConfig({
         },
         Badge: {
           borderRadius: ref.radius.full,
-          dotSize: ref.spacing[8],
           statuses: {
             info: {
               color: system.colors.accent,
               backgroundColor: system.colors.backgroundMuted,
               border: system.border.default,
-              dotColor: system.colors.accent,
             },
             success: {
               color: ref.color.success[500],
               backgroundColor: system.colors.backgroundMuted,
               border: system.border.default,
-              dotColor: ref.color.success[500],
             },
             warning: {
               color: ref.color.warning[500],
               backgroundColor: system.colors.backgroundMuted,
               border: system.border.default,
-              dotColor: ref.color.warning[500],
             },
             danger: {
               color: ref.color.danger[500],
               backgroundColor: system.colors.backgroundMuted,
               border: system.border.default,
-              dotColor: ref.color.danger[500],
             },
           },
           sizes: {
@@ -755,6 +754,7 @@ export default defineConfig({
           verticalSpacing: ref.spacing[12],
           gap: ref.spacing[8],
           iconSize: ref.fontSize.lg,
+          closeIcon: "close",
           statuses: {
             info: {
               color: system.colors.textPrimary,
@@ -762,6 +762,7 @@ export default defineConfig({
               borderColor: system.colors.accent,
               iconColor: system.colors.accent,
               titleColor: system.colors.textPrimary,
+              icon: "info",
             },
             success: {
               color: system.colors.textPrimary,
@@ -769,6 +770,7 @@ export default defineConfig({
               borderColor: ref.color.success[500],
               iconColor: ref.color.success[500],
               titleColor: system.colors.textPrimary,
+              icon: "check",
             },
             warning: {
               color: system.colors.textPrimary,
@@ -776,6 +778,7 @@ export default defineConfig({
               borderColor: ref.color.warning[500],
               iconColor: ref.color.warning[500],
               titleColor: system.colors.textPrimary,
+              icon: "alert",
             },
             danger: {
               color: system.colors.textPrimary,
@@ -783,6 +786,7 @@ export default defineConfig({
               borderColor: ref.color.danger[500],
               iconColor: ref.color.danger[500],
               titleColor: system.colors.textPrimary,
+              icon: "alert",
             },
           },
         },
@@ -833,7 +837,16 @@ export default defineConfig({
           },
         },
         Checkbox: {
-          sizes: ref.iconScale,
+          sizes: {
+            sm: {
+              boxSize: ref.iconScale.sm,
+              labelTypography: system.textScale["tiny-caption"],
+            },
+            md: {
+              boxSize: ref.iconScale.lg,
+              labelTypography: system.textScale["paragraph-body-m"],
+            },
+          },
           border: system.border.default,
           borderRadius: ref.radius.inner,
           backgroundColor: system.colors.backgroundCard,
@@ -843,9 +856,10 @@ export default defineConfig({
           invalidBorderColor: ref.color.danger[500],
           disabledBackgroundColor: system.colors.backgroundMuted,
           disabledColor: system.colors.textDisabled,
-          labelTypography: system.textScale["paragraph-body-m"],
           labelColor: system.colors.textPrimary,
           gap: ref.spacing[8],
+          checkedIcon: "check",
+          indeterminateIcon: "close",
         },
         RadioList: {
           sizes: ref.iconScale,
@@ -942,6 +956,9 @@ export default defineConfig({
           itemDisabledColor: system.colors.textDisabled,
           itemHorizontalSpacing: ref.spacing[8],
           itemVerticalSpacing: ref.spacing[8],
+          indicatorIcon: "chevronDown",
+          selectedIcon: "check",
+          clearIcon: "close",
         },
         Autocomplete: {
           borderRadius: ref.radius.element,
@@ -981,6 +998,9 @@ export default defineConfig({
           emptyStateTypography: system.textScale["tiny-caption"],
           emptyStateSpacing: ref.spacing[12],
           highlightColor: ref.color.primary[500],
+          selectedIcon: "check",
+          clearIcon: "close",
+          searchIcon: "search",
         },
         FileInput: {
           border: system.border.default,
@@ -1001,6 +1021,8 @@ export default defineConfig({
           fileTypography: system.textScale["tiny-caption"],
           fileColor: system.colors.textPrimary,
           fileBorderRadius: ref.radius.inner,
+          uploadIcon: "info",
+          removeIcon: "close",
         },
         Slider: {
           trackBackgroundColor: system.colors.backgroundBody,
@@ -1040,6 +1062,7 @@ export default defineConfig({
           iconSize: ref.fontSize.base,
           affixColor: system.colors.textSecondary,
           affixBackgroundColor: system.colors.backgroundBody,
+          clearIcon: "close",
         },
         NumberInput: {
           borderRadius: ref.radius.element,
@@ -1066,6 +1089,8 @@ export default defineConfig({
           stepperHoverBackgroundColor: system.colors.backgroundMuted,
           stepperBorder: system.border.default,
           stepperWidth: ref.spacing[24],
+          incrementIcon: "chevronDown",
+          decrementIcon: "chevronDown",
         },
         DateInput: {
           borderRadius: ref.radius.element,
@@ -1104,6 +1129,10 @@ export default defineConfig({
           dayDisabledColor: system.colors.textDisabled,
           weekdayTypography: system.textScale["tiny-caption"],
           weekdayColor: system.colors.textSecondary,
+          calendarIcon: "info",
+          previousIcon: "chevronDown",
+          nextIcon: "chevronDown",
+          clearIcon: "close",
         },
         Textarea: {
           borderRadius: ref.radius.element,
@@ -1143,6 +1172,7 @@ export default defineConfig({
           optionalColor: system.colors.textSecondary,
           gap: ref.spacing[4],
           iconSize: ref.fontSize.sm,
+          errorIcon: "alert",
         },
         Breadcrumb: {
           typography: system.textScale["tiny-caption"],
@@ -1153,6 +1183,8 @@ export default defineConfig({
           separatorColor: system.colors.textDisabled,
           gap: ref.spacing[4],
           iconSize: ref.fontSize.sm,
+          separatorIcon: "chevronDown",
+          overflowIcon: "info",
         },
         Outline: {
           typography: system.textScale["tiny-caption"],
@@ -1194,6 +1226,10 @@ export default defineConfig({
               typography: system.textScale["paragraph-body-m"],
             },
           },
+          previousIcon: "chevronDown",
+          nextIcon: "chevronDown",
+          firstIcon: "chevronDown",
+          lastIcon: "chevronDown",
         },
         Tabs: {
           typography: system.textScale["paragraph-body-m"],
@@ -1236,6 +1272,8 @@ export default defineConfig({
           connectorThickness: ref.spacing[2],
           connectorSpacing: ref.spacing[4],
           indicatorBorderRadius: ref.radius.full,
+          completeIcon: "check",
+          errorIcon: "alert",
           statuses: {
             complete: {
               indicatorBackgroundColor: system.colors.accent,
@@ -1294,6 +1332,7 @@ export default defineConfig({
           descriptionColor: system.colors.textSecondary,
           footerBorder: system.border.default,
           transition: system.transitionScale.fast,
+          closeIcon: "close",
           sizes: {
             sm: { maxWidth: ref.overlayWidth.sm },
             md: { maxWidth: ref.overlayWidth.md },
@@ -1314,6 +1353,7 @@ export default defineConfig({
           titleColor: system.colors.textPrimary,
           footerBorder: system.border.default,
           transition: system.transitionScale.fast,
+          closeIcon: "close",
           sizes: {
             sm: { size: ref.overlayWidth.sm },
             md: { size: ref.overlayWidth.md },
@@ -1365,6 +1405,7 @@ export default defineConfig({
           width: ref.overlayWidth.sm,
           iconSize: ref.fontSize.lg,
           transition: system.transitionScale.fast,
+          closeIcon: "close",
           statuses: {
             info: {
               color: system.colors.textPrimary,
@@ -1372,6 +1413,7 @@ export default defineConfig({
               borderColor: system.colors.accent,
               iconColor: system.colors.accent,
               titleColor: system.colors.textPrimary,
+              icon: "info",
             },
             success: {
               color: system.colors.textPrimary,
@@ -1379,6 +1421,7 @@ export default defineConfig({
               borderColor: ref.color.success[500],
               iconColor: ref.color.success[500],
               titleColor: system.colors.textPrimary,
+              icon: "check",
             },
             warning: {
               color: system.colors.textPrimary,
@@ -1386,6 +1429,7 @@ export default defineConfig({
               borderColor: ref.color.warning[500],
               iconColor: ref.color.warning[500],
               titleColor: system.colors.textPrimary,
+              icon: "alert",
             },
             danger: {
               color: system.colors.textPrimary,
@@ -1393,6 +1437,7 @@ export default defineConfig({
               borderColor: ref.color.danger[500],
               iconColor: ref.color.danger[500],
               titleColor: system.colors.textPrimary,
+              icon: "alert",
             },
           },
         },
@@ -1421,6 +1466,7 @@ export default defineConfig({
           guideColor: system.colors.border,
           iconSize: ref.fontSize.base,
           iconColor: system.colors.textSecondary,
+          expandIcon: "chevronDown",
         },
         Timeline: {
           connectorColor: system.colors.border,

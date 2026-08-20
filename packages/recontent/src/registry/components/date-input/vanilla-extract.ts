@@ -132,7 +132,7 @@ export const dateInputRoot = style({
       color: ${disabledColor.reference},
       cursor: "not-allowed",
     },
-    ${focusRingBlock(focusRingColor, { selector: "&:focus-within" })}
+    ${focusRingBlock(focusRingColor, { selector: "&:has(:focus-visible)" })}
   },
 });
 
@@ -143,12 +143,21 @@ export const dateInputField = style({
   border: "none",
   outline: "none",
   background: "none",
+  cursor: "pointer",
   color: ${color.reference},
   paddingTop: ${verticalSpacing.reference},
   paddingBottom: ${verticalSpacing.reference},
   ${typographyProps(typography.reference)},
   "::placeholder": {
     color: ${placeholderColor.reference},
+  },
+  ":disabled": {
+    cursor: "not-allowed",
+  },
+  selectors: {
+    [\`\${dateInputRoot}[data-readonly] &\`]: {
+      cursor: "default",
+    },
   },
 });
 
@@ -200,10 +209,12 @@ export const dateInputNavButton = style({
   alignItems: "center",
   justifyContent: "center",
   cursor: "pointer",
+  outline: "none",
   border: "none",
   background: "none",
   padding: 0,
   color: ${iconColor.reference},
+  ${focusRingBlock(focusRingColor)}
   selectors: {
     "&:disabled": {
       cursor: "not-allowed",
@@ -212,15 +223,39 @@ export const dateInputNavButton = style({
   },
 });
 
+export const dateInputMonths = style({
+  display: "flex",
+  flexDirection: "column",
+});
+
 export const dateInputMonthLabel = style({
   ${typographyProps(dayTypography.reference)},
   color: ${dayColor.reference},
+  textAlign: "center",
 });
 
 export const dateInputGrid = style({
   display: "grid",
   gridTemplateColumns: "repeat(7, 1fr)",
   gap: "0.125rem",
+  borderCollapse: "collapse",
+});
+
+/**
+ * react-day-picker renders \`month_grid\` as a \`<table>\`, with a \`<thead>\`
+ * wrapping the weekday \`<tr>\` and a \`<tbody>\` wrapping the week \`<tr>\`s.
+ * All of \`thead\`, \`tbody\` and \`tr\` must become transparent to CSS Grid via
+ * \`display: contents\` for the \`<td>\`/\`<th>\` cells to flow as direct grid
+ * items of \`dateInputGrid\`; otherwise the browser generates an anonymous
+ * table around \`thead\`/\`tbody\` (since they keep their table-group display)
+ * and lays out each row as its own independent table, ignoring the grid.
+ */
+export const dateInputRow = style({
+  display: "contents",
+});
+
+export const dateInputRowGroup = style({
+  display: "contents",
 });
 
 export const dateInputWeekday = style({
@@ -229,11 +264,18 @@ export const dateInputWeekday = style({
   ${typographyProps(weekdayTypography.reference)},
 });
 
+/** Marker classes applied by react-day-picker's \`classNames\` to the day cell; styled on the button via a descendant selector below. */
+export const dateInputDaySelected = style({});
+export const dateInputDayToday = style({});
+export const dateInputDayOutside = style({});
+export const dateInputDayDisabled = style({});
+
 export const dateInputDay = style({
   display: "inline-flex",
   alignItems: "center",
   justifyContent: "center",
   boxSizing: "border-box",
+  width: "100%",
   aspectRatio: "1",
   cursor: "pointer",
   outline: "none",
@@ -246,37 +288,48 @@ export const dateInputDay = style({
     backgroundColor: ${dayHoverBackgroundColor.reference},
   },
   selectors: {
-    "&[data-outside-month]": {
+    [\`.\${dateInputDayOutside} &\`]: {
       color: ${dayOutsideMonthColor.reference},
     },
-    "&[data-today]": {
+    [\`.\${dateInputDayToday} &\`]: {
       borderColor: ${dayTodayBorderColor.reference},
     },
-    "&[data-selected]": {
+    [\`.\${dateInputDaySelected} &\`]: {
       backgroundColor: ${daySelectedBackgroundColor.reference},
       color: ${daySelectedColor.reference},
     },
-    "&:disabled": {
+    [\`.\${dateInputDayDisabled} &\`]: {
       color: ${dayDisabledColor.reference},
       cursor: "not-allowed",
     },
   },
 });
+
 `,
-    component: `import { useState } from "react";
+    component: `import { useState, type KeyboardEvent, type MouseEvent } from "react";
 import { Popover as BasePopover } from "@base-ui/react/popover";
+import { DayPicker } from "react-day-picker";
+import { enUS } from "react-day-picker/locale";
+import { format } from "date-fns";
 import {
   dateInputDay,
+  dateInputDayDisabled,
+  dateInputDayOutside,
+  dateInputDaySelected,
+  dateInputDayToday,
   dateInputField,
   dateInputGrid,
   dateInputHeader,
   dateInputIcon,
   dateInputIconButton,
   dateInputMonthLabel,
+  dateInputMonths,
   dateInputNavButton,
   dateInputPopup,
   dateInputPositioner,
   dateInputRoot,
+  dateInputRow,
+  dateInputRowGroup,
   dateInputWeekday,
 } from "./DateInput.gen.css";
 import { renderElement, type CommonComponentProps, type FieldableInputProps, type RenderProp } from "../../renderElement.gen";
@@ -286,8 +339,6 @@ const CalendarIcon = icons[${JSON.stringify(calendarIcon)}];
 const PreviousIcon = icons[${JSON.stringify(previousIcon)}];
 const NextIcon = icons[${JSON.stringify(nextIcon)}];
 const ClearIcon = icons[${JSON.stringify(clearIcon)}];
-
-const WEEKDAY_LABELS = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
 
 export interface DateInputProps extends CommonComponentProps, FieldableInputProps {
   value?: Date | null;
@@ -301,21 +352,6 @@ export interface DateInputProps extends CommonComponentProps, FieldableInputProp
   readOnly?: boolean;
   clearable?: boolean;
   render?: RenderProp<"input">;
-}
-
-function isSameDay(a: Date, b: Date): boolean {
-  return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
-}
-
-function getMonthMatrix(viewDate: Date): Date[][] {
-  const first = new Date(viewDate.getFullYear(), viewDate.getMonth(), 1);
-  const gridStart = new Date(first.getFullYear(), first.getMonth(), 1 - first.getDay());
-  return Array.from({ length: 6 }, (_, week) =>
-    Array.from(
-      { length: 7 },
-      (_, day) => new Date(gridStart.getFullYear(), gridStart.getMonth(), gridStart.getDate() + week * 7 + day),
-    ),
-  );
 }
 
 export function DateInput({
@@ -346,7 +382,6 @@ export function DateInput({
   const [open, setOpen] = useState(false);
 
   const formatter = new Intl.DateTimeFormat(locale);
-  const monthFormatter = new Intl.DateTimeFormat(locale, { month: "long", year: "numeric" });
 
   function commitValue(next: Date | null) {
     if (!isControlled) setUncontrolledValue(next);
@@ -360,10 +395,14 @@ export function DateInput({
   }
 
   const classes = [dateInputRoot, className].filter(Boolean).join(" ");
-  const today = new Date();
+
+  function openFromField() {
+    if (disabled || readOnly) return;
+    setOpen(true);
+  }
 
   return (
-    <BasePopover.Root open={open} onOpenChange={setOpen}>
+    <BasePopover.Root open={open} onOpenChange={setOpen} modal="trap-focus">
       <div
         className={classes}
         data-slot="date-input"
@@ -382,8 +421,25 @@ export function DateInput({
             name,
             disabled,
             required,
+            "aria-haspopup": "dialog",
+            "aria-expanded": open,
             onFocus,
             onBlur,
+            // Prevents the browser's default click-to-focus behavior so the
+            // field never becomes focus-visible from a mouse interaction
+            // (only the ring-worthy Tab/keyboard path should focus it); the
+            // click still opens the popup via the handler below.
+            onMouseDown: (event: MouseEvent<HTMLInputElement>) => {
+              if (disabled || readOnly) return;
+              event.preventDefault();
+            },
+            onClick: openFromField,
+            onKeyDown: (event: KeyboardEvent<HTMLInputElement>) => {
+              if (event.key === "Enter" || event.key === " " || event.key === "ArrowDown") {
+                event.preventDefault();
+                openFromField();
+              }
+            },
             className: dateInputField,
           } as never,
         )}
@@ -417,7 +473,7 @@ export function DateInput({
               >
                 <PreviousIcon className={dateInputIcon} aria-hidden="true" style={{ transform: "rotate(90deg)" }} />
               </button>
-              <span className={dateInputMonthLabel}>{monthFormatter.format(viewDate)}</span>
+              <span className={dateInputMonthLabel}>{format(viewDate, "LLLL yyyy")}</span>
               <button
                 type="button"
                 className={dateInputNavButton}
@@ -427,33 +483,47 @@ export function DateInput({
                 <NextIcon className={dateInputIcon} aria-hidden="true" style={{ transform: "rotate(-90deg)" }} />
               </button>
             </div>
-            <div className={dateInputGrid}>
-              {WEEKDAY_LABELS.map((label) => (
-                <span key={label} className={dateInputWeekday}>
-                  {label}
-                </span>
-              ))}
-              {getMonthMatrix(viewDate).flat().map((date) => {
-                const unavailable = isUnavailable(date);
-                return (
-                  <button
-                    key={date.toISOString()}
-                    type="button"
-                    className={dateInputDay}
-                    disabled={unavailable}
-                    data-outside-month={date.getMonth() !== viewDate.getMonth() || undefined}
-                    data-today={isSameDay(date, today) || undefined}
-                    data-selected={(selected && isSameDay(date, selected)) || undefined}
-                    onClick={() => {
-                      commitValue(date);
-                      setOpen(false);
-                    }}
-                  >
-                    {date.getDate()}
-                  </button>
-                );
-              })}
-            </div>
+            <DayPicker
+              mode="single"
+              locale={enUS}
+              month={viewDate}
+              onMonthChange={setViewDate}
+              selected={selected ?? undefined}
+              onSelect={(date) => {
+                commitValue(date ?? null);
+                setOpen(false);
+              }}
+              disabled={isUnavailable}
+              showOutsideDays
+              className={dateInputMonths}
+              classNames={{
+                month_grid: dateInputGrid,
+                weekdays: dateInputRow,
+                weekday: dateInputWeekday,
+                weeks: dateInputRowGroup,
+                week: dateInputRow,
+                day_button: dateInputDay,
+                selected: dateInputDaySelected,
+                today: dateInputDayToday,
+                outside: dateInputDayOutside,
+                disabled: dateInputDayDisabled,
+              }}
+              components={{
+                // The month caption and prev/next navigation are rendered by
+                // our own header above, driven by the same \`viewDate\` state.
+                Nav: () => <></>,
+                MonthCaption: () => <></>,
+                // react-day-picker hardcodes \`<thead>\` without forwarding
+                // classNames.weekdays to it, so it keeps its default
+                // \`table-header-group\` display and breaks out of the grid
+                // laid out on \`dateInputGrid\`. Wrap it ourselves instead.
+                Weekdays: (weekdaysProps) => (
+                  <thead aria-hidden="true" className={dateInputRowGroup}>
+                    <tr {...weekdaysProps} />
+                  </thead>
+                ),
+              }}
+            />
           </BasePopover.Popup>
         </BasePopover.Positioner>
       </BasePopover.Portal>

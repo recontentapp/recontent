@@ -30,7 +30,7 @@ export const dateInputRoot = style({
       color: vars.system.colors.textDisabled,
       cursor: "not-allowed",
     },
-    "&:focus-within": {
+    "&:has(:focus-visible)": {
     outline: "none",
     boxShadow: `0 0 0 2px ${vars.system.colors.accent}`,
   },
@@ -44,6 +44,7 @@ export const dateInputField = style({
   border: "none",
   outline: "none",
   background: "none",
+  cursor: "pointer",
   color: vars.system.colors.textPrimary,
   paddingTop: vars.ref.spacing[8],
   paddingBottom: vars.ref.spacing[8],
@@ -54,6 +55,14 @@ export const dateInputField = style({
       lineHeight: vars.system.textScale["paragraph-body-m"].lineHeight,
   "::placeholder": {
     color: vars.system.colors.textSecondary,
+  },
+  ":disabled": {
+    cursor: "not-allowed",
+  },
+  selectors: {
+    [`${dateInputRoot}[data-readonly] &`]: {
+      cursor: "default",
+    },
   },
 });
 
@@ -105,16 +114,26 @@ export const dateInputNavButton = style({
   alignItems: "center",
   justifyContent: "center",
   cursor: "pointer",
+  outline: "none",
   border: "none",
   background: "none",
   padding: 0,
   color: vars.system.colors.textSecondary,
+  ":focus-visible": {
+    outline: "none",
+    boxShadow: `0 0 0 2px ${vars.system.colors.accent}`,
+  },
   selectors: {
     "&:disabled": {
       cursor: "not-allowed",
       opacity: 0.5,
     },
   },
+});
+
+export const dateInputMonths = style({
+  display: "flex",
+  flexDirection: "column",
 });
 
 export const dateInputMonthLabel = style({
@@ -124,12 +143,31 @@ export const dateInputMonthLabel = style({
       letterSpacing: vars.system.textScale["paragraph-body-m"].letterSpacing,
       lineHeight: vars.system.textScale["paragraph-body-m"].lineHeight,
   color: vars.system.colors.textPrimary,
+  textAlign: "center",
 });
 
 export const dateInputGrid = style({
   display: "grid",
   gridTemplateColumns: "repeat(7, 1fr)",
   gap: "0.125rem",
+  borderCollapse: "collapse",
+});
+
+/**
+ * react-day-picker renders `month_grid` as a `<table>`, with a `<thead>`
+ * wrapping the weekday `<tr>` and a `<tbody>` wrapping the week `<tr>`s.
+ * All of `thead`, `tbody` and `tr` must become transparent to CSS Grid via
+ * `display: contents` for the `<td>`/`<th>` cells to flow as direct grid
+ * items of `dateInputGrid`; otherwise the browser generates an anonymous
+ * table around `thead`/`tbody` (since they keep their table-group display)
+ * and lays out each row as its own independent table, ignoring the grid.
+ */
+export const dateInputRow = style({
+  display: "contents",
+});
+
+export const dateInputRowGroup = style({
+  display: "contents",
 });
 
 export const dateInputWeekday = style({
@@ -142,11 +180,18 @@ export const dateInputWeekday = style({
       lineHeight: vars.system.textScale["tiny-caption"].lineHeight,
 });
 
+/** Marker classes applied by react-day-picker's `classNames` to the day cell; styled on the button via a descendant selector below. */
+export const dateInputDaySelected = style({});
+export const dateInputDayToday = style({});
+export const dateInputDayOutside = style({});
+export const dateInputDayDisabled = style({});
+
 export const dateInputDay = style({
   display: "inline-flex",
   alignItems: "center",
   justifyContent: "center",
   boxSizing: "border-box",
+  width: "100%",
   aspectRatio: "1",
   cursor: "pointer",
   outline: "none",
@@ -163,19 +208,20 @@ export const dateInputDay = style({
     backgroundColor: vars.system.colors.backgroundBody,
   },
   selectors: {
-    "&[data-outside-month]": {
+    [`.${dateInputDayOutside} &`]: {
       color: vars.system.colors.textDisabled,
     },
-    "&[data-today]": {
+    [`.${dateInputDayToday} &`]: {
       borderColor: vars.system.colors.accent,
     },
-    "&[data-selected]": {
+    [`.${dateInputDaySelected} &`]: {
       backgroundColor: vars.system.colors.accent,
       color: vars.system.colors.onAccent,
     },
-    "&:disabled": {
+    [`.${dateInputDayDisabled} &`]: {
       color: vars.system.colors.textDisabled,
       cursor: "not-allowed",
     },
   },
 });
+

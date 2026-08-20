@@ -217,6 +217,7 @@ export const autocompletePositioner = style({
 
 export const autocompletePopup = style({
   boxSizing: "border-box",
+  width: "var(--anchor-width)",
   backgroundColor: ${popupBackgroundColor.reference},
   border: ${popupBorder.reference},
   borderRadius: ${popupBorderRadius.reference},
@@ -274,7 +275,7 @@ export const autocompleteEmpty = style({
   ${typographyProps(emptyStateTypography.reference)},
 });
 `,
-    component: `import type { ReactNode } from "react";
+    component: `import { useRef, type ReactNode } from "react";
 import { Combobox as BaseCombobox } from "@base-ui/react/combobox";
 import {
   autocompleteChip,
@@ -362,6 +363,7 @@ export function Autocomplete<Value extends string>({
   ...props
 }: AutocompleteProps<Value>) {
   const classes = [autocompleteTrigger, className].filter(Boolean).join(" ");
+  const triggerRef = useRef<HTMLDivElement>(null);
   const query = inputValue ?? "";
   const filteredOptions = query
     ? options.filter((option) =>
@@ -386,7 +388,12 @@ export function Autocomplete<Value extends string>({
       defaultOpen={defaultOpen}
       onOpenChange={onOpenChange}
     >
-      <div className={classes} data-slot="autocomplete-trigger" data-loading={loading || undefined}>
+      <div
+        ref={triggerRef}
+        className={classes}
+        data-slot="autocomplete-trigger"
+        data-loading={loading || undefined}
+      >
         {multiple && (
           <BaseCombobox.Chips className={autocompleteChips}>
             {(Array.isArray(value) ? value : []).map((chipValue) => {
@@ -421,7 +428,7 @@ export function Autocomplete<Value extends string>({
         </span>
       </div>
       <BaseCombobox.Portal>
-        <BaseCombobox.Positioner className={autocompletePositioner}>
+        <BaseCombobox.Positioner className={autocompletePositioner} anchor={triggerRef}>
           <BaseCombobox.Popup className={autocompletePopup} data-slot="autocomplete-popup">
             <BaseCombobox.Empty className={autocompleteEmpty}>
               {emptyState ?? "No results found."}

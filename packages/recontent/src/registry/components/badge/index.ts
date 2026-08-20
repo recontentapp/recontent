@@ -7,7 +7,6 @@ type BadgeStatusFields = {
   color: TokenBinding<"color">;
   backgroundColor: TokenBinding<"color">;
   border: TokenBinding<"border">;
-  dotColor: TokenBinding<"color">;
 };
 
 type BadgeSizeFields = {
@@ -22,7 +21,6 @@ export type BadgeComponentOptions = {
   borderRadius: TokenBinding<"dimension">;
   statuses: Record<string, BadgeStatusFields>;
   sizes: Record<string, BadgeSizeFields>;
-  dotSize: TokenBinding<"dimension">;
 };
 
 export const badgeComponent = defineRegistryComponent<BadgeComponentOptions>()({
@@ -42,7 +40,6 @@ export const badgeComponent = defineRegistryComponent<BadgeComponentOptions>()({
         color: { kind: "token", type: "color" },
         backgroundColor: { kind: "token", type: "color" },
         border: { kind: "token", type: "border" },
-        dotColor: { kind: "token", type: "color" },
       },
     },
     sizes: {
@@ -56,11 +53,6 @@ export const badgeComponent = defineRegistryComponent<BadgeComponentOptions>()({
         iconSize: { kind: "token", type: "dimension" },
       },
     },
-    dotSize: {
-      kind: "token",
-      type: "dimension",
-      description: "Diameter of the status dot.",
-    },
   },
   outputs: {
     "vanilla-extract": vanillaExtractComponentOutput(
@@ -69,7 +61,6 @@ export const badgeComponent = defineRegistryComponent<BadgeComponentOptions>()({
       (_scales, _breakpoints, tokens) =>
         generateBadgeSources({
           borderRadius: tokens.borderRadius!,
-          dotSize: tokens.dotSize!,
           tokens,
         }),
     ),

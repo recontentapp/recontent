@@ -1,5 +1,6 @@
 import type { TokenBinding } from "@recontentapp/core";
 import { defineRegistryComponent } from "../../define.js";
+import type { IconName } from "../../internal/icon-map/icons.js";
 import { vanillaExtractComponentOutput } from "../shared.js";
 import { generateFieldSources } from "./vanilla-extract.js";
 
@@ -15,14 +16,8 @@ export type FieldComponentOptions = {
   optionalColor: TokenBinding<"color">;
   gap: TokenBinding<"dimension">;
   iconSize: TokenBinding<"dimension">;
+  errorIcon: IconName;
 };
-
-/**
- * Icon isn't a token binding (Icon isn't a `ComponentContract` kind), so —
- * like other components' icon config — this is a build-time choice baked
- * directly into the generated component rather than a config binding.
- */
-const ERROR_ICON = "alert";
 
 export const fieldComponent = defineRegistryComponent<FieldComponentOptions>()({
   id: "field",
@@ -52,12 +47,13 @@ export const fieldComponent = defineRegistryComponent<FieldComponentOptions>()({
     optionalColor: { kind: "token", type: "color", description: "Text color of the optional text." },
     gap: { kind: "token", type: "dimension", description: "Space between the label, control and helper text." },
     iconSize: { kind: "token", type: "dimension", description: "Size of the error icon." },
+    errorIcon: { kind: "icon", description: "Icon rendered next to the error text." },
   },
   outputs: {
     "vanilla-extract": vanillaExtractComponentOutput(
       "field",
       "Field",
-      (_scales, _breakpoints, tokens) =>
+      (_scales, _breakpoints, tokens, _focusRingColor, icons) =>
         generateFieldSources({
           labelTypography: tokens.labelTypography!,
           labelColor: tokens.labelColor!,
@@ -70,7 +66,7 @@ export const fieldComponent = defineRegistryComponent<FieldComponentOptions>()({
           optionalColor: tokens.optionalColor!,
           gap: tokens.gap!,
           iconSize: tokens.iconSize!,
-          errorIcon: ERROR_ICON,
+          errorIcon: icons.errorIcon!,
         }),
       { "@base-ui/react": "^1.0.0" },
     ),

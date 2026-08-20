@@ -383,6 +383,7 @@ export const vanillaExtractOutputProcessor: OutputProcessor<VanillaExtractOutput
     const selection = normalizeBuiltInComponents(output.builtInComponents);
     const builtInComponents = selection.names;
     const resolvedComponentIds = resolveBuiltInComponentIds(builtInComponents);
+    const iconNames = output.icons ?? [];
 
     if (builtInComponents.length > 0) {
       const errors = validateBuiltInComponents(
@@ -390,6 +391,7 @@ export const vanillaExtractOutputProcessor: OutputProcessor<VanillaExtractOutput
         builtInComponents,
         "vanilla-extract",
         selection.options,
+        iconNames,
       );
       if (errors.length > 0) {
         throw new MissingDesignTokensError(errors);
@@ -401,6 +403,7 @@ export const vanillaExtractOutputProcessor: OutputProcessor<VanillaExtractOutput
     const scaleExports = scaleExportsForConfig(config);
     const scaleBindings: Record<string, { typeName: string; exportName: string }> = {};
     const tokenBindings: Record<string, { reference: string }> = {};
+    const iconBindings: Record<string, string> = {};
 
     for (const id of resolvedComponentIds) {
       const component = registryComponents[id];
@@ -427,10 +430,18 @@ export const vanillaExtractOutputProcessor: OutputProcessor<VanillaExtractOutput
             typeName: scale.typeName,
             exportName: scale.exportName,
           };
+        } else if (contract.kind === "icon") {
+          iconBindings[`${id}.${contract.key}`] = binding as string;
         } else {
           const variants = binding as Record<string, Record<string, unknown>>;
           for (const [name, variant] of Object.entries(variants)) {
             for (const field of contract.fields) {
+              if (field.kind === "icon") {
+                iconBindings[`${id}.${contract.key}.${name}.${field.key}`] = variant[
+                  field.key
+                ] as string;
+                continue;
+              }
               tokenBindings[`${id}.${contract.key}.${name}.${field.key}`] = resolveTokenBinding(
                 config.registry,
                 variant[field.key] as TokenBinding<TokenType>,
@@ -478,6 +489,7 @@ export const vanillaExtractOutputProcessor: OutputProcessor<VanillaExtractOutput
         ...generateBuiltInComponentFiles(builtInComponents, "vanilla-extract", {
           scaleBindings,
           tokenBindings,
+          iconBindings,
           breakpoints: resolvedBreakpoints,
           focusRingColor: focusRingColorBinding,
         }),
@@ -485,6 +497,7 @@ export const vanillaExtractOutputProcessor: OutputProcessor<VanillaExtractOutput
           resolvedComponentIds,
           "vanilla-extract",
           resolvedBreakpoints,
+          iconNames,
         ),
         {
           filename: "components.dependencies.json",

@@ -70,8 +70,13 @@ export const collapsibleTrigger = style({
   paddingTop: ${triggerVerticalSpacing.reference},
   paddingBottom: ${triggerVerticalSpacing.reference},
   ${typographyProps(triggerTypography.reference)},
-  ":hover": {
-    backgroundColor: ${hoverBackgroundColor.reference},
+  transitionProperty: "background-color",
+  transitionDuration: ${transition.reference}.transitionDuration,
+  transitionTimingFunction: ${transition.reference}.transitionTimingFunction,
+  selectors: {
+    "&:hover, &:focus-visible": {
+      backgroundColor: ${hoverBackgroundColor.reference},
+    },
   },
   ${focusRingBlock(focusRingColor)}
 });
@@ -91,6 +96,15 @@ export const collapsibleIndicator = style({
 
 export const collapsiblePanel = style({
   overflow: "hidden",
+  height: "var(--collapsible-panel-height)",
+  transitionProperty: "height",
+  transitionDuration: ${transition.reference}.transitionDuration,
+  transitionTimingFunction: ${transition.reference}.transitionTimingFunction,
+  selectors: {
+    "&[data-starting-style], &[data-ending-style]": {
+      height: 0,
+    },
+  },
 });
 
 export const collapsiblePanelContent = style({

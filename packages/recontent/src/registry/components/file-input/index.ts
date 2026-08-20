@@ -1,5 +1,6 @@
 import type { TokenBinding } from "@recontentapp/core";
 import { defineRegistryComponent } from "../../define.js";
+import type { IconName } from "../../internal/icon-map/icons.js";
 import { vanillaExtractComponentOutput } from "../shared.js";
 import { generateFileInputSources } from "./vanilla-extract.js";
 
@@ -22,15 +23,9 @@ export type FileInputComponentOptions = {
   fileTypography: TokenBinding<"typography">;
   fileColor: TokenBinding<"color">;
   fileBorderRadius: TokenBinding<"dimension">;
+  uploadIcon: IconName;
+  removeIcon: IconName;
 };
-
-/**
- * Icons aren't token bindings (Icon isn't a `ComponentContract` kind), so —
- * like Collapsible's indicator — these are build-time choices baked directly
- * into the generated component rather than `recontent.config.ts` bindings.
- */
-const UPLOAD_ICON = "info";
-const REMOVE_ICON = "close";
 
 export const fileInputComponent = defineRegistryComponent<FileInputComponentOptions>()({
   id: "file-input",
@@ -42,11 +37,27 @@ export const fileInputComponent = defineRegistryComponent<FileInputComponentOpti
       type: "border",
       description: "Dashed border around the dropzone.",
     },
-    borderRadius: { kind: "token", type: "dimension", description: "Corner radius of the dropzone." },
-    backgroundColor: { kind: "token", type: "color", description: "Background color of the dropzone." },
+    borderRadius: {
+      kind: "token",
+      type: "dimension",
+      description: "Corner radius of the dropzone.",
+    },
+    backgroundColor: {
+      kind: "token",
+      type: "color",
+      description: "Background color of the dropzone.",
+    },
     color: { kind: "token", type: "color", description: "Text color of the dropzone." },
-    typography: { kind: "token", type: "typography", description: "Typography used by the dropzone." },
-    hoverBorderColor: { kind: "token", type: "color", description: "Border color of the dropzone on hover." },
+    typography: {
+      kind: "token",
+      type: "typography",
+      description: "Typography used by the dropzone.",
+    },
+    hoverBorderColor: {
+      kind: "token",
+      type: "color",
+      description: "Border color of the dropzone on hover.",
+    },
     draggingBorderColor: {
       kind: "token",
       type: "color",
@@ -63,20 +74,49 @@ export const fileInputComponent = defineRegistryComponent<FileInputComponentOpti
       type: "color",
       description: "Background color of the dropzone when disabled.",
     },
-    disabledColor: { kind: "token", type: "color", description: "Text color of the dropzone when disabled." },
-    horizontalSpacing: { kind: "token", type: "dimension", description: "Left/right padding of the dropzone." },
-    verticalSpacing: { kind: "token", type: "dimension", description: "Top/bottom padding of the dropzone." },
-    gap: { kind: "token", type: "dimension", description: "Space between the dropzone and the file list." },
+    disabledColor: {
+      kind: "token",
+      type: "color",
+      description: "Text color of the dropzone when disabled.",
+    },
+    horizontalSpacing: {
+      kind: "token",
+      type: "dimension",
+      description: "Left/right padding of the dropzone.",
+    },
+    verticalSpacing: {
+      kind: "token",
+      type: "dimension",
+      description: "Top/bottom padding of the dropzone.",
+    },
+    gap: {
+      kind: "token",
+      type: "dimension",
+      description: "Space between the dropzone and the file list.",
+    },
     iconSize: { kind: "token", type: "dimension", description: "Size of the upload/remove icons." },
-    fileTypography: { kind: "token", type: "typography", description: "Typography of a listed file's name." },
+    fileTypography: {
+      kind: "token",
+      type: "typography",
+      description: "Typography of a listed file's name.",
+    },
     fileColor: { kind: "token", type: "color", description: "Text color of a listed file." },
-    fileBorderRadius: { kind: "token", type: "dimension", description: "Corner radius of a listed file's row." },
+    fileBorderRadius: {
+      kind: "token",
+      type: "dimension",
+      description: "Corner radius of a listed file's row.",
+    },
+    uploadIcon: { kind: "icon", description: "Icon rendered in the dropzone." },
+    removeIcon: {
+      kind: "icon",
+      description: "Icon used to remove a listed file.",
+    },
   },
   outputs: {
     "vanilla-extract": vanillaExtractComponentOutput(
       "file-input",
       "FileInput",
-      (_scales, _breakpoints, tokens, focusRingColor) =>
+      (_scales, _breakpoints, tokens, focusRingColor, icons) =>
         generateFileInputSources({
           border: tokens.border!,
           borderRadius: tokens.borderRadius!,
@@ -96,8 +136,8 @@ export const fileInputComponent = defineRegistryComponent<FileInputComponentOpti
           fileTypography: tokens.fileTypography!,
           fileColor: tokens.fileColor!,
           fileBorderRadius: tokens.fileBorderRadius!,
-          uploadIcon: UPLOAD_ICON,
-          removeIcon: REMOVE_ICON,
+          uploadIcon: icons.uploadIcon!,
+          removeIcon: icons.removeIcon!,
           focusRingColor,
         }),
     ),

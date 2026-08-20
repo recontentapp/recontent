@@ -1,14 +1,8 @@
 import type { TokenBinding } from "@recontentapp/core";
 import { defineRegistryComponent } from "../../define.js";
+import type { IconName } from "../../internal/icon-map/icons.js";
 import { vanillaExtractComponentOutput } from "../shared.js";
 import { generateDropdownButtonSources } from "./vanilla-extract.js";
-
-/**
- * The icon rendered at the end of the trigger. This is a build-time choice
- * (not a token binding, so it isn't a `ComponentContract`) baked directly
- * into the generated component source, mirroring Collapsible/Accordion.
- */
-const INDICATOR_ICON = "chevronDown";
 
 type DropdownButtonVariantFields = {
   backgroundColor: TokenBinding<"color">;
@@ -47,6 +41,7 @@ export type DropdownButtonComponentOptions = {
   itemHorizontalSpacing: TokenBinding<"dimension">;
   itemVerticalSpacing: TokenBinding<"dimension">;
   itemIconSize: TokenBinding<"dimension">;
+  indicatorIcon: IconName;
 };
 
 export const dropdownButtonComponent = defineRegistryComponent<DropdownButtonComponentOptions>()({
@@ -150,12 +145,13 @@ export const dropdownButtonComponent = defineRegistryComponent<DropdownButtonCom
       type: "dimension",
       description: "Size of a menu item's leading icon.",
     },
+    indicatorIcon: { kind: "icon", description: "Icon rendered at the end of the trigger." },
   },
   outputs: {
     "vanilla-extract": vanillaExtractComponentOutput(
       "dropdown-button",
       "DropdownButton",
-      (_scales, _breakpoints, tokens, focusRingColor) =>
+      (_scales, _breakpoints, tokens, focusRingColor, icons) =>
         generateDropdownButtonSources({
           borderRadius: tokens.borderRadius!,
           popupBackgroundColor: tokens.popupBackgroundColor!,
@@ -171,7 +167,7 @@ export const dropdownButtonComponent = defineRegistryComponent<DropdownButtonCom
           itemHorizontalSpacing: tokens.itemHorizontalSpacing!,
           itemVerticalSpacing: tokens.itemVerticalSpacing!,
           itemIconSize: tokens.itemIconSize!,
-          indicatorIcon: INDICATOR_ICON,
+          indicatorIcon: icons.indicatorIcon!,
           tokens,
           focusRingColor,
         }),

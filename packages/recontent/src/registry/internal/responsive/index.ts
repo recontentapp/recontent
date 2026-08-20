@@ -6,7 +6,8 @@ export const responsiveModule: InternalModuleDefinition = {
   outputs: {
     "vanilla-extract": {
       runtimeDependencies: {},
-      generate: (breakpoints?: readonly BreakpointBinding[]) => {
+      generate: (options?: { breakpoints?: readonly BreakpointBinding[] }) => {
+        const breakpoints = options?.breakpoints;
         if (!breakpoints || breakpoints.length === 0) {
           return [];
         }

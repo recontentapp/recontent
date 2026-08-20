@@ -66,6 +66,9 @@ export const breadcrumbLink = style({
   gap: "0.25em",
   color: ${color.reference},
   textDecoration: "none",
+  transitionProperty: "color",
+  transitionDuration: "150ms",
+  transitionTimingFunction: "ease",
   ${typographyProps(typography.reference)},
   ":hover": {
     color: ${hoverColor.reference},
@@ -105,6 +108,9 @@ export const breadcrumbOverflow = style({
   background: "none",
   padding: 0,
   color: ${color.reference},
+  transitionProperty: "color",
+  transitionDuration: "150ms",
+  transitionTimingFunction: "ease",
   ":hover": {
     color: ${hoverColor.reference},
   },

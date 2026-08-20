@@ -1509,6 +1509,7 @@ describe("Collapsible built-in component", () => {
       output: {
         target: "vanilla-extract",
         outDir: "dist-test",
+        icons: ["chevronDown", "close", "check", "search", "alert", "info"],
         builtInComponents: {
           Collapsible: {
             borderRadius: system.radius.element,
@@ -1522,6 +1523,7 @@ describe("Collapsible built-in component", () => {
             contentHorizontalSpacing: system.spacing.md,
             contentVerticalSpacing: system.spacing.sm,
             transition: system.transitions.standard,
+            indicatorIcon: "chevronDown",
           },
         },
         focusRingColor: ref.__veColor,
@@ -1610,6 +1612,7 @@ describe("Accordion built-in component", () => {
       output: {
         target: "vanilla-extract",
         outDir: "dist-test",
+        icons: ["chevronDown", "close", "check", "search", "alert", "info"],
         builtInComponents: {
           Accordion: {
             border: system.border.default,
@@ -1622,6 +1625,7 @@ describe("Accordion built-in component", () => {
             contentHorizontalSpacing: system.spacing.md,
             contentVerticalSpacing: system.spacing.sm,
             transition: system.transitions.standard,
+            indicatorIcon: "chevronDown",
           },
         },
         focusRingColor: ref.__veColor,
@@ -1901,6 +1905,7 @@ describe("DropdownButton built-in component", () => {
       output: {
         target: "vanilla-extract",
         outDir: "dist-test",
+        icons: ["chevronDown", "close", "check", "search", "alert", "info"],
         builtInComponents: {
           DropdownButton: {
             borderRadius: system.radius.element,
@@ -1939,6 +1944,7 @@ describe("DropdownButton built-in component", () => {
             itemHorizontalSpacing: system.spacing.md,
             itemVerticalSpacing: system.spacing.sm,
             itemIconSize: system.spacing.md,
+            indicatorIcon: "chevronDown",
           },
         },
         focusRingColor: ref.__veColor,
@@ -2312,13 +2318,11 @@ describe("Badge built-in component", () => {
         builtInComponents: {
           Badge: {
             borderRadius: system.radius.full,
-            dotSize: system.spacing.xs,
             statuses: {
               info: {
                 color: ref.color.black,
                 backgroundColor: ref.color.white,
                 border: system.border.default,
-                dotColor: ref.color.black,
               },
             },
             sizes: {
@@ -2346,15 +2350,12 @@ describe("Badge built-in component", () => {
     expect(filenames).toContain("components/badge/Badge.gen.tsx");
   });
 
-  test("statuses and sizes keys become literal union types, dot renders with variant color", () => {
+  test("statuses and sizes keys become literal union types, icon renders with variant color", () => {
     const files = generate(badgeConfig());
     const component = files.find((f) => f.filename === "components/badge/Badge.gen.tsx")!;
     expect(component.content).toMatch(/export type BadgeStatusToken = "info";/);
     expect(component.content).toMatch(/export type BadgeSize = "sm";/);
-    expect(component.content).toMatch(/badgeDotColor\[variant\]/);
-
-    const styles = files.find((f) => f.filename === "components/badge/Badge.gen.css.ts")!;
-    expect(styles.content).toMatch(/export const badgeDotColor = styleVariants/);
+    expect(component.content).not.toMatch(/dot/i);
   });
 
   test("missing Badge bindings throw MissingDesignTokensError", () => {
@@ -2408,6 +2409,7 @@ describe("Banner built-in component", () => {
       output: {
         target: "vanilla-extract",
         outDir: "dist-test",
+        icons: ["chevronDown", "close", "check", "search", "alert", "info"],
         builtInComponents: {
           Banner: {
             border: system.border.default,
@@ -2418,6 +2420,7 @@ describe("Banner built-in component", () => {
             verticalSpacing: system.spacing.sm,
             gap: system.spacing.sm,
             iconSize: system.spacing.md,
+            closeIcon: "close",
             statuses: {
               info: {
                 color: ref.color.black,
@@ -2425,6 +2428,7 @@ describe("Banner built-in component", () => {
                 borderColor: ref.color.black,
                 iconColor: ref.color.black,
                 titleColor: ref.color.black,
+                icon: "info",
               },
               danger: {
                 color: ref.color.black,
@@ -2432,6 +2436,7 @@ describe("Banner built-in component", () => {
                 borderColor: ref.color.black,
                 iconColor: ref.color.black,
                 titleColor: ref.color.black,
+                icon: "alert",
               },
             },
           },
@@ -2798,9 +2803,19 @@ describe("Checkbox built-in component", () => {
       output: {
         target: "vanilla-extract",
         outDir: "dist-test",
+        icons: ["chevronDown", "close", "check", "search", "alert", "info"],
         builtInComponents: {
           Checkbox: {
-            sizes: ref.fontSizeScale,
+            sizes: {
+              sm: {
+                boxSize: ref.fontSizeScale.sm,
+                labelTypography: system.textStyles.body,
+              },
+              md: {
+                boxSize: ref.fontSizeScale.md,
+                labelTypography: system.textStyles.body,
+              },
+            },
             border: system.border.default,
             borderRadius: system.radius.inner,
             backgroundColor: ref.color.white,
@@ -2810,9 +2825,10 @@ describe("Checkbox built-in component", () => {
             invalidBorderColor: ref.color.black,
             disabledBackgroundColor: ref.color.white,
             disabledColor: ref.color.black,
-            labelTypography: system.textStyles.body,
             labelColor: ref.color.black,
             gap: system.spacing.sm,
+            checkedIcon: "check",
+            indeterminateIcon: "close",
           },
         },
         focusRingColor: ref.__veColor,
@@ -2836,7 +2852,9 @@ describe("Checkbox built-in component", () => {
       /import { Checkbox as BaseCheckbox } from "@base-ui\/react\/checkbox";/,
     );
     expect(component.content).toMatch(/extends CommonComponentProps, FieldableInputProps/);
-    expect(component.content).toMatch(/indeterminate \? <IndeterminateIcon \/> : <CheckedIcon \/>/);
+    expect(component.content).toMatch(/indeterminate \? \(/);
+    expect(component.content).toMatch(/<IndeterminateIcon className={checkboxIndicatorIcon} \/>/);
+    expect(component.content).toMatch(/<CheckedIcon className={checkboxIndicatorIcon} \/>/);
 
     const renderElementModule = files.find((f) => f.filename === "renderElement.gen.tsx")!;
     expect(renderElementModule.content).toMatch(/export interface FieldableInputProps/);
@@ -3221,6 +3239,7 @@ describe("Select built-in component", () => {
       output: {
         target: "vanilla-extract",
         outDir: "dist-test",
+        icons: ["chevronDown", "close", "check", "search", "alert", "info"],
         builtInComponents: {
           Select: {
             borderRadius: system.radius.element,
@@ -3251,6 +3270,9 @@ describe("Select built-in component", () => {
             itemDisabledColor: ref.color.black,
             itemHorizontalSpacing: system.spacing.md,
             itemVerticalSpacing: system.spacing.sm,
+            indicatorIcon: "chevronDown",
+            selectedIcon: "check",
+            clearIcon: "close",
           },
         },
         focusRingColor: ref.__veColor,
@@ -3346,6 +3368,7 @@ describe("Autocomplete built-in component", () => {
       output: {
         target: "vanilla-extract",
         outDir: "dist-test",
+        icons: ["chevronDown", "close", "check", "search", "alert", "info"],
         builtInComponents: {
           Autocomplete: {
             borderRadius: system.radius.element,
@@ -3385,6 +3408,9 @@ describe("Autocomplete built-in component", () => {
             emptyStateTypography: system.textStyles.supporting,
             emptyStateSpacing: system.spacing.md,
             highlightColor: ref.color.white,
+            selectedIcon: "check",
+            clearIcon: "close",
+            searchIcon: "search",
           },
         },
         focusRingColor: ref.__veColor,
@@ -3472,6 +3498,7 @@ describe("FileInput built-in component", () => {
       output: {
         target: "vanilla-extract",
         outDir: "dist-test",
+        icons: ["chevronDown", "close", "check", "search", "alert", "info"],
         builtInComponents: {
           FileInput: {
             border: system.border.default,
@@ -3492,6 +3519,8 @@ describe("FileInput built-in component", () => {
             fileTypography: system.textStyles.supporting,
             fileColor: ref.color.black,
             fileBorderRadius: system.radius.inner,
+            uploadIcon: "info",
+            removeIcon: "close",
           },
         },
         focusRingColor: ref.__veColor,
@@ -3680,6 +3709,7 @@ describe("TextInput built-in component", () => {
       output: {
         target: "vanilla-extract",
         outDir: "dist-test",
+        icons: ["chevronDown", "close", "check", "search", "alert", "info"],
         builtInComponents: {
           TextInput: {
             borderRadius: system.radius.element,
@@ -3701,6 +3731,7 @@ describe("TextInput built-in component", () => {
             iconSize: system.spacing.md,
             affixColor: ref.color.black,
             affixBackgroundColor: ref.color.white,
+            clearIcon: "close",
           },
         },
         focusRingColor: ref.__veColor,
@@ -3782,6 +3813,7 @@ describe("NumberInput built-in component", () => {
       output: {
         target: "vanilla-extract",
         outDir: "dist-test",
+        icons: ["chevronDown", "close", "check", "search", "alert", "info"],
         builtInComponents: {
           NumberInput: {
             borderRadius: system.radius.element,
@@ -3808,6 +3840,8 @@ describe("NumberInput built-in component", () => {
             stepperHoverBackgroundColor: ref.color.white,
             stepperBorder: system.border.default,
             stepperWidth: system.spacing.lg,
+            incrementIcon: "chevronDown",
+            decrementIcon: "chevronDown",
           },
         },
         focusRingColor: ref.__veColor,
@@ -3903,6 +3937,7 @@ describe("DateInput built-in component", () => {
       output: {
         target: "vanilla-extract",
         outDir: "dist-test",
+        icons: ["chevronDown", "close", "check", "search", "alert", "info"],
         builtInComponents: {
           DateInput: {
             borderRadius: system.radius.element,
@@ -3941,6 +3976,10 @@ describe("DateInput built-in component", () => {
             dayDisabledColor: ref.color.black,
             weekdayTypography: system.textStyles.supporting,
             weekdayColor: ref.color.black,
+            calendarIcon: "info",
+            previousIcon: "chevronDown",
+            nextIcon: "chevronDown",
+            clearIcon: "close",
           },
         },
         focusRingColor: ref.__veColor,
@@ -3957,14 +3996,24 @@ describe("DateInput built-in component", () => {
     expect(filenames).toContain("components/date-input/DateInput.gen.tsx");
   });
 
-  test("DateInput.gen.tsx wraps Base UI's Popover around a hand-built calendar grid", () => {
+  test("DateInput.gen.tsx wraps Base UI's Popover around a react-day-picker calendar", () => {
     const files = generate(dateInputConfig());
     const component = files.find((f) => f.filename === "components/date-input/DateInput.gen.tsx")!;
     expect(component.content).toMatch(
       /import { Popover as BasePopover } from "@base-ui\/react\/popover";/,
     );
-    expect(component.content).toMatch(/function getMonthMatrix\(/);
-    expect(component.content).toMatch(/getMonthMatrix\(viewDate\)\.flat\(\)\.map\(\(date\) =>/);
+    expect(component.content).toMatch(/import { DayPicker } from "react-day-picker";/);
+    expect(component.content).toMatch(/import { format } from "date-fns";/);
+    expect(component.content).toMatch(/<DayPicker/);
+    expect(component.content).toMatch(/mode="single"/);
+  });
+
+  test("DateInput declares react-day-picker and date-fns as runtime dependencies", () => {
+    const files = generate(dateInputConfig());
+    const dependencies = files.find((f) => f.filename === "components.dependencies.json")!;
+    const parsed = JSON.parse(dependencies.content) as Record<string, string>;
+    expect(parsed["react-day-picker"]).toBeDefined();
+    expect(parsed["date-fns"]).toBeDefined();
   });
 
   test("missing DateInput bindings throw MissingDesignTokensError", () => {
@@ -4131,6 +4180,7 @@ describe("Field built-in component", () => {
       output: {
         target: "vanilla-extract",
         outDir: "dist-test",
+        icons: ["chevronDown", "close", "check", "search", "alert", "info"],
         builtInComponents: {
           Field: {
             labelTypography: system.textStyles.body,
@@ -4144,6 +4194,7 @@ describe("Field built-in component", () => {
             optionalColor: ref.color.black,
             gap: system.spacing.sm,
             iconSize: system.spacing.sm,
+            errorIcon: "alert",
           },
         },
         focusRingColor: ref.__veColor,
@@ -4223,6 +4274,7 @@ describe("Breadcrumb built-in component", () => {
       output: {
         target: "vanilla-extract",
         outDir: "dist-test",
+        icons: ["chevronDown", "close", "check", "search", "alert", "info"],
         builtInComponents: {
           Breadcrumb: {
             typography: system.textStyles.supporting,
@@ -4233,6 +4285,8 @@ describe("Breadcrumb built-in component", () => {
             separatorColor: ref.color.black,
             gap: system.spacing.sm,
             iconSize: system.spacing.sm,
+            separatorIcon: "chevronDown",
+            overflowIcon: "info",
           },
         },
         focusRingColor: ref.__veColor,
@@ -4411,6 +4465,7 @@ describe("Pagination built-in component", () => {
       output: {
         target: "vanilla-extract",
         outDir: "dist-test",
+        icons: ["chevronDown", "close", "check", "search", "alert", "info"],
         builtInComponents: {
           Pagination: {
             borderRadius: system.radius.inner,
@@ -4434,6 +4489,10 @@ describe("Pagination built-in component", () => {
                 typography: system.textStyles.body,
               },
             },
+            previousIcon: "chevronDown",
+            nextIcon: "chevronDown",
+            firstIcon: "chevronDown",
+            lastIcon: "chevronDown",
           },
         },
         focusRingColor: ref.__veColor,
@@ -4625,6 +4684,7 @@ describe("Steps built-in component", () => {
       output: {
         target: "vanilla-extract",
         outDir: "dist-test",
+        icons: ["chevronDown", "close", "check", "search", "alert", "info"],
         builtInComponents: {
           Steps: {
             labelTypography: system.textStyles.body,
@@ -4646,6 +4706,8 @@ describe("Steps built-in component", () => {
                 gap: system.spacing.sm,
               },
             },
+            completeIcon: "check",
+            errorIcon: "alert",
           },
         },
         focusRingColor: ref.__veColor,
@@ -4741,6 +4803,7 @@ describe("Dialog built-in component", () => {
       output: {
         target: "vanilla-extract",
         outDir: "dist-test",
+        icons: ["chevronDown", "close", "check", "search", "alert", "info"],
         builtInComponents: {
           Dialog: {
             backdropColor: ref.color.black,
@@ -4763,6 +4826,7 @@ describe("Dialog built-in component", () => {
               lg: { maxWidth: ref.overlayWidth.lg },
               fullscreen: { maxWidth: ref.overlayWidth.fullscreen },
             },
+            closeIcon: "close",
           },
         },
         focusRingColor: ref.__veColor,
@@ -4865,6 +4929,7 @@ describe("Drawer built-in component", () => {
       output: {
         target: "vanilla-extract",
         outDir: "dist-test",
+        icons: ["chevronDown", "close", "check", "search", "alert", "info"],
         builtInComponents: {
           Drawer: {
             backdropColor: ref.color.black,
@@ -4885,6 +4950,7 @@ describe("Drawer built-in component", () => {
               lg: { size: ref.overlayWidth.lg },
               full: { size: ref.overlayWidth.full },
             },
+            closeIcon: "close",
           },
         },
         focusRingColor: ref.__veColor,
@@ -5195,6 +5261,7 @@ describe("Toast built-in component", () => {
       output: {
         target: "vanilla-extract",
         outDir: "dist-test",
+        icons: ["chevronDown", "close", "check", "search", "alert", "info"],
         builtInComponents: {
           Toast: {
             backgroundColor: ref.color.white,
@@ -5212,6 +5279,7 @@ describe("Toast built-in component", () => {
             width: system.spacing.md,
             iconSize: system.spacing.sm,
             transition: system.transitions.standard,
+            closeIcon: "close",
             statuses: {
               info: {
                 color: ref.color.black,
@@ -5219,6 +5287,7 @@ describe("Toast built-in component", () => {
                 borderColor: ref.color.black,
                 iconColor: ref.color.black,
                 titleColor: ref.color.black,
+                icon: "info",
               },
               danger: {
                 color: ref.color.black,
@@ -5226,6 +5295,7 @@ describe("Toast built-in component", () => {
                 borderColor: ref.color.black,
                 iconColor: ref.color.black,
                 titleColor: ref.color.black,
+                icon: "alert",
               },
             },
           },
@@ -5402,6 +5472,7 @@ describe("TreeList built-in component", () => {
       output: {
         target: "vanilla-extract",
         outDir: "dist-test",
+        icons: ["chevronDown", "close", "check", "search", "alert", "info"],
         builtInComponents: {
           TreeList: {
             typography: system.textStyles.body,
@@ -5417,6 +5488,7 @@ describe("TreeList built-in component", () => {
             guideColor: ref.color.black,
             iconSize: system.spacing.md,
             iconColor: ref.color.black,
+            expandIcon: "chevronDown",
           },
         },
         focusRingColor: ref.__veColor,
@@ -5664,6 +5736,7 @@ describe("focus ring", () => {
       itemHorizontalSpacing: system.spacing.md,
       itemVerticalSpacing: system.spacing.sm,
       itemIconSize: system.spacing.md,
+      indicatorIcon: "chevronDown" as const,
     };
   }
 
@@ -5685,6 +5758,7 @@ describe("focus ring", () => {
       guideColor: ref.color.black,
       iconSize: system.spacing.md,
       iconColor: ref.color.black,
+      expandIcon: "chevronDown" as const,
     };
   }
 
@@ -5714,6 +5788,7 @@ describe("focus ring", () => {
       output: {
         target: "vanilla-extract",
         outDir: "dist-test",
+        icons: ["chevronDown", "close", "check", "search", "alert", "info"],
         builtInComponents: {
           Button: buttonBuiltInComponents(ref, system),
           DropdownButton: dropdownButtonBuiltInComponents(ref, system),
@@ -5738,6 +5813,7 @@ describe("focus ring", () => {
       output: {
         target: "vanilla-extract",
         outDir: "dist-test",
+        icons: ["chevronDown", "close", "check", "search", "alert", "info"],
         builtInComponents: { DropdownButton: dropdownButtonBuiltInComponents(ref, system) },
         focusRingColor: ref.__veColor,
         fontFamily: ref.__veFontFamily,
@@ -5760,6 +5836,7 @@ describe("focus ring", () => {
       output: {
         target: "vanilla-extract",
         outDir: "dist-test",
+        icons: ["chevronDown", "close", "check", "search", "alert", "info"],
         builtInComponents: { TreeList: treeListBuiltInComponents(ref, system) },
         focusRingColor: ref.__veColor,
         fontFamily: ref.__veFontFamily,

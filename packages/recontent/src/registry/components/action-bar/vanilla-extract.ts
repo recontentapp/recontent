@@ -43,10 +43,22 @@ export const actionBarRoot = style({
   paddingRight: ${horizontalSpacing.reference},
   paddingTop: ${verticalSpacing.reference},
   paddingBottom: ${verticalSpacing.reference},
+  opacity: 1,
+  transform: "translateY(0)",
+  pointerEvents: "auto",
+  transitionProperty: "opacity, transform",
+  transitionDuration: "200ms",
+  transitionTimingFunction: "ease",
 });
 
+/**
+ * Stays in the DOM (not \`display: none\`) so opacity/transform can actually
+ * transition — a display toggle can't be animated with plain CSS transitions.
+ */
 export const actionBarHidden = style({
-  display: "none",
+  opacity: 0,
+  transform: "translateY(0.5rem)",
+  pointerEvents: "none",
 });
 
 export const actionBarPlacement = styleVariants({
@@ -57,7 +69,7 @@ export const actionBarPlacement = styleVariants({
   bottom: {
     bottom: ${offset.reference},
     left: "50%",
-    transform: "translateX(-50%)",
+    translate: "-50% 0",
   },
   "bottom-end": {
     bottom: ${offset.reference},

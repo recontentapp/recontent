@@ -1,5 +1,5 @@
 import type { ComponentPropsWithoutRef, ReactNode } from "react";
-import { badgeDot, badgeDotColor, badgeIconSize, badgeRoot, badgeSize, badgeVariant } from "./Badge.gen.css";
+import { badgeIconSize, badgeRoot, badgeSize, badgeVariant } from "./Badge.gen.css";
 import { renderElement, type CommonComponentProps, type RenderProp } from "../../renderElement.gen";
 import { icons, type IconType } from "../../iconMap";
 
@@ -10,7 +10,6 @@ export interface BadgeProps extends CommonComponentProps {
   variant?: BadgeStatusToken;
   size?: BadgeSize;
   icon?: IconType;
-  dot?: boolean;
   children?: ReactNode;
   render?: RenderProp<"span">;
 }
@@ -19,7 +18,6 @@ export function Badge({
   variant = "info",
   size = "sm",
   icon,
-  dot = false,
   className,
   render,
   children,
@@ -33,7 +31,6 @@ export function Badge({
 
   const content = (
     <>
-      {dot && <span className={[badgeDot, badgeDotColor[variant]].join(" ")} aria-hidden="true" />}
       {Icon && <Icon className={badgeIconSize[size]} aria-hidden="true" />}
       {children}
     </>

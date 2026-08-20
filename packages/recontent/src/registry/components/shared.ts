@@ -15,6 +15,7 @@ export function vanillaExtractComponentOutput(
     breakpoints: readonly BreakpointBinding[] | undefined,
     tokens: Record<string, TokenImport>,
     focusRingColor: TokenImport | undefined,
+    icons: Record<string, string>,
   ) => ComponentSourceFiles,
   runtimeDependencies?: Record<string, string>,
 ): ComponentOutput {
@@ -24,8 +25,8 @@ export function vanillaExtractComponentOutput(
       react: ">=18",
       ...runtimeDependencies,
     },
-    generate: ({ scales, breakpoints, tokens, focusRingColor }) => {
-      const sources = generateSources(scales, breakpoints, tokens, focusRingColor);
+    generate: ({ scales, breakpoints, tokens, focusRingColor, icons }) => {
+      const sources = generateSources(scales, breakpoints, tokens, focusRingColor, icons);
       return [
         {
           filename: componentArtifactPath(id, name, ".gen.css.ts"),
@@ -84,6 +85,36 @@ export function groupVariantTokens(
     for (const field of fields) {
       const token = tokens[`${contractKey}.${name}.${field}`];
       if (token) entry[field] = token;
+    }
+    result[name] = entry;
+  }
+  return result;
+}
+
+/**
+ * Like `groupVariantTokens`, but for a variant's `kind: "icon"` fields
+ * (raw icon names, not token references).
+ */
+export function groupVariantIcons(
+  icons: Record<string, string>,
+  contractKey: string,
+  fields: readonly string[],
+): Record<string, Record<string, string>> {
+  const prefix = `${contractKey}.`;
+  const names = new Set<string>();
+  for (const key of Object.keys(icons)) {
+    if (!key.startsWith(prefix)) continue;
+    const rest = key.slice(prefix.length);
+    const variantName = rest.slice(0, rest.lastIndexOf("."));
+    if (variantName) names.add(variantName);
+  }
+
+  const result: Record<string, Record<string, string>> = {};
+  for (const name of names) {
+    const entry: Record<string, string> = {};
+    for (const field of fields) {
+      const icon = icons[`${contractKey}.${name}.${field}`];
+      if (icon) entry[field] = icon;
     }
     result[name] = entry;
   }

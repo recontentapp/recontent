@@ -1,7 +1,9 @@
 import type { ScaleBinding, TokenBinding, TokenType } from "@recontentapp/core";
+import type { IconName } from "./internal/icon-map/icons.js";
 import type {
   ComponentContract,
   ComponentOutput,
+  IconContract,
   RegistryOutputTarget,
   ScaleContract,
   TokenContract,
@@ -29,14 +31,22 @@ type VariantSchema<Fields> = {
   required?: boolean;
 };
 
+type IconSchema = {
+  kind: "icon";
+  description?: string;
+  required?: boolean;
+};
+
 type BindingSchema<Value> =
   Value extends TokenBinding<infer Type>
     ? TokenSchema<Type>
     : Value extends ScaleBinding<infer Type>
       ? ScaleSchema<Type>
-      : Value extends Record<string, infer Fields>
-        ? VariantSchema<ComponentSchema<Fields>>
-        : never;
+      : Value extends IconName | undefined
+        ? IconSchema
+        : Value extends Record<string, infer Fields>
+          ? VariantSchema<ComponentSchema<Fields>>
+          : never;
 
 type ComponentSchema<Options> = {
   [Key in keyof Options]-?: BindingSchema<Options[Key]>;
@@ -47,27 +57,49 @@ function schemaContracts(
     string,
     | TokenSchema<TokenType>
     | ScaleSchema<TokenType>
-    | VariantSchema<Record<string, TokenSchema<TokenType>>>
+    | VariantSchema<Record<string, TokenSchema<TokenType> | IconSchema>>
+    | IconSchema
   >,
 ): readonly ComponentContract[] {
   return Object.entries(schema).map(([key, entry]) => {
-    const required = entry.required ?? true;
-
     if (entry.kind === "variants") {
       return {
         kind: "variants",
         key,
-        required,
-        fields: Object.entries(entry.fields).map(([fieldKey, field]) => ({
-          kind: "token",
-          key: fieldKey,
-          type: field.type,
-          required: field.required ?? true,
-          description: field.description,
-        })) as TokenContract[],
+        required: entry.required ?? true,
+        fields: Object.entries(entry.fields).map(([fieldKey, field]) =>
+          field.kind === "icon"
+            ? ({
+                kind: "icon",
+                key: fieldKey,
+                required: field.required ?? true,
+                description: field.description,
+              } satisfies IconContract)
+            : ({
+                kind: "token",
+                key: fieldKey,
+                type: field.type,
+                required: field.required ?? true,
+                description: field.description,
+              } satisfies TokenContract),
+        ),
         description: entry.description,
       } satisfies VariantContract;
     }
+
+    if (entry.kind === "icon") {
+      return {
+        kind: "icon",
+        key,
+        // Icon names have no built-in default (the project's `icons` list is
+        // user-defined), so unlike tokens they must be explicitly bound
+        // unless a schema entry opts out.
+        required: entry.required ?? true,
+        description: entry.description,
+      } satisfies IconContract;
+    }
+
+    const required = entry.required ?? true;
 
     return {
       kind: entry.kind,

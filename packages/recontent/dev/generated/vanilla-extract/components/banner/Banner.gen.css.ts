@@ -48,6 +48,15 @@ export const bannerIcon = style({
   height: vars.ref.fontSize.lg,
 });
 
+export const bannerLeadingIcon = style([
+  bannerIcon,
+  {
+    // Nudges the icon down so its optical center lines up with the title's
+    // cap-height instead of the top of its line box (which includes leading).
+    marginTop: "0.125em",
+  },
+]);
+
 export const bannerStatusIconColor = styleVariants({
   "info": { color: vars.system.colors.accent },
   "success": { color: vars.ref.color.success[500] },

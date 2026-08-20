@@ -18,6 +18,13 @@ export interface VanillaExtractOutput {
   fontFamily: TokenBinding<"fontFamily">;
   placeholderColor: TokenBinding<"color">;
   breakpoints?: ScaleBinding<"dimension">;
+  /**
+   * Icon names available to built-in components in this project. Each
+   * built-in component's icon options (e.g. Accordion's `indicatorIcon`)
+   * must reference a name declared here; the generated `iconMap.tsx` is
+   * seeded with one placeholder entry per declared name for you to fill in.
+   */
+  icons?: readonly string[];
 }
 export interface TypeScriptOutput {
   target: "typescript";

@@ -1,5 +1,6 @@
 import type { TokenBinding } from "@recontentapp/core";
 import { defineRegistryComponent } from "../../define.js";
+import type { IconName } from "../../internal/icon-map/icons.js";
 import { vanillaExtractComponentOutput } from "../shared.js";
 import { generateAccordionSources } from "./vanilla-extract.js";
 
@@ -14,14 +15,8 @@ export type AccordionComponentOptions = {
   contentHorizontalSpacing: TokenBinding<"dimension">;
   contentVerticalSpacing: TokenBinding<"dimension">;
   transition: TokenBinding<"transition">;
+  indicatorIcon: IconName;
 };
-
-/**
- * The icon rendered by each item's trigger, rotated on open. Build-time
- * choice (not a token binding, so it isn't a `ComponentContract`) baked
- * directly into the generated component source.
- */
-const INDICATOR_ICON = "chevronDown";
 
 /**
  * Build-time toggle (not a token binding) between a full border wrapping the
@@ -84,12 +79,16 @@ export const accordionComponent = defineRegistryComponent<AccordionComponentOpti
       type: "transition",
       description: "Transition of each indicator's open/close rotation.",
     },
+    indicatorIcon: {
+      kind: "icon",
+      description: "Icon rendered by each item's trigger, rotated on open.",
+    },
   },
   outputs: {
     "vanilla-extract": vanillaExtractComponentOutput(
       "accordion",
       "Accordion",
-      (_scales, _breakpoints, tokens, focusRingColor) =>
+      (_scales, _breakpoints, tokens, focusRingColor, icons) =>
         generateAccordionSources({
           border: tokens.border!,
           borderRadius: tokens.borderRadius!,
@@ -101,7 +100,7 @@ export const accordionComponent = defineRegistryComponent<AccordionComponentOpti
           contentHorizontalSpacing: tokens.contentHorizontalSpacing!,
           contentVerticalSpacing: tokens.contentVerticalSpacing!,
           transition: tokens.transition!,
-          indicatorIcon: INDICATOR_ICON,
+          indicatorIcon: icons.indicatorIcon!,
           borderBottomOnly: BORDER_BOTTOM_ONLY,
           focusRingColor,
         }),

@@ -1,5 +1,6 @@
 import type { TokenBinding } from "@recontentapp/core";
 import { defineRegistryComponent } from "../../define.js";
+import type { IconName } from "../../internal/icon-map/icons.js";
 import { vanillaExtractComponentOutput } from "../shared.js";
 import { generateSelectSources } from "./vanilla-extract.js";
 
@@ -32,16 +33,10 @@ export type SelectComponentOptions = {
   itemDisabledColor: TokenBinding<"color">;
   itemHorizontalSpacing: TokenBinding<"dimension">;
   itemVerticalSpacing: TokenBinding<"dimension">;
+  indicatorIcon: IconName;
+  selectedIcon: IconName;
+  clearIcon: IconName;
 };
-
-/**
- * Icons aren't token bindings (Icon isn't a `ComponentContract` kind), so —
- * like Collapsible's indicator — these are build-time choices baked directly
- * into the generated component rather than `recontent.config.ts` bindings.
- */
-const INDICATOR_ICON = "chevronDown";
-const SELECTED_ICON = "check";
-const CLEAR_ICON = "close";
 
 export const selectComponent = defineRegistryComponent<SelectComponentOptions>()({
   id: "select",
@@ -88,12 +83,15 @@ export const selectComponent = defineRegistryComponent<SelectComponentOptions>()
     itemDisabledColor: { kind: "token", type: "color", description: "Text color of a disabled item." },
     itemHorizontalSpacing: { kind: "token", type: "dimension", description: "Left/right padding of an item." },
     itemVerticalSpacing: { kind: "token", type: "dimension", description: "Top/bottom padding of an item." },
+    indicatorIcon: { kind: "icon", description: "Icon rendered at the end of the trigger." },
+    selectedIcon: { kind: "icon", description: "Icon marking the selected item." },
+    clearIcon: { kind: "icon", description: "Icon used by the clear button." },
   },
   outputs: {
     "vanilla-extract": vanillaExtractComponentOutput(
       "select",
       "Select",
-      (_scales, _breakpoints, tokens, focusRingColor) =>
+      (_scales, _breakpoints, tokens, focusRingColor, icons) =>
         generateSelectSources({
           borderRadius: tokens.borderRadius!,
           border: tokens.border!,
@@ -124,9 +122,9 @@ export const selectComponent = defineRegistryComponent<SelectComponentOptions>()
           itemDisabledColor: tokens.itemDisabledColor!,
           itemHorizontalSpacing: tokens.itemHorizontalSpacing!,
           itemVerticalSpacing: tokens.itemVerticalSpacing!,
-          indicatorIcon: INDICATOR_ICON,
-          selectedIcon: SELECTED_ICON,
-          clearIcon: CLEAR_ICON,
+          indicatorIcon: icons.indicatorIcon!,
+          selectedIcon: icons.selectedIcon!,
+          clearIcon: icons.clearIcon!,
         }),
       { "@base-ui/react": "^1.0.0" },
     ),

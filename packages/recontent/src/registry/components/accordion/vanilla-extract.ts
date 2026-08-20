@@ -89,6 +89,9 @@ export const accordionTrigger = style({
   paddingTop: ${triggerVerticalSpacing.reference},
   paddingBottom: ${triggerVerticalSpacing.reference},
   ${typographyProps(triggerTypography.reference)},
+  transitionProperty: "background-color",
+  transitionDuration: ${transition.reference}.transitionDuration,
+  transitionTimingFunction: ${transition.reference}.transitionTimingFunction,
   ":hover": {
     backgroundColor: ${hoverBackgroundColor.reference},
   },
@@ -110,6 +113,15 @@ export const accordionIndicator = style({
 
 export const accordionPanel = style({
   overflow: "hidden",
+  height: "var(--accordion-panel-height)",
+  transitionProperty: "height",
+  transitionDuration: ${transition.reference}.transitionDuration,
+  transitionTimingFunction: ${transition.reference}.transitionTimingFunction,
+  selectors: {
+    "&[data-starting-style], &[data-ending-style]": {
+      height: 0,
+    },
+  },
 });
 
 export const accordionContent = style({
@@ -136,24 +148,24 @@ import { icons } from "../../iconMap";
 
 const IndicatorIcon = icons[${JSON.stringify(indicatorIcon)}];
 
-export interface AccordionItemData {
-  value: string;
+export interface AccordionItemData<Value extends string = string> {
+  value: Value;
   trigger: ReactNode;
   content: ReactNode;
   disabled?: boolean;
 }
 
-export interface AccordionProps extends CommonComponentProps {
-  items: AccordionItemData[];
-  value?: string[];
-  defaultValue?: string[];
-  onValueChange?: (value: string[]) => void;
+export interface AccordionProps<Value extends string = string> extends CommonComponentProps {
+  items: AccordionItemData<Value>[];
+  value?: Value[];
+  defaultValue?: Value[];
+  onValueChange?: (value: Value[]) => void;
   multiple?: boolean;
   disabled?: boolean;
   render?: RenderProp<"div">;
 }
 
-export function Accordion({
+export function Accordion<Value extends string = string>({
   items,
   value,
   defaultValue,
@@ -163,7 +175,7 @@ export function Accordion({
   className,
   render,
   ...props
-}: AccordionProps) {
+}: AccordionProps<Value>) {
   const classes = [accordionRoot, className].filter(Boolean).join(" ");
 
   return (
@@ -171,7 +183,7 @@ export function Accordion({
       {...props}
       value={value}
       defaultValue={defaultValue}
-      onValueChange={(nextValue) => onValueChange?.(nextValue as string[])}
+      onValueChange={(nextValue) => onValueChange?.(nextValue as Value[])}
       multiple={multiple}
       disabled={disabled}
       render={render}

@@ -32,13 +32,6 @@ export const badgeVariant = styleVariants({
     },
 });
 
-export const badgeDotColor = styleVariants({
-  "info": { backgroundColor: vars.system.colors.accent },
-  "success": { backgroundColor: vars.ref.color.success[500] },
-  "warning": { backgroundColor: vars.ref.color.warning[500] },
-  "danger": { backgroundColor: vars.ref.color.danger[500] },
-});
-
 export const badgeSize = styleVariants({
   "sm": {
       paddingLeft: vars.ref.spacing[4],
@@ -69,11 +62,4 @@ export const badgeSize = styleVariants({
 export const badgeIconSize = styleVariants({
   "sm": { width: vars.ref.fontSize.xs, height: vars.ref.fontSize.xs },
   "md": { width: vars.ref.fontSize.sm, height: vars.ref.fontSize.sm },
-});
-
-export const badgeDot = style({
-  flexShrink: 0,
-  borderRadius: "50%",
-  width: vars.ref.spacing[8],
-  height: vars.ref.spacing[8],
 });

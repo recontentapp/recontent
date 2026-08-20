@@ -1,7 +1,13 @@
 import type { ComponentSourceFiles, TokenImport } from "../../types.js";
-import { focusRingBlock, groupVariantTokens } from "../shared.js";
+import { focusRingBlock, groupVariantIcons, groupVariantTokens } from "../shared.js";
 
-const STATUS_FIELDS = ["color", "backgroundColor", "borderColor", "iconColor", "titleColor"] as const;
+const STATUS_FIELDS = [
+  "color",
+  "backgroundColor",
+  "borderColor",
+  "iconColor",
+  "titleColor",
+] as const;
 
 function typographyProps(ref: string): string {
   return [
@@ -38,8 +44,9 @@ export function generateBannerSources(bindings: {
   verticalSpacing: TokenImport;
   gap: TokenImport;
   iconSize: TokenImport;
-  defaultStatusIcons: Record<string, string>;
+  closeIcon: string;
   tokens: Record<string, TokenImport>;
+  icons: Record<string, string>;
   focusRingColor: TokenImport | undefined;
 }): ComponentSourceFiles {
   const {
@@ -51,12 +58,14 @@ export function generateBannerSources(bindings: {
     verticalSpacing,
     gap,
     iconSize,
-    defaultStatusIcons,
+    closeIcon,
     tokens,
+    icons,
     focusRingColor,
   } = bindings;
   const statuses = groupVariantTokens(tokens, "statuses", STATUS_FIELDS);
   const statusNames = Object.keys(statuses);
+  const statusIcons = groupVariantIcons(icons, "statuses", ["icon"]);
 
   return {
     styles: `import { style, styleVariants } from "@vanilla-extract/css";
@@ -85,6 +94,15 @@ export const bannerIcon = style({
   width: ${iconSize.reference},
   height: ${iconSize.reference},
 });
+
+export const bannerLeadingIcon = style([
+  bannerIcon,
+  {
+    // Nudges the icon down so its optical center lines up with the title's
+    // cap-height instead of the top of its line box (which includes leading).
+    marginTop: "0.125em",
+  },
+]);
 
 export const bannerStatusIconColor = styleVariants({
 ${statusNames.map((name) => `  ${JSON.stringify(name)}: ${statusIconStyleBody(statuses[name]!)},`).join("\n")}
@@ -133,6 +151,7 @@ import {
   bannerContent,
   bannerDismiss,
   bannerIcon,
+  bannerLeadingIcon,
   bannerRoot,
   bannerStatus,
   bannerStatusIconColor,
@@ -145,7 +164,7 @@ import { icons, type IconType } from "../../iconMap";
 export type BannerStatusToken = ${statusNames.map((n) => JSON.stringify(n)).join(" | ")};
 
 const STATUS_ICONS: Record<BannerStatusToken, IconType> = {
-${statusNames.map((name) => `  ${JSON.stringify(name)}: ${JSON.stringify(defaultStatusIcons[name] ?? "info")} as IconType,`).join("\n")}
+${statusNames.map((name) => `  ${JSON.stringify(name)}: ${JSON.stringify(statusIcons[name]!.icon)} as IconType,`).join("\n")}
 };
 
 export interface BannerProps extends CommonComponentProps {
@@ -172,13 +191,13 @@ export function Banner({
 }: BannerProps) {
   const iconKey = icon === false ? undefined : (icon ?? STATUS_ICONS[status]);
   const Icon = iconKey ? icons[iconKey] : undefined;
-  const CloseIcon = icons["close"];
+  const CloseIcon = icons[${JSON.stringify(closeIcon)}];
 
   const classes = [bannerRoot, bannerStatus[status], className].filter(Boolean).join(" ");
 
   const content = (
     <>
-      {Icon && <Icon className={[bannerIcon, bannerStatusIconColor[status]].join(" ")} aria-hidden="true" />}
+      {Icon && <Icon className={[bannerLeadingIcon, bannerStatusIconColor[status]].join(" ")} aria-hidden="true" />}
       <div className={bannerContent}>
         {title !== undefined && (
           <p className={[bannerTitle, bannerStatusTitleColor[status]].join(" ")}>{title}</p>

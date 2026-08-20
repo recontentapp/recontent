@@ -1,5 +1,6 @@
 import type { TokenBinding } from "@recontentapp/core";
 import { defineRegistryComponent } from "../../define.js";
+import type { IconName } from "../../internal/icon-map/icons.js";
 import { vanillaExtractComponentOutput } from "../shared.js";
 import { generateDateInputSources } from "./vanilla-extract.js";
 
@@ -42,17 +43,11 @@ export type DateInputComponentOptions = {
   dayDisabledColor: TokenBinding<"color">;
   weekdayTypography: TokenBinding<"typography">;
   weekdayColor: TokenBinding<"color">;
+  calendarIcon: IconName;
+  previousIcon: IconName;
+  nextIcon: IconName;
+  clearIcon: IconName;
 };
-
-/**
- * Icons aren't token bindings (Icon isn't a `ComponentContract` kind), so —
- * like TextInput's clear icon — these are build-time choices baked directly
- * into the generated component rather than `recontent.config.ts` bindings.
- */
-const CALENDAR_ICON = "info";
-const PREVIOUS_ICON = "chevronDown";
-const NEXT_ICON = "chevronDown";
-const CLEAR_ICON = "close";
 
 export const dateInputComponent = defineRegistryComponent<DateInputComponentOptions>()({
   id: "date-input",
@@ -61,40 +56,104 @@ export const dateInputComponent = defineRegistryComponent<DateInputComponentOpti
   schema: {
     borderRadius: { kind: "token", type: "dimension", description: "Corner radius of the input." },
     border: { kind: "token", type: "border", description: "Border applied around the input." },
-    backgroundColor: { kind: "token", type: "color", description: "Background color of the input." },
+    backgroundColor: {
+      kind: "token",
+      type: "color",
+      description: "Background color of the input.",
+    },
     color: { kind: "token", type: "color", description: "Text color of the input." },
-    typography: { kind: "token", type: "typography", description: "Typography applied to the input." },
-    placeholderColor: { kind: "token", type: "color", description: "Text color of the placeholder." },
-    horizontalSpacing: { kind: "token", type: "dimension", description: "Left/right padding of the input." },
-    verticalSpacing: { kind: "token", type: "dimension", description: "Top/bottom padding of the input." },
-    gap: { kind: "token", type: "dimension", description: "Space between affixes, icons and the field." },
-    hoverBorderColor: { kind: "token", type: "color", description: "Border color of the input on hover." },
-    focusBorderColor: { kind: "token", type: "color", description: "Border color of the input on focus." },
-    invalidBorderColor: { kind: "token", type: "color", description: "Border color of the input when invalid." },
+    typography: {
+      kind: "token",
+      type: "typography",
+      description: "Typography applied to the input.",
+    },
+    placeholderColor: {
+      kind: "token",
+      type: "color",
+      description: "Text color of the placeholder.",
+    },
+    horizontalSpacing: {
+      kind: "token",
+      type: "dimension",
+      description: "Left/right padding of the input.",
+    },
+    verticalSpacing: {
+      kind: "token",
+      type: "dimension",
+      description: "Top/bottom padding of the input.",
+    },
+    gap: {
+      kind: "token",
+      type: "dimension",
+      description: "Space between affixes, icons and the field.",
+    },
+    hoverBorderColor: {
+      kind: "token",
+      type: "color",
+      description: "Border color of the input on hover.",
+    },
+    focusBorderColor: {
+      kind: "token",
+      type: "color",
+      description: "Border color of the input on focus.",
+    },
+    invalidBorderColor: {
+      kind: "token",
+      type: "color",
+      description: "Border color of the input when invalid.",
+    },
     disabledBackgroundColor: {
       kind: "token",
       type: "color",
       description: "Background color of the input when disabled.",
     },
-    disabledColor: { kind: "token", type: "color", description: "Text color of the input when disabled." },
+    disabledColor: {
+      kind: "token",
+      type: "color",
+      description: "Text color of the input when disabled.",
+    },
     readOnlyBackgroundColor: {
       kind: "token",
       type: "color",
       description: "Background color of the input when read-only.",
     },
     iconColor: { kind: "token", type: "color", description: "Color of the calendar/clear icons." },
-    iconSize: { kind: "token", type: "dimension", description: "Size of the calendar/clear icons." },
+    iconSize: {
+      kind: "token",
+      type: "dimension",
+      description: "Size of the calendar/clear icons.",
+    },
     affixColor: { kind: "token", type: "color", description: "Text color of the prefix/suffix." },
-    affixBackgroundColor: { kind: "token", type: "color", description: "Background color of the prefix/suffix." },
-    popupBackgroundColor: { kind: "token", type: "color", description: "Background color of the calendar popup." },
+    affixBackgroundColor: {
+      kind: "token",
+      type: "color",
+      description: "Background color of the prefix/suffix.",
+    },
+    popupBackgroundColor: {
+      kind: "token",
+      type: "color",
+      description: "Background color of the calendar popup.",
+    },
     popupBorder: { kind: "token", type: "border", description: "Border applied around the popup." },
-    popupBorderRadius: { kind: "token", type: "dimension", description: "Corner radius of the popup." },
+    popupBorderRadius: {
+      kind: "token",
+      type: "dimension",
+      description: "Corner radius of the popup.",
+    },
     popupShadow: { kind: "token", type: "shadow", description: "Shadow applied to the popup." },
     popupSpacing: { kind: "token", type: "dimension", description: "Padding around the calendar." },
-    popupOffset: { kind: "token", type: "dimension", description: "Gap between the input and the popup." },
+    popupOffset: {
+      kind: "token",
+      type: "dimension",
+      description: "Gap between the input and the popup.",
+    },
     dayTypography: { kind: "token", type: "typography", description: "Typography of a day cell." },
     dayColor: { kind: "token", type: "color", description: "Text color of a day cell." },
-    dayBorderRadius: { kind: "token", type: "dimension", description: "Corner radius of a day cell." },
+    dayBorderRadius: {
+      kind: "token",
+      type: "dimension",
+      description: "Corner radius of a day cell.",
+    },
     dayHoverBackgroundColor: {
       kind: "token",
       type: "color",
@@ -105,22 +164,51 @@ export const dateInputComponent = defineRegistryComponent<DateInputComponentOpti
       type: "color",
       description: "Background color of the selected day.",
     },
-    daySelectedColor: { kind: "token", type: "color", description: "Text color of the selected day." },
-    dayTodayBorderColor: { kind: "token", type: "color", description: "Border color marking today's day." },
+    daySelectedColor: {
+      kind: "token",
+      type: "color",
+      description: "Text color of the selected day.",
+    },
+    dayTodayBorderColor: {
+      kind: "token",
+      type: "color",
+      description: "Border color marking today's day.",
+    },
     dayOutsideMonthColor: {
       kind: "token",
       type: "color",
       description: "Text color of a day outside the visible month.",
     },
-    dayDisabledColor: { kind: "token", type: "color", description: "Text color of an unavailable day." },
-    weekdayTypography: { kind: "token", type: "typography", description: "Typography of a weekday header." },
+    dayDisabledColor: {
+      kind: "token",
+      type: "color",
+      description: "Text color of an unavailable day.",
+    },
+    weekdayTypography: {
+      kind: "token",
+      type: "typography",
+      description: "Typography of a weekday header.",
+    },
     weekdayColor: { kind: "token", type: "color", description: "Text color of a weekday header." },
+    calendarIcon: {
+      kind: "icon",
+      description: "Icon used to open the calendar popup.",
+    },
+    previousIcon: {
+      kind: "icon",
+      description: "Icon used to navigate to the previous month.",
+    },
+    nextIcon: {
+      kind: "icon",
+      description: "Icon used to navigate to the next month.",
+    },
+    clearIcon: { kind: "icon", description: "Icon used by the clear button." },
   },
   outputs: {
     "vanilla-extract": vanillaExtractComponentOutput(
       "date-input",
       "DateInput",
-      (_scales, _breakpoints, tokens, focusRingColor) =>
+      (_scales, _breakpoints, tokens, focusRingColor, icons) =>
         generateDateInputSources({
           borderRadius: tokens.borderRadius!,
           border: tokens.border!,
@@ -159,12 +247,12 @@ export const dateInputComponent = defineRegistryComponent<DateInputComponentOpti
           dayDisabledColor: tokens.dayDisabledColor!,
           weekdayTypography: tokens.weekdayTypography!,
           weekdayColor: tokens.weekdayColor!,
-          calendarIcon: CALENDAR_ICON,
-          previousIcon: PREVIOUS_ICON,
-          nextIcon: NEXT_ICON,
-          clearIcon: CLEAR_ICON,
+          calendarIcon: icons.calendarIcon!,
+          previousIcon: icons.previousIcon!,
+          nextIcon: icons.nextIcon!,
+          clearIcon: icons.clearIcon!,
         }),
-      { "@base-ui/react": "^1.0.0" },
+      { "@base-ui/react": "^1.0.0", "react-day-picker": "^10.0.1", "date-fns": "^4.0.0" },
     ),
   },
 });

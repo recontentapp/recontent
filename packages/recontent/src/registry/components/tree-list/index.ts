@@ -1,5 +1,6 @@
 import type { TokenBinding } from "@recontentapp/core";
 import { defineRegistryComponent } from "../../define.js";
+import type { IconName } from "../../internal/icon-map/icons.js";
 import { vanillaExtractComponentOutput } from "../shared.js";
 import { generateTreeListSources } from "./vanilla-extract.js";
 
@@ -17,14 +18,8 @@ export type TreeListComponentOptions = {
   guideColor: TokenBinding<"color">;
   iconSize: TokenBinding<"dimension">;
   iconColor: TokenBinding<"color">;
+  expandIcon: IconName;
 };
-
-/**
- * Icon isn't a token binding (Icon isn't a `ComponentContract` kind), so —
- * like other components' icon config — this is a build-time choice baked
- * directly into the generated component rather than a config binding.
- */
-const EXPAND_ICON = "chevronDown";
 
 export const treeListComponent = defineRegistryComponent<TreeListComponentOptions>()({
   id: "tree-list",
@@ -52,12 +47,13 @@ export const treeListComponent = defineRegistryComponent<TreeListComponentOption
     guideColor: { kind: "token", type: "color", description: "Color of the indent guide lines." },
     iconSize: { kind: "token", type: "dimension", description: "Size of a row's icon." },
     iconColor: { kind: "token", type: "color", description: "Color of a row's icon." },
+    expandIcon: { kind: "icon", description: "Icon rendered by a row's expand/collapse indicator." },
   },
   outputs: {
     "vanilla-extract": vanillaExtractComponentOutput(
       "tree-list",
       "TreeList",
-      (_scales, _breakpoints, tokens, focusRingColor) =>
+      (_scales, _breakpoints, tokens, focusRingColor, icons) =>
         generateTreeListSources({
           typography: tokens.typography!,
           color: tokens.color!,
@@ -73,7 +69,7 @@ export const treeListComponent = defineRegistryComponent<TreeListComponentOption
           guideColor: tokens.guideColor!,
           iconSize: tokens.iconSize!,
           iconColor: tokens.iconColor!,
-          expandIcon: EXPAND_ICON,
+          expandIcon: icons.expandIcon!,
         }),
     ),
   },

@@ -1,5 +1,6 @@
 import type { TokenBinding } from "@recontentapp/core";
 import { defineRegistryComponent } from "../../define.js";
+import type { IconName } from "../../internal/icon-map/icons.js";
 import { vanillaExtractComponentOutput } from "../shared.js";
 import { generateDrawerSources } from "./vanilla-extract.js";
 
@@ -18,14 +19,8 @@ export type DrawerComponentOptions = {
   titleColor: TokenBinding<"color">;
   footerBorder: TokenBinding<"border">;
   transition: TokenBinding<"transition">;
+  closeIcon: IconName;
 };
-
-/**
- * Icon isn't a token binding (Icon isn't a `ComponentContract` kind), so —
- * like other components' icon config — this is a build-time choice baked
- * directly into the generated component rather than a config binding.
- */
-const CLOSE_ICON = "close";
 
 export const drawerComponent = defineRegistryComponent<DrawerComponentOptions>()({
   id: "drawer",
@@ -51,12 +46,13 @@ export const drawerComponent = defineRegistryComponent<DrawerComponentOptions>()
     titleColor: { kind: "token", type: "color", description: "Text color of the title." },
     footerBorder: { kind: "token", type: "border", description: "Border above the footer." },
     transition: { kind: "token", type: "transition", description: "Transition used to slide the drawer in/out." },
+    closeIcon: { kind: "icon", description: "Icon used by the close button." },
   },
   outputs: {
     "vanilla-extract": vanillaExtractComponentOutput(
       "drawer",
       "Drawer",
-      (_scales, _breakpoints, tokens, focusRingColor) =>
+      (_scales, _breakpoints, tokens, focusRingColor, icons) =>
         generateDrawerSources({
           backdropColor: tokens.backdropColor!,
           backgroundColor: tokens.backgroundColor!,
@@ -70,7 +66,7 @@ export const drawerComponent = defineRegistryComponent<DrawerComponentOptions>()
           titleColor: tokens.titleColor!,
           footerBorder: tokens.footerBorder!,
           transition: tokens.transition!,
-          closeIcon: CLOSE_ICON,
+          closeIcon: icons.closeIcon!,
           tokens,
           focusRingColor,
         }),

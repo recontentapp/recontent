@@ -126,6 +126,7 @@ export const autocompletePositioner = style({
 
 export const autocompletePopup = style({
   boxSizing: "border-box",
+  width: "var(--anchor-width)",
   backgroundColor: vars.system.colors.backgroundCard,
   border: vars.system.border.default,
   borderRadius: vars.ref.radius.element,

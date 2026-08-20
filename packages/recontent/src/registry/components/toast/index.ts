@@ -1,5 +1,6 @@
 import type { TokenBinding } from "@recontentapp/core";
 import { defineRegistryComponent } from "../../define.js";
+import type { IconName } from "../../internal/icon-map/icons.js";
 import { vanillaExtractComponentOutput } from "../shared.js";
 import { generateToastSources } from "./vanilla-extract.js";
 
@@ -9,6 +10,7 @@ type ToastStatusFields = {
   borderColor: TokenBinding<"color">;
   iconColor: TokenBinding<"color">;
   titleColor: TokenBinding<"color">;
+  icon: IconName;
 };
 
 export type ToastComponentOptions = {
@@ -28,23 +30,8 @@ export type ToastComponentOptions = {
   width: TokenBinding<"dimension">;
   iconSize: TokenBinding<"dimension">;
   transition: TokenBinding<"transition">;
+  closeIcon: IconName;
 };
-
-/**
- * Default icon per status, keyed by convention. `statusIcons` isn't a token
- * binding (Icon isn't a `ComponentContract` kind), so — like Banner's status
- * icons — it's a build-time choice baked directly into the generated
- * component. `closeIcon` is likewise baked. Unrecognized status keys fall
- * back to "info".
- */
-const DEFAULT_STATUS_ICONS: Record<string, string> = {
-  info: "info",
-  success: "check",
-  warning: "alert",
-  danger: "alert",
-  error: "alert",
-};
-const CLOSE_ICON = "close";
 
 export const toastComponent = defineRegistryComponent<ToastComponentOptions>()({
   id: "toast",
@@ -60,6 +47,7 @@ export const toastComponent = defineRegistryComponent<ToastComponentOptions>()({
         borderColor: { kind: "token", type: "color" },
         iconColor: { kind: "token", type: "color" },
         titleColor: { kind: "token", type: "color" },
+        icon: { kind: "icon" },
       },
     },
     backgroundColor: { kind: "token", type: "color", description: "Background color of a toast." },
@@ -85,12 +73,13 @@ export const toastComponent = defineRegistryComponent<ToastComponentOptions>()({
       type: "transition",
       description: "Transition used to enter/exit.",
     },
+    closeIcon: { kind: "icon", description: "Icon used by the close button." },
   },
   outputs: {
     "vanilla-extract": vanillaExtractComponentOutput(
       "toast",
       "Toast",
-      (_scales, _breakpoints, tokens, focusRingColor) =>
+      (_scales, _breakpoints, tokens, focusRingColor, icons) =>
         generateToastSources({
           backgroundColor: tokens.backgroundColor!,
           border: tokens.border!,
@@ -107,9 +96,9 @@ export const toastComponent = defineRegistryComponent<ToastComponentOptions>()({
           width: tokens.width!,
           iconSize: tokens.iconSize!,
           transition: tokens.transition!,
-          defaultStatusIcons: DEFAULT_STATUS_ICONS,
-          closeIcon: CLOSE_ICON,
+          closeIcon: icons.closeIcon!,
           tokens,
+          icons,
           focusRingColor,
         }),
       { "@base-ui/react": "^1.0.0" },

@@ -1,5 +1,6 @@
 import type { TokenBinding } from "@recontentapp/core";
 import { defineRegistryComponent } from "../../define.js";
+import type { IconName } from "../../internal/icon-map/icons.js";
 import { vanillaExtractComponentOutput } from "../shared.js";
 import { generateNumberInputSources } from "./vanilla-extract.js";
 
@@ -30,15 +31,9 @@ export type NumberInputComponentOptions = {
   stepperHoverBackgroundColor: TokenBinding<"color">;
   stepperBorder: TokenBinding<"border">;
   stepperWidth: TokenBinding<"dimension">;
+  incrementIcon: IconName;
+  decrementIcon: IconName;
 };
-
-/**
- * Icons aren't token bindings (Icon isn't a `ComponentContract` kind), so —
- * like TextInput's clear icon — these are build-time choices baked directly
- * into the generated component rather than `recontent.config.ts` bindings.
- */
-const INCREMENT_ICON = "chevronDown";
-const DECREMENT_ICON = "chevronDown";
 
 export const numberInputComponent = defineRegistryComponent<NumberInputComponentOptions>()({
   id: "number-input",
@@ -85,12 +80,14 @@ export const numberInputComponent = defineRegistryComponent<NumberInputComponent
     },
     stepperBorder: { kind: "token", type: "border", description: "Border applied around the stepper group." },
     stepperWidth: { kind: "token", type: "dimension", description: "Width of a stepper button." },
+    incrementIcon: { kind: "icon", description: "Icon used by the increment stepper button." },
+    decrementIcon: { kind: "icon", description: "Icon used by the decrement stepper button." },
   },
   outputs: {
     "vanilla-extract": vanillaExtractComponentOutput(
       "number-input",
       "NumberInput",
-      (_scales, _breakpoints, tokens, focusRingColor) =>
+      (_scales, _breakpoints, tokens, focusRingColor, icons) =>
         generateNumberInputSources({
           borderRadius: tokens.borderRadius!,
           border: tokens.border!,
@@ -117,8 +114,8 @@ export const numberInputComponent = defineRegistryComponent<NumberInputComponent
           stepperHoverBackgroundColor: tokens.stepperHoverBackgroundColor!,
           stepperBorder: tokens.stepperBorder!,
           stepperWidth: tokens.stepperWidth!,
-          incrementIcon: INCREMENT_ICON,
-          decrementIcon: DECREMENT_ICON,
+          incrementIcon: icons.incrementIcon!,
+          decrementIcon: icons.decrementIcon!,
         }),
       { "@base-ui/react": "^1.0.0" },
     ),

@@ -1,5 +1,5 @@
 import type { ComponentSourceFiles, TokenImport } from "../../types.js";
-import { focusRingBlock, groupVariantTokens } from "../shared.js";
+import { focusRingBlock, groupVariantIcons, groupVariantTokens } from "../shared.js";
 
 const STATUS_FIELDS = ["color", "backgroundColor", "borderColor", "iconColor", "titleColor"] as const;
 
@@ -45,10 +45,9 @@ export function generateToastSources(bindings: {
   width: TokenImport;
   iconSize: TokenImport;
   transition: TokenImport;
-  defaultStatusIcons: Record<string, string>;
-  /** Build-time config, baked directly into the generated component. */
   closeIcon: string;
   tokens: Record<string, TokenImport>;
+  icons: Record<string, string>;
   focusRingColor: TokenImport | undefined;
 }): ComponentSourceFiles {
   const {
@@ -67,13 +66,14 @@ export function generateToastSources(bindings: {
     width,
     iconSize,
     transition,
-    defaultStatusIcons,
     closeIcon,
     tokens,
+    icons,
     focusRingColor,
   } = bindings;
   const statuses = groupVariantTokens(tokens, "statuses", STATUS_FIELDS);
   const statusNames = Object.keys(statuses);
+  const statusIcons = groupVariantIcons(icons, "statuses", ["icon"]);
 
   return {
     styles: `import { style, styleVariants } from "@vanilla-extract/css";
@@ -210,7 +210,7 @@ import { icons, type IconType } from "../../iconMap";
 export type ToastStatusToken = ${statusNames.map((n) => JSON.stringify(n)).join(" | ")};
 
 const STATUS_ICONS: Record<ToastStatusToken, IconType> = {
-${statusNames.map((name) => `  ${JSON.stringify(name)}: ${JSON.stringify(defaultStatusIcons[name] ?? "info")} as IconType,`).join("\n")}
+${statusNames.map((name) => `  ${JSON.stringify(name)}: ${JSON.stringify(statusIcons[name]!.icon)} as IconType,`).join("\n")}
 };
 
 const CloseIcon = icons[${JSON.stringify(closeIcon)}];

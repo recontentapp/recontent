@@ -1,8 +1,14 @@
 import type { ComponentSourceFiles, TokenImport } from "../../types.js";
 import { groupVariantTokens } from "../shared.js";
 
-const STATUS_FIELDS = ["color", "backgroundColor", "border", "dotColor"] as const;
-const SIZE_FIELDS = ["typography", "horizontalSpacing", "verticalSpacing", "gap", "iconSize"] as const;
+const STATUS_FIELDS = ["color", "backgroundColor", "border"] as const;
+const SIZE_FIELDS = [
+  "typography",
+  "horizontalSpacing",
+  "verticalSpacing",
+  "gap",
+  "iconSize",
+] as const;
 
 function typographyProps(ref: string): string {
   return [
@@ -22,10 +28,6 @@ function statusStyleBody(fields: Record<string, TokenImport>): string {
     }`;
 }
 
-function dotColorStyleBody(fields: Record<string, TokenImport>): string {
-  return `{ backgroundColor: ${fields.dotColor!.reference} }`;
-}
-
 function sizeStyleBody(fields: Record<string, TokenImport>): string {
   return `{
       paddingLeft: ${fields.horizontalSpacing!.reference},
@@ -43,10 +45,9 @@ function sizeIconStyleBody(fields: Record<string, TokenImport>): string {
 
 export function generateBadgeSources(bindings: {
   borderRadius: TokenImport;
-  dotSize: TokenImport;
   tokens: Record<string, TokenImport>;
 }): ComponentSourceFiles {
-  const { borderRadius, dotSize, tokens } = bindings;
+  const { borderRadius, tokens } = bindings;
   const statuses = groupVariantTokens(tokens, "statuses", STATUS_FIELDS);
   const sizes = groupVariantTokens(tokens, "sizes", SIZE_FIELDS);
 
@@ -69,10 +70,6 @@ export const badgeVariant = styleVariants({
 ${statusNames.map((name) => `  ${JSON.stringify(name)}: ${statusStyleBody(statuses[name]!)},`).join("\n")}
 });
 
-export const badgeDotColor = styleVariants({
-${statusNames.map((name) => `  ${JSON.stringify(name)}: ${dotColorStyleBody(statuses[name]!)},`).join("\n")}
-});
-
 export const badgeSize = styleVariants({
 ${sizeNames.map((name) => `  ${JSON.stringify(name)}: ${sizeStyleBody(sizes[name]!)},`).join("\n")}
 });
@@ -80,16 +77,9 @@ ${sizeNames.map((name) => `  ${JSON.stringify(name)}: ${sizeStyleBody(sizes[name
 export const badgeIconSize = styleVariants({
 ${sizeNames.map((name) => `  ${JSON.stringify(name)}: ${sizeIconStyleBody(sizes[name]!)},`).join("\n")}
 });
-
-export const badgeDot = style({
-  flexShrink: 0,
-  borderRadius: "50%",
-  width: ${dotSize.reference},
-  height: ${dotSize.reference},
-});
 `,
     component: `import type { ComponentPropsWithoutRef, ReactNode } from "react";
-import { badgeDot, badgeDotColor, badgeIconSize, badgeRoot, badgeSize, badgeVariant } from "./Badge.gen.css";
+import { badgeIconSize, badgeRoot, badgeSize, badgeVariant } from "./Badge.gen.css";
 import { renderElement, type CommonComponentProps, type RenderProp } from "../../renderElement.gen";
 import { icons, type IconType } from "../../iconMap";
 
@@ -100,7 +90,6 @@ export interface BadgeProps extends CommonComponentProps {
   variant?: BadgeStatusToken;
   size?: BadgeSize;
   icon?: IconType;
-  dot?: boolean;
   children?: ReactNode;
   render?: RenderProp<"span">;
 }
@@ -109,7 +98,6 @@ export function Badge({
   variant = ${JSON.stringify(statusNames[0] ?? "info")},
   size = ${JSON.stringify(sizeNames[0] ?? "sm")},
   icon,
-  dot = false,
   className,
   render,
   children,
@@ -123,7 +111,6 @@ export function Badge({
 
   const content = (
     <>
-      {dot && <span className={[badgeDot, badgeDotColor[variant]].join(" ")} aria-hidden="true" />}
       {Icon && <Icon className={badgeIconSize[size]} aria-hidden="true" />}
       {children}
     </>

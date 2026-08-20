@@ -31,6 +31,9 @@ function variantStyleBody(fields: Record<string, TokenImport>): string {
       backgroundColor: ${fields.backgroundColor!.reference},
       color: ${fields.color!.reference},
       border: ${fields.border!.reference},
+      transitionProperty: "background-color, color, border-color",
+      transitionDuration: "150ms",
+      transitionTimingFunction: "ease",
       ${typographyProps(fields.typography!.reference)},
       ":hover": {
         backgroundColor: ${fields.hoverBackgroundColor!.reference},

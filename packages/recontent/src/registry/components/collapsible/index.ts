@@ -1,5 +1,6 @@
 import type { TokenBinding } from "@recontentapp/core";
 import { defineRegistryComponent } from "../../define.js";
+import type { IconName } from "../../internal/icon-map/icons.js";
 import { vanillaExtractComponentOutput } from "../shared.js";
 import { generateCollapsibleSources } from "./vanilla-extract.js";
 
@@ -15,14 +16,8 @@ export type CollapsibleComponentOptions = {
   contentHorizontalSpacing: TokenBinding<"dimension">;
   contentVerticalSpacing: TokenBinding<"dimension">;
   transition: TokenBinding<"transition">;
+  indicatorIcon: IconName;
 };
-
-/**
- * The icon rendered by the trigger, rotated on open. This is a build-time
- * choice (not a token binding, so it isn't a `ComponentContract`) baked
- * directly into the generated component source.
- */
-const INDICATOR_ICON = "chevronDown";
 
 export const collapsibleComponent = defineRegistryComponent<CollapsibleComponentOptions>()({
   id: "collapsible",
@@ -84,12 +79,16 @@ export const collapsibleComponent = defineRegistryComponent<CollapsibleComponent
       type: "transition",
       description: "Transition of the indicator's open/close rotation.",
     },
+    indicatorIcon: {
+      kind: "icon",
+      description: "Icon rendered by the trigger, rotated on open.",
+    },
   },
   outputs: {
     "vanilla-extract": vanillaExtractComponentOutput(
       "collapsible",
       "Collapsible",
-      (_scales, _breakpoints, tokens, focusRingColor) =>
+      (_scales, _breakpoints, tokens, focusRingColor, icons) =>
         generateCollapsibleSources({
           borderRadius: tokens.borderRadius!,
           border: tokens.border!,
@@ -102,7 +101,7 @@ export const collapsibleComponent = defineRegistryComponent<CollapsibleComponent
           contentHorizontalSpacing: tokens.contentHorizontalSpacing!,
           contentVerticalSpacing: tokens.contentVerticalSpacing!,
           transition: tokens.transition!,
-          indicatorIcon: INDICATOR_ICON,
+          indicatorIcon: icons.indicatorIcon!,
           focusRingColor,
         }),
       { "@base-ui/react": "^1.0.0" },

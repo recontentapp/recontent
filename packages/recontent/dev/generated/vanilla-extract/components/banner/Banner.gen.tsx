@@ -4,6 +4,7 @@ import {
   bannerContent,
   bannerDismiss,
   bannerIcon,
+  bannerLeadingIcon,
   bannerRoot,
   bannerStatus,
   bannerStatusIconColor,
@@ -52,7 +53,7 @@ export function Banner({
 
   const content = (
     <>
-      {Icon && <Icon className={[bannerIcon, bannerStatusIconColor[status]].join(" ")} aria-hidden="true" />}
+      {Icon && <Icon className={[bannerLeadingIcon, bannerStatusIconColor[status]].join(" ")} aria-hidden="true" />}
       <div className={bannerContent}>
         {title !== undefined && (
           <p className={[bannerTitle, bannerStatusTitleColor[status]].join(" ")}>{title}</p>

@@ -1,5 +1,6 @@
 import type { TokenBinding } from "@recontentapp/core";
 import { defineRegistryComponent } from "../../define.js";
+import type { IconName } from "../../internal/icon-map/icons.js";
 import { vanillaExtractComponentOutput } from "../shared.js";
 import { generateTextInputSources } from "./vanilla-extract.js";
 
@@ -23,14 +24,8 @@ export type TextInputComponentOptions = {
   iconSize: TokenBinding<"dimension">;
   affixColor: TokenBinding<"color">;
   affixBackgroundColor: TokenBinding<"color">;
+  clearIcon: IconName;
 };
-
-/**
- * Icon isn't a token binding (Icon isn't a `ComponentContract` kind), so —
- * like other components' icon config — this is a build-time choice baked
- * directly into the generated component rather than a config binding.
- */
-const CLEAR_ICON = "close";
 
 export const textInputComponent = defineRegistryComponent<TextInputComponentOptions>()({
   id: "text-input",
@@ -68,12 +63,13 @@ export const textInputComponent = defineRegistryComponent<TextInputComponentOpti
     iconSize: { kind: "token", type: "dimension", description: "Size of the leading/trailing icons." },
     affixColor: { kind: "token", type: "color", description: "Text color of the prefix/suffix." },
     affixBackgroundColor: { kind: "token", type: "color", description: "Background color of the prefix/suffix." },
+    clearIcon: { kind: "icon", description: "Icon used by the clear button." },
   },
   outputs: {
     "vanilla-extract": vanillaExtractComponentOutput(
       "text-input",
       "TextInput",
-      (_scales, _breakpoints, tokens, focusRingColor) =>
+      (_scales, _breakpoints, tokens, focusRingColor, icons) =>
         generateTextInputSources({
           borderRadius: tokens.borderRadius!,
           border: tokens.border!,
@@ -95,7 +91,7 @@ export const textInputComponent = defineRegistryComponent<TextInputComponentOpti
           iconSize: tokens.iconSize!,
           affixColor: tokens.affixColor!,
           affixBackgroundColor: tokens.affixBackgroundColor!,
-          clearIcon: CLEAR_ICON,
+          clearIcon: icons.clearIcon!,
         }),
     ),
   },

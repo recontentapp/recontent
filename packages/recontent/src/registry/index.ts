@@ -111,6 +111,7 @@ function validateVariants(
   contract: Extract<RegistryComponentDefinition["contracts"][number], { kind: "variants" }>,
   value: unknown,
   errors: string[],
+  availableIconNames: readonly string[],
 ): void {
   if (!value || typeof value !== "object" || Array.isArray(value)) {
     errors.push(
@@ -135,6 +136,12 @@ function validateVariants(
       const binding = values[field.key];
       if (binding === undefined) {
         errors.push(`Component "${componentId}" variant "${name}" requires config "${field.key}".`);
+      } else if (field.kind === "icon") {
+        if (typeof binding !== "string" || !availableIconNames.includes(binding)) {
+          errors.push(
+            `Component "${componentId}" variant "${name}" config "${field.key}" must be one of the declared output icons: ${availableIconNames.join(", ") || "(none declared)"}.`,
+          );
+        }
       } else if (!isTokenBinding(binding, field.type as TokenType)) {
         errors.push(
           `Component "${componentId}" variant "${name}" config "${field.key}" must be a ${field.type} token defined in ref, system, or components tokens.`,
@@ -187,6 +194,7 @@ export function validateBuiltInComponents(
   names: readonly string[],
   target: RegistryOutputTarget = "vanilla-extract",
   options: BuiltInComponentOptions = {},
+  availableIconNames: readonly string[] = [],
 ): string[] {
   const errors: string[] = [];
 
@@ -218,7 +226,16 @@ export function validateBuiltInComponents(
         continue;
       }
       if (contract.kind === "variants") {
-        validateVariants(component.id, contract, binding, errors);
+        validateVariants(component.id, contract, binding, errors, availableIconNames);
+        continue;
+      }
+
+      if (contract.kind === "icon") {
+        if (typeof binding !== "string" || !availableIconNames.includes(binding)) {
+          errors.push(
+            `Component "${component.id}" config "${contract.key}" must be one of the declared output icons: ${availableIconNames.join(", ") || "(none declared)"}.`,
+          );
+        }
         continue;
       }
 
@@ -249,6 +266,7 @@ export function generateBuiltInComponentFiles(
   options?: {
     scaleBindings?: Record<string, ScaleImport>;
     tokenBindings?: Record<string, TokenImport>;
+    iconBindings?: Record<string, string>;
     breakpoints?: readonly BreakpointBinding[];
     focusRingColor?: TokenImport;
   },
@@ -272,9 +290,15 @@ export function generateBuiltInComponentFiles(
         .filter(([key]) => key.startsWith(prefix))
         .map(([key, value]) => [key.slice(prefix.length), value]),
     );
+    const icons = Object.fromEntries(
+      Object.entries(options?.iconBindings ?? {})
+        .filter(([key]) => key.startsWith(prefix))
+        .map(([key, value]) => [key.slice(prefix.length), value]),
+    );
     return output.generate({
       scales,
       tokens,
+      icons,
       breakpoints: options?.breakpoints,
       focusRingColor: options?.focusRingColor,
     });
@@ -314,6 +338,7 @@ export function generateInternalModuleFiles(
   componentIds: readonly string[],
   target: RegistryOutputTarget = "vanilla-extract",
   breakpoints?: readonly BreakpointBinding[],
+  iconNames?: readonly string[],
 ): OutputFile[] {
   return resolveInternalModuleIds(componentIds).flatMap((id) => {
     if (BREAKPOINT_GATED_MODULES.has(id) && breakpoints === undefined) {
@@ -324,7 +349,7 @@ export function generateInternalModuleFiles(
     if (!output) {
       throw new Error(`Internal module "${id}" does not support the "${target}" output target.`);
     }
-    return output.generate(breakpoints);
+    return output.generate({ breakpoints, iconNames });
   });
 }
 
@@ -365,7 +390,7 @@ export function generateUseBreakpointFiles(
       `Internal module "use-breakpoint" does not support the "${target}" output target.`,
     );
   }
-  return output.generate(breakpoints);
+  return output.generate({ breakpoints });
 }
 
 export function getUseBreakpointDependencies(
