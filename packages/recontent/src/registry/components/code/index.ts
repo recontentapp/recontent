@@ -55,16 +55,19 @@ export const codeComponent = defineRegistryComponent<CodeComponentOptions>()({
     },
   },
   outputs: {
-    "vanilla-extract": vanillaExtractComponentOutput("code", "Code", (_scales, _breakpoints, tokens) =>
-      generateCodeSources({
-        color: tokens.color!,
-        backgroundColor: tokens.backgroundColor!,
-        border: tokens.border!,
-        borderRadius: tokens.borderRadius!,
-        typography: tokens.typography!,
-        horizontalSpacing: tokens.horizontalSpacing!,
-        verticalSpacing: tokens.verticalSpacing!,
-      }),
+    "vanilla-extract": vanillaExtractComponentOutput(
+      "code",
+      "Code",
+      (_scales, _breakpoints, tokens) =>
+        generateCodeSources({
+          color: tokens.color!,
+          backgroundColor: tokens.backgroundColor!,
+          border: tokens.border!,
+          borderRadius: tokens.borderRadius!,
+          typography: tokens.typography!,
+          horizontalSpacing: tokens.horizontalSpacing!,
+          verticalSpacing: tokens.verticalSpacing!,
+        }),
     ),
   },
 });

@@ -24,15 +24,27 @@ export const fieldComponent = defineRegistryComponent<FieldComponentOptions>()({
   name: "Field",
   internalDependencies: ["render-element", "icon-map"],
   schema: {
-    labelTypography: { kind: "token", type: "typography", description: "Typography applied to the label." },
+    labelTypography: {
+      kind: "token",
+      type: "typography",
+      description: "Typography applied to the label.",
+    },
     labelColor: { kind: "token", type: "color", description: "Text color of the label." },
     descriptionTypography: {
       kind: "token",
       type: "typography",
       description: "Typography applied to the description.",
     },
-    descriptionColor: { kind: "token", type: "color", description: "Text color of the description." },
-    errorTypography: { kind: "token", type: "typography", description: "Typography applied to the error text." },
+    descriptionColor: {
+      kind: "token",
+      type: "color",
+      description: "Text color of the description.",
+    },
+    errorTypography: {
+      kind: "token",
+      type: "typography",
+      description: "Typography applied to the error text.",
+    },
     errorColor: { kind: "token", type: "color", description: "Text color of the error text." },
     requiredIndicatorColor: {
       kind: "token",
@@ -44,8 +56,16 @@ export const fieldComponent = defineRegistryComponent<FieldComponentOptions>()({
       type: "typography",
       description: "Typography of the optional text next to the label.",
     },
-    optionalColor: { kind: "token", type: "color", description: "Text color of the optional text." },
-    gap: { kind: "token", type: "dimension", description: "Space between the label, control and helper text." },
+    optionalColor: {
+      kind: "token",
+      type: "color",
+      description: "Text color of the optional text.",
+    },
+    gap: {
+      kind: "token",
+      type: "dimension",
+      description: "Space between the label, control and helper text.",
+    },
     iconSize: { kind: "token", type: "dimension", description: "Size of the error icon." },
     errorIcon: { kind: "icon", description: "Icon rendered next to the error text." },
   },

@@ -58,14 +58,26 @@ export const stepsComponent = defineRegistryComponent<StepsComponentOptions>()({
         gap: { kind: "token", type: "dimension" },
       },
     },
-    labelTypography: { kind: "token", type: "typography", description: "Typography of a step's label." },
+    labelTypography: {
+      kind: "token",
+      type: "typography",
+      description: "Typography of a step's label.",
+    },
     descriptionTypography: {
       kind: "token",
       type: "typography",
       description: "Typography of a step's description.",
     },
-    descriptionColor: { kind: "token", type: "color", description: "Text color of a step's description." },
-    connectorThickness: { kind: "token", type: "dimension", description: "Thickness of the connector line." },
+    descriptionColor: {
+      kind: "token",
+      type: "color",
+      description: "Text color of a step's description.",
+    },
+    connectorThickness: {
+      kind: "token",
+      type: "dimension",
+      description: "Thickness of the connector line.",
+    },
     connectorSpacing: {
       kind: "token",
       type: "dimension",

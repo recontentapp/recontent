@@ -29,7 +29,11 @@ export const metadataListComponent = defineRegistryComponent<MetadataListCompone
     labelColor: { kind: "token", type: "color", description: "Text color of a label." },
     valueTypography: { kind: "token", type: "typography", description: "Typography of a value." },
     valueColor: { kind: "token", type: "color", description: "Text color of a value." },
-    pairGap: { kind: "token", type: "dimension", description: "Space between a label and its value." },
+    pairGap: {
+      kind: "token",
+      type: "dimension",
+      description: "Space between a label and its value.",
+    },
     iconSize: { kind: "token", type: "dimension", description: "Size of an item's icon." },
     iconColor: { kind: "token", type: "color", description: "Color of an item's icon." },
     divider: { kind: "token", type: "border", description: "Border applied between rows." },

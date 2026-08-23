@@ -14,9 +14,22 @@ const meta = {
     orientation: "vertical",
     defaultValue: "standard",
     options: [
-      { value: "standard", label: "Standard shipping", description: "Delivered in 5-7 business days" },
-      { value: "express", label: "Express shipping", description: "Delivered in 1-2 business days" },
-      { value: "pickup", label: "Store pickup", description: "Ready within 2 hours", disabled: true },
+      {
+        value: "standard",
+        label: "Standard shipping",
+        description: "Delivered in 5-7 business days",
+      },
+      {
+        value: "express",
+        label: "Express shipping",
+        description: "Delivered in 1-2 business days",
+      },
+      {
+        value: "pickup",
+        label: "Store pickup",
+        description: "Ready within 2 hours",
+        disabled: true,
+      },
     ],
   },
 } satisfies Meta<typeof RadioList>;

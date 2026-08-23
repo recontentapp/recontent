@@ -1,0 +1,11 @@
+pre-commit:
+  parallel: true
+  commands:
+    lint:
+      glob: "*.{js,jsx,mjs,cjs,ts,tsx}"
+      run: yarn oxlint --fix {staged_files}
+      stage_fixed: true
+    format:
+      glob: "*"
+      run: yarn oxfmt --no-error-on-unmatched-pattern {staged_files}
+      stage_fixed: true

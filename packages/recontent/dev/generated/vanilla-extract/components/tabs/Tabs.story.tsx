@@ -20,7 +20,12 @@ const meta = {
     fitted: false,
     items: [
       { value: "overview", label: "Overview", content: "Overview content goes here." },
-      { value: "activity", label: "Activity", icon: "info", content: "Activity content goes here." },
+      {
+        value: "activity",
+        label: "Activity",
+        icon: "info",
+        content: "Activity content goes here.",
+      },
       { value: "settings", label: "Settings", content: "Settings content goes here." },
     ],
   },

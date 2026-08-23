@@ -27,16 +27,28 @@ export const sliderComponent = defineRegistryComponent<SliderComponentOptions>()
   name: "Slider",
   internalDependencies: ["render-element"],
   schema: {
-    trackBackgroundColor: { kind: "token", type: "color", description: "Background color of the track." },
+    trackBackgroundColor: {
+      kind: "token",
+      type: "color",
+      description: "Background color of the track.",
+    },
     trackHeight: { kind: "token", type: "dimension", description: "Thickness of the track." },
-    borderRadius: { kind: "token", type: "dimension", description: "Corner radius of the track and indicator." },
+    borderRadius: {
+      kind: "token",
+      type: "dimension",
+      description: "Corner radius of the track and indicator.",
+    },
     indicatorBackgroundColor: {
       kind: "token",
       type: "color",
       description: "Background color of the filled portion of the track.",
     },
     thumbSize: { kind: "token", type: "dimension", description: "Diameter of the thumb." },
-    thumbBackgroundColor: { kind: "token", type: "color", description: "Background color of the thumb." },
+    thumbBackgroundColor: {
+      kind: "token",
+      type: "color",
+      description: "Background color of the thumb.",
+    },
     thumbBorder: { kind: "token", type: "border", description: "Border applied around the thumb." },
     thumbShadow: { kind: "token", type: "shadow", description: "Shadow applied to the thumb." },
     hoverThumbBackgroundColor: {
@@ -55,9 +67,21 @@ export const sliderComponent = defineRegistryComponent<SliderComponentOptions>()
       description: "Background color of the thumb when disabled.",
     },
     markColor: { kind: "token", type: "color", description: "Color of a step mark." },
-    markTypography: { kind: "token", type: "typography", description: "Typography of a mark's label." },
-    valueLabelTypography: { kind: "token", type: "typography", description: "Typography of the value label." },
-    valueLabelColor: { kind: "token", type: "color", description: "Text color of the value label." },
+    markTypography: {
+      kind: "token",
+      type: "typography",
+      description: "Typography of a mark's label.",
+    },
+    valueLabelTypography: {
+      kind: "token",
+      type: "typography",
+      description: "Typography of the value label.",
+    },
+    valueLabelColor: {
+      kind: "token",
+      type: "color",
+      description: "Text color of the value label.",
+    },
     valueLabelBackgroundColor: {
       kind: "token",
       type: "color",

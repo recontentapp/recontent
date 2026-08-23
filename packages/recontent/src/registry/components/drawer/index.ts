@@ -27,10 +27,22 @@ export const drawerComponent = defineRegistryComponent<DrawerComponentOptions>()
   name: "Drawer",
   internalDependencies: ["render-element", "icon-map"],
   schema: {
-    backdropColor: { kind: "token", type: "color", description: "Background color of the backdrop." },
-    backgroundColor: { kind: "token", type: "color", description: "Background color of the drawer." },
+    backdropColor: {
+      kind: "token",
+      type: "color",
+      description: "Background color of the backdrop.",
+    },
+    backgroundColor: {
+      kind: "token",
+      type: "color",
+      description: "Background color of the drawer.",
+    },
     border: { kind: "token", type: "border", description: "Border applied around the drawer." },
-    borderRadius: { kind: "token", type: "dimension", description: "Corner radius applied to the drawer." },
+    borderRadius: {
+      kind: "token",
+      type: "dimension",
+      description: "Corner radius applied to the drawer.",
+    },
     shadow: { kind: "token", type: "shadow", description: "Shadow applied to the drawer." },
     sizes: {
       kind: "variants",
@@ -39,13 +51,29 @@ export const drawerComponent = defineRegistryComponent<DrawerComponentOptions>()
         size: { kind: "token", type: "dimension" },
       },
     },
-    horizontalSpacing: { kind: "token", type: "dimension", description: "Left/right padding of the drawer." },
-    verticalSpacing: { kind: "token", type: "dimension", description: "Top/bottom padding of the drawer." },
-    gap: { kind: "token", type: "dimension", description: "Space between the header, body and footer." },
+    horizontalSpacing: {
+      kind: "token",
+      type: "dimension",
+      description: "Left/right padding of the drawer.",
+    },
+    verticalSpacing: {
+      kind: "token",
+      type: "dimension",
+      description: "Top/bottom padding of the drawer.",
+    },
+    gap: {
+      kind: "token",
+      type: "dimension",
+      description: "Space between the header, body and footer.",
+    },
     titleTypography: { kind: "token", type: "typography", description: "Typography of the title." },
     titleColor: { kind: "token", type: "color", description: "Text color of the title." },
     footerBorder: { kind: "token", type: "border", description: "Border above the footer." },
-    transition: { kind: "token", type: "transition", description: "Transition used to slide the drawer in/out." },
+    transition: {
+      kind: "token",
+      type: "transition",
+      description: "Transition used to slide the drawer in/out.",
+    },
     closeIcon: { kind: "icon", description: "Icon used by the close button." },
   },
   outputs: {

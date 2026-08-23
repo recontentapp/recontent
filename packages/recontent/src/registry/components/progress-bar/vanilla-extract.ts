@@ -34,8 +34,14 @@ export function generateProgressBarSources(bindings: {
   animationDuration: TokenImport;
   tokens: Record<string, TokenImport>;
 }): ComponentSourceFiles {
-  const { borderRadius, trackBackgroundColor, labelTypography, labelGap, animationDuration, tokens } =
-    bindings;
+  const {
+    borderRadius,
+    trackBackgroundColor,
+    labelTypography,
+    labelGap,
+    animationDuration,
+    tokens,
+  } = bindings;
   const statuses = groupVariantTokens(tokens, "statuses", STATUS_FIELDS);
   const sizes = groupVariantTokens(tokens, "sizes", SIZE_FIELDS);
 

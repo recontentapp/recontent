@@ -1,7 +1,13 @@
 import type { ComponentSourceFiles, TokenImport } from "../../types.js";
 import { focusRingBlock, groupVariantIcons, groupVariantTokens } from "../shared.js";
 
-const STATUS_FIELDS = ["color", "backgroundColor", "borderColor", "iconColor", "titleColor"] as const;
+const STATUS_FIELDS = [
+  "color",
+  "backgroundColor",
+  "borderColor",
+  "iconColor",
+  "titleColor",
+] as const;
 
 function typographyProps(ref: string): string {
   return [

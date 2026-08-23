@@ -31,18 +31,46 @@ export const tooltipComponent = defineRegistryComponent<TooltipComponentOptions>
   name: "Tooltip",
   internalDependencies: ["render-element"],
   schema: {
-    backgroundColor: { kind: "token", type: "color", description: "Background color of the tooltip." },
+    backgroundColor: {
+      kind: "token",
+      type: "color",
+      description: "Background color of the tooltip.",
+    },
     color: { kind: "token", type: "color", description: "Text color of the tooltip." },
-    typography: { kind: "token", type: "typography", description: "Typography applied to the tooltip." },
-    borderRadius: { kind: "token", type: "dimension", description: "Corner radius applied to the tooltip." },
+    typography: {
+      kind: "token",
+      type: "typography",
+      description: "Typography applied to the tooltip.",
+    },
+    borderRadius: {
+      kind: "token",
+      type: "dimension",
+      description: "Corner radius applied to the tooltip.",
+    },
     border: { kind: "token", type: "border", description: "Border applied around the tooltip." },
     shadow: { kind: "token", type: "shadow", description: "Shadow applied to the tooltip." },
-    horizontalSpacing: { kind: "token", type: "dimension", description: "Left/right padding of the tooltip." },
-    verticalSpacing: { kind: "token", type: "dimension", description: "Top/bottom padding of the tooltip." },
-    offset: { kind: "token", type: "dimension", description: "Gap between the trigger and the tooltip." },
+    horizontalSpacing: {
+      kind: "token",
+      type: "dimension",
+      description: "Left/right padding of the tooltip.",
+    },
+    verticalSpacing: {
+      kind: "token",
+      type: "dimension",
+      description: "Top/bottom padding of the tooltip.",
+    },
+    offset: {
+      kind: "token",
+      type: "dimension",
+      description: "Gap between the trigger and the tooltip.",
+    },
     maxWidth: { kind: "token", type: "dimension", description: "Maximum width of the tooltip." },
     arrowSize: { kind: "token", type: "dimension", description: "Size of the arrow." },
-    transition: { kind: "token", type: "transition", description: "Transition used to open/close the tooltip." },
+    transition: {
+      kind: "token",
+      type: "transition",
+      description: "Transition used to open/close the tooltip.",
+    },
   },
   outputs: {
     "vanilla-extract": vanillaExtractComponentOutput(

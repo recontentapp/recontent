@@ -23,10 +23,6 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   render: (args) => (
-    <Banner
-      {...args}
-      actions={<button type="button">Upgrade</button>}
-      onDismiss={() => {}}
-    />
+    <Banner {...args} actions={<button type="button">Upgrade</button>} onDismiss={() => {}} />
   ),
 };

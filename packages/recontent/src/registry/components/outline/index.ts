@@ -25,16 +25,32 @@ export const outlineComponent = defineRegistryComponent<OutlineComponentOptions>
     color: { kind: "token", type: "color", description: "Text color of an item." },
     hoverColor: { kind: "token", type: "color", description: "Text color of an item on hover." },
     activeColor: { kind: "token", type: "color", description: "Text color of the active item." },
-    activeTypography: { kind: "token", type: "typography", description: "Typography of the active item." },
+    activeTypography: {
+      kind: "token",
+      type: "typography",
+      description: "Typography of the active item.",
+    },
     border: { kind: "token", type: "border", description: "Border used for the vertical rail." },
     activeIndicatorColor: {
       kind: "token",
       type: "color",
       description: "Color of the indicator aligned with the active item.",
     },
-    indentSpacing: { kind: "token", type: "dimension", description: "Indent applied per depth level." },
-    itemHorizontalSpacing: { kind: "token", type: "dimension", description: "Left/right padding of an item." },
-    itemVerticalSpacing: { kind: "token", type: "dimension", description: "Top/bottom padding of an item." },
+    indentSpacing: {
+      kind: "token",
+      type: "dimension",
+      description: "Indent applied per depth level.",
+    },
+    itemHorizontalSpacing: {
+      kind: "token",
+      type: "dimension",
+      description: "Left/right padding of an item.",
+    },
+    itemVerticalSpacing: {
+      kind: "token",
+      type: "dimension",
+      description: "Top/bottom padding of an item.",
+    },
   },
   outputs: {
     "vanilla-extract": vanillaExtractComponentOutput(

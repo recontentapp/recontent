@@ -37,20 +37,40 @@ export const paginationComponent = defineRegistryComponent<PaginationComponentOp
   name: "Pagination",
   internalDependencies: ["render-element", "icon-map"],
   schema: {
-    borderRadius: { kind: "token", type: "dimension", description: "Corner radius of a page control." },
+    borderRadius: {
+      kind: "token",
+      type: "dimension",
+      description: "Corner radius of a page control.",
+    },
     border: { kind: "token", type: "border", description: "Border applied around a page control." },
     typography: { kind: "token", type: "typography", description: "Typography of a page control." },
     color: { kind: "token", type: "color", description: "Text color of a page control." },
-    backgroundColor: { kind: "token", type: "color", description: "Background color of a page control." },
-    hoverColor: { kind: "token", type: "color", description: "Text color of a page control on hover." },
+    backgroundColor: {
+      kind: "token",
+      type: "color",
+      description: "Background color of a page control.",
+    },
+    hoverColor: {
+      kind: "token",
+      type: "color",
+      description: "Text color of a page control on hover.",
+    },
     hoverBackgroundColor: {
       kind: "token",
       type: "color",
       description: "Background color of a page control on hover.",
     },
     activeColor: { kind: "token", type: "color", description: "Text color of the active page." },
-    activeBackgroundColor: { kind: "token", type: "color", description: "Background color of the active page." },
-    disabledColor: { kind: "token", type: "color", description: "Text color of a disabled control." },
+    activeBackgroundColor: {
+      kind: "token",
+      type: "color",
+      description: "Background color of the active page.",
+    },
+    disabledColor: {
+      kind: "token",
+      type: "color",
+      description: "Text color of a disabled control.",
+    },
     ellipsisColor: { kind: "token", type: "color", description: "Color of the ellipsis." },
     sizes: {
       kind: "variants",

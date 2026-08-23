@@ -26,9 +26,17 @@ export const treeListComponent = defineRegistryComponent<TreeListComponentOption
   name: "TreeList",
   internalDependencies: ["render-element", "icon-map"],
   schema: {
-    typography: { kind: "token", type: "typography", description: "Typography applied to a row's label." },
+    typography: {
+      kind: "token",
+      type: "typography",
+      description: "Typography applied to a row's label.",
+    },
     color: { kind: "token", type: "color", description: "Text color of a row." },
-    hoverBackgroundColor: { kind: "token", type: "color", description: "Background color of a row on hover." },
+    hoverBackgroundColor: {
+      kind: "token",
+      type: "color",
+      description: "Background color of a row on hover.",
+    },
     selectedBackgroundColor: {
       kind: "token",
       type: "color",
@@ -36,9 +44,21 @@ export const treeListComponent = defineRegistryComponent<TreeListComponentOption
     },
     selectedColor: { kind: "token", type: "color", description: "Text color of the selected row." },
     borderRadius: { kind: "token", type: "dimension", description: "Corner radius of a row." },
-    indentSpacing: { kind: "token", type: "dimension", description: "Indent applied per depth level." },
-    rowHorizontalSpacing: { kind: "token", type: "dimension", description: "Left/right padding of a row." },
-    rowVerticalSpacing: { kind: "token", type: "dimension", description: "Top/bottom padding of a row." },
+    indentSpacing: {
+      kind: "token",
+      type: "dimension",
+      description: "Indent applied per depth level.",
+    },
+    rowHorizontalSpacing: {
+      kind: "token",
+      type: "dimension",
+      description: "Left/right padding of a row.",
+    },
+    rowVerticalSpacing: {
+      kind: "token",
+      type: "dimension",
+      description: "Top/bottom padding of a row.",
+    },
     rowGap: {
       kind: "token",
       type: "dimension",
@@ -47,7 +67,10 @@ export const treeListComponent = defineRegistryComponent<TreeListComponentOption
     guideColor: { kind: "token", type: "color", description: "Color of the indent guide lines." },
     iconSize: { kind: "token", type: "dimension", description: "Size of a row's icon." },
     iconColor: { kind: "token", type: "color", description: "Color of a row's icon." },
-    expandIcon: { kind: "icon", description: "Icon rendered by a row's expand/collapse indicator." },
+    expandIcon: {
+      kind: "icon",
+      description: "Icon rendered by a row's expand/collapse indicator.",
+    },
   },
   outputs: {
     "vanilla-extract": vanillaExtractComponentOutput(

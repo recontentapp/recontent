@@ -21,8 +21,17 @@ export function generateMetadataListSources(bindings: {
   iconColor: TokenImport;
   divider: TokenImport;
 }): ComponentSourceFiles {
-  const { gaps, labelTypography, labelColor, valueTypography, valueColor, pairGap, iconSize, iconColor, divider } =
-    bindings;
+  const {
+    gaps,
+    labelTypography,
+    labelColor,
+    valueTypography,
+    valueColor,
+    pairGap,
+    iconSize,
+    iconColor,
+    divider,
+  } = bindings;
 
   return {
     styles: `import { style, styleVariants } from "@vanilla-extract/css";

@@ -22,7 +22,8 @@ const meta = {
         <Button>Confirm</Button>
       </>
     ),
-    children: "Are you sure you want to delete this project? All of its content will be permanently removed.",
+    children:
+      "Are you sure you want to delete this project? All of its content will be permanently removed.",
   },
 } satisfies Meta<typeof Dialog>;
 

@@ -18,7 +18,9 @@ const meta = {
     trigger: <button type="button">Open popover</button>,
     content: (
       <div style={{ padding: 12, maxWidth: 220 }}>
-        <p style={{ margin: 0 }}>This is some helpful contextual information shown next to the trigger.</p>
+        <p style={{ margin: 0 }}>
+          This is some helpful contextual information shown next to the trigger.
+        </p>
       </div>
     ),
     side: "bottom",

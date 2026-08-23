@@ -14,8 +14,8 @@ export type KeyboardShortcutComponentOptions = {
   gap: TokenBinding<"dimension">;
 };
 
-export const keyboardShortcutComponent = defineRegistryComponent<KeyboardShortcutComponentOptions>()(
-  {
+export const keyboardShortcutComponent =
+  defineRegistryComponent<KeyboardShortcutComponentOptions>()({
     id: "keyboard-shortcut",
     name: "KeyboardShortcut",
     internalDependencies: ["render-element"],
@@ -78,5 +78,4 @@ export const keyboardShortcutComponent = defineRegistryComponent<KeyboardShortcu
           }),
       ),
     },
-  },
-);
+  });

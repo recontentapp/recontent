@@ -32,14 +32,34 @@ export const popoverComponent = defineRegistryComponent<PopoverComponentOptions>
   name: "Popover",
   internalDependencies: ["render-element"],
   schema: {
-    backgroundColor: { kind: "token", type: "color", description: "Background color of the popover." },
+    backgroundColor: {
+      kind: "token",
+      type: "color",
+      description: "Background color of the popover.",
+    },
     color: { kind: "token", type: "color", description: "Text color of the popover." },
     border: { kind: "token", type: "border", description: "Border applied around the popover." },
-    borderRadius: { kind: "token", type: "dimension", description: "Corner radius applied to the popover." },
+    borderRadius: {
+      kind: "token",
+      type: "dimension",
+      description: "Corner radius applied to the popover.",
+    },
     shadow: { kind: "token", type: "shadow", description: "Shadow applied to the popover." },
-    horizontalSpacing: { kind: "token", type: "dimension", description: "Left/right padding of the popover." },
-    verticalSpacing: { kind: "token", type: "dimension", description: "Top/bottom padding of the popover." },
-    offset: { kind: "token", type: "dimension", description: "Gap between the trigger and the popover." },
+    horizontalSpacing: {
+      kind: "token",
+      type: "dimension",
+      description: "Left/right padding of the popover.",
+    },
+    verticalSpacing: {
+      kind: "token",
+      type: "dimension",
+      description: "Top/bottom padding of the popover.",
+    },
+    offset: {
+      kind: "token",
+      type: "dimension",
+      description: "Gap between the trigger and the popover.",
+    },
     maxWidth: { kind: "token", type: "dimension", description: "Maximum width of the popover." },
     backdropColor: {
       kind: "token",
@@ -47,7 +67,11 @@ export const popoverComponent = defineRegistryComponent<PopoverComponentOptions>
       description: "Background color of the backdrop, shown only when modal.",
     },
     arrowSize: { kind: "token", type: "dimension", description: "Size of the arrow." },
-    transition: { kind: "token", type: "transition", description: "Transition used to open/close the popover." },
+    transition: {
+      kind: "token",
+      type: "transition",
+      description: "Transition used to open/close the popover.",
+    },
   },
   outputs: {
     "vanilla-extract": vanillaExtractComponentOutput(
