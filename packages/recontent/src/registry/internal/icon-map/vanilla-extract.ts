@@ -15,7 +15,8 @@ export type IconRenderProps = SVGProps<SVGSVGElement>;
 
 // Owned by you: Recontent creates this file once and never overwrites it.
 // Swap these placeholders for your icon library (lucide-react, heroicons, ...).
-// Each key below comes from the \`icons\` list in recontent.config.ts.
+// Each key below comes from an icon name referenced by a built-in component
+// option (e.g. Accordion's \`indicatorIcon\`) in recontent.config.ts.
 export const icons = {
 ${entries}
 } satisfies Record<string, ComponentType<IconRenderProps>>;

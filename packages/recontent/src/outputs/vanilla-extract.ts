@@ -383,7 +383,6 @@ export const vanillaExtractOutputProcessor: OutputProcessor<VanillaExtractOutput
     const selection = normalizeBuiltInComponents(output.builtInComponents);
     const builtInComponents = selection.names;
     const resolvedComponentIds = resolveBuiltInComponentIds(builtInComponents);
-    const iconNames = output.icons ?? [];
 
     if (builtInComponents.length > 0) {
       const errors = validateBuiltInComponents(
@@ -391,7 +390,6 @@ export const vanillaExtractOutputProcessor: OutputProcessor<VanillaExtractOutput
         builtInComponents,
         "vanilla-extract",
         selection.options,
-        iconNames,
       );
       if (errors.length > 0) {
         throw new MissingDesignTokensError(errors);
@@ -497,7 +495,7 @@ export const vanillaExtractOutputProcessor: OutputProcessor<VanillaExtractOutput
           resolvedComponentIds,
           "vanilla-extract",
           resolvedBreakpoints,
-          iconNames,
+          iconBindings,
         ),
         {
           filename: "components.dependencies.json",

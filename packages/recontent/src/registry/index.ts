@@ -111,7 +111,6 @@ function validateVariants(
   contract: Extract<RegistryComponentDefinition["contracts"][number], { kind: "variants" }>,
   value: unknown,
   errors: string[],
-  availableIconNames: readonly string[],
 ): void {
   if (!value || typeof value !== "object" || Array.isArray(value)) {
     errors.push(
@@ -137,9 +136,9 @@ function validateVariants(
       if (binding === undefined) {
         errors.push(`Component "${componentId}" variant "${name}" requires config "${field.key}".`);
       } else if (field.kind === "icon") {
-        if (typeof binding !== "string" || !availableIconNames.includes(binding)) {
+        if (typeof binding !== "string" || binding.length === 0) {
           errors.push(
-            `Component "${componentId}" variant "${name}" config "${field.key}" must be one of the declared output icons: ${availableIconNames.join(", ") || "(none declared)"}.`,
+            `Component "${componentId}" variant "${name}" config "${field.key}" must be a non-empty icon name string.`,
           );
         }
       } else if (!isTokenBinding(binding, field.type as TokenType)) {
@@ -194,7 +193,6 @@ export function validateBuiltInComponents(
   names: readonly string[],
   target: RegistryOutputTarget = "vanilla-extract",
   options: BuiltInComponentOptions = {},
-  availableIconNames: readonly string[] = [],
 ): string[] {
   const errors: string[] = [];
 
@@ -226,14 +224,14 @@ export function validateBuiltInComponents(
         continue;
       }
       if (contract.kind === "variants") {
-        validateVariants(component.id, contract, binding, errors, availableIconNames);
+        validateVariants(component.id, contract, binding, errors);
         continue;
       }
 
       if (contract.kind === "icon") {
-        if (typeof binding !== "string" || !availableIconNames.includes(binding)) {
+        if (typeof binding !== "string" || binding.length === 0) {
           errors.push(
-            `Component "${component.id}" config "${contract.key}" must be one of the declared output icons: ${availableIconNames.join(", ") || "(none declared)"}.`,
+            `Component "${component.id}" config "${contract.key}" must be a non-empty icon name string.`,
           );
         }
         continue;
@@ -338,8 +336,9 @@ export function generateInternalModuleFiles(
   componentIds: readonly string[],
   target: RegistryOutputTarget = "vanilla-extract",
   breakpoints?: readonly BreakpointBinding[],
-  iconNames?: readonly string[],
+  iconBindings?: Record<string, string>,
 ): OutputFile[] {
+  const iconNames = [...new Set(Object.values(iconBindings ?? {}))];
   return resolveInternalModuleIds(componentIds).flatMap((id) => {
     if (BREAKPOINT_GATED_MODULES.has(id) && breakpoints === undefined) {
       return [];

@@ -432,7 +432,6 @@ export default defineConfig({
         xl: "1200px",
         xxl: "1800px",
       }),
-      icons: ["chevronDown", "close", "check", "search", "alert", "info"],
       builtInComponents: {
         Box: {
           spacing: system.spacing,

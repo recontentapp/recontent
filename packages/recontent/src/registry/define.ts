@@ -91,9 +91,9 @@ function schemaContracts(
       return {
         kind: "icon",
         key,
-        // Icon names have no built-in default (the project's `icons` list is
-        // user-defined), so unlike tokens they must be explicitly bound
-        // unless a schema entry opts out.
+        // Icon names have no built-in default (they're free-form strings
+        // chosen per project), so unlike tokens they must be explicitly
+        // bound unless a schema entry opts out.
         required: entry.required ?? true,
         description: entry.description,
       } satisfies IconContract;

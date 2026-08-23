@@ -1509,7 +1509,6 @@ describe("Collapsible built-in component", () => {
       output: {
         target: "vanilla-extract",
         outDir: "dist-test",
-        icons: ["chevronDown", "close", "check", "search", "alert", "info"],
         builtInComponents: {
           Collapsible: {
             borderRadius: system.radius.element,
@@ -1612,7 +1611,6 @@ describe("Accordion built-in component", () => {
       output: {
         target: "vanilla-extract",
         outDir: "dist-test",
-        icons: ["chevronDown", "close", "check", "search", "alert", "info"],
         builtInComponents: {
           Accordion: {
             border: system.border.default,
@@ -1905,7 +1903,6 @@ describe("DropdownButton built-in component", () => {
       output: {
         target: "vanilla-extract",
         outDir: "dist-test",
-        icons: ["chevronDown", "close", "check", "search", "alert", "info"],
         builtInComponents: {
           DropdownButton: {
             borderRadius: system.radius.element,
@@ -2409,7 +2406,6 @@ describe("Banner built-in component", () => {
       output: {
         target: "vanilla-extract",
         outDir: "dist-test",
-        icons: ["chevronDown", "close", "check", "search", "alert", "info"],
         builtInComponents: {
           Banner: {
             border: system.border.default,
@@ -2803,7 +2799,6 @@ describe("Checkbox built-in component", () => {
       output: {
         target: "vanilla-extract",
         outDir: "dist-test",
-        icons: ["chevronDown", "close", "check", "search", "alert", "info"],
         builtInComponents: {
           Checkbox: {
             sizes: {
@@ -3239,7 +3234,6 @@ describe("Select built-in component", () => {
       output: {
         target: "vanilla-extract",
         outDir: "dist-test",
-        icons: ["chevronDown", "close", "check", "search", "alert", "info"],
         builtInComponents: {
           Select: {
             borderRadius: system.radius.element,
@@ -3368,7 +3362,6 @@ describe("Autocomplete built-in component", () => {
       output: {
         target: "vanilla-extract",
         outDir: "dist-test",
-        icons: ["chevronDown", "close", "check", "search", "alert", "info"],
         builtInComponents: {
           Autocomplete: {
             borderRadius: system.radius.element,
@@ -3498,7 +3491,6 @@ describe("FileInput built-in component", () => {
       output: {
         target: "vanilla-extract",
         outDir: "dist-test",
-        icons: ["chevronDown", "close", "check", "search", "alert", "info"],
         builtInComponents: {
           FileInput: {
             border: system.border.default,
@@ -3709,7 +3701,6 @@ describe("TextInput built-in component", () => {
       output: {
         target: "vanilla-extract",
         outDir: "dist-test",
-        icons: ["chevronDown", "close", "check", "search", "alert", "info"],
         builtInComponents: {
           TextInput: {
             borderRadius: system.radius.element,
@@ -3813,7 +3804,6 @@ describe("NumberInput built-in component", () => {
       output: {
         target: "vanilla-extract",
         outDir: "dist-test",
-        icons: ["chevronDown", "close", "check", "search", "alert", "info"],
         builtInComponents: {
           NumberInput: {
             borderRadius: system.radius.element,
@@ -3937,7 +3927,6 @@ describe("DateInput built-in component", () => {
       output: {
         target: "vanilla-extract",
         outDir: "dist-test",
-        icons: ["chevronDown", "close", "check", "search", "alert", "info"],
         builtInComponents: {
           DateInput: {
             borderRadius: system.radius.element,
@@ -4180,7 +4169,6 @@ describe("Field built-in component", () => {
       output: {
         target: "vanilla-extract",
         outDir: "dist-test",
-        icons: ["chevronDown", "close", "check", "search", "alert", "info"],
         builtInComponents: {
           Field: {
             labelTypography: system.textStyles.body,
@@ -4274,7 +4262,6 @@ describe("Breadcrumb built-in component", () => {
       output: {
         target: "vanilla-extract",
         outDir: "dist-test",
-        icons: ["chevronDown", "close", "check", "search", "alert", "info"],
         builtInComponents: {
           Breadcrumb: {
             typography: system.textStyles.supporting,
@@ -4465,7 +4452,6 @@ describe("Pagination built-in component", () => {
       output: {
         target: "vanilla-extract",
         outDir: "dist-test",
-        icons: ["chevronDown", "close", "check", "search", "alert", "info"],
         builtInComponents: {
           Pagination: {
             borderRadius: system.radius.inner,
@@ -4684,7 +4670,6 @@ describe("Steps built-in component", () => {
       output: {
         target: "vanilla-extract",
         outDir: "dist-test",
-        icons: ["chevronDown", "close", "check", "search", "alert", "info"],
         builtInComponents: {
           Steps: {
             labelTypography: system.textStyles.body,
@@ -4803,7 +4788,6 @@ describe("Dialog built-in component", () => {
       output: {
         target: "vanilla-extract",
         outDir: "dist-test",
-        icons: ["chevronDown", "close", "check", "search", "alert", "info"],
         builtInComponents: {
           Dialog: {
             backdropColor: ref.color.black,
@@ -4929,7 +4913,6 @@ describe("Drawer built-in component", () => {
       output: {
         target: "vanilla-extract",
         outDir: "dist-test",
-        icons: ["chevronDown", "close", "check", "search", "alert", "info"],
         builtInComponents: {
           Drawer: {
             backdropColor: ref.color.black,
@@ -5261,7 +5244,6 @@ describe("Toast built-in component", () => {
       output: {
         target: "vanilla-extract",
         outDir: "dist-test",
-        icons: ["chevronDown", "close", "check", "search", "alert", "info"],
         builtInComponents: {
           Toast: {
             backgroundColor: ref.color.white,
@@ -5472,7 +5454,6 @@ describe("TreeList built-in component", () => {
       output: {
         target: "vanilla-extract",
         outDir: "dist-test",
-        icons: ["chevronDown", "close", "check", "search", "alert", "info"],
         builtInComponents: {
           TreeList: {
             typography: system.textStyles.body,
@@ -5788,7 +5769,6 @@ describe("focus ring", () => {
       output: {
         target: "vanilla-extract",
         outDir: "dist-test",
-        icons: ["chevronDown", "close", "check", "search", "alert", "info"],
         builtInComponents: {
           Button: buttonBuiltInComponents(ref, system),
           DropdownButton: dropdownButtonBuiltInComponents(ref, system),
@@ -5813,7 +5793,6 @@ describe("focus ring", () => {
       output: {
         target: "vanilla-extract",
         outDir: "dist-test",
-        icons: ["chevronDown", "close", "check", "search", "alert", "info"],
         builtInComponents: { DropdownButton: dropdownButtonBuiltInComponents(ref, system) },
         focusRingColor: ref.__veColor,
         fontFamily: ref.__veFontFamily,
@@ -5836,7 +5815,6 @@ describe("focus ring", () => {
       output: {
         target: "vanilla-extract",
         outDir: "dist-test",
-        icons: ["chevronDown", "close", "check", "search", "alert", "info"],
         builtInComponents: { TreeList: treeListBuiltInComponents(ref, system) },
         focusRingColor: ref.__veColor,
         fontFamily: ref.__veFontFamily,
