@@ -19,6 +19,7 @@ export const vars = createThemeContract({
       md: null,
       lg: null,
     },
+    fontFamily: null,
   },
   components: {
     box: {
@@ -67,6 +68,7 @@ export const themeClass = createTheme(vars, {
       md: "16px",
       lg: "24px",
     },
+    fontFamily: "-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif",
   },
   components: {
     box: {

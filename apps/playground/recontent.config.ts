@@ -25,6 +25,9 @@ const system = defineSystemTokens({
     md: "16px",
     lg: "24px",
   }),
+  fontFamily: tokens.fontFamily(
+    '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
+  ),
 });
 
 const components = defineComponentTokens({
@@ -38,6 +41,8 @@ export default defineConfig({
   output: {
     target: "vanilla-extract",
     outDir: "src/design-system",
+    fontFamily: system.fontFamily,
+    placeholderColor: system.color.primary500,
     builtInComponents: {
       Stack: {
         spacing: system.spacing,
