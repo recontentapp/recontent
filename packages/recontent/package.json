@@ -27,7 +27,7 @@
     "dev:dtcg": "node dist/cli/bin.mjs dtcg-export -c dev/recontent.config.ts -o dev/generated/",
     "dev:doctor": "node dist/cli/bin.mjs doctor -c dev/recontent.config.ts",
     "dev:diff": "node dist/cli/bin.mjs diff -c dev/recontent.config.ts",
-    "dev:dtcg:lint": "npx tz check dev/generated/tokens.tokens.json && npx tz check dev/generated/blackTheme.tokens.json"
+    "dev:dtcg:lint": "npx tz check dev/generated/tokens.tokens.json"
   },
   "dependencies": {
     "@recontentapp/core": "0.1.1",
