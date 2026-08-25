@@ -53,23 +53,37 @@ export const switchTrackSize = styleVariants({
 
 export const switchThumb = style({
   boxSizing: "border-box",
+  position: "absolute",
+  top: "50%",
+  left: "2px",
+  translate: "0 -50%",
   borderRadius: vars.ref.radius.full,
   backgroundColor: vars.ref.color.white[100],
   boxShadow: vars.system.elevationScale.sm,
-  transitionProperty: "translate",
+  transitionProperty: "left",
   transitionDuration: vars.system.transitionScale.fast.transitionDuration,
   transitionTimingFunction: vars.system.transitionScale.fast.transitionTimingFunction,
-  translate: "2px",
-  selectors: {
-    "[data-checked] > &": {
-      translate: "calc(100% - 2px)",
-    },
-  },
 });
 
 export const switchThumbSize = styleVariants({
-  "sm": { width: vars.ref.spacing[8], height: vars.ref.spacing[8] },
-  "md": { width: vars.ref.spacing[12], height: vars.ref.spacing[12] },
+  "sm": {
+    width: vars.ref.spacing[8],
+    height: vars.ref.spacing[8],
+    selectors: {
+      "[data-checked] > &": {
+        left: `calc(100% - ${vars.ref.spacing[8]} - 2px)`,
+      },
+    },
+  },
+  "md": {
+    width: vars.ref.spacing[12],
+    height: vars.ref.spacing[12],
+    selectors: {
+      "[data-checked] > &": {
+        left: `calc(100% - ${vars.ref.spacing[12]} - 2px)`,
+      },
+    },
+  },
 });
 
 export const switchLabel = style({

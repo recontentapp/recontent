@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { ActionBar } from "./ActionBar.gen";
+import { Button } from "../button/Button.gen";
 
 const meta = {
   title: "Components/ActionBar",
@@ -23,9 +24,10 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
   render: (args) => (
     <ActionBar {...args}>
-      <button type="button">Duplicate</button>
-      <button type="button">Archive</button>
-      <button type="button">Delete</button>
+      <Button type="button">Duplicate</Button>
+      <Button variant="secondary" type="button">
+        Archive
+      </Button>
     </ActionBar>
   ),
 };

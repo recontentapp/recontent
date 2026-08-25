@@ -3,6 +3,9 @@ import { focusRingBlock, groupVariantTokens } from "../shared.js";
 
 const SIZE_FIELDS = ["trackWidth", "trackHeight", "thumbSize"] as const;
 
+// Inset kept identical on both edges of the track, in both the checked and unchecked state.
+const THUMB_OFFSET = "2px";
+
 function typographyProps(ref: string): string {
   return [
     `fontFamily: ${ref}.fontFamily`,
@@ -18,7 +21,15 @@ function sizeTrackStyleBody(fields: Record<string, TokenImport>): string {
 }
 
 function sizeThumbStyleBody(fields: Record<string, TokenImport>): string {
-  return `{ width: ${fields.thumbSize!.reference}, height: ${fields.thumbSize!.reference} }`;
+  return `{
+    width: ${fields.thumbSize!.reference},
+    height: ${fields.thumbSize!.reference},
+    selectors: {
+      "[data-checked] > &": {
+        left: \`calc(100% - \${${fields.thumbSize!.reference}} - ${THUMB_OFFSET})\`,
+      },
+    },
+  }`;
 }
 
 export function generateSwitchSources(bindings: {
@@ -106,18 +117,16 @@ ${sizeNames.map((name) => `  ${JSON.stringify(name)}: ${sizeTrackStyleBody(sizes
 
 export const switchThumb = style({
   boxSizing: "border-box",
+  position: "absolute",
+  top: "50%",
+  left: ${JSON.stringify(THUMB_OFFSET)},
+  translate: "0 -50%",
   borderRadius: ${borderRadius.reference},
   backgroundColor: ${thumbBackgroundColor.reference},
   boxShadow: ${thumbShadow.reference},
-  transitionProperty: "translate",
+  transitionProperty: "left",
   transitionDuration: ${transition.reference}.transitionDuration,
   transitionTimingFunction: ${transition.reference}.transitionTimingFunction,
-  translate: "2px",
-  selectors: {
-    "[data-checked] > &": {
-      translate: "calc(100% - 2px)",
-    },
-  },
 });
 
 export const switchThumbSize = styleVariants({

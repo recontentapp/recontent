@@ -3387,21 +3387,14 @@ describe("Autocomplete built-in component", () => {
             itemColor: ref.color.black,
             itemTypography: system.textStyles.body,
             itemHoverBackgroundColor: ref.color.white,
-            itemSelectedBackgroundColor: ref.color.white,
-            itemSelectedColor: ref.color.black,
             itemDisabledColor: ref.color.black,
             itemHorizontalSpacing: system.spacing.md,
             itemVerticalSpacing: system.spacing.sm,
-            tagBackgroundColor: ref.color.white,
-            tagColor: ref.color.black,
-            tagBorderRadius: system.radius.inner,
-            tagTypography: system.textStyles.supporting,
-            tagGap: system.spacing.sm,
+            gap: system.spacing.sm,
             emptyStateColor: ref.color.black,
             emptyStateTypography: system.textStyles.supporting,
             emptyStateSpacing: system.spacing.md,
             highlightColor: ref.color.white,
-            selectedIcon: "check",
             clearIcon: "close",
             searchIcon: "search",
           },
@@ -3420,13 +3413,13 @@ describe("Autocomplete built-in component", () => {
     expect(filenames).toContain("components/autocomplete/Autocomplete.gen.tsx");
   });
 
-  test("Autocomplete.gen.tsx wraps Base UI's Combobox with chips, search icon and highlight", () => {
+  test("Autocomplete.gen.tsx wraps Base UI's Autocomplete with search icon and highlight", () => {
     const files = generate(autocompleteConfig());
     const component = files.find(
       (f) => f.filename === "components/autocomplete/Autocomplete.gen.tsx",
     )!;
     expect(component.content).toMatch(
-      /import { Combobox as BaseCombobox } from "@base-ui\/react\/combobox";/,
+      /import { Autocomplete as BaseAutocomplete } from "@base-ui\/react\/autocomplete";/,
     );
     expect(component.content).toMatch(/const SearchIcon = icons\["search"\];/);
     expect(component.content).toMatch(/function highlightMatch\(/);

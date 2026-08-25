@@ -4,11 +4,6 @@ import { Autocomplete } from "./Autocomplete.gen";
 const meta = {
   title: "Components/Autocomplete",
   component: Autocomplete,
-  argTypes: {
-    multiple: {
-      control: "boolean",
-    },
-  },
   args: {
     options: [
       { value: "en", label: "English" },

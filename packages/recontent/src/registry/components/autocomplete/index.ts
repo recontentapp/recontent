@@ -29,22 +29,15 @@ export type AutocompleteComponentOptions = {
   itemColor: TokenBinding<"color">;
   itemTypography: TokenBinding<"typography">;
   itemHoverBackgroundColor: TokenBinding<"color">;
-  itemSelectedBackgroundColor: TokenBinding<"color">;
-  itemSelectedColor: TokenBinding<"color">;
   itemDisabledColor: TokenBinding<"color">;
   itemHorizontalSpacing: TokenBinding<"dimension">;
   itemVerticalSpacing: TokenBinding<"dimension">;
   // Autocomplete-specific.
-  tagBackgroundColor: TokenBinding<"color">;
-  tagColor: TokenBinding<"color">;
-  tagBorderRadius: TokenBinding<"dimension">;
-  tagTypography: TokenBinding<"typography">;
-  tagGap: TokenBinding<"dimension">;
+  gap: TokenBinding<"dimension">;
   emptyStateColor: TokenBinding<"color">;
   emptyStateTypography: TokenBinding<"typography">;
   emptyStateSpacing: TokenBinding<"dimension">;
   highlightColor: TokenBinding<"color">;
-  selectedIcon: IconName;
   clearIcon: IconName;
   searchIcon: IconName;
 };
@@ -145,16 +138,6 @@ export const autocompleteComponent = defineRegistryComponent<AutocompleteCompone
       type: "color",
       description: "Background color of a highlighted item.",
     },
-    itemSelectedBackgroundColor: {
-      kind: "token",
-      type: "color",
-      description: "Background color of the selected item.",
-    },
-    itemSelectedColor: {
-      kind: "token",
-      type: "color",
-      description: "Text color of the selected item.",
-    },
     itemDisabledColor: {
       kind: "token",
       type: "color",
@@ -170,19 +153,11 @@ export const autocompleteComponent = defineRegistryComponent<AutocompleteCompone
       type: "dimension",
       description: "Top/bottom padding of an item.",
     },
-    tagBackgroundColor: {
+    gap: {
       kind: "token",
-      type: "color",
-      description: "Background color of a multi-value chip.",
+      type: "dimension",
+      description: "Space between the search icon, input and clear button in the trigger.",
     },
-    tagColor: { kind: "token", type: "color", description: "Text color of a multi-value chip." },
-    tagBorderRadius: { kind: "token", type: "dimension", description: "Corner radius of a chip." },
-    tagTypography: {
-      kind: "token",
-      type: "typography",
-      description: "Typography applied to a chip.",
-    },
-    tagGap: { kind: "token", type: "dimension", description: "Space between chips." },
     emptyStateColor: {
       kind: "token",
       type: "color",
@@ -203,7 +178,6 @@ export const autocompleteComponent = defineRegistryComponent<AutocompleteCompone
       type: "color",
       description: "Background color behind a matched substring in an option's label.",
     },
-    selectedIcon: { kind: "icon", description: "Icon marking the selected item." },
     clearIcon: { kind: "icon", description: "Icon used by the clear button." },
     searchIcon: { kind: "icon", description: "Icon used by the search input." },
   },
@@ -237,21 +211,14 @@ export const autocompleteComponent = defineRegistryComponent<AutocompleteCompone
           itemColor: tokens.itemColor!,
           itemTypography: tokens.itemTypography!,
           itemHoverBackgroundColor: tokens.itemHoverBackgroundColor!,
-          itemSelectedBackgroundColor: tokens.itemSelectedBackgroundColor!,
-          itemSelectedColor: tokens.itemSelectedColor!,
           itemDisabledColor: tokens.itemDisabledColor!,
           itemHorizontalSpacing: tokens.itemHorizontalSpacing!,
           itemVerticalSpacing: tokens.itemVerticalSpacing!,
-          tagBackgroundColor: tokens.tagBackgroundColor!,
-          tagColor: tokens.tagColor!,
-          tagBorderRadius: tokens.tagBorderRadius!,
-          tagTypography: tokens.tagTypography!,
-          tagGap: tokens.tagGap!,
+          gap: tokens.gap!,
           emptyStateColor: tokens.emptyStateColor!,
           emptyStateTypography: tokens.emptyStateTypography!,
           emptyStateSpacing: tokens.emptyStateSpacing!,
           highlightColor: tokens.highlightColor!,
-          selectedIcon: icons.selectedIcon!,
           clearIcon: icons.clearIcon!,
           searchIcon: icons.searchIcon!,
         }),

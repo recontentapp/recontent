@@ -36,22 +36,15 @@ export function generateAutocompleteSources(bindings: {
   itemColor: TokenImport;
   itemTypography: TokenImport;
   itemHoverBackgroundColor: TokenImport;
-  itemSelectedBackgroundColor: TokenImport;
-  itemSelectedColor: TokenImport;
   itemDisabledColor: TokenImport;
   itemHorizontalSpacing: TokenImport;
   itemVerticalSpacing: TokenImport;
-  tagBackgroundColor: TokenImport;
-  tagColor: TokenImport;
-  tagBorderRadius: TokenImport;
-  tagTypography: TokenImport;
-  tagGap: TokenImport;
+  gap: TokenImport;
   emptyStateColor: TokenImport;
   emptyStateTypography: TokenImport;
   emptyStateSpacing: TokenImport;
   highlightColor: TokenImport;
   /** Build-time config, baked directly into the generated component. */
-  selectedIcon: string;
   clearIcon: string;
   searchIcon: string;
 }): ComponentSourceFiles {
@@ -80,21 +73,14 @@ export function generateAutocompleteSources(bindings: {
     itemColor,
     itemTypography,
     itemHoverBackgroundColor,
-    itemSelectedBackgroundColor,
-    itemSelectedColor,
     itemDisabledColor,
     itemHorizontalSpacing,
     itemVerticalSpacing,
-    tagBackgroundColor,
-    tagColor,
-    tagBorderRadius,
-    tagTypography,
-    tagGap,
+    gap,
     emptyStateColor,
     emptyStateTypography,
     emptyStateSpacing,
     highlightColor,
-    selectedIcon,
     clearIcon,
     searchIcon,
   } = bindings;
@@ -105,11 +91,10 @@ import { vars } from "../../tokens.css";
 
 export const autocompleteTrigger = style({
   display: "flex",
-  flexWrap: "wrap",
   alignItems: "center",
   boxSizing: "border-box",
   width: "100%",
-  gap: ${tagGap.reference},
+  gap: ${gap.reference},
   color: ${color.reference},
   border: ${border.reference},
   borderRadius: ${borderRadius.reference},
@@ -139,7 +124,7 @@ export const autocompleteTrigger = style({
 
 export const autocompleteInput = style({
   flex: 1,
-  minWidth: "4rem",
+  minWidth: 0,
   border: "none",
   outline: "none",
   background: "none",
@@ -148,36 +133,6 @@ export const autocompleteInput = style({
   "::placeholder": {
     color: ${placeholderColor.reference},
   },
-});
-
-export const autocompleteChips = style({
-  display: "flex",
-  flexWrap: "wrap",
-  alignItems: "center",
-  gap: ${tagGap.reference},
-});
-
-export const autocompleteChip = style({
-  display: "inline-flex",
-  alignItems: "center",
-  boxSizing: "border-box",
-  gap: ${tagGap.reference},
-  color: ${tagColor.reference},
-  backgroundColor: ${tagBackgroundColor.reference},
-  borderRadius: ${tagBorderRadius.reference},
-  paddingLeft: ${itemHorizontalSpacing.reference},
-  paddingRight: ${itemHorizontalSpacing.reference},
-  ${typographyProps(tagTypography.reference)},
-});
-
-export const autocompleteChipRemove = style({
-  display: "inline-flex",
-  alignItems: "center",
-  cursor: "pointer",
-  border: "none",
-  background: "none",
-  padding: 0,
-  color: "inherit",
 });
 
 export const autocompleteTriggerIcons = style({
@@ -246,10 +201,6 @@ export const autocompleteItem = style({
     "&[data-highlighted]": {
       backgroundColor: ${itemHoverBackgroundColor.reference},
     },
-    "&[data-selected]": {
-      backgroundColor: ${itemSelectedBackgroundColor.reference},
-      color: ${itemSelectedColor.reference},
-    },
     "&[data-disabled]": {
       color: ${itemDisabledColor.reference},
       cursor: "not-allowed",
@@ -276,11 +227,8 @@ export const autocompleteEmpty = style({
 });
 `,
     component: `import { useRef, type ReactNode } from "react";
-import { Combobox as BaseCombobox } from "@base-ui/react/combobox";
+import { Autocomplete as BaseAutocomplete } from "@base-ui/react/autocomplete";
 import {
-  autocompleteChip,
-  autocompleteChipRemove,
-  autocompleteChips,
   autocompleteClear,
   autocompleteEmpty,
   autocompleteHighlight,
@@ -296,11 +244,10 @@ import {
 import type { CommonComponentProps, FieldableInputProps, RenderProp } from "../../renderElement.gen";
 import { icons, type IconType } from "../../iconMap";
 
-const SelectedIcon = icons[${JSON.stringify(selectedIcon)}];
 const ClearIcon = icons[${JSON.stringify(clearIcon)}];
 const SearchIcon = icons[${JSON.stringify(searchIcon)}];
 
-export interface SelectOption<Value extends string> {
+export interface AutocompleteOption<Value extends string> {
   value: Value;
   label: ReactNode;
   icon?: IconType;
@@ -309,15 +256,12 @@ export interface SelectOption<Value extends string> {
 
 export interface AutocompleteProps<Value extends string>
   extends CommonComponentProps, FieldableInputProps {
-  options: SelectOption<Value>[];
-  value?: Value | Value[];
-  defaultValue?: Value | Value[];
-  onValueChange?: (value: Value | Value[]) => void;
-  multiple?: boolean;
+  options: AutocompleteOption<Value>[];
+  value?: string;
+  defaultValue?: string;
+  onValueChange?: (value: string) => void;
+  onItemClick?: (value: Value, event: React.MouseEvent<HTMLElement>) => void;
   placeholder?: ReactNode;
-  inputValue?: string;
-  onInputValueChange?: (query: string) => void;
-  loading?: boolean;
   emptyState?: ReactNode;
   open?: boolean;
   defaultOpen?: boolean;
@@ -343,11 +287,8 @@ export function Autocomplete<Value extends string>({
   value,
   defaultValue,
   onValueChange,
-  multiple = false,
+  onItemClick,
   placeholder,
-  inputValue,
-  onInputValueChange,
-  loading = false,
   emptyState,
   open,
   defaultOpen,
@@ -364,26 +305,17 @@ export function Autocomplete<Value extends string>({
 }: AutocompleteProps<Value>) {
   const classes = [autocompleteTrigger, className].filter(Boolean).join(" ");
   const triggerRef = useRef<HTMLDivElement>(null);
-  const query = inputValue ?? "";
-  const filteredOptions = query
-    ? options.filter((option) =>
-        (typeof option.label === "string" ? option.label : option.value)
-          .toLowerCase()
-          .includes(query.toLowerCase()),
-      )
-    : options;
+  const query = value ?? "";
 
   return (
-    <BaseCombobox.Root
-      value={value ?? null}
+    <BaseAutocomplete.Root
+      items={options}
+      value={value}
       defaultValue={defaultValue}
-      onValueChange={(next) => onValueChange?.(next as Value | Value[])}
-      multiple={multiple}
-      inputValue={inputValue}
-      onInputValueChange={onInputValueChange}
+      onValueChange={(next) => onValueChange?.(next)}
       name={name}
       disabled={disabled}
-      aria-required={required || undefined}
+      required={required}
       open={open}
       defaultOpen={defaultOpen}
       onOpenChange={onOpenChange}
@@ -392,25 +324,9 @@ export function Autocomplete<Value extends string>({
         ref={triggerRef}
         className={classes}
         data-slot="autocomplete-trigger"
-        data-loading={loading || undefined}
       >
-        {multiple && (
-          <BaseCombobox.Chips className={autocompleteChips}>
-            {(Array.isArray(value) ? value : []).map((chipValue) => {
-              const option = options.find((o) => o.value === chipValue);
-              return (
-                <BaseCombobox.Chip key={chipValue} className={autocompleteChip}>
-                  {option?.label ?? chipValue}
-                  <BaseCombobox.ChipRemove className={autocompleteChipRemove} aria-label="Remove">
-                    <ClearIcon className={autocompleteIcon} aria-hidden="true" />
-                  </BaseCombobox.ChipRemove>
-                </BaseCombobox.Chip>
-              );
-            })}
-          </BaseCombobox.Chips>
-        )}
         <SearchIcon className={autocompleteIcon} aria-hidden="true" />
-        <BaseCombobox.Input
+        <BaseAutocomplete.Input
           {...props}
           placeholder={typeof placeholder === "string" ? placeholder : undefined}
           onFocus={onFocus}
@@ -420,44 +336,42 @@ export function Autocomplete<Value extends string>({
           className={autocompleteInput}
         />
         <span className={autocompleteTriggerIcons}>
-          {value !== undefined && (Array.isArray(value) ? value.length > 0 : value !== null) && (
-            <BaseCombobox.Clear className={autocompleteClear} aria-label="Clear">
+          {value !== undefined && value !== "" && (
+            <BaseAutocomplete.Clear className={autocompleteClear} aria-label="Clear">
               <ClearIcon className={autocompleteIcon} aria-hidden="true" />
-            </BaseCombobox.Clear>
+            </BaseAutocomplete.Clear>
           )}
         </span>
       </div>
-      <BaseCombobox.Portal>
-        <BaseCombobox.Positioner className={autocompletePositioner} anchor={triggerRef}>
-          <BaseCombobox.Popup className={autocompletePopup} data-slot="autocomplete-popup">
-            <BaseCombobox.Empty className={autocompleteEmpty}>
+      <BaseAutocomplete.Portal>
+        <BaseAutocomplete.Positioner className={autocompletePositioner} anchor={triggerRef}>
+          <BaseAutocomplete.Popup className={autocompletePopup} data-slot="autocomplete-popup">
+            <BaseAutocomplete.Empty className={autocompleteEmpty}>
               {emptyState ?? "No results found."}
-            </BaseCombobox.Empty>
-            <BaseCombobox.List>
-              {filteredOptions.map((option) => {
+            </BaseAutocomplete.Empty>
+            <BaseAutocomplete.List>
+              {(option: AutocompleteOption<Value>) => {
                 const OptionIcon = option.icon ? icons[option.icon] : undefined;
                 return (
-                  <BaseCombobox.Item
+                  <BaseAutocomplete.Item
                     key={option.value}
                     value={option.value}
                     disabled={option.disabled}
+                    onClick={(event) => onItemClick?.(option.value, event)}
                     className={autocompleteItem}
                   >
                     <span className={autocompleteItemStart}>
                       {OptionIcon && <OptionIcon className={autocompleteIcon} aria-hidden="true" />}
                       <span>{highlightMatch(option.label, query)}</span>
                     </span>
-                    <BaseCombobox.ItemIndicator>
-                      <SelectedIcon className={autocompleteIcon} aria-hidden="true" />
-                    </BaseCombobox.ItemIndicator>
-                  </BaseCombobox.Item>
+                  </BaseAutocomplete.Item>
                 );
-              })}
-            </BaseCombobox.List>
-          </BaseCombobox.Popup>
-        </BaseCombobox.Positioner>
-      </BaseCombobox.Portal>
-    </BaseCombobox.Root>
+              }}
+            </BaseAutocomplete.List>
+          </BaseAutocomplete.Popup>
+        </BaseAutocomplete.Positioner>
+      </BaseAutocomplete.Portal>
+    </BaseAutocomplete.Root>
   );
 }
 `,

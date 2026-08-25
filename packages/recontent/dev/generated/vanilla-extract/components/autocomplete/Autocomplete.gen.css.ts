@@ -3,7 +3,6 @@ import { vars } from "../../tokens.css";
 
 export const autocompleteTrigger = style({
   display: "flex",
-  flexWrap: "wrap",
   alignItems: "center",
   boxSizing: "border-box",
   width: "100%",
@@ -40,7 +39,7 @@ export const autocompleteTrigger = style({
 
 export const autocompleteInput = style({
   flex: 1,
-  minWidth: "4rem",
+  minWidth: 0,
   border: "none",
   outline: "none",
   background: "none",
@@ -53,40 +52,6 @@ export const autocompleteInput = style({
   "::placeholder": {
     color: vars.system.colors.textSecondary,
   },
-});
-
-export const autocompleteChips = style({
-  display: "flex",
-  flexWrap: "wrap",
-  alignItems: "center",
-  gap: vars.ref.spacing[2],
-});
-
-export const autocompleteChip = style({
-  display: "inline-flex",
-  alignItems: "center",
-  boxSizing: "border-box",
-  gap: vars.ref.spacing[2],
-  color: vars.system.colors.textPrimary,
-  backgroundColor: vars.system.colors.backgroundMuted,
-  borderRadius: vars.ref.radius.inner,
-  paddingLeft: vars.ref.spacing[8],
-  paddingRight: vars.ref.spacing[8],
-  fontFamily: vars.system.textScale["tiny-caption"].fontFamily,
-      fontSize: vars.system.textScale["tiny-caption"].fontSize,
-      fontWeight: vars.system.textScale["tiny-caption"].fontWeight,
-      letterSpacing: vars.system.textScale["tiny-caption"].letterSpacing,
-      lineHeight: vars.system.textScale["tiny-caption"].lineHeight,
-});
-
-export const autocompleteChipRemove = style({
-  display: "inline-flex",
-  alignItems: "center",
-  cursor: "pointer",
-  border: "none",
-  background: "none",
-  padding: 0,
-  color: "inherit",
 });
 
 export const autocompleteTriggerIcons = style({
@@ -158,10 +123,6 @@ export const autocompleteItem = style({
   selectors: {
     "&[data-highlighted]": {
       backgroundColor: vars.system.colors.backgroundBody,
-    },
-    "&[data-selected]": {
-      backgroundColor: vars.system.colors.backgroundMuted,
-      color: vars.system.colors.accent,
     },
     "&[data-disabled]": {
       color: vars.system.colors.textDisabled,
