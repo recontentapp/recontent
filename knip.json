@@ -8,7 +8,7 @@
       "entry": ["dev/recontent.config.ts", "dev/.storybook/preview.tsx"],
       "project": ["src/**/*.{ts,tsx}", "dev/**/*.{ts,tsx}"],
       "ignore": ["dev/generated/**"],
-      "ignoreDependencies": ["@base-ui/react"],
+      "ignoreDependencies": ["@base-ui/react", "@stylexjs/stylex"],
       "storybook": {
         "config": ["dev/.storybook/main.ts"]
       }

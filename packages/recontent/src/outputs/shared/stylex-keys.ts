@@ -3,7 +3,6 @@ import {
   isExpandedComposite,
   pathKey,
   type Config,
-  type TokenEntry,
   type TokenTypeMap,
 } from "@recontentapp/core";
 import { entryPath } from "./ts-source.js";
@@ -22,15 +21,11 @@ function capitalizeSegment(segment: string): string {
  * `defineVars` rejects nested objects: `["ref", "color", "gray900"]` becomes
  * `refColorGray900`; `["ref", "spacing", "0-5"]` becomes `refSpacing05`.
  */
-export function flatKey(path: readonly string[]): string {
+function flatKey(path: readonly string[]): string {
   const [first, ...rest] = path;
   const firstSanitized = sanitizeSegment(first ?? "");
   const firstKey = firstSanitized.charAt(0).toLowerCase() + firstSanitized.slice(1);
   return firstKey + rest.map(capitalizeSegment).join("");
-}
-
-export function entryFlatKey(entry: Pick<TokenEntry, "path" | "layer">): string {
-  return flatKey([entry.layer, ...entryPath(entry)]);
 }
 
 /**
