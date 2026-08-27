@@ -8,15 +8,20 @@
       "entry": ["dev/recontent.config.ts", "dev/.storybook/preview.tsx"],
       "project": ["src/**/*.{ts,tsx}", "dev/**/*.{ts,tsx}"],
       "ignore": ["dev/generated/**"],
-      "ignoreDependencies": ["@base-ui/react"],
+      "ignoreDependencies": ["@base-ui/react", "@stylexjs/stylex"],
       "storybook": {
         "config": ["dev/.storybook/main.ts"]
       }
     },
-    "apps/playground": {
+    "apps/vanilla-extract-playground": {
       "entry": ["recontent.config.ts"],
       "project": ["src/**/*.{ts,tsx}", "*.ts"],
       "ignore": ["src/design-system/**"]
+    },
+    "apps/stylex-playground": {
+      "entry": ["recontent.config.ts"],
+      "project": ["src/**/*.{ts,tsx}", "*.ts"],
+      "ignore": ["src/generated/**"]
     }
   }
 }

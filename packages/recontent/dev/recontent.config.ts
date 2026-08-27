@@ -1504,5 +1504,11 @@ export default defineConfig({
         },
       },
     },
+    {
+      target: "stylex",
+      outDir: "dev/generated/stylex",
+      fontFamily: system.typography.bodyFontFamily,
+      placeholderColor: system.colors.textSecondary,
+    },
   ],
 });

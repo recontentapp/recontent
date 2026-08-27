@@ -4,10 +4,12 @@ import { cssOutputProcessor } from "./css.js";
 import { vanillaExtractOutputProcessor } from "./vanilla-extract.js";
 import { typescriptOutputProcessor } from "./typescript.js";
 import { typescriptNativeOutputProcessor } from "./typescript-native.js";
+import { stylexOutputProcessor } from "./stylex.js";
 
 export type {
   Output,
   OutputFile,
+  StylexOutput,
   TypeScriptNativeOutput,
   TypeScriptOutput,
   VanillaExtractOutput,
@@ -23,6 +25,7 @@ const outputProcessors: Record<OutputTarget, OutputProcessor> = {
   "vanilla-extract": vanillaExtractOutputProcessor,
   typescript: typescriptOutputProcessor,
   "typescript-native": typescriptNativeOutputProcessor,
+  stylex: stylexOutputProcessor,
 };
 
 function getOutputProcessor(target: OutputTarget): OutputProcessor {

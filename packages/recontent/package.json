@@ -14,10 +14,11 @@
     "./outputs/css": "./dist/outputs/css.mjs",
     "./outputs/vanilla-extract": "./dist/outputs/vanilla-extract.mjs",
     "./outputs/typescript": "./dist/outputs/typescript.mjs",
-    "./outputs/typescript-native": "./dist/outputs/typescript-native.mjs"
+    "./outputs/typescript-native": "./dist/outputs/typescript-native.mjs",
+    "./outputs/stylex": "./dist/outputs/stylex.mjs"
   },
   "scripts": {
-    "build": "tsdown src/index.ts src/generators/dtcg.ts src/generators/html.ts src/outputs/css.ts src/outputs/vanilla-extract.ts src/outputs/typescript.ts src/outputs/typescript-native.ts src/cli/bin.ts",
+    "build": "tsdown src/index.ts src/generators/dtcg.ts src/generators/html.ts src/outputs/css.ts src/outputs/vanilla-extract.ts src/outputs/typescript.ts src/outputs/typescript-native.ts src/outputs/stylex.ts src/cli/bin.ts",
     "typecheck": "tsc --noEmit",
     "test": "NODE_OPTIONS=--experimental-vm-modules jest && yarn test:dtcg",
     "test:dtcg": "yarn dev:build && yarn dev:dtcg && yarn dev:dtcg:lint",
@@ -36,10 +37,13 @@
     "typescript": "^6.0.3"
   },
   "devDependencies": {
+    "@babel/core": "8.0.1",
     "@base-ui/react": "1.0.0",
     "@jest/globals": "30.2.0",
     "@storybook/addon-a11y": "10.5.2",
     "@storybook/react-vite": "10.5.2",
+    "@stylexjs/babel-plugin": "0.19.0",
+    "@stylexjs/stylex": "0.19.0",
     "@swc/core": "1.13.5",
     "@swc/jest": "0.2.39",
     "@terrazzo/cli": "2.5.0",
