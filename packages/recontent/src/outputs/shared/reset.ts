@@ -3,57 +3,110 @@ export interface CssResetOptions {
   placeholderColor: string;
 }
 
-export function generateCssResetSource(options: CssResetOptions): string {
+type ResetDeclaration = {
+  property: string;
+  value: string;
+  /** Raw JS (a numeric literal or a token-binding reference) — not JS-string-quoted. */
+  raw?: true;
+};
+
+type ResetRule = {
+  selector: string;
+  media?: string;
+  declarations: ResetDeclaration[];
+};
+
+/**
+ * Single source of truth for the reset rules, shared by the vanilla-extract
+ * (`globalStyle`) and StyleX (plain CSS) emitters so they can't drift.
+ * `fontFamily`/`placeholderColor` are embedded verbatim: a raw JS expression
+ * for vanilla-extract's `globalStyle` object, a `var(...)` reference for
+ * plain CSS — in both cases as `raw`, since they're never JS-string-quoted.
+ */
+function resetRules(options: CssResetOptions): ResetRule[] {
   const { fontFamily, placeholderColor } = options;
-
-  return `import { globalStyle } from "@vanilla-extract/css";
-import { vars } from "./tokens.css";
-
-globalStyle("*, *::before, *::after", {
-  boxSizing: "border-box",
-});
-
-globalStyle("*:not(dialog)", {
-  margin: 0,
-});
-
-globalStyle("html", {
-  "@media": {
-    "(prefers-reduced-motion: no-preference)": {
-      interpolateSize: "allow-keywords",
+  return [
+    {
+      selector: "*, *::before, *::after",
+      declarations: [{ property: "boxSizing", value: "border-box" }],
     },
-  },
-});
+    { selector: "*:not(dialog)", declarations: [{ property: "margin", value: "0", raw: true }] },
+    {
+      selector: "html",
+      media: "(prefers-reduced-motion: no-preference)",
+      declarations: [{ property: "interpolateSize", value: "allow-keywords" }],
+    },
+    {
+      selector: "body",
+      declarations: [
+        { property: "lineHeight", value: "1.5", raw: true },
+        { property: "WebkitFontSmoothing", value: "antialiased" },
+        { property: "fontFamily", value: fontFamily, raw: true },
+      ],
+    },
+    {
+      selector: "img, picture, video, canvas, svg",
+      declarations: [
+        { property: "display", value: "block" },
+        { property: "maxWidth", value: "100%" },
+      ],
+    },
+    {
+      selector: "input, button, textarea, select",
+      declarations: [{ property: "font", value: "inherit" }],
+    },
+    {
+      selector: "p, h1, h2, h3, h4, h5, h6",
+      declarations: [{ property: "overflowWrap", value: "break-word" }],
+    },
+    { selector: "p", declarations: [{ property: "textWrap", value: "pretty" }] },
+    {
+      selector: "h1, h2, h3, h4, h5, h6",
+      declarations: [{ property: "textWrap", value: "balance" }],
+    },
+    {
+      selector: "::placeholder",
+      declarations: [{ property: "color", value: placeholderColor, raw: true }],
+    },
+  ];
+}
 
-globalStyle("body", {
-  lineHeight: 1.5,
-  WebkitFontSmoothing: "antialiased",
-  fontFamily: ${fontFamily},
-});
+export function generateCssResetSource(options: CssResetOptions): string {
+  const lines = [
+    'import { globalStyle } from "@vanilla-extract/css";',
+    'import { vars } from "./tokens.css";',
+    "",
+  ];
 
-globalStyle("img, picture, video, canvas, svg", {
-  display: "block",
-  maxWidth: "100%",
-});
+  for (const rule of resetRules(options)) {
+    const indent = rule.media ? "      " : "  ";
+    const declarationLines = rule.declarations.map(
+      ({ property, value, raw }) => `${indent}${property}: ${raw ? value : `"${value}"`},`,
+    );
+    const body = rule.media
+      ? [`  "@media": {`, `    "${rule.media}": {`, ...declarationLines, `    },`, `  },`]
+      : declarationLines;
 
-globalStyle("input, button, textarea, select", {
-  font: "inherit",
-});
+    lines.push(`globalStyle("${rule.selector}", {`, ...body, "});", "");
+  }
 
-globalStyle("p, h1, h2, h3, h4, h5, h6", {
-  overflowWrap: "break-word",
-});
+  return `${lines.join("\n")}`.replace(/\n+$/, "\n");
+}
 
-globalStyle("p", {
-  textWrap: "pretty",
-});
+function toKebabCase(property: string): string {
+  return property.replace(/([A-Z])/g, "-$1").toLowerCase();
+}
 
-globalStyle("h1, h2, h3, h4, h5, h6", {
-  textWrap: "balance",
-});
+export function generateCssResetStylesheet(options: CssResetOptions): string {
+  const lines: string[] = [];
 
-globalStyle("::placeholder", {
-  color: ${placeholderColor},
-});
-`;
+  for (const rule of resetRules(options)) {
+    const body = rule.declarations
+      .map(({ property, value }) => `  ${toKebabCase(property)}: ${value};`)
+      .join("\n");
+    const block = `${rule.selector} {\n${body}\n}`;
+    lines.push(rule.media ? `@media ${rule.media} {\n${block}\n}` : block);
+  }
+
+  return `${lines.join("\n\n")}\n`;
 }

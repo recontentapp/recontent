@@ -1,0 +1,25 @@
+{
+  "name": "vanilla-extract-playground",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev:tokens": "recontent build -c recontent.config.ts",
+    "start": "yarn dev:tokens && vite",
+    "build": "yarn dev:tokens && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/react": "19.0.0",
+    "@types/react-dom": "19.0.0",
+    "@vanilla-extract/css": "1.17.4",
+    "@vanilla-extract/vite-plugin": "5.2.5",
+    "@vitejs/plugin-react": "4.3.0",
+    "react": "19.0.0",
+    "react-dom": "19.0.0",
+    "recontent": "*",
+    "typescript": "6.0.3",
+    "vite": "6.0.0"
+  }
+}

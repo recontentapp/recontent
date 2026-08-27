@@ -13,10 +13,15 @@
         "config": ["dev/.storybook/main.ts"]
       }
     },
-    "apps/playground": {
+    "apps/vanilla-extract-playground": {
       "entry": ["recontent.config.ts"],
       "project": ["src/**/*.{ts,tsx}", "*.ts"],
       "ignore": ["src/design-system/**"]
+    },
+    "apps/stylex-playground": {
+      "entry": ["recontent.config.ts"],
+      "project": ["src/**/*.{ts,tsx}", "*.ts"],
+      "ignore": ["src/generated/**"]
     }
   }
 }

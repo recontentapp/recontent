@@ -17,6 +17,11 @@ export function computeRequiredDependencies(config: Config): Record<string, stri
   const dependencies: Record<string, string> = {};
 
   for (const output of config.output) {
+    if (output.target === "stylex") {
+      Object.assign(dependencies, { "@stylexjs/stylex": "^0.19.0" });
+      continue;
+    }
+
     if (output.target !== "vanilla-extract") continue;
 
     const selection = normalizeBuiltInComponents(output.builtInComponents);

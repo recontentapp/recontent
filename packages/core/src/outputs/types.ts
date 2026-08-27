@@ -4,7 +4,12 @@ export type BuiltInComponentsInput =
   | Record<string, Record<string, unknown> | undefined>
   | readonly string[];
 
-export type OutputTarget = "css" | "vanilla-extract" | "typescript" | "typescript-native";
+export type OutputTarget =
+  | "css"
+  | "vanilla-extract"
+  | "typescript"
+  | "typescript-native"
+  | "stylex";
 export interface CssOutput {
   target: "css";
   outDir: string;
@@ -28,5 +33,16 @@ export interface TypeScriptNativeOutput {
   outDir: string;
   rootFontSize?: number;
 }
-export type Output = CssOutput | VanillaExtractOutput | TypeScriptOutput | TypeScriptNativeOutput;
+export interface StylexOutput {
+  target: "stylex";
+  outDir: string;
+  fontFamily: TokenBinding<"fontFamily">;
+  placeholderColor: TokenBinding<"color">;
+}
+export type Output =
+  | CssOutput
+  | VanillaExtractOutput
+  | TypeScriptOutput
+  | TypeScriptNativeOutput
+  | StylexOutput;
 export type OutputFile = { filename: string; content: string; writeMode?: "always" | "once" };

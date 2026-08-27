@@ -35,7 +35,7 @@ program
 program
   .command("build")
   .description(
-    "Generate configured output targets (css, vanilla-extract, typescript, typescript-native) from recontent.config.ts",
+    "Generate configured output targets (css, vanilla-extract, typescript, typescript-native, stylex) from recontent.config.ts",
   )
   .option("-c, --config <path>", "Path to config file", "recontent.config.ts")
   .option("-w, --watch", "Rerun the build whenever the config file changes")
