@@ -5,18 +5,16 @@
       "project": ["src/**/*.ts"]
     },
     "packages/recontent": {
-      "entry": ["dev/recontent.config.ts", "dev/.storybook/preview.tsx"],
-      "project": ["src/**/*.{ts,tsx}", "dev/**/*.{ts,tsx}"],
-      "ignore": ["dev/generated/**"],
-      "ignoreDependencies": ["@base-ui/react", "@stylexjs/stylex"],
-      "storybook": {
-        "config": ["dev/.storybook/main.ts"]
-      }
+      "project": ["src/**/*.{ts,tsx}"],
+      "ignoreDependencies": ["@base-ui/react", "@stylexjs/stylex"]
     },
     "apps/vanilla-extract-playground": {
-      "entry": ["recontent.config.ts"],
-      "project": ["src/**/*.{ts,tsx}", "*.ts"],
-      "ignore": ["src/design-system/**"]
+      "entry": ["recontent.config.ts", ".storybook/preview.tsx"],
+      "project": ["src/**/*.{ts,tsx}", "stories/**/*.{ts,tsx}", "*.ts"],
+      "ignore": ["src/generated/**"],
+      "storybook": {
+        "config": [".storybook/main.ts"]
+      }
     },
     "apps/stylex-playground": {
       "entry": ["recontent.config.ts"],

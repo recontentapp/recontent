@@ -4,5 +4,5 @@
     "rootDir": ".",
     "types": ["vite/client"]
   },
-  "include": ["src", "recontent.config.ts", "dev/generated"]
+  "include": ["src", "stories", "recontent.config.ts", ".storybook"]
 }
