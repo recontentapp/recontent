@@ -9,7 +9,7 @@
       "ignoreDependencies": ["@base-ui/react", "@stylexjs/stylex"]
     },
     "apps/vanilla-extract-playground": {
-      "entry": ["recontent.config.ts", ".storybook/preview.tsx"],
+      "entry": ["recontent.config.ts"],
       "project": ["src/**/*.{ts,tsx}", "stories/**/*.{ts,tsx}", "*.ts"],
       "ignore": ["src/generated/**"],
       "storybook": {
