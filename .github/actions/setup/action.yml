@@ -1,12 +1,9 @@
 name: Setup
-description: Checkout the repository, set up Node.js and enable Corepack
+description: Set up Node.js and enable Corepack
 
 runs:
   using: composite
   steps:
-    - name: Checkout
-      uses: actions/checkout@v4
-
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
