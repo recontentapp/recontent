@@ -671,13 +671,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@date-fns/tz@npm:^1.4.1":
-  version: 1.5.0
-  resolution: "@date-fns/tz@npm:1.5.0"
-  checksum: 10c0/4ef25eedd55924938fa81b23b949a3425201597e2007f5323db54d50fc19283eca5e2a7963c3d82c99b3adf273e9ea9bc7adfd1c9076e15badd99c593a984ffa
-  languageName: node
-  linkType: hard
-
 "@dual-bundle/import-meta-resolve@npm:^4.1.0":
   version: 4.2.1
   resolution: "@dual-bundle/import-meta-resolve@npm:4.2.1"
@@ -4451,13 +4444,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"date-fns@npm:4.4.0, date-fns@npm:^4.1.0":
-  version: 4.4.0
-  resolution: "date-fns@npm:4.4.0"
-  checksum: 10c0/988f0a13db183f5dfc85c36bbb6847a9c135a9225888bbea4005876ec15539a8613c21a07370a4e7ea543918d5a1cafb423c528b42cdbbde5fdfddb178126b21
-  languageName: node
-  linkType: hard
-
 "debug@npm:^4.1.0, debug@npm:^4.1.1, debug@npm:^4.3.1":
   version: 4.4.3
   resolution: "debug@npm:4.4.3"
@@ -7113,22 +7099,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-day-picker@npm:10.0.1":
-  version: 10.0.1
-  resolution: "react-day-picker@npm:10.0.1"
-  dependencies:
-    "@date-fns/tz": "npm:^1.4.1"
-    date-fns: "npm:^4.1.0"
-  peerDependencies:
-    "@types/react": ">=16.8.0"
-    react: ">=16.8.0"
-  peerDependenciesMeta:
-    "@types/react":
-      optional: true
-  checksum: 10c0/2ca2690f5e8c22b0fd24079b68959110ec199ec7d5ac74f26cfe6dad3cadf7d781458a9a654673dd47009e4fbb8548711ec0ae048e41dd3cf1d4ede16dadad55
-  languageName: node
-  linkType: hard
-
 "react-docgen-typescript@npm:^2.2.2":
   version: 2.4.0
   resolution: "react-docgen-typescript@npm:2.4.0"
@@ -7221,16 +7191,9 @@ __metadata:
     "@swc/core": "npm:1.13.5"
     "@swc/jest": "npm:0.2.39"
     "@types/node": "npm:22.0.0"
-    "@types/react": "npm:19.0.0"
-    "@types/react-dom": "npm:19.0.0"
     "@types/semver": "npm:7.7.1"
-    "@vanilla-extract/css": "npm:1.17.4"
     commander: "npm:^15.0.0"
-    date-fns: "npm:4.4.0"
     jest: "npm:30.2.0"
-    react: "npm:19.0.0"
-    react-day-picker: "npm:10.0.1"
-    react-dom: "npm:19.0.0"
     semver: "npm:^7.7.2"
     tsdown: "npm:0.22.9"
     typescript: "npm:^6.0.3"
