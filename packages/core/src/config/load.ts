@@ -76,11 +76,52 @@ function extractConfig(module: Record<string, unknown>): unknown {
   return undefined;
 }
 
-export function resolveConfigPath(configArg: string): string {
+export function resolveConfigPath(configArg: string, options?: { cwd?: string }): string {
   if (configArg.startsWith("~/")) return path.join(os.homedir(), configArg.slice(2));
   if (configArg.startsWith("~")) return path.join(os.homedir(), configArg.slice(1));
   if (path.isAbsolute(configArg)) return configArg;
-  return path.resolve(process.cwd(), configArg);
+  return path.resolve(options?.cwd ?? process.cwd(), configArg);
+}
+
+const DISCOVERABLE_CONFIG_NAMES = [
+  "recontent.config.ts",
+  "recontent.config.mts",
+  "recontent.config.js",
+  "recontent.config.mjs",
+];
+
+/**
+ * Searches upward from `cwd` for a `recontent.config.{ts,mts,js,mjs}` file,
+ * so `recontent` can be invoked from a subdirectory of a project (or the
+ * root of a monorepo) without an explicit `-c/--config`. The search stops at
+ * the filesystem root, or at the first directory that has a `package.json`
+ * but no config of its own — so it doesn't wander into an unrelated
+ * ancestor project.
+ */
+export function discoverConfigPath(cwd: string): string {
+  const searched: string[] = [];
+  let current = path.resolve(cwd);
+
+  while (true) {
+    searched.push(current);
+
+    for (const name of DISCOVERABLE_CONFIG_NAMES) {
+      const candidate = path.join(current, name);
+      if (fs.existsSync(candidate)) return candidate;
+    }
+
+    if (fs.existsSync(path.join(current, "package.json"))) break;
+
+    const parent = path.dirname(current);
+    if (parent === current) break;
+    current = parent;
+  }
+
+  throw new ConfigLoadError(
+    `Could not find a recontent.config.{ts,mts,js,mjs} file. Searched:\n${searched
+      .map((dir) => `  - ${dir}`)
+      .join("\n")}\nPass -c/--config to point at one explicitly.`,
+  );
 }
 
 export async function loadConfig(

@@ -1,6 +1,5 @@
-import { access, writeFile } from "node:fs/promises";
-import path from "node:path";
-import { exitWithError, logSuccess } from "../utils/fs.js";
+import { exitWithError, logSuccess } from "../utils/exit.js";
+import { writeOutputFile } from "../utils/fs.js";
 
 const CONFIG_TEMPLATE = `import {
   defineReferenceTokens,
@@ -53,23 +52,27 @@ export default defineConfig({
 `;
 
 export type InitOptions = {
+  cwd: string;
+  configPath: string;
   force?: boolean;
 };
 
-export async function runInit(options: InitOptions = {}): Promise<void> {
-  const configPath = path.resolve(process.cwd(), "recontent.config.ts");
+export async function runInit(options: InitOptions): Promise<void> {
+  const { configPath, cwd } = options;
 
-  if (!options.force) {
-    try {
-      await access(configPath);
-      exitWithError(
-        `recontent.config.ts already exists at "${configPath}". Use --force to overwrite.`,
-      );
-    } catch {
-      // File does not exist — proceed.
-    }
+  // `writeMode: "once"` uses `existsSync` rather than the access()-then-write
+  // TOCTOU-prone pattern this replaces — still not perfectly atomic, but no
+  // longer inverts control flow through a catch block either.
+  const { written } = await writeOutputFile(configPath, CONFIG_TEMPLATE, cwd, {
+    writeMode: options.force ? "always" : "once",
+  });
+
+  if (!written) {
+    exitWithError(
+      `recontent.config.ts already exists at "${configPath}". Use --force to overwrite.`,
+    );
+    return;
   }
 
-  await writeFile(configPath, CONFIG_TEMPLATE, "utf8");
   logSuccess(`Created ${configPath}`);
 }

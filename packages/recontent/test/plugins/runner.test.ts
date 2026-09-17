@@ -32,7 +32,16 @@ function baseConfig(plugins: RecontentPlugin[]): Config {
   };
 }
 
-const runOptions = { root: "/project", mode: "build" as const };
+const runOptions = {
+  root: "/project",
+  mode: "build" as const,
+  logger: {
+    info: () => {},
+    warn: () => {},
+    error: () => {},
+    debug: () => {},
+  },
+};
 
 test("enforce ordering: pre before unenforced before post, stable within each group", () => {
   const order: string[] = [];
@@ -102,7 +111,7 @@ test("dependencies merge across plugins", async () => {
         registry: new Map(),
         themes: {},
         root: "/project",
-        logger: { info: () => {}, warn: () => {}, debug: () => {} },
+        logger: { info: () => {}, warn: () => {}, error: () => {}, debug: () => {} },
         mode: "build",
       }),
     );

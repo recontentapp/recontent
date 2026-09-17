@@ -1,4 +1,7 @@
 import { spawnSync } from "node:child_process";
+import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import os from "node:os";
+import path from "node:path";
 
 function run(
   args: string[],
@@ -27,10 +30,40 @@ export function assertRevision(gitRoot: string, rev: string): void {
   }
 }
 
-export function readFileAtRevision(gitRoot: string, rev: string, relPath: string): string {
-  const result = run(["show", `${rev}:${relPath}`], gitRoot);
-  if (result.status !== 0) {
-    throw new Error(`"${relPath}" does not exist at revision "${rev}".`);
+/**
+ * Reproduces the whole tree at `rev` into `destDir` via `git archive | tar -x`.
+ * Preferred over `git worktree` — no lock files, no cleanup hazard, and it
+ * works on the shallow clones `actions/checkout` produces by default, as
+ * long as the rev itself is present.
+ */
+export function archiveRevision(gitRoot: string, rev: string, destDir: string): void {
+  const archive = spawnSync("git", ["archive", rev], {
+    cwd: gitRoot,
+    maxBuffer: 1024 * 1024 * 1024,
+  });
+  if (archive.status !== 0) {
+    const stderr = archive.stderr ? archive.stderr.toString("utf-8") : "";
+    throw new Error(
+      `"git archive ${rev}" failed: ${stderr.trim() || `exit code ${archive.status}`}`,
+    );
   }
-  return result.stdout;
+
+  const tmpTarDir = mkdtempSync(path.join(os.tmpdir(), "recontent-archive-"));
+  const tarPath = path.join(tmpTarDir, "archive.tar");
+  try {
+    // Route through a latin1 string rather than passing the Buffer
+    // directly — a byte-for-byte round trip, and it sidesteps a
+    // Buffer/ArrayBuffer typing conflict between @types/node versions
+    // elsewhere in this workspace.
+    writeFileSync(tarPath, archive.stdout.toString("binary"), "binary");
+    const extract = spawnSync("tar", ["-x", "-f", tarPath, "-C", destDir]);
+    if (extract.status !== 0) {
+      const stderr = extract.stderr ? extract.stderr.toString("utf-8") : "";
+      throw new Error(
+        `Extracting the archive for "${rev}" failed: ${stderr.trim() || `exit code ${extract.status}`}`,
+      );
+    }
+  } finally {
+    rmSync(tmpTarDir, { recursive: true, force: true });
+  }
 }

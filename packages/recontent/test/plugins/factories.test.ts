@@ -26,7 +26,7 @@ function ctx(): PluginContext {
     registry: config.registry,
     themes: config.themes,
     root: "/project",
-    logger: { info: () => {}, warn: () => {}, debug: () => {} },
+    logger: { info: () => {}, warn: () => {}, error: () => {}, debug: () => {} },
     mode: "build",
   };
 }
