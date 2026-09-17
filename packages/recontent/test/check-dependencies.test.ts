@@ -6,19 +6,20 @@ import {
   resolveDependencyDiagnostics,
 } from "../src/cli/doctor/check-dependencies.js";
 import { defineConfig, defineReferenceTokens, defineSystemTokens } from "../src/index.js";
+import { typescript, typescriptNative } from "../src/plugins/index.js";
 
 const configDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
-test("a config whose only outputs are the typescript targets requires no dependencies", () => {
+test("a config whose only plugins are the typescript targets requires no dependencies", () => {
   const config = defineConfig({
     tokens: {
       ref: defineReferenceTokens({}),
       system: defineSystemTokens({}),
       components: {},
     },
-    output: [
-      { target: "typescript", outDir: "dist-test-ts" },
-      { target: "typescript-native", outDir: "dist-test-native" },
+    plugins: [
+      typescript({ outDir: "dist-test-ts" }),
+      typescriptNative({ outDir: "dist-test-native" }),
     ],
   });
   expect(computeRequiredDependencies(config)).toEqual({});

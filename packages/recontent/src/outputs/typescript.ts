@@ -1,7 +1,7 @@
 import {
   expandedMembers,
   isExpandedComposite,
-  type Config,
+  type OutputFile,
   type TokenEntry,
   type TokenMember,
   type TokenType,
@@ -21,7 +21,7 @@ import {
 } from "./shared/ts-source.js";
 import { generateThemeSource, type ThemeTargetSpec } from "./shared/theme-source.js";
 import type { SourceTree, SourceValue } from "./shared/ts-source.js";
-import type { OutputFile, OutputProcessor, TypeScriptOutput } from "./index.js";
+import type { GeneratorContext } from "./shared/context.js";
 
 type MemberLookup = (memberAlias: string[]) => { ref?: string; value: TokenTypeMap[TokenType] };
 
@@ -111,8 +111,8 @@ const webSpec: ThemeTargetSpec = {
   },
 };
 
-function generateTypeScriptSource(config: Config): string {
-  const logger = createLogger(config.logLevel);
+function generateTypeScriptSource(config: GeneratorContext): string {
+  const logger = createLogger("info");
   const body = generateThemeSource(config, webSpec, logger, "typescript");
   const scaleExports = scaleExportsForConfig(config);
   const themeConstNames = ["theme", ...Object.keys(config.themes).sort()];
@@ -133,9 +133,13 @@ function generateTypeScriptSource(config: Config): string {
   return `${lines.join("\n")}\n`;
 }
 
-export const typescriptOutputProcessor: OutputProcessor<TypeScriptOutput> = {
-  target: "typescript",
-  generate(config: Config, _output: TypeScriptOutput): OutputFile[] {
-    return [{ filename: "tokens.ts", content: generateTypeScriptSource(config) }];
-  },
+export type TypeScriptPluginOptions = {
+  outDir: string;
 };
+
+export function generateTypeScriptFiles(
+  config: GeneratorContext,
+  _options: TypeScriptPluginOptions,
+): OutputFile[] {
+  return [{ filename: "tokens.ts", content: generateTypeScriptSource(config) }];
+}

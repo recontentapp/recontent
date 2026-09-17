@@ -2,7 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { createLogger } from "../../logger.js";
 import { MissingDesignTokensError } from "../../registry/index.js";
-import { runOutput } from "../../outputs/index.js";
+import { runPlugins } from "../../plugins/runner.js";
 import { ensureDependencies } from "../install-dependencies.js";
 import { DEFAULT_CONFIG, loadConfig, resolveConfigPath } from "@recontentapp/core";
 import { exitWithError, logSuccess, writeOutputFile } from "../utils/fs.js";
@@ -73,44 +73,55 @@ async function buildOnce(
     logger.warn(diagnostic.message);
   }
   logger.debug(
-    `Loaded build config with ${config.output.length} output target(s), ${config.registry.size} token(s), and ${Object.keys(config.themes).length} theme(s).`,
+    `Loaded build config with ${config.plugins.length} plugin(s), ${config.registry.size} token(s), and ${Object.keys(config.themes).length} theme(s).`,
   );
 
   const configDir = path.dirname(resolveConfigPath(options.config ?? DEFAULT_CONFIG));
   ensureDependencies(configDir, config.resolve, config.logLevel);
 
-  if (config.output.length === 0) {
-    console.log("No output targets configured in recontent.config.ts");
+  if (config.plugins.length === 0) {
+    console.log("No plugins configured in recontent.config.ts");
     return;
   }
 
-  for (const output of config.output) {
-    let files;
-    try {
-      files = await runOutput(config, output);
-    } catch (error) {
-      if (error instanceof MissingDesignTokensError) {
-        if (exitOnError) {
-          exitWithError(error.message);
-        }
-        console.error(`Error: ${error.message}`);
-        return;
+  const mode = options.watch ? "watch" : "build";
+  let result;
+  try {
+    result = await runPlugins(config, { root: configDir, mode });
+  } catch (error) {
+    if (error instanceof MissingDesignTokensError) {
+      if (exitOnError) {
+        exitWithError(error.message);
       }
-      throw error;
+      console.error(`Error: ${error.message}`);
+      return;
     }
+    throw error;
+  }
 
-    for (const file of files) {
-      const { path: outputPath, written } = await writeOutputFile(
-        path.join(output.outDir, file.filename),
-        file.content,
-        { writeMode: file.writeMode },
-      );
-      if (written) {
-        logSuccess(`Wrote ${outputPath}`);
-        logger.debug(`Wrote ${file.content.length.toLocaleString()} bytes to ${outputPath}.`);
-      } else {
-        logSuccess(`Skipped ${outputPath} (already exists)`);
-      }
+  for (const diagnostic of result.diagnostics) {
+    const prefix = diagnostic.severity === "error" ? "[recontent:error]" : "[recontent:warning]";
+    console.error(`${prefix} ${diagnostic.message}`);
+  }
+
+  if (result.diagnostics.some((diagnostic) => diagnostic.severity === "error")) {
+    const message = "Build aborted: one or more plugins reported an error.";
+    if (exitOnError) {
+      exitWithError(message);
+    }
+    console.error(`Error: ${message}`);
+    return;
+  }
+
+  for (const file of result.files) {
+    const { path: outputPath, written } = await writeOutputFile(file.path, file.content, {
+      writeMode: file.writeMode,
+    });
+    if (written) {
+      logSuccess(`Wrote ${outputPath}`);
+      logger.debug(`Wrote ${file.content.length.toLocaleString()} bytes to ${outputPath}.`);
+    } else {
+      logSuccess(`Skipped ${outputPath} (already exists)`);
     }
   }
 }

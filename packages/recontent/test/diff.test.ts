@@ -27,7 +27,7 @@ function config(registry: TokenRegistry, themes: Record<string, ThemeOverride> =
     registry,
     diagnostics: [],
     themes,
-    output: [],
+    plugins: [],
     logLevel: "info",
   };
 }

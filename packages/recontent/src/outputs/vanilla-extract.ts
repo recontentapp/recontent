@@ -5,7 +5,8 @@ import {
   isRawToken,
   isStampedToken,
   isTokenScale,
-  type Config,
+  type BuiltInComponentsInput,
+  type OutputFile,
   type RawToken,
   type StampedToken,
   type TokenEntry,
@@ -15,7 +16,7 @@ import {
   type TokenRegistry,
   pathKey,
 } from "@recontentapp/core";
-import { registryComponents } from "../registry/manifest.js";
+import { registryComponents, type BuiltInComponentOptions } from "../registry/manifest.js";
 import {
   serializeCompositeCss,
   serializeValueCss,
@@ -34,7 +35,7 @@ import {
   validateBuiltInComponents,
 } from "../registry/index.js";
 import type { BreakpointBinding } from "../registry/types.js";
-import type { OutputFile, OutputProcessor, VanillaExtractOutput } from "./index.js";
+import type { GeneratorContext } from "./shared/context.js";
 import { generateCssResetSource } from "./shared/reset.js";
 import type { ScaleBinding, TokenBinding } from "@recontentapp/core";
 import {
@@ -56,7 +57,7 @@ function variableReference(entry: TokenEntry): string {
 }
 
 function resolveVariableReference(
-  registry: Config["registry"],
+  registry: GeneratorContext["registry"],
   entry: TokenEntry,
   override?: ThemeOverride,
 ): string {
@@ -96,7 +97,7 @@ function resolveMemberReference(
 }
 
 function setExpandedComposite(
-  config: Config,
+  config: GeneratorContext,
   tree: SourceTree,
   entry: TokenEntry,
   override: ThemeOverride | undefined,
@@ -139,7 +140,7 @@ function setExpandedComposite(
 }
 
 function setInlineComposite(
-  config: Config,
+  config: GeneratorContext,
   tree: SourceTree,
   entry: TokenEntry,
   override: ThemeOverride | undefined,
@@ -168,7 +169,7 @@ function setInlineComposite(
   setTreeValue(tree, path, { value: `\`${template}\``, source: true });
 }
 
-function contractTree(config: Config): SourceTree {
+function contractTree(config: GeneratorContext): SourceTree {
   const tree: SourceTree = { ref: {}, system: {}, components: {} };
   for (const entry of config.registry.values()) {
     if (isExpandedComposite(entry.$type)) {
@@ -186,7 +187,7 @@ function contractTree(config: Config): SourceTree {
   return tree;
 }
 
-function valuesTree(config: Config, themeName?: string): SourceTree {
+function valuesTree(config: GeneratorContext, themeName?: string): SourceTree {
   const tree: SourceTree = { ref: {}, system: {}, components: {} };
   const override = themeName ? config.themes[themeName] : undefined;
   for (const entry of config.registry.values()) {
@@ -220,7 +221,7 @@ function valuesTree(config: Config, themeName?: string): SourceTree {
 }
 
 function resolveScaleBinding<T extends TokenType>(
-  registry: Config["registry"],
+  registry: GeneratorContext["registry"],
   scale: ScaleBinding<T>,
   expectedType: T,
   label: string,
@@ -244,7 +245,7 @@ function resolveScaleBinding<T extends TokenType>(
 }
 
 function resolveTokenBinding<T extends TokenType>(
-  registry: Config["registry"],
+  registry: GeneratorContext["registry"],
   token: TokenBinding<T>,
   expectedType: T,
   label: string,
@@ -269,7 +270,7 @@ function resolveTokenBinding<T extends TokenType>(
  * cannot be themed.
  */
 function resolveBreakpoints(
-  config: Config,
+  config: GeneratorContext,
   breakpoints: ScaleBinding<"dimension"> | undefined,
 ): readonly BreakpointBinding[] | undefined {
   if (breakpoints === undefined) {
@@ -339,7 +340,7 @@ function resolveBreakpoints(
 }
 
 function generateVanillaExtractSource(
-  config: Config,
+  config: GeneratorContext,
   scaleExports: readonly ScaleExport[],
 ): string {
   const lines = [
@@ -377,145 +378,157 @@ function generateVanillaExtractSource(
   return `${lines.join("\n")}\n`;
 }
 
-export const vanillaExtractOutputProcessor: OutputProcessor<VanillaExtractOutput> = {
-  target: "vanilla-extract",
-  generate(config: Config, output: VanillaExtractOutput): OutputFile[] {
-    const selection = normalizeBuiltInComponents(output.builtInComponents);
-    const builtInComponents = selection.names;
-    const resolvedComponentIds = resolveBuiltInComponentIds(builtInComponents);
+export type VanillaExtractPluginOptions = {
+  outDir: string;
+  builtInComponents?: BuiltInComponentOptions | readonly string[];
+  /** Optional. When omitted, no focus-ring styles are generated. */
+  focusRingColor?: TokenBinding<"color">;
+  fontFamily: TokenBinding<"fontFamily">;
+  placeholderColor: TokenBinding<"color">;
+  breakpoints?: ScaleBinding<"dimension">;
+};
 
-    if (builtInComponents.length > 0) {
-      const errors = validateBuiltInComponents(
-        config,
-        builtInComponents,
-        "vanilla-extract",
-        selection.options,
-      );
-      if (errors.length > 0) {
-        throw new MissingDesignTokensError(errors);
-      }
+export function generateVanillaExtractFiles(
+  config: GeneratorContext,
+  output: VanillaExtractPluginOptions,
+): OutputFile[] {
+  const selection = normalizeBuiltInComponents(
+    output.builtInComponents as BuiltInComponentsInput | undefined,
+  );
+  const builtInComponents = selection.names;
+  const resolvedComponentIds = resolveBuiltInComponentIds(builtInComponents);
+
+  if (builtInComponents.length > 0) {
+    const errors = validateBuiltInComponents(
+      config,
+      builtInComponents,
+      "vanilla-extract",
+      selection.options,
+    );
+    if (errors.length > 0) {
+      throw new MissingDesignTokensError(errors);
     }
+  }
 
-    const resolvedBreakpoints = resolveBreakpoints(config, output.breakpoints);
+  const resolvedBreakpoints = resolveBreakpoints(config, output.breakpoints);
 
-    const scaleExports = scaleExportsForConfig(config);
-    const scaleBindings: Record<string, { typeName: string; exportName: string }> = {};
-    const tokenBindings: Record<string, { reference: string }> = {};
-    const iconBindings: Record<string, string> = {};
+  const scaleExports = scaleExportsForConfig(config);
+  const scaleBindings: Record<string, { typeName: string; exportName: string }> = {};
+  const tokenBindings: Record<string, { reference: string }> = {};
+  const iconBindings: Record<string, string> = {};
 
-    for (const id of resolvedComponentIds) {
-      const component = registryComponents[id];
-      if (!component) continue;
-      const componentOptions = (selection.options as Record<string, unknown>)[component.name] ?? {};
-      for (const contract of component.contracts) {
-        const binding = (componentOptions as Record<string, unknown>)[contract.key];
-        if (binding === undefined) continue;
-        if (contract.kind === "token") {
-          tokenBindings[`${id}.${contract.key}`] = resolveTokenBinding(
-            config.registry,
-            binding as TokenBinding<TokenType>,
-            contract.type,
-            `${component.name}.${contract.key}`,
-          );
-        } else if (contract.kind === "scale") {
-          const scale = resolveScaleBinding(
-            config.registry,
-            binding as ScaleBinding<TokenType>,
-            contract.type,
-            `${component.name}.${contract.key}`,
-          );
-          scaleBindings[`${id}.${contract.key}`] = {
-            typeName: scale.typeName,
-            exportName: scale.exportName,
-          };
-        } else if (contract.kind === "icon") {
-          iconBindings[`${id}.${contract.key}`] = binding as string;
-        } else {
-          const variants = binding as Record<string, Record<string, unknown>>;
-          for (const [name, variant] of Object.entries(variants)) {
-            for (const field of contract.fields) {
-              if (field.kind === "icon") {
-                iconBindings[`${id}.${contract.key}.${name}.${field.key}`] = variant[
-                  field.key
-                ] as string;
-                continue;
-              }
-              tokenBindings[`${id}.${contract.key}.${name}.${field.key}`] = resolveTokenBinding(
-                config.registry,
-                variant[field.key] as TokenBinding<TokenType>,
-                field.type,
-                `${component.name}.${contract.key}.${name}.${field.key}`,
-              );
+  for (const id of resolvedComponentIds) {
+    const component = registryComponents[id];
+    if (!component) continue;
+    const componentOptions = (selection.options as Record<string, unknown>)[component.name] ?? {};
+    for (const contract of component.contracts) {
+      const binding = (componentOptions as Record<string, unknown>)[contract.key];
+      if (binding === undefined) continue;
+      if (contract.kind === "token") {
+        tokenBindings[`${id}.${contract.key}`] = resolveTokenBinding(
+          config.registry,
+          binding as TokenBinding<TokenType>,
+          contract.type,
+          `${component.name}.${contract.key}`,
+        );
+      } else if (contract.kind === "scale") {
+        const scale = resolveScaleBinding(
+          config.registry,
+          binding as ScaleBinding<TokenType>,
+          contract.type,
+          `${component.name}.${contract.key}`,
+        );
+        scaleBindings[`${id}.${contract.key}`] = {
+          typeName: scale.typeName,
+          exportName: scale.exportName,
+        };
+      } else if (contract.kind === "icon") {
+        iconBindings[`${id}.${contract.key}`] = binding as string;
+      } else {
+        const variants = binding as Record<string, Record<string, unknown>>;
+        for (const [name, variant] of Object.entries(variants)) {
+          for (const field of contract.fields) {
+            if (field.kind === "icon") {
+              iconBindings[`${id}.${contract.key}.${name}.${field.key}`] = variant[
+                field.key
+              ] as string;
+              continue;
             }
+            tokenBindings[`${id}.${contract.key}.${name}.${field.key}`] = resolveTokenBinding(
+              config.registry,
+              variant[field.key] as TokenBinding<TokenType>,
+              field.type,
+              `${component.name}.${contract.key}.${name}.${field.key}`,
+            );
           }
         }
       }
     }
+  }
 
-    const fontFamilyBinding = resolveTokenBinding(
-      config.registry,
-      output.fontFamily,
-      "fontFamily",
-      "fontFamily",
-    );
-    const placeholderColorBinding = resolveTokenBinding(
-      config.registry,
-      output.placeholderColor,
-      "color",
-      "placeholderColor",
-    );
-    const focusRingColorBinding =
-      output.focusRingColor === undefined
-        ? undefined
-        : resolveTokenBinding(config.registry, output.focusRingColor, "color", "focusRingColor");
+  const fontFamilyBinding = resolveTokenBinding(
+    config.registry,
+    output.fontFamily,
+    "fontFamily",
+    "fontFamily",
+  );
+  const placeholderColorBinding = resolveTokenBinding(
+    config.registry,
+    output.placeholderColor,
+    "color",
+    "placeholderColor",
+  );
+  const focusRingColorBinding =
+    output.focusRingColor === undefined
+      ? undefined
+      : resolveTokenBinding(config.registry, output.focusRingColor, "color", "focusRingColor");
 
-    const files: OutputFile[] = [
+  const files: OutputFile[] = [
+    {
+      filename: "tokens.css.ts",
+      content: generateVanillaExtractSource(config, scaleExports),
+    },
+    {
+      filename: "reset.gen.css.ts",
+      content: generateCssResetSource({
+        fontFamily: fontFamilyBinding.reference,
+        placeholderColor: placeholderColorBinding.reference,
+      }),
+    },
+  ];
+  if (builtInComponents.length > 0) {
+    files.push(
+      ...generateBuiltInComponentFiles(builtInComponents, "vanilla-extract", {
+        scaleBindings,
+        tokenBindings,
+        iconBindings,
+        breakpoints: resolvedBreakpoints,
+        focusRingColor: focusRingColorBinding,
+      }),
+      ...generateInternalModuleFiles(
+        resolvedComponentIds,
+        "vanilla-extract",
+        resolvedBreakpoints,
+        iconBindings,
+      ),
       {
-        filename: "tokens.css.ts",
-        content: generateVanillaExtractSource(config, scaleExports),
+        filename: "components.dependencies.json",
+        content: `${JSON.stringify(
+          {
+            ...getBuiltInComponentDependencies(builtInComponents, "vanilla-extract"),
+            ...getInternalModuleDependencies(
+              resolvedComponentIds,
+              "vanilla-extract",
+              resolvedBreakpoints,
+            ),
+            ...getUseBreakpointDependencies(resolvedBreakpoints, "vanilla-extract"),
+          },
+          null,
+          2,
+        )}\n`,
       },
-      {
-        filename: "reset.gen.css.ts",
-        content: generateCssResetSource({
-          fontFamily: fontFamilyBinding.reference,
-          placeholderColor: placeholderColorBinding.reference,
-        }),
-      },
-    ];
-    if (builtInComponents.length > 0) {
-      files.push(
-        ...generateBuiltInComponentFiles(builtInComponents, "vanilla-extract", {
-          scaleBindings,
-          tokenBindings,
-          iconBindings,
-          breakpoints: resolvedBreakpoints,
-          focusRingColor: focusRingColorBinding,
-        }),
-        ...generateInternalModuleFiles(
-          resolvedComponentIds,
-          "vanilla-extract",
-          resolvedBreakpoints,
-          iconBindings,
-        ),
-        {
-          filename: "components.dependencies.json",
-          content: `${JSON.stringify(
-            {
-              ...getBuiltInComponentDependencies(builtInComponents, "vanilla-extract"),
-              ...getInternalModuleDependencies(
-                resolvedComponentIds,
-                "vanilla-extract",
-                resolvedBreakpoints,
-              ),
-              ...getUseBreakpointDependencies(resolvedBreakpoints, "vanilla-extract"),
-            },
-            null,
-            2,
-          )}\n`,
-        },
-      );
-    }
-    files.push(...generateUseBreakpointFiles(resolvedBreakpoints, "vanilla-extract"));
-    return files;
-  },
-};
+    );
+  }
+  files.push(...generateUseBreakpointFiles(resolvedBreakpoints, "vanilla-extract"));
+  return files;
+}

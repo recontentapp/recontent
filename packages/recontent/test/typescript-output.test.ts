@@ -7,7 +7,10 @@ import {
   defineTheme,
   tokens,
 } from "../src/index.js";
-import { typescriptOutputProcessor } from "../src/outputs/typescript.js";
+import {
+  generateTypeScriptFiles,
+  type TypeScriptPluginOptions,
+} from "../src/outputs/typescript.js";
 import {
   assertParses,
   assertTypechecks,
@@ -15,19 +18,19 @@ import {
   compositeConfig,
   scaleConfig,
   themedConfig,
+  type Fixture,
 } from "./helpers/fixtures.js";
-import type { Config, OutputFile, TypeScriptOutput } from "@recontentapp/core";
+import type { Config, OutputFile } from "@recontentapp/core";
 
-const TS: TypeScriptOutput = { target: "typescript", outDir: "dist-test" };
+const TS: TypeScriptPluginOptions = { outDir: "dist-test" };
 
-function generate(config: Config): OutputFile[] {
-  const output = config.output[0] as TypeScriptOutput;
-  return typescriptOutputProcessor.generate(config, output) as OutputFile[];
+function generate(config: Config, options: TypeScriptPluginOptions = TS): OutputFile[] {
+  return generateTypeScriptFiles(config, options);
 }
 
 describe("scalars", () => {
   test("fontWeight and number are emitted as bare numbers", () => {
-    const config = aliasChainConfig(TS);
+    const { config } = aliasChainConfig();
     const [file] = generate(config);
     expect(file!.content).toMatch(/"black": '#000000',/);
   });
@@ -41,7 +44,6 @@ describe("scalars", () => {
     });
     const config = defineConfig({
       tokens: { ref, system: defineSystemTokens({}), components: {} },
-      output: TS,
     });
     const [file] = generate(config);
     expect(file!.content).toMatch(/"dim": '16px',/);
@@ -57,7 +59,6 @@ describe("scalars", () => {
     });
     const config = defineConfig({
       tokens: { ref, system: defineSystemTokens({}), components: {} },
-      output: TS,
     });
     const [file] = generate(config);
     expect(file!.content).toMatch(/"weight": 700,/);
@@ -67,7 +68,7 @@ describe("scalars", () => {
 
 describe("alias roots", () => {
   test("system references themeRef; components (full path, no stripped layer prefix) also terminate at themeRef", () => {
-    const config = aliasChainConfig(TS);
+    const { config } = aliasChainConfig();
     const [file] = generate(config);
     expect(file!.content).toMatch(/const themeRef = \{/);
     expect(file!.content).toMatch(/"accent": themeRef\.color\.black,/);
@@ -75,7 +76,7 @@ describe("alias roots", () => {
   });
 
   test("a 3-hop alias chain resolves to the terminal ref const, not the intermediate system const", () => {
-    const config = aliasChainConfig(TS);
+    const { config } = aliasChainConfig();
     const [file] = generate(config);
     expect(file!.content).toMatch(/"background": themeRef\.color\.black,/);
     expect(file!.content).not.toMatch(/"background": themeSystem\.colors\.accent,/);
@@ -85,13 +86,13 @@ describe("alias roots", () => {
 
 describe("composites", () => {
   test("typography is a nested object keyed by cssProperty", () => {
-    const config = compositeConfig(TS);
+    const { config } = compositeConfig();
     const [file] = generate(config);
     expect(file!.content).toMatch(/"body": \{\s*"fontFamily": themeRef\.fontFamily\.body,/);
   });
 
   test("an inline shadow with an aliased member emits a template literal", () => {
-    const config = compositeConfig(TS);
+    const { config } = compositeConfig();
     const [file] = generate(config);
     expect(file!.content).toMatch(/"card": `0px 2px 4px 0px \$\{themeRef\.color\.black\}`,/);
   });
@@ -105,7 +106,6 @@ describe("composites", () => {
     const system = defineSystemTokens({ typography: { body: ref.typography.base } });
     const config = defineConfig({
       tokens: { ref, system, components: {} },
-      output: TS,
     });
     const [file] = generate(config);
     expect(file!.content).toMatch(/"body": themeRef\.typography\.base,/);
@@ -114,7 +114,7 @@ describe("composites", () => {
 
 describe("theme blocks", () => {
   test("an overridden ref token becomes a literal in that theme's tree", () => {
-    const config = themedConfig({ layer: "ref", output: TS });
+    const { config } = themedConfig({ layer: "ref" });
     const [file] = generate(config);
     const darkStart = file!.content.indexOf("const darkRef");
     const darkBlock = file!.content.slice(darkStart, file!.content.indexOf("as const", darkStart));
@@ -122,7 +122,7 @@ describe("theme blocks", () => {
   });
 
   test("a system token aliasing an overridden ref token references darkRef", () => {
-    const config = themedConfig({ layer: "ref", output: TS });
+    const { config } = themedConfig({ layer: "ref" });
     const [file] = generate(config);
     const darkStart = file!.content.indexOf("const darkSystem");
     const darkBlock = file!.content.slice(darkStart, file!.content.indexOf("as const", darkStart));
@@ -130,7 +130,7 @@ describe("theme blocks", () => {
   });
 
   test("a system token overridden directly is a literal; components alias it via darkSystem", () => {
-    const config = themedConfig({ layer: "system", output: TS });
+    const { config } = themedConfig({ layer: "system" });
     const [file] = generate(config);
     const systemStart = file!.content.indexOf("const darkSystem");
     const systemBlock = file!.content.slice(
@@ -152,7 +152,6 @@ describe("same-layer aliases", () => {
     const ref = defineReferenceTokens({ color: { base: tokens.color("#000000") } });
     const config = defineConfig({
       tokens: { ref, system: defineSystemTokens({}), components: {} },
-      output: TS,
     });
     config.registry.set("ref.color.alias", {
       path: ["ref", "color", "alias"],
@@ -173,7 +172,6 @@ describe("same-layer aliases", () => {
     const config = defineConfig({
       tokens: { ref, system: defineSystemTokens({}), components: {} },
       themes: { dark },
-      output: TS,
     });
     config.registry.set("ref.color.alias", {
       path: ["ref", "color", "alias"],
@@ -195,7 +193,6 @@ describe("errors", () => {
     const a = defineReferenceTokens({ color: { a: tokens.color("#000000") } });
     const config = defineConfig({
       tokens: { ref: a, system: defineSystemTokens({}), components: {} },
-      output: TS,
     });
     config.registry.set("ref.color.a", {
       path: ["ref", "color", "a"],
@@ -218,7 +215,6 @@ describe("errors", () => {
     const a = defineReferenceTokens({ color: { a: tokens.color("#000000") } });
     const config = defineConfig({
       tokens: { ref: a, system: defineSystemTokens({}), components: {} },
-      output: TS,
     });
     config.registry.set("ref.color.a", {
       path: ["ref", "color", "a"],
@@ -233,21 +229,21 @@ describe("errors", () => {
 
 describe("scales and files", () => {
   test("scale exports are rooted at theme. with non-identifier keys quoted", () => {
-    const config = scaleConfig(TS);
+    const { config } = scaleConfig();
     const [file] = generate(config);
     expect(file!.content).toMatch(/export type RefSpacing = 0 \| 1 \| "0-5";/);
     expect(file!.content).toMatch(/export const refSpacing = theme\.ref\.spacing;/);
   });
 
   test("generate returns exactly one tokens.ts", () => {
-    const config = aliasChainConfig(TS);
+    const { config } = aliasChainConfig();
     const files = generate(config);
     expect(files.length).toBe(1);
     expect(files[0]!.filename).toBe("tokens.ts");
   });
 
   test("themes/ThemeName/Theme/BaseTheme are exported", () => {
-    const config = aliasChainConfig(TS);
+    const { config } = aliasChainConfig();
     const [file] = generate(config);
     expect(file!.content).toMatch(/export const themes = \{ theme \} as const;/);
     expect(file!.content).toMatch(/export type ThemeName = keyof typeof themes;/);
@@ -258,15 +254,15 @@ describe("scales and files", () => {
 
 describe("parses and typechecks", () => {
   test("every generated tokens.ts in this suite passes assertParses and assertTypechecks", () => {
-    const configs = [
-      aliasChainConfig(TS),
-      compositeConfig(TS),
-      scaleConfig(TS),
-      themedConfig({ layer: "ref", output: TS }),
-      themedConfig({ layer: "system", output: TS }),
-      themedConfig({ layer: "components", output: TS }),
+    const fixtures: Fixture[] = [
+      aliasChainConfig(),
+      compositeConfig(),
+      scaleConfig(),
+      themedConfig({ layer: "ref" }),
+      themedConfig({ layer: "system" }),
+      themedConfig({ layer: "components" }),
     ];
-    for (const config of configs) {
+    for (const { config } of fixtures) {
       const [file] = generate(config);
       assertParses(file!.content);
       assertTypechecks(file!.content);
@@ -274,6 +270,11 @@ describe("parses and typechecks", () => {
   });
 
   test("component built-in options are not accepted by the typescript output type", () => {
+    const options: TypeScriptPluginOptions = {
+      outDir: "dist-test",
+      // @ts-expect-error builtInComponents does not exist on TypeScriptPluginOptions
+      builtInComponents: {},
+    };
     const ref = defineReferenceTokens({ color: { black: tokens.color("#000000") } });
     const config = defineConfig({
       tokens: {
@@ -281,10 +282,8 @@ describe("parses and typechecks", () => {
         system: defineSystemTokens({}),
         components: defineComponentTokens({}),
       },
-      // @ts-expect-error builtInComponents does not exist on TypeScriptOutput
-      output: { target: "typescript", outDir: "dist-test", builtInComponents: {} },
     });
-    const [file] = generate(config);
+    const [file] = generate(config, options);
     assertTypechecks(file!.content);
   });
 });

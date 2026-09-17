@@ -1,4 +1,4 @@
-import type { Config, ThemeOverride } from "@recontentapp/core";
+import type { Config, ThemeOverride, TokenBinding } from "@recontentapp/core";
 import ts from "typescript";
 import {
   defineComponentTokens,
@@ -7,7 +7,6 @@ import {
   defineSystemTokens,
   defineTheme,
   tokens,
-  type OutputInput,
 } from "../../src/index.js";
 
 /**
@@ -85,11 +84,18 @@ export function assertTypechecks(source: string, fileName = "tokens.ts"): void {
   }
 }
 
+export type FixtureRef = {
+  color: { black: TokenBinding<"color"> };
+  fontFamily: { body: TokenBinding<"fontFamily"> };
+};
+
+export type Fixture = { config: Config; ref: FixtureRef };
+
 /**
  * A 3-hop alias chain: component -> system -> ref, all resolving to the same
  * color. Exercises reference preservation across every layer.
  */
-export function aliasChainConfig(output?: OutputInput): Config {
+export function aliasChainConfig(): Fixture {
   const ref = defineReferenceTokens({
     color: { black: tokens.color("#000000") },
     fontFamily: { body: tokens.fontFamily("Arial") },
@@ -97,25 +103,18 @@ export function aliasChainConfig(output?: OutputInput): Config {
   const system = defineSystemTokens({ colors: { accent: ref.color.black } });
   const components = defineComponentTokens({ button: { background: system.colors.accent } });
 
-  const resolvedOutput: OutputInput = output ?? {
-    target: "vanilla-extract",
-    outDir: "dist-test",
-    focusRingColor: ref.color.black,
-    fontFamily: ref.fontFamily.body,
-    placeholderColor: ref.color.black,
-  };
-
-  return defineConfig({
+  const config = defineConfig({
     tokens: { ref, system, components },
-    output: resolvedOutput,
   });
+
+  return { config, ref };
 }
 
 /**
  * One token of each of the 5 composite types (shadow, border, transition,
  * gradient, typography), each aliasing a ref color/fontFamily where relevant.
  */
-export function compositeConfig(output?: OutputInput): Config {
+export function compositeConfig(): Fixture {
   const ref = defineReferenceTokens({
     color: { black: tokens.color("#000000") },
     fontFamily: { body: tokens.fontFamily("Arial") },
@@ -153,25 +152,18 @@ export function compositeConfig(output?: OutputInput): Config {
     },
   });
 
-  const resolvedOutput: OutputInput = output ?? {
-    target: "vanilla-extract",
-    outDir: "dist-test",
-    focusRingColor: ref.color.black,
-    fontFamily: ref.fontFamily.body,
-    placeholderColor: ref.color.black,
-  };
-
-  return defineConfig({
+  const config = defineConfig({
     tokens: { ref, system, components: {} },
-    output: resolvedOutput,
   });
+
+  return { config, ref };
 }
 
 /**
  * A dimensionScale with a non-identifier key ("0-5") and a colorScale with a
  * numeric key (200), both at the ref layer.
  */
-export function scaleConfig(output?: OutputInput): Config {
+export function scaleConfig(): Fixture {
   const ref = defineReferenceTokens({
     spacing: tokens.dimensionScale({ 0: "0px", "0-5": "2px", 1: "4px" }),
     colors: tokens.colorScale({ 100: "#111111", 200: "#222222" }),
@@ -179,28 +171,18 @@ export function scaleConfig(output?: OutputInput): Config {
     fontFamily: { body: tokens.fontFamily("Arial") },
   });
 
-  const resolvedOutput: OutputInput = output ?? {
-    target: "vanilla-extract",
-    outDir: "dist-test",
-    focusRingColor: ref.color.black,
-    fontFamily: ref.fontFamily.body,
-    placeholderColor: ref.color.black,
-  };
-
-  return defineConfig({
+  const config = defineConfig({
     tokens: { ref, system: defineSystemTokens({}), components: {} },
-    output: resolvedOutput,
   });
+
+  return { config, ref };
 }
 
 /**
  * The same 3-hop alias chain as aliasChainConfig(), plus a "dark" theme
  * overriding the requested layer's token in the chain.
  */
-export function themedConfig(options: {
-  layer: "ref" | "system" | "components";
-  output?: OutputInput;
-}): Config {
+export function themedConfig(options: { layer: "ref" | "system" | "components" }): Fixture {
   const ref = defineReferenceTokens({
     color: { black: tokens.color("#000000") },
     fontFamily: { body: tokens.fontFamily("Arial") },
@@ -217,17 +199,10 @@ export function themedConfig(options: {
     dark = defineTheme(components, { button: { background: tokens.color("#111111") } });
   }
 
-  const resolvedOutput: OutputInput = options.output ?? {
-    target: "vanilla-extract",
-    outDir: "dist-test",
-    focusRingColor: ref.color.black,
-    fontFamily: ref.fontFamily.body,
-    placeholderColor: ref.color.black,
-  };
-
-  return defineConfig({
+  const config = defineConfig({
     tokens: { ref, system, components },
     themes: { dark },
-    output: resolvedOutput,
   });
+
+  return { config, ref };
 }

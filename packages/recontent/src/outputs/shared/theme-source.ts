@@ -1,7 +1,6 @@
 import {
   isCompositeType,
   pathKey,
-  type Config,
   type Logger,
   type ThemeOverride,
   type TokenEntry,
@@ -10,6 +9,7 @@ import {
   type TokenType,
   type TokenTypeMap,
 } from "@recontentapp/core";
+import type { GeneratorContext } from "./context.js";
 import {
   entryPath,
   formatTree,
@@ -107,7 +107,7 @@ function layerConstName(themeName: string | undefined, layer: TokenLayer): strin
 }
 
 function validateIdentifierGuards(
-  config: Config,
+  config: GeneratorContext,
   target: string,
   scaleExports: readonly ScaleExport[],
 ): void {
@@ -327,7 +327,7 @@ function emitCompositeEntry(
 }
 
 export function generateThemeSource(
-  config: Config,
+  config: GeneratorContext,
   spec: ThemeTargetSpec,
   logger: Logger,
   target: string,

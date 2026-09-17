@@ -7,7 +7,7 @@ import {
   defineTheme,
   tokens,
 } from "../src/index.js";
-import { cssOutputProcessor, generateCss, generateCssFromRegistry } from "../src/outputs/css.js";
+import { generateCssFiles, generateCss, generateCssFromRegistry } from "../src/outputs/css.js";
 import {
   aliasChainConfig,
   compositeConfig,
@@ -18,7 +18,7 @@ import type { OutputFile } from "@recontentapp/core";
 
 describe("reference preservation", () => {
   test("a system token aliasing a ref color emits var(--ref-color-black), and the hex appears only in the :root ref block", () => {
-    const config = aliasChainConfig();
+    const { config } = aliasChainConfig();
     const css = generateCss(config);
     expect(css).toMatch(/--system-colors-accent: var\(--ref-color-black\);/);
 
@@ -31,13 +31,13 @@ describe("reference preservation", () => {
   });
 
   test("a component token aliasing a system token emits var(--system-...) with no layer prefix in its own var name", () => {
-    const config = aliasChainConfig();
+    const { config } = aliasChainConfig();
     const css = generateCss(config);
     expect(css).toMatch(/--button-background: var\(--system-colors-accent\);/);
   });
 
   test("a 3-hop chain emits one hop per level, never a flattened value", () => {
-    const config = aliasChainConfig();
+    const { config } = aliasChainConfig();
     const css = generateCss(config);
     expect(css).toMatch(/--button-background: var\(--system-colors-accent\);/);
     expect(css).toMatch(/--system-colors-accent: var\(--ref-color-black\);/);
@@ -52,7 +52,6 @@ describe("reference preservation", () => {
     });
     const config = defineConfig({
       tokens: { ref, system: defineSystemTokens({}), components: {} },
-      output: { target: "css", outDir: "dist-test" },
     });
     const css = generateCss(config);
     expect(css).toMatch(/--ref-color-black: #000000;/);
@@ -61,7 +60,7 @@ describe("reference preservation", () => {
   });
 
   test("scale entries emit one var per key, including non-identifier keys", () => {
-    const config = scaleConfig();
+    const { config } = scaleConfig();
     const css = generateCss(config);
     expect(css).toMatch(/--ref-spacing-0: 0px;/);
     expect(css).toMatch(/--ref-spacing-0-5: 2px;/);
@@ -73,7 +72,7 @@ describe("reference preservation", () => {
 
 describe("composites", () => {
   test("an inline shadow with an aliased color emits one declaration embedding var(--ref-color-black)", () => {
-    const config = compositeConfig();
+    const { config } = compositeConfig();
     const css = generateCss(config);
     expect(css).toMatch(/--system-shadow-card: 0px 2px 4px 0px var\(--ref-color-black\);/);
   });
@@ -97,7 +96,6 @@ describe("composites", () => {
     });
     const config = defineConfig({
       tokens: { ref, system, components: {} },
-      output: { target: "css", outDir: "dist-test" },
     });
     const css = generateCss(config);
     expect(css).toMatch(
@@ -106,7 +104,7 @@ describe("composites", () => {
   });
 
   test("a border emits width style color", () => {
-    const config = compositeConfig();
+    const { config } = compositeConfig();
     const css = generateCss(config);
     expect(css).toMatch(/--system-border-default: 1px solid var\(--ref-color-black\);/);
   });
@@ -141,7 +139,6 @@ describe("composites", () => {
     });
     const config = defineConfig({
       tokens: { ref, system, components: {} },
-      output: { target: "css", outDir: "dist-test" },
     });
     const css = generateCss(config);
     expect(css).toMatch(
@@ -154,7 +151,7 @@ describe("composites", () => {
   });
 
   test("an expanded typography token emits 5 kebab-suffixed declarations, with fontWeight 'regular' resolving to 400", () => {
-    const config = compositeConfig();
+    const { config } = compositeConfig();
     const css = generateCss(config);
     expect(css).toMatch(/--system-typography-body-font-size: 16px;/);
     expect(css).toMatch(/--system-typography-body-font-weight: 400;/);
@@ -164,7 +161,7 @@ describe("composites", () => {
   });
 
   test("an expanded transition token emits 3 declarations including the defaulted 0ms delay", () => {
-    const config = compositeConfig();
+    const { config } = compositeConfig();
     const css = generateCss(config);
     expect(css).toMatch(/--system-transition-standard-transition-duration: 200ms;/);
     expect(css).toMatch(/--system-transition-standard-transition-delay: 0ms;/);
@@ -182,7 +179,6 @@ describe("composites", () => {
     const system = defineSystemTokens({ typography: { body: ref.typography.base } });
     const config = defineConfig({
       tokens: { ref, system, components: {} },
-      output: { target: "css", outDir: "dist-test" },
     });
     const css = generateCss(config);
     expect(css).toMatch(
@@ -199,7 +195,7 @@ describe("composites", () => {
 
 describe("themes", () => {
   test('a ref override produces a [data-theme="dark"] block containing only the overridden var', () => {
-    const config = themedConfig({ layer: "ref" });
+    const { config } = themedConfig({ layer: "ref" });
     const css = generateCss(config);
     const match = css.match(/\[data-theme="dark"\] \{\n([\s\S]*?)\n\}/);
     expect(match).not.toBeNull();
@@ -207,7 +203,7 @@ describe("themes", () => {
   });
 
   test("a system-layer override produces a theme block (Fix A)", () => {
-    const config = themedConfig({ layer: "system" });
+    const { config } = themedConfig({ layer: "system" });
     const css = generateCss(config);
     const match = css.match(/\[data-theme="dark"\] \{\n([\s\S]*?)\n\}/);
     expect(match).not.toBeNull();
@@ -215,7 +211,7 @@ describe("themes", () => {
   });
 
   test("a component-layer override produces a theme block", () => {
-    const config = themedConfig({ layer: "components" });
+    const { config } = themedConfig({ layer: "components" });
     const css = generateCss(config);
     const match = css.match(/\[data-theme="dark"\] \{\n([\s\S]*?)\n\}/);
     expect(match).not.toBeNull();
@@ -223,7 +219,7 @@ describe("themes", () => {
   });
 
   test("a system token aliasing an overridden ref token is not duplicated into the theme block", () => {
-    const config = themedConfig({ layer: "ref" });
+    const { config } = themedConfig({ layer: "ref" });
     const css = generateCss(config);
     const match = css.match(/\[data-theme="dark"\] \{\n([\s\S]*?)\n\}/);
     expect(match![1]).not.toMatch(/--system-colors-accent/);
@@ -245,7 +241,6 @@ describe("themes", () => {
     const config = defineConfig({
       tokens: { ref, system, components: {} },
       themes: { dark },
-      output: { target: "css", outDir: "dist-test" },
     });
     const css = generateCss(config);
     const match = css.match(/\[data-theme="dark"\] \{\n([\s\S]*?)\n\}/);
@@ -262,7 +257,6 @@ describe("themes", () => {
     const config = defineConfig({
       tokens: { ref, system, components: {} },
       themes: { dark, light },
-      output: { target: "css", outDir: "dist-test" },
     });
     const css = generateCss(config);
     const darkIndex = css.indexOf('[data-theme="dark"]');
@@ -278,7 +272,6 @@ describe("themes", () => {
     const config = defineConfig({
       tokens: { ref, system: defineSystemTokens({}), components: {} },
       themes: { empty },
-      output: { target: "css", outDir: "dist-test" },
     });
     const css = generateCss(config);
     expect(css).not.toMatch(/\[data-theme="empty"\]/);
@@ -287,7 +280,7 @@ describe("themes", () => {
 
 describe("structure & options", () => {
   test("block order is :root(ref) -> theme blocks -> :root(system) -> :root(components), and empty blocks are skipped", () => {
-    const config = themedConfig({ layer: "ref" });
+    const { config } = themedConfig({ layer: "ref" });
     const css = generateCss(config);
     const blocks = css.split(/\n\n/);
     expect(blocks.length).toBe(4);
@@ -301,16 +294,15 @@ describe("structure & options", () => {
   });
 
   test("default selector is [data-theme=\"x\"]; themeSelector 'class' emits .x; themeAttribute is honoured", () => {
-    const config = themedConfig({ layer: "ref" });
+    const { config } = themedConfig({ layer: "ref" });
     expect(generateCss(config)).toMatch(/\[data-theme="dark"\]/);
     expect(generateCss(config, { themeSelector: "class" })).toMatch(/\.dark \{/);
     expect(generateCss(config, { themeAttribute: "data-mode" })).toMatch(/\[data-mode="dark"\]/);
   });
 
-  test("cssOutputProcessor.generate returns exactly one file named tokens.css and uses class selectors", () => {
-    const config = themedConfig({ layer: "ref" });
-    const files = cssOutputProcessor.generate(config, {
-      target: "css",
+  test("generateCssFiles returns exactly one file named tokens.css and uses class selectors", () => {
+    const { config } = themedConfig({ layer: "ref" });
+    const files = generateCssFiles(config, {
       outDir: "dist-test",
     }) as OutputFile[];
     expect(files.length).toBe(1);
@@ -319,7 +311,7 @@ describe("structure & options", () => {
   });
 
   test("generateCssFromRegistry emits the layer blocks and never a theme block", () => {
-    const config = aliasChainConfig();
+    const { config } = aliasChainConfig();
     const css = generateCssFromRegistry(config.registry);
     expect(css).toMatch(/--ref-color-black: #000000;/);
     expect(css).toMatch(/--system-colors-accent: var\(--ref-color-black\);/);
@@ -334,7 +326,6 @@ describe("structure & options", () => {
         system: defineSystemTokens({}),
         components: defineComponentTokens({}),
       },
-      output: { target: "css", outDir: "dist-test" },
     });
     expect(generateCss(config)).toBe("");
   });

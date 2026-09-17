@@ -1,5 +1,10 @@
 import path from "node:path";
-import { DEFAULT_CONFIG, loadConfig, resolveConfigPath } from "@recontentapp/core";
+import {
+  DEFAULT_CONFIG,
+  loadConfig,
+  resolveConfigPath,
+  type PluginContext,
+} from "@recontentapp/core";
 import { createLogger } from "../../logger.js";
 import { diagnoseRegistry } from "../doctor/registry-diagnostics.js";
 import { checkDependencies } from "../doctor/check-dependencies.js";
@@ -27,7 +32,28 @@ export async function runDoctor(options: DoctorOptions = {}): Promise<void> {
     console.error(`[recontent:error] ${diagnostic.message}`);
   }
 
-  const errorCount = registryDiagnostics.length + dependencyDiagnostics.length;
+  const ctx: PluginContext = {
+    registry: config.registry,
+    themes: config.themes,
+    root: configDir,
+    logger,
+    mode: "check",
+  };
+  const pluginErrorCount = { count: 0 };
+  for (const plugin of config.plugins) {
+    if (!plugin.validate) continue;
+    const diagnostics = await plugin.validate(ctx);
+    for (const diagnostic of diagnostics) {
+      const prefix = diagnostic.severity === "error" ? "[recontent:error]" : "[recontent:warning]";
+      console.error(`${prefix} [${plugin.name}] ${diagnostic.message}`);
+      if (diagnostic.severity === "error") {
+        pluginErrorCount.count += 1;
+      }
+    }
+  }
+
+  const errorCount =
+    registryDiagnostics.length + dependencyDiagnostics.length + pluginErrorCount.count;
   const issueCount = config.diagnostics.length + errorCount;
 
   if (issueCount === 0) {

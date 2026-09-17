@@ -2,9 +2,9 @@ import {
   expandedMembers,
   isExpandedComposite,
   pathKey,
-  type Config,
   type TokenTypeMap,
 } from "@recontentapp/core";
+import type { GeneratorContext } from "./context.js";
 import { entryPath } from "./ts-source.js";
 
 function sanitizeSegment(segment: string): string {
@@ -40,7 +40,7 @@ function flatKey(path: readonly string[]): string {
  * JS identifier is a naming conflict that must be fixed at the source, since
  * the generated keys are effectively public API for consumers.
  */
-export function buildKeyMap(config: Config): Map<string, string> {
+export function buildKeyMap(config: GeneratorContext): Map<string, string> {
   const keys = new Map<string, string>();
   const owners = new Map<string, string>();
 

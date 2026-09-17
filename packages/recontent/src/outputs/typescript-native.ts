@@ -2,10 +2,10 @@ import {
   pathKey,
   type BorderValue,
   type ColorValue,
-  type Config,
   type DimensionValue,
   type GradientValue,
   type NumberValue,
+  type OutputFile,
   type ShadowValue,
   type TokenEntry,
   type TokenMember,
@@ -32,7 +32,7 @@ import {
   type ThemeTargetSpec,
 } from "./shared/theme-source.js";
 import type { SourceTree, SourceValue } from "./shared/ts-source.js";
-import type { OutputFile, OutputProcessor, TypeScriptNativeOutput } from "./index.js";
+import type { GeneratorContext } from "./shared/context.js";
 
 type MemberLookup = (memberAlias: string[]) => { ref?: string; value: TokenTypeMap[TokenType] };
 
@@ -282,8 +282,8 @@ function createNativeSpec(rootFontSize: number): ThemeTargetSpec {
   };
 }
 
-function generateTypeScriptNativeSource(config: Config, rootFontSize: number): string {
-  const logger = createLogger(config.logLevel);
+function generateTypeScriptNativeSource(config: GeneratorContext, rootFontSize: number): string {
+  const logger = createLogger();
   const spec = createNativeSpec(rootFontSize);
   const body = generateThemeSource(config, spec, logger, "typescript-native");
   const themeConstNames = ["theme", ...Object.keys(config.themes).sort()];
@@ -299,14 +299,17 @@ function generateTypeScriptNativeSource(config: Config, rootFontSize: number): s
   return `${lines.join("\n")}\n`;
 }
 
-export const typescriptNativeOutputProcessor: OutputProcessor<TypeScriptNativeOutput> = {
-  target: "typescript-native",
-  generate(config: Config, output: TypeScriptNativeOutput): OutputFile[] {
-    const rootFontSize = output.rootFontSize ?? DEFAULT_ROOT_FONT_SIZE;
-    return [
-      { filename: "tokens.ts", content: generateTypeScriptNativeSource(config, rootFontSize) },
-    ];
-  },
+export type TypeScriptNativePluginOptions = {
+  outDir: string;
+  rootFontSize?: number;
 };
+
+export function generateTypeScriptNativeFiles(
+  config: GeneratorContext,
+  options: TypeScriptNativePluginOptions,
+): OutputFile[] {
+  const rootFontSize = options.rootFontSize ?? DEFAULT_ROOT_FONT_SIZE;
+  return [{ filename: "tokens.ts", content: generateTypeScriptNativeSource(config, rootFontSize) }];
+}
 
 export type { LossReporter };

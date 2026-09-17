@@ -3,8 +3,8 @@ import type {
   Config,
   IntrospectionConfigInput,
   LogLevel,
-  Output,
   RawToken,
+  RecontentPlugin,
   ResolveConfigInput,
   StampedToken,
   ThemeOverride,
@@ -13,12 +13,10 @@ import type {
   TokenScaleMetadata,
   TokenScale,
   TokenType,
-  VanillaExtractOutput,
 } from "@recontentapp/core";
 import { diagnoseTokenTrees } from "./diagnostics.js";
 import { isRawToken, isStampedToken, isTokenLeaf, isTokenScale, pathKey } from "@recontentapp/core";
 import { withStampedTokenMethods, type ChainableMethods } from "./metadata.js";
-import type { BuiltInComponentOptions } from "./registry/manifest.js";
 
 type TokenTree = Record<string, unknown>;
 
@@ -189,12 +187,6 @@ export function defineComponentTokens<T extends TokenTree>(input: T): StampTree<
   return walkAndStamp(input, [], "components") as StampTree<T, "components">;
 }
 
-type VanillaExtractOutputInput = Omit<VanillaExtractOutput, "builtInComponents"> & {
-  builtInComponents?: BuiltInComponentOptions;
-};
-
-export type OutputInput = Exclude<Output, VanillaExtractOutput> | VanillaExtractOutputInput;
-
 export type DefineConfigInput = {
   tokens?: {
     ref: TokenTree;
@@ -202,19 +194,28 @@ export type DefineConfigInput = {
     components: TokenTree;
   };
   themes?: Record<string, ThemeOverride>;
-  output?: OutputInput | OutputInput[];
+  plugins?: RecontentPlugin | RecontentPlugin[];
   logLevel?: LogLevel;
   resolve?: ResolveConfigInput;
   observability?: ObservabilityConfigInput;
   introspection?: IntrospectionConfigInput;
 };
 
-function normalizeOutput(output: OutputInput | OutputInput[] | undefined): Output[] {
-  if (!output) {
+function normalizePlugins(
+  plugins: RecontentPlugin | RecontentPlugin[] | undefined,
+): RecontentPlugin[] {
+  if (!plugins) {
     return [];
   }
-  const outputs = Array.isArray(output) ? output : [output];
-  return outputs as Output[];
+  const list = Array.isArray(plugins) ? plugins : [plugins];
+  for (const plugin of list) {
+    if (typeof plugin !== "object" || plugin === null || typeof plugin.name !== "string") {
+      throw new Error(
+        "defineConfig's `plugins` must be RecontentPlugin instances (objects with at least a `name` string).",
+      );
+    }
+  }
+  return list;
 }
 
 function normalizeLogLevel(logLevel: LogLevel | undefined): LogLevel {
@@ -247,7 +248,7 @@ export function defineConfig(input: DefineConfigInput): Config {
     registry,
     diagnostics,
     themes: input.themes ?? {},
-    output: normalizeOutput(input.output),
+    plugins: normalizePlugins(input.plugins),
     logLevel: normalizeLogLevel(input.logLevel),
     resolve: input.resolve,
     observability: input.observability

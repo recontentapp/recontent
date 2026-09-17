@@ -36,12 +36,18 @@ function getTsconfigAliases(cwd: string): Record<string, string> {
   return aliases;
 }
 
-function getRecontentAlias(configDir: string): string {
+function getRecontentAliases(configDir: string): Record<string, string> {
   const requireFromConfig = createRequire(
     pathToFileURL(path.join(configDir, "__recontent_loader__.js")).href,
   );
   try {
-    return requireFromConfig.resolve("recontent");
+    const aliases: Record<string, string> = { recontent: requireFromConfig.resolve("recontent") };
+    try {
+      aliases["recontent/plugins"] = requireFromConfig.resolve("recontent/plugins");
+    } catch {
+      // Optional subpath — only used by configs that import plugin factories.
+    }
+    return aliases;
   } catch (cause) {
     throw new ConfigLoadError(
       `Could not resolve "recontent" from "${configDir}". Install recontent before loading this config.`,
@@ -58,7 +64,9 @@ function isConfig(value: unknown): value is Config {
     value.registry instanceof Map &&
     "themes" in value &&
     typeof value.themes === "object" &&
-    value.themes !== null
+    value.themes !== null &&
+    "plugins" in value &&
+    Array.isArray(value.plugins)
   );
 }
 
@@ -87,7 +95,7 @@ export async function loadConfig(
     const jiti = createJiti(import.meta.url, {
       interopDefault: true,
       alias: {
-        recontent: getRecontentAlias(configDir),
+        ...getRecontentAliases(configDir),
         ...getTsconfigAliases(configDir),
       },
     });
