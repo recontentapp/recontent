@@ -18,7 +18,7 @@ import {
   isExpandedComposite,
   isStampedToken,
   pathKey,
-  type Config,
+  type OutputFile,
   type ThemeOverride,
   type TokenEntry,
   type TokenRegistry,
@@ -30,7 +30,7 @@ import {
   serializeValueCss,
   type MemberResolver,
 } from "../serialize/values.js";
-import type { OutputFile, OutputProcessor, StylexOutput } from "./index.js";
+import type { GeneratorContext } from "./shared/context.js";
 import { generateCssResetStylesheet } from "./shared/reset.js";
 import { buildKeyMap } from "./shared/stylex-keys.js";
 import {
@@ -99,7 +99,7 @@ function resolveMemberReference(
  * is emitted into the `defineVars` object literal, every key its derived
  * function reads already exists earlier in the same literal.
  */
-function topologicalEntries(config: Config): TokenEntry[] {
+function topologicalEntries(config: GeneratorContext): TokenEntry[] {
   const { registry } = config;
   const visiting = new Set<string>();
   const visited = new Set<string>();
@@ -167,7 +167,11 @@ function collectCompositeMemberAliases(
   return aliases;
 }
 
-function expandedVarLines(config: Config, keys: Map<string, string>, entry: TokenEntry): VarLine[] {
+function expandedVarLines(
+  config: GeneratorContext,
+  keys: Map<string, string>,
+  entry: TokenEntry,
+): VarLine[] {
   const type = entry.$type as "typography" | "transition";
   const base = pathKey(entry.path);
 
@@ -224,7 +228,7 @@ function expandedVarLines(config: Config, keys: Map<string, string>, entry: Toke
 }
 
 function inlineCompositeVarLine(
-  config: Config,
+  config: GeneratorContext,
   keys: Map<string, string>,
   entry: TokenEntry,
 ): VarLine {
@@ -256,7 +260,11 @@ function inlineCompositeVarLine(
   return { key: flat, expression: `() => \`${template}\``, derived: true };
 }
 
-function scalarVarLine(config: Config, keys: Map<string, string>, entry: TokenEntry): VarLine {
+function scalarVarLine(
+  config: GeneratorContext,
+  keys: Map<string, string>,
+  entry: TokenEntry,
+): VarLine {
   const flat = keys.get(pathKey(entry.path))!;
   if (entry.alias) {
     const reference = resolveVariableReference(config.registry, keys, entry);
@@ -269,7 +277,7 @@ function scalarVarLine(config: Config, keys: Map<string, string>, entry: TokenEn
   };
 }
 
-function tokenVarLines(config: Config, keys: Map<string, string>): VarLine[] {
+function tokenVarLines(config: GeneratorContext, keys: Map<string, string>): VarLine[] {
   const lines: VarLine[] = [];
   for (const entry of topologicalEntries(config)) {
     if (isExpandedComposite(entry.$type)) {
@@ -291,7 +299,7 @@ function formatVarLines(lines: readonly VarLine[], indent = "  "): string {
   return `{\n${body}\n${indent.slice(2)}}`;
 }
 
-function generateVarsSource(config: Config, keys: Map<string, string>): string {
+function generateVarsSource(config: GeneratorContext, keys: Map<string, string>): string {
   const lines = tokenVarLines(config, keys);
   return [
     // Derived entries (`() => \`${vars.other}\``) reference `vars` from inside
@@ -309,7 +317,7 @@ function generateVarsSource(config: Config, keys: Map<string, string>): string {
 }
 
 function themeOverrideLines(
-  config: Config,
+  config: GeneratorContext,
   keys: Map<string, string>,
   override: ThemeOverride,
 ): VarLine[] {
@@ -375,7 +383,7 @@ function themeOverrideLines(
   return lines;
 }
 
-function generateThemesSource(config: Config, keys: Map<string, string>): string {
+function generateThemesSource(config: GeneratorContext, keys: Map<string, string>): string {
   const themeNames = Object.keys(config.themes).sort();
   if (themeNames.length === 0) {
     return "export {};\n";
@@ -429,7 +437,7 @@ function generateScaleSource(keys: Map<string, string>, scale: ScaleExport): str
   return `${typeDeclaration}\n\nexport const ${scale.exportName} = {\n${entries.join("\n")}\n} as const;`;
 }
 
-function generateScalesSource(config: Config, keys: Map<string, string>): string {
+function generateScalesSource(config: GeneratorContext, keys: Map<string, string>): string {
   const scaleExports = scaleExportsForConfig(config);
   const lines = ['import { vars } from "./tokens.stylex.js";', ""];
   for (const scale of scaleExports) {
@@ -439,7 +447,7 @@ function generateScalesSource(config: Config, keys: Map<string, string>): string
 }
 
 function resolveTokenBindingEntry<T extends TokenType>(
-  registry: Config["registry"],
+  registry: GeneratorContext["registry"],
   token: TokenBinding<T>,
   expectedType: T,
   label: string,
@@ -454,46 +462,52 @@ function resolveTokenBindingEntry<T extends TokenType>(
   return entry;
 }
 
-export const stylexOutputProcessor: OutputProcessor<StylexOutput> = {
-  target: "stylex",
-  generate(config: Config, output: StylexOutput): OutputFile[] {
-    const keys = buildKeyMap(config);
-
-    const fontFamilyEntry = resolveTokenBindingEntry(
-      config.registry,
-      output.fontFamily,
-      "fontFamily",
-      "fontFamily",
-    );
-    const placeholderColorEntry = resolveTokenBindingEntry(
-      config.registry,
-      output.placeholderColor,
-      "color",
-      "placeholderColor",
-    );
-
-    const fontFamilyValue = resolveEntryValue(
-      config.registry,
-      fontFamilyEntry,
-    ) as TokenTypeMap["fontFamily"];
-    const placeholderColorValue = resolveEntryValue(
-      config.registry,
-      placeholderColorEntry,
-    ) as TokenTypeMap["color"];
-    const fontFamilyCss = serializeValueCss("fontFamily", fontFamilyValue);
-    const placeholderColorCss = serializeValueCss("color", placeholderColorValue);
-
-    return [
-      { filename: "tokens.stylex.ts", content: generateVarsSource(config, keys) },
-      {
-        filename: "reset.gen.css",
-        content: generateCssResetStylesheet({
-          fontFamily: fontFamilyCss,
-          placeholderColor: placeholderColorCss,
-        }),
-      },
-      { filename: "themes.ts", content: generateThemesSource(config, keys) },
-      { filename: "scales.ts", content: generateScalesSource(config, keys) },
-    ];
-  },
+export type StylexPluginOptions = {
+  outDir: string;
+  fontFamily: TokenBinding<"fontFamily">;
+  placeholderColor: TokenBinding<"color">;
 };
+
+export function generateStylexFiles(
+  config: GeneratorContext,
+  options: StylexPluginOptions,
+): OutputFile[] {
+  const keys = buildKeyMap(config);
+
+  const fontFamilyEntry = resolveTokenBindingEntry(
+    config.registry,
+    options.fontFamily,
+    "fontFamily",
+    "fontFamily",
+  );
+  const placeholderColorEntry = resolveTokenBindingEntry(
+    config.registry,
+    options.placeholderColor,
+    "color",
+    "placeholderColor",
+  );
+
+  const fontFamilyValue = resolveEntryValue(
+    config.registry,
+    fontFamilyEntry,
+  ) as TokenTypeMap["fontFamily"];
+  const placeholderColorValue = resolveEntryValue(
+    config.registry,
+    placeholderColorEntry,
+  ) as TokenTypeMap["color"];
+  const fontFamilyCss = serializeValueCss("fontFamily", fontFamilyValue);
+  const placeholderColorCss = serializeValueCss("color", placeholderColorValue);
+
+  return [
+    { filename: "tokens.stylex.ts", content: generateVarsSource(config, keys) },
+    {
+      filename: "reset.gen.css",
+      content: generateCssResetStylesheet({
+        fontFamily: fontFamilyCss,
+        placeholderColor: placeholderColorCss,
+      }),
+    },
+    { filename: "themes.ts", content: generateThemesSource(config, keys) },
+    { filename: "scales.ts", content: generateScalesSource(config, keys) },
+  ];
+}

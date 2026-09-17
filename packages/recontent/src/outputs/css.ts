@@ -2,13 +2,13 @@ import {
   expandedMembers,
   isExpandedComposite,
   pathKey,
-  type Config,
+  type OutputFile,
   type TokenEntry,
   type TokenRegistry,
   type TokenTypeMap,
 } from "@recontentapp/core";
 import { cssVarName, serializeValueCss } from "../serialize/values.js";
-import type { Output, OutputFile, OutputProcessor } from "./index.js";
+import type { GeneratorContext } from "./shared/context.js";
 
 export type CssGeneratorOptions = {
   themeAttribute?: string;
@@ -138,7 +138,7 @@ function themeSelectorFor(themeName: string, options: CssGeneratorOptions): stri
   return `[${themeAttribute}="${themeName}"]`;
 }
 
-export function generateCss(config: Config, options: CssGeneratorOptions = {}): string {
+export function generateCss(config: GeneratorContext, options: CssGeneratorOptions = {}): string {
   const { registry, themes } = config;
   const blocks: string[] = [];
 
@@ -176,23 +176,21 @@ export function generateCss(config: Config, options: CssGeneratorOptions = {}): 
 }
 
 export function generateCssFromRegistry(registry: TokenRegistry): string {
-  return generateCss({
-    registry,
-    diagnostics: [],
-    themes: {},
-    output: [],
-    logLevel: "info",
-  });
+  return generateCss({ registry, themes: {} });
 }
 
-export const cssOutputProcessor: OutputProcessor<Output> = {
-  target: "css",
-  generate(config: Config, _output: Output): OutputFile[] {
-    return [
-      {
-        filename: "tokens.css",
-        content: generateCss(config, { themeSelector: "class" }),
-      },
-    ];
-  },
+export type CssPluginOptions = {
+  outDir: string;
 };
+
+export function generateCssFiles(
+  config: GeneratorContext,
+  _options: CssPluginOptions,
+): OutputFile[] {
+  return [
+    {
+      filename: "tokens.css",
+      content: generateCss(config, { themeSelector: "class" }),
+    },
+  ];
+}

@@ -7,7 +7,10 @@ import {
   tokens,
   type BuiltInComponentOptions,
 } from "../src/index.js";
-import { vanillaExtractOutputProcessor } from "../src/outputs/vanilla-extract.js";
+import {
+  generateVanillaExtractFiles,
+  type VanillaExtractPluginOptions,
+} from "../src/outputs/vanilla-extract.js";
 import { MissingDesignTokensError } from "../src/registry/index.js";
 import {
   assertParses,
@@ -15,12 +18,22 @@ import {
   compositeConfig,
   scaleConfig,
   themedConfig,
+  type Fixture,
 } from "./helpers/fixtures.js";
-import type { OutputFile, ScaleBinding, VanillaExtractOutput } from "@recontentapp/core";
+import type { Config, OutputFile, ScaleBinding } from "@recontentapp/core";
 
-function generate(config: ReturnType<typeof aliasChainConfig>): OutputFile[] {
-  const output = config.output[0] as VanillaExtractOutput;
-  return vanillaExtractOutputProcessor.generate(config, output) as OutputFile[];
+type GenerateInput = Fixture | { config: Config; output: VanillaExtractPluginOptions };
+
+function generate(input: GenerateInput): OutputFile[] {
+  if ("ref" in input) {
+    return generateVanillaExtractFiles(input.config, {
+      outDir: "dist-test",
+      focusRingColor: input.ref.color.black,
+      fontFamily: input.ref.fontFamily.body,
+      placeholderColor: input.ref.color.black,
+    });
+  }
+  return generateVanillaExtractFiles(input.config, input.output);
 }
 
 describe("contract", () => {
@@ -62,15 +75,14 @@ describe("contract", () => {
     const system = defineSystemTokens({ gap: ref.spacing["0-5"], accent: ref.colors[200] });
     const config = defineConfig({
       tokens: { ref, system, components: {} },
-      output: {
-        target: "vanilla-extract",
-        outDir: "dist-test",
-        focusRingColor: ref.__veColor,
-        fontFamily: ref.__veFontFamily,
-        placeholderColor: ref.__veColor,
-      },
     });
-    const [file] = generate(config);
+    const output: VanillaExtractPluginOptions = {
+      outDir: "dist-test",
+      focusRingColor: ref.__veColor,
+      fontFamily: ref.__veFontFamily,
+      placeholderColor: ref.__veColor,
+    };
+    const [file] = generate({ config, output });
     expect(file!.content).toMatch(/"gap": vars\.ref\.spacing\["0-5"\],/);
     expect(file!.content).not.toMatch(/vars\.ref\.spacing\.0-5/);
     expect(file!.content).toMatch(/"accent": vars\.ref\.colors\[200\],/);
@@ -108,15 +120,14 @@ describe("base themeClass", () => {
     const system = defineSystemTokens({ meta: { name: tokens.fontFamily("O'Brien \\ Co") } });
     const config = defineConfig({
       tokens: { ref, system, components: {} },
-      output: {
-        target: "vanilla-extract",
-        outDir: "dist-test",
-        focusRingColor: ref.__veColor,
-        fontFamily: ref.__veFontFamily,
-        placeholderColor: ref.__veColor,
-      },
     });
-    const [file] = generate(config);
+    const output: VanillaExtractPluginOptions = {
+      outDir: "dist-test",
+      focusRingColor: ref.__veColor,
+      fontFamily: ref.__veFontFamily,
+      placeholderColor: ref.__veColor,
+    };
+    const [file] = generate({ config, output });
     expect(file!.content).toMatch(/"name": 'O\\'Brien \\\\ Co',/);
   });
 
@@ -132,14 +143,13 @@ describe("base themeClass", () => {
     });
     const config = defineConfig({
       tokens: { ref, system, components: {} },
-      output: {
-        target: "vanilla-extract",
-        outDir: "dist-test",
-        focusRingColor: ref.__veColor,
-        fontFamily: ref.__veFontFamily,
-        placeholderColor: ref.__veColor,
-      },
     });
+    const output: VanillaExtractPluginOptions = {
+      outDir: "dist-test",
+      focusRingColor: ref.__veColor,
+      fontFamily: ref.__veFontFamily,
+      placeholderColor: ref.__veColor,
+    };
     // Bypass tokens.color(...) validation to exercise escapeTemplateLiteral directly:
     // a colorSpace value is otherwise never attacker/author-controlled free text.
     config.registry.set("system.border.weird", {
@@ -159,7 +169,7 @@ describe("base themeClass", () => {
       },
       layer: "system",
     });
-    const [file] = generate(config);
+    const [file] = generate({ config, output });
     expect(file!.content).toMatch(/color\(custom\\`\\\$\{x\} 0 0 0\)/);
   });
 
@@ -174,15 +184,14 @@ describe("base themeClass", () => {
     const system = defineSystemTokens({ typography: { body: ref.typography.base } });
     const config = defineConfig({
       tokens: { ref, system, components: {} },
-      output: {
-        target: "vanilla-extract",
-        outDir: "dist-test",
-        focusRingColor: ref.__veColor,
-        fontFamily: ref.__veFontFamily,
-        placeholderColor: ref.__veColor,
-      },
     });
-    const [file] = generate(config);
+    const output: VanillaExtractPluginOptions = {
+      outDir: "dist-test",
+      focusRingColor: ref.__veColor,
+      fontFamily: ref.__veFontFamily,
+      placeholderColor: ref.__veColor,
+    };
+    const [file] = generate({ config, output });
     expect(file!.content).toMatch(/"fontSize": vars\.ref\.typography\.base\.fontSize,/);
     expect(file!.content).toMatch(/"fontFamily": vars\.ref\.typography\.base\.fontFamily,/);
   });
@@ -201,15 +210,14 @@ describe("theme classes (Fix B + C)", () => {
     const config = defineConfig({
       tokens: { ref, system, components: {} },
       themes: { bravo, alpha },
-      output: {
-        target: "vanilla-extract",
-        outDir: "dist-test",
-        focusRingColor: ref.__veColor,
-        fontFamily: ref.__veFontFamily,
-        placeholderColor: ref.__veColor,
-      },
     });
-    const [file] = generate(config);
+    const output: VanillaExtractPluginOptions = {
+      outDir: "dist-test",
+      focusRingColor: ref.__veColor,
+      fontFamily: ref.__veFontFamily,
+      placeholderColor: ref.__veColor,
+    };
+    const [file] = generate({ config, output });
     expect(file!.content).toMatch(/export const alphaThemeClass = createTheme/);
     expect(file!.content).toMatch(/export const bravoThemeClass = createTheme/);
     expect(file!.content.indexOf("alphaThemeClass")).toBeLessThan(
@@ -262,15 +270,14 @@ describe("theme classes (Fix B + C)", () => {
     const config = defineConfig({
       tokens: { ref, system, components: {} },
       themes: { dark },
-      output: {
-        target: "vanilla-extract",
-        outDir: "dist-test",
-        focusRingColor: ref.__veColor,
-        fontFamily: ref.__veFontFamily,
-        placeholderColor: ref.__veColor,
-      },
     });
-    const [file] = generate(config);
+    const output: VanillaExtractPluginOptions = {
+      outDir: "dist-test",
+      focusRingColor: ref.__veColor,
+      fontFamily: ref.__veFontFamily,
+      placeholderColor: ref.__veColor,
+    };
+    const [file] = generate({ config, output });
     const darkBlock = file!.content.slice(file!.content.indexOf("darkThemeClass"));
     expect(darkBlock).toMatch(/"card": `0px 2px 4px 0px \$\{vars\.ref\.color\.black\}`,/);
   });
@@ -285,15 +292,14 @@ describe("theme classes (Fix B + C)", () => {
     const config = defineConfig({
       tokens: { ref, system: defineSystemTokens({}), components: {} },
       themes: { dark },
-      output: {
-        target: "vanilla-extract",
-        outDir: "dist-test",
-        focusRingColor: ref.__veColor,
-        fontFamily: ref.__veFontFamily,
-        placeholderColor: ref.__veColor,
-      },
     });
-    const [file] = generate(config);
+    const output: VanillaExtractPluginOptions = {
+      outDir: "dist-test",
+      focusRingColor: ref.__veColor,
+      fontFamily: ref.__veFontFamily,
+      placeholderColor: ref.__veColor,
+    };
+    const [file] = generate({ config, output });
     const darkBlock = file!.content.slice(file!.content.indexOf("darkThemeClass"));
     expect(darkBlock).toMatch(/"none": '0px',/);
   });
@@ -310,15 +316,14 @@ describe("theme classes (Fix B + C)", () => {
     const config = defineConfig({
       tokens: { ref, system: defineSystemTokens({}), components: {} },
       themes: { dark },
-      output: {
-        target: "vanilla-extract",
-        outDir: "dist-test",
-        focusRingColor: ref.__veColor,
-        fontFamily: ref.__veFontFamily,
-        placeholderColor: ref.__veColor,
-      },
     });
-    const [file] = generate(config);
+    const output: VanillaExtractPluginOptions = {
+      outDir: "dist-test",
+      focusRingColor: ref.__veColor,
+      fontFamily: ref.__veFontFamily,
+      placeholderColor: ref.__veColor,
+    };
+    const [file] = generate({ config, output });
     const darkBlock = file!.content.slice(file!.content.indexOf("darkThemeClass"));
     expect(darkBlock).toMatch(/"1": '100px',/);
     expect(darkBlock).toMatch(/"0": '0px',/);
@@ -344,15 +349,14 @@ describe("scales, errors, files", () => {
     });
     const config = defineConfig({
       tokens: { ref, system: defineSystemTokens({}), components: {} },
-      output: {
-        target: "vanilla-extract",
-        outDir: "dist-test",
-        focusRingColor: ref.__veColor,
-        fontFamily: ref.__veFontFamily,
-        placeholderColor: ref.__veColor,
-      },
     });
-    const [file] = generate(config);
+    const output: VanillaExtractPluginOptions = {
+      outDir: "dist-test",
+      focusRingColor: ref.__veColor,
+      fontFamily: ref.__veFontFamily,
+      placeholderColor: ref.__veColor,
+    };
+    const [file] = generate({ config, output });
     expect(file!.content).toMatch(/export type RefLabels = "a" \| "b";/);
     expect(file!.content).toMatch(/export const refLabels = vars\.ref\.labels;/);
   });
@@ -368,15 +372,14 @@ describe("scales, errors, files", () => {
     });
     const config = defineConfig({
       tokens: { ref, system: defineSystemTokens({}), components: {} },
-      output: {
-        target: "vanilla-extract",
-        outDir: "dist-test",
-        focusRingColor: ref.__veColor,
-        fontFamily: ref.__veFontFamily,
-        placeholderColor: ref.__veColor,
-      },
     });
-    const [file] = generate(config);
+    const output: VanillaExtractPluginOptions = {
+      outDir: "dist-test",
+      focusRingColor: ref.__veColor,
+      fontFamily: ref.__veFontFamily,
+      placeholderColor: ref.__veColor,
+    };
+    const [file] = generate({ config, output });
     expect(file!.content).toMatch(/export type RefTransitions = "fast" \| "slow";/);
     expect(file!.content).toMatch(/export const refTransitions = vars\.ref\.transitions;/);
   });
@@ -396,14 +399,13 @@ describe("scales, errors, files", () => {
     // Manually construct a registry with a circular alias: a -> b -> a.
     const config = defineConfig({
       tokens: { ref: a, system: defineSystemTokens({}), components: {} },
-      output: {
-        target: "vanilla-extract",
-        outDir: "dist-test",
-        focusRingColor: a.__veColor,
-        fontFamily: a.__veFontFamily,
-        placeholderColor: a.__veColor,
-      },
     });
+    const output: VanillaExtractPluginOptions = {
+      outDir: "dist-test",
+      focusRingColor: a.__veColor,
+      fontFamily: a.__veFontFamily,
+      placeholderColor: a.__veColor,
+    };
     config.registry.set("ref.color.a", {
       path: ["ref", "color", "a"],
       $type: "color",
@@ -418,7 +420,9 @@ describe("scales, errors, files", () => {
       alias: ["ref", "color", "a"],
       layer: "ref",
     });
-    expect(() => generate(config)).toThrow(/Circular alias detected at token path: ref\.color\./);
+    expect(() => generate({ config, output })).toThrow(
+      /Circular alias detected at token path: ref\.color\./,
+    );
   });
 
   test("a missing alias target throws", () => {
@@ -429,14 +433,13 @@ describe("scales, errors, files", () => {
     });
     const config = defineConfig({
       tokens: { ref: a, system: defineSystemTokens({}), components: {} },
-      output: {
-        target: "vanilla-extract",
-        outDir: "dist-test",
-        focusRingColor: a.__veColor,
-        fontFamily: a.__veFontFamily,
-        placeholderColor: a.__veColor,
-      },
     });
+    const output: VanillaExtractPluginOptions = {
+      outDir: "dist-test",
+      focusRingColor: a.__veColor,
+      fontFamily: a.__veFontFamily,
+      placeholderColor: a.__veColor,
+    };
     config.registry.set("ref.color.a", {
       path: ["ref", "color", "a"],
       $type: "color",
@@ -444,7 +447,7 @@ describe("scales, errors, files", () => {
       alias: ["ref", "color", "missing"],
       layer: "ref",
     });
-    expect(() => generate(config)).toThrow("Alias target not found: ref.color.missing");
+    expect(() => generate({ config, output })).toThrow("Alias target not found: ref.color.missing");
   });
 
   test("generate with no builtInComponents returns tokens.css.ts and reset.gen.css.ts", () => {
@@ -484,18 +487,17 @@ describe("scales, errors, files", () => {
     });
     const config = defineConfig({
       tokens: { ref, system, components: {} },
-      output: {
-        target: "vanilla-extract",
-        outDir: "dist-test",
-        builtInComponents: {
-          Stack: { spacing: system.spacing },
-        },
-        focusRingColor: ref.__veColor,
-        fontFamily: ref.__veFontFamily,
-        placeholderColor: ref.__veColor,
-      },
     });
-    const files = generate(config);
+    const output: VanillaExtractPluginOptions = {
+      outDir: "dist-test",
+      builtInComponents: {
+        Stack: { spacing: system.spacing },
+      },
+      focusRingColor: ref.__veColor,
+      fontFamily: ref.__veFontFamily,
+      placeholderColor: ref.__veColor,
+    };
+    const files = generate({ config, output });
     const filenames = files.map((file) => file.filename);
     expect(filenames).toContain("tokens.css.ts");
     expect(filenames).toContain("renderElement.gen.tsx");
@@ -550,18 +552,17 @@ describe("scales, errors, files", () => {
     });
     const config = defineConfig({
       tokens: { ref, system, components: {} },
-      output: {
-        target: "vanilla-extract",
-        outDir: "dist-test",
-        builtInComponents: {
-          Stack: { spacing: system.spacing },
-        },
-        focusRingColor: ref.__veColor,
-        fontFamily: ref.__veFontFamily,
-        placeholderColor: ref.__veColor,
-      },
     });
-    const files = generate(config);
+    const output: VanillaExtractPluginOptions = {
+      outDir: "dist-test",
+      builtInComponents: {
+        Stack: { spacing: system.spacing },
+      },
+      focusRingColor: ref.__veColor,
+      fontFamily: ref.__veFontFamily,
+      placeholderColor: ref.__veColor,
+    };
+    const files = generate({ config, output });
     const styles = files.find((file) => file.filename === "components/stack/Stack.gen.css.ts")!;
     const component = files.find((file) => file.filename === "components/stack/Stack.gen.tsx")!;
 
@@ -587,19 +588,18 @@ describe("scales, errors, files", () => {
     });
     const config = defineConfig({
       tokens: { ref, system, components: {} },
-      output: {
-        target: "vanilla-extract",
-        outDir: "dist-test",
-        builtInComponents: {
-          Stack: { spacing: system.wrongScale },
-        } as never,
-        focusRingColor: ref.__veColor,
-        fontFamily: ref.__veFontFamily,
-        placeholderColor: ref.__veColor,
-      },
     });
-    expect(() => generate(config)).toThrow(MissingDesignTokensError);
-    expect(() => generate(config)).toThrow(/must be a dimension TokenScale/);
+    const output: VanillaExtractPluginOptions = {
+      outDir: "dist-test",
+      builtInComponents: {
+        Stack: { spacing: system.wrongScale },
+      } as never,
+      focusRingColor: ref.__veColor,
+      fontFamily: ref.__veFontFamily,
+      placeholderColor: ref.__veColor,
+    };
+    expect(() => generate({ config, output })).toThrow(MissingDesignTokensError);
+    expect(() => generate({ config, output })).toThrow(/must be a dimension TokenScale/);
   });
 
   test("missing tokens throw MissingDesignTokensError", () => {
@@ -610,16 +610,15 @@ describe("scales, errors, files", () => {
     });
     const config = defineConfig({
       tokens: { ref, system: defineSystemTokens({}), components: {} },
-      output: {
-        target: "vanilla-extract",
-        outDir: "dist-test",
-        builtInComponents: { Stack: {} } as never,
-        focusRingColor: ref.__veColor,
-        fontFamily: ref.__veFontFamily,
-        placeholderColor: ref.__veColor,
-      },
     });
-    expect(() => generate(config)).toThrow(MissingDesignTokensError);
+    const output: VanillaExtractPluginOptions = {
+      outDir: "dist-test",
+      builtInComponents: { Stack: {} } as never,
+      focusRingColor: ref.__veColor,
+      fontFamily: ref.__veFontFamily,
+      placeholderColor: ref.__veColor,
+    };
+    expect(() => generate({ config, output })).toThrow(MissingDesignTokensError);
   });
 
   test("every generated tokens.css.ts in this suite passes assertParses", () => {
@@ -647,18 +646,18 @@ describe("breakpoints", () => {
     const system = defineSystemTokens({
       spacing: tokens.dimensionScale({ 0: "0px", 1: "4px", 2: "8px" }),
     });
-    return defineConfig({
+    const config = defineConfig({
       tokens: { ref, system, components: {} },
-      output: {
-        target: "vanilla-extract",
-        outDir: "dist-test",
-        ...(breakpoints ? { breakpoints } : {}),
-        builtInComponents: { Grid: { spacing: system.spacing } },
-        focusRingColor: ref.__veColor,
-        fontFamily: ref.__veFontFamily,
-        placeholderColor: ref.__veColor,
-      },
     });
+    const output: VanillaExtractPluginOptions = {
+      outDir: "dist-test",
+      ...(breakpoints ? { breakpoints } : {}),
+      builtInComponents: { Grid: { spacing: system.spacing } },
+      focusRingColor: ref.__veColor,
+      fontFamily: ref.__veFontFamily,
+      placeholderColor: ref.__veColor,
+    };
+    return { config, output };
   }
 
   test("omitting breakpoints keeps output byte-identical to before responsive support existed", () => {
@@ -739,17 +738,16 @@ describe("breakpoints", () => {
     const config = defineConfig({
       tokens: { ref, system, components: {} },
       themes: { dark },
-      output: {
-        target: "vanilla-extract",
-        outDir: "dist-test",
-        breakpoints: ref.breakpoints,
-        builtInComponents: { Grid: { spacing: system.spacing } },
-        focusRingColor: ref.__veColor,
-        fontFamily: ref.__veFontFamily,
-        placeholderColor: ref.__veColor,
-      },
     });
-    expect(() => generate(config)).toThrow(/cannot be overridden by theme "dark"/);
+    const output: VanillaExtractPluginOptions = {
+      outDir: "dist-test",
+      breakpoints: ref.breakpoints,
+      builtInComponents: { Grid: { spacing: system.spacing } },
+      focusRingColor: ref.__veColor,
+      fontFamily: ref.__veFontFamily,
+      placeholderColor: ref.__veColor,
+    };
+    expect(() => generate({ config, output })).toThrow(/cannot be overridden by theme "dark"/);
   });
 });
 
@@ -768,21 +766,21 @@ describe("Grid, Text, Icon built-in components", () => {
       }),
       iconSizes: tokens.dimensionScale({ sm: "12px", lg: "24px" }),
     });
-    return defineConfig({
+    const config = defineConfig({
       tokens: { ref, system, components: {} },
-      output: {
-        target: "vanilla-extract",
-        outDir: "dist-test",
-        builtInComponents: {
-          Grid: { spacing: system.spacing },
-          Text: { typography: system.textStyles, color: system.textColors },
-          Icon: { size: system.iconSizes, color: system.textColors },
-        },
-        focusRingColor: ref.__veColor,
-        fontFamily: ref.__veFontFamily,
-        placeholderColor: ref.__veColor,
-      },
     });
+    const output: VanillaExtractPluginOptions = {
+      outDir: "dist-test",
+      builtInComponents: {
+        Grid: { spacing: system.spacing },
+        Text: { typography: system.textStyles, color: system.textColors },
+        Icon: { size: system.iconSizes, color: system.textColors },
+      },
+      focusRingColor: ref.__veColor,
+      fontFamily: ref.__veFontFamily,
+      placeholderColor: ref.__veColor,
+    };
+    return { config, output };
   }
 
   test("selecting Grid emits Grid.gen.css.ts and Grid.gen.tsx", () => {
@@ -795,16 +793,15 @@ describe("Grid, Text, Icon built-in components", () => {
     });
     const config = defineConfig({
       tokens: { ref, system, components: {} },
-      output: {
-        target: "vanilla-extract",
-        outDir: "dist-test",
-        builtInComponents: { Grid: { spacing: system.spacing } },
-        focusRingColor: ref.__veColor,
-        fontFamily: ref.__veFontFamily,
-        placeholderColor: ref.__veColor,
-      },
     });
-    const files = generate(config);
+    const output: VanillaExtractPluginOptions = {
+      outDir: "dist-test",
+      builtInComponents: { Grid: { spacing: system.spacing } },
+      focusRingColor: ref.__veColor,
+      fontFamily: ref.__veFontFamily,
+      placeholderColor: ref.__veColor,
+    };
+    const files = generate({ config, output });
     const filenames = files.map((file) => file.filename);
     expect(filenames).toContain("components/grid/Grid.gen.css.ts");
     expect(filenames).toContain("components/grid/Grid.gen.tsx");
@@ -825,18 +822,17 @@ describe("Grid, Text, Icon built-in components", () => {
     });
     const config = defineConfig({
       tokens: { ref, system, components: {} },
-      output: {
-        target: "vanilla-extract",
-        outDir: "dist-test",
-        builtInComponents: {
-          Text: { typography: system.textStyles, color: system.textColors },
-        },
-        focusRingColor: ref.__veColor,
-        fontFamily: ref.__veFontFamily,
-        placeholderColor: ref.__veColor,
-      },
     });
-    const files = generate(config);
+    const output: VanillaExtractPluginOptions = {
+      outDir: "dist-test",
+      builtInComponents: {
+        Text: { typography: system.textStyles, color: system.textColors },
+      },
+      focusRingColor: ref.__veColor,
+      fontFamily: ref.__veFontFamily,
+      placeholderColor: ref.__veColor,
+    };
+    const files = generate({ config, output });
     const filenames = files.map((file) => file.filename);
     expect(filenames).toContain("components/text/Text.gen.css.ts");
     expect(filenames).toContain("components/text/Text.gen.tsx");
@@ -874,17 +870,16 @@ describe("Grid, Text, Icon built-in components", () => {
     });
     const config = defineConfig({
       tokens: { ref, system, components: {} },
-      output: {
-        target: "vanilla-extract",
-        outDir: "dist-test",
-        builtInComponents: { Grid: { spacing: system.wrongScale } } as never,
-        focusRingColor: ref.__veColor,
-        fontFamily: ref.__veFontFamily,
-        placeholderColor: ref.__veColor,
-      },
     });
-    expect(() => generate(config)).toThrow(MissingDesignTokensError);
-    expect(() => generate(config)).toThrow(/must be a dimension TokenScale/);
+    const output: VanillaExtractPluginOptions = {
+      outDir: "dist-test",
+      builtInComponents: { Grid: { spacing: system.wrongScale } } as never,
+      focusRingColor: ref.__veColor,
+      fontFamily: ref.__veFontFamily,
+      placeholderColor: ref.__veColor,
+    };
+    expect(() => generate({ config, output })).toThrow(MissingDesignTokensError);
+    expect(() => generate({ config, output })).toThrow(/must be a dimension TokenScale/);
   });
 
   test("missing Icon bindings throw MissingDesignTokensError", () => {
@@ -894,16 +889,15 @@ describe("Grid, Text, Icon built-in components", () => {
     });
     const config = defineConfig({
       tokens: { ref, system: defineSystemTokens({}), components: {} },
-      output: {
-        target: "vanilla-extract",
-        outDir: "dist-test",
-        builtInComponents: { Icon: {} } as never,
-        focusRingColor: ref.__veColor,
-        fontFamily: ref.__veFontFamily,
-        placeholderColor: ref.__veColor,
-      },
     });
-    expect(() => generate(config)).toThrow(MissingDesignTokensError);
+    const output: VanillaExtractPluginOptions = {
+      outDir: "dist-test",
+      builtInComponents: { Icon: {} } as never,
+      focusRingColor: ref.__veColor,
+      fontFamily: ref.__veFontFamily,
+      placeholderColor: ref.__veColor,
+    };
+    expect(() => generate({ config, output })).toThrow(MissingDesignTokensError);
   });
 
   test("Text.gen.tsx/Icon.gen.tsx/Grid.gen.tsx reference the resolved bindings", () => {
@@ -958,43 +952,43 @@ describe("Button built-in component", () => {
       },
       spacing: { sm: tokens.dimension("4px"), md: tokens.dimension("8px") },
     });
-    return defineConfig({
+    const config = defineConfig({
       tokens: { ref, system, components: {} },
-      output: {
-        target: "vanilla-extract",
-        outDir: "dist-test",
-        builtInComponents: {
-          Button: {
-            borderRadius: system.radius.element,
-            variants: {
-              primary: {
-                backgroundColor: ref.color.black,
-                color: ref.color.white,
-                typography: system.textStyles.body,
-                border: system.border.default,
-                hoverBackgroundColor: ref.color.black,
-                hoverColor: ref.color.white,
-                hoverBorder: system.border.default,
-                disabledBackgroundColor: ref.color.black,
-                disabledColor: ref.color.white,
-                disabledBorder: system.border.default,
-              },
+    });
+    const output: VanillaExtractPluginOptions = {
+      outDir: "dist-test",
+      builtInComponents: {
+        Button: {
+          borderRadius: system.radius.element,
+          variants: {
+            primary: {
+              backgroundColor: ref.color.black,
+              color: ref.color.white,
+              typography: system.textStyles.body,
+              border: system.border.default,
+              hoverBackgroundColor: ref.color.black,
+              hoverColor: ref.color.white,
+              hoverBorder: system.border.default,
+              disabledBackgroundColor: ref.color.black,
+              disabledColor: ref.color.white,
+              disabledBorder: system.border.default,
             },
-            sizes: {
-              md: {
-                horizontalSpacing: system.spacing.md,
-                verticalSpacing: system.spacing.sm,
-                typography: system.textStyles.body,
-                gap: system.spacing.sm,
-              },
+          },
+          sizes: {
+            md: {
+              horizontalSpacing: system.spacing.md,
+              verticalSpacing: system.spacing.sm,
+              typography: system.textStyles.body,
+              gap: system.spacing.sm,
             },
           },
         },
-        focusRingColor: ref.__veColor,
-        fontFamily: ref.__veFontFamily,
-        placeholderColor: ref.__veColor,
       },
-    });
+      focusRingColor: ref.__veColor,
+      fontFamily: ref.__veFontFamily,
+      placeholderColor: ref.__veColor,
+    };
+    return { config, output };
   }
 
   test("selecting Button emits Button.gen.css.ts and Button.gen.tsx", () => {
@@ -1022,17 +1016,16 @@ describe("Button built-in component", () => {
     });
     const config = defineConfig({
       tokens: { ref, system: defineSystemTokens({}), components: {} },
-      output: {
-        target: "vanilla-extract",
-        outDir: "dist-test",
-        builtInComponents: { Button: {} } as never,
-        focusRingColor: ref.__veColor,
-        fontFamily: ref.__veFontFamily,
-        placeholderColor: ref.__veColor,
-      },
     });
-    expect(() => generate(config)).toThrow(MissingDesignTokensError);
-    expect(() => generate(config)).toThrow(/requires config "borderRadius"/);
+    const output: VanillaExtractPluginOptions = {
+      outDir: "dist-test",
+      builtInComponents: { Button: {} } as never,
+      focusRingColor: ref.__veColor,
+      fontFamily: ref.__veFontFamily,
+      placeholderColor: ref.__veColor,
+    };
+    expect(() => generate({ config, output })).toThrow(MissingDesignTokensError);
+    expect(() => generate({ config, output })).toThrow(/requires config "borderRadius"/);
   });
 
   test("Button generated sources pass assertParses", () => {
@@ -1062,25 +1055,25 @@ describe("Avatar built-in component", () => {
         body: tokens.typography({ fontFamily: "Arial", fontSize: "14px", fontWeight: "regular" }),
       },
     });
-    return defineConfig({
+    const config = defineConfig({
       tokens: { ref, system, components: {} },
-      output: {
-        target: "vanilla-extract",
-        outDir: "dist-test",
-        builtInComponents: {
-          Avatar: {
-            sizes: ref.sizeScale,
-            color: ref.color.white,
-            backgroundColor: ref.color.black,
-            borderRadius: system.radius.element,
-            typography: system.textStyles.body,
-          },
-        },
-        focusRingColor: ref.__veColor,
-        fontFamily: ref.__veFontFamily,
-        placeholderColor: ref.__veColor,
-      },
     });
+    const output: VanillaExtractPluginOptions = {
+      outDir: "dist-test",
+      builtInComponents: {
+        Avatar: {
+          sizes: ref.sizeScale,
+          color: ref.color.white,
+          backgroundColor: ref.color.black,
+          borderRadius: system.radius.element,
+          typography: system.textStyles.body,
+        },
+      },
+      focusRingColor: ref.__veColor,
+      fontFamily: ref.__veFontFamily,
+      placeholderColor: ref.__veColor,
+    };
+    return { config, output };
   }
 
   test("selecting Avatar emits Avatar.gen.css.ts and Avatar.gen.tsx", () => {
@@ -1107,17 +1100,16 @@ describe("Avatar built-in component", () => {
     });
     const config = defineConfig({
       tokens: { ref, system: defineSystemTokens({}), components: {} },
-      output: {
-        target: "vanilla-extract",
-        outDir: "dist-test",
-        builtInComponents: { Avatar: {} } as never,
-        focusRingColor: ref.__veColor,
-        fontFamily: ref.__veFontFamily,
-        placeholderColor: ref.__veColor,
-      },
     });
-    expect(() => generate(config)).toThrow(MissingDesignTokensError);
-    expect(() => generate(config)).toThrow(/requires config "sizes"/);
+    const output: VanillaExtractPluginOptions = {
+      outDir: "dist-test",
+      builtInComponents: { Avatar: {} } as never,
+      focusRingColor: ref.__veColor,
+      fontFamily: ref.__veFontFamily,
+      placeholderColor: ref.__veColor,
+    };
+    expect(() => generate({ config, output })).toThrow(MissingDesignTokensError);
+    expect(() => generate({ config, output })).toThrow(/requires config "sizes"/);
   });
 
   test("Avatar generated sources pass assertParses", () => {
@@ -1152,28 +1144,28 @@ describe("QuoteBlock built-in component", () => {
         }),
       },
     });
-    return defineConfig({
+    const config = defineConfig({
       tokens: { ref, system, components: {} },
-      output: {
-        target: "vanilla-extract",
-        outDir: "dist-test",
-        builtInComponents: {
-          QuoteBlock: {
-            color: ref.color.black,
-            typography: system.textStyles.body,
-            citationColor: ref.color.gray,
-            citationTypography: system.textStyles.supporting,
-            border: system.border.default,
-            horizontalSpacing: system.spacing.md,
-            verticalSpacing: system.spacing.sm,
-            gap: system.spacing.sm,
-          },
-        },
-        focusRingColor: ref.__veColor,
-        fontFamily: ref.__veFontFamily,
-        placeholderColor: ref.__veColor,
-      },
     });
+    const output: VanillaExtractPluginOptions = {
+      outDir: "dist-test",
+      builtInComponents: {
+        QuoteBlock: {
+          color: ref.color.black,
+          typography: system.textStyles.body,
+          citationColor: ref.color.gray,
+          citationTypography: system.textStyles.supporting,
+          border: system.border.default,
+          horizontalSpacing: system.spacing.md,
+          verticalSpacing: system.spacing.sm,
+          gap: system.spacing.sm,
+        },
+      },
+      focusRingColor: ref.__veColor,
+      fontFamily: ref.__veFontFamily,
+      placeholderColor: ref.__veColor,
+    };
+    return { config, output };
   }
 
   test("selecting QuoteBlock emits QuoteBlock.gen.css.ts and QuoteBlock.gen.tsx", () => {
@@ -1200,17 +1192,16 @@ describe("QuoteBlock built-in component", () => {
     });
     const config = defineConfig({
       tokens: { ref, system: defineSystemTokens({}), components: {} },
-      output: {
-        target: "vanilla-extract",
-        outDir: "dist-test",
-        builtInComponents: { QuoteBlock: {} } as never,
-        focusRingColor: ref.__veColor,
-        fontFamily: ref.__veFontFamily,
-        placeholderColor: ref.__veColor,
-      },
     });
-    expect(() => generate(config)).toThrow(MissingDesignTokensError);
-    expect(() => generate(config)).toThrow(/requires config "color"/);
+    const output: VanillaExtractPluginOptions = {
+      outDir: "dist-test",
+      builtInComponents: { QuoteBlock: {} } as never,
+      focusRingColor: ref.__veColor,
+      fontFamily: ref.__veFontFamily,
+      placeholderColor: ref.__veColor,
+    };
+    expect(() => generate({ config, output })).toThrow(MissingDesignTokensError);
+    expect(() => generate({ config, output })).toThrow(/requires config "color"/);
   });
 
   test("QuoteBlock generated sources pass assertParses", () => {
@@ -1245,27 +1236,27 @@ describe("Code built-in component", () => {
         }),
       },
     });
-    return defineConfig({
+    const config = defineConfig({
       tokens: { ref, system, components: {} },
-      output: {
-        target: "vanilla-extract",
-        outDir: "dist-test",
-        builtInComponents: {
-          Code: {
-            color: ref.color.black,
-            backgroundColor: ref.color.gray,
-            border: system.border.default,
-            borderRadius: system.radius.inner,
-            typography: system.textStyles.code,
-            horizontalSpacing: system.spacing.md,
-            verticalSpacing: system.spacing.sm,
-          },
-        },
-        focusRingColor: ref.__veColor,
-        fontFamily: ref.__veFontFamily,
-        placeholderColor: ref.__veColor,
-      },
     });
+    const output: VanillaExtractPluginOptions = {
+      outDir: "dist-test",
+      builtInComponents: {
+        Code: {
+          color: ref.color.black,
+          backgroundColor: ref.color.gray,
+          border: system.border.default,
+          borderRadius: system.radius.inner,
+          typography: system.textStyles.code,
+          horizontalSpacing: system.spacing.md,
+          verticalSpacing: system.spacing.sm,
+        },
+      },
+      focusRingColor: ref.__veColor,
+      fontFamily: ref.__veFontFamily,
+      placeholderColor: ref.__veColor,
+    };
+    return { config, output };
   }
 
   test("selecting Code emits Code.gen.css.ts and Code.gen.tsx", () => {
@@ -1289,17 +1280,16 @@ describe("Code built-in component", () => {
     });
     const config = defineConfig({
       tokens: { ref, system: defineSystemTokens({}), components: {} },
-      output: {
-        target: "vanilla-extract",
-        outDir: "dist-test",
-        builtInComponents: { Code: {} } as never,
-        focusRingColor: ref.__veColor,
-        fontFamily: ref.__veFontFamily,
-        placeholderColor: ref.__veColor,
-      },
     });
-    expect(() => generate(config)).toThrow(MissingDesignTokensError);
-    expect(() => generate(config)).toThrow(/requires config "color"/);
+    const output: VanillaExtractPluginOptions = {
+      outDir: "dist-test",
+      builtInComponents: { Code: {} } as never,
+      focusRingColor: ref.__veColor,
+      fontFamily: ref.__veFontFamily,
+      placeholderColor: ref.__veColor,
+    };
+    expect(() => generate({ config, output })).toThrow(MissingDesignTokensError);
+    expect(() => generate({ config, output })).toThrow(/requires config "color"/);
   });
 
   test("Code generated sources pass assertParses", () => {
@@ -1331,28 +1321,28 @@ describe("KeyboardShortcut built-in component", () => {
         }),
       },
     });
-    return defineConfig({
+    const config = defineConfig({
       tokens: { ref, system, components: {} },
-      output: {
-        target: "vanilla-extract",
-        outDir: "dist-test",
-        builtInComponents: {
-          KeyboardShortcut: {
-            color: ref.color.black,
-            backgroundColor: ref.color.gray,
-            border: system.border.default,
-            borderRadius: system.radius.inner,
-            typography: system.textStyles.code,
-            horizontalSpacing: system.spacing.sm,
-            verticalSpacing: system.spacing.xs,
-            gap: system.spacing.xs,
-          },
-        },
-        focusRingColor: ref.__veColor,
-        fontFamily: ref.__veFontFamily,
-        placeholderColor: ref.__veColor,
-      },
     });
+    const output: VanillaExtractPluginOptions = {
+      outDir: "dist-test",
+      builtInComponents: {
+        KeyboardShortcut: {
+          color: ref.color.black,
+          backgroundColor: ref.color.gray,
+          border: system.border.default,
+          borderRadius: system.radius.inner,
+          typography: system.textStyles.code,
+          horizontalSpacing: system.spacing.sm,
+          verticalSpacing: system.spacing.xs,
+          gap: system.spacing.xs,
+        },
+      },
+      focusRingColor: ref.__veColor,
+      fontFamily: ref.__veFontFamily,
+      placeholderColor: ref.__veColor,
+    };
+    return { config, output };
   }
 
   test("selecting KeyboardShortcut emits KeyboardShortcut.gen.css.ts and KeyboardShortcut.gen.tsx", () => {
@@ -1378,17 +1368,16 @@ describe("KeyboardShortcut built-in component", () => {
     });
     const config = defineConfig({
       tokens: { ref, system: defineSystemTokens({}), components: {} },
-      output: {
-        target: "vanilla-extract",
-        outDir: "dist-test",
-        builtInComponents: { KeyboardShortcut: {} } as never,
-        focusRingColor: ref.__veColor,
-        fontFamily: ref.__veFontFamily,
-        placeholderColor: ref.__veColor,
-      },
     });
-    expect(() => generate(config)).toThrow(MissingDesignTokensError);
-    expect(() => generate(config)).toThrow(/requires config "color"/);
+    const output: VanillaExtractPluginOptions = {
+      outDir: "dist-test",
+      builtInComponents: { KeyboardShortcut: {} } as never,
+      focusRingColor: ref.__veColor,
+      fontFamily: ref.__veFontFamily,
+      placeholderColor: ref.__veColor,
+    };
+    expect(() => generate({ config, output })).toThrow(MissingDesignTokensError);
+    expect(() => generate({ config, output })).toThrow(/requires config "color"/);
   });
 
   test("KeyboardShortcut generated sources pass assertParses", () => {
@@ -1416,24 +1405,24 @@ describe("Divider built-in component", () => {
       radius: { none: tokens.dimension("0px") },
       border: { default: tokens.border({ color: ref.color.black, width: "1px" }) },
     });
-    return defineConfig({
+    const config = defineConfig({
       tokens: { ref, system, components: {} },
-      output: {
-        target: "vanilla-extract",
-        outDir: "dist-test",
-        builtInComponents: {
-          Divider: {
-            border: system.border.default,
-            borderRadius: system.radius.none,
-            color: ref.color.gray,
-            spacing: system.spacing.sm,
-          },
-        },
-        focusRingColor: ref.__veColor,
-        fontFamily: ref.__veFontFamily,
-        placeholderColor: ref.__veColor,
-      },
     });
+    const output: VanillaExtractPluginOptions = {
+      outDir: "dist-test",
+      builtInComponents: {
+        Divider: {
+          border: system.border.default,
+          borderRadius: system.radius.none,
+          color: ref.color.gray,
+          spacing: system.spacing.sm,
+        },
+      },
+      focusRingColor: ref.__veColor,
+      fontFamily: ref.__veFontFamily,
+      placeholderColor: ref.__veColor,
+    };
+    return { config, output };
   }
 
   test("selecting Divider emits Divider.gen.css.ts and Divider.gen.tsx", () => {
@@ -1460,17 +1449,16 @@ describe("Divider built-in component", () => {
     });
     const config = defineConfig({
       tokens: { ref, system: defineSystemTokens({}), components: {} },
-      output: {
-        target: "vanilla-extract",
-        outDir: "dist-test",
-        builtInComponents: { Divider: {} } as never,
-        focusRingColor: ref.__veColor,
-        fontFamily: ref.__veFontFamily,
-        placeholderColor: ref.__veColor,
-      },
     });
-    expect(() => generate(config)).toThrow(MissingDesignTokensError);
-    expect(() => generate(config)).toThrow(/requires config "border"/);
+    const output: VanillaExtractPluginOptions = {
+      outDir: "dist-test",
+      builtInComponents: { Divider: {} } as never,
+      focusRingColor: ref.__veColor,
+      fontFamily: ref.__veFontFamily,
+      placeholderColor: ref.__veColor,
+    };
+    expect(() => generate({ config, output })).toThrow(MissingDesignTokensError);
+    expect(() => generate({ config, output })).toThrow(/requires config "border"/);
   });
 
   test("Divider generated sources pass assertParses", () => {
@@ -1504,32 +1492,32 @@ describe("Collapsible built-in component", () => {
         standard: tokens.transition({ duration: "150ms", timingFunction: [0.24, 1, 0.4, 1] }),
       },
     });
-    return defineConfig({
+    const config = defineConfig({
       tokens: { ref, system, components: {} },
-      output: {
-        target: "vanilla-extract",
-        outDir: "dist-test",
-        builtInComponents: {
-          Collapsible: {
-            borderRadius: system.radius.element,
-            border: system.border.default,
-            backgroundColor: ref.color.white,
-            hoverBackgroundColor: ref.color.white,
-            triggerHorizontalSpacing: system.spacing.md,
-            triggerVerticalSpacing: system.spacing.sm,
-            triggerTypography: system.textStyles.body,
-            triggerColor: ref.color.black,
-            contentHorizontalSpacing: system.spacing.md,
-            contentVerticalSpacing: system.spacing.sm,
-            transition: system.transitions.standard,
-            indicatorIcon: "chevronDown",
-          },
-        },
-        focusRingColor: ref.__veColor,
-        fontFamily: ref.__veFontFamily,
-        placeholderColor: ref.__veColor,
-      },
     });
+    const output: VanillaExtractPluginOptions = {
+      outDir: "dist-test",
+      builtInComponents: {
+        Collapsible: {
+          borderRadius: system.radius.element,
+          border: system.border.default,
+          backgroundColor: ref.color.white,
+          hoverBackgroundColor: ref.color.white,
+          triggerHorizontalSpacing: system.spacing.md,
+          triggerVerticalSpacing: system.spacing.sm,
+          triggerTypography: system.textStyles.body,
+          triggerColor: ref.color.black,
+          contentHorizontalSpacing: system.spacing.md,
+          contentVerticalSpacing: system.spacing.sm,
+          transition: system.transitions.standard,
+          indicatorIcon: "chevronDown",
+        },
+      },
+      focusRingColor: ref.__veColor,
+      fontFamily: ref.__veFontFamily,
+      placeholderColor: ref.__veColor,
+    };
+    return { config, output };
   }
 
   test("selecting Collapsible emits Collapsible.gen.css.ts and Collapsible.gen.tsx", () => {
@@ -1562,17 +1550,16 @@ describe("Collapsible built-in component", () => {
     });
     const config = defineConfig({
       tokens: { ref, system: defineSystemTokens({}), components: {} },
-      output: {
-        target: "vanilla-extract",
-        outDir: "dist-test",
-        builtInComponents: { Collapsible: {} } as never,
-        focusRingColor: ref.__veColor,
-        fontFamily: ref.__veFontFamily,
-        placeholderColor: ref.__veColor,
-      },
     });
-    expect(() => generate(config)).toThrow(MissingDesignTokensError);
-    expect(() => generate(config)).toThrow(/requires config "borderRadius"/);
+    const output: VanillaExtractPluginOptions = {
+      outDir: "dist-test",
+      builtInComponents: { Collapsible: {} } as never,
+      focusRingColor: ref.__veColor,
+      fontFamily: ref.__veFontFamily,
+      placeholderColor: ref.__veColor,
+    };
+    expect(() => generate({ config, output })).toThrow(MissingDesignTokensError);
+    expect(() => generate({ config, output })).toThrow(/requires config "borderRadius"/);
   });
 
   test("Collapsible generated sources pass assertParses", () => {
@@ -1606,31 +1593,31 @@ describe("Accordion built-in component", () => {
         standard: tokens.transition({ duration: "150ms", timingFunction: [0.24, 1, 0.4, 1] }),
       },
     });
-    return defineConfig({
+    const config = defineConfig({
       tokens: { ref, system, components: {} },
-      output: {
-        target: "vanilla-extract",
-        outDir: "dist-test",
-        builtInComponents: {
-          Accordion: {
-            border: system.border.default,
-            borderRadius: system.radius.element,
-            hoverBackgroundColor: ref.color.white,
-            triggerHorizontalSpacing: system.spacing.md,
-            triggerVerticalSpacing: system.spacing.sm,
-            triggerTypography: system.textStyles.body,
-            triggerColor: ref.color.black,
-            contentHorizontalSpacing: system.spacing.md,
-            contentVerticalSpacing: system.spacing.sm,
-            transition: system.transitions.standard,
-            indicatorIcon: "chevronDown",
-          },
-        },
-        focusRingColor: ref.__veColor,
-        fontFamily: ref.__veFontFamily,
-        placeholderColor: ref.__veColor,
-      },
     });
+    const output: VanillaExtractPluginOptions = {
+      outDir: "dist-test",
+      builtInComponents: {
+        Accordion: {
+          border: system.border.default,
+          borderRadius: system.radius.element,
+          hoverBackgroundColor: ref.color.white,
+          triggerHorizontalSpacing: system.spacing.md,
+          triggerVerticalSpacing: system.spacing.sm,
+          triggerTypography: system.textStyles.body,
+          triggerColor: ref.color.black,
+          contentHorizontalSpacing: system.spacing.md,
+          contentVerticalSpacing: system.spacing.sm,
+          transition: system.transitions.standard,
+          indicatorIcon: "chevronDown",
+        },
+      },
+      focusRingColor: ref.__veColor,
+      fontFamily: ref.__veFontFamily,
+      placeholderColor: ref.__veColor,
+    };
+    return { config, output };
   }
 
   test("selecting Accordion emits Accordion.gen.css.ts and Accordion.gen.tsx", () => {
@@ -1657,17 +1644,16 @@ describe("Accordion built-in component", () => {
     });
     const config = defineConfig({
       tokens: { ref, system: defineSystemTokens({}), components: {} },
-      output: {
-        target: "vanilla-extract",
-        outDir: "dist-test",
-        builtInComponents: { Accordion: {} } as never,
-        focusRingColor: ref.__veColor,
-        fontFamily: ref.__veFontFamily,
-        placeholderColor: ref.__veColor,
-      },
     });
-    expect(() => generate(config)).toThrow(MissingDesignTokensError);
-    expect(() => generate(config)).toThrow(/requires config "border"/);
+    const output: VanillaExtractPluginOptions = {
+      outDir: "dist-test",
+      builtInComponents: { Accordion: {} } as never,
+      focusRingColor: ref.__veColor,
+      fontFamily: ref.__veFontFamily,
+      placeholderColor: ref.__veColor,
+    };
+    expect(() => generate({ config, output })).toThrow(MissingDesignTokensError);
+    expect(() => generate({ config, output })).toThrow(/requires config "border"/);
   });
 
   test("Accordion generated sources pass assertParses", () => {
@@ -1695,24 +1681,24 @@ describe("Link built-in component", () => {
         body: tokens.typography({ fontFamily: "Arial", fontSize: "14px", fontWeight: "regular" }),
       },
     });
-    return defineConfig({
+    const config = defineConfig({
       tokens: { ref, system, components: {} },
-      output: {
-        target: "vanilla-extract",
-        outDir: "dist-test",
-        builtInComponents: {
-          Link: {
-            color: ref.color.blue,
-            hoverColor: ref.color.black,
-            typography: system.textStyles.body,
-            visitedColor: ref.color.blue,
-          },
-        },
-        focusRingColor: ref.__veColor,
-        fontFamily: ref.__veFontFamily,
-        placeholderColor: ref.__veColor,
-      },
     });
+    const output: VanillaExtractPluginOptions = {
+      outDir: "dist-test",
+      builtInComponents: {
+        Link: {
+          color: ref.color.blue,
+          hoverColor: ref.color.black,
+          typography: system.textStyles.body,
+          visitedColor: ref.color.blue,
+        },
+      },
+      focusRingColor: ref.__veColor,
+      fontFamily: ref.__veFontFamily,
+      placeholderColor: ref.__veColor,
+    };
+    return { config, output };
   }
 
   test("selecting Link emits Link.gen.css.ts and Link.gen.tsx", () => {
@@ -1741,17 +1727,16 @@ describe("Link built-in component", () => {
     });
     const config = defineConfig({
       tokens: { ref, system: defineSystemTokens({}), components: {} },
-      output: {
-        target: "vanilla-extract",
-        outDir: "dist-test",
-        builtInComponents: { Link: {} } as never,
-        focusRingColor: ref.__veColor,
-        fontFamily: ref.__veFontFamily,
-        placeholderColor: ref.__veColor,
-      },
     });
-    expect(() => generate(config)).toThrow(MissingDesignTokensError);
-    expect(() => generate(config)).toThrow(/requires config "color"/);
+    const output: VanillaExtractPluginOptions = {
+      outDir: "dist-test",
+      builtInComponents: { Link: {} } as never,
+      focusRingColor: ref.__veColor,
+      fontFamily: ref.__veFontFamily,
+      placeholderColor: ref.__veColor,
+    };
+    expect(() => generate({ config, output })).toThrow(MissingDesignTokensError);
+    expect(() => generate({ config, output })).toThrow(/requires config "color"/);
   });
 
   test("Link generated sources pass assertParses", () => {
@@ -1779,42 +1764,42 @@ describe("IconButton built-in component", () => {
       },
       spacing: { sm: tokens.dimension("4px"), md: tokens.dimension("8px") },
     });
-    return defineConfig({
+    const config = defineConfig({
       tokens: { ref, system, components: {} },
-      output: {
-        target: "vanilla-extract",
-        outDir: "dist-test",
-        builtInComponents: {
-          IconButton: {
-            borderRadius: system.radius.element,
-            variants: {
-              primary: {
-                backgroundColor: ref.color.black,
-                color: ref.color.white,
-                typography: system.textStyles.body,
-                border: system.border.default,
-                hoverBackgroundColor: ref.color.black,
-                hoverColor: ref.color.white,
-                hoverBorder: system.border.default,
-                disabledBackgroundColor: ref.color.black,
-                disabledColor: ref.color.white,
-                disabledBorder: system.border.default,
-              },
+    });
+    const output: VanillaExtractPluginOptions = {
+      outDir: "dist-test",
+      builtInComponents: {
+        IconButton: {
+          borderRadius: system.radius.element,
+          variants: {
+            primary: {
+              backgroundColor: ref.color.black,
+              color: ref.color.white,
+              typography: system.textStyles.body,
+              border: system.border.default,
+              hoverBackgroundColor: ref.color.black,
+              hoverColor: ref.color.white,
+              hoverBorder: system.border.default,
+              disabledBackgroundColor: ref.color.black,
+              disabledColor: ref.color.white,
+              disabledBorder: system.border.default,
             },
-            sizes: {
-              md: {
-                horizontalSpacing: system.spacing.md,
-                verticalSpacing: system.spacing.sm,
-                iconSize: system.spacing.md,
-              },
+          },
+          sizes: {
+            md: {
+              horizontalSpacing: system.spacing.md,
+              verticalSpacing: system.spacing.sm,
+              iconSize: system.spacing.md,
             },
           },
         },
-        focusRingColor: ref.__veColor,
-        fontFamily: ref.__veFontFamily,
-        placeholderColor: ref.__veColor,
       },
-    });
+      focusRingColor: ref.__veColor,
+      fontFamily: ref.__veFontFamily,
+      placeholderColor: ref.__veColor,
+    };
+    return { config, output };
   }
 
   test("selecting IconButton emits IconButton.gen.css.ts and IconButton.gen.tsx", () => {
@@ -1848,17 +1833,16 @@ describe("IconButton built-in component", () => {
     });
     const config = defineConfig({
       tokens: { ref, system: defineSystemTokens({}), components: {} },
-      output: {
-        target: "vanilla-extract",
-        outDir: "dist-test",
-        builtInComponents: { IconButton: {} } as never,
-        focusRingColor: ref.__veColor,
-        fontFamily: ref.__veFontFamily,
-        placeholderColor: ref.__veColor,
-      },
     });
-    expect(() => generate(config)).toThrow(MissingDesignTokensError);
-    expect(() => generate(config)).toThrow(/requires config "borderRadius"/);
+    const output: VanillaExtractPluginOptions = {
+      outDir: "dist-test",
+      builtInComponents: { IconButton: {} } as never,
+      focusRingColor: ref.__veColor,
+      fontFamily: ref.__veFontFamily,
+      placeholderColor: ref.__veColor,
+    };
+    expect(() => generate({ config, output })).toThrow(MissingDesignTokensError);
+    expect(() => generate({ config, output })).toThrow(/requires config "borderRadius"/);
   });
 
   test("IconButton generated sources pass assertParses", () => {
@@ -1898,57 +1882,57 @@ describe("DropdownButton built-in component", () => {
         }),
       },
     });
-    return defineConfig({
+    const config = defineConfig({
       tokens: { ref, system, components: {} },
-      output: {
-        target: "vanilla-extract",
-        outDir: "dist-test",
-        builtInComponents: {
-          DropdownButton: {
-            borderRadius: system.radius.element,
-            variants: {
-              primary: {
-                backgroundColor: ref.color.black,
-                color: ref.color.white,
-                typography: system.textStyles.body,
-                border: system.border.default,
-                hoverBackgroundColor: ref.color.black,
-                hoverColor: ref.color.white,
-                hoverBorder: system.border.default,
-                disabledBackgroundColor: ref.color.black,
-                disabledColor: ref.color.white,
-                disabledBorder: system.border.default,
-              },
-            },
-            sizes: {
-              md: {
-                horizontalSpacing: system.spacing.md,
-                verticalSpacing: system.spacing.sm,
-                typography: system.textStyles.body,
-                gap: system.spacing.sm,
-              },
-            },
-            popupBackgroundColor: ref.color.white,
-            popupBorder: system.border.default,
-            popupBorderRadius: system.radius.element,
-            popupShadow: system.elevation.md,
-            popupSpacing: system.spacing.sm,
-            popupOffset: system.spacing.sm,
-            itemColor: ref.color.black,
-            itemTypography: system.textStyles.body,
-            itemHoverBackgroundColor: ref.color.white,
-            itemDisabledColor: ref.color.black,
-            itemHorizontalSpacing: system.spacing.md,
-            itemVerticalSpacing: system.spacing.sm,
-            itemIconSize: system.spacing.md,
-            indicatorIcon: "chevronDown",
-          },
-        },
-        focusRingColor: ref.__veColor,
-        fontFamily: ref.__veFontFamily,
-        placeholderColor: ref.__veColor,
-      },
     });
+    const output: VanillaExtractPluginOptions = {
+      outDir: "dist-test",
+      builtInComponents: {
+        DropdownButton: {
+          borderRadius: system.radius.element,
+          variants: {
+            primary: {
+              backgroundColor: ref.color.black,
+              color: ref.color.white,
+              typography: system.textStyles.body,
+              border: system.border.default,
+              hoverBackgroundColor: ref.color.black,
+              hoverColor: ref.color.white,
+              hoverBorder: system.border.default,
+              disabledBackgroundColor: ref.color.black,
+              disabledColor: ref.color.white,
+              disabledBorder: system.border.default,
+            },
+          },
+          sizes: {
+            md: {
+              horizontalSpacing: system.spacing.md,
+              verticalSpacing: system.spacing.sm,
+              typography: system.textStyles.body,
+              gap: system.spacing.sm,
+            },
+          },
+          popupBackgroundColor: ref.color.white,
+          popupBorder: system.border.default,
+          popupBorderRadius: system.radius.element,
+          popupShadow: system.elevation.md,
+          popupSpacing: system.spacing.sm,
+          popupOffset: system.spacing.sm,
+          itemColor: ref.color.black,
+          itemTypography: system.textStyles.body,
+          itemHoverBackgroundColor: ref.color.white,
+          itemDisabledColor: ref.color.black,
+          itemHorizontalSpacing: system.spacing.md,
+          itemVerticalSpacing: system.spacing.sm,
+          itemIconSize: system.spacing.md,
+          indicatorIcon: "chevronDown",
+        },
+      },
+      focusRingColor: ref.__veColor,
+      fontFamily: ref.__veFontFamily,
+      placeholderColor: ref.__veColor,
+    };
+    return { config, output };
   }
 
   test("selecting DropdownButton emits DropdownButton.gen.css.ts and DropdownButton.gen.tsx", () => {
@@ -1976,17 +1960,16 @@ describe("DropdownButton built-in component", () => {
     });
     const config = defineConfig({
       tokens: { ref, system: defineSystemTokens({}), components: {} },
-      output: {
-        target: "vanilla-extract",
-        outDir: "dist-test",
-        builtInComponents: { DropdownButton: {} } as never,
-        focusRingColor: ref.__veColor,
-        fontFamily: ref.__veFontFamily,
-        placeholderColor: ref.__veColor,
-      },
     });
-    expect(() => generate(config)).toThrow(MissingDesignTokensError);
-    expect(() => generate(config)).toThrow(/requires config "borderRadius"/);
+    const output: VanillaExtractPluginOptions = {
+      outDir: "dist-test",
+      builtInComponents: { DropdownButton: {} } as never,
+      focusRingColor: ref.__veColor,
+      fontFamily: ref.__veFontFamily,
+      placeholderColor: ref.__veColor,
+    };
+    expect(() => generate({ config, output })).toThrow(MissingDesignTokensError);
+    expect(() => generate({ config, output })).toThrow(/requires config "borderRadius"/);
   });
 
   test("DropdownButton generated sources pass assertParses", () => {
@@ -2017,37 +2000,37 @@ describe("SegmentedControls built-in component", () => {
       },
       spacing: { sm: tokens.dimension("4px"), md: tokens.dimension("8px") },
     });
-    return defineConfig({
+    const config = defineConfig({
       tokens: { ref, system, components: {} },
-      output: {
-        target: "vanilla-extract",
-        outDir: "dist-test",
-        builtInComponents: {
-          SegmentedControls: {
-            borderRadius: system.radius.element,
-            optionBorderRadius: system.radius.inner,
-            border: system.border.default,
-            borderColor: ref.color.black,
-            typography: system.textStyles.body,
-            color: ref.color.black,
-            backgroundColor: ref.color.white,
-            hoverColor: ref.color.black,
-            activeColor: ref.color.white,
-            activeBackgroundColor: ref.color.black,
-            disabledColor: ref.color.black,
-            horizontalSpacing: system.spacing.sm,
-            verticalSpacing: system.spacing.sm,
-            optionHorizontalSpacing: system.spacing.md,
-            optionVerticalSpacing: system.spacing.sm,
-            optionGap: system.spacing.sm,
-            iconSize: system.spacing.md,
-          },
-        },
-        focusRingColor: ref.__veColor,
-        fontFamily: ref.__veFontFamily,
-        placeholderColor: ref.__veColor,
-      },
     });
+    const output: VanillaExtractPluginOptions = {
+      outDir: "dist-test",
+      builtInComponents: {
+        SegmentedControls: {
+          borderRadius: system.radius.element,
+          optionBorderRadius: system.radius.inner,
+          border: system.border.default,
+          borderColor: ref.color.black,
+          typography: system.textStyles.body,
+          color: ref.color.black,
+          backgroundColor: ref.color.white,
+          hoverColor: ref.color.black,
+          activeColor: ref.color.white,
+          activeBackgroundColor: ref.color.black,
+          disabledColor: ref.color.black,
+          horizontalSpacing: system.spacing.sm,
+          verticalSpacing: system.spacing.sm,
+          optionHorizontalSpacing: system.spacing.md,
+          optionVerticalSpacing: system.spacing.sm,
+          optionGap: system.spacing.sm,
+          iconSize: system.spacing.md,
+        },
+      },
+      focusRingColor: ref.__veColor,
+      fontFamily: ref.__veFontFamily,
+      placeholderColor: ref.__veColor,
+    };
+    return { config, output };
   }
 
   test("selecting SegmentedControls emits SegmentedControls.gen.css.ts and SegmentedControls.gen.tsx", () => {
@@ -2079,17 +2062,16 @@ describe("SegmentedControls built-in component", () => {
     });
     const config = defineConfig({
       tokens: { ref, system: defineSystemTokens({}), components: {} },
-      output: {
-        target: "vanilla-extract",
-        outDir: "dist-test",
-        builtInComponents: { SegmentedControls: {} } as never,
-        focusRingColor: ref.__veColor,
-        fontFamily: ref.__veFontFamily,
-        placeholderColor: ref.__veColor,
-      },
     });
-    expect(() => generate(config)).toThrow(MissingDesignTokensError);
-    expect(() => generate(config)).toThrow(/requires config "borderRadius"/);
+    const output: VanillaExtractPluginOptions = {
+      outDir: "dist-test",
+      builtInComponents: { SegmentedControls: {} } as never,
+      focusRingColor: ref.__veColor,
+      fontFamily: ref.__veFontFamily,
+      placeholderColor: ref.__veColor,
+    };
+    expect(() => generate({ config, output })).toThrow(MissingDesignTokensError);
+    expect(() => generate({ config, output })).toThrow(/requires config "borderRadius"/);
   });
 
   test("SegmentedControls generated sources pass assertParses", () => {
@@ -2117,30 +2099,30 @@ describe("SelectableCard built-in component", () => {
       border: { default: tokens.border({ color: ref.color.black, width: "1px" }) },
       spacing: { sm: tokens.dimension("4px"), md: tokens.dimension("8px") },
     });
-    return defineConfig({
+    const config = defineConfig({
       tokens: { ref, system, components: {} },
-      output: {
-        target: "vanilla-extract",
-        outDir: "dist-test",
-        builtInComponents: {
-          SelectableCard: {
-            borderRadius: system.radius.container,
-            border: system.border.default,
-            backgroundColor: ref.color.white,
-            activeBackgroundColor: ref.color.white,
-            activeBorderColor: ref.color.black,
-            hoverBorderColor: ref.color.black,
-            disabledBackgroundColor: ref.color.white,
-            disabledColor: ref.color.black,
-            horizontalSpacing: system.spacing.md,
-            verticalSpacing: system.spacing.sm,
-          },
-        },
-        focusRingColor: ref.__veColor,
-        fontFamily: ref.__veFontFamily,
-        placeholderColor: ref.__veColor,
-      },
     });
+    const output: VanillaExtractPluginOptions = {
+      outDir: "dist-test",
+      builtInComponents: {
+        SelectableCard: {
+          borderRadius: system.radius.container,
+          border: system.border.default,
+          backgroundColor: ref.color.white,
+          activeBackgroundColor: ref.color.white,
+          activeBorderColor: ref.color.black,
+          hoverBorderColor: ref.color.black,
+          disabledBackgroundColor: ref.color.white,
+          disabledColor: ref.color.black,
+          horizontalSpacing: system.spacing.md,
+          verticalSpacing: system.spacing.sm,
+        },
+      },
+      focusRingColor: ref.__veColor,
+      fontFamily: ref.__veFontFamily,
+      placeholderColor: ref.__veColor,
+    };
+    return { config, output };
   }
 
   test("selecting SelectableCard emits SelectableCard.gen.css.ts and SelectableCard.gen.tsx", () => {
@@ -2167,17 +2149,16 @@ describe("SelectableCard built-in component", () => {
     });
     const config = defineConfig({
       tokens: { ref, system: defineSystemTokens({}), components: {} },
-      output: {
-        target: "vanilla-extract",
-        outDir: "dist-test",
-        builtInComponents: { SelectableCard: {} } as never,
-        focusRingColor: ref.__veColor,
-        fontFamily: ref.__veFontFamily,
-        placeholderColor: ref.__veColor,
-      },
     });
-    expect(() => generate(config)).toThrow(MissingDesignTokensError);
-    expect(() => generate(config)).toThrow(/requires config "borderRadius"/);
+    const output: VanillaExtractPluginOptions = {
+      outDir: "dist-test",
+      builtInComponents: { SelectableCard: {} } as never,
+      focusRingColor: ref.__veColor,
+      fontFamily: ref.__veFontFamily,
+      placeholderColor: ref.__veColor,
+    };
+    expect(() => generate({ config, output })).toThrow(MissingDesignTokensError);
+    expect(() => generate({ config, output })).toThrow(/requires config "borderRadius"/);
   });
 
   test("SelectableCard generated sources pass assertParses", () => {
@@ -2214,29 +2195,29 @@ describe("ActionBar built-in component", () => {
         }),
       },
     });
-    return defineConfig({
+    const config = defineConfig({
       tokens: { ref, system, components: {} },
-      output: {
-        target: "vanilla-extract",
-        outDir: "dist-test",
-        builtInComponents: {
-          ActionBar: {
-            backgroundColor: ref.color.white,
-            color: ref.color.black,
-            border: system.border.default,
-            borderRadius: system.radius.container,
-            shadow: system.elevation.md,
-            horizontalSpacing: system.spacing.md,
-            verticalSpacing: system.spacing.sm,
-            gap: system.spacing.sm,
-            offset: system.spacing.md,
-          },
-        },
-        focusRingColor: ref.__veColor,
-        fontFamily: ref.__veFontFamily,
-        placeholderColor: ref.__veColor,
-      },
     });
+    const output: VanillaExtractPluginOptions = {
+      outDir: "dist-test",
+      builtInComponents: {
+        ActionBar: {
+          backgroundColor: ref.color.white,
+          color: ref.color.black,
+          border: system.border.default,
+          borderRadius: system.radius.container,
+          shadow: system.elevation.md,
+          horizontalSpacing: system.spacing.md,
+          verticalSpacing: system.spacing.sm,
+          gap: system.spacing.sm,
+          offset: system.spacing.md,
+        },
+      },
+      focusRingColor: ref.__veColor,
+      fontFamily: ref.__veFontFamily,
+      placeholderColor: ref.__veColor,
+    };
+    return { config, output };
   }
 
   test("selecting ActionBar emits ActionBar.gen.css.ts and ActionBar.gen.tsx", () => {
@@ -2266,17 +2247,16 @@ describe("ActionBar built-in component", () => {
     });
     const config = defineConfig({
       tokens: { ref, system: defineSystemTokens({}), components: {} },
-      output: {
-        target: "vanilla-extract",
-        outDir: "dist-test",
-        builtInComponents: { ActionBar: {} } as never,
-        focusRingColor: ref.__veColor,
-        fontFamily: ref.__veFontFamily,
-        placeholderColor: ref.__veColor,
-      },
     });
-    expect(() => generate(config)).toThrow(MissingDesignTokensError);
-    expect(() => generate(config)).toThrow(/requires config "backgroundColor"/);
+    const output: VanillaExtractPluginOptions = {
+      outDir: "dist-test",
+      builtInComponents: { ActionBar: {} } as never,
+      focusRingColor: ref.__veColor,
+      fontFamily: ref.__veFontFamily,
+      placeholderColor: ref.__veColor,
+    };
+    expect(() => generate({ config, output })).toThrow(MissingDesignTokensError);
+    expect(() => generate({ config, output })).toThrow(/requires config "backgroundColor"/);
   });
 
   test("ActionBar generated sources pass assertParses", () => {
@@ -2307,37 +2287,37 @@ describe("Badge built-in component", () => {
         body: tokens.typography({ fontFamily: "Arial", fontSize: "12px", fontWeight: "regular" }),
       },
     });
-    return defineConfig({
+    const config = defineConfig({
       tokens: { ref, system, components: {} },
-      output: {
-        target: "vanilla-extract",
-        outDir: "dist-test",
-        builtInComponents: {
-          Badge: {
-            borderRadius: system.radius.full,
-            statuses: {
-              info: {
-                color: ref.color.black,
-                backgroundColor: ref.color.white,
-                border: system.border.default,
-              },
+    });
+    const output: VanillaExtractPluginOptions = {
+      outDir: "dist-test",
+      builtInComponents: {
+        Badge: {
+          borderRadius: system.radius.full,
+          statuses: {
+            info: {
+              color: ref.color.black,
+              backgroundColor: ref.color.white,
+              border: system.border.default,
             },
-            sizes: {
-              sm: {
-                typography: system.textStyles.body,
-                horizontalSpacing: system.spacing.sm,
-                verticalSpacing: system.spacing.xs,
-                gap: system.spacing.xs,
-                iconSize: system.spacing.sm,
-              },
+          },
+          sizes: {
+            sm: {
+              typography: system.textStyles.body,
+              horizontalSpacing: system.spacing.sm,
+              verticalSpacing: system.spacing.xs,
+              gap: system.spacing.xs,
+              iconSize: system.spacing.sm,
             },
           },
         },
-        focusRingColor: ref.__veColor,
-        fontFamily: ref.__veFontFamily,
-        placeholderColor: ref.__veColor,
       },
-    });
+      focusRingColor: ref.__veColor,
+      fontFamily: ref.__veFontFamily,
+      placeholderColor: ref.__veColor,
+    };
+    return { config, output };
   }
 
   test("selecting Badge emits Badge.gen.css.ts and Badge.gen.tsx", () => {
@@ -2362,17 +2342,16 @@ describe("Badge built-in component", () => {
     });
     const config = defineConfig({
       tokens: { ref, system: defineSystemTokens({}), components: {} },
-      output: {
-        target: "vanilla-extract",
-        outDir: "dist-test",
-        builtInComponents: { Badge: {} } as never,
-        focusRingColor: ref.__veColor,
-        fontFamily: ref.__veFontFamily,
-        placeholderColor: ref.__veColor,
-      },
     });
-    expect(() => generate(config)).toThrow(MissingDesignTokensError);
-    expect(() => generate(config)).toThrow(/requires config "borderRadius"/);
+    const output: VanillaExtractPluginOptions = {
+      outDir: "dist-test",
+      builtInComponents: { Badge: {} } as never,
+      focusRingColor: ref.__veColor,
+      fontFamily: ref.__veFontFamily,
+      placeholderColor: ref.__veColor,
+    };
+    expect(() => generate({ config, output })).toThrow(MissingDesignTokensError);
+    expect(() => generate({ config, output })).toThrow(/requires config "borderRadius"/);
   });
 
   test("Badge generated sources pass assertParses", () => {
@@ -2401,47 +2380,47 @@ describe("Banner built-in component", () => {
         title: tokens.typography({ fontFamily: "Arial", fontSize: "16px", fontWeight: "bold" }),
       },
     });
-    return defineConfig({
+    const config = defineConfig({
       tokens: { ref, system, components: {} },
-      output: {
-        target: "vanilla-extract",
-        outDir: "dist-test",
-        builtInComponents: {
-          Banner: {
-            border: system.border.default,
-            borderRadius: system.radius.element,
-            typography: system.textStyles.body,
-            titleTypography: system.textStyles.title,
-            horizontalSpacing: system.spacing.md,
-            verticalSpacing: system.spacing.sm,
-            gap: system.spacing.sm,
-            iconSize: system.spacing.md,
-            closeIcon: "close",
-            statuses: {
-              info: {
-                color: ref.color.black,
-                backgroundColor: ref.color.white,
-                borderColor: ref.color.black,
-                iconColor: ref.color.black,
-                titleColor: ref.color.black,
-                icon: "info",
-              },
-              danger: {
-                color: ref.color.black,
-                backgroundColor: ref.color.white,
-                borderColor: ref.color.black,
-                iconColor: ref.color.black,
-                titleColor: ref.color.black,
-                icon: "alert",
-              },
+    });
+    const output: VanillaExtractPluginOptions = {
+      outDir: "dist-test",
+      builtInComponents: {
+        Banner: {
+          border: system.border.default,
+          borderRadius: system.radius.element,
+          typography: system.textStyles.body,
+          titleTypography: system.textStyles.title,
+          horizontalSpacing: system.spacing.md,
+          verticalSpacing: system.spacing.sm,
+          gap: system.spacing.sm,
+          iconSize: system.spacing.md,
+          closeIcon: "close",
+          statuses: {
+            info: {
+              color: ref.color.black,
+              backgroundColor: ref.color.white,
+              borderColor: ref.color.black,
+              iconColor: ref.color.black,
+              titleColor: ref.color.black,
+              icon: "info",
+            },
+            danger: {
+              color: ref.color.black,
+              backgroundColor: ref.color.white,
+              borderColor: ref.color.black,
+              iconColor: ref.color.black,
+              titleColor: ref.color.black,
+              icon: "alert",
             },
           },
         },
-        focusRingColor: ref.__veColor,
-        fontFamily: ref.__veFontFamily,
-        placeholderColor: ref.__veColor,
       },
-    });
+      focusRingColor: ref.__veColor,
+      fontFamily: ref.__veFontFamily,
+      placeholderColor: ref.__veColor,
+    };
+    return { config, output };
   }
 
   test("selecting Banner emits Banner.gen.css.ts and Banner.gen.tsx", () => {
@@ -2470,17 +2449,16 @@ describe("Banner built-in component", () => {
     });
     const config = defineConfig({
       tokens: { ref, system: defineSystemTokens({}), components: {} },
-      output: {
-        target: "vanilla-extract",
-        outDir: "dist-test",
-        builtInComponents: { Banner: {} } as never,
-        focusRingColor: ref.__veColor,
-        fontFamily: ref.__veFontFamily,
-        placeholderColor: ref.__veColor,
-      },
     });
-    expect(() => generate(config)).toThrow(MissingDesignTokensError);
-    expect(() => generate(config)).toThrow(/requires config "border"/);
+    const output: VanillaExtractPluginOptions = {
+      outDir: "dist-test",
+      builtInComponents: { Banner: {} } as never,
+      focusRingColor: ref.__veColor,
+      fontFamily: ref.__veFontFamily,
+      placeholderColor: ref.__veColor,
+    };
+    expect(() => generate({ config, output })).toThrow(MissingDesignTokensError);
+    expect(() => generate({ config, output })).toThrow(/requires config "border"/);
   });
 
   test("Banner generated sources pass assertParses", () => {
@@ -2509,26 +2487,26 @@ describe("Skeleton built-in component", () => {
       radius: { full: tokens.dimension("9999px") },
       motion: { fast: tokens.duration("150ms") },
     });
-    return defineConfig({
+    const config = defineConfig({
       tokens: { ref, system, components: {} },
-      output: {
-        target: "vanilla-extract",
-        outDir: "dist-test",
-        builtInComponents: {
-          Skeleton: {
-            backgroundColor: ref.color.black,
-            highlightColor: ref.color.white,
-            radii: ref.radiusScale,
-            circularRadius: system.radius.full,
-            lineGap: system.spacing.sm,
-            animationDuration: system.motion.fast,
-          },
-        },
-        focusRingColor: ref.__veColor,
-        fontFamily: ref.__veFontFamily,
-        placeholderColor: ref.__veColor,
-      },
     });
+    const output: VanillaExtractPluginOptions = {
+      outDir: "dist-test",
+      builtInComponents: {
+        Skeleton: {
+          backgroundColor: ref.color.black,
+          highlightColor: ref.color.white,
+          radii: ref.radiusScale,
+          circularRadius: system.radius.full,
+          lineGap: system.spacing.sm,
+          animationDuration: system.motion.fast,
+        },
+      },
+      focusRingColor: ref.__veColor,
+      fontFamily: ref.__veFontFamily,
+      placeholderColor: ref.__veColor,
+    };
+    return { config, output };
   }
 
   test("selecting Skeleton emits Skeleton.gen.css.ts and Skeleton.gen.tsx", () => {
@@ -2556,17 +2534,16 @@ describe("Skeleton built-in component", () => {
     });
     const config = defineConfig({
       tokens: { ref, system: defineSystemTokens({}), components: {} },
-      output: {
-        target: "vanilla-extract",
-        outDir: "dist-test",
-        builtInComponents: { Skeleton: {} } as never,
-        focusRingColor: ref.__veColor,
-        fontFamily: ref.__veFontFamily,
-        placeholderColor: ref.__veColor,
-      },
     });
-    expect(() => generate(config)).toThrow(MissingDesignTokensError);
-    expect(() => generate(config)).toThrow(/requires config "backgroundColor"/);
+    const output: VanillaExtractPluginOptions = {
+      outDir: "dist-test",
+      builtInComponents: { Skeleton: {} } as never,
+      focusRingColor: ref.__veColor,
+      fontFamily: ref.__veFontFamily,
+      placeholderColor: ref.__veColor,
+    };
+    expect(() => generate({ config, output })).toThrow(MissingDesignTokensError);
+    expect(() => generate({ config, output })).toThrow(/requires config "backgroundColor"/);
   });
 
   test("Skeleton generated sources pass assertParses", () => {
@@ -2595,25 +2572,25 @@ describe("Spinner built-in component", () => {
       spacing: { xs: tokens.dimension("2px") },
       motion: { fast: tokens.duration("600ms") },
     });
-    return defineConfig({
+    const config = defineConfig({
       tokens: { ref, system, components: {} },
-      output: {
-        target: "vanilla-extract",
-        outDir: "dist-test",
-        builtInComponents: {
-          Spinner: {
-            sizes: ref.fontSizeScale,
-            colors: ref.colorScale,
-            trackColor: ref.color.white,
-            thickness: system.spacing.xs,
-            animationDuration: system.motion.fast,
-          },
-        },
-        focusRingColor: ref.__veColor,
-        fontFamily: ref.__veFontFamily,
-        placeholderColor: ref.__veColor,
-      },
     });
+    const output: VanillaExtractPluginOptions = {
+      outDir: "dist-test",
+      builtInComponents: {
+        Spinner: {
+          sizes: ref.fontSizeScale,
+          colors: ref.colorScale,
+          trackColor: ref.color.white,
+          thickness: system.spacing.xs,
+          animationDuration: system.motion.fast,
+        },
+      },
+      focusRingColor: ref.__veColor,
+      fontFamily: ref.__veFontFamily,
+      placeholderColor: ref.__veColor,
+    };
+    return { config, output };
   }
 
   test("selecting Spinner emits Spinner.gen.css.ts and Spinner.gen.tsx", () => {
@@ -2643,17 +2620,16 @@ describe("Spinner built-in component", () => {
     });
     const config = defineConfig({
       tokens: { ref, system: defineSystemTokens({}), components: {} },
-      output: {
-        target: "vanilla-extract",
-        outDir: "dist-test",
-        builtInComponents: { Spinner: {} } as never,
-        focusRingColor: ref.__veColor,
-        fontFamily: ref.__veFontFamily,
-        placeholderColor: ref.__veColor,
-      },
     });
-    expect(() => generate(config)).toThrow(MissingDesignTokensError);
-    expect(() => generate(config)).toThrow(/requires config "sizes"/);
+    const output: VanillaExtractPluginOptions = {
+      outDir: "dist-test",
+      builtInComponents: { Spinner: {} } as never,
+      focusRingColor: ref.__veColor,
+      fontFamily: ref.__veFontFamily,
+      placeholderColor: ref.__veColor,
+    };
+    expect(() => generate({ config, output })).toThrow(MissingDesignTokensError);
+    expect(() => generate({ config, output })).toThrow(/requires config "sizes"/);
   });
 
   test("Spinner generated sources pass assertParses", () => {
@@ -2688,37 +2664,37 @@ describe("ProgressBar built-in component", () => {
       },
       motion: { fast: tokens.duration("600ms") },
     });
-    return defineConfig({
+    const config = defineConfig({
       tokens: { ref, system, components: {} },
-      output: {
-        target: "vanilla-extract",
-        outDir: "dist-test",
-        builtInComponents: {
-          ProgressBar: {
-            borderRadius: system.radius.full,
-            trackBackgroundColor: ref.color.white,
-            labelTypography: system.textStyles.supporting,
-            labelGap: system.spacing.xs,
-            animationDuration: system.motion.fast,
-            statuses: {
-              default: {
-                indicatorBackgroundColor: ref.color.black,
-                labelColor: ref.color.black,
-              },
+    });
+    const output: VanillaExtractPluginOptions = {
+      outDir: "dist-test",
+      builtInComponents: {
+        ProgressBar: {
+          borderRadius: system.radius.full,
+          trackBackgroundColor: ref.color.white,
+          labelTypography: system.textStyles.supporting,
+          labelGap: system.spacing.xs,
+          animationDuration: system.motion.fast,
+          statuses: {
+            default: {
+              indicatorBackgroundColor: ref.color.black,
+              labelColor: ref.color.black,
             },
-            sizes: {
-              md: {
-                height: system.spacing.sm,
-                typography: system.textStyles.supporting,
-              },
+          },
+          sizes: {
+            md: {
+              height: system.spacing.sm,
+              typography: system.textStyles.supporting,
             },
           },
         },
-        focusRingColor: ref.__veColor,
-        fontFamily: ref.__veFontFamily,
-        placeholderColor: ref.__veColor,
       },
-    });
+      focusRingColor: ref.__veColor,
+      fontFamily: ref.__veFontFamily,
+      placeholderColor: ref.__veColor,
+    };
+    return { config, output };
   }
 
   test("selecting ProgressBar emits ProgressBar.gen.css.ts and ProgressBar.gen.tsx", () => {
@@ -2752,17 +2728,16 @@ describe("ProgressBar built-in component", () => {
     });
     const config = defineConfig({
       tokens: { ref, system: defineSystemTokens({}), components: {} },
-      output: {
-        target: "vanilla-extract",
-        outDir: "dist-test",
-        builtInComponents: { ProgressBar: {} } as never,
-        focusRingColor: ref.__veColor,
-        fontFamily: ref.__veFontFamily,
-        placeholderColor: ref.__veColor,
-      },
     });
-    expect(() => generate(config)).toThrow(MissingDesignTokensError);
-    expect(() => generate(config)).toThrow(/requires config "borderRadius"/);
+    const output: VanillaExtractPluginOptions = {
+      outDir: "dist-test",
+      builtInComponents: { ProgressBar: {} } as never,
+      focusRingColor: ref.__veColor,
+      fontFamily: ref.__veFontFamily,
+      placeholderColor: ref.__veColor,
+    };
+    expect(() => generate({ config, output })).toThrow(MissingDesignTokensError);
+    expect(() => generate({ config, output })).toThrow(/requires config "borderRadius"/);
   });
 
   test("ProgressBar generated sources pass assertParses", () => {
@@ -2794,43 +2769,43 @@ describe("Checkbox built-in component", () => {
         body: tokens.typography({ fontFamily: "Arial", fontSize: "14px", fontWeight: "regular" }),
       },
     });
-    return defineConfig({
+    const config = defineConfig({
       tokens: { ref, system, components: {} },
-      output: {
-        target: "vanilla-extract",
-        outDir: "dist-test",
-        builtInComponents: {
-          Checkbox: {
-            sizes: {
-              sm: {
-                boxSize: ref.fontSizeScale.sm,
-                labelTypography: system.textStyles.body,
-              },
-              md: {
-                boxSize: ref.fontSizeScale.md,
-                labelTypography: system.textStyles.body,
-              },
-            },
-            border: system.border.default,
-            borderRadius: system.radius.inner,
-            backgroundColor: ref.color.white,
-            checkedBackgroundColor: ref.color.black,
-            checkedColor: ref.color.white,
-            hoverBorderColor: ref.color.black,
-            invalidBorderColor: ref.color.black,
-            disabledBackgroundColor: ref.color.white,
-            disabledColor: ref.color.black,
-            labelColor: ref.color.black,
-            gap: system.spacing.sm,
-            checkedIcon: "check",
-            indeterminateIcon: "close",
-          },
-        },
-        focusRingColor: ref.__veColor,
-        fontFamily: ref.__veFontFamily,
-        placeholderColor: ref.__veColor,
-      },
     });
+    const output: VanillaExtractPluginOptions = {
+      outDir: "dist-test",
+      builtInComponents: {
+        Checkbox: {
+          sizes: {
+            sm: {
+              boxSize: ref.fontSizeScale.sm,
+              labelTypography: system.textStyles.body,
+            },
+            md: {
+              boxSize: ref.fontSizeScale.md,
+              labelTypography: system.textStyles.body,
+            },
+          },
+          border: system.border.default,
+          borderRadius: system.radius.inner,
+          backgroundColor: ref.color.white,
+          checkedBackgroundColor: ref.color.black,
+          checkedColor: ref.color.white,
+          hoverBorderColor: ref.color.black,
+          invalidBorderColor: ref.color.black,
+          disabledBackgroundColor: ref.color.white,
+          disabledColor: ref.color.black,
+          labelColor: ref.color.black,
+          gap: system.spacing.sm,
+          checkedIcon: "check",
+          indeterminateIcon: "close",
+        },
+      },
+      focusRingColor: ref.__veColor,
+      fontFamily: ref.__veFontFamily,
+      placeholderColor: ref.__veColor,
+    };
+    return { config, output };
   }
 
   test("selecting Checkbox emits Checkbox.gen.css.ts and Checkbox.gen.tsx", () => {
@@ -2862,17 +2837,16 @@ describe("Checkbox built-in component", () => {
     });
     const config = defineConfig({
       tokens: { ref, system: defineSystemTokens({}), components: {} },
-      output: {
-        target: "vanilla-extract",
-        outDir: "dist-test",
-        builtInComponents: { Checkbox: {} } as never,
-        focusRingColor: ref.__veColor,
-        fontFamily: ref.__veFontFamily,
-        placeholderColor: ref.__veColor,
-      },
     });
-    expect(() => generate(config)).toThrow(MissingDesignTokensError);
-    expect(() => generate(config)).toThrow(/requires config "sizes"/);
+    const output: VanillaExtractPluginOptions = {
+      outDir: "dist-test",
+      builtInComponents: { Checkbox: {} } as never,
+      focusRingColor: ref.__veColor,
+      fontFamily: ref.__veFontFamily,
+      placeholderColor: ref.__veColor,
+    };
+    expect(() => generate({ config, output })).toThrow(MissingDesignTokensError);
+    expect(() => generate({ config, output })).toThrow(/requires config "sizes"/);
   });
 
   test("Checkbox generated sources pass assertParses", () => {
@@ -2908,35 +2882,35 @@ describe("RadioList built-in component", () => {
         }),
       },
     });
-    return defineConfig({
+    const config = defineConfig({
       tokens: { ref, system, components: {} },
-      output: {
-        target: "vanilla-extract",
-        outDir: "dist-test",
-        builtInComponents: {
-          RadioList: {
-            sizes: ref.fontSizeScale,
-            border: system.border.default,
-            backgroundColor: ref.color.white,
-            checkedBorderColor: ref.color.black,
-            checkedColor: ref.color.black,
-            hoverBorderColor: ref.color.black,
-            invalidBorderColor: ref.color.black,
-            disabledBackgroundColor: ref.color.white,
-            disabledColor: ref.color.black,
-            labelTypography: system.textStyles.body,
-            labelColor: ref.color.black,
-            descriptionTypography: system.textStyles.supporting,
-            descriptionColor: ref.color.black,
-            gap: system.spacing.sm,
-            optionGap: system.spacing.md,
-          },
-        },
-        focusRingColor: ref.__veColor,
-        fontFamily: ref.__veFontFamily,
-        placeholderColor: ref.__veColor,
-      },
     });
+    const output: VanillaExtractPluginOptions = {
+      outDir: "dist-test",
+      builtInComponents: {
+        RadioList: {
+          sizes: ref.fontSizeScale,
+          border: system.border.default,
+          backgroundColor: ref.color.white,
+          checkedBorderColor: ref.color.black,
+          checkedColor: ref.color.black,
+          hoverBorderColor: ref.color.black,
+          invalidBorderColor: ref.color.black,
+          disabledBackgroundColor: ref.color.white,
+          disabledColor: ref.color.black,
+          labelTypography: system.textStyles.body,
+          labelColor: ref.color.black,
+          descriptionTypography: system.textStyles.supporting,
+          descriptionColor: ref.color.black,
+          gap: system.spacing.sm,
+          optionGap: system.spacing.md,
+        },
+      },
+      focusRingColor: ref.__veColor,
+      fontFamily: ref.__veFontFamily,
+      placeholderColor: ref.__veColor,
+    };
+    return { config, output };
   }
 
   test("selecting RadioList emits RadioList.gen.css.ts and RadioList.gen.tsx", () => {
@@ -2966,17 +2940,16 @@ describe("RadioList built-in component", () => {
     });
     const config = defineConfig({
       tokens: { ref, system: defineSystemTokens({}), components: {} },
-      output: {
-        target: "vanilla-extract",
-        outDir: "dist-test",
-        builtInComponents: { RadioList: {} } as never,
-        focusRingColor: ref.__veColor,
-        fontFamily: ref.__veFontFamily,
-        placeholderColor: ref.__veColor,
-      },
     });
-    expect(() => generate(config)).toThrow(MissingDesignTokensError);
-    expect(() => generate(config)).toThrow(/requires config "sizes"/);
+    const output: VanillaExtractPluginOptions = {
+      outDir: "dist-test",
+      builtInComponents: { RadioList: {} } as never,
+      focusRingColor: ref.__veColor,
+      fontFamily: ref.__veFontFamily,
+      placeholderColor: ref.__veColor,
+    };
+    expect(() => generate({ config, output })).toThrow(MissingDesignTokensError);
+    expect(() => generate({ config, output })).toThrow(/requires config "sizes"/);
   });
 
   test("RadioList generated sources pass assertParses", () => {
@@ -3019,38 +2992,38 @@ describe("Switch built-in component", () => {
         }),
       },
     });
-    return defineConfig({
+    const config = defineConfig({
       tokens: { ref, system, components: {} },
-      output: {
-        target: "vanilla-extract",
-        outDir: "dist-test",
-        builtInComponents: {
-          Switch: {
-            borderRadius: system.radius.full,
-            trackBackgroundColor: ref.color.white,
-            trackCheckedBackgroundColor: ref.color.black,
-            trackBorder: system.border.default,
-            thumbBackgroundColor: ref.color.white,
-            thumbShadow: system.elevation.sm,
-            disabledTrackBackgroundColor: ref.color.white,
-            labelTypography: system.textStyles.body,
-            labelColor: ref.color.black,
-            gap: system.spacing.sm,
-            transition: system.transitions.standard,
-            sizes: {
-              md: {
-                trackWidth: system.spacing.md,
-                trackHeight: system.spacing.sm,
-                thumbSize: system.spacing.sm,
-              },
+    });
+    const output: VanillaExtractPluginOptions = {
+      outDir: "dist-test",
+      builtInComponents: {
+        Switch: {
+          borderRadius: system.radius.full,
+          trackBackgroundColor: ref.color.white,
+          trackCheckedBackgroundColor: ref.color.black,
+          trackBorder: system.border.default,
+          thumbBackgroundColor: ref.color.white,
+          thumbShadow: system.elevation.sm,
+          disabledTrackBackgroundColor: ref.color.white,
+          labelTypography: system.textStyles.body,
+          labelColor: ref.color.black,
+          gap: system.spacing.sm,
+          transition: system.transitions.standard,
+          sizes: {
+            md: {
+              trackWidth: system.spacing.md,
+              trackHeight: system.spacing.sm,
+              thumbSize: system.spacing.sm,
             },
           },
         },
-        focusRingColor: ref.__veColor,
-        fontFamily: ref.__veFontFamily,
-        placeholderColor: ref.__veColor,
       },
-    });
+      focusRingColor: ref.__veColor,
+      fontFamily: ref.__veFontFamily,
+      placeholderColor: ref.__veColor,
+    };
+    return { config, output };
   }
 
   test("selecting Switch emits Switch.gen.css.ts and Switch.gen.tsx", () => {
@@ -3079,17 +3052,16 @@ describe("Switch built-in component", () => {
     });
     const config = defineConfig({
       tokens: { ref, system: defineSystemTokens({}), components: {} },
-      output: {
-        target: "vanilla-extract",
-        outDir: "dist-test",
-        builtInComponents: { Switch: {} } as never,
-        focusRingColor: ref.__veColor,
-        fontFamily: ref.__veFontFamily,
-        placeholderColor: ref.__veColor,
-      },
     });
-    expect(() => generate(config)).toThrow(MissingDesignTokensError);
-    expect(() => generate(config)).toThrow(/requires config "sizes"/);
+    const output: VanillaExtractPluginOptions = {
+      outDir: "dist-test",
+      builtInComponents: { Switch: {} } as never,
+      focusRingColor: ref.__veColor,
+      fontFamily: ref.__veFontFamily,
+      placeholderColor: ref.__veColor,
+    };
+    expect(() => generate({ config, output })).toThrow(MissingDesignTokensError);
+    expect(() => generate({ config, output })).toThrow(/requires config "sizes"/);
   });
 
   test("Switch generated sources pass assertParses", () => {
@@ -3120,37 +3092,37 @@ describe("Toggle built-in component", () => {
         body: tokens.typography({ fontFamily: "Arial", fontSize: "14px", fontWeight: "regular" }),
       },
     });
-    return defineConfig({
+    const config = defineConfig({
       tokens: { ref, system, components: {} },
-      output: {
-        target: "vanilla-extract",
-        outDir: "dist-test",
-        builtInComponents: {
-          Toggle: {
-            borderRadius: system.radius.element,
-            optionBorderRadius: system.radius.inner,
-            border: system.border.default,
-            backgroundColor: ref.color.white,
-            color: ref.color.black,
-            typography: system.textStyles.body,
-            hoverColor: ref.color.black,
-            activeColor: ref.color.white,
-            activeBackgroundColor: ref.color.black,
-            disabledColor: ref.color.black,
-            sizes: {
-              md: {
-                horizontalSpacing: system.spacing.md,
-                verticalSpacing: system.spacing.sm,
-                typography: system.textStyles.body,
-              },
+    });
+    const output: VanillaExtractPluginOptions = {
+      outDir: "dist-test",
+      builtInComponents: {
+        Toggle: {
+          borderRadius: system.radius.element,
+          optionBorderRadius: system.radius.inner,
+          border: system.border.default,
+          backgroundColor: ref.color.white,
+          color: ref.color.black,
+          typography: system.textStyles.body,
+          hoverColor: ref.color.black,
+          activeColor: ref.color.white,
+          activeBackgroundColor: ref.color.black,
+          disabledColor: ref.color.black,
+          sizes: {
+            md: {
+              horizontalSpacing: system.spacing.md,
+              verticalSpacing: system.spacing.sm,
+              typography: system.textStyles.body,
             },
           },
         },
-        focusRingColor: ref.__veColor,
-        fontFamily: ref.__veFontFamily,
-        placeholderColor: ref.__veColor,
       },
-    });
+      focusRingColor: ref.__veColor,
+      fontFamily: ref.__veFontFamily,
+      placeholderColor: ref.__veColor,
+    };
+    return { config, output };
   }
 
   test("selecting Toggle emits Toggle.gen.css.ts and Toggle.gen.tsx", () => {
@@ -3179,17 +3151,16 @@ describe("Toggle built-in component", () => {
     });
     const config = defineConfig({
       tokens: { ref, system: defineSystemTokens({}), components: {} },
-      output: {
-        target: "vanilla-extract",
-        outDir: "dist-test",
-        builtInComponents: { Toggle: {} } as never,
-        focusRingColor: ref.__veColor,
-        fontFamily: ref.__veFontFamily,
-        placeholderColor: ref.__veColor,
-      },
     });
-    expect(() => generate(config)).toThrow(MissingDesignTokensError);
-    expect(() => generate(config)).toThrow(/requires config "borderRadius"/);
+    const output: VanillaExtractPluginOptions = {
+      outDir: "dist-test",
+      builtInComponents: { Toggle: {} } as never,
+      focusRingColor: ref.__veColor,
+      fontFamily: ref.__veFontFamily,
+      placeholderColor: ref.__veColor,
+    };
+    expect(() => generate({ config, output })).toThrow(MissingDesignTokensError);
+    expect(() => generate({ config, output })).toThrow(/requires config "borderRadius"/);
   });
 
   test("Toggle generated sources pass assertParses", () => {
@@ -3229,51 +3200,51 @@ describe("Select built-in component", () => {
         }),
       },
     });
-    return defineConfig({
+    const config = defineConfig({
       tokens: { ref, system, components: {} },
-      output: {
-        target: "vanilla-extract",
-        outDir: "dist-test",
-        builtInComponents: {
-          Select: {
-            borderRadius: system.radius.element,
-            border: system.border.default,
-            backgroundColor: ref.color.white,
-            color: ref.color.black,
-            typography: system.textStyles.body,
-            placeholderColor: ref.color.black,
-            horizontalSpacing: system.spacing.md,
-            verticalSpacing: system.spacing.sm,
-            hoverBorderColor: ref.color.black,
-            focusBorderColor: ref.color.black,
-            invalidBorderColor: ref.color.black,
-            disabledBackgroundColor: ref.color.white,
-            disabledColor: ref.color.black,
-            iconSize: system.spacing.md,
-            popupBackgroundColor: ref.color.white,
-            popupBorder: system.border.default,
-            popupBorderRadius: system.radius.element,
-            popupShadow: system.elevation.md,
-            popupSpacing: system.spacing.sm,
-            popupOffset: system.spacing.sm,
-            itemColor: ref.color.black,
-            itemTypography: system.textStyles.body,
-            itemHoverBackgroundColor: ref.color.white,
-            itemSelectedBackgroundColor: ref.color.white,
-            itemSelectedColor: ref.color.black,
-            itemDisabledColor: ref.color.black,
-            itemHorizontalSpacing: system.spacing.md,
-            itemVerticalSpacing: system.spacing.sm,
-            indicatorIcon: "chevronDown",
-            selectedIcon: "check",
-            clearIcon: "close",
-          },
-        },
-        focusRingColor: ref.__veColor,
-        fontFamily: ref.__veFontFamily,
-        placeholderColor: ref.__veColor,
-      },
     });
+    const output: VanillaExtractPluginOptions = {
+      outDir: "dist-test",
+      builtInComponents: {
+        Select: {
+          borderRadius: system.radius.element,
+          border: system.border.default,
+          backgroundColor: ref.color.white,
+          color: ref.color.black,
+          typography: system.textStyles.body,
+          placeholderColor: ref.color.black,
+          horizontalSpacing: system.spacing.md,
+          verticalSpacing: system.spacing.sm,
+          hoverBorderColor: ref.color.black,
+          focusBorderColor: ref.color.black,
+          invalidBorderColor: ref.color.black,
+          disabledBackgroundColor: ref.color.white,
+          disabledColor: ref.color.black,
+          iconSize: system.spacing.md,
+          popupBackgroundColor: ref.color.white,
+          popupBorder: system.border.default,
+          popupBorderRadius: system.radius.element,
+          popupShadow: system.elevation.md,
+          popupSpacing: system.spacing.sm,
+          popupOffset: system.spacing.sm,
+          itemColor: ref.color.black,
+          itemTypography: system.textStyles.body,
+          itemHoverBackgroundColor: ref.color.white,
+          itemSelectedBackgroundColor: ref.color.white,
+          itemSelectedColor: ref.color.black,
+          itemDisabledColor: ref.color.black,
+          itemHorizontalSpacing: system.spacing.md,
+          itemVerticalSpacing: system.spacing.sm,
+          indicatorIcon: "chevronDown",
+          selectedIcon: "check",
+          clearIcon: "close",
+        },
+      },
+      focusRingColor: ref.__veColor,
+      fontFamily: ref.__veFontFamily,
+      placeholderColor: ref.__veColor,
+    };
+    return { config, output };
   }
 
   test("selecting Select emits Select.gen.css.ts and Select.gen.tsx", () => {
@@ -3302,17 +3273,16 @@ describe("Select built-in component", () => {
     });
     const config = defineConfig({
       tokens: { ref, system: defineSystemTokens({}), components: {} },
-      output: {
-        target: "vanilla-extract",
-        outDir: "dist-test",
-        builtInComponents: { Select: {} } as never,
-        focusRingColor: ref.__veColor,
-        fontFamily: ref.__veFontFamily,
-        placeholderColor: ref.__veColor,
-      },
     });
-    expect(() => generate(config)).toThrow(MissingDesignTokensError);
-    expect(() => generate(config)).toThrow(/requires config "borderRadius"/);
+    const output: VanillaExtractPluginOptions = {
+      outDir: "dist-test",
+      builtInComponents: { Select: {} } as never,
+      focusRingColor: ref.__veColor,
+      fontFamily: ref.__veFontFamily,
+      placeholderColor: ref.__veColor,
+    };
+    expect(() => generate({ config, output })).toThrow(MissingDesignTokensError);
+    expect(() => generate({ config, output })).toThrow(/requires config "borderRadius"/);
   });
 
   test("Select generated sources pass assertParses", () => {
@@ -3357,53 +3327,53 @@ describe("Autocomplete built-in component", () => {
         }),
       },
     });
-    return defineConfig({
+    const config = defineConfig({
       tokens: { ref, system, components: {} },
-      output: {
-        target: "vanilla-extract",
-        outDir: "dist-test",
-        builtInComponents: {
-          Autocomplete: {
-            borderRadius: system.radius.element,
-            border: system.border.default,
-            backgroundColor: ref.color.white,
-            color: ref.color.black,
-            typography: system.textStyles.body,
-            placeholderColor: ref.color.black,
-            horizontalSpacing: system.spacing.md,
-            verticalSpacing: system.spacing.sm,
-            hoverBorderColor: ref.color.black,
-            focusBorderColor: ref.color.black,
-            invalidBorderColor: ref.color.black,
-            disabledBackgroundColor: ref.color.white,
-            disabledColor: ref.color.black,
-            iconSize: system.spacing.md,
-            popupBackgroundColor: ref.color.white,
-            popupBorder: system.border.default,
-            popupBorderRadius: system.radius.element,
-            popupShadow: system.elevation.md,
-            popupSpacing: system.spacing.sm,
-            popupOffset: system.spacing.sm,
-            itemColor: ref.color.black,
-            itemTypography: system.textStyles.body,
-            itemHoverBackgroundColor: ref.color.white,
-            itemDisabledColor: ref.color.black,
-            itemHorizontalSpacing: system.spacing.md,
-            itemVerticalSpacing: system.spacing.sm,
-            gap: system.spacing.sm,
-            emptyStateColor: ref.color.black,
-            emptyStateTypography: system.textStyles.supporting,
-            emptyStateSpacing: system.spacing.md,
-            highlightColor: ref.color.white,
-            clearIcon: "close",
-            searchIcon: "search",
-          },
-        },
-        focusRingColor: ref.__veColor,
-        fontFamily: ref.__veFontFamily,
-        placeholderColor: ref.__veColor,
-      },
     });
+    const output: VanillaExtractPluginOptions = {
+      outDir: "dist-test",
+      builtInComponents: {
+        Autocomplete: {
+          borderRadius: system.radius.element,
+          border: system.border.default,
+          backgroundColor: ref.color.white,
+          color: ref.color.black,
+          typography: system.textStyles.body,
+          placeholderColor: ref.color.black,
+          horizontalSpacing: system.spacing.md,
+          verticalSpacing: system.spacing.sm,
+          hoverBorderColor: ref.color.black,
+          focusBorderColor: ref.color.black,
+          invalidBorderColor: ref.color.black,
+          disabledBackgroundColor: ref.color.white,
+          disabledColor: ref.color.black,
+          iconSize: system.spacing.md,
+          popupBackgroundColor: ref.color.white,
+          popupBorder: system.border.default,
+          popupBorderRadius: system.radius.element,
+          popupShadow: system.elevation.md,
+          popupSpacing: system.spacing.sm,
+          popupOffset: system.spacing.sm,
+          itemColor: ref.color.black,
+          itemTypography: system.textStyles.body,
+          itemHoverBackgroundColor: ref.color.white,
+          itemDisabledColor: ref.color.black,
+          itemHorizontalSpacing: system.spacing.md,
+          itemVerticalSpacing: system.spacing.sm,
+          gap: system.spacing.sm,
+          emptyStateColor: ref.color.black,
+          emptyStateTypography: system.textStyles.supporting,
+          emptyStateSpacing: system.spacing.md,
+          highlightColor: ref.color.white,
+          clearIcon: "close",
+          searchIcon: "search",
+        },
+      },
+      focusRingColor: ref.__veColor,
+      fontFamily: ref.__veFontFamily,
+      placeholderColor: ref.__veColor,
+    };
+    return { config, output };
   }
 
   test("selecting Autocomplete emits Autocomplete.gen.css.ts and Autocomplete.gen.tsx", () => {
@@ -3433,17 +3403,16 @@ describe("Autocomplete built-in component", () => {
     });
     const config = defineConfig({
       tokens: { ref, system: defineSystemTokens({}), components: {} },
-      output: {
-        target: "vanilla-extract",
-        outDir: "dist-test",
-        builtInComponents: { Autocomplete: {} } as never,
-        focusRingColor: ref.__veColor,
-        fontFamily: ref.__veFontFamily,
-        placeholderColor: ref.__veColor,
-      },
     });
-    expect(() => generate(config)).toThrow(MissingDesignTokensError);
-    expect(() => generate(config)).toThrow(/requires config "borderRadius"/);
+    const output: VanillaExtractPluginOptions = {
+      outDir: "dist-test",
+      builtInComponents: { Autocomplete: {} } as never,
+      focusRingColor: ref.__veColor,
+      fontFamily: ref.__veFontFamily,
+      placeholderColor: ref.__veColor,
+    };
+    expect(() => generate({ config, output })).toThrow(MissingDesignTokensError);
+    expect(() => generate({ config, output })).toThrow(/requires config "borderRadius"/);
   });
 
   test("Autocomplete generated sources pass assertParses", () => {
@@ -3479,40 +3448,40 @@ describe("FileInput built-in component", () => {
         }),
       },
     });
-    return defineConfig({
+    const config = defineConfig({
       tokens: { ref, system, components: {} },
-      output: {
-        target: "vanilla-extract",
-        outDir: "dist-test",
-        builtInComponents: {
-          FileInput: {
-            border: system.border.default,
-            borderRadius: system.radius.element,
-            backgroundColor: ref.color.white,
-            color: ref.color.black,
-            typography: system.textStyles.body,
-            hoverBorderColor: ref.color.black,
-            draggingBorderColor: ref.color.black,
-            draggingBackgroundColor: ref.color.white,
-            invalidBorderColor: ref.color.black,
-            disabledBackgroundColor: ref.color.white,
-            disabledColor: ref.color.black,
-            horizontalSpacing: system.spacing.md,
-            verticalSpacing: system.spacing.sm,
-            gap: system.spacing.sm,
-            iconSize: system.spacing.md,
-            fileTypography: system.textStyles.supporting,
-            fileColor: ref.color.black,
-            fileBorderRadius: system.radius.inner,
-            uploadIcon: "info",
-            removeIcon: "close",
-          },
-        },
-        focusRingColor: ref.__veColor,
-        fontFamily: ref.__veFontFamily,
-        placeholderColor: ref.__veColor,
-      },
     });
+    const output: VanillaExtractPluginOptions = {
+      outDir: "dist-test",
+      builtInComponents: {
+        FileInput: {
+          border: system.border.default,
+          borderRadius: system.radius.element,
+          backgroundColor: ref.color.white,
+          color: ref.color.black,
+          typography: system.textStyles.body,
+          hoverBorderColor: ref.color.black,
+          draggingBorderColor: ref.color.black,
+          draggingBackgroundColor: ref.color.white,
+          invalidBorderColor: ref.color.black,
+          disabledBackgroundColor: ref.color.white,
+          disabledColor: ref.color.black,
+          horizontalSpacing: system.spacing.md,
+          verticalSpacing: system.spacing.sm,
+          gap: system.spacing.sm,
+          iconSize: system.spacing.md,
+          fileTypography: system.textStyles.supporting,
+          fileColor: ref.color.black,
+          fileBorderRadius: system.radius.inner,
+          uploadIcon: "info",
+          removeIcon: "close",
+        },
+      },
+      focusRingColor: ref.__veColor,
+      fontFamily: ref.__veFontFamily,
+      placeholderColor: ref.__veColor,
+    };
+    return { config, output };
   }
 
   test("selecting FileInput emits FileInput.gen.css.ts and FileInput.gen.tsx", () => {
@@ -3538,17 +3507,16 @@ describe("FileInput built-in component", () => {
     });
     const config = defineConfig({
       tokens: { ref, system: defineSystemTokens({}), components: {} },
-      output: {
-        target: "vanilla-extract",
-        outDir: "dist-test",
-        builtInComponents: { FileInput: {} } as never,
-        focusRingColor: ref.__veColor,
-        fontFamily: ref.__veFontFamily,
-        placeholderColor: ref.__veColor,
-      },
     });
-    expect(() => generate(config)).toThrow(MissingDesignTokensError);
-    expect(() => generate(config)).toThrow(/requires config "border"/);
+    const output: VanillaExtractPluginOptions = {
+      outDir: "dist-test",
+      builtInComponents: { FileInput: {} } as never,
+      focusRingColor: ref.__veColor,
+      fontFamily: ref.__veFontFamily,
+      placeholderColor: ref.__veColor,
+    };
+    expect(() => generate({ config, output })).toThrow(MissingDesignTokensError);
+    expect(() => generate({ config, output })).toThrow(/requires config "border"/);
   });
 
   test("FileInput generated sources pass assertParses", () => {
@@ -3592,36 +3560,36 @@ describe("Slider built-in component", () => {
         }),
       },
     });
-    return defineConfig({
+    const config = defineConfig({
       tokens: { ref, system, components: {} },
-      output: {
-        target: "vanilla-extract",
-        outDir: "dist-test",
-        builtInComponents: {
-          Slider: {
-            trackBackgroundColor: ref.color.white,
-            trackHeight: system.spacing.sm,
-            borderRadius: system.radius.full,
-            indicatorBackgroundColor: ref.color.black,
-            thumbSize: system.spacing.md,
-            thumbBackgroundColor: ref.color.white,
-            thumbBorder: system.border.default,
-            thumbShadow: system.elevation.sm,
-            hoverThumbBackgroundColor: ref.color.white,
-            disabledTrackBackgroundColor: ref.color.white,
-            disabledThumbBackgroundColor: ref.color.white,
-            markColor: ref.color.black,
-            markTypography: system.textStyles.supporting,
-            valueLabelTypography: system.textStyles.supporting,
-            valueLabelColor: ref.color.white,
-            valueLabelBackgroundColor: ref.color.black,
-          },
-        },
-        focusRingColor: ref.__veColor,
-        fontFamily: ref.__veFontFamily,
-        placeholderColor: ref.__veColor,
-      },
     });
+    const output: VanillaExtractPluginOptions = {
+      outDir: "dist-test",
+      builtInComponents: {
+        Slider: {
+          trackBackgroundColor: ref.color.white,
+          trackHeight: system.spacing.sm,
+          borderRadius: system.radius.full,
+          indicatorBackgroundColor: ref.color.black,
+          thumbSize: system.spacing.md,
+          thumbBackgroundColor: ref.color.white,
+          thumbBorder: system.border.default,
+          thumbShadow: system.elevation.sm,
+          hoverThumbBackgroundColor: ref.color.white,
+          disabledTrackBackgroundColor: ref.color.white,
+          disabledThumbBackgroundColor: ref.color.white,
+          markColor: ref.color.black,
+          markTypography: system.textStyles.supporting,
+          valueLabelTypography: system.textStyles.supporting,
+          valueLabelColor: ref.color.white,
+          valueLabelBackgroundColor: ref.color.black,
+        },
+      },
+      focusRingColor: ref.__veColor,
+      fontFamily: ref.__veFontFamily,
+      placeholderColor: ref.__veColor,
+    };
+    return { config, output };
   }
 
   test("selecting Slider emits Slider.gen.css.ts and Slider.gen.tsx", () => {
@@ -3648,17 +3616,16 @@ describe("Slider built-in component", () => {
     });
     const config = defineConfig({
       tokens: { ref, system: defineSystemTokens({}), components: {} },
-      output: {
-        target: "vanilla-extract",
-        outDir: "dist-test",
-        builtInComponents: { Slider: {} } as never,
-        focusRingColor: ref.__veColor,
-        fontFamily: ref.__veFontFamily,
-        placeholderColor: ref.__veColor,
-      },
     });
-    expect(() => generate(config)).toThrow(MissingDesignTokensError);
-    expect(() => generate(config)).toThrow(/requires config "trackBackgroundColor"/);
+    const output: VanillaExtractPluginOptions = {
+      outDir: "dist-test",
+      builtInComponents: { Slider: {} } as never,
+      focusRingColor: ref.__veColor,
+      fontFamily: ref.__veFontFamily,
+      placeholderColor: ref.__veColor,
+    };
+    expect(() => generate({ config, output })).toThrow(MissingDesignTokensError);
+    expect(() => generate({ config, output })).toThrow(/requires config "trackBackgroundColor"/);
   });
 
   test("Slider generated sources pass assertParses", () => {
@@ -3689,40 +3656,40 @@ describe("TextInput built-in component", () => {
         body: tokens.typography({ fontFamily: "Arial", fontSize: "14px", fontWeight: "regular" }),
       },
     });
-    return defineConfig({
+    const config = defineConfig({
       tokens: { ref, system, components: {} },
-      output: {
-        target: "vanilla-extract",
-        outDir: "dist-test",
-        builtInComponents: {
-          TextInput: {
-            borderRadius: system.radius.element,
-            border: system.border.default,
-            backgroundColor: ref.color.white,
-            color: ref.color.black,
-            typography: system.textStyles.body,
-            placeholderColor: ref.color.black,
-            horizontalSpacing: system.spacing.md,
-            verticalSpacing: system.spacing.sm,
-            gap: system.spacing.sm,
-            hoverBorderColor: ref.color.black,
-            focusBorderColor: ref.color.black,
-            invalidBorderColor: ref.color.black,
-            disabledBackgroundColor: ref.color.white,
-            disabledColor: ref.color.black,
-            readOnlyBackgroundColor: ref.color.white,
-            iconColor: ref.color.black,
-            iconSize: system.spacing.md,
-            affixColor: ref.color.black,
-            affixBackgroundColor: ref.color.white,
-            clearIcon: "close",
-          },
-        },
-        focusRingColor: ref.__veColor,
-        fontFamily: ref.__veFontFamily,
-        placeholderColor: ref.__veColor,
-      },
     });
+    const output: VanillaExtractPluginOptions = {
+      outDir: "dist-test",
+      builtInComponents: {
+        TextInput: {
+          borderRadius: system.radius.element,
+          border: system.border.default,
+          backgroundColor: ref.color.white,
+          color: ref.color.black,
+          typography: system.textStyles.body,
+          placeholderColor: ref.color.black,
+          horizontalSpacing: system.spacing.md,
+          verticalSpacing: system.spacing.sm,
+          gap: system.spacing.sm,
+          hoverBorderColor: ref.color.black,
+          focusBorderColor: ref.color.black,
+          invalidBorderColor: ref.color.black,
+          disabledBackgroundColor: ref.color.white,
+          disabledColor: ref.color.black,
+          readOnlyBackgroundColor: ref.color.white,
+          iconColor: ref.color.black,
+          iconSize: system.spacing.md,
+          affixColor: ref.color.black,
+          affixBackgroundColor: ref.color.white,
+          clearIcon: "close",
+        },
+      },
+      focusRingColor: ref.__veColor,
+      fontFamily: ref.__veFontFamily,
+      placeholderColor: ref.__veColor,
+    };
+    return { config, output };
   }
 
   test("selecting TextInput emits TextInput.gen.css.ts and TextInput.gen.tsx", () => {
@@ -3747,17 +3714,16 @@ describe("TextInput built-in component", () => {
     });
     const config = defineConfig({
       tokens: { ref, system: defineSystemTokens({}), components: {} },
-      output: {
-        target: "vanilla-extract",
-        outDir: "dist-test",
-        builtInComponents: { TextInput: {} } as never,
-        focusRingColor: ref.__veColor,
-        fontFamily: ref.__veFontFamily,
-        placeholderColor: ref.__veColor,
-      },
     });
-    expect(() => generate(config)).toThrow(MissingDesignTokensError);
-    expect(() => generate(config)).toThrow(/requires config "borderRadius"/);
+    const output: VanillaExtractPluginOptions = {
+      outDir: "dist-test",
+      builtInComponents: { TextInput: {} } as never,
+      focusRingColor: ref.__veColor,
+      fontFamily: ref.__veFontFamily,
+      placeholderColor: ref.__veColor,
+    };
+    expect(() => generate({ config, output })).toThrow(MissingDesignTokensError);
+    expect(() => generate({ config, output })).toThrow(/requires config "borderRadius"/);
   });
 
   test("TextInput generated sources pass assertParses", () => {
@@ -3792,46 +3758,46 @@ describe("NumberInput built-in component", () => {
         body: tokens.typography({ fontFamily: "Arial", fontSize: "14px", fontWeight: "regular" }),
       },
     });
-    return defineConfig({
+    const config = defineConfig({
       tokens: { ref, system, components: {} },
-      output: {
-        target: "vanilla-extract",
-        outDir: "dist-test",
-        builtInComponents: {
-          NumberInput: {
-            borderRadius: system.radius.element,
-            border: system.border.default,
-            backgroundColor: ref.color.white,
-            color: ref.color.black,
-            typography: system.textStyles.body,
-            placeholderColor: ref.color.black,
-            horizontalSpacing: system.spacing.md,
-            verticalSpacing: system.spacing.sm,
-            gap: system.spacing.sm,
-            hoverBorderColor: ref.color.black,
-            focusBorderColor: ref.color.black,
-            invalidBorderColor: ref.color.black,
-            disabledBackgroundColor: ref.color.white,
-            disabledColor: ref.color.black,
-            readOnlyBackgroundColor: ref.color.white,
-            iconColor: ref.color.black,
-            iconSize: system.spacing.sm,
-            affixColor: ref.color.black,
-            affixBackgroundColor: ref.color.white,
-            stepperBackgroundColor: ref.color.white,
-            stepperColor: ref.color.black,
-            stepperHoverBackgroundColor: ref.color.white,
-            stepperBorder: system.border.default,
-            stepperWidth: system.spacing.lg,
-            incrementIcon: "chevronDown",
-            decrementIcon: "chevronDown",
-          },
-        },
-        focusRingColor: ref.__veColor,
-        fontFamily: ref.__veFontFamily,
-        placeholderColor: ref.__veColor,
-      },
     });
+    const output: VanillaExtractPluginOptions = {
+      outDir: "dist-test",
+      builtInComponents: {
+        NumberInput: {
+          borderRadius: system.radius.element,
+          border: system.border.default,
+          backgroundColor: ref.color.white,
+          color: ref.color.black,
+          typography: system.textStyles.body,
+          placeholderColor: ref.color.black,
+          horizontalSpacing: system.spacing.md,
+          verticalSpacing: system.spacing.sm,
+          gap: system.spacing.sm,
+          hoverBorderColor: ref.color.black,
+          focusBorderColor: ref.color.black,
+          invalidBorderColor: ref.color.black,
+          disabledBackgroundColor: ref.color.white,
+          disabledColor: ref.color.black,
+          readOnlyBackgroundColor: ref.color.white,
+          iconColor: ref.color.black,
+          iconSize: system.spacing.sm,
+          affixColor: ref.color.black,
+          affixBackgroundColor: ref.color.white,
+          stepperBackgroundColor: ref.color.white,
+          stepperColor: ref.color.black,
+          stepperHoverBackgroundColor: ref.color.white,
+          stepperBorder: system.border.default,
+          stepperWidth: system.spacing.lg,
+          incrementIcon: "chevronDown",
+          decrementIcon: "chevronDown",
+        },
+      },
+      focusRingColor: ref.__veColor,
+      fontFamily: ref.__veFontFamily,
+      placeholderColor: ref.__veColor,
+    };
+    return { config, output };
   }
 
   test("selecting NumberInput emits NumberInput.gen.css.ts and NumberInput.gen.tsx", () => {
@@ -3860,17 +3826,16 @@ describe("NumberInput built-in component", () => {
     });
     const config = defineConfig({
       tokens: { ref, system: defineSystemTokens({}), components: {} },
-      output: {
-        target: "vanilla-extract",
-        outDir: "dist-test",
-        builtInComponents: { NumberInput: {} } as never,
-        focusRingColor: ref.__veColor,
-        fontFamily: ref.__veFontFamily,
-        placeholderColor: ref.__veColor,
-      },
     });
-    expect(() => generate(config)).toThrow(MissingDesignTokensError);
-    expect(() => generate(config)).toThrow(/requires config "borderRadius"/);
+    const output: VanillaExtractPluginOptions = {
+      outDir: "dist-test",
+      builtInComponents: { NumberInput: {} } as never,
+      focusRingColor: ref.__veColor,
+      fontFamily: ref.__veFontFamily,
+      placeholderColor: ref.__veColor,
+    };
+    expect(() => generate({ config, output })).toThrow(MissingDesignTokensError);
+    expect(() => generate({ config, output })).toThrow(/requires config "borderRadius"/);
   });
 
   test("NumberInput generated sources pass assertParses", () => {
@@ -3915,60 +3880,60 @@ describe("DateInput built-in component", () => {
         }),
       },
     });
-    return defineConfig({
+    const config = defineConfig({
       tokens: { ref, system, components: {} },
-      output: {
-        target: "vanilla-extract",
-        outDir: "dist-test",
-        builtInComponents: {
-          DateInput: {
-            borderRadius: system.radius.element,
-            border: system.border.default,
-            backgroundColor: ref.color.white,
-            color: ref.color.black,
-            typography: system.textStyles.body,
-            placeholderColor: ref.color.black,
-            horizontalSpacing: system.spacing.md,
-            verticalSpacing: system.spacing.sm,
-            gap: system.spacing.sm,
-            hoverBorderColor: ref.color.black,
-            focusBorderColor: ref.color.black,
-            invalidBorderColor: ref.color.black,
-            disabledBackgroundColor: ref.color.white,
-            disabledColor: ref.color.black,
-            readOnlyBackgroundColor: ref.color.white,
-            iconColor: ref.color.black,
-            iconSize: system.spacing.md,
-            affixColor: ref.color.black,
-            affixBackgroundColor: ref.color.white,
-            popupBackgroundColor: ref.color.white,
-            popupBorder: system.border.default,
-            popupBorderRadius: system.radius.element,
-            popupShadow: system.elevation.md,
-            popupSpacing: system.spacing.md,
-            popupOffset: system.spacing.sm,
-            dayTypography: system.textStyles.body,
-            dayColor: ref.color.black,
-            dayBorderRadius: system.radius.inner,
-            dayHoverBackgroundColor: ref.color.white,
-            daySelectedBackgroundColor: ref.color.black,
-            daySelectedColor: ref.color.white,
-            dayTodayBorderColor: ref.color.black,
-            dayOutsideMonthColor: ref.color.black,
-            dayDisabledColor: ref.color.black,
-            weekdayTypography: system.textStyles.supporting,
-            weekdayColor: ref.color.black,
-            calendarIcon: "info",
-            previousIcon: "chevronDown",
-            nextIcon: "chevronDown",
-            clearIcon: "close",
-          },
-        },
-        focusRingColor: ref.__veColor,
-        fontFamily: ref.__veFontFamily,
-        placeholderColor: ref.__veColor,
-      },
     });
+    const output: VanillaExtractPluginOptions = {
+      outDir: "dist-test",
+      builtInComponents: {
+        DateInput: {
+          borderRadius: system.radius.element,
+          border: system.border.default,
+          backgroundColor: ref.color.white,
+          color: ref.color.black,
+          typography: system.textStyles.body,
+          placeholderColor: ref.color.black,
+          horizontalSpacing: system.spacing.md,
+          verticalSpacing: system.spacing.sm,
+          gap: system.spacing.sm,
+          hoverBorderColor: ref.color.black,
+          focusBorderColor: ref.color.black,
+          invalidBorderColor: ref.color.black,
+          disabledBackgroundColor: ref.color.white,
+          disabledColor: ref.color.black,
+          readOnlyBackgroundColor: ref.color.white,
+          iconColor: ref.color.black,
+          iconSize: system.spacing.md,
+          affixColor: ref.color.black,
+          affixBackgroundColor: ref.color.white,
+          popupBackgroundColor: ref.color.white,
+          popupBorder: system.border.default,
+          popupBorderRadius: system.radius.element,
+          popupShadow: system.elevation.md,
+          popupSpacing: system.spacing.md,
+          popupOffset: system.spacing.sm,
+          dayTypography: system.textStyles.body,
+          dayColor: ref.color.black,
+          dayBorderRadius: system.radius.inner,
+          dayHoverBackgroundColor: ref.color.white,
+          daySelectedBackgroundColor: ref.color.black,
+          daySelectedColor: ref.color.white,
+          dayTodayBorderColor: ref.color.black,
+          dayOutsideMonthColor: ref.color.black,
+          dayDisabledColor: ref.color.black,
+          weekdayTypography: system.textStyles.supporting,
+          weekdayColor: ref.color.black,
+          calendarIcon: "info",
+          previousIcon: "chevronDown",
+          nextIcon: "chevronDown",
+          clearIcon: "close",
+        },
+      },
+      focusRingColor: ref.__veColor,
+      fontFamily: ref.__veFontFamily,
+      placeholderColor: ref.__veColor,
+    };
+    return { config, output };
   }
 
   test("selecting DateInput emits DateInput.gen.css.ts and DateInput.gen.tsx", () => {
@@ -4005,17 +3970,16 @@ describe("DateInput built-in component", () => {
     });
     const config = defineConfig({
       tokens: { ref, system: defineSystemTokens({}), components: {} },
-      output: {
-        target: "vanilla-extract",
-        outDir: "dist-test",
-        builtInComponents: { DateInput: {} } as never,
-        focusRingColor: ref.__veColor,
-        fontFamily: ref.__veFontFamily,
-        placeholderColor: ref.__veColor,
-      },
     });
-    expect(() => generate(config)).toThrow(MissingDesignTokensError);
-    expect(() => generate(config)).toThrow(/requires config "borderRadius"/);
+    const output: VanillaExtractPluginOptions = {
+      outDir: "dist-test",
+      builtInComponents: { DateInput: {} } as never,
+      focusRingColor: ref.__veColor,
+      fontFamily: ref.__veFontFamily,
+      placeholderColor: ref.__veColor,
+    };
+    expect(() => generate({ config, output })).toThrow(MissingDesignTokensError);
+    expect(() => generate({ config, output })).toThrow(/requires config "borderRadius"/);
   });
 
   test("DateInput generated sources pass assertParses", () => {
@@ -4051,44 +4015,44 @@ describe("Textarea built-in component", () => {
         }),
       },
     });
-    return defineConfig({
+    const config = defineConfig({
       tokens: { ref, system, components: {} },
-      output: {
-        target: "vanilla-extract",
-        outDir: "dist-test",
-        builtInComponents: {
-          Textarea: {
-            borderRadius: system.radius.element,
-            border: system.border.default,
-            backgroundColor: ref.color.white,
-            color: ref.color.black,
-            typography: system.textStyles.body,
-            placeholderColor: ref.color.black,
-            horizontalSpacing: system.spacing.md,
-            verticalSpacing: system.spacing.sm,
-            gap: system.spacing.sm,
-            hoverBorderColor: ref.color.black,
-            focusBorderColor: ref.color.black,
-            invalidBorderColor: ref.color.black,
-            disabledBackgroundColor: ref.color.white,
-            disabledColor: ref.color.black,
-            readOnlyBackgroundColor: ref.color.white,
-            iconColor: ref.color.black,
-            iconSize: system.spacing.md,
-            affixColor: ref.color.black,
-            affixBackgroundColor: ref.color.white,
-            counterTypography: system.textStyles.supporting,
-            counterColor: ref.color.black,
-            counterExceededColor: ref.color.black,
-            counterGap: system.spacing.sm,
-            resizeHandleColor: ref.color.black,
-          },
-        },
-        focusRingColor: ref.__veColor,
-        fontFamily: ref.__veFontFamily,
-        placeholderColor: ref.__veColor,
-      },
     });
+    const output: VanillaExtractPluginOptions = {
+      outDir: "dist-test",
+      builtInComponents: {
+        Textarea: {
+          borderRadius: system.radius.element,
+          border: system.border.default,
+          backgroundColor: ref.color.white,
+          color: ref.color.black,
+          typography: system.textStyles.body,
+          placeholderColor: ref.color.black,
+          horizontalSpacing: system.spacing.md,
+          verticalSpacing: system.spacing.sm,
+          gap: system.spacing.sm,
+          hoverBorderColor: ref.color.black,
+          focusBorderColor: ref.color.black,
+          invalidBorderColor: ref.color.black,
+          disabledBackgroundColor: ref.color.white,
+          disabledColor: ref.color.black,
+          readOnlyBackgroundColor: ref.color.white,
+          iconColor: ref.color.black,
+          iconSize: system.spacing.md,
+          affixColor: ref.color.black,
+          affixBackgroundColor: ref.color.white,
+          counterTypography: system.textStyles.supporting,
+          counterColor: ref.color.black,
+          counterExceededColor: ref.color.black,
+          counterGap: system.spacing.sm,
+          resizeHandleColor: ref.color.black,
+        },
+      },
+      focusRingColor: ref.__veColor,
+      fontFamily: ref.__veFontFamily,
+      placeholderColor: ref.__veColor,
+    };
+    return { config, output };
   }
 
   test("selecting Textarea emits Textarea.gen.css.ts and Textarea.gen.tsx", () => {
@@ -4113,17 +4077,16 @@ describe("Textarea built-in component", () => {
     });
     const config = defineConfig({
       tokens: { ref, system: defineSystemTokens({}), components: {} },
-      output: {
-        target: "vanilla-extract",
-        outDir: "dist-test",
-        builtInComponents: { Textarea: {} } as never,
-        focusRingColor: ref.__veColor,
-        fontFamily: ref.__veFontFamily,
-        placeholderColor: ref.__veColor,
-      },
     });
-    expect(() => generate(config)).toThrow(MissingDesignTokensError);
-    expect(() => generate(config)).toThrow(/requires config "borderRadius"/);
+    const output: VanillaExtractPluginOptions = {
+      outDir: "dist-test",
+      builtInComponents: { Textarea: {} } as never,
+      focusRingColor: ref.__veColor,
+      fontFamily: ref.__veFontFamily,
+      placeholderColor: ref.__veColor,
+    };
+    expect(() => generate({ config, output })).toThrow(MissingDesignTokensError);
+    expect(() => generate({ config, output })).toThrow(/requires config "borderRadius"/);
   });
 
   test("Textarea generated sources pass assertParses", () => {
@@ -4157,32 +4120,32 @@ describe("Field built-in component", () => {
         }),
       },
     });
-    return defineConfig({
+    const config = defineConfig({
       tokens: { ref, system, components: {} },
-      output: {
-        target: "vanilla-extract",
-        outDir: "dist-test",
-        builtInComponents: {
-          Field: {
-            labelTypography: system.textStyles.body,
-            labelColor: ref.color.black,
-            descriptionTypography: system.textStyles.supporting,
-            descriptionColor: ref.color.black,
-            errorTypography: system.textStyles.supporting,
-            errorColor: ref.color.black,
-            requiredIndicatorColor: ref.color.black,
-            optionalTypography: system.textStyles.supporting,
-            optionalColor: ref.color.black,
-            gap: system.spacing.sm,
-            iconSize: system.spacing.sm,
-            errorIcon: "alert",
-          },
-        },
-        focusRingColor: ref.__veColor,
-        fontFamily: ref.__veFontFamily,
-        placeholderColor: ref.__veColor,
-      },
     });
+    const output: VanillaExtractPluginOptions = {
+      outDir: "dist-test",
+      builtInComponents: {
+        Field: {
+          labelTypography: system.textStyles.body,
+          labelColor: ref.color.black,
+          descriptionTypography: system.textStyles.supporting,
+          descriptionColor: ref.color.black,
+          errorTypography: system.textStyles.supporting,
+          errorColor: ref.color.black,
+          requiredIndicatorColor: ref.color.black,
+          optionalTypography: system.textStyles.supporting,
+          optionalColor: ref.color.black,
+          gap: system.spacing.sm,
+          iconSize: system.spacing.sm,
+          errorIcon: "alert",
+        },
+      },
+      focusRingColor: ref.__veColor,
+      fontFamily: ref.__veFontFamily,
+      placeholderColor: ref.__veColor,
+    };
+    return { config, output };
   }
 
   test("selecting Field emits Field.gen.css.ts and Field.gen.tsx", () => {
@@ -4210,17 +4173,16 @@ describe("Field built-in component", () => {
     });
     const config = defineConfig({
       tokens: { ref, system: defineSystemTokens({}), components: {} },
-      output: {
-        target: "vanilla-extract",
-        outDir: "dist-test",
-        builtInComponents: { Field: {} } as never,
-        focusRingColor: ref.__veColor,
-        fontFamily: ref.__veFontFamily,
-        placeholderColor: ref.__veColor,
-      },
     });
-    expect(() => generate(config)).toThrow(MissingDesignTokensError);
-    expect(() => generate(config)).toThrow(/requires config "labelTypography"/);
+    const output: VanillaExtractPluginOptions = {
+      outDir: "dist-test",
+      builtInComponents: { Field: {} } as never,
+      focusRingColor: ref.__veColor,
+      fontFamily: ref.__veFontFamily,
+      placeholderColor: ref.__veColor,
+    };
+    expect(() => generate({ config, output })).toThrow(MissingDesignTokensError);
+    expect(() => generate({ config, output })).toThrow(/requires config "labelTypography"/);
   });
 
   test("Field generated sources pass assertParses", () => {
@@ -4250,30 +4212,30 @@ describe("Breadcrumb built-in component", () => {
         }),
       },
     });
-    return defineConfig({
+    const config = defineConfig({
       tokens: { ref, system, components: {} },
-      output: {
-        target: "vanilla-extract",
-        outDir: "dist-test",
-        builtInComponents: {
-          Breadcrumb: {
-            typography: system.textStyles.supporting,
-            color: ref.color.black,
-            hoverColor: ref.color.black,
-            currentColor: ref.color.black,
-            currentTypography: system.textStyles.supporting,
-            separatorColor: ref.color.black,
-            gap: system.spacing.sm,
-            iconSize: system.spacing.sm,
-            separatorIcon: "chevronDown",
-            overflowIcon: "info",
-          },
-        },
-        focusRingColor: ref.__veColor,
-        fontFamily: ref.__veFontFamily,
-        placeholderColor: ref.__veColor,
-      },
     });
+    const output: VanillaExtractPluginOptions = {
+      outDir: "dist-test",
+      builtInComponents: {
+        Breadcrumb: {
+          typography: system.textStyles.supporting,
+          color: ref.color.black,
+          hoverColor: ref.color.black,
+          currentColor: ref.color.black,
+          currentTypography: system.textStyles.supporting,
+          separatorColor: ref.color.black,
+          gap: system.spacing.sm,
+          iconSize: system.spacing.sm,
+          separatorIcon: "chevronDown",
+          overflowIcon: "info",
+        },
+      },
+      focusRingColor: ref.__veColor,
+      fontFamily: ref.__veFontFamily,
+      placeholderColor: ref.__veColor,
+    };
+    return { config, output };
   }
 
   test("selecting Breadcrumb emits Breadcrumb.gen.css.ts and Breadcrumb.gen.tsx", () => {
@@ -4298,17 +4260,16 @@ describe("Breadcrumb built-in component", () => {
     });
     const config = defineConfig({
       tokens: { ref, system: defineSystemTokens({}), components: {} },
-      output: {
-        target: "vanilla-extract",
-        outDir: "dist-test",
-        builtInComponents: { Breadcrumb: {} } as never,
-        focusRingColor: ref.__veColor,
-        fontFamily: ref.__veFontFamily,
-        placeholderColor: ref.__veColor,
-      },
     });
-    expect(() => generate(config)).toThrow(MissingDesignTokensError);
-    expect(() => generate(config)).toThrow(/requires config "typography"/);
+    const output: VanillaExtractPluginOptions = {
+      outDir: "dist-test",
+      builtInComponents: { Breadcrumb: {} } as never,
+      focusRingColor: ref.__veColor,
+      fontFamily: ref.__veFontFamily,
+      placeholderColor: ref.__veColor,
+    };
+    expect(() => generate({ config, output })).toThrow(MissingDesignTokensError);
+    expect(() => generate({ config, output })).toThrow(/requires config "typography"/);
   });
 
   test("Breadcrumb generated sources pass assertParses", () => {
@@ -4342,30 +4303,30 @@ describe("Outline built-in component", () => {
         }),
       },
     });
-    return defineConfig({
+    const config = defineConfig({
       tokens: { ref, system, components: {} },
-      output: {
-        target: "vanilla-extract",
-        outDir: "dist-test",
-        builtInComponents: {
-          Outline: {
-            typography: system.textStyles.supporting,
-            color: ref.color.black,
-            hoverColor: ref.color.black,
-            activeColor: ref.color.black,
-            activeTypography: system.textStyles.supporting,
-            border: system.border.default,
-            activeIndicatorColor: ref.color.black,
-            indentSpacing: system.spacing.md,
-            itemHorizontalSpacing: system.spacing.md,
-            itemVerticalSpacing: system.spacing.sm,
-          },
-        },
-        focusRingColor: ref.__veColor,
-        fontFamily: ref.__veFontFamily,
-        placeholderColor: ref.__veColor,
-      },
     });
+    const output: VanillaExtractPluginOptions = {
+      outDir: "dist-test",
+      builtInComponents: {
+        Outline: {
+          typography: system.textStyles.supporting,
+          color: ref.color.black,
+          hoverColor: ref.color.black,
+          activeColor: ref.color.black,
+          activeTypography: system.textStyles.supporting,
+          border: system.border.default,
+          activeIndicatorColor: ref.color.black,
+          indentSpacing: system.spacing.md,
+          itemHorizontalSpacing: system.spacing.md,
+          itemVerticalSpacing: system.spacing.sm,
+        },
+      },
+      focusRingColor: ref.__veColor,
+      fontFamily: ref.__veFontFamily,
+      placeholderColor: ref.__veColor,
+    };
+    return { config, output };
   }
 
   test("selecting Outline emits Outline.gen.css.ts and Outline.gen.tsx", () => {
@@ -4390,17 +4351,16 @@ describe("Outline built-in component", () => {
     });
     const config = defineConfig({
       tokens: { ref, system: defineSystemTokens({}), components: {} },
-      output: {
-        target: "vanilla-extract",
-        outDir: "dist-test",
-        builtInComponents: { Outline: {} } as never,
-        focusRingColor: ref.__veColor,
-        fontFamily: ref.__veFontFamily,
-        placeholderColor: ref.__veColor,
-      },
     });
-    expect(() => generate(config)).toThrow(MissingDesignTokensError);
-    expect(() => generate(config)).toThrow(/requires config "typography"/);
+    const output: VanillaExtractPluginOptions = {
+      outDir: "dist-test",
+      builtInComponents: { Outline: {} } as never,
+      focusRingColor: ref.__veColor,
+      fontFamily: ref.__veFontFamily,
+      placeholderColor: ref.__veColor,
+    };
+    expect(() => generate({ config, output })).toThrow(MissingDesignTokensError);
+    expect(() => generate({ config, output })).toThrow(/requires config "typography"/);
   });
 
   test("Outline generated sources pass assertParses", () => {
@@ -4440,45 +4400,45 @@ describe("Pagination built-in component", () => {
         }),
       },
     });
-    return defineConfig({
+    const config = defineConfig({
       tokens: { ref, system, components: {} },
-      output: {
-        target: "vanilla-extract",
-        outDir: "dist-test",
-        builtInComponents: {
-          Pagination: {
-            borderRadius: system.radius.inner,
-            border: system.border.default,
-            typography: system.textStyles.supporting,
-            color: ref.color.black,
-            backgroundColor: ref.color.white,
-            hoverColor: ref.color.black,
-            hoverBackgroundColor: ref.color.white,
-            activeColor: ref.color.white,
-            activeBackgroundColor: ref.color.black,
-            disabledColor: ref.color.black,
-            ellipsisColor: ref.color.black,
-            gap: system.spacing.sm,
-            iconSize: system.spacing.sm,
-            sizes: {
-              md: {
-                minSize: system.spacing.lg,
-                horizontalSpacing: system.spacing.md,
-                verticalSpacing: system.spacing.sm,
-                typography: system.textStyles.body,
-              },
-            },
-            previousIcon: "chevronDown",
-            nextIcon: "chevronDown",
-            firstIcon: "chevronDown",
-            lastIcon: "chevronDown",
-          },
-        },
-        focusRingColor: ref.__veColor,
-        fontFamily: ref.__veFontFamily,
-        placeholderColor: ref.__veColor,
-      },
     });
+    const output: VanillaExtractPluginOptions = {
+      outDir: "dist-test",
+      builtInComponents: {
+        Pagination: {
+          borderRadius: system.radius.inner,
+          border: system.border.default,
+          typography: system.textStyles.supporting,
+          color: ref.color.black,
+          backgroundColor: ref.color.white,
+          hoverColor: ref.color.black,
+          hoverBackgroundColor: ref.color.white,
+          activeColor: ref.color.white,
+          activeBackgroundColor: ref.color.black,
+          disabledColor: ref.color.black,
+          ellipsisColor: ref.color.black,
+          gap: system.spacing.sm,
+          iconSize: system.spacing.sm,
+          sizes: {
+            md: {
+              minSize: system.spacing.lg,
+              horizontalSpacing: system.spacing.md,
+              verticalSpacing: system.spacing.sm,
+              typography: system.textStyles.body,
+            },
+          },
+          previousIcon: "chevronDown",
+          nextIcon: "chevronDown",
+          firstIcon: "chevronDown",
+          lastIcon: "chevronDown",
+        },
+      },
+      focusRingColor: ref.__veColor,
+      fontFamily: ref.__veFontFamily,
+      placeholderColor: ref.__veColor,
+    };
+    return { config, output };
   }
 
   test("selecting Pagination emits Pagination.gen.css.ts and Pagination.gen.tsx", () => {
@@ -4504,17 +4464,16 @@ describe("Pagination built-in component", () => {
     });
     const config = defineConfig({
       tokens: { ref, system: defineSystemTokens({}), components: {} },
-      output: {
-        target: "vanilla-extract",
-        outDir: "dist-test",
-        builtInComponents: { Pagination: {} } as never,
-        focusRingColor: ref.__veColor,
-        fontFamily: ref.__veFontFamily,
-        placeholderColor: ref.__veColor,
-      },
     });
-    expect(() => generate(config)).toThrow(MissingDesignTokensError);
-    expect(() => generate(config)).toThrow(/requires config "borderRadius"/);
+    const output: VanillaExtractPluginOptions = {
+      outDir: "dist-test",
+      builtInComponents: { Pagination: {} } as never,
+      focusRingColor: ref.__veColor,
+      fontFamily: ref.__veFontFamily,
+      placeholderColor: ref.__veColor,
+    };
+    expect(() => generate({ config, output })).toThrow(MissingDesignTokensError);
+    expect(() => generate({ config, output })).toThrow(/requires config "borderRadius"/);
   });
 
   test("Pagination generated sources pass assertParses", () => {
@@ -4545,42 +4504,42 @@ describe("Tabs built-in component", () => {
         body: tokens.typography({ fontFamily: "Arial", fontSize: "14px", fontWeight: "regular" }),
       },
     });
-    return defineConfig({
+    const config = defineConfig({
       tokens: { ref, system, components: {} },
-      output: {
-        target: "vanilla-extract",
-        outDir: "dist-test",
-        builtInComponents: {
-          Tabs: {
-            typography: system.textStyles.body,
-            activeTypography: system.textStyles.body,
-            disabledColor: ref.color.black,
-            indicatorThickness: system.spacing.sm,
-            horizontalSpacing: system.spacing.md,
-            verticalSpacing: system.spacing.sm,
-            gap: system.spacing.sm,
-            tabGap: system.spacing.sm,
-            panelSpacing: system.spacing.md,
-            iconSize: system.spacing.md,
-            variants: {
-              line: {
-                color: ref.color.black,
-                activeColor: ref.color.black,
-                hoverColor: ref.color.black,
-                backgroundColor: ref.color.white,
-                activeBackgroundColor: ref.color.white,
-                indicatorColor: ref.color.black,
-                border: system.border.default,
-                borderRadius: system.radius.none,
-              },
+    });
+    const output: VanillaExtractPluginOptions = {
+      outDir: "dist-test",
+      builtInComponents: {
+        Tabs: {
+          typography: system.textStyles.body,
+          activeTypography: system.textStyles.body,
+          disabledColor: ref.color.black,
+          indicatorThickness: system.spacing.sm,
+          horizontalSpacing: system.spacing.md,
+          verticalSpacing: system.spacing.sm,
+          gap: system.spacing.sm,
+          tabGap: system.spacing.sm,
+          panelSpacing: system.spacing.md,
+          iconSize: system.spacing.md,
+          variants: {
+            line: {
+              color: ref.color.black,
+              activeColor: ref.color.black,
+              hoverColor: ref.color.black,
+              backgroundColor: ref.color.white,
+              activeBackgroundColor: ref.color.white,
+              indicatorColor: ref.color.black,
+              border: system.border.default,
+              borderRadius: system.radius.none,
             },
           },
         },
-        focusRingColor: ref.__veColor,
-        fontFamily: ref.__veFontFamily,
-        placeholderColor: ref.__veColor,
       },
-    });
+      focusRingColor: ref.__veColor,
+      fontFamily: ref.__veFontFamily,
+      placeholderColor: ref.__veColor,
+    };
+    return { config, output };
   }
 
   test("selecting Tabs emits Tabs.gen.css.ts and Tabs.gen.tsx", () => {
@@ -4608,17 +4567,16 @@ describe("Tabs built-in component", () => {
     });
     const config = defineConfig({
       tokens: { ref, system: defineSystemTokens({}), components: {} },
-      output: {
-        target: "vanilla-extract",
-        outDir: "dist-test",
-        builtInComponents: { Tabs: {} } as never,
-        focusRingColor: ref.__veColor,
-        fontFamily: ref.__veFontFamily,
-        placeholderColor: ref.__veColor,
-      },
     });
-    expect(() => generate(config)).toThrow(MissingDesignTokensError);
-    expect(() => generate(config)).toThrow(/requires config "typography"/);
+    const output: VanillaExtractPluginOptions = {
+      outDir: "dist-test",
+      builtInComponents: { Tabs: {} } as never,
+      focusRingColor: ref.__veColor,
+      fontFamily: ref.__veFontFamily,
+      placeholderColor: ref.__veColor,
+    };
+    expect(() => generate({ config, output })).toThrow(MissingDesignTokensError);
+    expect(() => generate({ config, output })).toThrow(/requires config "typography"/);
   });
 
   test("Tabs generated sources pass assertParses", () => {
@@ -4658,41 +4616,41 @@ describe("Steps built-in component", () => {
       labelColor: ref.color.black,
       connectorColor: ref.color.black,
     };
-    return defineConfig({
+    const config = defineConfig({
       tokens: { ref, system, components: {} },
-      output: {
-        target: "vanilla-extract",
-        outDir: "dist-test",
-        builtInComponents: {
-          Steps: {
-            labelTypography: system.textStyles.body,
-            descriptionTypography: system.textStyles.supporting,
-            descriptionColor: ref.color.black,
-            connectorThickness: system.spacing.sm,
-            connectorSpacing: system.spacing.sm,
-            indicatorBorderRadius: system.radius.full,
-            statuses: {
-              complete: statusFields,
-              current: statusFields,
-              upcoming: statusFields,
-              error: statusFields,
-            },
-            sizes: {
-              md: {
-                indicatorSize: system.spacing.md,
-                typography: system.textStyles.body,
-                gap: system.spacing.sm,
-              },
-            },
-            completeIcon: "check",
-            errorIcon: "alert",
-          },
-        },
-        focusRingColor: ref.__veColor,
-        fontFamily: ref.__veFontFamily,
-        placeholderColor: ref.__veColor,
-      },
     });
+    const output: VanillaExtractPluginOptions = {
+      outDir: "dist-test",
+      builtInComponents: {
+        Steps: {
+          labelTypography: system.textStyles.body,
+          descriptionTypography: system.textStyles.supporting,
+          descriptionColor: ref.color.black,
+          connectorThickness: system.spacing.sm,
+          connectorSpacing: system.spacing.sm,
+          indicatorBorderRadius: system.radius.full,
+          statuses: {
+            complete: statusFields,
+            current: statusFields,
+            upcoming: statusFields,
+            error: statusFields,
+          },
+          sizes: {
+            md: {
+              indicatorSize: system.spacing.md,
+              typography: system.textStyles.body,
+              gap: system.spacing.sm,
+            },
+          },
+          completeIcon: "check",
+          errorIcon: "alert",
+        },
+      },
+      focusRingColor: ref.__veColor,
+      fontFamily: ref.__veFontFamily,
+      placeholderColor: ref.__veColor,
+    };
+    return { config, output };
   }
 
   test("selecting Steps emits Steps.gen.css.ts and Steps.gen.tsx", () => {
@@ -4719,17 +4677,16 @@ describe("Steps built-in component", () => {
     });
     const config = defineConfig({
       tokens: { ref, system: defineSystemTokens({}), components: {} },
-      output: {
-        target: "vanilla-extract",
-        outDir: "dist-test",
-        builtInComponents: { Steps: {} } as never,
-        focusRingColor: ref.__veColor,
-        fontFamily: ref.__veFontFamily,
-        placeholderColor: ref.__veColor,
-      },
     });
-    expect(() => generate(config)).toThrow(MissingDesignTokensError);
-    expect(() => generate(config)).toThrow(/requires config "statuses"/);
+    const output: VanillaExtractPluginOptions = {
+      outDir: "dist-test",
+      builtInComponents: { Steps: {} } as never,
+      focusRingColor: ref.__veColor,
+      fontFamily: ref.__veFontFamily,
+      placeholderColor: ref.__veColor,
+    };
+    expect(() => generate({ config, output })).toThrow(MissingDesignTokensError);
+    expect(() => generate({ config, output })).toThrow(/requires config "statuses"/);
   });
 
   test("Steps generated sources pass assertParses", () => {
@@ -4776,41 +4733,41 @@ describe("Dialog built-in component", () => {
         }),
       },
     });
-    return defineConfig({
+    const config = defineConfig({
       tokens: { ref, system, components: {} },
-      output: {
-        target: "vanilla-extract",
-        outDir: "dist-test",
-        builtInComponents: {
-          Dialog: {
-            backdropColor: ref.color.black,
-            backgroundColor: ref.color.white,
-            border: system.border.default,
-            borderRadius: system.radius.container,
-            shadow: system.elevation.md,
-            horizontalSpacing: system.spacing.md,
-            verticalSpacing: system.spacing.sm,
-            gap: system.spacing.sm,
-            titleTypography: system.textStyles.title,
-            titleColor: ref.color.black,
-            descriptionTypography: system.textStyles.body,
-            descriptionColor: ref.color.black,
-            footerBorder: system.border.default,
-            transition: system.transitions.standard,
-            sizes: {
-              sm: { maxWidth: ref.overlayWidth.sm },
-              md: { maxWidth: ref.overlayWidth.md },
-              lg: { maxWidth: ref.overlayWidth.lg },
-              fullscreen: { maxWidth: ref.overlayWidth.fullscreen },
-            },
-            closeIcon: "close",
-          },
-        },
-        focusRingColor: ref.__veColor,
-        fontFamily: ref.__veFontFamily,
-        placeholderColor: ref.__veColor,
-      },
     });
+    const output: VanillaExtractPluginOptions = {
+      outDir: "dist-test",
+      builtInComponents: {
+        Dialog: {
+          backdropColor: ref.color.black,
+          backgroundColor: ref.color.white,
+          border: system.border.default,
+          borderRadius: system.radius.container,
+          shadow: system.elevation.md,
+          horizontalSpacing: system.spacing.md,
+          verticalSpacing: system.spacing.sm,
+          gap: system.spacing.sm,
+          titleTypography: system.textStyles.title,
+          titleColor: ref.color.black,
+          descriptionTypography: system.textStyles.body,
+          descriptionColor: ref.color.black,
+          footerBorder: system.border.default,
+          transition: system.transitions.standard,
+          sizes: {
+            sm: { maxWidth: ref.overlayWidth.sm },
+            md: { maxWidth: ref.overlayWidth.md },
+            lg: { maxWidth: ref.overlayWidth.lg },
+            fullscreen: { maxWidth: ref.overlayWidth.fullscreen },
+          },
+          closeIcon: "close",
+        },
+      },
+      focusRingColor: ref.__veColor,
+      fontFamily: ref.__veFontFamily,
+      placeholderColor: ref.__veColor,
+    };
+    return { config, output };
   }
 
   test("selecting Dialog emits Dialog.gen.css.ts and Dialog.gen.tsx", () => {
@@ -4842,17 +4799,16 @@ describe("Dialog built-in component", () => {
     });
     const config = defineConfig({
       tokens: { ref, system: defineSystemTokens({}), components: {} },
-      output: {
-        target: "vanilla-extract",
-        outDir: "dist-test",
-        builtInComponents: { Dialog: {} } as never,
-        focusRingColor: ref.__veColor,
-        fontFamily: ref.__veFontFamily,
-        placeholderColor: ref.__veColor,
-      },
     });
-    expect(() => generate(config)).toThrow(MissingDesignTokensError);
-    expect(() => generate(config)).toThrow(/requires config "backdropColor"/);
+    const output: VanillaExtractPluginOptions = {
+      outDir: "dist-test",
+      builtInComponents: { Dialog: {} } as never,
+      focusRingColor: ref.__veColor,
+      fontFamily: ref.__veFontFamily,
+      placeholderColor: ref.__veColor,
+    };
+    expect(() => generate({ config, output })).toThrow(MissingDesignTokensError);
+    expect(() => generate({ config, output })).toThrow(/requires config "backdropColor"/);
   });
 
   test("Dialog generated sources pass assertParses", () => {
@@ -4901,39 +4857,39 @@ describe("Drawer built-in component", () => {
         }),
       },
     });
-    return defineConfig({
+    const config = defineConfig({
       tokens: { ref, system, components: {} },
-      output: {
-        target: "vanilla-extract",
-        outDir: "dist-test",
-        builtInComponents: {
-          Drawer: {
-            backdropColor: ref.color.black,
-            backgroundColor: ref.color.white,
-            border: system.border.default,
-            borderRadius: system.radius.container,
-            shadow: system.elevation.md,
-            horizontalSpacing: system.spacing.md,
-            verticalSpacing: system.spacing.sm,
-            gap: system.spacing.sm,
-            titleTypography: system.textStyles.title,
-            titleColor: ref.color.black,
-            footerBorder: system.border.default,
-            transition: system.transitions.medium,
-            sizes: {
-              sm: { size: ref.overlayWidth.sm },
-              md: { size: ref.overlayWidth.md },
-              lg: { size: ref.overlayWidth.lg },
-              full: { size: ref.overlayWidth.full },
-            },
-            closeIcon: "close",
-          },
-        },
-        focusRingColor: ref.__veColor,
-        fontFamily: ref.__veFontFamily,
-        placeholderColor: ref.__veColor,
-      },
     });
+    const output: VanillaExtractPluginOptions = {
+      outDir: "dist-test",
+      builtInComponents: {
+        Drawer: {
+          backdropColor: ref.color.black,
+          backgroundColor: ref.color.white,
+          border: system.border.default,
+          borderRadius: system.radius.container,
+          shadow: system.elevation.md,
+          horizontalSpacing: system.spacing.md,
+          verticalSpacing: system.spacing.sm,
+          gap: system.spacing.sm,
+          titleTypography: system.textStyles.title,
+          titleColor: ref.color.black,
+          footerBorder: system.border.default,
+          transition: system.transitions.medium,
+          sizes: {
+            sm: { size: ref.overlayWidth.sm },
+            md: { size: ref.overlayWidth.md },
+            lg: { size: ref.overlayWidth.lg },
+            full: { size: ref.overlayWidth.full },
+          },
+          closeIcon: "close",
+        },
+      },
+      focusRingColor: ref.__veColor,
+      fontFamily: ref.__veFontFamily,
+      placeholderColor: ref.__veColor,
+    };
+    return { config, output };
   }
 
   test("selecting Drawer emits Drawer.gen.css.ts and Drawer.gen.tsx", () => {
@@ -4963,17 +4919,16 @@ describe("Drawer built-in component", () => {
     });
     const config = defineConfig({
       tokens: { ref, system: defineSystemTokens({}), components: {} },
-      output: {
-        target: "vanilla-extract",
-        outDir: "dist-test",
-        builtInComponents: { Drawer: {} } as never,
-        focusRingColor: ref.__veColor,
-        fontFamily: ref.__veFontFamily,
-        placeholderColor: ref.__veColor,
-      },
     });
-    expect(() => generate(config)).toThrow(MissingDesignTokensError);
-    expect(() => generate(config)).toThrow(/requires config "backdropColor"/);
+    const output: VanillaExtractPluginOptions = {
+      outDir: "dist-test",
+      builtInComponents: { Drawer: {} } as never,
+      focusRingColor: ref.__veColor,
+      fontFamily: ref.__veFontFamily,
+      placeholderColor: ref.__veColor,
+    };
+    expect(() => generate({ config, output })).toThrow(MissingDesignTokensError);
+    expect(() => generate({ config, output })).toThrow(/requires config "backdropColor"/);
   });
 
   test("Drawer generated sources pass assertParses", () => {
@@ -5020,32 +4975,32 @@ describe("Tooltip built-in component", () => {
         }),
       },
     });
-    return defineConfig({
+    const config = defineConfig({
       tokens: { ref, system, components: {} },
-      output: {
-        target: "vanilla-extract",
-        outDir: "dist-test",
-        builtInComponents: {
-          Tooltip: {
-            backgroundColor: ref.color.black,
-            color: ref.color.white,
-            typography: system.textStyles.supporting,
-            borderRadius: system.radius.inner,
-            border: system.border.default,
-            shadow: system.elevation.sm,
-            horizontalSpacing: system.spacing.md,
-            verticalSpacing: system.spacing.sm,
-            offset: system.spacing.sm,
-            maxWidth: system.spacing.md,
-            arrowSize: system.spacing.sm,
-            transition: system.transitions.standard,
-          },
-        },
-        focusRingColor: ref.__veColor,
-        fontFamily: ref.__veFontFamily,
-        placeholderColor: ref.__veColor,
-      },
     });
+    const output: VanillaExtractPluginOptions = {
+      outDir: "dist-test",
+      builtInComponents: {
+        Tooltip: {
+          backgroundColor: ref.color.black,
+          color: ref.color.white,
+          typography: system.textStyles.supporting,
+          borderRadius: system.radius.inner,
+          border: system.border.default,
+          shadow: system.elevation.sm,
+          horizontalSpacing: system.spacing.md,
+          verticalSpacing: system.spacing.sm,
+          offset: system.spacing.sm,
+          maxWidth: system.spacing.md,
+          arrowSize: system.spacing.sm,
+          transition: system.transitions.standard,
+        },
+      },
+      focusRingColor: ref.__veColor,
+      fontFamily: ref.__veFontFamily,
+      placeholderColor: ref.__veColor,
+    };
+    return { config, output };
   }
 
   test("selecting Tooltip emits Tooltip.gen.css.ts and Tooltip.gen.tsx", () => {
@@ -5072,17 +5027,16 @@ describe("Tooltip built-in component", () => {
     });
     const config = defineConfig({
       tokens: { ref, system: defineSystemTokens({}), components: {} },
-      output: {
-        target: "vanilla-extract",
-        outDir: "dist-test",
-        builtInComponents: { Tooltip: {} } as never,
-        focusRingColor: ref.__veColor,
-        fontFamily: ref.__veFontFamily,
-        placeholderColor: ref.__veColor,
-      },
     });
-    expect(() => generate(config)).toThrow(MissingDesignTokensError);
-    expect(() => generate(config)).toThrow(/requires config "backgroundColor"/);
+    const output: VanillaExtractPluginOptions = {
+      outDir: "dist-test",
+      builtInComponents: { Tooltip: {} } as never,
+      focusRingColor: ref.__veColor,
+      fontFamily: ref.__veFontFamily,
+      placeholderColor: ref.__veColor,
+    };
+    expect(() => generate({ config, output })).toThrow(MissingDesignTokensError);
+    expect(() => generate({ config, output })).toThrow(/requires config "backgroundColor"/);
   });
 
   test("Tooltip generated sources pass assertParses", () => {
@@ -5122,32 +5076,32 @@ describe("Popover built-in component", () => {
         }),
       },
     });
-    return defineConfig({
+    const config = defineConfig({
       tokens: { ref, system, components: {} },
-      output: {
-        target: "vanilla-extract",
-        outDir: "dist-test",
-        builtInComponents: {
-          Popover: {
-            backgroundColor: ref.color.white,
-            color: ref.color.black,
-            border: system.border.default,
-            borderRadius: system.radius.element,
-            shadow: system.elevation.md,
-            horizontalSpacing: system.spacing.md,
-            verticalSpacing: system.spacing.sm,
-            offset: system.spacing.sm,
-            maxWidth: system.spacing.md,
-            backdropColor: ref.color.black,
-            arrowSize: system.spacing.sm,
-            transition: system.transitions.standard,
-          },
-        },
-        focusRingColor: ref.__veColor,
-        fontFamily: ref.__veFontFamily,
-        placeholderColor: ref.__veColor,
-      },
     });
+    const output: VanillaExtractPluginOptions = {
+      outDir: "dist-test",
+      builtInComponents: {
+        Popover: {
+          backgroundColor: ref.color.white,
+          color: ref.color.black,
+          border: system.border.default,
+          borderRadius: system.radius.element,
+          shadow: system.elevation.md,
+          horizontalSpacing: system.spacing.md,
+          verticalSpacing: system.spacing.sm,
+          offset: system.spacing.sm,
+          maxWidth: system.spacing.md,
+          backdropColor: ref.color.black,
+          arrowSize: system.spacing.sm,
+          transition: system.transitions.standard,
+        },
+      },
+      focusRingColor: ref.__veColor,
+      fontFamily: ref.__veFontFamily,
+      placeholderColor: ref.__veColor,
+    };
+    return { config, output };
   }
 
   test("selecting Popover emits Popover.gen.css.ts and Popover.gen.tsx", () => {
@@ -5174,17 +5128,16 @@ describe("Popover built-in component", () => {
     });
     const config = defineConfig({
       tokens: { ref, system: defineSystemTokens({}), components: {} },
-      output: {
-        target: "vanilla-extract",
-        outDir: "dist-test",
-        builtInComponents: { Popover: {} } as never,
-        focusRingColor: ref.__veColor,
-        fontFamily: ref.__veFontFamily,
-        placeholderColor: ref.__veColor,
-      },
     });
-    expect(() => generate(config)).toThrow(MissingDesignTokensError);
-    expect(() => generate(config)).toThrow(/requires config "backgroundColor"/);
+    const output: VanillaExtractPluginOptions = {
+      outDir: "dist-test",
+      builtInComponents: { Popover: {} } as never,
+      focusRingColor: ref.__veColor,
+      fontFamily: ref.__veFontFamily,
+      placeholderColor: ref.__veColor,
+    };
+    expect(() => generate({ config, output })).toThrow(MissingDesignTokensError);
+    expect(() => generate({ config, output })).toThrow(/requires config "backgroundColor"/);
   });
 
   test("Popover generated sources pass assertParses", () => {
@@ -5232,54 +5185,54 @@ describe("Toast built-in component", () => {
         }),
       },
     });
-    return defineConfig({
+    const config = defineConfig({
       tokens: { ref, system, components: {} },
-      output: {
-        target: "vanilla-extract",
-        outDir: "dist-test",
-        builtInComponents: {
-          Toast: {
-            backgroundColor: ref.color.white,
-            border: system.border.default,
-            borderRadius: system.radius.element,
-            shadow: system.elevation.md,
-            titleTypography: system.textStyles.body,
-            descriptionTypography: system.textStyles.supporting,
-            descriptionColor: ref.color.black,
-            horizontalSpacing: system.spacing.md,
-            verticalSpacing: system.spacing.sm,
-            gap: system.spacing.sm,
-            stackGap: system.spacing.sm,
-            offset: system.spacing.md,
-            width: system.spacing.md,
-            iconSize: system.spacing.sm,
-            transition: system.transitions.standard,
-            closeIcon: "close",
-            statuses: {
-              info: {
-                color: ref.color.black,
-                backgroundColor: ref.color.white,
-                borderColor: ref.color.black,
-                iconColor: ref.color.black,
-                titleColor: ref.color.black,
-                icon: "info",
-              },
-              danger: {
-                color: ref.color.black,
-                backgroundColor: ref.color.white,
-                borderColor: ref.color.black,
-                iconColor: ref.color.black,
-                titleColor: ref.color.black,
-                icon: "alert",
-              },
+    });
+    const output: VanillaExtractPluginOptions = {
+      outDir: "dist-test",
+      builtInComponents: {
+        Toast: {
+          backgroundColor: ref.color.white,
+          border: system.border.default,
+          borderRadius: system.radius.element,
+          shadow: system.elevation.md,
+          titleTypography: system.textStyles.body,
+          descriptionTypography: system.textStyles.supporting,
+          descriptionColor: ref.color.black,
+          horizontalSpacing: system.spacing.md,
+          verticalSpacing: system.spacing.sm,
+          gap: system.spacing.sm,
+          stackGap: system.spacing.sm,
+          offset: system.spacing.md,
+          width: system.spacing.md,
+          iconSize: system.spacing.sm,
+          transition: system.transitions.standard,
+          closeIcon: "close",
+          statuses: {
+            info: {
+              color: ref.color.black,
+              backgroundColor: ref.color.white,
+              borderColor: ref.color.black,
+              iconColor: ref.color.black,
+              titleColor: ref.color.black,
+              icon: "info",
+            },
+            danger: {
+              color: ref.color.black,
+              backgroundColor: ref.color.white,
+              borderColor: ref.color.black,
+              iconColor: ref.color.black,
+              titleColor: ref.color.black,
+              icon: "alert",
             },
           },
         },
-        focusRingColor: ref.__veColor,
-        fontFamily: ref.__veFontFamily,
-        placeholderColor: ref.__veColor,
       },
-    });
+      focusRingColor: ref.__veColor,
+      fontFamily: ref.__veFontFamily,
+      placeholderColor: ref.__veColor,
+    };
+    return { config, output };
   }
 
   test("selecting Toast emits Toast.gen.css.ts and Toast.gen.tsx", () => {
@@ -5309,17 +5262,16 @@ describe("Toast built-in component", () => {
     });
     const config = defineConfig({
       tokens: { ref, system: defineSystemTokens({}), components: {} },
-      output: {
-        target: "vanilla-extract",
-        outDir: "dist-test",
-        builtInComponents: { Toast: {} } as never,
-        focusRingColor: ref.__veColor,
-        fontFamily: ref.__veFontFamily,
-        placeholderColor: ref.__veColor,
-      },
     });
-    expect(() => generate(config)).toThrow(MissingDesignTokensError);
-    expect(() => generate(config)).toThrow(/requires config "backgroundColor"/);
+    const output: VanillaExtractPluginOptions = {
+      outDir: "dist-test",
+      builtInComponents: { Toast: {} } as never,
+      focusRingColor: ref.__veColor,
+      fontFamily: ref.__veFontFamily,
+      placeholderColor: ref.__veColor,
+    };
+    expect(() => generate({ config, output })).toThrow(MissingDesignTokensError);
+    expect(() => generate({ config, output })).toThrow(/requires config "backgroundColor"/);
   });
 
   test("Toast generated sources pass assertParses", () => {
@@ -5352,29 +5304,29 @@ describe("MetadataList built-in component", () => {
         }),
       },
     });
-    return defineConfig({
+    const config = defineConfig({
       tokens: { ref, system, components: {} },
-      output: {
-        target: "vanilla-extract",
-        outDir: "dist-test",
-        builtInComponents: {
-          MetadataList: {
-            gaps: ref.gapScale,
-            labelTypography: system.textStyles.supporting,
-            labelColor: ref.color.black,
-            valueTypography: system.textStyles.body,
-            valueColor: ref.color.black,
-            pairGap: system.spacing.sm,
-            iconSize: system.spacing.sm,
-            iconColor: ref.color.black,
-            divider: system.border.default,
-          },
-        },
-        focusRingColor: ref.__veColor,
-        fontFamily: ref.__veFontFamily,
-        placeholderColor: ref.__veColor,
-      },
     });
+    const output: VanillaExtractPluginOptions = {
+      outDir: "dist-test",
+      builtInComponents: {
+        MetadataList: {
+          gaps: ref.gapScale,
+          labelTypography: system.textStyles.supporting,
+          labelColor: ref.color.black,
+          valueTypography: system.textStyles.body,
+          valueColor: ref.color.black,
+          pairGap: system.spacing.sm,
+          iconSize: system.spacing.sm,
+          iconColor: ref.color.black,
+          divider: system.border.default,
+        },
+      },
+      focusRingColor: ref.__veColor,
+      fontFamily: ref.__veFontFamily,
+      placeholderColor: ref.__veColor,
+    };
+    return { config, output };
   }
 
   test("selecting MetadataList emits MetadataList.gen.css.ts and MetadataList.gen.tsx", () => {
@@ -5402,17 +5354,16 @@ describe("MetadataList built-in component", () => {
     });
     const config = defineConfig({
       tokens: { ref, system: defineSystemTokens({}), components: {} },
-      output: {
-        target: "vanilla-extract",
-        outDir: "dist-test",
-        builtInComponents: { MetadataList: {} } as never,
-        focusRingColor: ref.__veColor,
-        fontFamily: ref.__veFontFamily,
-        placeholderColor: ref.__veColor,
-      },
     });
-    expect(() => generate(config)).toThrow(MissingDesignTokensError);
-    expect(() => generate(config)).toThrow(/requires config "gaps"/);
+    const output: VanillaExtractPluginOptions = {
+      outDir: "dist-test",
+      builtInComponents: { MetadataList: {} } as never,
+      focusRingColor: ref.__veColor,
+      fontFamily: ref.__veFontFamily,
+      placeholderColor: ref.__veColor,
+    };
+    expect(() => generate({ config, output })).toThrow(MissingDesignTokensError);
+    expect(() => generate({ config, output })).toThrow(/requires config "gaps"/);
   });
 
   test("MetadataList generated sources pass assertParses", () => {
@@ -5442,34 +5393,34 @@ describe("TreeList built-in component", () => {
         body: tokens.typography({ fontFamily: "Arial", fontSize: "14px", fontWeight: "regular" }),
       },
     });
-    return defineConfig({
+    const config = defineConfig({
       tokens: { ref, system, components: {} },
-      output: {
-        target: "vanilla-extract",
-        outDir: "dist-test",
-        builtInComponents: {
-          TreeList: {
-            typography: system.textStyles.body,
-            color: ref.color.black,
-            hoverBackgroundColor: ref.color.white,
-            selectedBackgroundColor: ref.color.white,
-            selectedColor: ref.color.black,
-            borderRadius: system.radius.inner,
-            indentSpacing: system.spacing.md,
-            rowHorizontalSpacing: system.spacing.md,
-            rowVerticalSpacing: system.spacing.sm,
-            rowGap: system.spacing.sm,
-            guideColor: ref.color.black,
-            iconSize: system.spacing.md,
-            iconColor: ref.color.black,
-            expandIcon: "chevronDown",
-          },
-        },
-        focusRingColor: ref.__veColor,
-        fontFamily: ref.__veFontFamily,
-        placeholderColor: ref.__veColor,
-      },
     });
+    const output: VanillaExtractPluginOptions = {
+      outDir: "dist-test",
+      builtInComponents: {
+        TreeList: {
+          typography: system.textStyles.body,
+          color: ref.color.black,
+          hoverBackgroundColor: ref.color.white,
+          selectedBackgroundColor: ref.color.white,
+          selectedColor: ref.color.black,
+          borderRadius: system.radius.inner,
+          indentSpacing: system.spacing.md,
+          rowHorizontalSpacing: system.spacing.md,
+          rowVerticalSpacing: system.spacing.sm,
+          rowGap: system.spacing.sm,
+          guideColor: ref.color.black,
+          iconSize: system.spacing.md,
+          iconColor: ref.color.black,
+          expandIcon: "chevronDown",
+        },
+      },
+      focusRingColor: ref.__veColor,
+      fontFamily: ref.__veFontFamily,
+      placeholderColor: ref.__veColor,
+    };
+    return { config, output };
   }
 
   test("selecting TreeList emits TreeList.gen.css.ts and TreeList.gen.tsx", () => {
@@ -5497,17 +5448,16 @@ describe("TreeList built-in component", () => {
     });
     const config = defineConfig({
       tokens: { ref, system: defineSystemTokens({}), components: {} },
-      output: {
-        target: "vanilla-extract",
-        outDir: "dist-test",
-        builtInComponents: { TreeList: {} } as never,
-        focusRingColor: ref.__veColor,
-        fontFamily: ref.__veFontFamily,
-        placeholderColor: ref.__veColor,
-      },
     });
-    expect(() => generate(config)).toThrow(MissingDesignTokensError);
-    expect(() => generate(config)).toThrow(/requires config "typography"/);
+    const output: VanillaExtractPluginOptions = {
+      outDir: "dist-test",
+      builtInComponents: { TreeList: {} } as never,
+      focusRingColor: ref.__veColor,
+      fontFamily: ref.__veFontFamily,
+      placeholderColor: ref.__veColor,
+    };
+    expect(() => generate({ config, output })).toThrow(MissingDesignTokensError);
+    expect(() => generate({ config, output })).toThrow(/requires config "typography"/);
   });
 
   test("TreeList generated sources pass assertParses", () => {
@@ -5547,41 +5497,41 @@ describe("Timeline built-in component", () => {
       indicatorBackgroundColor: ref.color.white,
       indicatorBorder: system.border.default,
     };
-    return defineConfig({
+    const config = defineConfig({
       tokens: { ref, system, components: {} },
-      output: {
-        target: "vanilla-extract",
-        outDir: "dist-test",
-        builtInComponents: {
-          Timeline: {
-            connectorColor: ref.color.black,
-            connectorThickness: system.spacing.sm,
-            connectorSpacing: system.spacing.sm,
-            labelTypography: system.textStyles.body,
-            labelColor: ref.color.black,
-            descriptionTypography: system.textStyles.supporting,
-            descriptionColor: ref.color.black,
-            timestampTypography: system.textStyles.supporting,
-            timestampColor: ref.color.black,
-            itemGap: system.spacing.sm,
-            iconSize: system.spacing.md,
-            statuses: {
-              neutral: statusFields,
-            },
-            sizes: {
-              md: {
-                indicatorSize: system.spacing.md,
-                gap: system.spacing.sm,
-                typography: system.textStyles.body,
-              },
+    });
+    const output: VanillaExtractPluginOptions = {
+      outDir: "dist-test",
+      builtInComponents: {
+        Timeline: {
+          connectorColor: ref.color.black,
+          connectorThickness: system.spacing.sm,
+          connectorSpacing: system.spacing.sm,
+          labelTypography: system.textStyles.body,
+          labelColor: ref.color.black,
+          descriptionTypography: system.textStyles.supporting,
+          descriptionColor: ref.color.black,
+          timestampTypography: system.textStyles.supporting,
+          timestampColor: ref.color.black,
+          itemGap: system.spacing.sm,
+          iconSize: system.spacing.md,
+          statuses: {
+            neutral: statusFields,
+          },
+          sizes: {
+            md: {
+              indicatorSize: system.spacing.md,
+              gap: system.spacing.sm,
+              typography: system.textStyles.body,
             },
           },
         },
-        focusRingColor: ref.__veColor,
-        fontFamily: ref.__veFontFamily,
-        placeholderColor: ref.__veColor,
       },
-    });
+      focusRingColor: ref.__veColor,
+      fontFamily: ref.__veFontFamily,
+      placeholderColor: ref.__veColor,
+    };
+    return { config, output };
   }
 
   test("selecting Timeline emits Timeline.gen.css.ts and Timeline.gen.tsx", () => {
@@ -5607,17 +5557,16 @@ describe("Timeline built-in component", () => {
     });
     const config = defineConfig({
       tokens: { ref, system: defineSystemTokens({}), components: {} },
-      output: {
-        target: "vanilla-extract",
-        outDir: "dist-test",
-        builtInComponents: { Timeline: {} } as never,
-        focusRingColor: ref.__veColor,
-        fontFamily: ref.__veFontFamily,
-        placeholderColor: ref.__veColor,
-      },
     });
-    expect(() => generate(config)).toThrow(MissingDesignTokensError);
-    expect(() => generate(config)).toThrow(/requires config "statuses"/);
+    const output: VanillaExtractPluginOptions = {
+      outDir: "dist-test",
+      builtInComponents: { Timeline: {} } as never,
+      focusRingColor: ref.__veColor,
+      fontFamily: ref.__veFontFamily,
+      placeholderColor: ref.__veColor,
+    };
+    expect(() => generate({ config, output })).toThrow(MissingDesignTokensError);
+    expect(() => generate({ config, output })).toThrow(/requires config "statuses"/);
   });
 
   test("Timeline generated sources pass assertParses", () => {
@@ -5740,16 +5689,15 @@ describe("focus ring", () => {
     const { ref, system } = focusRingBaseTokens();
     const config = defineConfig({
       tokens: { ref, system, components: {} },
-      output: {
-        target: "vanilla-extract",
-        outDir: "dist-test",
-        builtInComponents: { Button: buttonBuiltInComponents(ref, system) },
-        focusRingColor: ref.__veColor,
-        fontFamily: ref.__veFontFamily,
-        placeholderColor: ref.__veColor,
-      },
     });
-    const files = generate(config);
+    const output: VanillaExtractPluginOptions = {
+      outDir: "dist-test",
+      builtInComponents: { Button: buttonBuiltInComponents(ref, system) },
+      focusRingColor: ref.__veColor,
+      fontFamily: ref.__veFontFamily,
+      placeholderColor: ref.__veColor,
+    };
+    const files = generate({ config, output });
     const styles = files.find((f) => f.filename === "components/button/Button.gen.css.ts")!;
     expect(styles.content).toMatch(/outline: "none",/);
     expect(styles.content).toMatch(/boxShadow: `0 0 0 2px \$\{vars\.ref\.__veColor\}`,/);
@@ -5759,19 +5707,18 @@ describe("focus ring", () => {
     const { ref, system } = focusRingBaseTokens();
     const config = defineConfig({
       tokens: { ref, system, components: {} },
-      output: {
-        target: "vanilla-extract",
-        outDir: "dist-test",
-        builtInComponents: {
-          Button: buttonBuiltInComponents(ref, system),
-          DropdownButton: dropdownButtonBuiltInComponents(ref, system),
-          TreeList: treeListBuiltInComponents(ref, system),
-        },
-        fontFamily: ref.__veFontFamily,
-        placeholderColor: ref.__veColor,
-      },
     });
-    const files = generate(config);
+    const output: VanillaExtractPluginOptions = {
+      outDir: "dist-test",
+      builtInComponents: {
+        Button: buttonBuiltInComponents(ref, system),
+        DropdownButton: dropdownButtonBuiltInComponents(ref, system),
+        TreeList: treeListBuiltInComponents(ref, system),
+      },
+      fontFamily: ref.__veFontFamily,
+      placeholderColor: ref.__veColor,
+    };
+    const files = generate({ config, output });
     for (const file of files) {
       if (!file.filename.endsWith(".gen.css.ts")) continue;
       expect(file.content).not.toMatch(/:focus-visible/);
@@ -5783,16 +5730,15 @@ describe("focus ring", () => {
     const { ref, system } = focusRingBaseTokens();
     const config = defineConfig({
       tokens: { ref, system, components: {} },
-      output: {
-        target: "vanilla-extract",
-        outDir: "dist-test",
-        builtInComponents: { DropdownButton: dropdownButtonBuiltInComponents(ref, system) },
-        focusRingColor: ref.__veColor,
-        fontFamily: ref.__veFontFamily,
-        placeholderColor: ref.__veColor,
-      },
     });
-    const files = generate(config);
+    const output: VanillaExtractPluginOptions = {
+      outDir: "dist-test",
+      builtInComponents: { DropdownButton: dropdownButtonBuiltInComponents(ref, system) },
+      focusRingColor: ref.__veColor,
+      fontFamily: ref.__veFontFamily,
+      placeholderColor: ref.__veColor,
+    };
+    const files = generate({ config, output });
     const styles = files.find(
       (f) => f.filename === "components/dropdown-button/DropdownButton.gen.css.ts",
     )!;
@@ -5805,16 +5751,15 @@ describe("focus ring", () => {
     const { ref, system } = focusRingBaseTokens();
     const config = defineConfig({
       tokens: { ref, system, components: {} },
-      output: {
-        target: "vanilla-extract",
-        outDir: "dist-test",
-        builtInComponents: { TreeList: treeListBuiltInComponents(ref, system) },
-        focusRingColor: ref.__veColor,
-        fontFamily: ref.__veFontFamily,
-        placeholderColor: ref.__veColor,
-      },
     });
-    const files = generate(config);
+    const output: VanillaExtractPluginOptions = {
+      outDir: "dist-test",
+      builtInComponents: { TreeList: treeListBuiltInComponents(ref, system) },
+      focusRingColor: ref.__veColor,
+      fontFamily: ref.__veFontFamily,
+      placeholderColor: ref.__veColor,
+    };
+    const files = generate({ config, output });
     const styles = files.find((f) => f.filename === "components/tree-list/TreeList.gen.css.ts")!;
     expect(styles.content).toMatch(/boxShadow: `inset 0 0 0 2px \$\{vars\.ref\.__veColor\}`,/);
   });

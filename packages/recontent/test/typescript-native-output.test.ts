@@ -6,15 +6,17 @@ import {
   defineTheme,
   tokens,
 } from "../src/index.js";
-import { typescriptNativeOutputProcessor } from "../src/outputs/typescript-native.js";
+import {
+  generateTypeScriptNativeFiles,
+  type TypeScriptNativePluginOptions,
+} from "../src/outputs/typescript-native.js";
 import { assertParses, assertTypechecks, compositeConfig } from "./helpers/fixtures.js";
-import type { Config, OutputFile, TypeScriptNativeOutput } from "@recontentapp/core";
+import type { Config, OutputFile } from "@recontentapp/core";
 
-const NATIVE: TypeScriptNativeOutput = { target: "typescript-native", outDir: "dist-test" };
+const NATIVE: TypeScriptNativePluginOptions = { outDir: "dist-test" };
 
-function generate(config: Config): OutputFile[] {
-  const output = config.output[0] as TypeScriptNativeOutput;
-  return typescriptNativeOutputProcessor.generate(config, output) as OutputFile[];
+function generate(config: Config, options: TypeScriptNativePluginOptions = NATIVE): OutputFile[] {
+  return generateTypeScriptNativeFiles(config, options);
 }
 
 describe("scalars", () => {
@@ -25,7 +27,6 @@ describe("scalars", () => {
     });
     const config = defineConfig({
       tokens: { ref, system: defineSystemTokens({}), components: {} },
-      output: NATIVE,
     });
     const [file] = generate(config);
     expect(file!.content).toMatch(/"px": 16,/);
@@ -39,7 +40,6 @@ describe("scalars", () => {
     });
     const config = defineConfig({
       tokens: { ref, system: defineSystemTokens({}), components: {} },
-      output: NATIVE,
     });
     const [file] = generate(config);
     expect(file!.content).toMatch(/"ms": 175,/);
@@ -53,7 +53,6 @@ describe("scalars", () => {
     });
     const config = defineConfig({
       tokens: { ref, system: defineSystemTokens({}), components: {} },
-      output: NATIVE,
     });
     const [file] = generate(config);
     expect(file!.content).toMatch(/"opaque": '#0064e0',/);
@@ -67,7 +66,6 @@ describe("scalars", () => {
     });
     const config = defineConfig({
       tokens: { ref, system: defineSystemTokens({}), components: {} },
-      output: NATIVE,
     });
     const [file] = generate(config);
     expect(file!.content).toMatch(/"weight": '700',/);
@@ -77,7 +75,7 @@ describe("scalars", () => {
 
 describe("composites", () => {
   test("shadow: shape with shadowOpacity from alpha and a literal shadowColor", () => {
-    const config = compositeConfig(NATIVE);
+    const { config } = compositeConfig();
     const [file] = generate(config);
     expect(file!.content).toMatch(/"shadowColor": '#000000',/);
     expect(file!.content).toMatch(/"shadowOffset": \{\s*"width": 0,\s*"height": 2,\s*\},/);
@@ -86,7 +84,7 @@ describe("composites", () => {
   });
 
   test("border shape", () => {
-    const config = compositeConfig(NATIVE);
+    const { config } = compositeConfig();
     const [file] = generate(config);
     expect(file!.content).toMatch(
       /"default": \{\s*"borderColor": themeRef\.color\.black,\s*"borderWidth": 1,\s*"borderStyle": 'solid',\s*\},/,
@@ -94,7 +92,7 @@ describe("composites", () => {
   });
 
   test("transition uses duration/delay/timingFunction keys", () => {
-    const config = compositeConfig(NATIVE);
+    const { config } = compositeConfig();
     const [file] = generate(config);
     expect(file!.content).toMatch(
       /"standard": \{\s*"duration": 200,\s*"delay": 0,\s*"timingFunction": \[0\.4, 0, 0\.2, 1\],\s*\},/,
@@ -102,7 +100,7 @@ describe("composites", () => {
   });
 
   test("gradient shape", () => {
-    const config = compositeConfig(NATIVE);
+    const { config } = compositeConfig();
     const [file] = generate(config);
     expect(file!.content).toMatch(/"kind": 'linear',/);
     expect(file!.content).toMatch(/"angle": '180deg',/);
@@ -124,7 +122,6 @@ describe("composites", () => {
     });
     const config = defineConfig({
       tokens: { ref, system: defineSystemTokens({}), components: {} },
-      output: NATIVE,
     });
     const [file] = generate(config);
     expect(file!.content).toMatch(/"lineHeight": 20\.0004,/);
@@ -146,7 +143,6 @@ describe("composites", () => {
     const config = defineConfig({
       tokens: { ref, system, components: {} },
       themes: { dark },
-      output: NATIVE,
     });
     const [file] = generate(config);
     const darkStart = file!.content.indexOf("const darkSystem");
@@ -171,7 +167,6 @@ describe("lossy warnings", () => {
     const config = defineConfig({
       tokens: { ref, system, components: {} },
       themes: { dark },
-      output: NATIVE,
     });
     generate(config);
     const shadowWarnings = warn.mock.calls.filter((call) =>
@@ -191,7 +186,6 @@ describe("lossy warnings", () => {
     });
     const config = defineConfig({
       tokens: { ref, system, components: {} },
-      output: NATIVE,
     });
     const [file] = generate(config);
     expect(file!.content).toMatch(/"borderStyle": 'solid',/);
@@ -207,16 +201,15 @@ describe("rootFontSize option", () => {
     const ref = defineReferenceTokens({ rem: tokens.dimension("1rem") });
     const config = defineConfig({
       tokens: { ref, system: defineSystemTokens({}), components: {} },
-      output: { target: "typescript-native", outDir: "dist-test", rootFontSize: 10 },
     });
-    const [file] = generate(config);
+    const [file] = generate(config, { outDir: "dist-test", rootFontSize: 10 });
     expect(file!.content).toMatch(/"rem": 10,/);
   });
 });
 
 describe("parses and typechecks", () => {
   test("generated tokens.ts passes assertParses and assertTypechecks", () => {
-    const config = compositeConfig(NATIVE);
+    const { config } = compositeConfig();
     const [file] = generate(config);
     assertParses(file!.content);
     assertTypechecks(file!.content);
@@ -230,7 +223,6 @@ describe("parses and typechecks", () => {
     });
     const config = defineConfig({
       tokens: { ref, system: defineSystemTokens({}), components: {} },
-      output: NATIVE,
     });
     const [file] = generate(config);
     const rnShim = `
@@ -254,7 +246,7 @@ const style: TextStyle = { fontWeight: theme.ref.typography.base.fontWeight };
   });
 
   test("generate returns exactly one tokens.ts", () => {
-    const config = compositeConfig(NATIVE);
+    const { config } = compositeConfig();
     const files = generate(config);
     expect(files.length).toBe(1);
     expect(files[0]!.filename).toBe("tokens.ts");

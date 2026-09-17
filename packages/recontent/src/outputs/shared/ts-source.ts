@@ -1,5 +1,4 @@
 import type {
-  Config,
   ThemeOverride,
   TokenEntry,
   TokenLayer,
@@ -7,6 +6,7 @@ import type {
   TokenScaleMetadata,
 } from "@recontentapp/core";
 import { pathKey } from "@recontentapp/core";
+import type { GeneratorContext } from "./context.js";
 
 export type SourceValue = { value: string; source?: true };
 export type SourceTree = { [key: string]: SourceTree | SourceValue };
@@ -135,7 +135,7 @@ export function scaleExportNames(scale: TokenScaleMetadata): {
   };
 }
 
-export function scaleExportsForConfig(config: Config): ScaleExport[] {
+export function scaleExportsForConfig(config: GeneratorContext): ScaleExport[] {
   const scales = new Map<string, TokenScaleMetadata>();
   for (const entry of config.registry.values()) {
     if (entry.scale) {

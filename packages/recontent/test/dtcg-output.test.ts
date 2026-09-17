@@ -55,7 +55,6 @@ function fullTreeConfig() {
     themes: {
       dark: defineTheme(system, { colors: { accent: tokens.color("#eeeeee") } }),
     },
-    output: { target: "css", outDir: "dist-test" },
   });
 }
 
@@ -135,7 +134,6 @@ describe("array aliasing (§9.1)", () => {
     });
     const config = defineConfig({
       tokens: { ref, system, components: {} },
-      output: { target: "css", outDir: "dist-test" },
     });
     const output = generateDtcg(config) as never as {
       system: { gradient: { composed: { $value: unknown[] } } };

@@ -5,6 +5,7 @@ import {
   defineTheme,
   tokens,
 } from "recontent";
+import { stylex } from "recontent/plugins";
 
 const ref = defineReferenceTokens({
   color: {
@@ -66,10 +67,11 @@ const dark = defineTheme(system, {
 export default defineConfig({
   tokens: { ref, system, components: {} },
   themes: { dark },
-  output: {
-    target: "stylex",
-    outDir: "src/generated/stylex",
-    fontFamily: system.fontFamily,
-    placeholderColor: system.colors.textMuted,
-  },
+  plugins: [
+    stylex({
+      outDir: "src/generated/stylex",
+      fontFamily: system.fontFamily,
+      placeholderColor: system.colors.textMuted,
+    }),
+  ],
 });

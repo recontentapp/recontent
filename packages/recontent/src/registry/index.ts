@@ -1,8 +1,14 @@
 import { internalModules, registryComponents, type BuiltInComponentOptions } from "./manifest.js";
 import type { RegistryComponentDefinition } from "./define.js";
 import type { BreakpointBinding, RegistryOutputTarget, ScaleImport, TokenImport } from "./types.js";
-import { isStampedToken, isTokenScale, type Config, type TokenType } from "@recontentapp/core";
-import type { OutputFile, VanillaExtractOutput } from "@recontentapp/core";
+import {
+  isStampedToken,
+  isTokenScale,
+  type BuiltInComponentsInput,
+  type TokenType,
+} from "@recontentapp/core";
+import type { OutputFile } from "@recontentapp/core";
+import type { GeneratorContext } from "../outputs/shared/context.js";
 
 export class MissingDesignTokensError extends Error {
   readonly errors: string[];
@@ -45,7 +51,7 @@ export type BuiltInComponentSelection = {
 };
 
 export function normalizeBuiltInComponents(
-  builtInComponents: VanillaExtractOutput["builtInComponents"],
+  builtInComponents: BuiltInComponentsInput | undefined,
 ): BuiltInComponentSelection {
   if (!builtInComponents) {
     return { names: [], options: {} };
@@ -189,7 +195,7 @@ export function resolveBuiltInComponentIds(names: readonly string[]): string[] {
 }
 
 export function validateBuiltInComponents(
-  config: Config,
+  config: GeneratorContext,
   names: readonly string[],
   target: RegistryOutputTarget = "vanilla-extract",
   options: BuiltInComponentOptions = {},

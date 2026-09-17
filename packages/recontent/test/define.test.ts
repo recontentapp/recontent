@@ -5,7 +5,6 @@ function configWithRef(ref: Record<string, unknown>) {
   return () =>
     defineConfig({
       tokens: { ref: ref as never, system: {}, components: {} },
-      output: { target: "css", outDir: "dist-test" },
     });
 }
 
@@ -39,7 +38,6 @@ test("a valid tree with hyphenated scale keys does not throw", () => {
   expect(() =>
     defineConfig({
       tokens: { ref, system: {}, components: {} },
-      output: { target: "css", outDir: "dist-test" },
     }),
   ).not.toThrow();
 });
@@ -50,7 +48,6 @@ test("defineConfig surfaces a case-only name collision diagnostic", () => {
   });
   const config = defineConfig({
     tokens: { ref, system: {}, components: {} },
-    output: { target: "css", outDir: "dist-test" },
   });
   expect(config.diagnostics.some((d) => d.message.includes("differing only by case"))).toBe(true);
 });

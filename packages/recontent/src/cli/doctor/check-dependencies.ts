@@ -2,11 +2,8 @@ import { createRequire } from "node:module";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 import semver from "semver";
-import type { Config } from "@recontentapp/core";
-import {
-  getBuiltInComponentDependencies,
-  normalizeBuiltInComponents,
-} from "../../registry/index.js";
+import type { Config, PluginContext } from "@recontentapp/core";
+import { createLogger } from "../../logger.js";
 
 export type DependencyDiagnostic = {
   packageName: string;
@@ -15,22 +12,16 @@ export type DependencyDiagnostic = {
 
 export function computeRequiredDependencies(config: Config): Record<string, string> {
   const dependencies: Record<string, string> = {};
+  const ctx: PluginContext = {
+    registry: config.registry,
+    themes: config.themes,
+    root: process.cwd(),
+    logger: createLogger(config.logLevel),
+    mode: "check",
+  };
 
-  for (const output of config.output) {
-    if (output.target === "stylex") {
-      Object.assign(dependencies, { "@stylexjs/stylex": "^0.19.0" });
-      continue;
-    }
-
-    if (output.target !== "vanilla-extract") continue;
-
-    const selection = normalizeBuiltInComponents(output.builtInComponents);
-    if (selection.names.length === 0) continue;
-
-    Object.assign(
-      dependencies,
-      getBuiltInComponentDependencies(selection.names, "vanilla-extract"),
-    );
+  for (const plugin of config.plugins) {
+    Object.assign(dependencies, plugin.dependencies?.(ctx) ?? {});
   }
 
   return dependencies;

@@ -11,7 +11,7 @@ import {
   defineTheme,
   tokens,
 } from "../src/index.js";
-import { stylexOutputProcessor } from "../src/outputs/stylex.js";
+import { generateStylexFiles, type StylexPluginOptions } from "../src/outputs/stylex.js";
 import {
   assertParses,
   assertTypechecks,
@@ -19,19 +19,21 @@ import {
   compositeConfig,
   scaleConfig,
   themedConfig,
+  type Fixture,
 } from "./helpers/fixtures.js";
-import type { Config, OutputFile, StylexOutput } from "@recontentapp/core";
+import type { Config, OutputFile } from "@recontentapp/core";
 import type { PluginItem } from "@babel/core";
 
-function generate(config: Config): OutputFile[] {
-  const output: StylexOutput = {
-    target: "stylex",
+function generate(config: Config, options: StylexPluginOptions): OutputFile[] {
+  return generateStylexFiles(config, options);
+}
+
+function generateFixture(fixture: Fixture): OutputFile[] {
+  return generate(fixture.config, {
     outDir: "dist-test",
-    fontFamily: (config.output[0] as { fontFamily: StylexOutput["fontFamily"] }).fontFamily,
-    placeholderColor: (config.output[0] as { placeholderColor: StylexOutput["placeholderColor"] })
-      .placeholderColor,
-  };
-  return stylexOutputProcessor.generate(config, output) as OutputFile[];
+    fontFamily: fixture.ref.fontFamily.body,
+    placeholderColor: fixture.ref.color.black,
+  });
 }
 
 const require = createRequire(import.meta.url);
@@ -47,7 +49,7 @@ function file(files: OutputFile[], filename: string): OutputFile {
 
 describe("tokens.stylex.ts", () => {
   test("emits a single defineVars call with flat, layer-prefixed keys", () => {
-    const files = generate(aliasChainConfig());
+    const files = generateFixture(aliasChainConfig());
     const tokensFile = file(files, "tokens.stylex.ts");
     expect(tokensFile.content).toMatch(/import \* as stylex from "@stylexjs\/stylex";/);
     expect(tokensFile.content).toMatch(/export const vars = stylex\.defineVars\(\{/);
@@ -56,7 +58,7 @@ describe("tokens.stylex.ts", () => {
   });
 
   test("a plain alias flattens directly to the terminal ref key via a derived function", () => {
-    const files = generate(aliasChainConfig());
+    const files = generateFixture(aliasChainConfig());
     const tokensFile = file(files, "tokens.stylex.ts");
     // system.colors.accent -> ref.color.black
     expect(tokensFile.content).toMatch(/systemColorsAccent: \(\) => `\$\{vars\.refColorBlack\}`,/);
@@ -67,7 +69,7 @@ describe("tokens.stylex.ts", () => {
   });
 
   test("the aliased key is emitted before the entry that references it (topological order)", () => {
-    const files = generate(aliasChainConfig());
+    const files = generateFixture(aliasChainConfig());
     const tokensFile = file(files, "tokens.stylex.ts");
     const refIndex = tokensFile.content.indexOf("refColorBlack:");
     const systemIndex = tokensFile.content.indexOf("systemColorsAccent:");
@@ -78,14 +80,14 @@ describe("tokens.stylex.ts", () => {
   });
 
   test("numeric and non-identifier scale keys sanitize into a valid flat identifier", () => {
-    const files = generate(scaleConfig());
+    const files = generateFixture(scaleConfig());
     const tokensFile = file(files, "tokens.stylex.ts");
     expect(tokensFile.content).toMatch(/refSpacing05: '2px',/);
     expect(tokensFile.content).toMatch(/refColors200: '#222222',/);
   });
 
   test("an inline shadow with an aliased member emits a derived template literal", () => {
-    const files = generate(compositeConfig());
+    const files = generateFixture(compositeConfig());
     const tokensFile = file(files, "tokens.stylex.ts");
     expect(tokensFile.content).toMatch(
       /systemShadowCard: \(\) => `0px 2px 4px 0px \$\{vars\.refColorBlack\}`,/,
@@ -93,7 +95,7 @@ describe("tokens.stylex.ts", () => {
   });
 
   test("an expanded typography composite emits one flat key per cssProperty", () => {
-    const files = generate(compositeConfig());
+    const files = generateFixture(compositeConfig());
     const tokensFile = file(files, "tokens.stylex.ts");
     expect(tokensFile.content).toMatch(
       /systemTypographyBodyFontFamily: \(\) => `\$\{vars\.refFontFamilyBody\}`,/,
@@ -109,12 +111,6 @@ describe("tokens.stylex.ts", () => {
     });
     const config = defineConfig({
       tokens: { ref: a, system: defineSystemTokens({}), components: {} },
-      output: {
-        target: "stylex",
-        outDir: "dist-test",
-        fontFamily: a.fontFamily.body,
-        placeholderColor: a.color.a,
-      } as never,
     });
     config.registry.set("ref.color.a", {
       path: ["ref", "color", "a"],
@@ -130,7 +126,13 @@ describe("tokens.stylex.ts", () => {
       alias: ["ref", "color", "a"],
       layer: "ref",
     });
-    expect(() => generate(config)).toThrow(/Circular alias detected at token path: ref\.color\./);
+    expect(() =>
+      generate(config, {
+        outDir: "dist-test",
+        fontFamily: a.fontFamily.body,
+        placeholderColor: a.color.a,
+      }),
+    ).toThrow(/Circular alias detected at token path: ref\.color\./);
   });
 
   test("a key collision between two distinct token paths throws", () => {
@@ -141,18 +143,18 @@ describe("tokens.stylex.ts", () => {
     });
     const config = defineConfig({
       tokens: { ref, system: defineSystemTokens({}), components: {} },
-      output: {
-        target: "stylex",
+    });
+    expect(() =>
+      generate(config, {
         outDir: "dist-test",
         fontFamily: ref.fontFamily.body,
         placeholderColor: ref.fooBar,
-      } as never,
-    });
-    expect(() => generate(config)).toThrow(/StyleX key collision/);
+      }),
+    ).toThrow(/StyleX key collision/);
   });
 
   test("every generated tokens.stylex.ts in this suite passes assertParses and assertTypechecks", () => {
-    const configs = [
+    const fixtures: Fixture[] = [
       aliasChainConfig(),
       compositeConfig(),
       scaleConfig(),
@@ -160,8 +162,8 @@ describe("tokens.stylex.ts", () => {
       themedConfig({ layer: "system" }),
       themedConfig({ layer: "components" }),
     ];
-    for (const config of configs) {
-      const files = generate(config);
+    for (const fixture of fixtures) {
+      const files = generateFixture(fixture);
       const tokensFile = file(files, "tokens.stylex.ts");
       assertParses(tokensFile.content, "tokens.stylex.ts");
       assertTypechecks(
@@ -177,7 +179,7 @@ describe("tokens.stylex.ts", () => {
 
 describe("reset.gen.css", () => {
   test("reset.gen.css is plain CSS with hardcoded design token values, never :focus-visible", () => {
-    const files = generate(aliasChainConfig());
+    const files = generateFixture(aliasChainConfig());
     const resetCss = file(files, "reset.gen.css");
     expect(resetCss.content).toMatch(/font-family: Arial;/);
     expect(resetCss.content).toMatch(/color: #000000;/);
@@ -199,14 +201,12 @@ describe("themes.ts", () => {
     const config = defineConfig({
       tokens: { ref, system, components: {} },
       themes: { bravo, alpha },
-      output: {
-        target: "stylex",
-        outDir: "dist-test",
-        fontFamily: ref.fontFamily.body,
-        placeholderColor: ref.color.black,
-      } as never,
     });
-    const files = generate(config);
+    const files = generate(config, {
+      outDir: "dist-test",
+      fontFamily: ref.fontFamily.body,
+      placeholderColor: ref.color.black,
+    });
     const themesFile = file(files, "themes.ts");
     expect(themesFile.content).toMatch(/export const alphaTheme = stylex\.createTheme\(vars, \{/);
     expect(themesFile.content).toMatch(/export const bravoTheme = stylex\.createTheme\(vars, \{/);
@@ -216,13 +216,13 @@ describe("themes.ts", () => {
   });
 
   test("a directly overridden ref token becomes a literal createTheme override", () => {
-    const files = generate(themedConfig({ layer: "ref" }));
+    const files = generateFixture(themedConfig({ layer: "ref" }));
     const themesFile = file(files, "themes.ts");
     expect(themesFile.content).toMatch(/refColorBlack: '#111111',/);
   });
 
   test("only directly overridden keys are listed in the override object (indirection is left to CSS cascade)", () => {
-    const files = generate(themedConfig({ layer: "ref" }));
+    const files = generateFixture(themedConfig({ layer: "ref" }));
     const themesFile = file(files, "themes.ts");
     const darkBlock = themesFile.content.slice(themesFile.content.indexOf("darkTheme"));
     expect(darkBlock).toMatch(/refColorBlack: '#111111',/);
@@ -231,7 +231,7 @@ describe("themes.ts", () => {
   });
 
   test("a directly overridden system token overrides only that flat key", () => {
-    const files = generate(themedConfig({ layer: "system" }));
+    const files = generateFixture(themedConfig({ layer: "system" }));
     const themesFile = file(files, "themes.ts");
     const darkBlock = themesFile.content.slice(themesFile.content.indexOf("darkTheme"));
     expect(darkBlock).toMatch(/systemColorsAccent: '#111111',/);
@@ -268,26 +268,24 @@ describe("themes.ts", () => {
     const config = defineConfig({
       tokens: { ref, system, components: {} },
       themes: { dark },
-      output: {
-        target: "stylex",
-        outDir: "dist-test",
-        fontFamily: ref.fontFamily.body,
-        placeholderColor: ref.color.black,
-      } as never,
     });
-    const files = generate(config);
+    const files = generate(config, {
+      outDir: "dist-test",
+      fontFamily: ref.fontFamily.body,
+      placeholderColor: ref.color.black,
+    });
     const themesFile = file(files, "themes.ts");
     expect(themesFile.content).toMatch(/systemShadowCard: '0px 4px 8px 0px #eeeeee',/);
   });
 
   test("every generated themes.ts in this suite passes assertParses", () => {
-    const configs = [
+    const fixtures: Fixture[] = [
       themedConfig({ layer: "ref" }),
       themedConfig({ layer: "system" }),
       themedConfig({ layer: "components" }),
     ];
-    for (const config of configs) {
-      const files = generate(config);
+    for (const fixture of fixtures) {
+      const files = generateFixture(fixture);
       assertParses(file(files, "themes.ts").content, "themes.ts");
     }
   });
@@ -295,7 +293,7 @@ describe("themes.ts", () => {
 
 describe("scales.ts", () => {
   test("a dimensionScale/colorScale emits type + const map of vars.<flatKey> per key", () => {
-    const files = generate(scaleConfig());
+    const files = generateFixture(scaleConfig());
     const scalesFile = file(files, "scales.ts");
     expect(scalesFile.content).toMatch(/export type RefSpacing = 0 \| 1 \| "0-5";/);
     expect(scalesFile.content).toMatch(/0: vars\.refSpacing0,/);
@@ -316,21 +314,19 @@ describe("scales.ts", () => {
     });
     const config = defineConfig({
       tokens: { ref, system, components: {} },
-      output: {
-        target: "stylex",
-        outDir: "dist-test",
-        fontFamily: ref.fontFamily.body,
-        placeholderColor: ref.color.black,
-      } as never,
     });
-    const files = generate(config);
+    const files = generate(config, {
+      outDir: "dist-test",
+      fontFamily: ref.fontFamily.body,
+      placeholderColor: ref.color.black,
+    });
     const scalesFile = file(files, "scales.ts");
     expect(scalesFile.content).toMatch(/export type SystemTextStyles = "body";/);
     expect(scalesFile.content).not.toMatch(/export const systemTextStyles/);
   });
 
   test("every generated scales.ts in this suite passes assertParses and assertTypechecks", () => {
-    const files = generate(scaleConfig());
+    const files = generateFixture(scaleConfig());
     const scalesFile = file(files, "scales.ts");
     assertParses(scalesFile.content, "scales.ts");
     assertTypechecks(
@@ -345,7 +341,7 @@ describe("scales.ts", () => {
 
 describe("files", () => {
   test("generate returns exactly 4 files", () => {
-    const files = generate(aliasChainConfig());
+    const files = generateFixture(aliasChainConfig());
     expect(files.map((f) => f.filename).sort()).toEqual(
       ["reset.gen.css", "scales.ts", "themes.ts", "tokens.stylex.ts"].sort(),
     );
@@ -393,14 +389,12 @@ describe("StyleX compile test", () => {
     const config = defineConfig({
       tokens: { ref, system, components: {} },
       themes: { dark },
-      output: {
-        target: "stylex",
-        outDir: "dist-test",
-        fontFamily: ref.fontFamily.body,
-        placeholderColor: ref.color.black,
-      } as never,
     });
-    const files = generate(config);
+    const files = generate(config, {
+      outDir: "dist-test",
+      fontFamily: ref.fontFamily.body,
+      placeholderColor: ref.color.black,
+    });
 
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), "recontent-stylex-"));
     try {
