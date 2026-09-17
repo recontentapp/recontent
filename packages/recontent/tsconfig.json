@@ -3,12 +3,5 @@
   "compilerOptions": {
     "types": ["node"]
   },
-  "include": [
-    "src",
-    "test",
-    "dev/generated/ts/tokens.ts",
-    "dev/generated/native/tokens.ts",
-    "dev/generated/vanilla-extract/**/*.ts",
-    "dev/generated/vanilla-extract/**/*.tsx"
-  ]
+  "include": ["src", "test"]
 }
