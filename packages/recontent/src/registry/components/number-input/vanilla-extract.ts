@@ -57,7 +57,6 @@ export function generateNumberInputSources(bindings: {
     disabledBackgroundColor,
     disabledColor,
     readOnlyBackgroundColor,
-    iconColor,
     iconSize,
     affixColor,
     affixBackgroundColor,

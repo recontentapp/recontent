@@ -55,7 +55,6 @@ export function generateTimelineSources(bindings: {
     timestampTypography,
     timestampColor,
     itemGap,
-    iconSize,
     tokens,
   } = bindings;
   const statuses = groupVariantTokens(tokens, "statuses", STATUS_FIELDS);
