@@ -13,18 +13,17 @@
     "./generators/dtcg": "./dist/generators/dtcg.mjs",
     "./generators/html": "./dist/generators/html.mjs",
     "./outputs/css": "./dist/outputs/css.mjs",
-    "./outputs/vanilla-extract": "./dist/outputs/vanilla-extract.mjs",
     "./outputs/typescript": "./dist/outputs/typescript.mjs",
     "./outputs/typescript-native": "./dist/outputs/typescript-native.mjs",
     "./outputs/stylex": "./dist/outputs/stylex.mjs"
   },
   "scripts": {
-    "build": "tsdown src/index.ts src/plugins/index.ts src/generators/dtcg.ts src/generators/html.ts src/outputs/css.ts src/outputs/vanilla-extract.ts src/outputs/typescript.ts src/outputs/typescript-native.ts src/outputs/stylex.ts src/cli/bin.ts",
+    "build": "tsdown src/index.ts src/plugins/index.ts src/generators/dtcg.ts src/generators/html.ts src/outputs/css.ts src/outputs/typescript.ts src/outputs/typescript-native.ts src/outputs/stylex.ts src/cli/bin.ts",
     "typecheck": "tsc --noEmit",
     "test": "NODE_OPTIONS=--experimental-vm-modules jest"
   },
   "dependencies": {
-    "@recontentapp/core": "0.1.1",
+    "@recontentapp/core": "0.2.0",
     "commander": "^15.0.0",
     "semver": "^7.7.2",
     "typescript": "^6.0.3"

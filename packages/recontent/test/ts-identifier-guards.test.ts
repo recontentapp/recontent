@@ -17,7 +17,7 @@ import {
 import {
   generateVanillaExtractFiles,
   type VanillaExtractPluginOptions,
-} from "../src/outputs/vanilla-extract.js";
+} from "../src/plugins/vanilla-extract/generate.js";
 import type { Config } from "@recontentapp/core";
 
 function configWithTheme(themeName: string): Config {

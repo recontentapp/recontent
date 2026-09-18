@@ -5,13 +5,13 @@ import {
   defineSystemTokens,
   defineTheme,
   tokens,
-  type BuiltInComponentOptions,
 } from "../src/index.js";
 import {
   generateVanillaExtractFiles,
   type VanillaExtractPluginOptions,
-} from "../src/outputs/vanilla-extract.js";
-import { MissingDesignTokensError } from "../src/registry/index.js";
+} from "../src/plugins/vanilla-extract/generate.js";
+import type { BuiltInComponentOptions } from "../src/plugins/vanilla-extract/registry/manifest.js";
+import { MissingDesignTokensError } from "../src/plugins/vanilla-extract/registry/index.js";
 import {
   assertParses,
   aliasChainConfig,

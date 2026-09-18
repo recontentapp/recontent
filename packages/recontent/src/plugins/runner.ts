@@ -7,7 +7,7 @@ import type {
   PluginDiagnostic,
   RecontentPlugin,
 } from "@recontentapp/core";
-import { MissingDesignTokensError } from "../registry/index.js";
+import { MissingDesignTokensError } from "./errors.js";
 
 export function sortPlugins(plugins: RecontentPlugin[]): RecontentPlugin[] {
   const pre: RecontentPlugin[] = [];
@@ -83,8 +83,14 @@ export async function runPlugins(
       pluginFiles = await plugin.generate(ctx);
     } catch (error) {
       if (error instanceof MissingDesignTokensError) {
+        const prefixedErrors = error.errors.map((message) => `[${plugin.name}] ${message}`);
         throw new MissingDesignTokensError(
-          error.errors.map((message) => `[${plugin.name}] ${message}`),
+          [
+            "Cannot generate output because required design tokens are missing:",
+            "",
+            ...prefixedErrors.map((message) => `  - ${message}`),
+          ].join("\n"),
+          prefixedErrors,
         );
       }
       throw error;
