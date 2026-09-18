@@ -2,6 +2,7 @@ import path from "node:path";
 import type {
   Config,
   EmittedFile,
+  Logger,
   PluginContext,
   PluginDiagnostic,
   RecontentPlugin,
@@ -29,6 +30,7 @@ export function sortPlugins(plugins: RecontentPlugin[]): RecontentPlugin[] {
 export type RunPluginsOptions = {
   root: string;
   mode: PluginContext["mode"];
+  logger: Logger;
 };
 
 export type RunPluginsResult = {
@@ -45,11 +47,7 @@ export async function runPlugins(
     registry: config.registry,
     themes: config.themes,
     root: options.root,
-    logger: {
-      info: (message) => console.log(message),
-      warn: (message) => console.warn(message),
-      debug: () => {},
-    },
+    logger: options.logger,
     mode: options.mode,
   };
 

@@ -10,6 +10,9 @@ export function createLogger(logLevel: LogLevel = "info"): Logger {
     warn(message: string): void {
       console.error(`[recontent:warning] ${message}`);
     },
+    error(message: string): void {
+      console.error(`[recontent:error] ${message}`);
+    },
     debug(message: string): void {
       if (logLevel === "debug") {
         console.error(`[recontent:debug] ${message}`);

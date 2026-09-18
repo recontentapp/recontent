@@ -1,22 +1,19 @@
 import path from "node:path";
-import {
-  DEFAULT_CONFIG,
-  loadConfig,
-  resolveConfigPath,
-  type PluginContext,
-} from "@recontentapp/core";
+import { loadConfig, type LogLevel, type PluginContext } from "@recontentapp/core";
 import { createLogger } from "../../logger.js";
 import { diagnoseRegistry } from "../doctor/registry-diagnostics.js";
 import { checkDependencies } from "../doctor/check-dependencies.js";
 
 export type DoctorOptions = {
-  config?: string;
+  cwd: string;
+  configPath: string;
+  logLevel?: LogLevel;
 };
 
-export async function runDoctor(options: DoctorOptions = {}): Promise<void> {
-  const config = await loadConfig(options.config);
-  const logger = createLogger(config.logLevel);
-  const configDir = path.dirname(resolveConfigPath(options.config ?? DEFAULT_CONFIG));
+export async function runDoctor(options: DoctorOptions): Promise<void> {
+  const config = await loadConfig(options.configPath);
+  const logger = createLogger(options.logLevel ?? config.logLevel);
+  const configDir = path.dirname(options.configPath);
 
   for (const diagnostic of config.diagnostics) {
     logger.warn(diagnostic.message);
@@ -24,12 +21,12 @@ export async function runDoctor(options: DoctorOptions = {}): Promise<void> {
 
   const registryDiagnostics = diagnoseRegistry(config.registry);
   for (const diagnostic of registryDiagnostics) {
-    console.error(`[recontent:error] ${diagnostic.message}`);
+    logger.error(diagnostic.message);
   }
 
   const dependencyDiagnostics = checkDependencies(configDir, config);
   for (const diagnostic of dependencyDiagnostics) {
-    console.error(`[recontent:error] ${diagnostic.message}`);
+    logger.error(diagnostic.message);
   }
 
   const ctx: PluginContext = {
@@ -44,10 +41,12 @@ export async function runDoctor(options: DoctorOptions = {}): Promise<void> {
     if (!plugin.validate) continue;
     const diagnostics = await plugin.validate(ctx);
     for (const diagnostic of diagnostics) {
-      const prefix = diagnostic.severity === "error" ? "[recontent:error]" : "[recontent:warning]";
-      console.error(`${prefix} [${plugin.name}] ${diagnostic.message}`);
+      const message = `[${plugin.name}] ${diagnostic.message}`;
       if (diagnostic.severity === "error") {
+        logger.error(message);
         pluginErrorCount.count += 1;
+      } else {
+        logger.warn(message);
       }
     }
   }

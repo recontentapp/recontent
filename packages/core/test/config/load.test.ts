@@ -2,7 +2,12 @@ import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { expect, test } from "@jest/globals";
-import { ConfigLoadError, loadConfig, resolveConfigPath } from "../../src/config/load.js";
+import {
+  ConfigLoadError,
+  discoverConfigPath,
+  loadConfig,
+  resolveConfigPath,
+} from "../../src/config/load.js";
 
 const configSource = `
   import { defineConfig, tokens } from "recontent";
@@ -103,4 +108,36 @@ test("resolves relative, absolute, and home config paths", () => {
 
 test("resolves a path starting with a bare ~", () => {
   expect(resolveConfigPath("~config.ts")).toBe(path.join(os.homedir(), "config.ts"));
+});
+
+test("resolveConfigPath resolves relative paths against an explicit cwd", () => {
+  expect(resolveConfigPath("recontent.config.ts", { cwd: "/tmp/some/dir" })).toBe(
+    path.join("/tmp/some/dir", "recontent.config.ts"),
+  );
+});
+
+test("discoverConfigPath finds a config in an ancestor directory", async () => {
+  await withFixture(
+    {
+      "recontent.config.ts": configSource,
+      "src/deep/.gitkeep": "",
+    },
+    async (directory) => {
+      const found = discoverConfigPath(path.join(directory, "src", "deep"));
+      expect(found).toBe(path.join(directory, "recontent.config.ts"));
+    },
+  );
+});
+
+test("discoverConfigPath stops at a directory with package.json and no config", async () => {
+  await withFixture(
+    {
+      "package.json": "{}",
+      "src/.gitkeep": "",
+    },
+    async (directory) => {
+      expect(() => discoverConfigPath(path.join(directory, "src"))).toThrow(ConfigLoadError);
+      expect(() => discoverConfigPath(path.join(directory, "src"))).toThrow(/Searched:/);
+    },
+  );
 });

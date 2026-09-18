@@ -17,29 +17,45 @@ describe("writeOutputFile", () => {
 
   test("without writeMode, always writes and reports written: true", async () => {
     const filePath = path.join(dir, "always.txt");
-    const first = await writeOutputFile(filePath, "first");
+    const first = await writeOutputFile(filePath, "first", dir);
     expect(first.written).toBe(true);
     expect(await readFile(filePath, "utf8")).toBe("first");
 
-    const second = await writeOutputFile(filePath, "second");
+    const second = await writeOutputFile(filePath, "second", dir);
     expect(second.written).toBe(true);
     expect(await readFile(filePath, "utf8")).toBe("second");
   });
 
   test('writeMode "once" creates the file when absent', async () => {
     const filePath = path.join(dir, "once.txt");
-    const result = await writeOutputFile(filePath, "initial", { writeMode: "once" });
+    const result = await writeOutputFile(filePath, "initial", dir, { writeMode: "once" });
     expect(result.written).toBe(true);
     expect(await readFile(filePath, "utf8")).toBe("initial");
   });
 
   test('writeMode "once" leaves modified contents intact on a second call', async () => {
     const filePath = path.join(dir, "once.txt");
-    await writeOutputFile(filePath, "initial", { writeMode: "once" });
+    await writeOutputFile(filePath, "initial", dir, { writeMode: "once" });
     await writeFile(filePath, "user-edited", "utf8");
 
-    const result = await writeOutputFile(filePath, "regenerated", { writeMode: "once" });
+    const result = await writeOutputFile(filePath, "regenerated", dir, { writeMode: "once" });
     expect(result.written).toBe(false);
     expect(await readFile(filePath, "utf8")).toBe("user-edited");
+  });
+
+  test("a relative path resolves against the passed base directory, not process.cwd()", async () => {
+    const outsideCwd = await mkdtemp(path.join(tmpdir(), "recontent-fs-elsewhere-"));
+    try {
+      const result = await writeOutputFile("nested/output.txt", "content", dir);
+      expect(result.path).toBe(path.join(dir, "nested", "output.txt"));
+      expect(await readFile(result.path, "utf8")).toBe("content");
+
+      // Sanity check: nothing was written relative to process.cwd() or to an
+      // unrelated directory, even though both existed at call time.
+      expect(result.path.startsWith(outsideCwd)).toBe(false);
+      expect(result.path.startsWith(process.cwd())).toBe(false);
+    } finally {
+      await rm(outsideCwd, { recursive: true, force: true });
+    }
   });
 });

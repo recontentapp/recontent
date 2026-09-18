@@ -1,7 +1,11 @@
-import { expect, test } from "@jest/globals";
+import { spawnSync } from "node:child_process";
+import { mkdtemp, rm, writeFile } from "node:fs/promises";
+import path from "node:path";
+import { afterEach, beforeEach, describe, expect, jest, test } from "@jest/globals";
 import type { Config, ThemeOverride, TokenEntry, TokenRegistry } from "@recontentapp/core";
 import { diffConfigs, formatDiff, hasBreakingChanges } from "../src/cli/diff/diff.js";
-import { findExternalImports } from "../src/cli/diff/config-imports.js";
+import { findExternalImports } from "../src/cli/config-graph.js";
+import { runDiff } from "../src/cli/commands/diff.js";
 
 function entry(path: string[], overrides: Partial<TokenEntry> = {}): TokenEntry {
   return {
@@ -242,4 +246,133 @@ test("findExternalImports reports non-recontent specifiers", () => {
     findExternalImports('await (async () => { await import("./b"); })();', "config.ts"),
   ).toEqual(["./b"]);
   expect(findExternalImports('const c = require("./c");', "config.ts")).toEqual(["./c"]);
+});
+
+function git(args: string[], cwd: string): void {
+  const result = spawnSync("git", args, { cwd, encoding: "utf-8" });
+  if (result.status !== 0) {
+    throw new Error(`git ${args.join(" ")} failed: ${result.stderr || result.stdout}`);
+  }
+}
+
+const COLORS_BASE = `import { tokens } from "recontent";
+
+export const blue = tokens.color("#2563eb");
+export const red = tokens.color("#dc2626");
+`;
+
+const CONFIG_BASE = `import {
+  defineReferenceTokens,
+  defineSystemTokens,
+  defineComponentTokens,
+  defineConfig,
+} from "recontent";
+import { blue, red } from "./colors";
+
+const ref = defineReferenceTokens({
+  color: { blue, red },
+});
+
+const system = defineSystemTokens({});
+const components = defineComponentTokens({});
+
+export default defineConfig({
+  tokens: { ref, system, components },
+});
+`;
+
+const COLORS_HEAD = `import { tokens } from "recontent";
+
+export const blue = tokens.color("#1d4ed8");
+export const red = tokens.color("#dc2626");
+`;
+
+const CONFIG_HEAD = `import {
+  defineReferenceTokens,
+  defineSystemTokens,
+  defineComponentTokens,
+  defineConfig,
+} from "recontent";
+import { blue } from "./colors";
+
+const ref = defineReferenceTokens({
+  color: { blue },
+});
+
+const system = defineSystemTokens({});
+const components = defineComponentTokens({});
+
+export default defineConfig({
+  tokens: { ref, system, components },
+});
+`;
+
+describe("runDiff against a config that imports a sibling file", () => {
+  let repoDir: string;
+  let logSpy: ReturnType<typeof jest.spyOn>;
+
+  beforeEach(async () => {
+    repoDir = await mkdtemp(path.join(process.cwd(), "test", "diff-fixture-"));
+    git(["init", "-q"], repoDir);
+    git(
+      [
+        "-c",
+        "user.email=test@example.com",
+        "-c",
+        "user.name=Test",
+        "config",
+        "commit.gpgsign",
+        "false",
+      ],
+      repoDir,
+    );
+
+    await writeFile(path.join(repoDir, "colors.ts"), COLORS_BASE, "utf-8");
+    await writeFile(path.join(repoDir, "recontent.config.ts"), CONFIG_BASE, "utf-8");
+    git(["add", "-A"], repoDir);
+    git(
+      ["-c", "user.email=test@example.com", "-c", "user.name=Test", "commit", "-q", "-m", "base"],
+      repoDir,
+    );
+
+    // Working tree now diverges from HEAD: a value change in the imported
+    // file, and a breaking removal (dropping `red`) in the config itself.
+    await writeFile(path.join(repoDir, "colors.ts"), COLORS_HEAD, "utf-8");
+    await writeFile(path.join(repoDir, "recontent.config.ts"), CONFIG_HEAD, "utf-8");
+
+    logSpy = jest.spyOn(console, "log").mockImplementation(() => {});
+  });
+
+  afterEach(async () => {
+    logSpy.mockRestore();
+    process.exitCode = undefined;
+    await rm(repoDir, { recursive: true, force: true });
+  });
+
+  test("reports the change instead of erroring on the non-recontent import", async () => {
+    await runDiff({
+      cwd: repoDir,
+      configPath: path.join(repoDir, "recontent.config.ts"),
+      rev: "HEAD",
+    });
+
+    const output = logSpy.mock.calls.map((call: unknown[]) => call.join(" ")).join("\n");
+    expect(output).toContain("ref.color.blue");
+    expect(output).toContain("#2563eb");
+    expect(output).toContain("#1d4ed8");
+    expect(output).toContain("ref.color.red");
+  });
+
+  test("--fail-on-breaking exits 1 on the removed token", async () => {
+    expect(process.exitCode).toBeUndefined();
+
+    await runDiff({
+      cwd: repoDir,
+      configPath: path.join(repoDir, "recontent.config.ts"),
+      rev: "HEAD",
+      failOnBreaking: true,
+    });
+
+    expect(process.exitCode).toBe(1);
+  });
 });
