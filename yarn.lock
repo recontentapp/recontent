@@ -3369,15 +3369,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:22.0.0":
-  version: 22.0.0
-  resolution: "@types/node@npm:22.0.0"
-  dependencies:
-    undici-types: "npm:~6.11.1"
-  checksum: 10c0/af26a8ec7266c857b0ced75dc3a93c6b65280d1fa40d1b4488c814d30831c5c752489c99ecb5698daec1376145b1a9ddd08350882dc2e07769917a5f22a460bc
-  languageName: node
-  linkType: hard
-
 "@types/node@npm:24.1.0":
   version: 24.1.0
   resolution: "@types/node@npm:24.1.0"
@@ -7227,7 +7218,7 @@ __metadata:
     "@stylexjs/stylex": "npm:0.19.0"
     "@swc/core": "npm:1.13.5"
     "@swc/jest": "npm:0.2.39"
-    "@types/node": "npm:22.0.0"
+    "@types/node": "npm:24.1.0"
     "@types/semver": "npm:7.7.1"
     commander: "npm:^15.0.0"
     jest: "npm:30.2.0"
@@ -8146,13 +8137,6 @@ __metadata:
     "@quansync/fs": "npm:^1.0.0"
     quansync: "npm:^1.0.0"
   checksum: 10c0/9c9f745254aa8e267140430a432353d17ee87f625b0ea0668e189d88736828d117b66bd2dd41f1d48bd40d44d5b7c7d160e8b7996a60c8f484e2975ef73c7cb7
-  languageName: node
-  linkType: hard
-
-"undici-types@npm:~6.11.1":
-  version: 6.11.1
-  resolution: "undici-types@npm:6.11.1"
-  checksum: 10c0/d8f5739a8e6c779d72336c82deb49c56d5ac9f9f6e0eb2e8dd4d3f6929ae9db7cde370d2e46516fe6cad04ea53e790c5e16c4c75eed7cd0f9bd31b0763bb2fa3
   languageName: node
   linkType: hard
 

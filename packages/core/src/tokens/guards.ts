@@ -1,28 +1,22 @@
 import type { RawToken, StampedToken, TokenScale } from "./model.js";
 
-export function isRawToken(value: unknown): value is RawToken {
+function hasKind(value: unknown, kind: string): boolean {
   return (
     typeof value === "object" &&
     value !== null &&
     "_kind" in value &&
-    (value as RawToken)._kind === "raw"
+    (value as { _kind: unknown })._kind === kind
   );
+}
+
+export function isRawToken(value: unknown): value is RawToken {
+  return hasKind(value, "raw");
 }
 export function isTokenScale(value: unknown): value is TokenScale {
-  return (
-    typeof value === "object" &&
-    value !== null &&
-    "_kind" in value &&
-    (value as TokenScale)._kind === "scale"
-  );
+  return hasKind(value, "scale");
 }
 export function isStampedToken(value: unknown): value is StampedToken {
-  return (
-    typeof value === "object" &&
-    value !== null &&
-    "_kind" in value &&
-    (value as StampedToken)._kind === "stamped"
-  );
+  return hasKind(value, "stamped");
 }
 export function isTokenLeaf(value: unknown): value is RawToken | StampedToken {
   return isRawToken(value) || isStampedToken(value);

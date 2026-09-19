@@ -1,6 +1,5 @@
 import type {
   BorderValue,
-  FontWeightName,
   GradientValue,
   ShadowLayer,
   ShadowValue,
@@ -11,31 +10,7 @@ import type {
   TransitionValue,
   TypographyValue,
 } from "@recontentapp/core";
-
-const FONT_WEIGHT_NUMERIC: Record<FontWeightName, number> = {
-  thin: 100,
-  hairline: 100,
-  extralight: 200,
-  "extra-light": 200,
-  "ultra-light": 200,
-  light: 300,
-  book: 350,
-  regular: 400,
-  normal: 400,
-  medium: 500,
-  semibold: 600,
-  "semi-bold": 600,
-  "demi-bold": 600,
-  bold: 700,
-  extrabold: 800,
-  "extra-bold": 800,
-  "ultra-bold": 800,
-  black: 900,
-  heavy: 900,
-  extrablack: 950,
-  "extra-black": 950,
-  "ultra-black": 950,
-};
+import { FONT_WEIGHT_NUMERIC } from "@recontentapp/core";
 
 function serializeColorDtcg(value: TokenTypeMap["color"]): TokenTypeMap["color"] {
   return value;

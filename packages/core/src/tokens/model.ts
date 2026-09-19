@@ -45,12 +45,3 @@ export type CompInput<T extends TokenType> = RawToken<T> | RefToken<T> | SystemT
 
 export type ScaleBinding<T extends TokenType = TokenType> = TokenScale<never, T, StampedToken<T>>;
 export type TokenBinding<T extends TokenType = TokenType> = StampedToken<T>;
-
-export type DeepPartial<T> =
-  T extends RawToken<infer U>
-    ? RawToken<U>
-    : T extends StampedToken<infer U, infer _L>
-      ? RawToken<U>
-      : T extends object
-        ? { [K in keyof T]?: DeepPartial<T[K]> }
-        : T;
