@@ -57,7 +57,7 @@ function sizeStyleBody(fields: Record<string, TokenImport>): string {
     }`;
 }
 
-export function generateDropdownButtonSources(bindings: {
+function generateDropdownButtonSources(bindings: {
   borderRadius: TokenImport;
   popupBackgroundColor: TokenImport;
   popupBorder: TokenImport;

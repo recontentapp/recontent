@@ -344,7 +344,7 @@ ${SPACING_VARIANTS.map(
   };
 }
 
-export function generateBoxSources(
+function generateBoxSources(
   bindings: {
     spacing: ScaleImport;
     surface: ScaleImport;

@@ -45,7 +45,7 @@ function sizeLabelStyleBody(fields: Record<string, TokenImport>): string {
   return `{ gap: ${fields.gap!.reference} }`;
 }
 
-export function generateStepsSources(bindings: {
+function generateStepsSources(bindings: {
   labelTypography: TokenImport;
   descriptionTypography: TokenImport;
   descriptionColor: TokenImport;

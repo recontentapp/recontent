@@ -35,7 +35,7 @@ function statusTitleStyleBody(fields: Record<string, TokenImport>): string {
   return `{ color: ${fields.titleColor!.reference} }`;
 }
 
-export function generateBannerSources(bindings: {
+function generateBannerSources(bindings: {
   border: TokenImport;
   borderRadius: TokenImport;
   typography: TokenImport;

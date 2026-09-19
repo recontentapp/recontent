@@ -11,7 +11,7 @@ function typographyProps(ref: string): string {
   ].join(",\n    ");
 }
 
-export function generateLinkSources(bindings: {
+function generateLinkSources(bindings: {
   color: TokenImport;
   hoverColor: TokenImport;
   typography: TokenImport;

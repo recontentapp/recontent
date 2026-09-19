@@ -11,7 +11,7 @@ function typographyProps(ref: string): string {
   ].join(",\n  ");
 }
 
-export function generateRadioListSources(bindings: {
+function generateRadioListSources(bindings: {
   sizes: ScaleImport;
   border: TokenImport;
   backgroundColor: TokenImport;

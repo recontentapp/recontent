@@ -1,7 +1,7 @@
 import type { ComponentSourceFiles, TokenImport } from "../types.js";
 import { focusRingBlock } from "./shared.js";
 
-export function generateSelectableCardSources(bindings: {
+function generateSelectableCardSources(bindings: {
   borderRadius: TokenImport;
   border: TokenImport;
   backgroundColor: TokenImport;

@@ -11,7 +11,7 @@ function typographyProps(ref: string): string {
   ].join(",\n      ");
 }
 
-export function generateOutlineSources(bindings: {
+function generateOutlineSources(bindings: {
   typography: TokenImport;
   color: TokenImport;
   hoverColor: TokenImport;

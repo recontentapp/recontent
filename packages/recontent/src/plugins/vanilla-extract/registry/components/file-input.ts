@@ -11,7 +11,7 @@ function typographyProps(ref: string): string {
   ].join(",\n      ");
 }
 
-export function generateFileInputSources(bindings: {
+function generateFileInputSources(bindings: {
   border: TokenImport;
   borderRadius: TokenImport;
   backgroundColor: TokenImport;

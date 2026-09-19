@@ -1,4 +1,4 @@
-export function generateRenderElementSource(): string {
+function generateRenderElementSource(): string {
   return `import { cloneElement } from "react";
 import type { AriaAttributes, ComponentPropsWithoutRef, ElementType, FocusEventHandler, ReactElement } from "react";
 

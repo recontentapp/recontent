@@ -1,6 +1,6 @@
 import type { ComponentSourceFiles, ScaleImport, TokenImport } from "../types.js";
 
-export function generateSkeletonSources(bindings: {
+function generateSkeletonSources(bindings: {
   backgroundColor: TokenImport;
   highlightColor: TokenImport;
   radii: ScaleImport;

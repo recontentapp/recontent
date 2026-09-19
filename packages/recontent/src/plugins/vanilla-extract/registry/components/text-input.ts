@@ -10,7 +10,7 @@ function typographyProps(ref: string): string {
   ].join(",\n      ");
 }
 
-export function generateTextInputSources(bindings: {
+function generateTextInputSources(bindings: {
   borderRadius: TokenImport;
   border: TokenImport;
   backgroundColor: TokenImport;

@@ -193,7 +193,7 @@ export function StackItem({
   };
 }
 
-export function generateStackItemSources(
+function generateStackItemSources(
   { spacing }: { spacing: ScaleImport },
   breakpoints: readonly BreakpointBinding[] | undefined,
 ): ComponentSourceFiles {

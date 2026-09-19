@@ -245,7 +245,7 @@ export function Grid({
   };
 }
 
-export function generateGridSources(
+function generateGridSources(
   { spacing }: { spacing: ScaleImport },
   breakpoints: readonly BreakpointBinding[] | undefined,
 ): ComponentSourceFiles {

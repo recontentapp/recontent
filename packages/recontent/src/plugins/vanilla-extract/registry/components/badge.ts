@@ -43,7 +43,7 @@ function sizeIconStyleBody(fields: Record<string, TokenImport>): string {
   return `{ width: ${fields.iconSize!.reference}, height: ${fields.iconSize!.reference} }`;
 }
 
-export function generateBadgeSources(bindings: {
+function generateBadgeSources(bindings: {
   borderRadius: TokenImport;
   tokens: Record<string, TokenImport>;
 }): ComponentSourceFiles {

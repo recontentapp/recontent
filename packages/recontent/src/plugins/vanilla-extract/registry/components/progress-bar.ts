@@ -26,7 +26,7 @@ function sizeTrackStyleBody(fields: Record<string, TokenImport>): string {
   return `{ height: ${fields.height!.reference} }`;
 }
 
-export function generateProgressBarSources(bindings: {
+function generateProgressBarSources(bindings: {
   borderRadius: TokenImport;
   trackBackgroundColor: TokenImport;
   labelTypography: TokenImport;

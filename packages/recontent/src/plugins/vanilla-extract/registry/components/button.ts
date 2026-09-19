@@ -60,7 +60,7 @@ function sizeStyleBody(fields: Record<string, TokenImport>): string {
     }`;
 }
 
-export function generateButtonSources(bindings: {
+function generateButtonSources(bindings: {
   borderRadius: TokenImport;
   focusRingColor: TokenImport | undefined;
   tokens: Record<string, TokenImport>;

@@ -11,7 +11,7 @@ function typographyProps(ref: string): string {
   ].join(",\n  ");
 }
 
-export function generateSegmentedControlsSources(bindings: {
+function generateSegmentedControlsSources(bindings: {
   borderRadius: TokenImport;
   optionBorderRadius: TokenImport;
   border: TokenImport;

@@ -10,7 +10,7 @@ function typographyProps(ref: string): string {
   ].join(",\n    ");
 }
 
-export function generateQuoteBlockSources(bindings: {
+function generateQuoteBlockSources(bindings: {
   color: TokenImport;
   typography: TokenImport;
   citationColor: TokenImport;

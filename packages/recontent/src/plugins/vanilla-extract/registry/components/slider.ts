@@ -10,7 +10,7 @@ function typographyProps(ref: string): string {
   ].join(",\n      ");
 }
 
-export function generateSliderSources(bindings: {
+function generateSliderSources(bindings: {
   trackBackgroundColor: TokenImport;
   trackHeight: TokenImport;
   borderRadius: TokenImport;

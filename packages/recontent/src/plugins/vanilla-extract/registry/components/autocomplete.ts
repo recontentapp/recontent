@@ -11,7 +11,7 @@ function typographyProps(ref: string): string {
   ].join(",\n      ");
 }
 
-export function generateAutocompleteSources(bindings: {
+function generateAutocompleteSources(bindings: {
   borderRadius: TokenImport;
   border: TokenImport;
   backgroundColor: TokenImport;

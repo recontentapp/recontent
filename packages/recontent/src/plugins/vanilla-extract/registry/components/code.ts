@@ -10,7 +10,7 @@ function typographyProps(ref: string): string {
   ].join(",\n    ");
 }
 
-export function generateCodeSources(bindings: {
+function generateCodeSources(bindings: {
   color: TokenImport;
   backgroundColor: TokenImport;
   border: TokenImport;

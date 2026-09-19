@@ -205,7 +205,7 @@ export function Stack({
   };
 }
 
-export function generateStackSources(
+function generateStackSources(
   { spacing }: { spacing: ScaleImport },
   breakpoints: readonly BreakpointBinding[] | undefined,
 ): ComponentSourceFiles {

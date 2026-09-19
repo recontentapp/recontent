@@ -11,7 +11,7 @@ function typographyProps(ref: string): string {
   ].join(",\n    ");
 }
 
-export function generateAccordionSources(bindings: {
+function generateAccordionSources(bindings: {
   border: TokenImport;
   borderRadius: TokenImport;
   hoverBackgroundColor: TokenImport;

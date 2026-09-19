@@ -10,7 +10,7 @@ function typographyProps(ref: string): string {
   ].join(",\n      ");
 }
 
-export function generateMetadataListSources(bindings: {
+function generateMetadataListSources(bindings: {
   gaps: ScaleImport;
   labelTypography: TokenImport;
   labelColor: TokenImport;

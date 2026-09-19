@@ -1,6 +1,6 @@
 import type { BreakpointBinding, InternalModuleDefinition } from "../types.js";
 
-export function generateUseBreakpointSource(breakpoints: readonly BreakpointBinding[]): string {
+function generateUseBreakpointSource(breakpoints: readonly BreakpointBinding[]): string {
   const breakpointUnion = breakpoints
     .map((breakpoint) => JSON.stringify(breakpoint.name))
     .join(" | ");

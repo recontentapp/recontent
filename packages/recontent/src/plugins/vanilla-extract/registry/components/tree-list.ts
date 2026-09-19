@@ -11,7 +11,7 @@ function typographyProps(ref: string): string {
   ].join(",\n      ");
 }
 
-export function generateTreeListSources(bindings: {
+function generateTreeListSources(bindings: {
   typography: TokenImport;
   color: TokenImport;
   hoverBackgroundColor: TokenImport;

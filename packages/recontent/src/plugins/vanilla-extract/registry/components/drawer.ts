@@ -13,7 +13,7 @@ function typographyProps(ref: string): string {
   ].join(",\n      ");
 }
 
-export function generateDrawerSources(bindings: {
+function generateDrawerSources(bindings: {
   backdropColor: TokenImport;
   backgroundColor: TokenImport;
   border: TokenImport;

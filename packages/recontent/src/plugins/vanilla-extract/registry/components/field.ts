@@ -10,7 +10,7 @@ function typographyProps(ref: string): string {
   ].join(",\n      ");
 }
 
-export function generateFieldSources(bindings: {
+function generateFieldSources(bindings: {
   labelTypography: TokenImport;
   labelColor: TokenImport;
   descriptionTypography: TokenImport;

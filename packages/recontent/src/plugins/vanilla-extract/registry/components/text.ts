@@ -240,7 +240,7 @@ ${TYPOGRAPHY_MEMBERS.map(
   };
 }
 
-export function generateTextSources(
+function generateTextSources(
   { typography, color }: { typography: ScaleImport; color: ScaleImport },
   breakpoints: readonly BreakpointBinding[] | undefined,
 ): ComponentSourceFiles {

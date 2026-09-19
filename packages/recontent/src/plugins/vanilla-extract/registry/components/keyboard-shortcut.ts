@@ -10,7 +10,7 @@ function typographyProps(ref: string): string {
   ].join(",\n    ");
 }
 
-export function generateKeyboardShortcutSources(bindings: {
+function generateKeyboardShortcutSources(bindings: {
   color: TokenImport;
   backgroundColor: TokenImport;
   border: TokenImport;

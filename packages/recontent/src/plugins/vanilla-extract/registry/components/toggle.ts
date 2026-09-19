@@ -23,7 +23,7 @@ function sizeStyleBody(fields: Record<string, TokenImport>): string {
     }`;
 }
 
-export function generateToggleSources(bindings: {
+function generateToggleSources(bindings: {
   borderRadius: TokenImport;
   optionBorderRadius: TokenImport;
   border: TokenImport;

@@ -1,6 +1,6 @@
 import type { ComponentSourceFiles, TokenImport } from "../types.js";
 
-export function generateDividerSources(bindings: {
+function generateDividerSources(bindings: {
   border: TokenImport;
   borderRadius: TokenImport;
   color: TokenImport;

@@ -1,6 +1,6 @@
 import type { ComponentSourceFiles, ScaleImport } from "../types.js";
 
-export function generateIconSources({
+function generateIconSources({
   size,
   color,
 }: {

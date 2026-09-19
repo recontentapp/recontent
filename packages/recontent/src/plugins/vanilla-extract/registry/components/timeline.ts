@@ -30,7 +30,7 @@ function sizeContentStyleBody(fields: Record<string, TokenImport>): string {
   return `{ gap: ${fields.gap!.reference}, ${typographyProps(fields.typography!.reference)} }`;
 }
 
-export function generateTimelineSources(bindings: {
+function generateTimelineSources(bindings: {
   connectorColor: TokenImport;
   connectorThickness: TokenImport;
   connectorSpacing: TokenImport;

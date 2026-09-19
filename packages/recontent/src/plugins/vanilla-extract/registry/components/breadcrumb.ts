@@ -11,7 +11,7 @@ function typographyProps(ref: string): string {
   ].join(",\n      ");
 }
 
-export function generateBreadcrumbSources(bindings: {
+function generateBreadcrumbSources(bindings: {
   typography: TokenImport;
   color: TokenImport;
   hoverColor: TokenImport;

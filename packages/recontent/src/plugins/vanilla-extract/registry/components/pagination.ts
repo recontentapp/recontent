@@ -24,7 +24,7 @@ function sizeStyleBody(fields: Record<string, TokenImport>): string {
     }`;
 }
 
-export function generatePaginationSources(bindings: {
+function generatePaginationSources(bindings: {
   borderRadius: TokenImport;
   border: TokenImport;
   typography: TokenImport;

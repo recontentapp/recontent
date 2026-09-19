@@ -50,7 +50,7 @@ function variantIndicatorStyleBody(fields: Record<string, TokenImport>): string 
   return `{ backgroundColor: ${fields.indicatorColor!.reference} }`;
 }
 
-export function generateTabsSources(bindings: {
+function generateTabsSources(bindings: {
   typography: TokenImport;
   activeTypography: TokenImport;
   disabledColor: TokenImport;

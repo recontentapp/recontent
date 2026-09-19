@@ -10,7 +10,7 @@ function typographyProps(ref: string): string {
   ].join(",\n    ");
 }
 
-export function generateAvatarSources(bindings: {
+function generateAvatarSources(bindings: {
   sizes: ScaleImport;
   color: TokenImport;
   backgroundColor: TokenImport;

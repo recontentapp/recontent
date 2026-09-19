@@ -1,6 +1,6 @@
 import type { ComponentSourceFiles, TokenImport } from "../types.js";
 
-export function generateActionBarSources(bindings: {
+function generateActionBarSources(bindings: {
   backgroundColor: TokenImport;
   color: TokenImport;
   border: TokenImport;

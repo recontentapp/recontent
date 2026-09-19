@@ -26,7 +26,7 @@ function labelSizeStyleBody(fields: Record<string, TokenImport>): string {
   }`;
 }
 
-export function generateCheckboxSources(bindings: {
+function generateCheckboxSources(bindings: {
   border: TokenImport;
   borderRadius: TokenImport;
   backgroundColor: TokenImport;

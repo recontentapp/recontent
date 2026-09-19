@@ -10,7 +10,7 @@ function typographyProps(ref: string): string {
   ].join(",\n      ");
 }
 
-export function generateTooltipSources(bindings: {
+function generateTooltipSources(bindings: {
   backgroundColor: TokenImport;
   color: TokenImport;
   typography: TokenImport;

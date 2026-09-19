@@ -35,7 +35,7 @@ function statusTitleStyleBody(fields: Record<string, TokenImport>): string {
   return `{ color: ${fields.titleColor!.reference} }`;
 }
 
-export function generateToastSources(bindings: {
+function generateToastSources(bindings: {
   backgroundColor: TokenImport;
   border: TokenImport;
   borderRadius: TokenImport;

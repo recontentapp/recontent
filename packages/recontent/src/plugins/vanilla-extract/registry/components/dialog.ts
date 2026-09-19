@@ -13,7 +13,7 @@ function typographyProps(ref: string): string {
   ].join(",\n      ");
 }
 
-export function generateDialogSources(bindings: {
+function generateDialogSources(bindings: {
   backdropColor: TokenImport;
   backgroundColor: TokenImport;
   border: TokenImport;

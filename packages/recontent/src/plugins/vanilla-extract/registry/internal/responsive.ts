@@ -1,6 +1,6 @@
 import type { BreakpointBinding, InternalModuleDefinition } from "../types.js";
 
-export function generateResponsiveSource(breakpoints: readonly BreakpointBinding[]): string {
+function generateResponsiveSource(breakpoints: readonly BreakpointBinding[]): string {
   const names = breakpoints.map((breakpoint) => JSON.stringify(breakpoint.name));
   const breakpointUnion = names.join(" | ");
   const breakpointList = `[${names.join(", ")}] as const`;

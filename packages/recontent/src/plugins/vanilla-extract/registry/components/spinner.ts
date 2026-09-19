@@ -1,6 +1,6 @@
 import type { ComponentSourceFiles, ScaleImport, TokenImport } from "../types.js";
 
-export function generateSpinnerSources(bindings: {
+function generateSpinnerSources(bindings: {
   sizes: ScaleImport;
   colors: ScaleImport;
   trackColor: TokenImport;

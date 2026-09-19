@@ -6,7 +6,7 @@ function iconEntry(name: string): string {
   ),`;
 }
 
-export function generateIconMapSource(iconNames: readonly string[]): string {
+function generateIconMapSource(iconNames: readonly string[]): string {
   const entries = [...iconNames].sort().map(iconEntry).join("\n");
 
   return `import type { ComponentType, SVGProps } from "react";

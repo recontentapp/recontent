@@ -1,6 +1,6 @@
 import type { ComponentSourceFiles, TokenImport } from "../types.js";
 
-export function generatePopoverSources(bindings: {
+function generatePopoverSources(bindings: {
   backgroundColor: TokenImport;
   color: TokenImport;
   border: TokenImport;

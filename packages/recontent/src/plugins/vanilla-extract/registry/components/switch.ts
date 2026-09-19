@@ -32,7 +32,7 @@ function sizeThumbStyleBody(fields: Record<string, TokenImport>): string {
   }`;
 }
 
-export function generateSwitchSources(bindings: {
+function generateSwitchSources(bindings: {
   borderRadius: TokenImport;
   trackBackgroundColor: TokenImport;
   trackCheckedBackgroundColor: TokenImport;
