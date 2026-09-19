@@ -23,7 +23,7 @@
     "test": "NODE_OPTIONS=--experimental-vm-modules jest"
   },
   "dependencies": {
-    "@recontentapp/core": "0.2.0",
+    "@recontentapp/core": "0.1.2",
     "commander": "^15.0.0",
     "semver": "^7.7.2",
     "typescript": "^6.0.3"

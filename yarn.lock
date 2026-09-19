@@ -2368,7 +2368,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@recontentapp/core@npm:0.2.0, @recontentapp/core@workspace:packages/core":
+"@recontentapp/core@npm:0.1.2, @recontentapp/core@workspace:packages/core":
   version: 0.0.0-use.local
   resolution: "@recontentapp/core@workspace:packages/core"
   dependencies:
@@ -7222,7 +7222,7 @@ __metadata:
     "@babel/core": "npm:8.0.1"
     "@base-ui/react": "npm:1.0.0"
     "@jest/globals": "npm:30.2.0"
-    "@recontentapp/core": "npm:0.2.0"
+    "@recontentapp/core": "npm:0.1.2"
     "@stylexjs/babel-plugin": "npm:0.19.0"
     "@stylexjs/stylex": "npm:0.19.0"
     "@swc/core": "npm:1.13.5"
