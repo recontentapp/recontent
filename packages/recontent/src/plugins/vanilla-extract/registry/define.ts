@@ -1,5 +1,5 @@
 import type { ScaleBinding, TokenBinding, TokenType } from "@recontentapp/core";
-import type { IconName } from "./internal/icon-map/icons.js";
+import type { IconName } from "./internal/icon-map-icons.js";
 import type {
   ComponentContract,
   ComponentOutput,
