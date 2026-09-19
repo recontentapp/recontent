@@ -6,7 +6,7 @@ import { runPlugins } from "../../plugins/runner.js";
 import { ensureDependencies } from "../install-dependencies.js";
 import { loadConfig, type LogLevel } from "@recontentapp/core";
 import { collectLocalImports } from "../config-graph.js";
-import { exitWithError, logSuccess } from "../utils/exit.js";
+import { exitWithError } from "../utils/exit.js";
 import { writeOutputFile } from "../utils/fs.js";
 
 export type BuildOptions = {
@@ -189,10 +189,10 @@ async function buildOnce(
       { writeMode: file.writeMode },
     );
     if (written) {
-      logSuccess(`Wrote ${outputPath}`);
+      logger.info(`Wrote ${outputPath}`);
       logger.debug(`Wrote ${file.content.length.toLocaleString()} bytes to ${outputPath}.`);
     } else {
-      logSuccess(`Skipped ${outputPath} (already exists)`);
+      logger.info(`Skipped ${outputPath} (already exists)`);
     }
   }
 }

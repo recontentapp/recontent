@@ -1,7 +1,7 @@
 import path from "node:path";
 import { generateDtcgJson, generateDtcgThemedJson } from "../../../generators/dtcg.js";
 import { loadConfig, type LogLevel } from "@recontentapp/core";
-import { logSuccess } from "../../utils/exit.js";
+import { createLogger } from "../../../logger.js";
 import { writeOutputFile } from "../../utils/fs.js";
 
 export type DtcgExportOptions = {
@@ -13,6 +13,7 @@ export type DtcgExportOptions = {
 
 export async function runDtcgExport(options: DtcgExportOptions): Promise<void> {
   const config = await loadConfig(options.configPath);
+  const logger = createLogger(options.logLevel ?? config.logLevel);
   const written: string[] = [];
 
   const { path: basePath } = await writeOutputFile(
@@ -32,6 +33,6 @@ export async function runDtcgExport(options: DtcgExportOptions): Promise<void> {
   }
 
   for (const filePath of written) {
-    logSuccess(`Wrote ${filePath}`);
+    logger.info(`Wrote ${filePath}`);
   }
 }

@@ -18,7 +18,9 @@ recontent export dtcg [-o dir]    Write tokens.tokens.json + one <theme>.tokens.
 ## Global options
 
 These apply to every command and must be given before the subcommand name
-(e.g. `recontent --cwd apps/web build`, not `recontent build --cwd apps/web`):
+(e.g. `recontent --cwd apps/web build`, not `recontent build --cwd apps/web`)
+— except `-c/--config`, which is deliberately accepted in both positions, so
+`recontent build -c recontent.config.ts` also works:
 
 - `-c, --config <path>` — path to the config file. When omitted, `recontent`
   searches upward from `--cwd` for `recontent.config.{ts,mts,js,mjs}`,

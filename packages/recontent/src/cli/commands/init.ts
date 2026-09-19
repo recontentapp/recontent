@@ -1,4 +1,5 @@
-import { exitWithError, logSuccess } from "../utils/exit.js";
+import { createLogger } from "../../logger.js";
+import { exitWithError } from "../utils/exit.js";
 import { writeOutputFile } from "../utils/fs.js";
 
 const CONFIG_TEMPLATE = `import {
@@ -60,9 +61,8 @@ export type InitOptions = {
 export async function runInit(options: InitOptions): Promise<void> {
   const { configPath, cwd } = options;
 
-  // `writeMode: "once"` uses `existsSync` rather than the access()-then-write
-  // TOCTOU-prone pattern this replaces — still not perfectly atomic, but no
-  // longer inverts control flow through a catch block either.
+  // `writeMode: "once"` checks existsSync() before writing — not perfectly
+  // atomic, but avoids inverting control flow through a catch block.
   const { written } = await writeOutputFile(configPath, CONFIG_TEMPLATE, cwd, {
     writeMode: options.force ? "always" : "once",
   });
@@ -74,5 +74,5 @@ export async function runInit(options: InitOptions): Promise<void> {
     return;
   }
 
-  logSuccess(`Created ${configPath}`);
+  createLogger().info(`Created ${configPath}`);
 }

@@ -52,33 +52,23 @@ function resolveLogLevel(explicit: string | undefined): LogLevel | undefined {
 }
 
 /** Resolves the global `--cwd`, `-c/--config`, and `--log-level` options once,
- * before a command's action runs. Config discovery (upward search) only
- * happens when `-c` was not given explicitly (neither globally, before the
- * subcommand name, nor as the subcommand's own `-c`, kept for
- * `recontent build -c path/to/config.ts` — the existing invocation both
- * playgrounds already use). */
-function resolveGlobalOptions(localConfig?: string): {
-  cwd: string;
-  configPath: string;
-  logLevel?: LogLevel;
-} {
+ * before a command's action runs. With `discover: false` (only `init` needs
+ * this — it creates the config rather than discovering an existing one),
+ * a missing `-c` resolves to `fallback` instead of an upward search. */
+function resolveGlobalOptions(
+  localConfig?: string,
+  { discover = true, fallback }: { discover?: boolean; fallback?: string } = {},
+): { cwd: string; configPath: string; logLevel?: LogLevel } {
   const opts = program.opts<GlobalOptions>();
   const cwd = path.resolve(process.cwd(), opts.cwd ?? ".");
   const config = localConfig ?? opts.config;
-  const configPath = config ? resolveConfigPath(config, { cwd }) : discoverConfigPath(cwd);
+  const configPath = config
+    ? resolveConfigPath(config, { cwd })
+    : discover
+      ? discoverConfigPath(cwd)
+      : resolveConfigPath(fallback!, { cwd });
   const logLevel = resolveLogLevel(opts.logLevel);
   return { cwd, configPath, logLevel };
-}
-
-/** Like `resolveGlobalOptions`, but for `init`, which creates the config
- * rather than discovering an existing one — no upward search. */
-function resolveGlobalOptionsForInit(localConfig?: string): { cwd: string; configPath: string } {
-  const opts = program.opts<GlobalOptions>();
-  const cwd = path.resolve(process.cwd(), opts.cwd ?? ".");
-  const configPath = resolveConfigPath(localConfig ?? opts.config ?? "recontent.config.ts", {
-    cwd,
-  });
-  return { cwd, configPath };
 }
 
 // `-c, --config` is also kept on each command itself (not just as a global
@@ -94,7 +84,10 @@ program
   .option(CONFIG_OPTION_FLAGS, "Path to write the config file to (default: recontent.config.ts)")
   .option("--force", "Overwrite an existing recontent.config.ts")
   .action(async (options: { config?: string; force?: boolean }) => {
-    const { cwd, configPath } = resolveGlobalOptionsForInit(options.config);
+    const { cwd, configPath } = resolveGlobalOptions(options.config, {
+      discover: false,
+      fallback: "recontent.config.ts",
+    });
     await runInit({ cwd, configPath, force: options.force });
   });
 

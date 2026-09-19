@@ -3,15 +3,11 @@
  *
  * `exitWithError` sets `process.exitCode` and returns rather than calling
  * `process.exit()` directly, so pending async stdout/stderr writes are
- * allowed to drain before the process actually exits (§5).
+ * allowed to drain before the process actually exits.
  */
 export function exitWithError(message: string): void {
   console.error(`Error: ${message}`);
   process.exitCode = 1;
-}
-
-export function logSuccess(message: string): void {
-  console.error(message);
 }
 
 /**

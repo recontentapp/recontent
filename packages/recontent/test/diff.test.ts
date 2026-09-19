@@ -340,7 +340,7 @@ describe("runDiff against a config that imports a sibling file", () => {
     await writeFile(path.join(repoDir, "colors.ts"), COLORS_HEAD, "utf-8");
     await writeFile(path.join(repoDir, "recontent.config.ts"), CONFIG_HEAD, "utf-8");
 
-    logSpy = jest.spyOn(console, "log").mockImplementation(() => {});
+    logSpy = jest.spyOn(console, "error").mockImplementation(() => {});
   });
 
   afterEach(async () => {
