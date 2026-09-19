@@ -173,18 +173,24 @@ function number(value: number): RawToken<"number"> & ChainableMethods<RawToken<"
   return createRawToken("number", { value });
 }
 
+function memberFromToken<T extends TokenType>(
+  token: RawToken<T> | StampedToken<T>,
+): TokenMember<T> {
+  if ("_path" in token) {
+    return {
+      $value: token.$value as import("@recontentapp/core").TokenTypeMap[T],
+      alias: token._path,
+    };
+  }
+  return { $value: token.$value as import("@recontentapp/core").TokenTypeMap[T] };
+}
+
 function toMember<T extends TokenType>(
   input: unknown,
   coerce: (raw: never) => RawToken<T>,
 ): TokenMember<T> {
-  if (isStampedToken(input)) {
-    return {
-      $value: input.$value as import("@recontentapp/core").TokenTypeMap[T],
-      alias: input._path,
-    };
-  }
-  if (isRawToken(input)) {
-    return { $value: input.$value as import("@recontentapp/core").TokenTypeMap[T] };
+  if (isStampedToken(input) || isRawToken(input)) {
+    return memberFromToken(input as RawToken<T> | StampedToken<T>);
   }
   return { $value: coerce(input as never).$value };
 }
@@ -248,9 +254,7 @@ type ShadowLayerInput =
 
 function toShadowLayer(input: ShadowLayerInput): ShadowLayer | TokenMember<"shadow"> {
   if (isStampedToken(input) || isRawToken(input)) {
-    return toMember<"shadow">(input, () => {
-      throw new Error("Unreachable");
-    });
+    return memberFromToken(input);
   }
 
   if (!input.color || !input.offsetX || !input.offsetY || !input.blur || !input.spread) {
@@ -344,9 +348,7 @@ function toGradientStop(
   input: GradientStopInput | RawToken<"gradient"> | StampedToken<"gradient">,
 ): { color: TokenMember<"color">; position: TokenMember<"number"> } | TokenMember<"gradient"> {
   if (isStampedToken(input) || isRawToken(input)) {
-    return toMember<"gradient">(input, () => {
-      throw new Error("Unreachable");
-    });
+    return memberFromToken(input);
   }
 
   return {
@@ -407,64 +409,48 @@ function createScale<
   return scale as TokenScale<Key, T, Value>;
 }
 
+function scaleFrom<Key extends string | number, T extends TokenType, Value>(
+  type: T,
+  scale: Record<Key, Value>,
+  factory: (input: Exclude<Value, RawToken<T> | StampedToken<T>>) => RawToken<T>,
+): TokenScale<Key, T, RawToken<T> | StampedToken<T>> {
+  const result = {} as Record<Key, RawToken<T> | StampedToken<T>>;
+  for (const [step, input] of Object.entries(scale) as Array<[string, Value]>) {
+    result[step as Key] = isTokenLeaf(input)
+      ? (input as RawToken<T> | StampedToken<T>)
+      : factory(input as Exclude<Value, RawToken<T> | StampedToken<T>>);
+  }
+  return createScale(type, result);
+}
+
 function colorScale<Key extends string | number>(
   scale: Record<Key, ColorInput | RawToken<"color"> | StampedToken<"color">>,
 ): TokenScale<Key, "color", RawToken<"color"> | StampedToken<"color">> {
-  const result = {} as Record<Key, RawToken<"color"> | StampedToken<"color">>;
-  for (const [step, input] of Object.entries(scale) as Array<
-    [string, ColorInput | RawToken<"color"> | StampedToken<"color">]
-  >) {
-    result[step as Key] = isTokenLeaf(input) ? input : color(input);
-  }
-  return createScale("color", result);
+  return scaleFrom("color", scale, color);
 }
 
 function dimensionScale<Key extends string | number>(
   scale: Record<Key, string | RawToken<"dimension"> | StampedToken<"dimension">>,
 ): TokenScale<Key, "dimension", RawToken<"dimension"> | StampedToken<"dimension">> {
-  const result = {} as Record<Key, RawToken<"dimension"> | StampedToken<"dimension">>;
-  for (const [step, input] of Object.entries(scale) as Array<
-    [string, string | RawToken<"dimension"> | StampedToken<"dimension">]
-  >) {
-    result[step as Key] = typeof input === "string" ? dimension(input) : input;
-  }
-  return createScale("dimension", result);
+  return scaleFrom("dimension", scale, dimension);
 }
 
 function numberScale<Key extends string | number>(
   scale: Record<Key, number | RawToken<"number"> | StampedToken<"number">>,
 ): TokenScale<Key, "number", RawToken<"number"> | StampedToken<"number">> {
-  const result = {} as Record<Key, RawToken<"number"> | StampedToken<"number">>;
-  for (const [step, input] of Object.entries(scale) as Array<
-    [string, number | RawToken<"number"> | StampedToken<"number">]
-  >) {
-    result[step as Key] = isTokenLeaf(input) ? input : number(input);
-  }
-  return createScale("number", result);
+  return scaleFrom("number", scale, number);
 }
 
 function durationScale<Key extends string | number>(
   scale: Record<Key, string | RawToken<"duration"> | StampedToken<"duration">>,
 ): TokenScale<Key, "duration", RawToken<"duration"> | StampedToken<"duration">> {
-  const result = {} as Record<Key, RawToken<"duration"> | StampedToken<"duration">>;
-  for (const [step, input] of Object.entries(scale) as Array<
-    [string, string | RawToken<"duration"> | StampedToken<"duration">]
-  >) {
-    result[step as Key] = typeof input === "string" ? duration(input) : input;
-  }
-  return createScale("duration", result);
+  return scaleFrom("duration", scale, duration);
 }
 
 function borderScale<Key extends string | number>(
   scale: Record<Key, BorderInput | RawToken<"border"> | StampedToken<"border">>,
 ): TokenScale<Key, "border", RawToken<"border"> | StampedToken<"border">> {
-  const result = {} as Record<Key, RawToken<"border"> | StampedToken<"border">>;
-  for (const [step, input] of Object.entries(scale) as Array<
-    [string, BorderInput | RawToken<"border"> | StampedToken<"border">]
-  >) {
-    result[step as Key] = isTokenLeaf(input) ? input : border(input);
-  }
-  return createScale("border", result);
+  return scaleFrom("border", scale, border);
 }
 
 function cubicBezierScale<Key extends string | number>(
@@ -473,40 +459,19 @@ function cubicBezierScale<Key extends string | number>(
     [number, number, number, number] | RawToken<"cubicBezier"> | StampedToken<"cubicBezier">
   >,
 ): TokenScale<Key, "cubicBezier", RawToken<"cubicBezier"> | StampedToken<"cubicBezier">> {
-  const result = {} as Record<Key, RawToken<"cubicBezier"> | StampedToken<"cubicBezier">>;
-  for (const [step, input] of Object.entries(scale) as Array<
-    [
-      string,
-      [number, number, number, number] | RawToken<"cubicBezier"> | StampedToken<"cubicBezier">,
-    ]
-  >) {
-    result[step as Key] = isTokenLeaf(input) ? input : cubicBezier(input);
-  }
-  return createScale("cubicBezier", result);
+  return scaleFrom("cubicBezier", scale, cubicBezier);
 }
 
 function gradientScale<Key extends string | number>(
   scale: Record<Key, GradientInput | RawToken<"gradient"> | StampedToken<"gradient">>,
 ): TokenScale<Key, "gradient", RawToken<"gradient"> | StampedToken<"gradient">> {
-  const result = {} as Record<Key, RawToken<"gradient"> | StampedToken<"gradient">>;
-  for (const [step, input] of Object.entries(scale) as Array<
-    [string, GradientInput | RawToken<"gradient"> | StampedToken<"gradient">]
-  >) {
-    result[step as Key] = isTokenLeaf(input) ? input : gradient(input);
-  }
-  return createScale("gradient", result);
+  return scaleFrom("gradient", scale, gradient);
 }
 
 function transitionScale<Key extends string | number>(
   scale: Record<Key, TransitionInput | RawToken<"transition"> | StampedToken<"transition">>,
 ): TokenScale<Key, "transition", RawToken<"transition"> | StampedToken<"transition">> {
-  const result = {} as Record<Key, RawToken<"transition"> | StampedToken<"transition">>;
-  for (const [step, input] of Object.entries(scale) as Array<
-    [string, TransitionInput | RawToken<"transition"> | StampedToken<"transition">]
-  >) {
-    result[step as Key] = isTokenLeaf(input) ? input : transition(input);
-  }
-  return createScale("transition", result);
+  return scaleFrom("transition", scale, transition);
 }
 
 function shadowScale<Key extends string | number>(
@@ -515,25 +480,13 @@ function shadowScale<Key extends string | number>(
     ShadowLayerInput | ShadowLayerInput[] | RawToken<"shadow"> | StampedToken<"shadow">
   >,
 ): TokenScale<Key, "shadow", RawToken<"shadow"> | StampedToken<"shadow">> {
-  const result = {} as Record<Key, RawToken<"shadow"> | StampedToken<"shadow">>;
-  for (const [step, input] of Object.entries(scale) as Array<
-    [string, ShadowLayerInput | ShadowLayerInput[] | RawToken<"shadow"> | StampedToken<"shadow">]
-  >) {
-    result[step as Key] = isTokenLeaf(input) ? input : shadow(input);
-  }
-  return createScale("shadow", result);
+  return scaleFrom("shadow", scale, shadow);
 }
 
 function typographyScale<Key extends string | number>(
   scale: Record<Key, TypographyInput | RawToken<"typography"> | StampedToken<"typography">>,
 ): TokenScale<Key, "typography", RawToken<"typography"> | StampedToken<"typography">> {
-  const result = {} as Record<Key, RawToken<"typography"> | StampedToken<"typography">>;
-  for (const [step, input] of Object.entries(scale) as Array<
-    [string, TypographyInput | RawToken<"typography"> | StampedToken<"typography">]
-  >) {
-    result[step as Key] = isTokenLeaf(input) ? input : typography(input);
-  }
-  return createScale("typography", result);
+  return scaleFrom("typography", scale, typography);
 }
 
 export const tokens = {
