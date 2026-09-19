@@ -19,11 +19,13 @@ import {
   generateScaleExports,
   scaleExportsForConfig,
 } from "./shared/ts-source.js";
-import { generateThemeSource, type ThemeTargetSpec } from "./shared/theme-source.js";
+import {
+  generateThemeSource,
+  type MemberLookup,
+  type ThemeTargetSpec,
+} from "./shared/theme-source.js";
 import type { SourceTree, SourceValue } from "./shared/ts-source.js";
 import type { GeneratorContext } from "./shared/context.js";
-
-type MemberLookup = (memberAlias: string[]) => { ref?: string; value: TokenTypeMap[TokenType] };
 
 function scalarSourceValue(type: TokenType, value: TokenTypeMap[TokenType]): SourceValue {
   switch (type) {
@@ -112,7 +114,7 @@ const webSpec: ThemeTargetSpec = {
 };
 
 function generateTypeScriptSource(config: GeneratorContext): string {
-  const logger = createLogger("info");
+  const logger = config.logger ?? createLogger();
   const body = generateThemeSource(config, webSpec, logger, "typescript");
   const scaleExports = scaleExportsForConfig(config);
   const themeConstNames = ["theme", ...Object.keys(config.themes).sort()];

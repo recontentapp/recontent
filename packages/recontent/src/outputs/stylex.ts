@@ -1,18 +1,19 @@
 /**
- * StyleX cannot reference a var from a different `defineVars` group, so the
- * base spike (see plan) confirmed all three token layers must live in ONE
- * `defineVars` call with flat, layer-prefixed keys. Aliases are preserved as
- * derived functions (`key: () => \`${vars.target}\``), which StyleX resolves
- * through arbitrarily long chains. `createTheme` overrides, by contrast, only
- * ever compile to CSS when given a *literal* value — a derived-function
- * override value silently produces no CSS rule (verified empirically against
- * @stylexjs/babel-plugin 0.19.0) — so every theme override below is flattened
- * to a literal via `serializeValueCss`/`member.$value`, never re-aliased.
- * This is safe: CSS custom-property cascade means overriding a single
- * upstream var (e.g. a ref color) already propagates to every token that
- * aliases it, without needing to redeclare the intermediate keys.
+ * StyleX cannot reference a var from a different `defineVars` group, so all
+ * three token layers live in ONE `defineVars` call with flat, layer-prefixed
+ * keys. Aliases are preserved as derived functions
+ * (`key: () => \`${vars.target}\``), which StyleX resolves through
+ * arbitrarily long chains. `createTheme` overrides, by contrast, only ever
+ * compile to CSS when given a *literal* value — a derived-function override
+ * value silently produces no CSS rule (verified empirically against
+ * @stylexjs/babel-plugin 0.19.0) — so every theme override below is
+ * flattened to a literal via `serializeValueCss`/`member.$value`, never
+ * re-aliased. This is safe: CSS custom-property cascade means overriding a
+ * single upstream var (e.g. a ref color) already propagates to every token
+ * that aliases it, without needing to redeclare the intermediate keys.
  */
 import {
+  compositeMembers,
   expandedMembers,
   isCompositeType,
   isExpandedComposite,
@@ -30,19 +31,21 @@ import {
   serializeValueCss,
   type MemberResolver,
 } from "../serialize/values.js";
+import { terminalEntry } from "./shared/alias.js";
 import type { GeneratorContext } from "./shared/context.js";
 import { generateCssResetStylesheet } from "./shared/reset.js";
 import { buildKeyMap } from "./shared/stylex-keys.js";
 import {
   escapeString,
   escapeTemplateLiteral,
+  quotedKey,
   resolveEntryValue,
   scaleExportsForConfig,
   type ScaleExport,
 } from "./shared/ts-source.js";
 import type { TokenBinding } from "@recontentapp/core";
 
-type VarLine = { key: string; expression: string; derived: boolean };
+type VarLine = { key: string; expression: string };
 
 function quoteLiteral(value: string): string {
   return `'${escapeString(value)}'`;
@@ -57,23 +60,7 @@ function resolveVariableReference(
   keys: Map<string, string>,
   entry: TokenEntry,
 ): string {
-  const visited = new Set<string>();
-  let current = entry;
-
-  while (current.alias) {
-    const key = pathKey(current.path);
-    if (visited.has(key)) {
-      throw new Error(`Circular alias detected at token path: ${key}`);
-    }
-    visited.add(key);
-
-    const target = registry.get(pathKey(current.alias));
-    if (!target) {
-      throw new Error(`Alias target not found: ${pathKey(current.alias)}`);
-    }
-    current = target;
-  }
-
+  const current = terminalEntry(registry, entry);
   const flat = keys.get(pathKey(current.path));
   if (!flat) {
     throw new Error(`Missing generated StyleX key for token path: ${pathKey(current.path)}`);
@@ -156,15 +143,9 @@ function collectCompositeMemberAliases(
   type: "shadow" | "border" | "gradient",
   value: TokenTypeMap["shadow"] | TokenTypeMap["border"] | TokenTypeMap["gradient"],
 ): string[] {
-  const aliases: string[] = [];
-  const resolve: MemberResolver = (_memberType, member) => {
-    if (member.alias) {
-      aliases.push(pathKey(member.alias));
-    }
-    return "";
-  };
-  serializeCompositeCss(type, value, resolve);
-  return aliases;
+  return compositeMembers(type, value)
+    .filter(({ member }) => member.alias)
+    .map(({ member }) => pathKey(member.alias!));
 }
 
 function expandedVarLines(
@@ -182,20 +163,7 @@ function expandedVarLines(
     }
     // Walk to the terminal (non-alias) entry sharing this composite's shape,
     // so each cssProperty references that entry's own flattened member key.
-    const visited = new Set<string>();
-    let current = target;
-    while (current.alias) {
-      const key = pathKey(current.path);
-      if (visited.has(key)) {
-        throw new Error(`Circular alias detected at token path: ${key}`);
-      }
-      visited.add(key);
-      const next = config.registry.get(pathKey(current.alias));
-      if (!next) {
-        throw new Error(`Alias target not found: ${pathKey(current.alias)}`);
-      }
-      current = next;
-    }
+    const current = terminalEntry(config.registry, target);
     const targetBase = pathKey(current.path);
     return expandedMembers(type, entry.$value as TokenTypeMap[typeof type]).map(
       ({ cssProperty }) => {
@@ -206,7 +174,7 @@ function expandedVarLines(
             `Missing generated StyleX key for token path: ${targetBase}.${cssProperty}`,
           );
         }
-        return { key: flat, expression: derivedTemplate(`vars.${targetFlat}`), derived: true };
+        return { key: flat, expression: derivedTemplate(`vars.${targetFlat}`) };
       },
     );
   }
@@ -216,12 +184,11 @@ function expandedVarLines(
       const flat = keys.get(`${base}.${cssProperty}`)!;
       if (member.alias) {
         const reference = resolveMemberReference(config.registry, keys, member.alias);
-        return { key: flat, expression: derivedTemplate(reference), derived: true };
+        return { key: flat, expression: derivedTemplate(reference) };
       }
       return {
         key: flat,
         expression: quoteLiteral(serializeValueCss(memberType, member.$value)),
-        derived: false,
       };
     },
   );
@@ -237,7 +204,7 @@ function inlineCompositeVarLine(
 
   if (entry.alias) {
     const reference = resolveVariableReference(config.registry, keys, entry);
-    return { key: flat, expression: derivedTemplate(reference), derived: true };
+    return { key: flat, expression: derivedTemplate(reference) };
   }
 
   const value = entry.$value as
@@ -255,9 +222,9 @@ function inlineCompositeVarLine(
   const template = serializeCompositeCss(type, value, resolve);
 
   if (!hasAlias) {
-    return { key: flat, expression: quoteLiteral(template), derived: false };
+    return { key: flat, expression: quoteLiteral(template) };
   }
-  return { key: flat, expression: `() => \`${template}\``, derived: true };
+  return { key: flat, expression: `() => \`${template}\`` };
 }
 
 function scalarVarLine(
@@ -268,12 +235,11 @@ function scalarVarLine(
   const flat = keys.get(pathKey(entry.path))!;
   if (entry.alias) {
     const reference = resolveVariableReference(config.registry, keys, entry);
-    return { key: flat, expression: derivedTemplate(reference), derived: true };
+    return { key: flat, expression: derivedTemplate(reference) };
   }
   return {
     key: flat,
     expression: quoteLiteral(serializeValueCss(entry.$type, entry.$value)),
-    derived: false,
   };
 }
 
@@ -344,7 +310,6 @@ function themeOverrideLines(
         lines.push({
           key: flat,
           expression: quoteLiteral(serializeValueCss(memberType, member.$value)),
-          derived: false,
         });
       }
       continue;
@@ -363,7 +328,7 @@ function themeOverrideLines(
         value as TokenTypeMap["shadow"] | TokenTypeMap["border"] | TokenTypeMap["gradient"],
         resolve,
       );
-      lines.push({ key: flat, expression: quoteLiteral(template), derived: false });
+      lines.push({ key: flat, expression: quoteLiteral(template) });
       continue;
     }
 
@@ -376,7 +341,6 @@ function themeOverrideLines(
       expression: quoteLiteral(
         serializeValueCss(entry.$type, value as TokenTypeMap[typeof entry.$type]),
       ),
-      derived: false,
     });
   }
 
@@ -412,12 +376,10 @@ function generateThemesSource(config: GeneratorContext, keys: Map<string, string
  * `vars.<flatKey>`. Composite scale types (typography/transition) expand
  * into multiple flat vars with no single combined reference, so only their
  * union type is exported — consumers switch on the key and read the
- * per-property vars directly (see the plan's "ergonomic consequences").
+ * per-property vars directly.
  */
 function generateScaleSource(keys: Map<string, string>, scale: ScaleExport): string {
-  const type = scale.metadata.keys
-    .map((key) => (/^-?(?:0|[1-9]\d*)(?:\.\d+)?$/.test(key) ? key : JSON.stringify(key)))
-    .join(" | ");
+  const type = scale.metadata.keys.map(quotedKey).join(" | ");
   const typeDeclaration = `export type ${scale.typeName} = ${type};`;
 
   if (isExpandedComposite(scale.metadata.type)) {
@@ -430,8 +392,7 @@ function generateScaleSource(keys: Map<string, string>, scale: ScaleExport): str
     if (!flat) {
       throw new Error(`Missing generated StyleX key for scale member: ${pathKey(path)}`);
     }
-    const propertyKey = /^-?(?:0|[1-9]\d*)(?:\.\d+)?$/.test(key) ? key : JSON.stringify(key);
-    return `  ${propertyKey}: vars.${flat},`;
+    return `  ${quotedKey(key)}: vars.${flat},`;
   });
 
   return `${typeDeclaration}\n\nexport const ${scale.exportName} = {\n${entries.join("\n")}\n} as const;`;

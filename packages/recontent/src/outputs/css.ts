@@ -58,11 +58,6 @@ function entryDeclarations(entry: TokenEntry): Record<string, string> {
   return expandedEntryDeclarations(entry, entry.$value);
 }
 
-function entryComment(entry: TokenEntry): string | undefined {
-  if (!entry.$description) return undefined;
-  return entry.$description;
-}
-
 function formatRule(
   selector: string,
   declarations: Record<string, string>,
@@ -75,29 +70,9 @@ function formatRule(
   return `${selector} {\n${lines.join("\n")}\n}`;
 }
 
-function collectRefDeclarations(registry: TokenRegistry): {
-  declarations: Record<string, string>;
-  comments: Record<string, string>;
-} {
-  const declarations: Record<string, string> = {};
-  const comments: Record<string, string> = {};
-
-  for (const entry of registry.values()) {
-    if (entry.layer !== "ref") continue;
-    const entryDecl = entryDeclarations(entry);
-    Object.assign(declarations, entryDecl);
-    const comment = entryComment(entry);
-    if (comment) {
-      comments[cssVarName(entry.path)] = comment;
-    }
-  }
-
-  return { declarations, comments };
-}
-
 function collectLayerDeclarations(
   registry: TokenRegistry,
-  layer: "system" | "components",
+  layer: "ref" | "system" | "components",
 ): { declarations: Record<string, string>; comments: Record<string, string> } {
   const declarations: Record<string, string> = {};
   const comments: Record<string, string> = {};
@@ -105,9 +80,8 @@ function collectLayerDeclarations(
   for (const entry of registry.values()) {
     if (entry.layer !== layer) continue;
     Object.assign(declarations, entryDeclarations(entry));
-    const comment = entryComment(entry);
-    if (comment) {
-      comments[cssVarName(entry.path)] = comment;
+    if (entry.$description) {
+      comments[cssVarName(entry.path)] = entry.$description;
     }
   }
 
@@ -142,7 +116,7 @@ export function generateCss(config: GeneratorContext, options: CssGeneratorOptio
   const { registry, themes } = config;
   const blocks: string[] = [];
 
-  const lightRef = collectRefDeclarations(registry);
+  const lightRef = collectLayerDeclarations(registry, "ref");
   if (Object.keys(lightRef.declarations).length > 0) {
     blocks.push(formatRule(":root", lightRef.declarations, lightRef.comments));
   }
@@ -175,22 +149,18 @@ export function generateCss(config: GeneratorContext, options: CssGeneratorOptio
   return blocks.join("\n\n");
 }
 
-export function generateCssFromRegistry(registry: TokenRegistry): string {
-  return generateCss({ registry, themes: {} });
-}
-
-export type CssPluginOptions = {
+export type CssPluginOptions = CssGeneratorOptions & {
   outDir: string;
 };
 
 export function generateCssFiles(
   config: GeneratorContext,
-  _options: CssPluginOptions,
+  options: CssPluginOptions,
 ): OutputFile[] {
   return [
     {
       filename: "tokens.css",
-      content: generateCss(config, { themeSelector: "class" }),
+      content: generateCss(config, { themeSelector: "class", ...options }),
     },
   ];
 }

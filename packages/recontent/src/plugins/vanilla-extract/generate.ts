@@ -35,6 +35,7 @@ import {
   validateBuiltInComponents,
 } from "./registry/index.js";
 import type { BreakpointBinding } from "./registry/types.js";
+import { terminalEntry } from "../../outputs/shared/alias.js";
 import type { GeneratorContext } from "../../outputs/shared/context.js";
 import { generateCssResetSource } from "../../outputs/shared/reset.js";
 import type { ScaleBinding, TokenBinding } from "@recontentapp/core";
@@ -61,26 +62,7 @@ function resolveVariableReference(
   entry: TokenEntry,
   override?: ThemeOverride,
 ): string {
-  const visited = new Set<string>();
-  let current = entry;
-
-  while (current.alias) {
-    const key = pathKey(current.path);
-    if (visited.has(key)) {
-      throw new Error(`Circular alias detected at token path: ${key}`);
-    }
-    visited.add(key);
-
-    const target = registry.get(pathKey(current.alias));
-    if (!target) {
-      throw new Error(`Alias target not found: ${pathKey(current.alias)}`);
-    }
-    current = target;
-    if (override?.has(pathKey(current.path))) {
-      break;
-    }
-  }
-
+  const current = terminalEntry(registry, entry, override && ((key) => override.has(key)));
   return variableReference(current);
 }
 

@@ -1,4 +1,4 @@
-import type { ThemeOverride, TokenRegistry } from "@recontentapp/core";
+import type { Logger, ThemeOverride, TokenRegistry } from "@recontentapp/core";
 
 /** Structural subset of `Config`/`PluginContext` every generator needs. Both
  *  types are assignable to this, so generators work unchanged whether called
@@ -6,4 +6,5 @@ import type { ThemeOverride, TokenRegistry } from "@recontentapp/core";
 export type GeneratorContext = {
   registry: TokenRegistry;
   themes: Record<string, ThemeOverride>;
+  logger?: Logger;
 };

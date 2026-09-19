@@ -28,13 +28,11 @@ import {
 import { escapeString } from "./shared/ts-source.js";
 import {
   generateThemeSource,
-  type LossReporter,
+  type MemberLookup,
   type ThemeTargetSpec,
 } from "./shared/theme-source.js";
 import type { SourceTree, SourceValue } from "./shared/ts-source.js";
 import type { GeneratorContext } from "./shared/context.js";
-
-type MemberLookup = (memberAlias: string[]) => { ref?: string; value: TokenTypeMap[TokenType] };
 
 const DEFAULT_ROOT_FONT_SIZE = 16;
 
@@ -283,7 +281,7 @@ function createNativeSpec(rootFontSize: number): ThemeTargetSpec {
 }
 
 function generateTypeScriptNativeSource(config: GeneratorContext, rootFontSize: number): string {
-  const logger = createLogger();
+  const logger = config.logger ?? createLogger();
   const spec = createNativeSpec(rootFontSize);
   const body = generateThemeSource(config, spec, logger, "typescript-native");
   const themeConstNames = ["theme", ...Object.keys(config.themes).sort()];
@@ -311,5 +309,3 @@ export function generateTypeScriptNativeFiles(
   const rootFontSize = options.rootFontSize ?? DEFAULT_ROOT_FONT_SIZE;
   return [{ filename: "tokens.ts", content: generateTypeScriptNativeSource(config, rootFontSize) }];
 }
-
-export type { LossReporter };

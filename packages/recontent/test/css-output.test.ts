@@ -7,7 +7,7 @@ import {
   defineTheme,
   tokens,
 } from "../src/index.js";
-import { generateCssFiles, generateCss, generateCssFromRegistry } from "../src/outputs/css.js";
+import { generateCssFiles, generateCss } from "../src/outputs/css.js";
 import {
   aliasChainConfig,
   compositeConfig,
@@ -308,15 +308,6 @@ describe("structure & options", () => {
     expect(files.length).toBe(1);
     expect(files[0]!.filename).toBe("tokens.css");
     expect(files[0]!.content).toMatch(/\.dark \{/);
-  });
-
-  test("generateCssFromRegistry emits the layer blocks and never a theme block", () => {
-    const { config } = aliasChainConfig();
-    const css = generateCssFromRegistry(config.registry);
-    expect(css).toMatch(/--ref-color-black: #000000;/);
-    expect(css).toMatch(/--system-colors-accent: var\(--ref-color-black\);/);
-    expect(css).toMatch(/--button-background: var\(--system-colors-accent\);/);
-    expect(css).not.toMatch(/\[data-theme/);
   });
 
   test("a tokenless config yields an empty string", () => {
