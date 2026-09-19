@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { createLogger } from "../../logger.js";
-import { MissingDesignTokensError } from "../../registry/index.js";
+import { MissingDesignTokensError } from "../../plugins/errors.js";
 import { runPlugins } from "../../plugins/runner.js";
 import { ensureDependencies } from "../install-dependencies.js";
 import { loadConfig, type LogLevel } from "@recontentapp/core";
