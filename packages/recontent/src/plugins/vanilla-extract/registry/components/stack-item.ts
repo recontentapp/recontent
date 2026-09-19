@@ -1,5 +1,8 @@
 import type { BreakpointBinding, ComponentSourceFiles, ScaleImport } from "../types.js";
 import { responsiveRule } from "./shared/responsive.js";
+import type { ScaleBinding } from "@recontentapp/core";
+import { defineRegistryComponent } from "../define.js";
+import { vanillaExtractComponentOutput } from "./shared.js";
 
 function generateStackItemSourcesStatic({
   spacing,
@@ -201,10 +204,6 @@ function generateStackItemSources(
     ? generateStackItemSourcesResponsive({ spacing }, breakpoints)
     : generateStackItemSourcesStatic({ spacing });
 }
-
-import type { ScaleBinding } from "@recontentapp/core";
-import { defineRegistryComponent } from "../define.js";
-import { vanillaExtractComponentOutput } from "./shared.js";
 
 export type StackItemComponentOptions = {
   spacing: ScaleBinding<"dimension">;

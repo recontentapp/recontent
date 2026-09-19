@@ -1,15 +1,7 @@
 import type { ComponentSourceFiles, TokenImport } from "../types.js";
-
-function typographyProps(ref: string): string {
-  return [
-    `fontFamily: ${ref}.fontFamily`,
-    `fontSize: ${ref}.fontSize`,
-    `fontWeight: ${ref}.fontWeight`,
-    `letterSpacing: ${ref}.letterSpacing`,
-    `lineHeight: ${ref}.lineHeight`,
-  ].join(",\n    ");
-}
-
+import type { TokenBinding } from "@recontentapp/core";
+import { defineRegistryComponent } from "../define.js";
+import { typographyProps, vanillaExtractComponentOutput } from "./shared.js";
 function generateQuoteBlockSources(bindings: {
   color: TokenImport;
   typography: TokenImport;
@@ -51,13 +43,13 @@ export const quoteBlockRoot = style({
 export const quoteBlockQuote = style({
   margin: 0,
   color: ${color.reference},
-  ${typographyProps(typography.reference)},
+  ${typographyProps(typography.reference, "    ")},
 });
 
 export const quoteBlockCitation = style({
   margin: 0,
   color: ${citationColor.reference},
-  ${typographyProps(citationTypography.reference)},
+  ${typographyProps(citationTypography.reference, "    ")},
 });
 `,
     component: `import type { ComponentPropsWithoutRef, ReactNode } from "react";
@@ -104,10 +96,6 @@ export function QuoteBlock({
 `,
   };
 }
-
-import type { TokenBinding } from "@recontentapp/core";
-import { defineRegistryComponent } from "../define.js";
-import { vanillaExtractComponentOutput } from "./shared.js";
 
 export type QuoteBlockComponentOptions = {
   color: TokenBinding<"color">;

@@ -1,16 +1,8 @@
 import type { ComponentSourceFiles, TokenImport } from "../types.js";
-import { focusRingBlock } from "./shared.js";
-
-function typographyProps(ref: string): string {
-  return [
-    `fontFamily: ${ref}.fontFamily`,
-    `fontSize: ${ref}.fontSize`,
-    `fontWeight: ${ref}.fontWeight`,
-    `letterSpacing: ${ref}.letterSpacing`,
-    `lineHeight: ${ref}.lineHeight`,
-  ].join(",\n  ");
-}
-
+import { focusRingBlock, typographyProps } from "./shared.js";
+import type { TokenBinding } from "@recontentapp/core";
+import { defineRegistryComponent } from "../define.js";
+import { vanillaExtractComponentOutput } from "./shared.js";
 function generateSegmentedControlsSources(bindings: {
   borderRadius: TokenImport;
   optionBorderRadius: TokenImport;
@@ -84,7 +76,7 @@ export const segmentedControlsOption = style({
   paddingRight: ${optionHorizontalSpacing.reference},
   paddingTop: ${optionVerticalSpacing.reference},
   paddingBottom: ${optionVerticalSpacing.reference},
-  ${typographyProps(typography.reference)},
+  ${typographyProps(typography.reference, "  ")},
   ":hover": {
     color: ${hoverColor.reference},
   },
@@ -189,10 +181,6 @@ export function SegmentedControls<Value extends string>({
 `,
   };
 }
-
-import type { TokenBinding } from "@recontentapp/core";
-import { defineRegistryComponent } from "../define.js";
-import { vanillaExtractComponentOutput } from "./shared.js";
 
 export type SegmentedControlsComponentOptions = {
   borderRadius: TokenBinding<"dimension">;

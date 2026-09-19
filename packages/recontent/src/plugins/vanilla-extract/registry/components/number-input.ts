@@ -1,15 +1,8 @@
 import type { ComponentSourceFiles, TokenImport } from "../types.js";
-
-function typographyProps(ref: string): string {
-  return [
-    `fontFamily: ${ref}.fontFamily`,
-    `fontSize: ${ref}.fontSize`,
-    `fontWeight: ${ref}.fontWeight`,
-    `letterSpacing: ${ref}.letterSpacing`,
-    `lineHeight: ${ref}.lineHeight`,
-  ].join(",\n      ");
-}
-
+import type { TokenBinding } from "@recontentapp/core";
+import { defineRegistryComponent } from "../define.js";
+import type { IconName } from "../internal/icon-map-icons.js";
+import { typographyProps, vanillaExtractComponentOutput } from "./shared.js";
 function generateNumberInputSources(bindings: {
   borderRadius: TokenImport;
   border: TokenImport;
@@ -115,7 +108,7 @@ export const numberInputField = style({
   color: ${color.reference},
   paddingTop: ${verticalSpacing.reference},
   paddingBottom: ${verticalSpacing.reference},
-  ${typographyProps(typography.reference)},
+  ${typographyProps(typography.reference, "      ")},
   "::placeholder": {
     color: ${placeholderColor.reference},
   },
@@ -127,7 +120,7 @@ export const numberInputAffix = style({
   flexShrink: 0,
   color: ${affixColor.reference},
   backgroundColor: ${affixBackgroundColor.reference},
-  ${typographyProps(typography.reference)},
+  ${typographyProps(typography.reference, "      ")},
 });
 
 export const numberInputStepper = style({
@@ -284,11 +277,6 @@ export function NumberInput({
 `,
   };
 }
-
-import type { TokenBinding } from "@recontentapp/core";
-import { defineRegistryComponent } from "../define.js";
-import type { IconName } from "../internal/icon-map-icons.js";
-import { vanillaExtractComponentOutput } from "./shared.js";
 
 export type NumberInputComponentOptions = {
   // Input surface, shared with TextInput.

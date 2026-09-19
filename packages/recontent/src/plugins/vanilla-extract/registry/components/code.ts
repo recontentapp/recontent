@@ -1,15 +1,7 @@
 import type { ComponentSourceFiles, TokenImport } from "../types.js";
-
-function typographyProps(ref: string): string {
-  return [
-    `fontFamily: ${ref}.fontFamily`,
-    `fontSize: ${ref}.fontSize`,
-    `fontWeight: ${ref}.fontWeight`,
-    `letterSpacing: ${ref}.letterSpacing`,
-    `lineHeight: ${ref}.lineHeight`,
-  ].join(",\n    ");
-}
-
+import type { TokenBinding } from "@recontentapp/core";
+import { defineRegistryComponent } from "../define.js";
+import { typographyProps, vanillaExtractComponentOutput } from "./shared.js";
 function generateCodeSources(bindings: {
   color: TokenImport;
   backgroundColor: TokenImport;
@@ -44,7 +36,7 @@ export const codeRoot = style({
   paddingRight: ${horizontalSpacing.reference},
   paddingTop: ${verticalSpacing.reference},
   paddingBottom: ${verticalSpacing.reference},
-  ${typographyProps(typography.reference)},
+  ${typographyProps(typography.reference, "    ")},
 });
 `,
     component: `import type { ComponentPropsWithoutRef, ReactNode } from "react";
@@ -71,10 +63,6 @@ export function Code({ className, render, children, ...props }: CodeProps) {
 `,
   };
 }
-
-import type { TokenBinding } from "@recontentapp/core";
-import { defineRegistryComponent } from "../define.js";
-import { vanillaExtractComponentOutput } from "./shared.js";
 
 export type CodeComponentOptions = {
   color: TokenBinding<"color">;

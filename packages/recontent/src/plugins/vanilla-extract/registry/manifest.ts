@@ -115,6 +115,11 @@ export const registryComponents = Object.fromEntries(definitions.map((d) => [d.i
   RegistryComponentDefinition
 >;
 
+export const componentsByName = Object.fromEntries(definitions.map((d) => [d.name, d])) as Record<
+  string,
+  RegistryComponentDefinition
+>;
+
 const internalModuleDefinitions = [
   renderElementModule,
   iconMapModule,

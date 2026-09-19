@@ -1,5 +1,8 @@
 import type { BreakpointBinding, ComponentSourceFiles, ScaleImport } from "../types.js";
 import { responsiveRule } from "./shared/responsive.js";
+import type { ScaleBinding } from "@recontentapp/core";
+import { defineRegistryComponent } from "../define.js";
+import { vanillaExtractComponentOutput } from "./shared.js";
 
 function generateGridSourcesStatic({ spacing }: { spacing: ScaleImport }): ComponentSourceFiles {
   return {
@@ -253,10 +256,6 @@ function generateGridSources(
     ? generateGridSourcesResponsive({ spacing }, breakpoints)
     : generateGridSourcesStatic({ spacing });
 }
-
-import type { ScaleBinding } from "@recontentapp/core";
-import { defineRegistryComponent } from "../define.js";
-import { vanillaExtractComponentOutput } from "./shared.js";
 
 export type GridComponentOptions = {
   spacing: ScaleBinding<"dimension">;

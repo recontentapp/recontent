@@ -1,15 +1,7 @@
 import type { ComponentSourceFiles, ScaleImport, TokenImport } from "../types.js";
-
-function typographyProps(ref: string): string {
-  return [
-    `fontFamily: ${ref}.fontFamily`,
-    `fontSize: ${ref}.fontSize`,
-    `fontWeight: ${ref}.fontWeight`,
-    `letterSpacing: ${ref}.letterSpacing`,
-    `lineHeight: ${ref}.lineHeight`,
-  ].join(",\n    ");
-}
-
+import type { ScaleBinding, TokenBinding } from "@recontentapp/core";
+import { defineRegistryComponent } from "../define.js";
+import { typographyProps, vanillaExtractComponentOutput } from "./shared.js";
 function generateAvatarSources(bindings: {
   sizes: ScaleImport;
   color: TokenImport;
@@ -54,7 +46,7 @@ export const avatarFallback = style({
   alignItems: "center",
   justifyContent: "center",
   color: ${color.reference},
-  ${typographyProps(typography.reference)},
+  ${typographyProps(typography.reference, "    ")},
 });
 `,
     component: `import { Avatar as BaseAvatar } from "@base-ui/react/avatar";
@@ -106,10 +98,6 @@ export function Avatar({
 `,
   };
 }
-
-import type { ScaleBinding, TokenBinding } from "@recontentapp/core";
-import { defineRegistryComponent } from "../define.js";
-import { vanillaExtractComponentOutput } from "./shared.js";
 
 export type AvatarComponentOptions = {
   sizes: ScaleBinding<"dimension">;

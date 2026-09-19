@@ -1,5 +1,12 @@
 import type { ComponentSourceFiles, TokenImport } from "../types.js";
-import { focusRingBlock, groupVariantTokens } from "./shared.js";
+import {
+  focusRingBlock,
+  groupVariantTokens,
+  hoverDisabledVariantStyleBody as variantStyleBody,
+} from "./shared.js";
+import type { TokenBinding } from "@recontentapp/core";
+import { defineRegistryComponent } from "../define.js";
+import { vanillaExtractComponentOutput } from "./shared.js";
 
 const VARIANT_FIELDS = [
   "backgroundColor",
@@ -15,45 +22,14 @@ const VARIANT_FIELDS = [
 ] as const;
 
 const SIZE_FIELDS = ["horizontalSpacing", "verticalSpacing", "iconSize"] as const;
-
-function typographyProps(ref: string): string {
-  return [
-    `fontFamily: ${ref}.fontFamily`,
-    `fontSize: ${ref}.fontSize`,
-    `fontWeight: ${ref}.fontWeight`,
-    `letterSpacing: ${ref}.letterSpacing`,
-    `lineHeight: ${ref}.lineHeight`,
-  ].join(",\n      ");
-}
-
-function variantStyleBody(fields: Record<string, TokenImport>): string {
-  return `{
-      backgroundColor: ${fields.backgroundColor!.reference},
-      color: ${fields.color!.reference},
-      border: ${fields.border!.reference},
-      ${typographyProps(fields.typography!.reference)},
-      ":hover": {
-        backgroundColor: ${fields.hoverBackgroundColor!.reference},
-        color: ${fields.hoverColor!.reference},
-        border: ${fields.hoverBorder!.reference},
-      },
-      ":disabled": {
-        backgroundColor: ${fields.disabledBackgroundColor!.reference},
-        color: ${fields.disabledColor!.reference},
-        border: ${fields.disabledBorder!.reference},
-        cursor: "not-allowed",
-      },
-    }`;
-}
-
-function sizeStyleBody(fields: Record<string, TokenImport>): string {
+function iconButtonSizeStyleBody(fields: Record<string, TokenImport>): string {
   return `{
       width: \`calc(${fields.iconSize!.reference} + 2 * ${fields.horizontalSpacing!.reference})\`,
       height: \`calc(${fields.iconSize!.reference} + 2 * ${fields.verticalSpacing!.reference})\`,
     }`;
 }
 
-function sizeIconStyleBody(fields: Record<string, TokenImport>): string {
+function iconButtonSizeIconStyleBody(fields: Record<string, TokenImport>): string {
   return `{
       width: ${fields.iconSize!.reference},
       height: ${fields.iconSize!.reference},
@@ -97,11 +73,11 @@ ${variantNames.map((name) => `  ${JSON.stringify(name)}: ${variantStyleBody(vari
 });
 
 export const iconButtonSize = styleVariants({
-${sizeNames.map((name) => `  ${JSON.stringify(name)}: ${sizeStyleBody(sizes[name]!)},`).join("\n")}
+${sizeNames.map((name) => `  ${JSON.stringify(name)}: ${iconButtonSizeStyleBody(sizes[name]!)},`).join("\n")}
 });
 
 export const iconButtonIconSize = styleVariants({
-${sizeNames.map((name) => `  ${JSON.stringify(name)}: ${sizeIconStyleBody(sizes[name]!)},`).join("\n")}
+${sizeNames.map((name) => `  ${JSON.stringify(name)}: ${iconButtonSizeIconStyleBody(sizes[name]!)},`).join("\n")}
 });
 `,
     component: `import { Button as BaseButton } from "@base-ui/react/button";
@@ -176,10 +152,6 @@ export function IconButton({
 `,
   };
 }
-
-import type { TokenBinding } from "@recontentapp/core";
-import { defineRegistryComponent } from "../define.js";
-import { vanillaExtractComponentOutput } from "./shared.js";
 
 type IconButtonVariantFields = {
   backgroundColor: TokenBinding<"color">;

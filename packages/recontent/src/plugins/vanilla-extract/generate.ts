@@ -9,6 +9,7 @@ import {
   type RawToken,
   type StampedToken,
   type TokenEntry,
+  type TokenLayer,
   type TokenType,
   type TokenTypeMap,
   type ThemeOverride,
@@ -46,7 +47,6 @@ import {
   generateScaleExports,
   propertyAccess,
   resolveEntryValue,
-  scaleExportNames,
   scaleExportsForConfig,
   setTreeValue,
   type ScaleExport,
@@ -202,8 +202,12 @@ function valuesTree(config: GeneratorContext, themeName?: string): SourceTree {
   return tree;
 }
 
+function scaleExportKey(layer: TokenLayer, path: string[]): string {
+  return `${layer}:${pathKey(path)}`;
+}
+
 function resolveScaleBinding<T extends TokenType>(
-  registry: GeneratorContext["registry"],
+  scaleExportIndex: Map<string, ScaleExport>,
   scale: ScaleBinding<T>,
   expectedType: T,
   label: string,
@@ -214,16 +218,11 @@ function resolveScaleBinding<T extends TokenType>(
   if (!scale._layer || !scale._path) {
     throw new Error(`Component config "${label}" must reference a defined token scale.`);
   }
-  const found = [...registry.values()].find(
-    (entry) =>
-      entry.scale &&
-      entry.scale.layer === scale._layer &&
-      pathKey(entry.scale.path) === pathKey(scale._path ?? []),
-  )?.scale;
+  const found = scaleExportIndex.get(scaleExportKey(scale._layer, scale._path));
   if (!found) {
     throw new Error(`Component config "${label}" references a scale with no generated export.`);
   }
-  return { metadata: found, ...scaleExportNames(found) };
+  return found;
 }
 
 function resolveTokenBinding<T extends TokenType>(
@@ -388,6 +387,12 @@ export function generateVanillaExtractFiles(
   const resolvedBreakpoints = resolveBreakpoints(config, output.breakpoints);
 
   const scaleExports = scaleExportsForConfig(config);
+  const scaleExportIndex = new Map(
+    scaleExports.map((scaleExport) => [
+      scaleExportKey(scaleExport.metadata.layer, scaleExport.metadata.path),
+      scaleExport,
+    ]),
+  );
   const scaleBindings: Record<string, { typeName: string; exportName: string }> = {};
   const tokenBindings: Record<string, { reference: string }> = {};
   const iconBindings: Record<string, string> = {};
@@ -408,7 +413,7 @@ export function generateVanillaExtractFiles(
         );
       } else if (contract.kind === "scale") {
         const scale = resolveScaleBinding(
-          config.registry,
+          scaleExportIndex,
           binding as ScaleBinding<TokenType>,
           contract.type,
           `${component.name}.${contract.key}`,
@@ -473,7 +478,7 @@ export function generateVanillaExtractFiles(
   ];
   if (builtInComponents.length > 0) {
     files.push(
-      ...generateBuiltInComponentFiles(builtInComponents, {
+      ...generateBuiltInComponentFiles(resolvedComponentIds, {
         scaleBindings,
         tokenBindings,
         iconBindings,
@@ -485,7 +490,7 @@ export function generateVanillaExtractFiles(
         filename: "components.dependencies.json",
         content: `${JSON.stringify(
           {
-            ...getBuiltInComponentDependencies(builtInComponents),
+            ...getBuiltInComponentDependencies(resolvedComponentIds),
             ...getInternalModuleDependencies(resolvedComponentIds, resolvedBreakpoints),
             ...getUseBreakpointDependencies(resolvedBreakpoints),
           },

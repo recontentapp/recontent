@@ -136,7 +136,7 @@ function capitalizeSegment(segment: string): string {
   return normalized ? normalized.charAt(0).toUpperCase() + normalized.slice(1) : "";
 }
 
-export function scaleExportNames(scale: TokenScaleMetadata): {
+function scaleExportNames(scale: TokenScaleMetadata): {
   typeName: string;
   exportName: string;
 } {

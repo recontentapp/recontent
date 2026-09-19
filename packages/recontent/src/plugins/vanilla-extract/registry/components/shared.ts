@@ -42,6 +42,68 @@ export function vanillaExtractComponentOutput(
 }
 
 /**
+ * Renders a typography token reference's five members as object-literal
+ * property lines, joined with `indent` so callers can match their own
+ * surrounding indentation.
+ */
+export function typographyProps(ref: string, indent: string): string {
+  return [
+    `fontFamily: ${ref}.fontFamily`,
+    `fontSize: ${ref}.fontSize`,
+    `fontWeight: ${ref}.fontWeight`,
+    `letterSpacing: ${ref}.letterSpacing`,
+    `lineHeight: ${ref}.lineHeight`,
+  ].join(`,\n${indent}`);
+}
+
+/**
+ * Size-variant style body shared by badge/button/dropdown-button: horizontal
+ * and vertical padding, a gap, and typography — the shape of a labeled
+ * control sized by a single padding+gap+typography contract.
+ */
+export function paddedTypographySizeStyleBody(fields: Record<string, TokenImport>): string {
+  return `{
+      paddingLeft: ${fields.horizontalSpacing!.reference},
+      paddingRight: ${fields.horizontalSpacing!.reference},
+      paddingTop: ${fields.verticalSpacing!.reference},
+      paddingBottom: ${fields.verticalSpacing!.reference},
+      gap: ${fields.gap!.reference},
+      ${typographyProps(fields.typography!.reference, "      ")},
+    }`;
+}
+
+/**
+ * Variant style body shared by icon-button/dropdown-button: background,
+ * color, border and typography, with `:hover` and `:disabled` overrides.
+ */
+export function hoverDisabledVariantStyleBody(fields: Record<string, TokenImport>): string {
+  return `{
+      backgroundColor: ${fields.backgroundColor!.reference},
+      color: ${fields.color!.reference},
+      border: ${fields.border!.reference},
+      ${typographyProps(fields.typography!.reference, "      ")},
+      ":hover": {
+        backgroundColor: ${fields.hoverBackgroundColor!.reference},
+        color: ${fields.hoverColor!.reference},
+        border: ${fields.hoverBorder!.reference},
+      },
+      ":disabled": {
+        backgroundColor: ${fields.disabledBackgroundColor!.reference},
+        color: ${fields.disabledColor!.reference},
+        border: ${fields.disabledBorder!.reference},
+        cursor: "not-allowed",
+      },
+    }`;
+}
+
+/**
+ * Status icon color style body shared by banner/toast.
+ */
+export function statusIconStyleBody(fields: Record<string, TokenImport>): string {
+  return `{ color: ${fields.iconColor!.reference} }`;
+}
+
+/**
  * Focus-ring declarations for a root interactive element. Returns "" when the
  * output has no `focusRingColor`, so unconfigured projects emit no focus CSS.
  */
@@ -59,64 +121,48 @@ export function focusRingBlock(
 }
 
 /**
- * Regroups the flat `tokens` map produced for a `kind: "variants"` contract
- * (keyed `"<contractKey>.<variantName>.<fieldKey>"`) back into a nested
- * `{ variantName: { fieldKey: TokenImport } }` shape, in declared field order,
- * so generators can loop over `variants(tokens, "statuses", ["color", ...])`
- * instead of re-deriving the naming convention themselves.
+ * Regroups a flat map produced for a `kind: "variants"` contract (keyed
+ * `"<contractKey>.<variantName>.<fieldKey>"`) back into a nested
+ * `{ variantName: { fieldKey: value } }` shape, in declared field order, so
+ * generators can loop over `variants(tokens, "statuses", ["color", ...])`
+ * instead of re-deriving the naming convention themselves. Shared between
+ * `TokenImport` fields (`groupVariantTokens`) and `kind: "icon"` fields, which
+ * carry raw icon names instead of token references (`groupVariantIcons`).
  */
-export function groupVariantTokens(
+function groupVariants<Value>(
+  map: Record<string, Value>,
+  contractKey: string,
+  fields: readonly string[],
+): Record<string, Record<string, Value>> {
+  const prefix = `${contractKey}.`;
+  const names = new Set<string>();
+  for (const key of Object.keys(map)) {
+    if (!key.startsWith(prefix)) continue;
+    const rest = key.slice(prefix.length);
+    const variantName = rest.slice(0, rest.lastIndexOf("."));
+    if (variantName) names.add(variantName);
+  }
+
+  const result: Record<string, Record<string, Value>> = {};
+  for (const name of names) {
+    const entry: Record<string, Value> = {};
+    for (const field of fields) {
+      const value = map[`${contractKey}.${name}.${field}`];
+      if (value) entry[field] = value;
+    }
+    result[name] = entry;
+  }
+  return result;
+}
+
+export const groupVariantTokens: (
   tokens: Record<string, TokenImport>,
   contractKey: string,
   fields: readonly string[],
-): Record<string, Record<string, TokenImport>> {
-  const prefix = `${contractKey}.`;
-  const names = new Set<string>();
-  for (const key of Object.keys(tokens)) {
-    if (!key.startsWith(prefix)) continue;
-    const rest = key.slice(prefix.length);
-    const variantName = rest.slice(0, rest.lastIndexOf("."));
-    if (variantName) names.add(variantName);
-  }
+) => Record<string, Record<string, TokenImport>> = groupVariants;
 
-  const result: Record<string, Record<string, TokenImport>> = {};
-  for (const name of names) {
-    const entry: Record<string, TokenImport> = {};
-    for (const field of fields) {
-      const token = tokens[`${contractKey}.${name}.${field}`];
-      if (token) entry[field] = token;
-    }
-    result[name] = entry;
-  }
-  return result;
-}
-
-/**
- * Like `groupVariantTokens`, but for a variant's `kind: "icon"` fields
- * (raw icon names, not token references).
- */
-export function groupVariantIcons(
+export const groupVariantIcons: (
   icons: Record<string, string>,
   contractKey: string,
   fields: readonly string[],
-): Record<string, Record<string, string>> {
-  const prefix = `${contractKey}.`;
-  const names = new Set<string>();
-  for (const key of Object.keys(icons)) {
-    if (!key.startsWith(prefix)) continue;
-    const rest = key.slice(prefix.length);
-    const variantName = rest.slice(0, rest.lastIndexOf("."));
-    if (variantName) names.add(variantName);
-  }
-
-  const result: Record<string, Record<string, string>> = {};
-  for (const name of names) {
-    const entry: Record<string, string> = {};
-    for (const field of fields) {
-      const icon = icons[`${contractKey}.${name}.${field}`];
-      if (icon) entry[field] = icon;
-    }
-    result[name] = entry;
-  }
-  return result;
-}
+) => Record<string, Record<string, string>> = groupVariants;

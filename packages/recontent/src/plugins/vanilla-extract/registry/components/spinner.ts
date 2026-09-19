@@ -1,4 +1,7 @@
 import type { ComponentSourceFiles, ScaleImport, TokenImport } from "../types.js";
+import type { ScaleBinding, TokenBinding } from "@recontentapp/core";
+import { defineRegistryComponent } from "../define.js";
+import { vanillaExtractComponentOutput } from "./shared.js";
 
 function generateSpinnerSources(bindings: {
   sizes: ScaleImport;
@@ -83,10 +86,6 @@ export function Spinner({ size, color, label, className, render, ...props }: Spi
 `,
   };
 }
-
-import type { ScaleBinding, TokenBinding } from "@recontentapp/core";
-import { defineRegistryComponent } from "../define.js";
-import { vanillaExtractComponentOutput } from "./shared.js";
 
 export type SpinnerComponentOptions = {
   sizes: ScaleBinding<"dimension">;

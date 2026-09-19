@@ -1,15 +1,8 @@
 import type { ComponentSourceFiles, TokenImport } from "../types.js";
-
-function typographyProps(ref: string): string {
-  return [
-    `fontFamily: ${ref}.fontFamily`,
-    `fontSize: ${ref}.fontSize`,
-    `fontWeight: ${ref}.fontWeight`,
-    `letterSpacing: ${ref}.letterSpacing`,
-    `lineHeight: ${ref}.lineHeight`,
-  ].join(",\n      ");
-}
-
+import type { TokenBinding } from "@recontentapp/core";
+import { defineRegistryComponent } from "../define.js";
+import type { IconName } from "../internal/icon-map-icons.js";
+import { typographyProps, vanillaExtractComponentOutput } from "./shared.js";
 function generateFieldSources(bindings: {
   labelTypography: TokenImport;
   labelColor: TokenImport;
@@ -59,7 +52,7 @@ export const fieldLabelRow = style({
 
 export const fieldLabel = style({
   color: ${labelColor.reference},
-  ${typographyProps(labelTypography.reference)},
+  ${typographyProps(labelTypography.reference, "      ")},
 });
 
 export const fieldRequiredIndicator = style({
@@ -68,13 +61,13 @@ export const fieldRequiredIndicator = style({
 
 export const fieldOptionalText = style({
   color: ${optionalColor.reference},
-  ${typographyProps(optionalTypography.reference)},
+  ${typographyProps(optionalTypography.reference, "      ")},
 });
 
 export const fieldDescription = style({
   margin: 0,
   color: ${descriptionColor.reference},
-  ${typographyProps(descriptionTypography.reference)},
+  ${typographyProps(descriptionTypography.reference, "      ")},
 });
 
 export const fieldErrorRow = style({
@@ -82,7 +75,7 @@ export const fieldErrorRow = style({
   alignItems: "center",
   gap: "0.25em",
   color: ${errorColor.reference},
-  ${typographyProps(errorTypography.reference)},
+  ${typographyProps(errorTypography.reference, "      ")},
 });
 
 export const fieldErrorIcon = style({
@@ -170,11 +163,6 @@ export function Field({
 `,
   };
 }
-
-import type { TokenBinding } from "@recontentapp/core";
-import { defineRegistryComponent } from "../define.js";
-import type { IconName } from "../internal/icon-map-icons.js";
-import { vanillaExtractComponentOutput } from "./shared.js";
 
 export type FieldComponentOptions = {
   labelTypography: TokenBinding<"typography">;

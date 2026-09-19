@@ -1,21 +1,13 @@
 import type { ComponentSourceFiles, TokenImport } from "../types.js";
-import { focusRingBlock, groupVariantTokens } from "./shared.js";
+import { focusRingBlock, groupVariantTokens, typographyProps } from "./shared.js";
+import type { TokenBinding } from "@recontentapp/core";
+import { defineRegistryComponent } from "../define.js";
+import { vanillaExtractComponentOutput } from "./shared.js";
 
 const SIZE_FIELDS = ["trackWidth", "trackHeight", "thumbSize"] as const;
 
 // Inset kept identical on both edges of the track, in both the checked and unchecked state.
 const THUMB_OFFSET = "2px";
-
-function typographyProps(ref: string): string {
-  return [
-    `fontFamily: ${ref}.fontFamily`,
-    `fontSize: ${ref}.fontSize`,
-    `fontWeight: ${ref}.fontWeight`,
-    `letterSpacing: ${ref}.letterSpacing`,
-    `lineHeight: ${ref}.lineHeight`,
-  ].join(",\n      ");
-}
-
 function sizeTrackStyleBody(fields: Record<string, TokenImport>): string {
   return `{ width: ${fields.trackWidth!.reference}, height: ${fields.trackHeight!.reference} }`;
 }
@@ -135,7 +127,7 @@ ${sizeNames.map((name) => `  ${JSON.stringify(name)}: ${sizeThumbStyleBody(sizes
 
 export const switchLabel = style({
   color: ${labelColor.reference},
-  ${typographyProps(labelTypography.reference)},
+  ${typographyProps(labelTypography.reference, "      ")},
 });
 `,
     component: `import type { ReactNode } from "react";
@@ -209,10 +201,6 @@ export function Switch({
 `,
   };
 }
-
-import type { TokenBinding } from "@recontentapp/core";
-import { defineRegistryComponent } from "../define.js";
-import { vanillaExtractComponentOutput } from "./shared.js";
 
 type SwitchSizeFields = {
   trackWidth: TokenBinding<"dimension">;

@@ -1,15 +1,7 @@
 import type { ComponentSourceFiles, TokenImport } from "../types.js";
-
-function typographyProps(ref: string): string {
-  return [
-    `fontFamily: ${ref}.fontFamily`,
-    `fontSize: ${ref}.fontSize`,
-    `fontWeight: ${ref}.fontWeight`,
-    `letterSpacing: ${ref}.letterSpacing`,
-    `lineHeight: ${ref}.lineHeight`,
-  ].join(",\n      ");
-}
-
+import type { TokenBinding } from "@recontentapp/core";
+import { defineRegistryComponent } from "../define.js";
+import { typographyProps, vanillaExtractComponentOutput } from "./shared.js";
 function generateTooltipSources(bindings: {
   backgroundColor: TokenImport;
   color: TokenImport;
@@ -69,7 +61,7 @@ export const tooltipPopup = style({
   paddingRight: ${horizontalSpacing.reference},
   paddingTop: ${verticalSpacing.reference},
   paddingBottom: ${verticalSpacing.reference},
-  ${typographyProps(typography.reference)},
+  ${typographyProps(typography.reference, "      ")},
   transitionProperty: "opacity, transform",
   transitionDuration: ${transition.reference}.transitionDuration,
   transitionTimingFunction: ${transition.reference}.transitionTimingFunction,
@@ -157,10 +149,6 @@ export function Tooltip({
 `,
   };
 }
-
-import type { TokenBinding } from "@recontentapp/core";
-import { defineRegistryComponent } from "../define.js";
-import { vanillaExtractComponentOutput } from "./shared.js";
 
 export type TooltipComponentOptions = {
   backgroundColor: TokenBinding<"color">;

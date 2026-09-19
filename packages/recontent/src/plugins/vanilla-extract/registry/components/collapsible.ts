@@ -1,16 +1,9 @@
 import type { ComponentSourceFiles, TokenImport } from "../types.js";
-import { focusRingBlock } from "./shared.js";
-
-function typographyProps(ref: string): string {
-  return [
-    `fontFamily: ${ref}.fontFamily`,
-    `fontSize: ${ref}.fontSize`,
-    `fontWeight: ${ref}.fontWeight`,
-    `letterSpacing: ${ref}.letterSpacing`,
-    `lineHeight: ${ref}.lineHeight`,
-  ].join(",\n    ");
-}
-
+import { focusRingBlock, typographyProps } from "./shared.js";
+import type { TokenBinding } from "@recontentapp/core";
+import { defineRegistryComponent } from "../define.js";
+import type { IconName } from "../internal/icon-map-icons.js";
+import { vanillaExtractComponentOutput } from "./shared.js";
 function generateCollapsibleSources(bindings: {
   borderRadius: TokenImport;
   border: TokenImport;
@@ -69,7 +62,7 @@ export const collapsibleTrigger = style({
   paddingRight: ${triggerHorizontalSpacing.reference},
   paddingTop: ${triggerVerticalSpacing.reference},
   paddingBottom: ${triggerVerticalSpacing.reference},
-  ${typographyProps(triggerTypography.reference)},
+  ${typographyProps(triggerTypography.reference, "    ")},
   transitionProperty: "background-color",
   transitionDuration: ${transition.reference}.transitionDuration,
   transitionTimingFunction: ${transition.reference}.transitionTimingFunction,
@@ -176,11 +169,6 @@ export function Collapsible({
 `,
   };
 }
-
-import type { TokenBinding } from "@recontentapp/core";
-import { defineRegistryComponent } from "../define.js";
-import type { IconName } from "../internal/icon-map-icons.js";
-import { vanillaExtractComponentOutput } from "./shared.js";
 
 export type CollapsibleComponentOptions = {
   borderRadius: TokenBinding<"dimension">;

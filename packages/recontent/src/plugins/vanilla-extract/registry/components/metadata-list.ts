@@ -1,15 +1,7 @@
 import type { ComponentSourceFiles, ScaleImport, TokenImport } from "../types.js";
-
-function typographyProps(ref: string): string {
-  return [
-    `fontFamily: ${ref}.fontFamily`,
-    `fontSize: ${ref}.fontSize`,
-    `fontWeight: ${ref}.fontWeight`,
-    `letterSpacing: ${ref}.letterSpacing`,
-    `lineHeight: ${ref}.lineHeight`,
-  ].join(",\n      ");
-}
-
+import type { ScaleBinding, TokenBinding } from "@recontentapp/core";
+import { defineRegistryComponent } from "../define.js";
+import { typographyProps, vanillaExtractComponentOutput } from "./shared.js";
 function generateMetadataListSources(bindings: {
   gaps: ScaleImport;
   labelTypography: TokenImport;
@@ -79,13 +71,13 @@ export const metadataListLabelRow = style({
 export const metadataListLabel = style({
   margin: 0,
   color: ${labelColor.reference},
-  ${typographyProps(labelTypography.reference)},
+  ${typographyProps(labelTypography.reference, "      ")},
 });
 
 export const metadataListValue = style({
   margin: 0,
   color: ${valueColor.reference},
-  ${typographyProps(valueTypography.reference)},
+  ${typographyProps(valueTypography.reference, "      ")},
 });
 
 export const metadataListIcon = style({
@@ -165,10 +157,6 @@ export function MetadataList({
 `,
   };
 }
-
-import type { ScaleBinding, TokenBinding } from "@recontentapp/core";
-import { defineRegistryComponent } from "../define.js";
-import { vanillaExtractComponentOutput } from "./shared.js";
 
 export type MetadataListComponentOptions = {
   gaps: ScaleBinding<"dimension">;

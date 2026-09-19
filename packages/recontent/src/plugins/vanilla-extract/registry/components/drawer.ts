@@ -1,18 +1,11 @@
 import type { ComponentSourceFiles, TokenImport } from "../types.js";
-import { focusRingBlock, groupVariantTokens } from "./shared.js";
+import { focusRingBlock, groupVariantTokens, typographyProps } from "./shared.js";
+import type { TokenBinding } from "@recontentapp/core";
+import { defineRegistryComponent } from "../define.js";
+import type { IconName } from "../internal/icon-map-icons.js";
+import { vanillaExtractComponentOutput } from "./shared.js";
 
 const SIZE_KEYS = ["sm", "md", "lg", "full"] as const;
-
-function typographyProps(ref: string): string {
-  return [
-    `fontFamily: ${ref}.fontFamily`,
-    `fontSize: ${ref}.fontSize`,
-    `fontWeight: ${ref}.fontWeight`,
-    `letterSpacing: ${ref}.letterSpacing`,
-    `lineHeight: ${ref}.lineHeight`,
-  ].join(",\n      ");
-}
-
 function generateDrawerSources(bindings: {
   backdropColor: TokenImport;
   backgroundColor: TokenImport;
@@ -172,7 +165,7 @@ export const drawerHeader = style({
 export const drawerTitle = style({
   margin: 0,
   color: ${titleColor.reference},
-  ${typographyProps(titleTypography.reference)},
+  ${typographyProps(titleTypography.reference, "      ")},
 });
 
 export const drawerClose = style({
@@ -296,11 +289,6 @@ export function Drawer({
 `,
   };
 }
-
-import type { TokenBinding } from "@recontentapp/core";
-import { defineRegistryComponent } from "../define.js";
-import type { IconName } from "../internal/icon-map-icons.js";
-import { vanillaExtractComponentOutput } from "./shared.js";
 
 export type DrawerComponentOptions = {
   backdropColor: TokenBinding<"color">;

@@ -1,16 +1,9 @@
 import type { ComponentSourceFiles, TokenImport } from "../types.js";
-import { focusRingBlock } from "./shared.js";
-
-function typographyProps(ref: string): string {
-  return [
-    `fontFamily: ${ref}.fontFamily`,
-    `fontSize: ${ref}.fontSize`,
-    `fontWeight: ${ref}.fontWeight`,
-    `letterSpacing: ${ref}.letterSpacing`,
-    `lineHeight: ${ref}.lineHeight`,
-  ].join(",\n      ");
-}
-
+import { focusRingBlock, typographyProps } from "./shared.js";
+import type { TokenBinding } from "@recontentapp/core";
+import { defineRegistryComponent } from "../define.js";
+import type { IconName } from "../internal/icon-map-icons.js";
+import { vanillaExtractComponentOutput } from "./shared.js";
 function generateAutocompleteSources(bindings: {
   borderRadius: TokenImport;
   border: TokenImport;
@@ -129,7 +122,7 @@ export const autocompleteInput = style({
   outline: "none",
   background: "none",
   color: "inherit",
-  ${typographyProps(typography.reference)},
+  ${typographyProps(typography.reference, "      ")},
   "::placeholder": {
     color: ${placeholderColor.reference},
   },
@@ -196,7 +189,7 @@ export const autocompleteItem = style({
   paddingRight: ${itemHorizontalSpacing.reference},
   paddingTop: ${itemVerticalSpacing.reference},
   paddingBottom: ${itemVerticalSpacing.reference},
-  ${typographyProps(itemTypography.reference)},
+  ${typographyProps(itemTypography.reference, "      ")},
   selectors: {
     "&[data-highlighted]": {
       backgroundColor: ${itemHoverBackgroundColor.reference},
@@ -223,7 +216,7 @@ export const autocompleteEmpty = style({
   boxSizing: "border-box",
   color: ${emptyStateColor.reference},
   padding: ${emptyStateSpacing.reference},
-  ${typographyProps(emptyStateTypography.reference)},
+  ${typographyProps(emptyStateTypography.reference, "      ")},
 });
 `,
     component: `import { useRef, type ReactNode } from "react";
@@ -377,11 +370,6 @@ export function Autocomplete<Value extends string>({
 `,
   };
 }
-
-import type { TokenBinding } from "@recontentapp/core";
-import { defineRegistryComponent } from "../define.js";
-import type { IconName } from "../internal/icon-map-icons.js";
-import { vanillaExtractComponentOutput } from "./shared.js";
 
 export type AutocompleteComponentOptions = {
   // Trigger/popup surface, shared with Select.

@@ -1,15 +1,7 @@
 import type { ComponentSourceFiles, TokenImport } from "../types.js";
-
-function typographyProps(ref: string): string {
-  return [
-    `fontFamily: ${ref}.fontFamily`,
-    `fontSize: ${ref}.fontSize`,
-    `fontWeight: ${ref}.fontWeight`,
-    `letterSpacing: ${ref}.letterSpacing`,
-    `lineHeight: ${ref}.lineHeight`,
-  ].join(",\n      ");
-}
-
+import type { TokenBinding } from "@recontentapp/core";
+import { defineRegistryComponent } from "../define.js";
+import { typographyProps, vanillaExtractComponentOutput } from "./shared.js";
 function generateSliderSources(bindings: {
   trackBackgroundColor: TokenImport;
   trackHeight: TokenImport;
@@ -143,7 +135,7 @@ export const sliderMark = style({
   position: "absolute",
   transform: "translateX(-50%)",
   color: ${markColor.reference},
-  ${typographyProps(markTypography.reference)},
+  ${typographyProps(markTypography.reference, "      ")},
 });
 
 export const sliderValueLabel = style({
@@ -161,7 +153,7 @@ export const sliderValueLabel = style({
   paddingRight: "0.375rem",
   paddingTop: "0.125rem",
   paddingBottom: "0.125rem",
-  ${typographyProps(valueLabelTypography.reference)},
+  ${typographyProps(valueLabelTypography.reference, "      ")},
 });
 `,
     component: `import { Slider as BaseSlider } from "@base-ui/react/slider";
@@ -287,10 +279,6 @@ export function Slider({
 `,
   };
 }
-
-import type { TokenBinding } from "@recontentapp/core";
-import { defineRegistryComponent } from "../define.js";
-import { vanillaExtractComponentOutput } from "./shared.js";
 
 export type SliderComponentOptions = {
   trackBackgroundColor: TokenBinding<"color">;

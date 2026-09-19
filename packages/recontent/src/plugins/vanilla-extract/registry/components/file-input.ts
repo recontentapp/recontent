@@ -1,16 +1,9 @@
 import type { ComponentSourceFiles, TokenImport } from "../types.js";
-import { focusRingBlock } from "./shared.js";
-
-function typographyProps(ref: string): string {
-  return [
-    `fontFamily: ${ref}.fontFamily`,
-    `fontSize: ${ref}.fontSize`,
-    `fontWeight: ${ref}.fontWeight`,
-    `letterSpacing: ${ref}.letterSpacing`,
-    `lineHeight: ${ref}.lineHeight`,
-  ].join(",\n      ");
-}
-
+import { focusRingBlock, typographyProps } from "./shared.js";
+import type { TokenBinding } from "@recontentapp/core";
+import { defineRegistryComponent } from "../define.js";
+import type { IconName } from "../internal/icon-map-icons.js";
+import { vanillaExtractComponentOutput } from "./shared.js";
 function generateFileInputSources(bindings: {
   border: TokenImport;
   borderRadius: TokenImport;
@@ -88,7 +81,7 @@ export const fileInputDropzone = style({
   paddingRight: ${horizontalSpacing.reference},
   paddingTop: ${verticalSpacing.reference},
   paddingBottom: ${verticalSpacing.reference},
-  ${typographyProps(typography.reference)},
+  ${typographyProps(typography.reference, "      ")},
   ":hover": {
     borderColor: ${hoverBorderColor.reference},
   },
@@ -123,7 +116,7 @@ export const fileInputButton = style({
   paddingRight: ${horizontalSpacing.reference},
   paddingTop: ${verticalSpacing.reference},
   paddingBottom: ${verticalSpacing.reference},
-  ${typographyProps(typography.reference)},
+  ${typographyProps(typography.reference, "      ")},
   ":hover": {
     borderColor: ${hoverBorderColor.reference},
   },
@@ -178,7 +171,7 @@ export const fileInputFile = style({
   paddingRight: ${horizontalSpacing.reference},
   paddingTop: ${verticalSpacing.reference},
   paddingBottom: ${verticalSpacing.reference},
-  ${typographyProps(fileTypography.reference)},
+  ${typographyProps(fileTypography.reference, "      ")},
 });
 
 export const fileInputFileName = style({
@@ -380,11 +373,6 @@ export function FileInput({
 `,
   };
 }
-
-import type { TokenBinding } from "@recontentapp/core";
-import { defineRegistryComponent } from "../define.js";
-import type { IconName } from "../internal/icon-map-icons.js";
-import { vanillaExtractComponentOutput } from "./shared.js";
 
 export type FileInputComponentOptions = {
   border: TokenBinding<"border">;
