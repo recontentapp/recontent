@@ -23,7 +23,13 @@ export function formatMissingDesignTokensMessage(errors: string[]): string {
 }
 
 function findComponent(name: string): RegistryComponentDefinition | undefined {
-  return registryComponents[name] ?? componentsByName[name];
+  if (Object.hasOwn(registryComponents, name)) {
+    return registryComponents[name];
+  }
+  if (Object.hasOwn(componentsByName, name)) {
+    return componentsByName[name];
+  }
+  return undefined;
 }
 
 function availableComponents(): string {
@@ -59,7 +65,8 @@ function optionsForComponent(
   options: BuiltInComponentOptions,
   component: RegistryComponentDefinition,
 ): Record<string, unknown> {
-  return ((options as Record<string, unknown>)[component.name] ?? {}) as Record<string, unknown>;
+  const all = options as Record<string, unknown>;
+  return Object.hasOwn(all, component.name) ? (all[component.name] as Record<string, unknown>) : {};
 }
 
 function isScaleBinding(value: unknown, expectedType: TokenType): boolean {

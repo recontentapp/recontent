@@ -155,6 +155,7 @@ export type MemberResolver = (type: TokenType, member: TokenMember) => string;
 
 function flattenGradientStops(
   stops: GradientValue["stops"],
+  visited: WeakSet<GradientValue> = new WeakSet(),
 ): Array<{ color: TokenMember<"color">; position: TokenMember<"number"> }> {
   const result: Array<{ color: TokenMember<"color">; position: TokenMember<"number"> }> = [];
   for (const stop of stops) {
@@ -162,7 +163,12 @@ function flattenGradientStops(
       result.push(stop);
       continue;
     }
-    result.push(...flattenGradientStops((stop.$value as GradientValue).stops));
+    const nested = stop.$value as GradientValue;
+    if (visited.has(nested)) {
+      throw new Error("Circular gradient alias detected.");
+    }
+    visited.add(nested);
+    result.push(...flattenGradientStops(nested.stops, visited));
   }
   return result;
 }
@@ -276,8 +282,8 @@ export function setNested(target: Record<string, unknown>, path: string[], value
   let current = target;
   for (let i = 0; i < path.length - 1; i++) {
     const segment = path[i]!;
-    if (!(segment in current)) {
-      current[segment] = {};
+    if (!Object.hasOwn(current, segment)) {
+      current[segment] = Object.create(null) as Record<string, unknown>;
     }
     current = current[segment] as Record<string, unknown>;
   }

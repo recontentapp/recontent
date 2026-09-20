@@ -21,12 +21,22 @@ function isSourceValue(value: SourceTree | SourceValue): value is SourceValue {
   return typeof (value as SourceValue).value === "string";
 }
 
+function escapeLineTerminators(value: string): string {
+  return value
+    .replace(/\r/g, "\\r")
+    .replace(/\n/g, "\\n")
+    .replace(/\u2028/g, "\\u2028")
+    .replace(/\u2029/g, "\\u2029");
+}
+
 export function escapeString(value: string): string {
-  return value.replace(/\\/g, "\\\\").replace(/'/g, "\\'");
+  return escapeLineTerminators(value.replace(/\\/g, "\\\\").replace(/'/g, "\\'"));
 }
 
 export function escapeTemplateLiteral(value: string): string {
-  return value.replace(/\\/g, "\\\\").replace(/`/g, "\\`").replace(/\$\{/g, "\\${");
+  return escapeLineTerminators(
+    value.replace(/\\/g, "\\\\").replace(/`/g, "\\`").replace(/\$\{/g, "\\${"),
+  );
 }
 
 export function isNumericKey(key: string): boolean {
@@ -95,7 +105,7 @@ export function setTreeValue(
   for (const segment of path.slice(0, -1)) {
     const child = current[segment];
     if (!child || "value" in child) {
-      current[segment] = {};
+      current[segment] = Object.create(null) as SourceTree;
     }
     current = current[segment] as SourceTree;
   }

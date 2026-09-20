@@ -42,6 +42,30 @@ test("a valid tree with hyphenated scale keys does not throw", () => {
   ).not.toThrow();
 });
 
+test('a token name "__proto__" throws instead of silently vanishing', () => {
+  // Bracket/computed-key syntax creates a real own property named "__proto__";
+  // `{ __proto__: ... }` literal syntax would instead set the object's prototype.
+  const ref: Record<string, unknown> = {};
+  Object.defineProperty(ref, "__proto__", {
+    value: { black: tokens.color("#000000") },
+    enumerable: true,
+    configurable: true,
+  });
+  expect(configWithRef(ref)).toThrow(/"__proto__" is a reserved name/);
+});
+
+test('a token name "constructor" throws', () => {
+  expect(configWithRef({ constructor: { black: tokens.color("#000000") } })).toThrow(
+    /"constructor" is a reserved name/,
+  );
+});
+
+test('a token name "prototype" throws', () => {
+  expect(configWithRef({ prototype: { black: tokens.color("#000000") } })).toThrow(
+    /"prototype" is a reserved name/,
+  );
+});
+
 test("defineConfig surfaces a case-only name collision diagnostic", () => {
   const ref = defineReferenceTokens({
     color: { Blue: tokens.color("#0000ff"), blue: tokens.color("#0000fe") },

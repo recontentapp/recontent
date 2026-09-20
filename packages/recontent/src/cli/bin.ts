@@ -117,7 +117,9 @@ program
 program
   .command("diff [rev]")
   .description(
-    "Compare tokens in recontent.config.ts against a previous git revision (default HEAD)",
+    "Compare tokens in recontent.config.ts against a previous git revision (default HEAD). " +
+      "The revision must be an ancestor of HEAD — diffing loads and executes its config, so an " +
+      "unmerged branch or third-party-writable ref is rejected; merge or rebase first.",
   )
   .option(CONFIG_OPTION_FLAGS, CONFIG_OPTION_DESC)
   .option("--fail-on-breaking", "Exit with code 1 when tokens are removed, renamed, or retyped")

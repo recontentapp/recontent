@@ -39,6 +39,7 @@ import type { BreakpointBinding } from "./registry/types.js";
 import { terminalEntry } from "../../outputs/shared/alias.js";
 import type { GeneratorContext } from "../../outputs/shared/context.js";
 import { generateCssResetSource } from "../../outputs/shared/reset.js";
+import { validateThemeNames } from "../../outputs/shared/theme-source.js";
 import type { ScaleBinding, TokenBinding } from "@recontentapp/core";
 import {
   entryPath,
@@ -324,6 +325,8 @@ function generateVanillaExtractSource(
   config: GeneratorContext,
   scaleExports: readonly ScaleExport[],
 ): string {
+  validateThemeNames(Object.keys(config.themes), "vanilla-extract");
+
   const lines = [
     'import { createTheme, createThemeContract } from "@vanilla-extract/css";',
     "",

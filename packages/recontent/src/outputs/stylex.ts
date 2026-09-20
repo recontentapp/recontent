@@ -35,6 +35,7 @@ import { terminalEntry } from "./shared/alias.js";
 import type { GeneratorContext } from "./shared/context.js";
 import { generateCssResetStylesheet } from "./shared/reset.js";
 import { buildKeyMap } from "./shared/stylex-keys.js";
+import { validateThemeNames } from "./shared/theme-source.js";
 import {
   escapeString,
   escapeTemplateLiteral,
@@ -114,22 +115,48 @@ function topologicalEntries(config: GeneratorContext): TokenEntry[] {
     return [];
   }
 
-  function visit(key: string): void {
-    if (visited.has(key)) return;
-    if (visiting.has(key)) {
-      throw new Error(`Circular alias detected at token path: ${key}`);
+  // Explicit stack rather than recursive `visit`, so alias chains far deeper
+  // than the JS call stack (or a cycle, until it's caught) don't overflow it.
+  type Frame = { key: string; entry: TokenEntry; deps: string[]; index: number };
+
+  function visit(startKey: string): void {
+    if (visited.has(startKey)) return;
+    const startEntry = registry.get(startKey);
+    if (!startEntry) {
+      throw new Error(`Alias target not found: ${startKey}`);
     }
-    const entry = registry.get(key);
-    if (!entry) {
-      throw new Error(`Alias target not found: ${key}`);
+    visiting.add(startKey);
+    const stack: Frame[] = [
+      { key: startKey, entry: startEntry, deps: dependencies(startEntry), index: 0 },
+    ];
+
+    while (stack.length > 0) {
+      const frame = stack[stack.length - 1]!;
+      if (frame.index < frame.deps.length) {
+        const dependency = frame.deps[frame.index]!;
+        frame.index++;
+        if (visited.has(dependency)) continue;
+        if (visiting.has(dependency)) {
+          throw new Error(`Circular alias detected at token path: ${dependency}`);
+        }
+        const dependencyEntry = registry.get(dependency);
+        if (!dependencyEntry) {
+          throw new Error(`Alias target not found: ${dependency}`);
+        }
+        visiting.add(dependency);
+        stack.push({
+          key: dependency,
+          entry: dependencyEntry,
+          deps: dependencies(dependencyEntry),
+          index: 0,
+        });
+      } else {
+        stack.pop();
+        visiting.delete(frame.key);
+        visited.add(frame.key);
+        order.push(frame.entry);
+      }
     }
-    visiting.add(key);
-    for (const dependency of dependencies(entry)) {
-      visit(dependency);
-    }
-    visiting.delete(key);
-    visited.add(key);
-    order.push(entry);
   }
 
   for (const key of registry.keys()) {
@@ -352,6 +379,7 @@ function generateThemesSource(config: GeneratorContext, keys: Map<string, string
   if (themeNames.length === 0) {
     return "export {};\n";
   }
+  validateThemeNames(themeNames, "stylex");
 
   const lines = [
     'import * as stylex from "@stylexjs/stylex";',

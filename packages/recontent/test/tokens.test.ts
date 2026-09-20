@@ -3,6 +3,22 @@ import type { ShadowLayer } from "@recontentapp/core";
 import { isTokenScale } from "@recontentapp/core";
 import { defineReferenceTokens, tokens } from "../src/index.js";
 
+test("tokens.color rejects a hex string with non-hex characters", () => {
+  expect(() => tokens.color("#zzzzzz")).toThrow(/Invalid hex color/);
+});
+
+test("tokens.color rejects a short hex string with non-hex characters", () => {
+  expect(() => tokens.color("#zzz")).toThrow(/Invalid hex color/);
+});
+
+test("tokens.fontFamily rejects a family containing a newline", () => {
+  expect(() => tokens.fontFamily("A\nB")).toThrow(/control characters/);
+});
+
+test("tokens.fontFamily rejects a family containing a carriage return", () => {
+  expect(() => tokens.fontFamily("A\rB")).toThrow(/control characters/);
+});
+
 test("tokens.strokeStyle accepts a keyword", () => {
   const token = tokens.strokeStyle("dashed");
   expect(token.$type).toBe("strokeStyle");

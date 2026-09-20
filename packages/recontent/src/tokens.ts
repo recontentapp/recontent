@@ -41,8 +41,20 @@ function createRawToken<T extends TokenType>(
   return withRawTokenMethods({ _kind: "raw", $type: type, $value: value });
 }
 
+const HEX_CHARS_RE = /^[0-9a-fA-F]+$/;
+
 function parseHex(hex: string): ColorValue {
   const normalized = hex.trim().replace(/^#/, "");
+
+  if (
+    (normalized.length === 3 ||
+      normalized.length === 4 ||
+      normalized.length === 6 ||
+      normalized.length === 8) &&
+    !HEX_CHARS_RE.test(normalized)
+  ) {
+    throw new Error(`Invalid hex color: ${hex}`);
+  }
 
   let r: number;
   let g: number;
@@ -127,6 +139,9 @@ function dimension(input: string): RawToken<"dimension"> & ChainableMethods<RawT
   });
 }
 
+// eslint-disable-next-line no-control-regex
+const CONTROL_CHAR_RE = /[\u0000-\u0008\u000A-\u001F\u007F\u2028\u2029]/;
+
 function fontFamily(
   input: string,
 ): RawToken<"fontFamily"> & ChainableMethods<RawToken<"fontFamily">> {
@@ -134,6 +149,12 @@ function fontFamily(
     .split(",")
     .map((f) => f.trim().replace(/^['"]|['"]$/g, ""))
     .filter(Boolean);
+
+  for (const family of families) {
+    if (CONTROL_CHAR_RE.test(family)) {
+      throw new Error(`Invalid fontFamily: ${JSON.stringify(input)} contains control characters.`);
+    }
+  }
 
   return createRawToken("fontFamily", { value: families });
 }

@@ -99,6 +99,32 @@ const JS_RESERVED_WORDS = new Set([
 ]);
 
 const IDENTIFIER_RE = /^[A-Za-z_$][\w$]*$/;
+export const CSS_IDENTIFIER_RE = /^[A-Za-z_][\w-]*$/;
+const THEME_ATTRIBUTE_RE = /^[A-Za-z][\w-]*$/;
+
+export function validateThemeNames(
+  themeNames: readonly string[],
+  target: string,
+  options?: { pattern?: RegExp; description?: string },
+): void {
+  const pattern = options?.pattern ?? IDENTIFIER_RE;
+  const description = options?.description ?? "theme names must be valid TypeScript identifiers";
+  for (const name of themeNames) {
+    if (!pattern.test(name)) {
+      throw new Error(
+        `Theme name "${name}" cannot be used with the "${target}" output target: ${description}.`,
+      );
+    }
+  }
+}
+
+export function validateThemeAttribute(themeAttribute: string, target: string): void {
+  if (!THEME_ATTRIBUTE_RE.test(themeAttribute)) {
+    throw new Error(
+      `themeAttribute "${themeAttribute}" cannot be used with the "${target}" output target: it must match ${THEME_ATTRIBUTE_RE}.`,
+    );
+  }
+}
 
 function capitalize(value: string): string {
   return value.charAt(0).toUpperCase() + value.slice(1);
@@ -118,14 +144,7 @@ function validateIdentifierGuards(
   scaleExports: readonly ScaleExport[],
 ): void {
   const themeNames = Object.keys(config.themes);
-
-  for (const name of themeNames) {
-    if (!IDENTIFIER_RE.test(name)) {
-      throw new Error(
-        `Theme name "${name}" cannot be used with the "${target}" output target: theme names must be valid TypeScript identifiers.`,
-      );
-    }
-  }
+  validateThemeNames(themeNames, target);
 
   const reserved = new Set<string>([
     "theme",

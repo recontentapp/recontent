@@ -265,7 +265,7 @@ describe("themes", () => {
     expect(lightIndex).toBeGreaterThan(darkIndex);
   });
 
-  test("a theme whose overrides match nothing emits no block", () => {
+  test("a theme override referencing a token path outside the registry throws", () => {
     const ref = defineReferenceTokens({ color: { black: tokens.color("#000000") } });
     const otherRef = defineReferenceTokens({ color: { special: tokens.color("#000000") } });
     const empty = defineTheme(otherRef, { color: { special: tokens.color("#111111") } });
@@ -273,8 +273,7 @@ describe("themes", () => {
       tokens: { ref, system: defineSystemTokens({}), components: {} },
       themes: { empty },
     });
-    const css = generateCss(config);
-    expect(css).not.toMatch(/\[data-theme="empty"\]/);
+    expect(() => generateCss(config)).toThrow(/Theme override references an unknown token path/);
   });
 });
 

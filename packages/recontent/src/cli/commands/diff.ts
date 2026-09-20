@@ -4,7 +4,12 @@ import path from "node:path";
 import { loadConfig, type LogLevel } from "@recontentapp/core";
 import { diffConfigs, formatDiff, hasBreakingChanges } from "../diff/diff.js";
 import { createLogger } from "../../logger.js";
-import { archiveRevision, assertRevision, resolveGitRoot } from "../utils/git.js";
+import {
+  archiveRevision,
+  assertAncestorOfHead,
+  assertRevision,
+  resolveGitRoot,
+} from "../utils/git.js";
 
 export type DiffOptions = {
   cwd: string;
@@ -26,6 +31,7 @@ export async function runDiff(options: DiffOptions): Promise<void> {
   }
 
   assertRevision(gitRoot, rev);
+  assertAncestorOfHead(gitRoot, rev);
 
   const headConfig = await loadConfig(configPath);
   const logger = createLogger(options.logLevel ?? headConfig.logLevel);

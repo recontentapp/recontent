@@ -57,3 +57,11 @@ The step's exit code is the whole contract: `0` means no breaking change,
 `1` means a token was removed, renamed, or retyped since the base revision,
 and `2` means the invocation itself was wrong (e.g. an unknown flag) rather
 than a finding about your tokens.
+
+`diff` loads and executes the compared revision's `recontent.config.ts`, so
+it only accepts revisions that are already an ancestor of `HEAD` — comparing
+against an unmerged branch or any other third-party-writable ref is
+intentionally unsupported. Merge or rebase first. On a shallow checkout
+(`actions/checkout`'s default `fetch-depth: 1`), fetch enough history for the
+ancestry check to run, e.g. `git fetch --unshallow` or a deeper
+`fetch-depth`.

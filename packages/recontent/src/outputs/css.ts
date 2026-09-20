@@ -1,14 +1,19 @@
 import {
   expandedMembers,
   isExpandedComposite,
-  pathKey,
   type OutputFile,
   type TokenEntry,
+  type TokenLayer,
   type TokenRegistry,
   type TokenTypeMap,
 } from "@recontentapp/core";
 import { cssVarName, serializeValueCss } from "../serialize/values.js";
 import type { GeneratorContext } from "./shared/context.js";
+import {
+  CSS_IDENTIFIER_RE,
+  validateThemeAttribute,
+  validateThemeNames,
+} from "./shared/theme-source.js";
 
 export type CssGeneratorOptions = {
   themeAttribute?: string;
@@ -70,22 +75,26 @@ function formatRule(
   return `${selector} {\n${lines.join("\n")}\n}`;
 }
 
-function collectLayerDeclarations(
+type LayerDeclarations = { declarations: Record<string, string>; comments: Record<string, string> };
+
+function collectAllLayerDeclarations(
   registry: TokenRegistry,
-  layer: "ref" | "system" | "components",
-): { declarations: Record<string, string>; comments: Record<string, string> } {
-  const declarations: Record<string, string> = {};
-  const comments: Record<string, string> = {};
+): Record<TokenLayer, LayerDeclarations> {
+  const byLayer: Record<TokenLayer, LayerDeclarations> = {
+    ref: { declarations: {}, comments: {} },
+    system: { declarations: {}, comments: {} },
+    components: { declarations: {}, comments: {} },
+  };
 
   for (const entry of registry.values()) {
-    if (entry.layer !== layer) continue;
-    Object.assign(declarations, entryDeclarations(entry));
+    const bucket = byLayer[entry.layer];
+    Object.assign(bucket.declarations, entryDeclarations(entry));
     if (entry.$description) {
-      comments[cssVarName(entry.path)] = entry.$description;
+      bucket.comments[cssVarName(entry.path)] = entry.$description;
     }
   }
 
-  return { declarations, comments };
+  return byLayer;
 }
 
 function themeOverrideDeclarations(
@@ -116,16 +125,28 @@ export function generateCss(config: GeneratorContext, options: CssGeneratorOptio
   const { registry, themes } = config;
   const blocks: string[] = [];
 
-  const lightRef = collectLayerDeclarations(registry, "ref");
-  if (Object.keys(lightRef.declarations).length > 0) {
-    blocks.push(formatRule(":root", lightRef.declarations, lightRef.comments));
+  validateThemeNames(Object.keys(themes), "css", {
+    pattern: CSS_IDENTIFIER_RE,
+    description:
+      "theme names must contain only letters, digits, underscores, and hyphens, and cannot start with a digit or hyphen",
+  });
+  if (options.themeAttribute !== undefined) {
+    validateThemeAttribute(options.themeAttribute, "css");
+  }
+
+  const byLayer = collectAllLayerDeclarations(registry);
+
+  if (Object.keys(byLayer.ref.declarations).length > 0) {
+    blocks.push(formatRule(":root", byLayer.ref.declarations, byLayer.ref.comments));
   }
 
   for (const [themeName, override] of Object.entries(themes)) {
     const themeDeclarations: Record<string, string> = {};
-    for (const entry of registry.values()) {
-      const overridden = override.get(pathKey(entry.path));
-      if (overridden === undefined) continue;
+    for (const [key, overridden] of override.entries()) {
+      const entry = registry.get(key);
+      if (!entry) {
+        throw new Error(`Theme override references an unknown token path: ${key}`);
+      }
       Object.assign(
         themeDeclarations,
         themeOverrideDeclarations(entry, overridden as TokenTypeMap[typeof entry.$type]),
@@ -136,14 +157,12 @@ export function generateCss(config: GeneratorContext, options: CssGeneratorOptio
     }
   }
 
-  const system = collectLayerDeclarations(registry, "system");
-  if (Object.keys(system.declarations).length > 0) {
-    blocks.push(formatRule(":root", system.declarations, system.comments));
+  if (Object.keys(byLayer.system.declarations).length > 0) {
+    blocks.push(formatRule(":root", byLayer.system.declarations, byLayer.system.comments));
   }
 
-  const components = collectLayerDeclarations(registry, "components");
-  if (Object.keys(components.declarations).length > 0) {
-    blocks.push(formatRule(":root", components.declarations, components.comments));
+  if (Object.keys(byLayer.components.declarations).length > 0) {
+    blocks.push(formatRule(":root", byLayer.components.declarations, byLayer.components.comments));
   }
 
   return blocks.join("\n\n");
