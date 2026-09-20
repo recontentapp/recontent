@@ -1,0 +1,1752 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`golden snapshots css 1`] = `
+":root {
+  --ref-color-black: #000000;
+  --ref-color-white: #ffffff;
+  --ref-fontFamily-body: Arial;
+  --ref-weight-brand: 500;
+  --ref-motion-duration: 200ms;
+  --ref-motion-easing: cubic-bezier(0.4, 0, 0.2, 1);
+  --ref-spacing-0: 0px;
+  --ref-spacing-1: 4px;
+  --ref-spacing-2: 8px;
+  --ref-palette-100: #111111;
+  --ref-palette-200: #222222;
+}
+
+[data-theme="dark"] {
+  --ref-color-black: #eeeeee;
+}
+
+[data-theme="highContrast"] {
+  --system-colors-accent: #ff0000;
+}
+
+:root {
+  /* Primary accent color. */
+  --system-colors-accent: var(--ref-color-black);
+  --system-colors-surface: var(--ref-color-white);
+  --system-shadow-elevated: inset 0px 2px 4px 0px var(--ref-color-black), 0px 1px 2px 0px #111111;
+  --system-border-default: 1px solid var(--ref-color-black);
+  --system-transition-standard-transition-duration: var(--ref-motion-duration);
+  --system-transition-standard-transition-delay: 0ms;
+  --system-transition-standard-transition-timing-function: var(--ref-motion-easing);
+  --system-gradient-accent: linear-gradient(90deg, var(--ref-color-black) 0%, var(--ref-color-white) 100%);
+  --system-typography-body-font-family: var(--ref-fontFamily-body);
+  --system-typography-body-font-size: 16px;
+  --system-typography-body-font-weight: 400;
+  --system-typography-body-letter-spacing: 0px;
+  --system-typography-body-line-height: 1.4;
+}
+
+:root {
+  /* Primary accent color. */
+  --button-background: var(--system-colors-accent);
+  --button-border: var(--system-border-default);
+}"
+`;
+
+exports[`golden snapshots dtcg (base) 1`] = `
+{
+  "button": {
+    "background": {
+      "$deprecated": "Use system.colors.surface instead.",
+      "$description": "Primary accent color.",
+      "$type": "color",
+      "$value": "{system.colors.accent}",
+    },
+    "border": {
+      "$type": "border",
+      "$value": "{system.border.default}",
+    },
+  },
+  "ref": {
+    "color": {
+      "$type": "color",
+      "black": {
+        "$value": {
+          "alpha": 1,
+          "colorSpace": "srgb",
+          "components": [
+            0,
+            0,
+            0,
+          ],
+          "hex": "#000000",
+        },
+      },
+      "white": {
+        "$value": {
+          "alpha": 1,
+          "colorSpace": "srgb",
+          "components": [
+            1,
+            1,
+            1,
+          ],
+          "hex": "#ffffff",
+        },
+      },
+    },
+    "fontFamily": {
+      "body": {
+        "$type": "fontFamily",
+        "$value": [
+          "Arial",
+        ],
+      },
+    },
+    "motion": {
+      "duration": {
+        "$type": "duration",
+        "$value": {
+          "unit": "ms",
+          "value": 200,
+        },
+      },
+      "easing": {
+        "$type": "cubicBezier",
+        "$value": [
+          0.4,
+          0,
+          0.2,
+          1,
+        ],
+      },
+    },
+    "palette": {
+      "$type": "color",
+      "100": {
+        "$value": {
+          "alpha": 1,
+          "colorSpace": "srgb",
+          "components": [
+            0.06666666666666667,
+            0.06666666666666667,
+            0.06666666666666667,
+          ],
+          "hex": "#111111",
+        },
+      },
+      "200": {
+        "$value": {
+          "alpha": 1,
+          "colorSpace": "srgb",
+          "components": [
+            0.13333333333333333,
+            0.13333333333333333,
+            0.13333333333333333,
+          ],
+          "hex": "#222222",
+        },
+      },
+    },
+    "spacing": {
+      "$type": "dimension",
+      "0": {
+        "$value": {
+          "unit": "px",
+          "value": 0,
+        },
+      },
+      "1": {
+        "$value": {
+          "unit": "px",
+          "value": 4,
+        },
+      },
+      "2": {
+        "$value": {
+          "unit": "px",
+          "value": 8,
+        },
+      },
+    },
+    "weight": {
+      "brand": {
+        "$type": "fontWeight",
+        "$value": 500,
+      },
+    },
+  },
+  "system": {
+    "border": {
+      "default": {
+        "$type": "border",
+        "$value": {
+          "color": "{ref.color.black}",
+          "style": "solid",
+          "width": {
+            "unit": "px",
+            "value": 1,
+          },
+        },
+      },
+    },
+    "colors": {
+      "$type": "color",
+      "accent": {
+        "$description": "Primary accent color.",
+        "$value": "{ref.color.black}",
+      },
+      "surface": {
+        "$value": "{ref.color.white}",
+      },
+    },
+    "gradient": {
+      "accent": {
+        "$extensions": {
+          "com.recontent": {
+            "angle": "90deg",
+            "kind": "linear",
+          },
+        },
+        "$type": "gradient",
+        "$value": [
+          {
+            "color": "{ref.color.black}",
+            "position": 0,
+          },
+          {
+            "color": "{ref.color.white}",
+            "position": 1,
+          },
+        ],
+      },
+    },
+    "shadow": {
+      "elevated": {
+        "$type": "shadow",
+        "$value": [
+          {
+            "blur": {
+              "unit": "px",
+              "value": 4,
+            },
+            "color": "{ref.color.black}",
+            "inset": true,
+            "offsetX": {
+              "unit": "px",
+              "value": 0,
+            },
+            "offsetY": {
+              "unit": "px",
+              "value": 2,
+            },
+            "spread": {
+              "unit": "px",
+              "value": 0,
+            },
+          },
+          {
+            "blur": {
+              "unit": "px",
+              "value": 2,
+            },
+            "color": {
+              "alpha": 1,
+              "colorSpace": "srgb",
+              "components": [
+                0.06666666666666667,
+                0.06666666666666667,
+                0.06666666666666667,
+              ],
+              "hex": "#111111",
+            },
+            "offsetX": {
+              "unit": "px",
+              "value": 0,
+            },
+            "offsetY": {
+              "unit": "px",
+              "value": 1,
+            },
+            "spread": {
+              "unit": "px",
+              "value": 0,
+            },
+          },
+        ],
+      },
+    },
+    "transition": {
+      "standard": {
+        "$type": "transition",
+        "$value": {
+          "delay": {
+            "unit": "ms",
+            "value": 0,
+          },
+          "duration": "{ref.motion.duration}",
+          "timingFunction": "{ref.motion.easing}",
+        },
+      },
+    },
+    "typography": {
+      "body": {
+        "$type": "typography",
+        "$value": {
+          "fontFamily": "{ref.fontFamily.body}",
+          "fontSize": {
+            "unit": "px",
+            "value": 16,
+          },
+          "fontWeight": 400,
+          "letterSpacing": {
+            "unit": "px",
+            "value": 0,
+          },
+          "lineHeight": 1.4,
+        },
+      },
+    },
+  },
+}
+`;
+
+exports[`golden snapshots dtcg (themed: dark) 1`] = `
+{
+  "button": {
+    "background": {
+      "$deprecated": "Use system.colors.surface instead.",
+      "$description": "Primary accent color.",
+      "$type": "color",
+      "$value": "{system.colors.accent}",
+    },
+    "border": {
+      "$type": "border",
+      "$value": "{system.border.default}",
+    },
+  },
+  "ref": {
+    "color": {
+      "$type": "color",
+      "black": {
+        "$value": {
+          "alpha": 1,
+          "colorSpace": "srgb",
+          "components": [
+            0.9333333333333333,
+            0.9333333333333333,
+            0.9333333333333333,
+          ],
+          "hex": "#eeeeee",
+        },
+      },
+      "white": {
+        "$value": {
+          "alpha": 1,
+          "colorSpace": "srgb",
+          "components": [
+            1,
+            1,
+            1,
+          ],
+          "hex": "#ffffff",
+        },
+      },
+    },
+    "fontFamily": {
+      "body": {
+        "$type": "fontFamily",
+        "$value": [
+          "Arial",
+        ],
+      },
+    },
+    "motion": {
+      "duration": {
+        "$type": "duration",
+        "$value": {
+          "unit": "ms",
+          "value": 200,
+        },
+      },
+      "easing": {
+        "$type": "cubicBezier",
+        "$value": [
+          0.4,
+          0,
+          0.2,
+          1,
+        ],
+      },
+    },
+    "palette": {
+      "$type": "color",
+      "100": {
+        "$value": {
+          "alpha": 1,
+          "colorSpace": "srgb",
+          "components": [
+            0.06666666666666667,
+            0.06666666666666667,
+            0.06666666666666667,
+          ],
+          "hex": "#111111",
+        },
+      },
+      "200": {
+        "$value": {
+          "alpha": 1,
+          "colorSpace": "srgb",
+          "components": [
+            0.13333333333333333,
+            0.13333333333333333,
+            0.13333333333333333,
+          ],
+          "hex": "#222222",
+        },
+      },
+    },
+    "spacing": {
+      "$type": "dimension",
+      "0": {
+        "$value": {
+          "unit": "px",
+          "value": 0,
+        },
+      },
+      "1": {
+        "$value": {
+          "unit": "px",
+          "value": 4,
+        },
+      },
+      "2": {
+        "$value": {
+          "unit": "px",
+          "value": 8,
+        },
+      },
+    },
+    "weight": {
+      "brand": {
+        "$type": "fontWeight",
+        "$value": 500,
+      },
+    },
+  },
+  "system": {
+    "border": {
+      "default": {
+        "$type": "border",
+        "$value": {
+          "color": "{ref.color.black}",
+          "style": "solid",
+          "width": {
+            "unit": "px",
+            "value": 1,
+          },
+        },
+      },
+    },
+    "colors": {
+      "$type": "color",
+      "accent": {
+        "$description": "Primary accent color.",
+        "$value": "{ref.color.black}",
+      },
+      "surface": {
+        "$value": "{ref.color.white}",
+      },
+    },
+    "gradient": {
+      "accent": {
+        "$extensions": {
+          "com.recontent": {
+            "angle": "90deg",
+            "kind": "linear",
+          },
+        },
+        "$type": "gradient",
+        "$value": [
+          {
+            "color": "{ref.color.black}",
+            "position": 0,
+          },
+          {
+            "color": "{ref.color.white}",
+            "position": 1,
+          },
+        ],
+      },
+    },
+    "shadow": {
+      "elevated": {
+        "$type": "shadow",
+        "$value": [
+          {
+            "blur": {
+              "unit": "px",
+              "value": 4,
+            },
+            "color": "{ref.color.black}",
+            "inset": true,
+            "offsetX": {
+              "unit": "px",
+              "value": 0,
+            },
+            "offsetY": {
+              "unit": "px",
+              "value": 2,
+            },
+            "spread": {
+              "unit": "px",
+              "value": 0,
+            },
+          },
+          {
+            "blur": {
+              "unit": "px",
+              "value": 2,
+            },
+            "color": {
+              "alpha": 1,
+              "colorSpace": "srgb",
+              "components": [
+                0.06666666666666667,
+                0.06666666666666667,
+                0.06666666666666667,
+              ],
+              "hex": "#111111",
+            },
+            "offsetX": {
+              "unit": "px",
+              "value": 0,
+            },
+            "offsetY": {
+              "unit": "px",
+              "value": 1,
+            },
+            "spread": {
+              "unit": "px",
+              "value": 0,
+            },
+          },
+        ],
+      },
+    },
+    "transition": {
+      "standard": {
+        "$type": "transition",
+        "$value": {
+          "delay": {
+            "unit": "ms",
+            "value": 0,
+          },
+          "duration": "{ref.motion.duration}",
+          "timingFunction": "{ref.motion.easing}",
+        },
+      },
+    },
+    "typography": {
+      "body": {
+        "$type": "typography",
+        "$value": {
+          "fontFamily": "{ref.fontFamily.body}",
+          "fontSize": {
+            "unit": "px",
+            "value": 16,
+          },
+          "fontWeight": 400,
+          "letterSpacing": {
+            "unit": "px",
+            "value": 0,
+          },
+          "lineHeight": 1.4,
+        },
+      },
+    },
+  },
+}
+`;
+
+exports[`golden snapshots dtcg (themed: highContrast) 1`] = `
+{
+  "button": {
+    "background": {
+      "$deprecated": "Use system.colors.surface instead.",
+      "$description": "Primary accent color.",
+      "$type": "color",
+      "$value": "{system.colors.accent}",
+    },
+    "border": {
+      "$type": "border",
+      "$value": "{system.border.default}",
+    },
+  },
+  "ref": {
+    "color": {
+      "$type": "color",
+      "black": {
+        "$value": {
+          "alpha": 1,
+          "colorSpace": "srgb",
+          "components": [
+            0,
+            0,
+            0,
+          ],
+          "hex": "#000000",
+        },
+      },
+      "white": {
+        "$value": {
+          "alpha": 1,
+          "colorSpace": "srgb",
+          "components": [
+            1,
+            1,
+            1,
+          ],
+          "hex": "#ffffff",
+        },
+      },
+    },
+    "fontFamily": {
+      "body": {
+        "$type": "fontFamily",
+        "$value": [
+          "Arial",
+        ],
+      },
+    },
+    "motion": {
+      "duration": {
+        "$type": "duration",
+        "$value": {
+          "unit": "ms",
+          "value": 200,
+        },
+      },
+      "easing": {
+        "$type": "cubicBezier",
+        "$value": [
+          0.4,
+          0,
+          0.2,
+          1,
+        ],
+      },
+    },
+    "palette": {
+      "$type": "color",
+      "100": {
+        "$value": {
+          "alpha": 1,
+          "colorSpace": "srgb",
+          "components": [
+            0.06666666666666667,
+            0.06666666666666667,
+            0.06666666666666667,
+          ],
+          "hex": "#111111",
+        },
+      },
+      "200": {
+        "$value": {
+          "alpha": 1,
+          "colorSpace": "srgb",
+          "components": [
+            0.13333333333333333,
+            0.13333333333333333,
+            0.13333333333333333,
+          ],
+          "hex": "#222222",
+        },
+      },
+    },
+    "spacing": {
+      "$type": "dimension",
+      "0": {
+        "$value": {
+          "unit": "px",
+          "value": 0,
+        },
+      },
+      "1": {
+        "$value": {
+          "unit": "px",
+          "value": 4,
+        },
+      },
+      "2": {
+        "$value": {
+          "unit": "px",
+          "value": 8,
+        },
+      },
+    },
+    "weight": {
+      "brand": {
+        "$type": "fontWeight",
+        "$value": 500,
+      },
+    },
+  },
+  "system": {
+    "border": {
+      "default": {
+        "$type": "border",
+        "$value": {
+          "color": "{ref.color.black}",
+          "style": "solid",
+          "width": {
+            "unit": "px",
+            "value": 1,
+          },
+        },
+      },
+    },
+    "colors": {
+      "$type": "color",
+      "accent": {
+        "$description": "Primary accent color.",
+        "$value": {
+          "alpha": 1,
+          "colorSpace": "srgb",
+          "components": [
+            1,
+            0,
+            0,
+          ],
+          "hex": "#ff0000",
+        },
+      },
+      "surface": {
+        "$value": "{ref.color.white}",
+      },
+    },
+    "gradient": {
+      "accent": {
+        "$extensions": {
+          "com.recontent": {
+            "angle": "90deg",
+            "kind": "linear",
+          },
+        },
+        "$type": "gradient",
+        "$value": [
+          {
+            "color": "{ref.color.black}",
+            "position": 0,
+          },
+          {
+            "color": "{ref.color.white}",
+            "position": 1,
+          },
+        ],
+      },
+    },
+    "shadow": {
+      "elevated": {
+        "$type": "shadow",
+        "$value": [
+          {
+            "blur": {
+              "unit": "px",
+              "value": 4,
+            },
+            "color": "{ref.color.black}",
+            "inset": true,
+            "offsetX": {
+              "unit": "px",
+              "value": 0,
+            },
+            "offsetY": {
+              "unit": "px",
+              "value": 2,
+            },
+            "spread": {
+              "unit": "px",
+              "value": 0,
+            },
+          },
+          {
+            "blur": {
+              "unit": "px",
+              "value": 2,
+            },
+            "color": {
+              "alpha": 1,
+              "colorSpace": "srgb",
+              "components": [
+                0.06666666666666667,
+                0.06666666666666667,
+                0.06666666666666667,
+              ],
+              "hex": "#111111",
+            },
+            "offsetX": {
+              "unit": "px",
+              "value": 0,
+            },
+            "offsetY": {
+              "unit": "px",
+              "value": 1,
+            },
+            "spread": {
+              "unit": "px",
+              "value": 0,
+            },
+          },
+        ],
+      },
+    },
+    "transition": {
+      "standard": {
+        "$type": "transition",
+        "$value": {
+          "delay": {
+            "unit": "ms",
+            "value": 0,
+          },
+          "duration": "{ref.motion.duration}",
+          "timingFunction": "{ref.motion.easing}",
+        },
+      },
+    },
+    "typography": {
+      "body": {
+        "$type": "typography",
+        "$value": {
+          "fontFamily": "{ref.fontFamily.body}",
+          "fontSize": {
+            "unit": "px",
+            "value": 16,
+          },
+          "fontWeight": 400,
+          "letterSpacing": {
+            "unit": "px",
+            "value": 0,
+          },
+          "lineHeight": 1.4,
+        },
+      },
+    },
+  },
+}
+`;
+
+exports[`golden snapshots stylex 1`] = `
+"// ---- tokens.stylex.ts ----
+// @ts-nocheck
+import * as stylex from "@stylexjs/stylex";
+
+export const vars = stylex.defineVars({
+  refColorBlack: '#000000',
+  refColorWhite: '#ffffff',
+  refFontFamilyBody: 'Arial',
+  refWeightBrand: '500',
+  refMotionDuration: '200ms',
+  refMotionEasing: 'cubic-bezier(0.4, 0, 0.2, 1)',
+  refSpacing0: '0px',
+  refSpacing1: '4px',
+  refSpacing2: '8px',
+  refPalette100: '#111111',
+  refPalette200: '#222222',
+  systemColorsAccent: () => \`\${vars.refColorBlack}\`,
+  systemColorsSurface: () => \`\${vars.refColorWhite}\`,
+  systemShadowElevated: () => \`inset 0px 2px 4px 0px \${vars.refColorBlack}, 0px 1px 2px 0px #111111\`,
+  systemBorderDefault: () => \`1px solid \${vars.refColorBlack}\`,
+  systemTransitionStandardTransitionDuration: () => \`\${vars.refMotionDuration}\`,
+  systemTransitionStandardTransitionDelay: '0ms',
+  systemTransitionStandardTransitionTimingFunction: () => \`\${vars.refMotionEasing}\`,
+  systemGradientAccent: () => \`linear-gradient(90deg, \${vars.refColorBlack} 0%, \${vars.refColorWhite} 100%)\`,
+  systemTypographyBodyFontFamily: () => \`\${vars.refFontFamilyBody}\`,
+  systemTypographyBodyFontSize: '16px',
+  systemTypographyBodyFontWeight: '400',
+  systemTypographyBodyLetterSpacing: '0px',
+  systemTypographyBodyLineHeight: '1.4',
+  componentsButtonBackground: () => \`\${vars.refColorBlack}\`,
+  componentsButtonBorder: () => \`\${vars.systemBorderDefault}\`,
+});
+
+
+// ---- reset.gen.css ----
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+*:not(dialog) {
+  margin: 0;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+html {
+  interpolate-size: allow-keywords;
+}
+}
+
+body {
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  font-family: Arial;
+}
+
+img, picture, video, canvas, svg {
+  display: block;
+  max-width: 100%;
+}
+
+input, button, textarea, select {
+  font: inherit;
+}
+
+p, h1, h2, h3, h4, h5, h6 {
+  overflow-wrap: break-word;
+}
+
+p {
+  text-wrap: pretty;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  text-wrap: balance;
+}
+
+::placeholder {
+  color: #000000;
+}
+
+
+// ---- themes.ts ----
+import * as stylex from "@stylexjs/stylex";
+import { vars } from "./tokens.stylex.js";
+
+export const darkTheme = stylex.createTheme(vars, {
+  refColorBlack: '#eeeeee',
+});
+
+export const highContrastTheme = stylex.createTheme(vars, {
+  systemColorsAccent: '#ff0000',
+});
+
+
+// ---- scales.ts ----
+import { vars } from "./tokens.stylex.js";
+
+export type RefSpacing = 0 | 1 | 2;
+
+export const refSpacing = {
+  0: vars.refSpacing0,
+  1: vars.refSpacing1,
+  2: vars.refSpacing2,
+} as const;
+
+export type RefPalette = 100 | 200;
+
+export const refPalette = {
+  100: vars.refPalette100,
+  200: vars.refPalette200,
+} as const;
+"
+`;
+
+exports[`golden snapshots typescript 1`] = `
+"// ---- tokens.ts ----
+const themeRef = {
+  "color": {
+    "black": '#000000',
+    "white": '#ffffff',
+  },
+  "fontFamily": {
+    "body": 'Arial',
+  },
+  "weight": {
+    "brand": 500,
+  },
+  "motion": {
+    "duration": '200ms',
+    "easing": 'cubic-bezier(0.4, 0, 0.2, 1)',
+  },
+  "spacing": {
+    "0": '0px',
+    "1": '4px',
+    "2": '8px',
+  },
+  "palette": {
+    "100": '#111111',
+    "200": '#222222',
+  },
+} as const;
+
+const themeSystem = {
+  "colors": {
+    "accent": themeRef.color.black,
+    "surface": themeRef.color.white,
+  },
+  "shadow": {
+    "elevated": \`inset 0px 2px 4px 0px \${themeRef.color.black}, 0px 1px 2px 0px #111111\`,
+  },
+  "border": {
+    "default": \`1px solid \${themeRef.color.black}\`,
+  },
+  "transition": {
+    "standard": {
+      "transitionDuration": themeRef.motion.duration,
+      "transitionDelay": '0ms',
+      "transitionTimingFunction": themeRef.motion.easing,
+    },
+  },
+  "gradient": {
+    "accent": \`linear-gradient(90deg, \${themeRef.color.black} 0%, \${themeRef.color.white} 100%)\`,
+  },
+  "typography": {
+    "body": {
+      "fontFamily": themeRef.fontFamily.body,
+      "fontSize": '16px',
+      "fontWeight": 400,
+      "letterSpacing": '0px',
+      "lineHeight": 1.4,
+    },
+  },
+} as const;
+
+const themeComponents = {
+  "button": {
+    "background": themeRef.color.black,
+    "border": themeSystem.border.default,
+  },
+} as const;
+
+export const theme = { ref: themeRef, system: themeSystem, components: themeComponents };
+
+const darkRef = {
+  "color": {
+    "black": '#eeeeee',
+    "white": '#ffffff',
+  },
+  "fontFamily": {
+    "body": 'Arial',
+  },
+  "weight": {
+    "brand": 500,
+  },
+  "motion": {
+    "duration": '200ms',
+    "easing": 'cubic-bezier(0.4, 0, 0.2, 1)',
+  },
+  "spacing": {
+    "0": '0px',
+    "1": '4px',
+    "2": '8px',
+  },
+  "palette": {
+    "100": '#111111',
+    "200": '#222222',
+  },
+} as const;
+
+const darkSystem = {
+  "colors": {
+    "accent": darkRef.color.black,
+    "surface": darkRef.color.white,
+  },
+  "shadow": {
+    "elevated": \`inset 0px 2px 4px 0px \${darkRef.color.black}, 0px 1px 2px 0px #111111\`,
+  },
+  "border": {
+    "default": \`1px solid \${darkRef.color.black}\`,
+  },
+  "transition": {
+    "standard": {
+      "transitionDuration": darkRef.motion.duration,
+      "transitionDelay": '0ms',
+      "transitionTimingFunction": darkRef.motion.easing,
+    },
+  },
+  "gradient": {
+    "accent": \`linear-gradient(90deg, \${darkRef.color.black} 0%, \${darkRef.color.white} 100%)\`,
+  },
+  "typography": {
+    "body": {
+      "fontFamily": darkRef.fontFamily.body,
+      "fontSize": '16px',
+      "fontWeight": 400,
+      "letterSpacing": '0px',
+      "lineHeight": 1.4,
+    },
+  },
+} as const;
+
+const darkComponents = {
+  "button": {
+    "background": darkRef.color.black,
+    "border": darkSystem.border.default,
+  },
+} as const;
+
+export const dark = { ref: darkRef, system: darkSystem, components: darkComponents };
+
+const highContrastRef = {
+  "color": {
+    "black": '#000000',
+    "white": '#ffffff',
+  },
+  "fontFamily": {
+    "body": 'Arial',
+  },
+  "weight": {
+    "brand": 500,
+  },
+  "motion": {
+    "duration": '200ms',
+    "easing": 'cubic-bezier(0.4, 0, 0.2, 1)',
+  },
+  "spacing": {
+    "0": '0px',
+    "1": '4px',
+    "2": '8px',
+  },
+  "palette": {
+    "100": '#111111',
+    "200": '#222222',
+  },
+} as const;
+
+const highContrastSystem = {
+  "colors": {
+    "accent": '#ff0000',
+    "surface": highContrastRef.color.white,
+  },
+  "shadow": {
+    "elevated": \`inset 0px 2px 4px 0px \${highContrastRef.color.black}, 0px 1px 2px 0px #111111\`,
+  },
+  "border": {
+    "default": \`1px solid \${highContrastRef.color.black}\`,
+  },
+  "transition": {
+    "standard": {
+      "transitionDuration": highContrastRef.motion.duration,
+      "transitionDelay": '0ms',
+      "transitionTimingFunction": highContrastRef.motion.easing,
+    },
+  },
+  "gradient": {
+    "accent": \`linear-gradient(90deg, \${highContrastRef.color.black} 0%, \${highContrastRef.color.white} 100%)\`,
+  },
+  "typography": {
+    "body": {
+      "fontFamily": highContrastRef.fontFamily.body,
+      "fontSize": '16px',
+      "fontWeight": 400,
+      "letterSpacing": '0px',
+      "lineHeight": 1.4,
+    },
+  },
+} as const;
+
+const highContrastComponents = {
+  "button": {
+    "background": highContrastSystem.colors.accent,
+    "border": highContrastSystem.border.default,
+  },
+} as const;
+
+export const highContrast = { ref: highContrastRef, system: highContrastSystem, components: highContrastComponents };
+
+export type RefSpacing = 0 | 1 | 2;
+
+export const refSpacing = theme.ref.spacing;
+
+export type RefPalette = 100 | 200;
+
+export const refPalette = theme.ref.palette;
+
+export const themes = { theme, dark, highContrast } as const;
+export type ThemeName = keyof typeof themes;
+export type Theme = (typeof themes)[ThemeName];
+export type BaseTheme = typeof theme;
+"
+`;
+
+exports[`golden snapshots typescript-native 1`] = `
+"// ---- tokens.ts ----
+const themeRef = {
+  "color": {
+    "black": '#000000',
+    "white": '#ffffff',
+  },
+  "fontFamily": {
+    "body": 'Arial',
+  },
+  "weight": {
+    "brand": '500',
+  },
+  "motion": {
+    "duration": 200,
+    "easing": [0.4, 0, 0.2, 1],
+  },
+  "spacing": {
+    "0": 0,
+    "1": 4,
+    "2": 8,
+  },
+  "palette": {
+    "100": '#111111',
+    "200": '#222222',
+  },
+} as const;
+
+const themeSystem = {
+  "colors": {
+    "accent": themeRef.color.black,
+    "surface": themeRef.color.white,
+  },
+  "shadow": {
+    "elevated": {
+      "shadowColor": '#000000',
+      "shadowOffset": {
+        "width": 0,
+        "height": 2,
+      },
+      "shadowRadius": 4,
+      "shadowOpacity": 1,
+    },
+  },
+  "border": {
+    "default": {
+      "borderColor": themeRef.color.black,
+      "borderWidth": 1,
+      "borderStyle": 'solid',
+    },
+  },
+  "transition": {
+    "standard": {
+      "duration": themeRef.motion.duration,
+      "delay": 0,
+      "timingFunction": themeRef.motion.easing,
+    },
+  },
+  "gradient": {
+    "accent": {
+      "kind": 'linear',
+      "angle": '90deg',
+      "stops": [{ color: themeRef.color.black, position: 0 }, { color: themeRef.color.white, position: 1 }],
+    },
+  },
+  "typography": {
+    "body": {
+      "fontFamily": themeRef.fontFamily.body,
+      "fontSize": 16,
+      "fontWeight": '400',
+      "letterSpacing": 0,
+      "lineHeight": 22.4,
+    },
+  },
+} as const;
+
+const themeComponents = {
+  "button": {
+    "background": themeRef.color.black,
+    "border": themeSystem.border.default,
+  },
+} as const;
+
+export const theme = { ref: themeRef, system: themeSystem, components: themeComponents };
+
+const darkRef = {
+  "color": {
+    "black": '#eeeeee',
+    "white": '#ffffff',
+  },
+  "fontFamily": {
+    "body": 'Arial',
+  },
+  "weight": {
+    "brand": '500',
+  },
+  "motion": {
+    "duration": 200,
+    "easing": [0.4, 0, 0.2, 1],
+  },
+  "spacing": {
+    "0": 0,
+    "1": 4,
+    "2": 8,
+  },
+  "palette": {
+    "100": '#111111',
+    "200": '#222222',
+  },
+} as const;
+
+const darkSystem = {
+  "colors": {
+    "accent": darkRef.color.black,
+    "surface": darkRef.color.white,
+  },
+  "shadow": {
+    "elevated": {
+      "shadowColor": '#eeeeee',
+      "shadowOffset": {
+        "width": 0,
+        "height": 2,
+      },
+      "shadowRadius": 4,
+      "shadowOpacity": 1,
+    },
+  },
+  "border": {
+    "default": {
+      "borderColor": darkRef.color.black,
+      "borderWidth": 1,
+      "borderStyle": 'solid',
+    },
+  },
+  "transition": {
+    "standard": {
+      "duration": darkRef.motion.duration,
+      "delay": 0,
+      "timingFunction": darkRef.motion.easing,
+    },
+  },
+  "gradient": {
+    "accent": {
+      "kind": 'linear',
+      "angle": '90deg',
+      "stops": [{ color: darkRef.color.black, position: 0 }, { color: darkRef.color.white, position: 1 }],
+    },
+  },
+  "typography": {
+    "body": {
+      "fontFamily": darkRef.fontFamily.body,
+      "fontSize": 16,
+      "fontWeight": '400',
+      "letterSpacing": 0,
+      "lineHeight": 22.4,
+    },
+  },
+} as const;
+
+const darkComponents = {
+  "button": {
+    "background": darkRef.color.black,
+    "border": darkSystem.border.default,
+  },
+} as const;
+
+export const dark = { ref: darkRef, system: darkSystem, components: darkComponents };
+
+const highContrastRef = {
+  "color": {
+    "black": '#000000',
+    "white": '#ffffff',
+  },
+  "fontFamily": {
+    "body": 'Arial',
+  },
+  "weight": {
+    "brand": '500',
+  },
+  "motion": {
+    "duration": 200,
+    "easing": [0.4, 0, 0.2, 1],
+  },
+  "spacing": {
+    "0": 0,
+    "1": 4,
+    "2": 8,
+  },
+  "palette": {
+    "100": '#111111',
+    "200": '#222222',
+  },
+} as const;
+
+const highContrastSystem = {
+  "colors": {
+    "accent": '#ff0000',
+    "surface": highContrastRef.color.white,
+  },
+  "shadow": {
+    "elevated": {
+      "shadowColor": '#000000',
+      "shadowOffset": {
+        "width": 0,
+        "height": 2,
+      },
+      "shadowRadius": 4,
+      "shadowOpacity": 1,
+    },
+  },
+  "border": {
+    "default": {
+      "borderColor": highContrastRef.color.black,
+      "borderWidth": 1,
+      "borderStyle": 'solid',
+    },
+  },
+  "transition": {
+    "standard": {
+      "duration": highContrastRef.motion.duration,
+      "delay": 0,
+      "timingFunction": highContrastRef.motion.easing,
+    },
+  },
+  "gradient": {
+    "accent": {
+      "kind": 'linear',
+      "angle": '90deg',
+      "stops": [{ color: highContrastRef.color.black, position: 0 }, { color: highContrastRef.color.white, position: 1 }],
+    },
+  },
+  "typography": {
+    "body": {
+      "fontFamily": highContrastRef.fontFamily.body,
+      "fontSize": 16,
+      "fontWeight": '400',
+      "letterSpacing": 0,
+      "lineHeight": 22.4,
+    },
+  },
+} as const;
+
+const highContrastComponents = {
+  "button": {
+    "background": highContrastSystem.colors.accent,
+    "border": highContrastSystem.border.default,
+  },
+} as const;
+
+export const highContrast = { ref: highContrastRef, system: highContrastSystem, components: highContrastComponents };
+
+export const themes = { theme, dark, highContrast } as const;
+export type ThemeName = keyof typeof themes;
+export type Theme = (typeof themes)[ThemeName];
+export type BaseTheme = typeof theme;
+"
+`;
+
+exports[`golden snapshots vanilla-extract 1`] = `
+"// ---- tokens.css.ts ----
+import { createTheme, createThemeContract } from "@vanilla-extract/css";
+
+export const vars = createThemeContract({
+  "ref": {
+    "color": {
+      "black": null,
+      "white": null,
+    },
+    "fontFamily": {
+      "body": null,
+    },
+    "weight": {
+      "brand": null,
+    },
+    "motion": {
+      "duration": null,
+      "easing": null,
+    },
+    "spacing": {
+      "0": null,
+      "1": null,
+      "2": null,
+    },
+    "palette": {
+      "100": null,
+      "200": null,
+    },
+  },
+  "system": {
+    "colors": {
+      "accent": null,
+      "surface": null,
+    },
+    "shadow": {
+      "elevated": null,
+    },
+    "border": {
+      "default": null,
+    },
+    "transition": {
+      "standard": {
+        "transitionDuration": null,
+        "transitionDelay": null,
+        "transitionTimingFunction": null,
+      },
+    },
+    "gradient": {
+      "accent": null,
+    },
+    "typography": {
+      "body": {
+        "fontFamily": null,
+        "fontSize": null,
+        "fontWeight": null,
+        "letterSpacing": null,
+        "lineHeight": null,
+      },
+    },
+  },
+  "components": {
+    "button": {
+      "background": null,
+      "border": null,
+    },
+  },
+});
+
+export type RefSpacing = 0 | 1 | 2;
+
+export const refSpacing = vars.ref.spacing;
+
+export type RefPalette = 100 | 200;
+
+export const refPalette = vars.ref.palette;
+
+export const refVars = vars.ref;
+export const systemVars = vars.system;
+export const componentVars = vars.components;
+
+export const themeClass = createTheme(vars, {
+  "ref": {
+    "color": {
+      "black": '#000000',
+      "white": '#ffffff',
+    },
+    "fontFamily": {
+      "body": 'Arial',
+    },
+    "weight": {
+      "brand": '500',
+    },
+    "motion": {
+      "duration": '200ms',
+      "easing": 'cubic-bezier(0.4, 0, 0.2, 1)',
+    },
+    "spacing": {
+      "0": '0px',
+      "1": '4px',
+      "2": '8px',
+    },
+    "palette": {
+      "100": '#111111',
+      "200": '#222222',
+    },
+  },
+  "system": {
+    "colors": {
+      "accent": vars.ref.color.black,
+      "surface": vars.ref.color.white,
+    },
+    "shadow": {
+      "elevated": \`inset 0px 2px 4px 0px \${vars.ref.color.black}, 0px 1px 2px 0px #111111\`,
+    },
+    "border": {
+      "default": \`1px solid \${vars.ref.color.black}\`,
+    },
+    "transition": {
+      "standard": {
+        "transitionDuration": vars.ref.motion.duration,
+        "transitionDelay": '0ms',
+        "transitionTimingFunction": vars.ref.motion.easing,
+      },
+    },
+    "gradient": {
+      "accent": \`linear-gradient(90deg, \${vars.ref.color.black} 0%, \${vars.ref.color.white} 100%)\`,
+    },
+    "typography": {
+      "body": {
+        "fontFamily": vars.ref.fontFamily.body,
+        "fontSize": '16px',
+        "fontWeight": '400',
+        "letterSpacing": '0px',
+        "lineHeight": '1.4',
+      },
+    },
+  },
+  "components": {
+    "button": {
+      "background": vars.ref.color.black,
+      "border": vars.system.border.default,
+    },
+  },
+});
+
+export const darkThemeClass = createTheme(vars, {
+  "ref": {
+    "color": {
+      "black": '#eeeeee',
+      "white": '#ffffff',
+    },
+    "fontFamily": {
+      "body": 'Arial',
+    },
+    "weight": {
+      "brand": '500',
+    },
+    "motion": {
+      "duration": '200ms',
+      "easing": 'cubic-bezier(0.4, 0, 0.2, 1)',
+    },
+    "spacing": {
+      "0": '0px',
+      "1": '4px',
+      "2": '8px',
+    },
+    "palette": {
+      "100": '#111111',
+      "200": '#222222',
+    },
+  },
+  "system": {
+    "colors": {
+      "accent": vars.ref.color.black,
+      "surface": vars.ref.color.white,
+    },
+    "shadow": {
+      "elevated": \`inset 0px 2px 4px 0px \${vars.ref.color.black}, 0px 1px 2px 0px #111111\`,
+    },
+    "border": {
+      "default": \`1px solid \${vars.ref.color.black}\`,
+    },
+    "transition": {
+      "standard": {
+        "transitionDuration": vars.ref.motion.duration,
+        "transitionDelay": '0ms',
+        "transitionTimingFunction": vars.ref.motion.easing,
+      },
+    },
+    "gradient": {
+      "accent": \`linear-gradient(90deg, \${vars.ref.color.black} 0%, \${vars.ref.color.white} 100%)\`,
+    },
+    "typography": {
+      "body": {
+        "fontFamily": vars.ref.fontFamily.body,
+        "fontSize": '16px',
+        "fontWeight": '400',
+        "letterSpacing": '0px',
+        "lineHeight": '1.4',
+      },
+    },
+  },
+  "components": {
+    "button": {
+      "background": vars.ref.color.black,
+      "border": vars.system.border.default,
+    },
+  },
+});
+
+export const highContrastThemeClass = createTheme(vars, {
+  "ref": {
+    "color": {
+      "black": '#000000',
+      "white": '#ffffff',
+    },
+    "fontFamily": {
+      "body": 'Arial',
+    },
+    "weight": {
+      "brand": '500',
+    },
+    "motion": {
+      "duration": '200ms',
+      "easing": 'cubic-bezier(0.4, 0, 0.2, 1)',
+    },
+    "spacing": {
+      "0": '0px',
+      "1": '4px',
+      "2": '8px',
+    },
+    "palette": {
+      "100": '#111111',
+      "200": '#222222',
+    },
+  },
+  "system": {
+    "colors": {
+      "accent": '#ff0000',
+      "surface": vars.ref.color.white,
+    },
+    "shadow": {
+      "elevated": \`inset 0px 2px 4px 0px \${vars.ref.color.black}, 0px 1px 2px 0px #111111\`,
+    },
+    "border": {
+      "default": \`1px solid \${vars.ref.color.black}\`,
+    },
+    "transition": {
+      "standard": {
+        "transitionDuration": vars.ref.motion.duration,
+        "transitionDelay": '0ms',
+        "transitionTimingFunction": vars.ref.motion.easing,
+      },
+    },
+    "gradient": {
+      "accent": \`linear-gradient(90deg, \${vars.ref.color.black} 0%, \${vars.ref.color.white} 100%)\`,
+    },
+    "typography": {
+      "body": {
+        "fontFamily": vars.ref.fontFamily.body,
+        "fontSize": '16px',
+        "fontWeight": '400',
+        "letterSpacing": '0px',
+        "lineHeight": '1.4',
+      },
+    },
+  },
+  "components": {
+    "button": {
+      "background": vars.system.colors.accent,
+      "border": vars.system.border.default,
+    },
+  },
+});
+
+
+// ---- reset.gen.css.ts ----
+import { globalStyle } from "@vanilla-extract/css";
+import { vars } from "./tokens.css";
+
+globalStyle("*, *::before, *::after", {
+  boxSizing: "border-box",
+});
+
+globalStyle("*:not(dialog)", {
+  margin: 0,
+});
+
+globalStyle("html", {
+  "@media": {
+    "(prefers-reduced-motion: no-preference)": {
+      interpolateSize: "allow-keywords",
+    },
+  },
+});
+
+globalStyle("body", {
+  lineHeight: 1.5,
+  WebkitFontSmoothing: "antialiased",
+  fontFamily: vars.ref.fontFamily.body,
+});
+
+globalStyle("img, picture, video, canvas, svg", {
+  display: "block",
+  maxWidth: "100%",
+});
+
+globalStyle("input, button, textarea, select", {
+  font: "inherit",
+});
+
+globalStyle("p, h1, h2, h3, h4, h5, h6", {
+  overflowWrap: "break-word",
+});
+
+globalStyle("p", {
+  textWrap: "pretty",
+});
+
+globalStyle("h1, h2, h3, h4, h5, h6", {
+  textWrap: "balance",
+});
+
+globalStyle("::placeholder", {
+  color: vars.ref.color.black,
+});
+"
+`;

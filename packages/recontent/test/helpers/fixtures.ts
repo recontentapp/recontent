@@ -206,3 +206,84 @@ export function themedConfig(options: { layer: "ref" | "system" | "components" }
 
   return { config, ref };
 }
+
+/**
+ * One config exercising every token kind (scalars, scales, all 5
+ * composites) across all 3 layers, aliased end-to-end, plus 2 themes
+ * overriding different layers. Used as a single stable golden fixture for
+ * cross-output snapshot regression tests.
+ */
+export function goldenConfig(): Fixture {
+  const ref = defineReferenceTokens({
+    color: { black: tokens.color("#000000"), white: tokens.color("#ffffff") },
+    fontFamily: { body: tokens.fontFamily("Arial") },
+    weight: { brand: tokens.fontWeight(500) },
+    motion: {
+      duration: tokens.duration("200ms"),
+      easing: tokens.cubicBezier([0.4, 0, 0.2, 1]),
+    },
+    spacing: tokens.dimensionScale({ 0: "0px", 1: "4px", 2: "8px" }),
+    palette: tokens.colorScale({ 100: "#111111", 200: "#222222" }),
+  });
+
+  const system = defineSystemTokens({
+    colors: {
+      accent: ref.color.black.describe("Primary accent color."),
+      surface: ref.color.white,
+    },
+    shadow: {
+      elevated: tokens.shadow([
+        {
+          color: ref.color.black,
+          offsetX: "0px",
+          offsetY: "2px",
+          blur: "4px",
+          spread: "0px",
+          inset: true,
+        },
+        { color: "#111111", offsetX: "0px", offsetY: "1px", blur: "2px", spread: "0px" },
+      ]),
+    },
+    border: { default: tokens.border({ color: ref.color.black, width: "1px" }) },
+    transition: {
+      standard: tokens.transition({
+        duration: ref.motion.duration,
+        timingFunction: ref.motion.easing,
+      }),
+    },
+    gradient: {
+      accent: tokens.gradient({
+        kind: "linear",
+        angle: "90deg",
+        stops: [
+          { color: ref.color.black, position: 0 },
+          { color: ref.color.white, position: 1 },
+        ],
+      }),
+    },
+    typography: {
+      body: tokens.typography({
+        fontFamily: ref.fontFamily.body,
+        fontSize: "16px",
+        fontWeight: "regular",
+      }),
+    },
+  });
+
+  const components = defineComponentTokens({
+    button: {
+      background: system.colors.accent.deprecate("Use system.colors.surface instead."),
+      border: system.border.default,
+    },
+  });
+
+  const dark = defineTheme(ref, { color: { black: tokens.color("#eeeeee") } });
+  const highContrast = defineTheme(system, { colors: { accent: tokens.color("#ff0000") } });
+
+  const config = defineConfig({
+    tokens: { ref, system, components },
+    themes: { dark, highContrast },
+  });
+
+  return { config, ref };
+}
