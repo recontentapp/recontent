@@ -1,4 +1,7 @@
 import type { ComponentSourceFiles, ScaleImport, TokenImport } from "../types.js";
+import type { ScaleBinding, TokenBinding } from "@recontentapp/core";
+import { defineRegistryComponent } from "../define.js";
+import { vanillaExtractComponentOutput } from "./shared.js";
 
 function generateSkeletonSources(bindings: {
   backgroundColor: TokenImport;
@@ -129,10 +132,6 @@ export function Skeleton({
 `,
   };
 }
-
-import type { ScaleBinding, TokenBinding } from "@recontentapp/core";
-import { defineRegistryComponent } from "../define.js";
-import { vanillaExtractComponentOutput } from "./shared.js";
 
 export type SkeletonComponentOptions = {
   backgroundColor: TokenBinding<"color">;

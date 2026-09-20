@@ -1,4 +1,7 @@
 import type { ComponentSourceFiles, TokenImport } from "../types.js";
+import type { TokenBinding } from "@recontentapp/core";
+import { defineRegistryComponent } from "../define.js";
+import { vanillaExtractComponentOutput } from "./shared.js";
 
 function generateActionBarSources(bindings: {
   backgroundColor: TokenImport;
@@ -122,10 +125,6 @@ export function ActionBar({
 `,
   };
 }
-
-import type { TokenBinding } from "@recontentapp/core";
-import { defineRegistryComponent } from "../define.js";
-import { vanillaExtractComponentOutput } from "./shared.js";
 
 export type ActionBarComponentOptions = {
   backgroundColor: TokenBinding<"color">;

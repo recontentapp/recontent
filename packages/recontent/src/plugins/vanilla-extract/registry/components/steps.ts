@@ -1,7 +1,12 @@
 import type { ComponentSourceFiles, TokenImport } from "../types.js";
-import { groupVariantTokens } from "./shared.js";
+import { groupVariantTokens, typographyProps } from "./shared.js";
+import type { TokenBinding } from "@recontentapp/core";
+import { defineRegistryComponent } from "../define.js";
+import type { IconName } from "../internal/icon-map-icons.js";
+import { vanillaExtractComponentOutput } from "./shared.js";
 
 const STATUS_KEYS = ["complete", "current", "upcoming", "error"] as const;
+
 const STATUS_FIELDS = [
   "indicatorBackgroundColor",
   "indicatorColor",
@@ -9,19 +14,9 @@ const STATUS_FIELDS = [
   "labelColor",
   "connectorColor",
 ] as const;
+
 const SIZE_FIELDS = ["indicatorSize", "typography", "gap"] as const;
-
-function typographyProps(ref: string): string {
-  return [
-    `fontFamily: ${ref}.fontFamily`,
-    `fontSize: ${ref}.fontSize`,
-    `fontWeight: ${ref}.fontWeight`,
-    `letterSpacing: ${ref}.letterSpacing`,
-    `lineHeight: ${ref}.lineHeight`,
-  ].join(",\n      ");
-}
-
-function statusIndicatorStyleBody(fields: Record<string, TokenImport>): string {
+function stepsStatusIndicatorStyleBody(fields: Record<string, TokenImport>): string {
   return `{
       backgroundColor: ${fields.indicatorBackgroundColor!.reference},
       color: ${fields.indicatorColor!.reference},
@@ -131,7 +126,7 @@ ${sizeNames.map((name) => `  ${JSON.stringify(name)}: ${sizeIndicatorStyleBody(s
 });
 
 export const stepsIndicatorStatus = styleVariants({
-${STATUS_KEYS.map((name) => `  ${JSON.stringify(name)}: ${statusIndicatorStyleBody(statuses[name] ?? {})},`).join("\n")}
+${STATUS_KEYS.map((name) => `  ${JSON.stringify(name)}: ${stepsStatusIndicatorStyleBody(statuses[name] ?? {})},`).join("\n")}
 });
 
 export const stepsConnector = style({
@@ -163,7 +158,7 @@ export const stepsContent = style({
 
 export const stepsLabel = style({
   margin: 0,
-  ${typographyProps(labelTypography.reference)},
+  ${typographyProps(labelTypography.reference, "      ")},
 });
 
 export const stepsLabelStatus = styleVariants({
@@ -173,7 +168,7 @@ ${STATUS_KEYS.map((name) => `  ${JSON.stringify(name)}: ${statusLabelStyleBody(s
 export const stepsDescription = style({
   margin: 0,
   color: ${descriptionColor.reference},
-  ${typographyProps(descriptionTypography.reference)},
+  ${typographyProps(descriptionTypography.reference, "      ")},
 });
 `,
     component: `import type { ComponentPropsWithoutRef, ReactNode } from "react";
@@ -274,11 +269,6 @@ export function Steps({
 `,
   };
 }
-
-import type { TokenBinding } from "@recontentapp/core";
-import { defineRegistryComponent } from "../define.js";
-import type { IconName } from "../internal/icon-map-icons.js";
-import { vanillaExtractComponentOutput } from "./shared.js";
 
 type StepsStatusFields = {
   indicatorBackgroundColor: TokenBinding<"color">;

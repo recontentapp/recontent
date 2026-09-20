@@ -1,5 +1,15 @@
 import type { ComponentSourceFiles, TokenImport } from "../types.js";
-import { focusRingBlock, groupVariantIcons, groupVariantTokens } from "./shared.js";
+import {
+  focusRingBlock,
+  groupVariantIcons,
+  groupVariantTokens,
+  statusIconStyleBody,
+  typographyProps,
+} from "./shared.js";
+import type { TokenBinding } from "@recontentapp/core";
+import { defineRegistryComponent } from "../define.js";
+import type { IconName } from "../internal/icon-map-icons.js";
+import { vanillaExtractComponentOutput } from "./shared.js";
 
 const STATUS_FIELDS = [
   "color",
@@ -8,27 +18,12 @@ const STATUS_FIELDS = [
   "iconColor",
   "titleColor",
 ] as const;
-
-function typographyProps(ref: string): string {
-  return [
-    `fontFamily: ${ref}.fontFamily`,
-    `fontSize: ${ref}.fontSize`,
-    `fontWeight: ${ref}.fontWeight`,
-    `letterSpacing: ${ref}.letterSpacing`,
-    `lineHeight: ${ref}.lineHeight`,
-  ].join(",\n      ");
-}
-
 function statusRootStyleBody(fields: Record<string, TokenImport>): string {
   return `{
       color: ${fields.color!.reference},
       backgroundColor: ${fields.backgroundColor!.reference},
       borderColor: ${fields.borderColor!.reference},
     }`;
-}
-
-function statusIconStyleBody(fields: Record<string, TokenImport>): string {
-  return `{ color: ${fields.iconColor!.reference} }`;
 }
 
 function statusTitleStyleBody(fields: Record<string, TokenImport>): string {
@@ -82,7 +77,7 @@ export const bannerRoot = style({
   paddingRight: ${horizontalSpacing.reference},
   paddingTop: ${verticalSpacing.reference},
   paddingBottom: ${verticalSpacing.reference},
-  ${typographyProps(typography.reference)},
+  ${typographyProps(typography.reference, "      ")},
 });
 
 export const bannerStatus = styleVariants({
@@ -118,7 +113,7 @@ export const bannerContent = style({
 
 export const bannerTitle = style({
   margin: 0,
-  ${typographyProps(titleTypography.reference)},
+  ${typographyProps(titleTypography.reference, "      ")},
 });
 
 export const bannerStatusTitleColor = styleVariants({
@@ -235,11 +230,6 @@ export function Banner({
 `,
   };
 }
-
-import type { TokenBinding } from "@recontentapp/core";
-import { defineRegistryComponent } from "../define.js";
-import type { IconName } from "../internal/icon-map-icons.js";
-import { vanillaExtractComponentOutput } from "./shared.js";
 
 type BannerStatusFields = {
   color: TokenBinding<"color">;

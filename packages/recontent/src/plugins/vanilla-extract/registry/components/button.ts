@@ -1,5 +1,13 @@
 import type { ComponentSourceFiles, TokenImport } from "../types.js";
-import { focusRingBlock, groupVariantTokens } from "./shared.js";
+import {
+  focusRingBlock,
+  groupVariantTokens,
+  paddedTypographySizeStyleBody as sizeStyleBody,
+  typographyProps,
+} from "./shared.js";
+import type { TokenBinding } from "@recontentapp/core";
+import { defineRegistryComponent } from "../define.js";
+import { vanillaExtractComponentOutput } from "./shared.js";
 
 const VARIANT_FIELDS = [
   "backgroundColor",
@@ -15,18 +23,7 @@ const VARIANT_FIELDS = [
 ] as const;
 
 const SIZE_FIELDS = ["horizontalSpacing", "verticalSpacing", "typography", "gap"] as const;
-
-function typographyProps(ref: string): string {
-  return [
-    `fontFamily: ${ref}.fontFamily`,
-    `fontSize: ${ref}.fontSize`,
-    `fontWeight: ${ref}.fontWeight`,
-    `letterSpacing: ${ref}.letterSpacing`,
-    `lineHeight: ${ref}.lineHeight`,
-  ].join(",\n      ");
-}
-
-function variantStyleBody(fields: Record<string, TokenImport>): string {
+function buttonVariantStyleBody(fields: Record<string, TokenImport>): string {
   return `{
       backgroundColor: ${fields.backgroundColor!.reference},
       color: ${fields.color!.reference},
@@ -34,7 +31,7 @@ function variantStyleBody(fields: Record<string, TokenImport>): string {
       transitionProperty: "background-color, color, border-color",
       transitionDuration: "150ms",
       transitionTimingFunction: "ease",
-      ${typographyProps(fields.typography!.reference)},
+      ${typographyProps(fields.typography!.reference, "      ")},
       ":hover": {
         backgroundColor: ${fields.hoverBackgroundColor!.reference},
         color: ${fields.hoverColor!.reference},
@@ -46,17 +43,6 @@ function variantStyleBody(fields: Record<string, TokenImport>): string {
         border: ${fields.disabledBorder!.reference},
         cursor: "not-allowed",
       },
-    }`;
-}
-
-function sizeStyleBody(fields: Record<string, TokenImport>): string {
-  return `{
-      paddingLeft: ${fields.horizontalSpacing!.reference},
-      paddingRight: ${fields.horizontalSpacing!.reference},
-      paddingTop: ${fields.verticalSpacing!.reference},
-      paddingBottom: ${fields.verticalSpacing!.reference},
-      gap: ${fields.gap!.reference},
-      ${typographyProps(fields.typography!.reference)},
     }`;
 }
 
@@ -92,7 +78,7 @@ export const buttonLoading = style({
 });
 
 export const buttonVariant = styleVariants({
-${variantNames.map((name) => `  ${JSON.stringify(name)}: ${variantStyleBody(variants[name]!)},`).join("\n")}
+${variantNames.map((name) => `  ${JSON.stringify(name)}: ${buttonVariantStyleBody(variants[name]!)},`).join("\n")}
 });
 
 export const buttonSize = styleVariants({
@@ -178,10 +164,6 @@ export function Button({
 `,
   };
 }
-
-import type { TokenBinding } from "@recontentapp/core";
-import { defineRegistryComponent } from "../define.js";
-import { vanillaExtractComponentOutput } from "./shared.js";
 
 type ButtonVariantFields = {
   backgroundColor: TokenBinding<"color">;

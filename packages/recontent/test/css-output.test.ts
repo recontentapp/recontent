@@ -7,7 +7,7 @@ import {
   defineTheme,
   tokens,
 } from "../src/index.js";
-import { generateCssFiles, generateCss, generateCssFromRegistry } from "../src/outputs/css.js";
+import { generateCssFiles, generateCss } from "../src/outputs/css.js";
 import {
   aliasChainConfig,
   compositeConfig,
@@ -265,7 +265,7 @@ describe("themes", () => {
     expect(lightIndex).toBeGreaterThan(darkIndex);
   });
 
-  test("a theme whose overrides match nothing emits no block", () => {
+  test("a theme override referencing a token path outside the registry throws", () => {
     const ref = defineReferenceTokens({ color: { black: tokens.color("#000000") } });
     const otherRef = defineReferenceTokens({ color: { special: tokens.color("#000000") } });
     const empty = defineTheme(otherRef, { color: { special: tokens.color("#111111") } });
@@ -273,8 +273,7 @@ describe("themes", () => {
       tokens: { ref, system: defineSystemTokens({}), components: {} },
       themes: { empty },
     });
-    const css = generateCss(config);
-    expect(css).not.toMatch(/\[data-theme="empty"\]/);
+    expect(() => generateCss(config)).toThrow(/Theme override references an unknown token path/);
   });
 });
 
@@ -308,15 +307,6 @@ describe("structure & options", () => {
     expect(files.length).toBe(1);
     expect(files[0]!.filename).toBe("tokens.css");
     expect(files[0]!.content).toMatch(/\.dark \{/);
-  });
-
-  test("generateCssFromRegistry emits the layer blocks and never a theme block", () => {
-    const { config } = aliasChainConfig();
-    const css = generateCssFromRegistry(config.registry);
-    expect(css).toMatch(/--ref-color-black: #000000;/);
-    expect(css).toMatch(/--system-colors-accent: var\(--ref-color-black\);/);
-    expect(css).toMatch(/--button-background: var\(--system-colors-accent\);/);
-    expect(css).not.toMatch(/\[data-theme/);
   });
 
   test("a tokenless config yields an empty string", () => {

@@ -1,6 +1,5 @@
 import type {
   BorderValue,
-  FontWeightName,
   GradientValue,
   ShadowLayer,
   ShadowValue,
@@ -11,31 +10,7 @@ import type {
   TransitionValue,
   TypographyValue,
 } from "@recontentapp/core";
-
-const FONT_WEIGHT_NUMERIC: Record<FontWeightName, number> = {
-  thin: 100,
-  hairline: 100,
-  extralight: 200,
-  "extra-light": 200,
-  "ultra-light": 200,
-  light: 300,
-  book: 350,
-  regular: 400,
-  normal: 400,
-  medium: 500,
-  semibold: 600,
-  "semi-bold": 600,
-  "demi-bold": 600,
-  bold: 700,
-  extrabold: 800,
-  "extra-bold": 800,
-  "ultra-bold": 800,
-  black: 900,
-  heavy: 900,
-  extrablack: 950,
-  "extra-black": 950,
-  "ultra-black": 950,
-};
+import { FONT_WEIGHT_NUMERIC } from "@recontentapp/core";
 
 function serializeColorDtcg(value: TokenTypeMap["color"]): TokenTypeMap["color"] {
   return value;
@@ -180,6 +155,7 @@ export type MemberResolver = (type: TokenType, member: TokenMember) => string;
 
 function flattenGradientStops(
   stops: GradientValue["stops"],
+  visited: WeakSet<GradientValue> = new WeakSet(),
 ): Array<{ color: TokenMember<"color">; position: TokenMember<"number"> }> {
   const result: Array<{ color: TokenMember<"color">; position: TokenMember<"number"> }> = [];
   for (const stop of stops) {
@@ -187,7 +163,12 @@ function flattenGradientStops(
       result.push(stop);
       continue;
     }
-    result.push(...flattenGradientStops((stop.$value as GradientValue).stops));
+    const nested = stop.$value as GradientValue;
+    if (visited.has(nested)) {
+      throw new Error("Circular gradient alias detected.");
+    }
+    visited.add(nested);
+    result.push(...flattenGradientStops(nested.stops, visited));
   }
   return result;
 }
@@ -301,8 +282,8 @@ export function setNested(target: Record<string, unknown>, path: string[], value
   let current = target;
   for (let i = 0; i < path.length - 1; i++) {
     const segment = path[i]!;
-    if (!(segment in current)) {
-      current[segment] = {};
+    if (!Object.hasOwn(current, segment)) {
+      current[segment] = Object.create(null) as Record<string, unknown>;
     }
     current = current[segment] as Record<string, unknown>;
   }

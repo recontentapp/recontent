@@ -1,5 +1,8 @@
 import type { ComponentSourceFiles, TokenImport } from "../types.js";
-import { focusRingBlock, groupVariantTokens } from "./shared.js";
+import { focusRingBlock, groupVariantTokens, typographyProps } from "./shared.js";
+import type { TokenBinding } from "@recontentapp/core";
+import { defineRegistryComponent } from "../define.js";
+import { vanillaExtractComponentOutput } from "./shared.js";
 
 const VARIANT_FIELDS = [
   "color",
@@ -11,17 +14,6 @@ const VARIANT_FIELDS = [
   "border",
   "borderRadius",
 ] as const;
-
-function typographyProps(ref: string): string {
-  return [
-    `fontFamily: ${ref}.fontFamily`,
-    `fontSize: ${ref}.fontSize`,
-    `fontWeight: ${ref}.fontWeight`,
-    `letterSpacing: ${ref}.letterSpacing`,
-    `lineHeight: ${ref}.lineHeight`,
-  ].join(",\n      ");
-}
-
 function variantListStyleBody(fields: Record<string, TokenImport>): string {
   return `{
       backgroundColor: ${fields.backgroundColor!.reference},
@@ -135,11 +127,11 @@ export const tabsTab = style({
   paddingRight: ${horizontalSpacing.reference},
   paddingTop: ${verticalSpacing.reference},
   paddingBottom: ${verticalSpacing.reference},
-  ${typographyProps(typography.reference)},
+  ${typographyProps(typography.reference, "      ")},
   ${focusRingBlock(focusRingColor)}
   selectors: {
     "&[data-selected]": {
-      ${typographyProps(activeTypography.reference)},
+      ${typographyProps(activeTypography.reference, "      ")},
     },
     "&[data-disabled]": {
       color: ${disabledColor.reference},
@@ -284,10 +276,6 @@ export function Tabs({
 `,
   };
 }
-
-import type { TokenBinding } from "@recontentapp/core";
-import { defineRegistryComponent } from "../define.js";
-import { vanillaExtractComponentOutput } from "./shared.js";
 
 type TabsVariantFields = {
   color: TokenBinding<"color">;

@@ -1,16 +1,8 @@
 import type { ComponentSourceFiles, ScaleImport, TokenImport } from "../types.js";
-import { focusRingBlock } from "./shared.js";
-
-function typographyProps(ref: string): string {
-  return [
-    `fontFamily: ${ref}.fontFamily`,
-    `fontSize: ${ref}.fontSize`,
-    `fontWeight: ${ref}.fontWeight`,
-    `letterSpacing: ${ref}.letterSpacing`,
-    `lineHeight: ${ref}.lineHeight`,
-  ].join(",\n  ");
-}
-
+import { focusRingBlock, typographyProps } from "./shared.js";
+import type { ScaleBinding, TokenBinding } from "@recontentapp/core";
+import { defineRegistryComponent } from "../define.js";
+import { vanillaExtractComponentOutput } from "./shared.js";
 function generateRadioListSources(bindings: {
   sizes: ScaleImport;
   border: TokenImport;
@@ -131,12 +123,12 @@ export const radioListContent = style({
 
 export const radioListLabel = style({
   color: ${labelColor.reference},
-  ${typographyProps(labelTypography.reference)},
+  ${typographyProps(labelTypography.reference, "  ")},
 });
 
 export const radioListDescription = style({
   color: ${descriptionColor.reference},
-  ${typographyProps(descriptionTypography.reference)},
+  ${typographyProps(descriptionTypography.reference, "  ")},
 });
 `,
     component: `import type { ReactNode } from "react";
@@ -240,10 +232,6 @@ export function RadioList<Value extends string>({
 `,
   };
 }
-
-import type { ScaleBinding, TokenBinding } from "@recontentapp/core";
-import { defineRegistryComponent } from "../define.js";
-import { vanillaExtractComponentOutput } from "./shared.js";
 
 export type RadioListComponentOptions = {
   sizes: ScaleBinding<"dimension">;

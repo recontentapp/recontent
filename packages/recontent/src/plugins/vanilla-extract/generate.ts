@@ -9,6 +9,7 @@ import {
   type RawToken,
   type StampedToken,
   type TokenEntry,
+  type TokenLayer,
   type TokenType,
   type TokenTypeMap,
   type ThemeOverride,
@@ -35,8 +36,10 @@ import {
   validateBuiltInComponents,
 } from "./registry/index.js";
 import type { BreakpointBinding } from "./registry/types.js";
+import { terminalEntry } from "../../outputs/shared/alias.js";
 import type { GeneratorContext } from "../../outputs/shared/context.js";
 import { generateCssResetSource } from "../../outputs/shared/reset.js";
+import { validateThemeNames } from "../../outputs/shared/theme-source.js";
 import type { ScaleBinding, TokenBinding } from "@recontentapp/core";
 import {
   entryPath,
@@ -45,7 +48,6 @@ import {
   generateScaleExports,
   propertyAccess,
   resolveEntryValue,
-  scaleExportNames,
   scaleExportsForConfig,
   setTreeValue,
   type ScaleExport,
@@ -61,26 +63,7 @@ function resolveVariableReference(
   entry: TokenEntry,
   override?: ThemeOverride,
 ): string {
-  const visited = new Set<string>();
-  let current = entry;
-
-  while (current.alias) {
-    const key = pathKey(current.path);
-    if (visited.has(key)) {
-      throw new Error(`Circular alias detected at token path: ${key}`);
-    }
-    visited.add(key);
-
-    const target = registry.get(pathKey(current.alias));
-    if (!target) {
-      throw new Error(`Alias target not found: ${pathKey(current.alias)}`);
-    }
-    current = target;
-    if (override?.has(pathKey(current.path))) {
-      break;
-    }
-  }
-
+  const current = terminalEntry(registry, entry, override && ((key) => override.has(key)));
   return variableReference(current);
 }
 
@@ -220,8 +203,12 @@ function valuesTree(config: GeneratorContext, themeName?: string): SourceTree {
   return tree;
 }
 
+function scaleExportKey(layer: TokenLayer, path: string[]): string {
+  return `${layer}:${pathKey(path)}`;
+}
+
 function resolveScaleBinding<T extends TokenType>(
-  registry: GeneratorContext["registry"],
+  scaleExportIndex: Map<string, ScaleExport>,
   scale: ScaleBinding<T>,
   expectedType: T,
   label: string,
@@ -232,16 +219,11 @@ function resolveScaleBinding<T extends TokenType>(
   if (!scale._layer || !scale._path) {
     throw new Error(`Component config "${label}" must reference a defined token scale.`);
   }
-  const found = [...registry.values()].find(
-    (entry) =>
-      entry.scale &&
-      entry.scale.layer === scale._layer &&
-      pathKey(entry.scale.path) === pathKey(scale._path ?? []),
-  )?.scale;
+  const found = scaleExportIndex.get(scaleExportKey(scale._layer, scale._path));
   if (!found) {
     throw new Error(`Component config "${label}" references a scale with no generated export.`);
   }
-  return { metadata: found, ...scaleExportNames(found) };
+  return found;
 }
 
 function resolveTokenBinding<T extends TokenType>(
@@ -343,6 +325,8 @@ function generateVanillaExtractSource(
   config: GeneratorContext,
   scaleExports: readonly ScaleExport[],
 ): string {
+  validateThemeNames(Object.keys(config.themes), "vanilla-extract");
+
   const lines = [
     'import { createTheme, createThemeContract } from "@vanilla-extract/css";',
     "",
@@ -406,6 +390,12 @@ export function generateVanillaExtractFiles(
   const resolvedBreakpoints = resolveBreakpoints(config, output.breakpoints);
 
   const scaleExports = scaleExportsForConfig(config);
+  const scaleExportIndex = new Map(
+    scaleExports.map((scaleExport) => [
+      scaleExportKey(scaleExport.metadata.layer, scaleExport.metadata.path),
+      scaleExport,
+    ]),
+  );
   const scaleBindings: Record<string, { typeName: string; exportName: string }> = {};
   const tokenBindings: Record<string, { reference: string }> = {};
   const iconBindings: Record<string, string> = {};
@@ -426,7 +416,7 @@ export function generateVanillaExtractFiles(
         );
       } else if (contract.kind === "scale") {
         const scale = resolveScaleBinding(
-          config.registry,
+          scaleExportIndex,
           binding as ScaleBinding<TokenType>,
           contract.type,
           `${component.name}.${contract.key}`,
@@ -491,7 +481,7 @@ export function generateVanillaExtractFiles(
   ];
   if (builtInComponents.length > 0) {
     files.push(
-      ...generateBuiltInComponentFiles(builtInComponents, {
+      ...generateBuiltInComponentFiles(resolvedComponentIds, {
         scaleBindings,
         tokenBindings,
         iconBindings,
@@ -503,7 +493,7 @@ export function generateVanillaExtractFiles(
         filename: "components.dependencies.json",
         content: `${JSON.stringify(
           {
-            ...getBuiltInComponentDependencies(builtInComponents),
+            ...getBuiltInComponentDependencies(resolvedComponentIds),
             ...getInternalModuleDependencies(resolvedComponentIds, resolvedBreakpoints),
             ...getUseBreakpointDependencies(resolvedBreakpoints),
           },

@@ -1,5 +1,8 @@
 import type { ComponentSourceFiles, TokenImport } from "../types.js";
 import { focusRingBlock } from "./shared.js";
+import type { TokenBinding } from "@recontentapp/core";
+import { defineRegistryComponent } from "../define.js";
+import { vanillaExtractComponentOutput } from "./shared.js";
 
 function generateSelectableCardSources(bindings: {
   borderRadius: TokenImport;
@@ -125,10 +128,6 @@ export function SelectableCard({
 `,
   };
 }
-
-import type { TokenBinding } from "@recontentapp/core";
-import { defineRegistryComponent } from "../define.js";
-import { vanillaExtractComponentOutput } from "./shared.js";
 
 export type SelectableCardComponentOptions = {
   borderRadius: TokenBinding<"dimension">;

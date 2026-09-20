@@ -1,5 +1,8 @@
 import type { BreakpointBinding, ComponentSourceFiles, ScaleImport } from "../types.js";
 import { responsiveRule } from "./shared/responsive.js";
+import type { ScaleBinding } from "@recontentapp/core";
+import { defineRegistryComponent } from "../define.js";
+import { vanillaExtractComponentOutput } from "./shared.js";
 
 function generateTextSourcesStatic({
   typography,
@@ -248,10 +251,6 @@ function generateTextSources(
     ? generateTextSourcesResponsive({ typography, color }, breakpoints)
     : generateTextSourcesStatic({ typography, color });
 }
-
-import type { ScaleBinding } from "@recontentapp/core";
-import { defineRegistryComponent } from "../define.js";
-import { vanillaExtractComponentOutput } from "./shared.js";
 
 export type TextComponentOptions = {
   typography: ScaleBinding<"typography">;

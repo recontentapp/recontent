@@ -1,20 +1,13 @@
 import type { ComponentSourceFiles, TokenImport } from "../types.js";
-import { groupVariantTokens } from "./shared.js";
+import { groupVariantTokens, typographyProps } from "./shared.js";
+import type { TokenBinding } from "@recontentapp/core";
+import { defineRegistryComponent } from "../define.js";
+import { vanillaExtractComponentOutput } from "./shared.js";
 
 const STATUS_FIELDS = ["indicatorBackgroundColor", "labelColor"] as const;
+
 const SIZE_FIELDS = ["height", "typography"] as const;
-
-function typographyProps(ref: string): string {
-  return [
-    `fontFamily: ${ref}.fontFamily`,
-    `fontSize: ${ref}.fontSize`,
-    `fontWeight: ${ref}.fontWeight`,
-    `letterSpacing: ${ref}.letterSpacing`,
-    `lineHeight: ${ref}.lineHeight`,
-  ].join(",\n      ");
-}
-
-function statusIndicatorStyleBody(fields: Record<string, TokenImport>): string {
+function progressBarStatusIndicatorStyleBody(fields: Record<string, TokenImport>): string {
   return `{ backgroundColor: ${fields.indicatorBackgroundColor!.reference} }`;
 }
 
@@ -69,7 +62,7 @@ export const progressBarLabelRow = style({
   alignItems: "center",
   justifyContent: "space-between",
   gap: ${labelGap.reference},
-  ${typographyProps(labelTypography.reference)},
+  ${typographyProps(labelTypography.reference, "      ")},
 });
 
 export const progressBarLabelStatus = styleVariants({
@@ -107,7 +100,7 @@ export const progressBarIndicator = style({
 });
 
 export const progressBarIndicatorStatus = styleVariants({
-${statusNames.map((name) => `  ${JSON.stringify(name)}: ${statusIndicatorStyleBody(statuses[name]!)},`).join("\n")}
+${statusNames.map((name) => `  ${JSON.stringify(name)}: ${progressBarStatusIndicatorStyleBody(statuses[name]!)},`).join("\n")}
 });
 `,
     component: `import { Progress as BaseProgress } from "@base-ui/react/progress";
@@ -183,10 +176,6 @@ export function ProgressBar({
 `,
   };
 }
-
-import type { TokenBinding } from "@recontentapp/core";
-import { defineRegistryComponent } from "../define.js";
-import { vanillaExtractComponentOutput } from "./shared.js";
 
 type ProgressBarStatusFields = {
   indicatorBackgroundColor: TokenBinding<"color">;

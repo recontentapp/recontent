@@ -1,4 +1,9 @@
-import { internalModules, registryComponents, type BuiltInComponentOptions } from "./manifest.js";
+import {
+  componentsByName,
+  internalModules,
+  registryComponents,
+  type BuiltInComponentOptions,
+} from "./manifest.js";
 import type { RegistryComponentDefinition } from "./define.js";
 import type { BreakpointBinding, ScaleImport, TokenImport } from "./types.js";
 import { isStampedToken, isTokenScale, type TokenType } from "@recontentapp/core";
@@ -18,10 +23,13 @@ export function formatMissingDesignTokensMessage(errors: string[]): string {
 }
 
 function findComponent(name: string): RegistryComponentDefinition | undefined {
-  return (
-    registryComponents[name] ??
-    Object.values(registryComponents).find((component) => component.name === name)
-  );
+  if (Object.hasOwn(registryComponents, name)) {
+    return registryComponents[name];
+  }
+  if (Object.hasOwn(componentsByName, name)) {
+    return componentsByName[name];
+  }
+  return undefined;
 }
 
 function availableComponents(): string {
@@ -57,36 +65,22 @@ function optionsForComponent(
   options: BuiltInComponentOptions,
   component: RegistryComponentDefinition,
 ): Record<string, unknown> {
-  return ((options as Record<string, unknown>)[component.name] ?? {}) as Record<string, unknown>;
+  const all = options as Record<string, unknown>;
+  return Object.hasOwn(all, component.name) ? (all[component.name] as Record<string, unknown>) : {};
 }
 
-function scaleBindingDetails(
-  value: unknown,
-  expectedType: TokenType,
-): {
-  type: TokenType;
-  keys: string[];
-  layer: "ref" | "system" | "components";
-} | null {
+function isScaleBinding(value: unknown, expectedType: TokenType): boolean {
   if (!isTokenScale(value)) {
-    return null;
+    return false;
   }
 
   const leaves = Object.values(value);
   const first = leaves[0];
   if (!first || !isStampedToken(first) || first.$type !== expectedType) {
-    return null;
+    return false;
   }
 
-  if (!value._path || !value._layer) {
-    return null;
-  }
-
-  return {
-    type: value.$type,
-    keys: Object.keys(value),
-    layer: value._layer,
-  };
+  return Boolean(value._path) && Boolean(value._layer);
 }
 
 function isTokenBinding(value: unknown, expectedType: TokenType): boolean {
@@ -232,8 +226,7 @@ export function validateBuiltInComponents(
         continue;
       }
 
-      const details = scaleBindingDetails(binding, contract.type);
-      if (!details) {
+      if (!isScaleBinding(binding, contract.type)) {
         errors.push(
           `Component "${component.id}" config "${contract.key}" must be a ${contract.type} TokenScale defined in ref, system, or components tokens.`,
         );
@@ -244,8 +237,32 @@ export function validateBuiltInComponents(
   return errors;
 }
 
+/**
+ * Groups `"<componentId>.<rest>": value` bindings by their component id,
+ * stripping the id prefix — a single pass shared across all resolved
+ * components, instead of each component re-filtering the whole map.
+ */
+function bucketByComponentId<T>(
+  bindings: Record<string, T> | undefined,
+): Map<string, Record<string, T>> {
+  const buckets = new Map<string, Record<string, T>>();
+  for (const [key, value] of Object.entries(bindings ?? {})) {
+    const dot = key.indexOf(".");
+    if (dot === -1) continue;
+    const id = key.slice(0, dot);
+    const rest = key.slice(dot + 1);
+    const bucket = buckets.get(id);
+    if (bucket) {
+      bucket[rest] = value;
+    } else {
+      buckets.set(id, { [rest]: value });
+    }
+  }
+  return buckets;
+}
+
 export function generateBuiltInComponentFiles(
-  names: readonly string[],
+  resolvedComponentIds: readonly string[],
   options?: {
     scaleBindings?: Record<string, ScaleImport>;
     tokenBindings?: Record<string, TokenImport>;
@@ -254,29 +271,17 @@ export function generateBuiltInComponentFiles(
     focusRingColor?: TokenImport;
   },
 ): OutputFile[] {
-  return resolveBuiltInComponentIds(names).flatMap((id) => {
+  const scaleBuckets = bucketByComponentId(options?.scaleBindings);
+  const tokenBuckets = bucketByComponentId(options?.tokenBindings);
+  const iconBuckets = bucketByComponentId(options?.iconBindings);
+
+  return resolvedComponentIds.flatMap((id) => {
     const component = registryComponents[id];
     const output = component.output;
-    const prefix = `${id}.`;
-    const scales = Object.fromEntries(
-      Object.entries(options?.scaleBindings ?? {})
-        .filter(([key]) => key.startsWith(prefix))
-        .map(([key, value]) => [key.slice(prefix.length), value]),
-    );
-    const tokens = Object.fromEntries(
-      Object.entries(options?.tokenBindings ?? {})
-        .filter(([key]) => key.startsWith(prefix))
-        .map(([key, value]) => [key.slice(prefix.length), value]),
-    );
-    const icons = Object.fromEntries(
-      Object.entries(options?.iconBindings ?? {})
-        .filter(([key]) => key.startsWith(prefix))
-        .map(([key, value]) => [key.slice(prefix.length), value]),
-    );
     return output.generate({
-      scales,
-      tokens,
-      icons,
+      scales: scaleBuckets.get(id) ?? {},
+      tokens: tokenBuckets.get(id) ?? {},
+      icons: iconBuckets.get(id) ?? {},
       breakpoints: options?.breakpoints,
       focusRingColor: options?.focusRingColor,
     });
@@ -376,9 +381,11 @@ export function getUseBreakpointDependencies(
   return internalModules["use-breakpoint"]?.output?.runtimeDependencies ?? {};
 }
 
-export function getBuiltInComponentDependencies(names: readonly string[]): Record<string, string> {
+export function getBuiltInComponentDependencies(
+  resolvedComponentIds: readonly string[],
+): Record<string, string> {
   const dependencies: Record<string, string> = {};
-  for (const id of resolveBuiltInComponentIds(names)) {
+  for (const id of resolvedComponentIds) {
     const output = registryComponents[id].output;
     Object.assign(dependencies, output.runtimeDependencies);
   }

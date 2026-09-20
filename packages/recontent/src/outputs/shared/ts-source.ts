@@ -17,16 +17,34 @@ export type ScaleExport = {
   exportName: string;
 };
 
-export function isSourceValue(value: SourceTree | SourceValue): value is SourceValue {
+function isSourceValue(value: SourceTree | SourceValue): value is SourceValue {
   return typeof (value as SourceValue).value === "string";
 }
 
+function escapeLineTerminators(value: string): string {
+  return value
+    .replace(/\r/g, "\\r")
+    .replace(/\n/g, "\\n")
+    .replace(/\u2028/g, "\\u2028")
+    .replace(/\u2029/g, "\\u2029");
+}
+
 export function escapeString(value: string): string {
-  return value.replace(/\\/g, "\\\\").replace(/'/g, "\\'");
+  return escapeLineTerminators(value.replace(/\\/g, "\\\\").replace(/'/g, "\\'"));
 }
 
 export function escapeTemplateLiteral(value: string): string {
-  return value.replace(/\\/g, "\\\\").replace(/`/g, "\\`").replace(/\$\{/g, "\\${");
+  return escapeLineTerminators(
+    value.replace(/\\/g, "\\\\").replace(/`/g, "\\`").replace(/\$\{/g, "\\${"),
+  );
+}
+
+export function isNumericKey(key: string): boolean {
+  return /^-?(?:0|[1-9]\d*)(?:\.\d+)?$/.test(key);
+}
+
+export function quotedKey(key: string): string {
+  return isNumericKey(key) ? key : JSON.stringify(key);
 }
 
 export function propertyAccess(root: string, path: readonly string[]): string {
@@ -78,12 +96,16 @@ export function resolveEntryValue(
   return walk(entry);
 }
 
-export function setTreeValue(tree: SourceTree, path: readonly string[], value: SourceValue): void {
+export function setTreeValue(
+  tree: SourceTree,
+  path: readonly string[],
+  value: SourceValue | SourceTree,
+): void {
   let current = tree;
   for (const segment of path.slice(0, -1)) {
     const child = current[segment];
     if (!child || "value" in child) {
-      current[segment] = {};
+      current[segment] = Object.create(null) as SourceTree;
     }
     current = current[segment] as SourceTree;
   }
@@ -124,7 +146,7 @@ function capitalizeSegment(segment: string): string {
   return normalized ? normalized.charAt(0).toUpperCase() + normalized.slice(1) : "";
 }
 
-export function scaleExportNames(scale: TokenScaleMetadata): {
+function scaleExportNames(scale: TokenScaleMetadata): {
   typeName: string;
   exportName: string;
 } {
@@ -149,8 +171,6 @@ export function scaleExportsForConfig(config: GeneratorContext): ScaleExport[] {
 }
 
 export function generateScaleExports(scale: ScaleExport, root = "vars"): string {
-  const type = scale.metadata.keys
-    .map((key) => (/^-?(?:0|[1-9]\d*)(?:\.\d+)?$/.test(key) ? key : JSON.stringify(key)))
-    .join(" | ");
+  const type = scale.metadata.keys.map(quotedKey).join(" | ");
   return `export type ${scale.typeName} = ${type};\n\nexport const ${scale.exportName} = ${propertyAccess(root, [scale.metadata.layer, ...entryPath({ path: scale.metadata.path, layer: scale.metadata.layer })])};`;
 }

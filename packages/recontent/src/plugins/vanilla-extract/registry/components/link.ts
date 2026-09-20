@@ -1,16 +1,8 @@
 import type { ComponentSourceFiles, TokenImport } from "../types.js";
-import { focusRingBlock } from "./shared.js";
-
-function typographyProps(ref: string): string {
-  return [
-    `fontFamily: ${ref}.fontFamily`,
-    `fontSize: ${ref}.fontSize`,
-    `fontWeight: ${ref}.fontWeight`,
-    `letterSpacing: ${ref}.letterSpacing`,
-    `lineHeight: ${ref}.lineHeight`,
-  ].join(",\n    ");
-}
-
+import { focusRingBlock, typographyProps } from "./shared.js";
+import type { TokenBinding } from "@recontentapp/core";
+import { defineRegistryComponent } from "../define.js";
+import { vanillaExtractComponentOutput } from "./shared.js";
 function generateLinkSources(bindings: {
   color: TokenImport;
   hoverColor: TokenImport;
@@ -27,7 +19,7 @@ import { vars } from "../../tokens.css";
 export const linkRoot = style({
   cursor: "pointer",
   color: ${color.reference},
-  ${typographyProps(typography.reference)},
+  ${typographyProps(typography.reference, "    ")},
   ":hover": {
     color: ${hoverColor.reference},
   },
@@ -89,10 +81,6 @@ export function Link({
 `,
   };
 }
-
-import type { TokenBinding } from "@recontentapp/core";
-import { defineRegistryComponent } from "../define.js";
-import { vanillaExtractComponentOutput } from "./shared.js";
 
 export type LinkComponentOptions = {
   color: TokenBinding<"color">;

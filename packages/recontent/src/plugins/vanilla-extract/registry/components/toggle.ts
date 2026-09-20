@@ -1,25 +1,17 @@
 import type { ComponentSourceFiles, TokenImport } from "../types.js";
-import { focusRingBlock, groupVariantTokens } from "./shared.js";
+import { focusRingBlock, groupVariantTokens, typographyProps } from "./shared.js";
+import type { TokenBinding } from "@recontentapp/core";
+import { defineRegistryComponent } from "../define.js";
+import { vanillaExtractComponentOutput } from "./shared.js";
 
 const SIZE_FIELDS = ["horizontalSpacing", "verticalSpacing", "typography"] as const;
-
-function typographyProps(ref: string): string {
-  return [
-    `fontFamily: ${ref}.fontFamily`,
-    `fontSize: ${ref}.fontSize`,
-    `fontWeight: ${ref}.fontWeight`,
-    `letterSpacing: ${ref}.letterSpacing`,
-    `lineHeight: ${ref}.lineHeight`,
-  ].join(",\n      ");
-}
-
-function sizeStyleBody(fields: Record<string, TokenImport>): string {
+function toggleSizeStyleBody(fields: Record<string, TokenImport>): string {
   return `{
       paddingLeft: ${fields.horizontalSpacing!.reference},
       paddingRight: ${fields.horizontalSpacing!.reference},
       paddingTop: ${fields.verticalSpacing!.reference},
       paddingBottom: ${fields.verticalSpacing!.reference},
-      ${typographyProps(fields.typography!.reference)},
+      ${typographyProps(fields.typography!.reference, "      ")},
     }`;
 }
 
@@ -76,7 +68,7 @@ export const toggleOption = style({
   backgroundColor: "transparent",
   color: ${color.reference},
   borderRadius: ${optionBorderRadius.reference},
-  ${typographyProps(typography.reference)},
+  ${typographyProps(typography.reference, "      ")},
   ":hover": {
     color: ${hoverColor.reference},
   },
@@ -97,7 +89,7 @@ export const toggleOption = style({
 });
 
 export const toggleOptionSize = styleVariants({
-${sizeNames.map((name) => `  ${JSON.stringify(name)}: ${sizeStyleBody(sizes[name]!)},`).join("\n")}
+${sizeNames.map((name) => `  ${JSON.stringify(name)}: ${toggleSizeStyleBody(sizes[name]!)},`).join("\n")}
 });
 `,
     component: `import type { ReactNode } from "react";
@@ -163,10 +155,6 @@ export function Toggle<Value extends string>({
 `,
   };
 }
-
-import type { TokenBinding } from "@recontentapp/core";
-import { defineRegistryComponent } from "../define.js";
-import { vanillaExtractComponentOutput } from "./shared.js";
 
 type ToggleSizeFields = {
   horizontalSpacing: TokenBinding<"dimension">;

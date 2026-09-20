@@ -13,7 +13,6 @@ import type { GeneratorContext } from "./context.js";
 import {
   entryPath,
   formatTree,
-  isSourceValue,
   propertyAccess,
   resolveEntryValue,
   scaleExportsForConfig,
@@ -23,7 +22,12 @@ import {
   type SourceValue,
 } from "./ts-source.js";
 
-export type LossReporter = (tokenPath: string[], message: string) => void;
+type LossReporter = (tokenPath: string[], message: string) => void;
+
+export type MemberLookup = (memberAlias: string[]) => {
+  ref?: string;
+  value: TokenTypeMap[TokenType];
+};
 
 export interface ThemeTargetSpec {
   scalar(
@@ -35,13 +39,15 @@ export interface ThemeTargetSpec {
   composite(
     entry: TokenEntry,
     resolved: TokenTypeMap[TokenType],
-    member: (memberAlias: string[]) => { ref?: string; value: TokenTypeMap[TokenType] },
+    member: MemberLookup,
     report: LossReporter,
   ): SourceValue | SourceTree;
 }
 
 const LAYERS: readonly TokenLayer[] = ["ref", "system", "components"];
-const LAYER_INDEX: Record<TokenLayer, number> = { ref: 0, system: 1, components: 2 };
+const LAYER_INDEX: Record<TokenLayer, number> = Object.fromEntries(
+  LAYERS.map((layer, index) => [layer, index]),
+) as Record<TokenLayer, number>;
 
 const JS_RESERVED_WORDS = new Set([
   "break",
@@ -93,6 +99,32 @@ const JS_RESERVED_WORDS = new Set([
 ]);
 
 const IDENTIFIER_RE = /^[A-Za-z_$][\w$]*$/;
+export const CSS_IDENTIFIER_RE = /^[A-Za-z_][\w-]*$/;
+const THEME_ATTRIBUTE_RE = /^[A-Za-z][\w-]*$/;
+
+export function validateThemeNames(
+  themeNames: readonly string[],
+  target: string,
+  options?: { pattern?: RegExp; description?: string },
+): void {
+  const pattern = options?.pattern ?? IDENTIFIER_RE;
+  const description = options?.description ?? "theme names must be valid TypeScript identifiers";
+  for (const name of themeNames) {
+    if (!pattern.test(name)) {
+      throw new Error(
+        `Theme name "${name}" cannot be used with the "${target}" output target: ${description}.`,
+      );
+    }
+  }
+}
+
+export function validateThemeAttribute(themeAttribute: string, target: string): void {
+  if (!THEME_ATTRIBUTE_RE.test(themeAttribute)) {
+    throw new Error(
+      `themeAttribute "${themeAttribute}" cannot be used with the "${target}" output target: it must match ${THEME_ATTRIBUTE_RE}.`,
+    );
+  }
+}
 
 function capitalize(value: string): string {
   return value.charAt(0).toUpperCase() + value.slice(1);
@@ -112,14 +144,7 @@ function validateIdentifierGuards(
   scaleExports: readonly ScaleExport[],
 ): void {
   const themeNames = Object.keys(config.themes);
-
-  for (const name of themeNames) {
-    if (!IDENTIFIER_RE.test(name)) {
-      throw new Error(
-        `Theme name "${name}" cannot be used with the "${target}" output target: theme names must be valid TypeScript identifiers.`,
-      );
-    }
-  }
+  validateThemeNames(themeNames, target);
 
   const reserved = new Set<string>([
     "theme",
@@ -166,6 +191,9 @@ function validateIdentifierGuards(
   }
 }
 
+// Not a `terminalEntry` (outputs/shared/alias.ts) walk: this tracks the last
+// candidate in an *earlier* layer than the one being emitted, rather than
+// the final entry in the chain, and can stop early on a theme override.
 function resolveAliasCandidate(
   registry: TokenRegistry,
   seedPath: string[],
@@ -198,30 +226,6 @@ function resolveAliasCandidate(
   }
 
   return candidate;
-}
-
-function setNodeValue(
-  tree: SourceTree,
-  path: readonly string[],
-  node: SourceValue | SourceTree,
-): void {
-  if (isSourceValue(node)) {
-    setTreeValue(tree, path, node);
-    return;
-  }
-  let current = tree;
-  for (const segment of path.slice(0, -1)) {
-    const child = current[segment];
-    if (!child || "value" in child) {
-      current[segment] = {};
-    }
-    current = current[segment] as SourceTree;
-  }
-  const key = path[path.length - 1];
-  if (!key) {
-    throw new Error("Cannot generate a token value without a path.");
-  }
-  current[key] = node;
 }
 
 function emitScalarEntry(
@@ -323,7 +327,7 @@ function emitCompositeEntry(
   };
 
   const node = spec.composite(entry, resolvedValue, member, report);
-  setNodeValue(tree, entryPath(entry), node);
+  setTreeValue(tree, entryPath(entry), node);
 }
 
 export function generateThemeSource(
@@ -346,13 +350,17 @@ export function generateThemeSource(
   const themeNames = Object.keys(config.themes).sort();
   const lines: string[] = [];
 
+  const entriesByLayer = new Map<TokenLayer, TokenEntry[]>(LAYERS.map((layer) => [layer, []]));
+  for (const entry of config.registry.values()) {
+    entriesByLayer.get(entry.layer)!.push(entry);
+  }
+
   for (const themeName of [undefined, ...themeNames]) {
     const override = themeName ? config.themes[themeName] : undefined;
 
     for (const layer of LAYERS) {
       const tree: SourceTree = {};
-      for (const entry of config.registry.values()) {
-        if (entry.layer !== layer) continue;
+      for (const entry of entriesByLayer.get(layer)!) {
         if (isCompositeType(entry.$type)) {
           emitCompositeEntry(tree, entry, config.registry, override, themeName, spec, report);
         } else {

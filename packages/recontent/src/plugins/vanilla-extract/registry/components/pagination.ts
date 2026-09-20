@@ -1,26 +1,19 @@
 import type { ComponentSourceFiles, TokenImport } from "../types.js";
-import { focusRingBlock, groupVariantTokens } from "./shared.js";
+import { focusRingBlock, groupVariantTokens, typographyProps } from "./shared.js";
+import type { TokenBinding } from "@recontentapp/core";
+import { defineRegistryComponent } from "../define.js";
+import type { IconName } from "../internal/icon-map-icons.js";
+import { vanillaExtractComponentOutput } from "./shared.js";
 
 const SIZE_FIELDS = ["minSize", "horizontalSpacing", "verticalSpacing", "typography"] as const;
-
-function typographyProps(ref: string): string {
-  return [
-    `fontFamily: ${ref}.fontFamily`,
-    `fontSize: ${ref}.fontSize`,
-    `fontWeight: ${ref}.fontWeight`,
-    `letterSpacing: ${ref}.letterSpacing`,
-    `lineHeight: ${ref}.lineHeight`,
-  ].join(",\n      ");
-}
-
-function sizeStyleBody(fields: Record<string, TokenImport>): string {
+function paginationSizeStyleBody(fields: Record<string, TokenImport>): string {
   return `{
       minWidth: ${fields.minSize!.reference},
       paddingLeft: ${fields.horizontalSpacing!.reference},
       paddingRight: ${fields.horizontalSpacing!.reference},
       paddingTop: ${fields.verticalSpacing!.reference},
       paddingBottom: ${fields.verticalSpacing!.reference},
-      ${typographyProps(fields.typography!.reference)},
+      ${typographyProps(fields.typography!.reference, "      ")},
     }`;
 }
 
@@ -91,7 +84,7 @@ export const paginationButton = style({
   borderRadius: ${borderRadius.reference},
   color: ${color.reference},
   backgroundColor: ${backgroundColor.reference},
-  ${typographyProps(typography.reference)},
+  ${typographyProps(typography.reference, "      ")},
   ":hover": {
     color: ${hoverColor.reference},
     backgroundColor: ${hoverBackgroundColor.reference},
@@ -110,7 +103,7 @@ export const paginationButton = style({
 });
 
 export const paginationButtonSize = styleVariants({
-${sizeNames.map((name) => `  ${JSON.stringify(name)}: ${sizeStyleBody(sizes[name]!)},`).join("\n")}
+${sizeNames.map((name) => `  ${JSON.stringify(name)}: ${paginationSizeStyleBody(sizes[name]!)},`).join("\n")}
 });
 
 export const paginationIcon = style({
@@ -126,7 +119,7 @@ export const paginationEllipsis = style({
   justifyContent: "center",
   boxSizing: "border-box",
   color: ${ellipsisColor.reference},
-  ${typographyProps(typography.reference)},
+  ${typographyProps(typography.reference, "      ")},
 });
 `,
     component: `import { Fragment, type ComponentPropsWithoutRef } from "react";
@@ -296,11 +289,6 @@ export function Pagination({
 `,
   };
 }
-
-import type { TokenBinding } from "@recontentapp/core";
-import { defineRegistryComponent } from "../define.js";
-import type { IconName } from "../internal/icon-map-icons.js";
-import { vanillaExtractComponentOutput } from "./shared.js";
 
 type PaginationSizeFields = {
   minSize: TokenBinding<"dimension">;

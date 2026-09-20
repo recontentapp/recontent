@@ -5,6 +5,7 @@ import {
   type TokenDiagnostic,
   type TokenLayer,
 } from "@recontentapp/core";
+import { isNumericKey } from "./outputs/shared/ts-source.js";
 
 function looksLikeCompositeObject(value: Record<string, unknown>): string | null {
   if ("layers" in value || "offsetX" in value || "blur" in value) {
@@ -69,7 +70,7 @@ function diagnostic(path: string[], value: unknown, scale: boolean): TokenDiagno
 
 function looksLikeScaleObject(value: Record<string, unknown>): boolean {
   const keys = Object.keys(value);
-  return keys.length > 0 && keys.every((key) => /^-?(?:0|[1-9]\d*)(?:\.\d+)?$/.test(key));
+  return keys.length > 0 && keys.every(isNumericKey);
 }
 
 function checkNameCollisions(

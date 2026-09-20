@@ -1,5 +1,15 @@
 import type { ComponentSourceFiles, TokenImport } from "../types.js";
-import { focusRingBlock, groupVariantTokens } from "./shared.js";
+import {
+  focusRingBlock,
+  groupVariantTokens,
+  hoverDisabledVariantStyleBody as variantStyleBody,
+  paddedTypographySizeStyleBody as sizeStyleBody,
+  typographyProps,
+} from "./shared.js";
+import type { TokenBinding } from "@recontentapp/core";
+import { defineRegistryComponent } from "../define.js";
+import type { IconName } from "../internal/icon-map-icons.js";
+import { vanillaExtractComponentOutput } from "./shared.js";
 
 const VARIANT_FIELDS = [
   "backgroundColor",
@@ -15,48 +25,6 @@ const VARIANT_FIELDS = [
 ] as const;
 
 const SIZE_FIELDS = ["horizontalSpacing", "verticalSpacing", "typography", "gap"] as const;
-
-function typographyProps(ref: string): string {
-  return [
-    `fontFamily: ${ref}.fontFamily`,
-    `fontSize: ${ref}.fontSize`,
-    `fontWeight: ${ref}.fontWeight`,
-    `letterSpacing: ${ref}.letterSpacing`,
-    `lineHeight: ${ref}.lineHeight`,
-  ].join(",\n      ");
-}
-
-function variantStyleBody(fields: Record<string, TokenImport>): string {
-  return `{
-      backgroundColor: ${fields.backgroundColor!.reference},
-      color: ${fields.color!.reference},
-      border: ${fields.border!.reference},
-      ${typographyProps(fields.typography!.reference)},
-      ":hover": {
-        backgroundColor: ${fields.hoverBackgroundColor!.reference},
-        color: ${fields.hoverColor!.reference},
-        border: ${fields.hoverBorder!.reference},
-      },
-      ":disabled": {
-        backgroundColor: ${fields.disabledBackgroundColor!.reference},
-        color: ${fields.disabledColor!.reference},
-        border: ${fields.disabledBorder!.reference},
-        cursor: "not-allowed",
-      },
-    }`;
-}
-
-function sizeStyleBody(fields: Record<string, TokenImport>): string {
-  return `{
-      paddingLeft: ${fields.horizontalSpacing!.reference},
-      paddingRight: ${fields.horizontalSpacing!.reference},
-      paddingTop: ${fields.verticalSpacing!.reference},
-      paddingBottom: ${fields.verticalSpacing!.reference},
-      gap: ${fields.gap!.reference},
-      ${typographyProps(fields.typography!.reference)},
-    }`;
-}
-
 function generateDropdownButtonSources(bindings: {
   borderRadius: TokenImport;
   popupBackgroundColor: TokenImport;
@@ -167,7 +135,7 @@ export const dropdownButtonItem = style({
   paddingRight: ${itemHorizontalSpacing.reference},
   paddingTop: ${itemVerticalSpacing.reference},
   paddingBottom: ${itemVerticalSpacing.reference},
-  ${typographyProps(itemTypography.reference)},
+  ${typographyProps(itemTypography.reference, "      ")},
   ":hover": {
     backgroundColor: ${itemHoverBackgroundColor.reference},
   },
@@ -297,11 +265,6 @@ export function DropdownButton({
 `,
   };
 }
-
-import type { TokenBinding } from "@recontentapp/core";
-import { defineRegistryComponent } from "../define.js";
-import type { IconName } from "../internal/icon-map-icons.js";
-import { vanillaExtractComponentOutput } from "./shared.js";
 
 type DropdownButtonVariantFields = {
   backgroundColor: TokenBinding<"color">;

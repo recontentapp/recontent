@@ -135,7 +135,7 @@ describe("recontent doctor", () => {
     const result = runCli(["--cwd", dir, "doctor"]);
 
     expect(result.status).toBe(0);
-    expect(result.stdout).toContain("No issues found");
+    expect(result.stderr).toContain("No issues found");
   });
 
   test("exits 1 and reports a missing plugin dependency", () => {
@@ -216,7 +216,7 @@ describe("recontent diff", () => {
     const result = runCli(["--cwd", dir, "diff"]);
 
     expect(result.status).toBe(0);
-    expect(result.stdout).toContain("No token changes between the working tree and HEAD");
+    expect(result.stderr).toContain("No token changes between the working tree and HEAD");
   });
 
   test("reports a changed token value against HEAD", () => {
@@ -231,8 +231,8 @@ describe("recontent diff", () => {
     const result = runCli(["--cwd", dir, "diff"]);
 
     expect(result.status).toBe(0);
-    expect(result.stdout).toContain("Changed");
-    expect(result.stdout).toContain("ref.color.brand.primary");
+    expect(result.stderr).toContain("Changed");
+    expect(result.stderr).toContain("ref.color.brand.primary");
   });
 
   test("--fail-on-breaking exits 1 when a token is removed", () => {
@@ -253,7 +253,7 @@ describe("recontent diff", () => {
 
     const withoutBreaking = runCli(["--cwd", dir, "diff"]);
     expect(withoutBreaking.status).toBe(0);
-    expect(withoutBreaking.stdout).toContain("Breaking");
+    expect(withoutBreaking.stderr).toContain("Breaking");
 
     const withBreaking = runCli(["--cwd", dir, "diff", "--fail-on-breaking"]);
     expect(withBreaking.status).toBe(1);

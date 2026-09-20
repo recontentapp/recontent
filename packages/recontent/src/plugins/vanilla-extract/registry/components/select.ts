@@ -1,16 +1,9 @@
 import type { ComponentSourceFiles, TokenImport } from "../types.js";
-import { focusRingBlock } from "./shared.js";
-
-function typographyProps(ref: string): string {
-  return [
-    `fontFamily: ${ref}.fontFamily`,
-    `fontSize: ${ref}.fontSize`,
-    `fontWeight: ${ref}.fontWeight`,
-    `letterSpacing: ${ref}.letterSpacing`,
-    `lineHeight: ${ref}.lineHeight`,
-  ].join(",\n      ");
-}
-
+import { focusRingBlock, typographyProps } from "./shared.js";
+import type { TokenBinding } from "@recontentapp/core";
+import { defineRegistryComponent } from "../define.js";
+import type { IconName } from "../internal/icon-map-icons.js";
+import { vanillaExtractComponentOutput } from "./shared.js";
 function generateSelectSources(bindings: {
   borderRadius: TokenImport;
   border: TokenImport;
@@ -101,7 +94,7 @@ export const selectTrigger = style({
   paddingRight: ${horizontalSpacing.reference},
   paddingTop: ${verticalSpacing.reference},
   paddingBottom: ${verticalSpacing.reference},
-  ${typographyProps(typography.reference)},
+  ${typographyProps(typography.reference, "      ")},
   ":hover": {
     borderColor: ${hoverBorderColor.reference},
   },
@@ -191,7 +184,7 @@ export const selectItem = style({
   paddingRight: ${itemHorizontalSpacing.reference},
   paddingTop: ${itemVerticalSpacing.reference},
   paddingBottom: ${itemVerticalSpacing.reference},
-  ${typographyProps(itemTypography.reference)},
+  ${typographyProps(itemTypography.reference, "      ")},
   selectors: {
     "&[data-highlighted]": {
       backgroundColor: ${itemHoverBackgroundColor.reference},
@@ -359,11 +352,6 @@ export function Select<Value extends string>({
 `,
   };
 }
-
-import type { TokenBinding } from "@recontentapp/core";
-import { defineRegistryComponent } from "../define.js";
-import type { IconName } from "../internal/icon-map-icons.js";
-import { vanillaExtractComponentOutput } from "./shared.js";
 
 export type SelectComponentOptions = {
   borderRadius: TokenBinding<"dimension">;

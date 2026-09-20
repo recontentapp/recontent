@@ -4,8 +4,7 @@ import path from "node:path";
 
 /**
  * Writes `content` to `filePath`, resolved against the explicit `baseDir`
- * (never `process.cwd()` — callers own that decision; see §1/§2 of the CLI
- * ergonomics pass).
+ * (never `process.cwd()` — callers own that decision).
  */
 export async function writeOutputFile(
   filePath: string,

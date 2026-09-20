@@ -340,7 +340,7 @@ describe("runDiff against a config that imports a sibling file", () => {
     await writeFile(path.join(repoDir, "colors.ts"), COLORS_HEAD, "utf-8");
     await writeFile(path.join(repoDir, "recontent.config.ts"), CONFIG_HEAD, "utf-8");
 
-    logSpy = jest.spyOn(console, "log").mockImplementation(() => {});
+    logSpy = jest.spyOn(console, "error").mockImplementation(() => {});
   });
 
   afterEach(async () => {
@@ -374,5 +374,142 @@ describe("runDiff against a config that imports a sibling file", () => {
     });
 
     expect(process.exitCode).toBe(1);
+  });
+});
+
+const MALICIOUS_CONFIG = `import { writeFileSync } from "node:fs";
+import { defineReferenceTokens, defineSystemTokens, defineComponentTokens, defineConfig } from "recontent";
+
+// Top-level side effect: if this file is ever loaded, it must leave a trace.
+writeFileSync(process.env.RECONTENT_DIFF_TEST_SENTINEL!, "pwned");
+
+const ref = defineReferenceTokens({});
+const system = defineSystemTokens({});
+const components = defineComponentTokens({});
+
+export default defineConfig({
+  tokens: { ref, system, components },
+});
+`;
+
+describe("runDiff rejects a revision that is not an ancestor of HEAD (S1)", () => {
+  let repoDir: string;
+  let sentinelPath: string;
+  let logSpy: ReturnType<typeof jest.spyOn>;
+  let previousSentinelEnv: string | undefined;
+
+  beforeEach(async () => {
+    repoDir = await mkdtemp(path.join(process.cwd(), "test", "diff-fixture-"));
+    sentinelPath = path.join(repoDir, "..", `sentinel-${path.basename(repoDir)}.txt`);
+    previousSentinelEnv = process.env.RECONTENT_DIFF_TEST_SENTINEL;
+    process.env.RECONTENT_DIFF_TEST_SENTINEL = sentinelPath;
+
+    git(["init", "-q"], repoDir);
+    git(
+      [
+        "-c",
+        "user.email=test@example.com",
+        "-c",
+        "user.name=Test",
+        "config",
+        "commit.gpgsign",
+        "false",
+      ],
+      repoDir,
+    );
+
+    await writeFile(path.join(repoDir, "recontent.config.ts"), CONFIG_BASE, "utf-8");
+    await writeFile(path.join(repoDir, "colors.ts"), COLORS_BASE, "utf-8");
+    git(["add", "-A"], repoDir);
+    git(
+      ["-c", "user.email=test@example.com", "-c", "user.name=Test", "commit", "-q", "-m", "base"],
+      repoDir,
+    );
+    git(["tag", "v1"], repoDir);
+
+    await writeFile(path.join(repoDir, "colors.ts"), COLORS_HEAD, "utf-8");
+    git(["add", "-A"], repoDir);
+    git(
+      ["-c", "user.email=test@example.com", "-c", "user.name=Test", "commit", "-q", "-m", "second"],
+      repoDir,
+    );
+
+    // A branch forked off the base commit — never merged into the branch
+    // whose HEAD we diff against below — carrying a config with an
+    // observable top-level side effect.
+    const mainBranch = spawnSync("git", ["symbolic-ref", "--short", "HEAD"], {
+      cwd: repoDir,
+      encoding: "utf-8",
+    }).stdout.trim();
+
+    git(["branch", "malicious", "v1"], repoDir);
+    git(["checkout", "-q", "malicious"], repoDir);
+    await writeFile(path.join(repoDir, "recontent.config.ts"), MALICIOUS_CONFIG, "utf-8");
+    git(["add", "-A"], repoDir);
+    git(
+      [
+        "-c",
+        "user.email=test@example.com",
+        "-c",
+        "user.name=Test",
+        "commit",
+        "-q",
+        "-m",
+        "malicious",
+      ],
+      repoDir,
+    );
+    git(["checkout", "-q", mainBranch], repoDir);
+
+    // The current checkout's own config, used for every `runDiff` call below.
+    await writeFile(path.join(repoDir, "recontent.config.ts"), CONFIG_HEAD, "utf-8");
+
+    logSpy = jest.spyOn(console, "error").mockImplementation(() => {});
+  });
+
+  afterEach(async () => {
+    logSpy.mockRestore();
+    process.exitCode = undefined;
+    if (previousSentinelEnv === undefined) {
+      delete process.env.RECONTENT_DIFF_TEST_SENTINEL;
+    } else {
+      process.env.RECONTENT_DIFF_TEST_SENTINEL = previousSentinelEnv;
+    }
+    await rm(sentinelPath, { force: true });
+    await rm(repoDir, { recursive: true, force: true });
+  });
+
+  test("refuses a branch that is not an ancestor of HEAD, and never executes its config", async () => {
+    await expect(
+      runDiff({
+        cwd: repoDir,
+        configPath: path.join(repoDir, "recontent.config.ts"),
+        rev: "malicious",
+      }),
+    ).rejects.toThrow(/not an ancestor of HEAD/);
+
+    await expect(rm(sentinelPath)).rejects.toThrow();
+  });
+
+  test("still allows the default rev (HEAD)", async () => {
+    await expect(
+      runDiff({ cwd: repoDir, configPath: path.join(repoDir, "recontent.config.ts") }),
+    ).resolves.not.toThrow();
+  });
+
+  test("still allows HEAD~1", async () => {
+    await expect(
+      runDiff({
+        cwd: repoDir,
+        configPath: path.join(repoDir, "recontent.config.ts"),
+        rev: "HEAD~1",
+      }),
+    ).resolves.not.toThrow();
+  });
+
+  test("still allows a tag on merged history", async () => {
+    await expect(
+      runDiff({ cwd: repoDir, configPath: path.join(repoDir, "recontent.config.ts"), rev: "v1" }),
+    ).resolves.not.toThrow();
   });
 });

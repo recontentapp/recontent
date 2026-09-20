@@ -72,11 +72,20 @@ function stampScale<T extends TokenType, Layer extends TokenLayer>(
   return result as TokenScale<string | number, T, StampedToken<T, Layer>>;
 }
 
+const MAX_TOKEN_TREE_DEPTH = 64;
+
 function walkAndStamp<Layer extends TokenLayer>(
   input: unknown,
   path: string[],
   layer: Layer,
+  depth = 0,
 ): unknown {
+  if (depth > MAX_TOKEN_TREE_DEPTH) {
+    throw new Error(
+      `Token tree nesting exceeds ${MAX_TOKEN_TREE_DEPTH} levels at "${path.join(".")}"; check for a self-referencing object.`,
+    );
+  }
+
   if (isTokenScale(input)) {
     return stampScale(input, path, layer);
   }
@@ -91,12 +100,13 @@ function walkAndStamp<Layer extends TokenLayer>(
 
   const result: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(input)) {
-    result[key] = walkAndStamp(value, [...path, key], layer);
+    result[key] = walkAndStamp(value, [...path, key], layer, depth + 1);
   }
   return result;
 }
 
 const INVALID_NAME_CHARS = /[.{}]/;
+const RESERVED_NAMES = new Set(["__proto__", "constructor", "prototype"]);
 
 function validateTokenName(name: string, path: string[]): void {
   const match = name.match(INVALID_NAME_CHARS);
@@ -110,6 +120,11 @@ function validateTokenName(name: string, path: string[]): void {
       `Invalid token/group name "${name}" at "${[...path, name].join(".")}": names cannot start with "$".`,
     );
   }
+  if (RESERVED_NAMES.has(name)) {
+    throw new Error(
+      `Invalid token/group name "${name}" at "${[...path, name].join(".")}": "${name}" is a reserved name.`,
+    );
+  }
 }
 
 function collectEntries(
@@ -118,7 +133,14 @@ function collectEntries(
   layer: TokenLayer,
   registry: TokenRegistry,
   scale?: TokenScaleMetadata,
+  depth = 0,
 ): void {
+  if (depth > MAX_TOKEN_TREE_DEPTH) {
+    throw new Error(
+      `Token tree nesting exceeds ${MAX_TOKEN_TREE_DEPTH} levels at "${path.join(".")}"; check for a self-referencing object.`,
+    );
+  }
+
   if (isTokenScale(node)) {
     const scalePath = node._path ?? path;
     const scaleLayer = node._layer ?? layer;
@@ -131,7 +153,7 @@ function collectEntries(
 
     for (const [key, value] of Object.entries(node)) {
       validateTokenName(key, scalePath);
-      collectEntries(value, [...scalePath, key], scaleLayer, registry, scaleMetadata);
+      collectEntries(value, [...scalePath, key], scaleLayer, registry, scaleMetadata, depth + 1);
     }
     return;
   }
@@ -171,7 +193,7 @@ function collectEntries(
 
   for (const [key, value] of Object.entries(node)) {
     validateTokenName(key, path);
-    collectEntries(value, [...path, key], layer, registry);
+    collectEntries(value, [...path, key], layer, registry, undefined, depth + 1);
   }
 }
 

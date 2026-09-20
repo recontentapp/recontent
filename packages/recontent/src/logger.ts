@@ -5,7 +5,7 @@ export type { Logger, LogLevel } from "@recontentapp/core";
 export function createLogger(logLevel: LogLevel = "info"): Logger {
   return {
     info(message: string): void {
-      console.log(message);
+      console.error(message);
     },
     warn(message: string): void {
       console.error(`[recontent:warning] ${message}`);

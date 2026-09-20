@@ -36,7 +36,7 @@ export async function runDoctor(options: DoctorOptions): Promise<void> {
     logger,
     mode: "check",
   };
-  const pluginErrorCount = { count: 0 };
+  let pluginErrorCount = 0;
   for (const plugin of config.plugins) {
     if (!plugin.validate) continue;
     const diagnostics = await plugin.validate(ctx);
@@ -44,15 +44,14 @@ export async function runDoctor(options: DoctorOptions): Promise<void> {
       const message = `[${plugin.name}] ${diagnostic.message}`;
       if (diagnostic.severity === "error") {
         logger.error(message);
-        pluginErrorCount.count += 1;
+        pluginErrorCount += 1;
       } else {
         logger.warn(message);
       }
     }
   }
 
-  const errorCount =
-    registryDiagnostics.length + dependencyDiagnostics.length + pluginErrorCount.count;
+  const errorCount = registryDiagnostics.length + dependencyDiagnostics.length + pluginErrorCount;
   const issueCount = config.diagnostics.length + errorCount;
 
   if (issueCount === 0) {

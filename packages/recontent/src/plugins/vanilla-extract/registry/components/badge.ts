@@ -1,7 +1,11 @@
 import type { ComponentSourceFiles, TokenImport } from "../types.js";
-import { groupVariantTokens } from "./shared.js";
+import { groupVariantTokens, paddedTypographySizeStyleBody as sizeStyleBody } from "./shared.js";
+import type { TokenBinding } from "@recontentapp/core";
+import { defineRegistryComponent } from "../define.js";
+import { vanillaExtractComponentOutput } from "./shared.js";
 
 const STATUS_FIELDS = ["color", "backgroundColor", "border"] as const;
+
 const SIZE_FIELDS = [
   "typography",
   "horizontalSpacing",
@@ -9,17 +13,6 @@ const SIZE_FIELDS = [
   "gap",
   "iconSize",
 ] as const;
-
-function typographyProps(ref: string): string {
-  return [
-    `fontFamily: ${ref}.fontFamily`,
-    `fontSize: ${ref}.fontSize`,
-    `fontWeight: ${ref}.fontWeight`,
-    `letterSpacing: ${ref}.letterSpacing`,
-    `lineHeight: ${ref}.lineHeight`,
-  ].join(",\n      ");
-}
-
 function statusStyleBody(fields: Record<string, TokenImport>): string {
   return `{
       color: ${fields.color!.reference},
@@ -28,18 +21,7 @@ function statusStyleBody(fields: Record<string, TokenImport>): string {
     }`;
 }
 
-function sizeStyleBody(fields: Record<string, TokenImport>): string {
-  return `{
-      paddingLeft: ${fields.horizontalSpacing!.reference},
-      paddingRight: ${fields.horizontalSpacing!.reference},
-      paddingTop: ${fields.verticalSpacing!.reference},
-      paddingBottom: ${fields.verticalSpacing!.reference},
-      gap: ${fields.gap!.reference},
-      ${typographyProps(fields.typography!.reference)},
-    }`;
-}
-
-function sizeIconStyleBody(fields: Record<string, TokenImport>): string {
+function badgeSizeIconStyleBody(fields: Record<string, TokenImport>): string {
   return `{ width: ${fields.iconSize!.reference}, height: ${fields.iconSize!.reference} }`;
 }
 
@@ -75,7 +57,7 @@ ${sizeNames.map((name) => `  ${JSON.stringify(name)}: ${sizeStyleBody(sizes[name
 });
 
 export const badgeIconSize = styleVariants({
-${sizeNames.map((name) => `  ${JSON.stringify(name)}: ${sizeIconStyleBody(sizes[name]!)},`).join("\n")}
+${sizeNames.map((name) => `  ${JSON.stringify(name)}: ${badgeSizeIconStyleBody(sizes[name]!)},`).join("\n")}
 });
 `,
     component: `import type { ComponentPropsWithoutRef, ReactNode } from "react";
@@ -128,10 +110,6 @@ export function Badge({
 `,
   };
 }
-
-import type { TokenBinding } from "@recontentapp/core";
-import { defineRegistryComponent } from "../define.js";
-import { vanillaExtractComponentOutput } from "./shared.js";
 
 type BadgeStatusFields = {
   color: TokenBinding<"color">;

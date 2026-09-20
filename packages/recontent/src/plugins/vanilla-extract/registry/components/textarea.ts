@@ -1,15 +1,7 @@
 import type { ComponentSourceFiles, TokenImport } from "../types.js";
-
-function typographyProps(ref: string): string {
-  return [
-    `fontFamily: ${ref}.fontFamily`,
-    `fontSize: ${ref}.fontSize`,
-    `fontWeight: ${ref}.fontWeight`,
-    `letterSpacing: ${ref}.letterSpacing`,
-    `lineHeight: ${ref}.lineHeight`,
-  ].join(",\n      ");
-}
-
+import type { TokenBinding } from "@recontentapp/core";
+import { defineRegistryComponent } from "../define.js";
+import { typographyProps, vanillaExtractComponentOutput } from "./shared.js";
 function generateTextareaSources(bindings: {
   borderRadius: TokenImport;
   border: TokenImport;
@@ -80,7 +72,7 @@ export const textareaField = style({
   paddingRight: ${horizontalSpacing.reference},
   paddingTop: ${verticalSpacing.reference},
   paddingBottom: ${verticalSpacing.reference},
-  ${typographyProps(typography.reference)},
+  ${typographyProps(typography.reference, "      ")},
   accentColor: ${resizeHandleColor.reference},
   "::placeholder": {
     color: ${placeholderColor.reference},
@@ -114,7 +106,7 @@ export const textareaCounter = style({
   alignSelf: "flex-end",
   boxSizing: "border-box",
   color: ${counterColor.reference},
-  ${typographyProps(counterTypography.reference)},
+  ${typographyProps(counterTypography.reference, "      ")},
   selectors: {
     "&[data-exceeded]": {
       color: ${counterExceededColor.reference},
@@ -218,10 +210,6 @@ export function Textarea({
 `,
   };
 }
-
-import type { TokenBinding } from "@recontentapp/core";
-import { defineRegistryComponent } from "../define.js";
-import { vanillaExtractComponentOutput } from "./shared.js";
 
 export type TextareaComponentOptions = {
   // Input surface, shared with TextInput.

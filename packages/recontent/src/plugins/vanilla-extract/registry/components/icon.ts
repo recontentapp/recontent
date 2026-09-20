@@ -1,4 +1,7 @@
 import type { ComponentSourceFiles, ScaleImport } from "../types.js";
+import type { ScaleBinding } from "@recontentapp/core";
+import { defineRegistryComponent } from "../define.js";
+import { vanillaExtractComponentOutput } from "./shared.js";
 
 function generateIconSources({
   size,
@@ -62,10 +65,6 @@ export function Icon({ icon, size, color, label, className, ...props }: IconProp
 `,
   };
 }
-
-import type { ScaleBinding } from "@recontentapp/core";
-import { defineRegistryComponent } from "../define.js";
-import { vanillaExtractComponentOutput } from "./shared.js";
 
 export type IconComponentOptions = {
   size: ScaleBinding<"dimension">;

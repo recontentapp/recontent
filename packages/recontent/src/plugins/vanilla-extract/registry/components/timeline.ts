@@ -1,20 +1,13 @@
 import type { ComponentSourceFiles, TokenImport } from "../types.js";
-import { groupVariantTokens } from "./shared.js";
+import { groupVariantTokens, typographyProps } from "./shared.js";
+import type { TokenBinding } from "@recontentapp/core";
+import { defineRegistryComponent } from "../define.js";
+import { vanillaExtractComponentOutput } from "./shared.js";
 
 const STATUS_FIELDS = ["indicatorColor", "indicatorBackgroundColor", "indicatorBorder"] as const;
+
 const SIZE_FIELDS = ["indicatorSize", "gap", "typography"] as const;
-
-function typographyProps(ref: string): string {
-  return [
-    `fontFamily: ${ref}.fontFamily`,
-    `fontSize: ${ref}.fontSize`,
-    `fontWeight: ${ref}.fontWeight`,
-    `letterSpacing: ${ref}.letterSpacing`,
-    `lineHeight: ${ref}.lineHeight`,
-  ].join(",\n      ");
-}
-
-function statusIndicatorStyleBody(fields: Record<string, TokenImport>): string {
+function timelineStatusIndicatorStyleBody(fields: Record<string, TokenImport>): string {
   return `{
       color: ${fields.indicatorColor!.reference},
       backgroundColor: ${fields.indicatorBackgroundColor!.reference},
@@ -27,7 +20,7 @@ function sizeIndicatorStyleBody(fields: Record<string, TokenImport>): string {
 }
 
 function sizeContentStyleBody(fields: Record<string, TokenImport>): string {
-  return `{ gap: ${fields.gap!.reference}, ${typographyProps(fields.typography!.reference)} }`;
+  return `{ gap: ${fields.gap!.reference}, ${typographyProps(fields.typography!.reference, "      ")} }`;
 }
 
 function generateTimelineSources(bindings: {
@@ -118,7 +111,7 @@ ${sizeNames.map((name) => `  ${JSON.stringify(name)}: ${sizeIndicatorStyleBody(s
 });
 
 export const timelineIndicatorStatus = styleVariants({
-${statusNames.map((name) => `  ${JSON.stringify(name)}: ${statusIndicatorStyleBody(statuses[name]!)},`).join("\n")}
+${statusNames.map((name) => `  ${JSON.stringify(name)}: ${timelineStatusIndicatorStyleBody(statuses[name]!)},`).join("\n")}
 });
 
 export const timelineIcon = style({
@@ -159,19 +152,19 @@ ${sizeNames.map((name) => `  ${JSON.stringify(name)}: ${sizeContentStyleBody(siz
 export const timelineLabel = style({
   margin: 0,
   color: ${labelColor.reference},
-  ${typographyProps(labelTypography.reference)},
+  ${typographyProps(labelTypography.reference, "      ")},
 });
 
 export const timelineTimestamp = style({
   margin: 0,
   color: ${timestampColor.reference},
-  ${typographyProps(timestampTypography.reference)},
+  ${typographyProps(timestampTypography.reference, "      ")},
 });
 
 export const timelineDescription = style({
   margin: 0,
   color: ${descriptionColor.reference},
-  ${typographyProps(descriptionTypography.reference)},
+  ${typographyProps(descriptionTypography.reference, "      ")},
 });
 `,
     component: `import type { ComponentPropsWithoutRef, ReactNode } from "react";
@@ -267,10 +260,6 @@ export function Timeline({
 `,
   };
 }
-
-import type { TokenBinding } from "@recontentapp/core";
-import { defineRegistryComponent } from "../define.js";
-import { vanillaExtractComponentOutput } from "./shared.js";
 
 type TimelineStatusFields = {
   indicatorColor: TokenBinding<"color">;

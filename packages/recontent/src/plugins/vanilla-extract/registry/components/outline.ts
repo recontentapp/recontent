@@ -1,16 +1,8 @@
 import type { ComponentSourceFiles, TokenImport } from "../types.js";
-import { focusRingBlock } from "./shared.js";
-
-function typographyProps(ref: string): string {
-  return [
-    `fontFamily: ${ref}.fontFamily`,
-    `fontSize: ${ref}.fontSize`,
-    `fontWeight: ${ref}.fontWeight`,
-    `letterSpacing: ${ref}.letterSpacing`,
-    `lineHeight: ${ref}.lineHeight`,
-  ].join(",\n      ");
-}
-
+import { focusRingBlock, typographyProps } from "./shared.js";
+import type { TokenBinding } from "@recontentapp/core";
+import { defineRegistryComponent } from "../define.js";
+import { vanillaExtractComponentOutput } from "./shared.js";
 function generateOutlineSources(bindings: {
   typography: TokenImport;
   color: TokenImport;
@@ -70,7 +62,7 @@ export const outlineLink = style({
   paddingRight: ${itemHorizontalSpacing.reference},
   paddingTop: ${itemVerticalSpacing.reference},
   paddingBottom: ${itemVerticalSpacing.reference},
-  ${typographyProps(typography.reference)},
+  ${typographyProps(typography.reference, "      ")},
   ":hover": {
     color: ${hoverColor.reference},
   },
@@ -78,7 +70,7 @@ export const outlineLink = style({
   selectors: {
     "&[data-active]": {
       color: ${activeColor.reference},
-      ${typographyProps(activeTypography.reference)},
+      ${typographyProps(activeTypography.reference, "      ")},
     },
     "&[data-active]::before": {
       content: '""',
@@ -204,10 +196,6 @@ export function Outline({
 `,
   };
 }
-
-import type { TokenBinding } from "@recontentapp/core";
-import { defineRegistryComponent } from "../define.js";
-import { vanillaExtractComponentOutput } from "./shared.js";
 
 export type OutlineComponentOptions = {
   typography: TokenBinding<"typography">;

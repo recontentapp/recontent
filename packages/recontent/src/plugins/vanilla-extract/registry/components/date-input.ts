@@ -1,16 +1,9 @@
 import type { ComponentSourceFiles, TokenImport } from "../types.js";
-import { focusRingBlock } from "./shared.js";
-
-function typographyProps(ref: string): string {
-  return [
-    `fontFamily: ${ref}.fontFamily`,
-    `fontSize: ${ref}.fontSize`,
-    `fontWeight: ${ref}.fontWeight`,
-    `letterSpacing: ${ref}.letterSpacing`,
-    `lineHeight: ${ref}.lineHeight`,
-  ].join(",\n      ");
-}
-
+import { focusRingBlock, typographyProps } from "./shared.js";
+import type { TokenBinding } from "@recontentapp/core";
+import { defineRegistryComponent } from "../define.js";
+import type { IconName } from "../internal/icon-map-icons.js";
+import { vanillaExtractComponentOutput } from "./shared.js";
 function generateDateInputSources(bindings: {
   borderRadius: TokenImport;
   border: TokenImport;
@@ -147,7 +140,7 @@ export const dateInputField = style({
   color: ${color.reference},
   paddingTop: ${verticalSpacing.reference},
   paddingBottom: ${verticalSpacing.reference},
-  ${typographyProps(typography.reference)},
+  ${typographyProps(typography.reference, "      ")},
   "::placeholder": {
     color: ${placeholderColor.reference},
   },
@@ -229,7 +222,7 @@ export const dateInputMonths = style({
 });
 
 export const dateInputMonthLabel = style({
-  ${typographyProps(dayTypography.reference)},
+  ${typographyProps(dayTypography.reference, "      ")},
   color: ${dayColor.reference},
   textAlign: "center",
 });
@@ -261,7 +254,7 @@ export const dateInputRowGroup = style({
 export const dateInputWeekday = style({
   textAlign: "center",
   color: ${weekdayColor.reference},
-  ${typographyProps(weekdayTypography.reference)},
+  ${typographyProps(weekdayTypography.reference, "      ")},
 });
 
 /** Marker classes applied by react-day-picker's \`classNames\` to the day cell; styled on the button via a descendant selector below. */
@@ -283,7 +276,7 @@ export const dateInputDay = style({
   borderRadius: ${dayBorderRadius.reference},
   color: ${dayColor.reference},
   backgroundColor: "transparent",
-  ${typographyProps(dayTypography.reference)},
+  ${typographyProps(dayTypography.reference, "      ")},
   ":hover": {
     backgroundColor: ${dayHoverBackgroundColor.reference},
   },
@@ -533,11 +526,6 @@ export function DateInput({
 `,
   };
 }
-
-import type { TokenBinding } from "@recontentapp/core";
-import { defineRegistryComponent } from "../define.js";
-import type { IconName } from "../internal/icon-map-icons.js";
-import { vanillaExtractComponentOutput } from "./shared.js";
 
 export type DateInputComponentOptions = {
   // Input surface, shared with TextInput.

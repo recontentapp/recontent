@@ -1,19 +1,12 @@
 import type { ComponentSourceFiles, TokenImport } from "../types.js";
-import { focusRingBlock, groupVariantTokens } from "./shared.js";
+import { focusRingBlock, groupVariantTokens, typographyProps } from "./shared.js";
+import type { TokenBinding } from "@recontentapp/core";
+import { defineRegistryComponent } from "../define.js";
+import type { IconName } from "../internal/icon-map-icons.js";
+import { vanillaExtractComponentOutput } from "./shared.js";
 
 const SIZE_FIELDS = ["boxSize", "labelTypography"] as const;
-
-function typographyProps(ref: string): string {
-  return [
-    `fontFamily: ${ref}.fontFamily`,
-    `fontSize: ${ref}.fontSize`,
-    `fontWeight: ${ref}.fontWeight`,
-    `letterSpacing: ${ref}.letterSpacing`,
-    `lineHeight: ${ref}.lineHeight`,
-  ].join(",\n    ");
-}
-
-function sizeStyleBody(fields: Record<string, TokenImport>): string {
+function checkboxSizeStyleBody(fields: Record<string, TokenImport>): string {
   return `{
     width: ${fields.boxSize!.reference},
     height: ${fields.boxSize!.reference},
@@ -22,7 +15,7 @@ function sizeStyleBody(fields: Record<string, TokenImport>): string {
 
 function labelSizeStyleBody(fields: Record<string, TokenImport>): string {
   return `{
-    ${typographyProps(fields.labelTypography!.reference)},
+    ${typographyProps(fields.labelTypography!.reference, "    ")},
   }`;
 }
 
@@ -113,7 +106,7 @@ export const checkboxBox = style({
 });
 
 export const checkboxSize = styleVariants({
-${sizeNames.map((name) => `  ${JSON.stringify(name)}: ${sizeStyleBody(sizes[name]!)},`).join("\n")}
+${sizeNames.map((name) => `  ${JSON.stringify(name)}: ${checkboxSizeStyleBody(sizes[name]!)},`).join("\n")}
 });
 
 export const checkboxLabelSize = styleVariants({
@@ -234,11 +227,6 @@ export function Checkbox({
 `,
   };
 }
-
-import type { TokenBinding } from "@recontentapp/core";
-import { defineRegistryComponent } from "../define.js";
-import type { IconName } from "../internal/icon-map-icons.js";
-import { vanillaExtractComponentOutput } from "./shared.js";
 
 type CheckboxSizeFields = {
   boxSize: TokenBinding<"dimension">;

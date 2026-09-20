@@ -1,5 +1,8 @@
 import type { BreakpointBinding, ComponentSourceFiles, ScaleImport } from "../types.js";
 import { responsiveRule } from "./shared/responsive.js";
+import type { ScaleBinding } from "@recontentapp/core";
+import { defineRegistryComponent } from "../define.js";
+import { vanillaExtractComponentOutput } from "./shared.js";
 
 type SpacingVariant = { name: string; cssProps: readonly string[] };
 
@@ -358,10 +361,6 @@ function generateBoxSources(
     ? generateBoxSourcesResponsive(bindings, breakpoints)
     : generateBoxSourcesStatic(bindings);
 }
-
-import type { ScaleBinding } from "@recontentapp/core";
-import { defineRegistryComponent } from "../define.js";
-import { vanillaExtractComponentOutput } from "./shared.js";
 
 export type BoxComponentOptions = {
   spacing: ScaleBinding<"dimension">;

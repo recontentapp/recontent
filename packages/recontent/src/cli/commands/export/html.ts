@@ -1,6 +1,6 @@
 import { generateHtmlReport } from "../../../generators/html.js";
 import { loadConfig, type LogLevel } from "@recontentapp/core";
-import { logSuccess } from "../../utils/exit.js";
+import { createLogger } from "../../../logger.js";
 import { writeOutputFile } from "../../utils/fs.js";
 
 export type HtmlExportOptions = {
@@ -12,7 +12,8 @@ export type HtmlExportOptions = {
 
 export async function runHtmlExport(options: HtmlExportOptions): Promise<void> {
   const config = await loadConfig(options.configPath);
+  const logger = createLogger(options.logLevel ?? config.logLevel);
   const html = generateHtmlReport(config);
   const { path: outputPath } = await writeOutputFile(options.output, html, options.cwd);
-  logSuccess(`Wrote token report to ${outputPath}`);
+  logger.info(`Wrote token report to ${outputPath}`);
 }
