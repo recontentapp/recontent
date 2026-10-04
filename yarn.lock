@@ -6244,6 +6244,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"lucide-react@npm:0.469.0":
+  version: 0.469.0
+  resolution: "lucide-react@npm:0.469.0"
+  peerDependencies:
+    react: ^16.5.1 || ^17.0.0 || ^18.0.0 || ^19.0.0
+  checksum: 10c0/0ee78d110550579b848a01446a440f733fd17e1bf1850aa01551b61f415e03e5f5ab7f26b56f1c648edc93856177f5476ff9f8f6f5d80e8fe45913d208f49961
+  languageName: node
+  linkType: hard
+
 "lz-string@npm:^1.5.0":
   version: 1.5.0
   resolution: "lz-string@npm:1.5.0"
@@ -8295,6 +8304,7 @@ __metadata:
     "@vanilla-extract/vite-plugin": "npm:5.2.5"
     "@vitejs/plugin-react": "npm:4.3.0"
     date-fns: "npm:4.1.0"
+    lucide-react: "npm:0.469.0"
     react: "npm:19.0.0"
     react-day-picker: "npm:10.0.1"
     react-dom: "npm:19.0.0"

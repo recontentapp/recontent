@@ -1,25 +1,13 @@
 import type { ComponentSourceFiles, TokenImport } from "../types.js";
-import { focusRingBlock, groupVariantTokens, typographyProps } from "./shared.js";
+import { focusRingBlock, typographyProps } from "./shared.js";
 import type { TokenBinding } from "@recontentapp/core";
 import { defineRegistryComponent } from "../define.js";
 import type { IconName } from "../internal/icon-map-icons.js";
 import { vanillaExtractComponentOutput } from "./shared.js";
 
-const SIZE_FIELDS = ["boxSize", "labelTypography"] as const;
-function checkboxSizeStyleBody(fields: Record<string, TokenImport>): string {
-  return `{
-    width: ${fields.boxSize!.reference},
-    height: ${fields.boxSize!.reference},
-  }`;
-}
-
-function labelSizeStyleBody(fields: Record<string, TokenImport>): string {
-  return `{
-    ${typographyProps(fields.labelTypography!.reference, "    ")},
-  }`;
-}
-
 function generateCheckboxSources(bindings: {
+  boxSize: TokenImport;
+  labelTypography: TokenImport;
   border: TokenImport;
   borderRadius: TokenImport;
   backgroundColor: TokenImport;
@@ -32,12 +20,13 @@ function generateCheckboxSources(bindings: {
   disabledColor: TokenImport;
   labelColor: TokenImport;
   gap: TokenImport;
-  tokens: Record<string, TokenImport>;
   /** Build-time config, baked directly into the generated component. */
   checkedIcon: string;
   indeterminateIcon: string;
 }): ComponentSourceFiles {
   const {
+    boxSize,
+    labelTypography,
     border,
     borderRadius,
     backgroundColor,
@@ -50,16 +39,12 @@ function generateCheckboxSources(bindings: {
     disabledColor,
     labelColor,
     gap,
-    tokens,
     checkedIcon,
     indeterminateIcon,
   } = bindings;
 
-  const sizes = groupVariantTokens(tokens, "sizes", SIZE_FIELDS);
-  const sizeNames = Object.keys(sizes);
-
   return {
-    styles: `import { style, styleVariants } from "@vanilla-extract/css";
+    styles: `import { style } from "@vanilla-extract/css";
 import { vars } from "../../tokens.css";
 
 export const checkboxRoot = style({
@@ -82,8 +67,8 @@ export const checkboxBox = style({
   justifyContent: "center",
   flexShrink: 0,
   overflow: "hidden",
-  width: "1rem",
-  height: "1rem",
+  width: ${boxSize.reference},
+  height: ${boxSize.reference},
   border: ${border.reference},
   borderRadius: ${borderRadius.reference},
   backgroundColor: ${backgroundColor.reference},
@@ -103,14 +88,6 @@ export const checkboxBox = style({
       cursor: "not-allowed",
     },
   },
-});
-
-export const checkboxSize = styleVariants({
-${sizeNames.map((name) => `  ${JSON.stringify(name)}: ${checkboxSizeStyleBody(sizes[name]!)},`).join("\n")}
-});
-
-export const checkboxLabelSize = styleVariants({
-${sizeNames.map((name) => `  ${JSON.stringify(name)}: ${labelSizeStyleBody(sizes[name]!)},`).join("\n")}
 });
 
 export const checkboxIndicator = style({
@@ -134,6 +111,7 @@ export const checkboxIndicatorIcon = style({
 
 export const checkboxLabel = style({
   color: ${labelColor.reference},
+  ${typographyProps(labelTypography.reference, "      ")},
 });
 `,
     component: `import type { ReactNode } from "react";
@@ -143,14 +121,10 @@ import {
   checkboxIndicator,
   checkboxIndicatorIcon,
   checkboxLabel,
-  checkboxLabelSize,
   checkboxRoot,
-  checkboxSize,
 } from "./Checkbox.gen.css";
 import type { CommonComponentProps, FieldableInputProps, RenderProp } from "../../renderElement.gen";
 import { icons } from "../../iconMap";
-
-export type CheckboxSize = ${sizeNames.map((n) => JSON.stringify(n)).join(" | ")};
 
 const CheckedIcon = icons[${JSON.stringify(checkedIcon)}];
 const IndeterminateIcon = icons[${JSON.stringify(indeterminateIcon)}];
@@ -161,7 +135,6 @@ export interface CheckboxProps extends CommonComponentProps, FieldableInputProps
   onCheckedChange?: (checked: boolean) => void;
   value?: string;
   label?: ReactNode;
-  size?: CheckboxSize;
   indeterminate?: boolean;
   render?: RenderProp<"button">;
 }
@@ -172,7 +145,6 @@ export function Checkbox({
   onCheckedChange,
   value,
   label,
-  size,
   indeterminate = false,
   name,
   disabled = false,
@@ -202,7 +174,7 @@ export function Checkbox({
         onBlur={onBlur}
         data-invalid={invalid || undefined}
         render={render}
-        className={[checkboxBox, size !== undefined && checkboxSize[size]].filter(Boolean).join(" ")}
+        className={checkboxBox}
       >
         <BaseCheckbox.Indicator className={checkboxIndicator} keepMounted={false}>
           {indeterminate ? (
@@ -212,15 +184,7 @@ export function Checkbox({
           )}
         </BaseCheckbox.Indicator>
       </BaseCheckbox.Root>
-      {label !== undefined && (
-        <span
-          className={[checkboxLabel, size !== undefined && checkboxLabelSize[size]]
-            .filter(Boolean)
-            .join(" ")}
-        >
-          {label}
-        </span>
-      )}
+      {label !== undefined && <span className={checkboxLabel}>{label}</span>}
     </label>
   );
 }
@@ -228,13 +192,9 @@ export function Checkbox({
   };
 }
 
-type CheckboxSizeFields = {
+export type CheckboxComponentOptions = {
   boxSize: TokenBinding<"dimension">;
   labelTypography: TokenBinding<"typography">;
-};
-
-export type CheckboxComponentOptions = {
-  sizes: Record<string, CheckboxSizeFields>;
   border: TokenBinding<"border">;
   borderRadius: TokenBinding<"dimension">;
   backgroundColor: TokenBinding<"color">;
@@ -255,14 +215,11 @@ export const checkboxComponent = defineRegistryComponent<CheckboxComponentOption
   name: "Checkbox",
   internalDependencies: ["render-element", "icon-map"],
   schema: {
-    sizes: {
-      kind: "variants",
-      description:
-        "Consumer-defined sizes, drives the size prop. Pairs the box dimension with the label's typography so both scale together.",
-      fields: {
-        boxSize: { kind: "token", type: "dimension" },
-        labelTypography: { kind: "token", type: "typography" },
-      },
+    boxSize: { kind: "token", type: "dimension", description: "Width and height of the box." },
+    labelTypography: {
+      kind: "token",
+      type: "typography",
+      description: "Typography applied to the label.",
     },
     border: {
       kind: "token",
@@ -327,6 +284,8 @@ export const checkboxComponent = defineRegistryComponent<CheckboxComponentOption
     "Checkbox",
     (_scales, _breakpoints, tokens, focusRingColor, icons) =>
       generateCheckboxSources({
+        boxSize: tokens.boxSize!,
+        labelTypography: tokens.labelTypography!,
         border: tokens.border!,
         borderRadius: tokens.borderRadius!,
         backgroundColor: tokens.backgroundColor!,
@@ -339,7 +298,6 @@ export const checkboxComponent = defineRegistryComponent<CheckboxComponentOption
         disabledColor: tokens.disabledColor!,
         labelColor: tokens.labelColor!,
         gap: tokens.gap!,
-        tokens,
         checkedIcon: icons.checkedIcon!,
         indeterminateIcon: icons.indeterminateIcon!,
       }),

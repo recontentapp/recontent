@@ -47,17 +47,6 @@ export const toggleOption = style({
 });
 
 export const toggleOptionSize = styleVariants({
-  "sm": {
-      paddingLeft: vars.ref.spacing[12],
-      paddingRight: vars.ref.spacing[12],
-      paddingTop: vars.ref.spacing[2],
-      paddingBottom: vars.ref.spacing[2],
-      fontFamily: vars.system.textScale["tiny-caption"].fontFamily,
-      fontSize: vars.system.textScale["tiny-caption"].fontSize,
-      fontWeight: vars.system.textScale["tiny-caption"].fontWeight,
-      letterSpacing: vars.system.textScale["tiny-caption"].letterSpacing,
-      lineHeight: vars.system.textScale["tiny-caption"].lineHeight,
-    },
   "md": {
       paddingLeft: vars.ref.spacing[16],
       paddingRight: vars.ref.spacing[16],

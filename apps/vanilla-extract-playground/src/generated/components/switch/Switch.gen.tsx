@@ -5,13 +5,9 @@ import {
   switchRoot,
   switchRootLabelPosition,
   switchThumb,
-  switchThumbSize,
   switchTrack,
-  switchTrackSize,
 } from "./Switch.gen.css";
 import type { CommonComponentProps, FieldableInputProps, RenderProp } from "../../renderElement.gen";
-
-export type SwitchSize = "sm" | "md";
 
 export interface SwitchProps extends CommonComponentProps, FieldableInputProps {
   checked?: boolean;
@@ -19,7 +15,6 @@ export interface SwitchProps extends CommonComponentProps, FieldableInputProps {
   onCheckedChange?: (checked: boolean) => void;
   label?: ReactNode;
   labelPosition?: "start" | "end";
-  size?: SwitchSize;
   render?: RenderProp<"button">;
 }
 
@@ -29,7 +24,6 @@ export function Switch({
   onCheckedChange,
   label,
   labelPosition = "end",
-  size = "sm",
   name,
   disabled = false,
   required = false,
@@ -58,9 +52,9 @@ export function Switch({
         onBlur={onBlur}
         data-invalid={invalid || undefined}
         render={render}
-        className={[switchTrack, switchTrackSize[size]].join(" ")}
+        className={switchTrack}
       >
-        <BaseSwitch.Thumb className={[switchThumb, switchThumbSize[size]].join(" ")} />
+        <BaseSwitch.Thumb className={switchThumb} />
       </BaseSwitch.Root>
       {label !== undefined && <span className={switchLabel}>{label}</span>}
     </label>

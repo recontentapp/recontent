@@ -5,14 +5,10 @@ import {
   checkboxIndicator,
   checkboxIndicatorIcon,
   checkboxLabel,
-  checkboxLabelSize,
   checkboxRoot,
-  checkboxSize,
 } from "./Checkbox.gen.css";
 import type { CommonComponentProps, FieldableInputProps, RenderProp } from "../../renderElement.gen";
 import { icons } from "../../iconMap";
-
-export type CheckboxSize = "sm" | "md";
 
 const CheckedIcon = icons["check"];
 const IndeterminateIcon = icons["close"];
@@ -23,7 +19,6 @@ export interface CheckboxProps extends CommonComponentProps, FieldableInputProps
   onCheckedChange?: (checked: boolean) => void;
   value?: string;
   label?: ReactNode;
-  size?: CheckboxSize;
   indeterminate?: boolean;
   render?: RenderProp<"button">;
 }
@@ -34,7 +29,6 @@ export function Checkbox({
   onCheckedChange,
   value,
   label,
-  size,
   indeterminate = false,
   name,
   disabled = false,
@@ -64,7 +58,7 @@ export function Checkbox({
         onBlur={onBlur}
         data-invalid={invalid || undefined}
         render={render}
-        className={[checkboxBox, size !== undefined && checkboxSize[size]].filter(Boolean).join(" ")}
+        className={checkboxBox}
       >
         <BaseCheckbox.Indicator className={checkboxIndicator} keepMounted={false}>
           {indeterminate ? (
@@ -74,15 +68,7 @@ export function Checkbox({
           )}
         </BaseCheckbox.Indicator>
       </BaseCheckbox.Root>
-      {label !== undefined && (
-        <span
-          className={[checkboxLabel, size !== undefined && checkboxLabelSize[size]]
-            .filter(Boolean)
-            .join(" ")}
-        >
-          {label}
-        </span>
-      )}
+      {label !== undefined && <span className={checkboxLabel}>{label}</span>}
     </label>
   );
 }

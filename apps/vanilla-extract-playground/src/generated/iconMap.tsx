@@ -1,4 +1,5 @@
 import type { ComponentType, SVGProps } from "react";
+import { AlertTriangle, Check, ChevronDown, Info, Search, X } from "lucide-react";
 
 export type IconRenderProps = SVGProps<SVGSVGElement>;
 
@@ -7,36 +8,12 @@ export type IconRenderProps = SVGProps<SVGSVGElement>;
 // Each key below comes from an icon name referenced by a built-in component
 // option (e.g. Accordion's `indicatorIcon`) in recontent.config.ts.
 export const icons = {
-  alert: (props: IconRenderProps) => (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} {...props}>
-      <rect x="3" y="3" width="18" height="18" rx="2" />
-    </svg>
-  ),
-  check: (props: IconRenderProps) => (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} {...props}>
-      <rect x="3" y="3" width="18" height="18" rx="2" />
-    </svg>
-  ),
-  chevronDown: (props: IconRenderProps) => (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} {...props}>
-      <rect x="3" y="3" width="18" height="18" rx="2" />
-    </svg>
-  ),
-  close: (props: IconRenderProps) => (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} {...props}>
-      <rect x="3" y="3" width="18" height="18" rx="2" />
-    </svg>
-  ),
-  info: (props: IconRenderProps) => (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} {...props}>
-      <rect x="3" y="3" width="18" height="18" rx="2" />
-    </svg>
-  ),
-  search: (props: IconRenderProps) => (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} {...props}>
-      <rect x="3" y="3" width="18" height="18" rx="2" />
-    </svg>
-  ),
+  alert: AlertTriangle,
+  check: Check,
+  chevronDown: ChevronDown,
+  close: X,
+  info: Info,
+  search: Search,
 } satisfies Record<string, ComponentType<IconRenderProps>>;
 
 export type IconType = keyof typeof icons;

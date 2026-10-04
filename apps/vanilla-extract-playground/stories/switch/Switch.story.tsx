@@ -9,15 +9,10 @@ const meta = {
       control: "select",
       options: ["start", "end"],
     },
-    size: {
-      control: "select",
-      options: ["sm", "md"],
-    },
   },
   args: {
     label: "Enable notifications",
     labelPosition: "end",
-    size: "sm",
     defaultChecked: true,
   },
 } satisfies Meta<typeof Switch>;

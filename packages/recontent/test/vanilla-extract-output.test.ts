@@ -2776,16 +2776,8 @@ describe("Checkbox built-in component", () => {
       outDir: "dist-test",
       builtInComponents: {
         Checkbox: {
-          sizes: {
-            sm: {
-              boxSize: ref.fontSizeScale.sm,
-              labelTypography: system.textStyles.body,
-            },
-            md: {
-              boxSize: ref.fontSizeScale.md,
-              labelTypography: system.textStyles.body,
-            },
-          },
+          boxSize: ref.fontSizeScale.md,
+          labelTypography: system.textStyles.body,
           border: system.border.default,
           borderRadius: system.radius.inner,
           backgroundColor: ref.color.white,
@@ -2846,7 +2838,7 @@ describe("Checkbox built-in component", () => {
       placeholderColor: ref.__veColor,
     };
     expect(() => generate({ config, output })).toThrow(MissingDesignTokensError);
-    expect(() => generate({ config, output })).toThrow(/requires config "sizes"/);
+    expect(() => generate({ config, output })).toThrow(/requires config "boxSize"/);
   });
 
   test("Checkbox generated sources pass assertParses", () => {
@@ -2999,6 +2991,9 @@ describe("Switch built-in component", () => {
       outDir: "dist-test",
       builtInComponents: {
         Switch: {
+          trackWidth: system.spacing.md,
+          trackHeight: system.spacing.sm,
+          thumbSize: system.spacing.sm,
           borderRadius: system.radius.full,
           trackBackgroundColor: ref.color.white,
           trackCheckedBackgroundColor: ref.color.black,
@@ -3010,13 +3005,6 @@ describe("Switch built-in component", () => {
           labelColor: ref.color.black,
           gap: system.spacing.sm,
           transition: system.transitions.standard,
-          sizes: {
-            md: {
-              trackWidth: system.spacing.md,
-              trackHeight: system.spacing.sm,
-              thumbSize: system.spacing.sm,
-            },
-          },
         },
       },
       focusRingColor: ref.__veColor,
@@ -3039,8 +3027,6 @@ describe("Switch built-in component", () => {
     expect(component.content).toMatch(
       /import { Switch as BaseSwitch } from "@base-ui\/react\/switch";/,
     );
-    expect(component.content).toMatch(/export type SwitchSize = "md";/);
-
     const styles = files.find((f) => f.filename === "components/switch/Switch.gen.css.ts")!;
     expect(styles.content).toMatch(/\[data-checked\] > &/);
   });
@@ -3061,7 +3047,7 @@ describe("Switch built-in component", () => {
       placeholderColor: ref.__veColor,
     };
     expect(() => generate({ config, output })).toThrow(MissingDesignTokensError);
-    expect(() => generate({ config, output })).toThrow(/requires config "sizes"/);
+    expect(() => generate({ config, output })).toThrow(/requires config "trackWidth"/);
   });
 
   test("Switch generated sources pass assertParses", () => {

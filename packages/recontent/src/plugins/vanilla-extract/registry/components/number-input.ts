@@ -71,6 +71,7 @@ export const numberInputGroup = style({
   alignItems: "center",
   boxSizing: "border-box",
   width: "100%",
+  overflow: "hidden",
   gap: ${gap.reference},
   border: ${border.reference},
   borderRadius: ${borderRadius.reference},

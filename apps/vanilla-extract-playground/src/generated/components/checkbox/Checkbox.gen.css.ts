@@ -1,4 +1,4 @@
-import { style, styleVariants } from "@vanilla-extract/css";
+import { style } from "@vanilla-extract/css";
 import { vars } from "../../tokens.css";
 
 export const checkboxRoot = style({
@@ -21,8 +21,8 @@ export const checkboxBox = style({
   justifyContent: "center",
   flexShrink: 0,
   overflow: "hidden",
-  width: "1rem",
-  height: "1rem",
+  width: vars.ref.iconScale.lg,
+  height: vars.ref.iconScale.lg,
   border: vars.system.border.default,
   borderRadius: vars.ref.radius.inner,
   backgroundColor: vars.system.colors.backgroundCard,
@@ -47,34 +47,6 @@ export const checkboxBox = style({
   },
 });
 
-export const checkboxSize = styleVariants({
-  "sm": {
-    width: vars.ref.iconScale.sm,
-    height: vars.ref.iconScale.sm,
-  },
-  "md": {
-    width: vars.ref.iconScale.lg,
-    height: vars.ref.iconScale.lg,
-  },
-});
-
-export const checkboxLabelSize = styleVariants({
-  "sm": {
-    fontFamily: vars.system.textScale["tiny-caption"].fontFamily,
-    fontSize: vars.system.textScale["tiny-caption"].fontSize,
-    fontWeight: vars.system.textScale["tiny-caption"].fontWeight,
-    letterSpacing: vars.system.textScale["tiny-caption"].letterSpacing,
-    lineHeight: vars.system.textScale["tiny-caption"].lineHeight,
-  },
-  "md": {
-    fontFamily: vars.system.textScale["paragraph-body-m"].fontFamily,
-    fontSize: vars.system.textScale["paragraph-body-m"].fontSize,
-    fontWeight: vars.system.textScale["paragraph-body-m"].fontWeight,
-    letterSpacing: vars.system.textScale["paragraph-body-m"].letterSpacing,
-    lineHeight: vars.system.textScale["paragraph-body-m"].lineHeight,
-  },
-});
-
 export const checkboxIndicator = style({
   display: "inline-flex",
   alignItems: "center",
@@ -96,4 +68,9 @@ export const checkboxIndicatorIcon = style({
 
 export const checkboxLabel = style({
   color: vars.system.colors.textPrimary,
+  fontFamily: vars.system.textScale["paragraph-body-m"].fontFamily,
+      fontSize: vars.system.textScale["paragraph-body-m"].fontSize,
+      fontWeight: vars.system.textScale["paragraph-body-m"].fontWeight,
+      letterSpacing: vars.system.textScale["paragraph-body-m"].letterSpacing,
+      lineHeight: vars.system.textScale["paragraph-body-m"].lineHeight,
 });

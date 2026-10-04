@@ -6,6 +6,7 @@ export const numberInputGroup = style({
   alignItems: "center",
   boxSizing: "border-box",
   width: "100%",
+  overflow: "hidden",
   gap: vars.ref.spacing[8],
   border: vars.system.border.default,
   borderRadius: vars.ref.radius.element,

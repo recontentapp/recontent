@@ -25,6 +25,8 @@ export const switchTrack = style({
   display: "inline-flex",
   alignItems: "center",
   flexShrink: 0,
+  width: vars.components.switch.trackWidth,
+  height: vars.components.switch.trackHeight,
   border: vars.system.border.default,
   borderRadius: vars.ref.radius.full,
   backgroundColor: vars.system.colors.backgroundMuted,
@@ -46,42 +48,23 @@ export const switchTrack = style({
   },
 });
 
-export const switchTrackSize = styleVariants({
-  "sm": { width: vars.ref.spacing[24], height: vars.ref.spacing[12] },
-  "md": { width: vars.ref.spacing[32], height: vars.ref.spacing[16] },
-});
-
 export const switchThumb = style({
   boxSizing: "border-box",
   position: "absolute",
   top: "50%",
   left: "2px",
   translate: "0 -50%",
+  width: vars.components.switch.thumbSize,
+  height: vars.components.switch.thumbSize,
   borderRadius: vars.ref.radius.full,
   backgroundColor: vars.ref.color.white[100],
   boxShadow: vars.system.elevationScale.sm,
   transitionProperty: "left",
   transitionDuration: vars.system.transitionScale.fast.transitionDuration,
   transitionTimingFunction: vars.system.transitionScale.fast.transitionTimingFunction,
-});
-
-export const switchThumbSize = styleVariants({
-  "sm": {
-    width: vars.ref.spacing[8],
-    height: vars.ref.spacing[8],
-    selectors: {
-      "[data-checked] > &": {
-        left: `calc(100% - ${vars.ref.spacing[8]} - 2px)`,
-      },
-    },
-  },
-  "md": {
-    width: vars.ref.spacing[12],
-    height: vars.ref.spacing[12],
-    selectors: {
-      "[data-checked] > &": {
-        left: `calc(100% - ${vars.ref.spacing[12]} - 2px)`,
-      },
+  selectors: {
+    "[data-checked] > &": {
+      left: `calc(100% - ${vars.components.switch.thumbSize} - 2px)`,
     },
   },
 });

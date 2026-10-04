@@ -4,7 +4,7 @@ import { Toggle as BaseToggle } from "@base-ui/react/toggle";
 import { toggleOption, toggleOptionSize, toggleRoot } from "./Toggle.gen.css";
 import type { CommonComponentProps, RenderProp } from "../../renderElement.gen";
 
-export type ToggleSize = "sm" | "md";
+export type ToggleSize = "md";
 
 export interface ToggleOption<Value extends string> {
   value: Value;
@@ -27,7 +27,7 @@ export function Toggle<Value extends string>({
   defaultValue,
   onValueChange,
   disabled = false,
-  size = "sm",
+  size = "md",
   className,
   render,
   ...props

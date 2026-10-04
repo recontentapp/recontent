@@ -1,4 +1,4 @@
-import { useState, type KeyboardEvent, type MouseEvent } from "react";
+import { useRef, useState, type KeyboardEvent, type MouseEvent } from "react";
 import { Popover as BasePopover } from "@base-ui/react/popover";
 import { DayPicker } from "react-day-picker";
 import { enUS } from "react-day-picker/locale";
@@ -72,6 +72,7 @@ export function DateInput({
   const selected = isControlled ? value : uncontrolledValue;
   const [viewDate, setViewDate] = useState(selected ?? new Date());
   const [open, setOpen] = useState(false);
+  const rootRef = useRef<HTMLDivElement>(null);
 
   const formatter = new Intl.DateTimeFormat(locale);
 
@@ -96,6 +97,7 @@ export function DateInput({
   return (
     <BasePopover.Root open={open} onOpenChange={setOpen} modal="trap-focus">
       <div
+        ref={rootRef}
         className={classes}
         data-slot="date-input"
         data-invalid={invalid || undefined}
@@ -154,7 +156,12 @@ export function DateInput({
         </BasePopover.Trigger>
       </div>
       <BasePopover.Portal>
-        <BasePopover.Positioner className={dateInputPositioner} side="bottom" align="start">
+        <BasePopover.Positioner
+          className={dateInputPositioner}
+          anchor={rootRef}
+          side="bottom"
+          align="start"
+        >
           <BasePopover.Popup className={dateInputPopup} data-slot="date-input-popup">
             <div className={dateInputHeader}>
               <button

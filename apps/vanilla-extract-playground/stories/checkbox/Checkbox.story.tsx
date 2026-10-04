@@ -4,12 +4,6 @@ import { Checkbox } from "../../src/generated/components/checkbox/Checkbox.gen";
 const meta = {
   title: "Components/Checkbox",
   component: Checkbox,
-  argTypes: {
-    size: {
-      control: "select",
-      options: ["xs", "sm", "base", "lg", "xl", "2xl", "3xl", "4xl"],
-    },
-  },
   args: {
     label: "Accept terms and conditions",
     defaultChecked: true,

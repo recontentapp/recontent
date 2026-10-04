@@ -1,30 +1,16 @@
 import type { ComponentSourceFiles, TokenImport } from "../types.js";
-import { focusRingBlock, groupVariantTokens, typographyProps } from "./shared.js";
+import { focusRingBlock, typographyProps } from "./shared.js";
 import type { TokenBinding } from "@recontentapp/core";
 import { defineRegistryComponent } from "../define.js";
 import { vanillaExtractComponentOutput } from "./shared.js";
 
-const SIZE_FIELDS = ["trackWidth", "trackHeight", "thumbSize"] as const;
-
 // Inset kept identical on both edges of the track, in both the checked and unchecked state.
 const THUMB_OFFSET = "2px";
-function sizeTrackStyleBody(fields: Record<string, TokenImport>): string {
-  return `{ width: ${fields.trackWidth!.reference}, height: ${fields.trackHeight!.reference} }`;
-}
-
-function sizeThumbStyleBody(fields: Record<string, TokenImport>): string {
-  return `{
-    width: ${fields.thumbSize!.reference},
-    height: ${fields.thumbSize!.reference},
-    selectors: {
-      "[data-checked] > &": {
-        left: \`calc(100% - \${${fields.thumbSize!.reference}} - ${THUMB_OFFSET})\`,
-      },
-    },
-  }`;
-}
 
 function generateSwitchSources(bindings: {
+  trackWidth: TokenImport;
+  trackHeight: TokenImport;
+  thumbSize: TokenImport;
   borderRadius: TokenImport;
   trackBackgroundColor: TokenImport;
   trackCheckedBackgroundColor: TokenImport;
@@ -37,9 +23,11 @@ function generateSwitchSources(bindings: {
   labelColor: TokenImport;
   gap: TokenImport;
   transition: TokenImport;
-  tokens: Record<string, TokenImport>;
 }): ComponentSourceFiles {
   const {
+    trackWidth,
+    trackHeight,
+    thumbSize,
     borderRadius,
     trackBackgroundColor,
     trackCheckedBackgroundColor,
@@ -52,10 +40,7 @@ function generateSwitchSources(bindings: {
     labelColor,
     gap,
     transition,
-    tokens,
   } = bindings;
-  const sizes = groupVariantTokens(tokens, "sizes", SIZE_FIELDS);
-  const sizeNames = Object.keys(sizes);
 
   return {
     styles: `import { style, styleVariants } from "@vanilla-extract/css";
@@ -85,6 +70,8 @@ export const switchTrack = style({
   display: "inline-flex",
   alignItems: "center",
   flexShrink: 0,
+  width: ${trackWidth.reference},
+  height: ${trackHeight.reference},
   border: ${trackBorder.reference},
   borderRadius: ${borderRadius.reference},
   backgroundColor: ${trackBackgroundColor.reference},
@@ -103,26 +90,25 @@ export const switchTrack = style({
   },
 });
 
-export const switchTrackSize = styleVariants({
-${sizeNames.map((name) => `  ${JSON.stringify(name)}: ${sizeTrackStyleBody(sizes[name]!)},`).join("\n")}
-});
-
 export const switchThumb = style({
   boxSizing: "border-box",
   position: "absolute",
   top: "50%",
   left: ${JSON.stringify(THUMB_OFFSET)},
   translate: "0 -50%",
+  width: ${thumbSize.reference},
+  height: ${thumbSize.reference},
   borderRadius: ${borderRadius.reference},
   backgroundColor: ${thumbBackgroundColor.reference},
   boxShadow: ${thumbShadow.reference},
   transitionProperty: "left",
   transitionDuration: ${transition.reference}.transitionDuration,
   transitionTimingFunction: ${transition.reference}.transitionTimingFunction,
-});
-
-export const switchThumbSize = styleVariants({
-${sizeNames.map((name) => `  ${JSON.stringify(name)}: ${sizeThumbStyleBody(sizes[name]!)},`).join("\n")}
+  selectors: {
+    "[data-checked] > &": {
+      left: \`calc(100% - \${${thumbSize.reference}} - ${THUMB_OFFSET})\`,
+    },
+  },
 });
 
 export const switchLabel = style({
@@ -137,13 +123,9 @@ import {
   switchRoot,
   switchRootLabelPosition,
   switchThumb,
-  switchThumbSize,
   switchTrack,
-  switchTrackSize,
 } from "./Switch.gen.css";
 import type { CommonComponentProps, FieldableInputProps, RenderProp } from "../../renderElement.gen";
-
-export type SwitchSize = ${sizeNames.map((n) => JSON.stringify(n)).join(" | ")};
 
 export interface SwitchProps extends CommonComponentProps, FieldableInputProps {
   checked?: boolean;
@@ -151,7 +133,6 @@ export interface SwitchProps extends CommonComponentProps, FieldableInputProps {
   onCheckedChange?: (checked: boolean) => void;
   label?: ReactNode;
   labelPosition?: "start" | "end";
-  size?: SwitchSize;
   render?: RenderProp<"button">;
 }
 
@@ -161,7 +142,6 @@ export function Switch({
   onCheckedChange,
   label,
   labelPosition = "end",
-  size = ${JSON.stringify(sizeNames[0] ?? "md")},
   name,
   disabled = false,
   required = false,
@@ -190,9 +170,9 @@ export function Switch({
         onBlur={onBlur}
         data-invalid={invalid || undefined}
         render={render}
-        className={[switchTrack, switchTrackSize[size]].join(" ")}
+        className={switchTrack}
       >
-        <BaseSwitch.Thumb className={[switchThumb, switchThumbSize[size]].join(" ")} />
+        <BaseSwitch.Thumb className={switchThumb} />
       </BaseSwitch.Root>
       {label !== undefined && <span className={switchLabel}>{label}</span>}
     </label>
@@ -202,14 +182,10 @@ export function Switch({
   };
 }
 
-type SwitchSizeFields = {
+export type SwitchComponentOptions = {
   trackWidth: TokenBinding<"dimension">;
   trackHeight: TokenBinding<"dimension">;
   thumbSize: TokenBinding<"dimension">;
-};
-
-export type SwitchComponentOptions = {
-  sizes: Record<string, SwitchSizeFields>;
   borderRadius: TokenBinding<"dimension">;
   trackBackgroundColor: TokenBinding<"color">;
   trackCheckedBackgroundColor: TokenBinding<"color">;
@@ -228,15 +204,9 @@ export const switchComponent = defineRegistryComponent<SwitchComponentOptions>()
   name: "Switch",
   internalDependencies: ["render-element"],
   schema: {
-    sizes: {
-      kind: "variants",
-      description: "Consumer-defined sizes, drives the size prop.",
-      fields: {
-        trackWidth: { kind: "token", type: "dimension" },
-        trackHeight: { kind: "token", type: "dimension" },
-        thumbSize: { kind: "token", type: "dimension" },
-      },
-    },
+    trackWidth: { kind: "token", type: "dimension", description: "Width of the track." },
+    trackHeight: { kind: "token", type: "dimension", description: "Height of the track." },
+    thumbSize: { kind: "token", type: "dimension", description: "Width and height of the thumb." },
     borderRadius: {
       kind: "token",
       type: "dimension",
@@ -298,6 +268,9 @@ export const switchComponent = defineRegistryComponent<SwitchComponentOptions>()
     "Switch",
     (_scales, _breakpoints, tokens, focusRingColor) =>
       generateSwitchSources({
+        trackWidth: tokens.trackWidth!,
+        trackHeight: tokens.trackHeight!,
+        thumbSize: tokens.thumbSize!,
         borderRadius: tokens.borderRadius!,
         trackBackgroundColor: tokens.trackBackgroundColor!,
         trackCheckedBackgroundColor: tokens.trackCheckedBackgroundColor!,
@@ -310,7 +283,6 @@ export const switchComponent = defineRegistryComponent<SwitchComponentOptions>()
         labelColor: tokens.labelColor!,
         gap: tokens.gap!,
         transition: tokens.transition!,
-        tokens,
       }),
     { "@base-ui/react": "^1.0.0" },
   ),
