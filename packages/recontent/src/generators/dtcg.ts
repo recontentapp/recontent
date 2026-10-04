@@ -28,6 +28,28 @@ function resolveThemedEntry(
   };
 }
 
+function applyScaleMetadata(output: DtcgOutput, registry: TokenRegistry): void {
+  const seen = new Set<string>();
+  for (const entry of registry.values()) {
+    const scale = entry.scale;
+    if (!scale) continue;
+    const key = `${scale.layer}:${pathKey(scale.path)}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+
+    let group: unknown = output;
+    for (const segment of scale.path) {
+      group = (group as Record<string, unknown> | undefined)?.[segment];
+    }
+    if (typeof group !== "object" || group === null) continue;
+
+    const node = group as Record<string, unknown>;
+    if (scale.$description !== undefined) node.$description = scale.$description;
+    if (scale.$deprecated !== undefined) node.$deprecated = scale.$deprecated;
+    if (scale.$extensions !== undefined) node.$extensions = scale.$extensions;
+  }
+}
+
 function isTokenNode(node: unknown): node is Record<string, unknown> {
   return typeof node === "object" && node !== null && "$value" in node;
 }
@@ -81,6 +103,7 @@ export function generateDtcg(input: TokenRegistry | Config): DtcgOutput {
     setNested(output, entry.path, entryToDtcgNode(entry));
   }
 
+  applyScaleMetadata(output, registry);
   return hoistGroupTypes(output);
 }
 
@@ -99,6 +122,7 @@ export function generateDtcgThemed(config: Config, themeName: string): DtcgOutpu
     setNested(output, resolved.path, entryToDtcgNode(resolved));
   }
 
+  applyScaleMetadata(output, config.registry);
   return hoistGroupTypes(output);
 }
 

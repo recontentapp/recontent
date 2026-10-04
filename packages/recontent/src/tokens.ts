@@ -24,7 +24,7 @@ import {
   isTokenLeaf,
   toSrgbHex,
 } from "@recontentapp/core";
-import { withRawTokenMethods, type ChainableMethods } from "./metadata.js";
+import { withRawTokenMethods, withScaleMethods, type ChainableMethods } from "./metadata.js";
 
 type ColorInput =
   | string
@@ -203,7 +203,9 @@ function memberFromToken<T extends TokenType>(
       alias: token._path,
     };
   }
-  return { $value: token.$value as import("@recontentapp/core").TokenTypeMap[T] };
+  return {
+    $value: token.$value as import("@recontentapp/core").TokenTypeMap[T],
+  };
 }
 
 function toMember<T extends TokenType>(
@@ -418,23 +420,29 @@ function typography(
   return createRawToken("typography", value);
 }
 
+type ChainableScale<
+  Key extends string | number,
+  T extends TokenType,
+  Value extends RawToken<T> | StampedToken<T>,
+> = TokenScale<Key, T, Value>;
+
 function createScale<
   Key extends string | number,
   T extends TokenType,
   Value extends RawToken<T> | StampedToken<T>,
->(type: T, scale: Record<Key, Value>): TokenScale<Key, T, Value> {
+>(type: T, scale: Record<Key, Value>): ChainableScale<Key, T, Value> {
   Object.defineProperties(scale, {
     _kind: { value: "scale", enumerable: false },
     $type: { value: type, enumerable: false },
   });
-  return scale as TokenScale<Key, T, Value>;
+  return withScaleMethods(scale as TokenScale<Key, T, Value>);
 }
 
 function scaleFrom<Key extends string | number, T extends TokenType, Value>(
   type: T,
   scale: Record<Key, Value>,
   factory: (input: Exclude<Value, RawToken<T> | StampedToken<T>>) => RawToken<T>,
-): TokenScale<Key, T, RawToken<T> | StampedToken<T>> {
+): ChainableScale<Key, T, RawToken<T> | StampedToken<T>> {
   const result = {} as Record<Key, RawToken<T> | StampedToken<T>>;
   for (const [step, input] of Object.entries(scale) as Array<[string, Value]>) {
     result[step as Key] = isTokenLeaf(input)
@@ -446,31 +454,31 @@ function scaleFrom<Key extends string | number, T extends TokenType, Value>(
 
 function colorScale<Key extends string | number>(
   scale: Record<Key, ColorInput | RawToken<"color"> | StampedToken<"color">>,
-): TokenScale<Key, "color", RawToken<"color"> | StampedToken<"color">> {
+): ChainableScale<Key, "color", RawToken<"color"> | StampedToken<"color">> {
   return scaleFrom("color", scale, color);
 }
 
 function dimensionScale<Key extends string | number>(
   scale: Record<Key, string | RawToken<"dimension"> | StampedToken<"dimension">>,
-): TokenScale<Key, "dimension", RawToken<"dimension"> | StampedToken<"dimension">> {
+): ChainableScale<Key, "dimension", RawToken<"dimension"> | StampedToken<"dimension">> {
   return scaleFrom("dimension", scale, dimension);
 }
 
 function numberScale<Key extends string | number>(
   scale: Record<Key, number | RawToken<"number"> | StampedToken<"number">>,
-): TokenScale<Key, "number", RawToken<"number"> | StampedToken<"number">> {
+): ChainableScale<Key, "number", RawToken<"number"> | StampedToken<"number">> {
   return scaleFrom("number", scale, number);
 }
 
 function durationScale<Key extends string | number>(
   scale: Record<Key, string | RawToken<"duration"> | StampedToken<"duration">>,
-): TokenScale<Key, "duration", RawToken<"duration"> | StampedToken<"duration">> {
+): ChainableScale<Key, "duration", RawToken<"duration"> | StampedToken<"duration">> {
   return scaleFrom("duration", scale, duration);
 }
 
 function borderScale<Key extends string | number>(
   scale: Record<Key, BorderInput | RawToken<"border"> | StampedToken<"border">>,
-): TokenScale<Key, "border", RawToken<"border"> | StampedToken<"border">> {
+): ChainableScale<Key, "border", RawToken<"border"> | StampedToken<"border">> {
   return scaleFrom("border", scale, border);
 }
 
@@ -479,19 +487,19 @@ function cubicBezierScale<Key extends string | number>(
     Key,
     [number, number, number, number] | RawToken<"cubicBezier"> | StampedToken<"cubicBezier">
   >,
-): TokenScale<Key, "cubicBezier", RawToken<"cubicBezier"> | StampedToken<"cubicBezier">> {
+): ChainableScale<Key, "cubicBezier", RawToken<"cubicBezier"> | StampedToken<"cubicBezier">> {
   return scaleFrom("cubicBezier", scale, cubicBezier);
 }
 
 function gradientScale<Key extends string | number>(
   scale: Record<Key, GradientInput | RawToken<"gradient"> | StampedToken<"gradient">>,
-): TokenScale<Key, "gradient", RawToken<"gradient"> | StampedToken<"gradient">> {
+): ChainableScale<Key, "gradient", RawToken<"gradient"> | StampedToken<"gradient">> {
   return scaleFrom("gradient", scale, gradient);
 }
 
 function transitionScale<Key extends string | number>(
   scale: Record<Key, TransitionInput | RawToken<"transition"> | StampedToken<"transition">>,
-): TokenScale<Key, "transition", RawToken<"transition"> | StampedToken<"transition">> {
+): ChainableScale<Key, "transition", RawToken<"transition"> | StampedToken<"transition">> {
   return scaleFrom("transition", scale, transition);
 }
 
@@ -500,13 +508,13 @@ function shadowScale<Key extends string | number>(
     Key,
     ShadowLayerInput | ShadowLayerInput[] | RawToken<"shadow"> | StampedToken<"shadow">
   >,
-): TokenScale<Key, "shadow", RawToken<"shadow"> | StampedToken<"shadow">> {
+): ChainableScale<Key, "shadow", RawToken<"shadow"> | StampedToken<"shadow">> {
   return scaleFrom("shadow", scale, shadow);
 }
 
 function typographyScale<Key extends string | number>(
   scale: Record<Key, TypographyInput | RawToken<"typography"> | StampedToken<"typography">>,
-): TokenScale<Key, "typography", RawToken<"typography"> | StampedToken<"typography">> {
+): ChainableScale<Key, "typography", RawToken<"typography"> | StampedToken<"typography">> {
   return scaleFrom("typography", scale, typography);
 }
 

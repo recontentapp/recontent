@@ -30,12 +30,16 @@ export type TokenScale<
   Key extends string | number = string | number,
   T extends TokenType = TokenType,
   Value extends RawToken<T> | StampedToken<T> = RawToken<T>,
-> = Record<Key, Value> & {
-  readonly _kind: "scale";
-  readonly $type: T;
-  readonly _path?: string[];
-  readonly _layer?: TokenLayer;
-};
+> = Record<Key, Value> &
+  TokenMetadata & {
+    readonly _kind: "scale";
+    readonly $type: T;
+    readonly _path?: string[];
+    readonly _layer?: TokenLayer;
+    describe(description: string): TokenScale<Key, T, Value>;
+    deprecate(reason?: string): TokenScale<Key, T, Value>;
+    extend(namespace: string, value: Record<string, unknown>): TokenScale<Key, T, Value>;
+  };
 
 export type RefToken<T extends TokenType = TokenType> = StampedToken<T, "ref">;
 export type SystemToken<T extends TokenType = TokenType> = StampedToken<T, "system">;

@@ -1,5 +1,5 @@
 import { expect, test } from "@jest/globals";
-import { defineConfig, defineReferenceTokens, tokens } from "../src/index.js";
+import { defineConfig, defineReferenceTokens, defineSystemTokens, tokens } from "../src/index.js";
 
 function configWithRef(ref: Record<string, unknown>) {
   return () =>
@@ -74,4 +74,55 @@ test("defineConfig surfaces a case-only name collision diagnostic", () => {
     tokens: { ref, system: {}, components: {} },
   });
   expect(config.diagnostics.some((d) => d.message.includes("differing only by case"))).toBe(true);
+});
+
+test("scale describe/deprecate/extend return new scales without changing members", () => {
+  const scale = tokens.dimensionScale({ 0: "0px", 1: "4px" });
+  const described = scale.describe("Spacing");
+  const deprecated = described.deprecate("Use something else");
+  const extended = deprecated.extend("com.example", { a: 1 });
+
+  expect(described).not.toBe(scale);
+  expect(scale.$description).toBeUndefined();
+  expect(described.$description).toBe("Spacing");
+  expect(described.$deprecated).toBeUndefined();
+  expect(deprecated.$description).toBe("Spacing");
+  expect(deprecated.$deprecated).toBe("Use something else");
+  expect(extended.$extensions).toEqual({ "com.example": { a: 1 } });
+  expect(Object.keys(extended)).toEqual(["0", "1"]);
+  expect(extended.$type).toBe("dimension");
+  expect(extended[1].$value).toEqual({ value: 4, unit: "px" });
+  expect(tokens.dimensionScale({ 0: "0px" }).deprecate().$deprecated).toBe(true);
+});
+
+test("scale metadata reaches the registry and survives stamping and aliasing", () => {
+  const ref = defineReferenceTokens({
+    spacing: tokens
+      .dimensionScale({ 0: "0px", 1: "4px" })
+      .describe("Spacing scale")
+      .deprecate("Use system.spacing"),
+    plain: tokens.dimensionScale({ a: "1px" }),
+  });
+  const system = defineSystemTokens({ spacing: ref.spacing });
+  const config = defineConfig({ tokens: { ref, system, components: {} } });
+
+  expect(Object.keys(ref.spacing)).toEqual(["0", "1"]);
+  const refEntry = config.registry.get("ref.spacing.0")!;
+  expect(refEntry.scale?.$description).toBe("Spacing scale");
+  expect(refEntry.scale?.$deprecated).toBe("Use system.spacing");
+  expect(refEntry.$deprecated).toBeUndefined();
+  expect(config.registry.get("ref.plain.a")!.scale?.$description).toBeUndefined();
+
+  const systemEntry = config.registry.get("system.spacing.0")!;
+  expect(systemEntry.scale?.$description).toBe("Spacing scale");
+  expect(systemEntry.scale?.$deprecated).toBe("Use system.spacing");
+});
+
+test("describe on a stamped scale returns a stamped scale with the new metadata", () => {
+  const ref = defineReferenceTokens({ spacing: tokens.dimensionScale({ 0: "0px" }) });
+  const described = ref.spacing.describe("Later");
+  expect(described.$description).toBe("Later");
+  expect(ref.spacing.$description).toBeUndefined();
+  expect(described._path).toEqual(["ref", "spacing"]);
+  expect(Object.keys(described)).toEqual(["0"]);
 });
