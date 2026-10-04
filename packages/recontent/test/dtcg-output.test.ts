@@ -7,7 +7,7 @@ import {
   defineTheme,
   tokens,
 } from "../src/index.js";
-import { generateDtcg, generateDtcgThemed } from "../src/generators/dtcg.js";
+import { generateDtcg, generateDtcgThemed } from "../src/outputs/dtcg.js";
 
 function fullTreeConfig() {
   const ref = defineReferenceTokens({

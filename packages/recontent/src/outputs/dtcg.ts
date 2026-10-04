@@ -1,16 +1,20 @@
-import { pathKey, type Config, type TokenEntry, type TokenRegistry } from "@recontentapp/core";
+import {
+  pathKey,
+  type OutputFile,
+  type ThemeOverride,
+  type TokenEntry,
+  type TokenRegistry,
+} from "@recontentapp/core";
 import { entryToDtcgNode, setNested } from "../serialize/values.js";
+import type { GeneratorContext } from "./shared/context.js";
 
 export type DtcgOutput = Record<string, unknown>;
 
-function isConfig(input: TokenRegistry | Config): input is Config {
+function isConfig(input: TokenRegistry | GeneratorContext): input is GeneratorContext {
   return "registry" in input;
 }
 
-function resolveThemedEntry(
-  entry: TokenEntry,
-  themeOverride: Config["themes"][string],
-): TokenEntry {
+function resolveThemedEntry(entry: TokenEntry, themeOverride: ThemeOverride): TokenEntry {
   const key = pathKey(entry.path);
   const overridden = themeOverride.get(key);
   if (!overridden) {
@@ -95,7 +99,7 @@ export function hoistGroupTypes(output: DtcgOutput): DtcgOutput {
   return output;
 }
 
-export function generateDtcg(input: TokenRegistry | Config): DtcgOutput {
+export function generateDtcg(input: TokenRegistry | GeneratorContext): DtcgOutput {
   const registry = isConfig(input) ? input.registry : input;
   const output: DtcgOutput = {};
 
@@ -107,29 +111,46 @@ export function generateDtcg(input: TokenRegistry | Config): DtcgOutput {
   return hoistGroupTypes(output);
 }
 
-export function generateDtcgThemed(config: Config, themeName: string): DtcgOutput {
-  const themeOverride = config.themes[themeName];
+export function generateDtcgThemed(ctx: GeneratorContext, themeName: string): DtcgOutput {
+  const themeOverride = ctx.themes[themeName];
   if (!themeOverride) {
     throw new Error(
-      `Theme "${themeName}" is not defined in the config. Available themes: ${Object.keys(config.themes).join(", ") || "(none)"}`,
+      `Theme "${themeName}" is not defined in the config. Available themes: ${Object.keys(ctx.themes).join(", ") || "(none)"}`,
     );
   }
 
   const output: DtcgOutput = {};
 
-  for (const entry of config.registry.values()) {
+  for (const entry of ctx.registry.values()) {
     const resolved = resolveThemedEntry(entry, themeOverride);
     setNested(output, resolved.path, entryToDtcgNode(resolved));
   }
 
-  applyScaleMetadata(output, config.registry);
+  applyScaleMetadata(output, ctx.registry);
   return hoistGroupTypes(output);
 }
 
-export function generateDtcgJson(input: TokenRegistry | Config, space = 2): string {
-  return JSON.stringify(generateDtcg(input), null, space);
-}
+export type DtcgPluginOptions = {
+  outDir: string;
+};
 
-export function generateDtcgThemedJson(config: Config, themeName: string, space = 2): string {
-  return JSON.stringify(generateDtcgThemed(config, themeName), null, space);
+export function generateDtcgFiles(
+  ctx: GeneratorContext,
+  _options: DtcgPluginOptions,
+): OutputFile[] {
+  const files: OutputFile[] = [
+    {
+      filename: "tokens.tokens.json",
+      content: JSON.stringify(generateDtcg(ctx), null, 2),
+    },
+  ];
+
+  for (const themeName of Object.keys(ctx.themes).sort()) {
+    files.push({
+      filename: `${themeName}.tokens.json`,
+      content: JSON.stringify(generateDtcgThemed(ctx, themeName), null, 2),
+    });
+  }
+
+  return files;
 }

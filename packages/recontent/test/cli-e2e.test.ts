@@ -117,6 +117,29 @@ describe("recontent build", () => {
     expect(css).toContain("#2563eb");
   });
 
+  test("runs the configured dtcg and html plugins", () => {
+    const dir = makeScratchDir("build-dtcg-html");
+    copyFixture("valid", dir);
+
+    const result = runCli(["--cwd", dir, "build"]);
+
+    expect(result.status).toBe(0);
+
+    const htmlPath = path.join(dir, "dist/tokens.html");
+    expect(existsSync(htmlPath)).toBe(true);
+    const html = readFileSync(htmlPath, "utf-8");
+    expect(html).toContain("<!DOCTYPE html>");
+    expect(html).toContain("system.color.accent");
+
+    const dtcgPath = path.join(dir, "dist/tokens.tokens.json");
+    expect(existsSync(dtcgPath)).toBe(true);
+    const json = JSON.parse(readFileSync(dtcgPath, "utf-8"));
+    expect(json.ref.color.brand.primary.$value.hex).toBe("#2563eb");
+    // `system.color.accent` aliases `ref.color.brand.primary` — DTCG
+    // represents that as a `{...}` reference rather than a resolved value.
+    expect(json.system.color.accent.$value).toBe("{ref.color.brand.primary}");
+  });
+
   test("fails with a non-zero exit code when the config file is missing", () => {
     const dir = makeScratchDir("build-missing-config");
 
@@ -147,48 +170,6 @@ describe("recontent doctor", () => {
     expect(result.status).toBe(1);
     expect(result.stderr).toContain("@recontent-e2e/does-not-exist");
     expect(result.stderr).toContain("Missing dependency");
-  });
-});
-
-describe("recontent export", () => {
-  test("html writes a report containing every token path", () => {
-    const dir = makeScratchDir("export-html");
-    copyFixture("valid", dir);
-
-    const result = runCli(["--cwd", dir, "export", "html"]);
-
-    expect(result.status).toBe(0);
-    const outputPath = path.join(dir, "tokens.html");
-    expect(existsSync(outputPath)).toBe(true);
-    const html = readFileSync(outputPath, "utf-8");
-    expect(html).toContain("<!DOCTYPE html>");
-    expect(html).toContain("system.color.accent");
-  });
-
-  test("dtcg writes a valid tokens.tokens.json file", () => {
-    const dir = makeScratchDir("export-dtcg");
-    copyFixture("valid", dir);
-
-    const result = runCli(["--cwd", dir, "export", "dtcg"]);
-
-    expect(result.status).toBe(0);
-    const outputPath = path.join(dir, "tokens.tokens.json");
-    expect(existsSync(outputPath)).toBe(true);
-    const json = JSON.parse(readFileSync(outputPath, "utf-8"));
-    expect(json.ref.color.brand.primary.$value.hex).toBe("#2563eb");
-    // `system.color.accent` aliases `ref.color.brand.primary` — DTCG
-    // represents that as a `{...}` reference rather than a resolved value.
-    expect(json.system.color.accent.$value).toBe("{ref.color.brand.primary}");
-  });
-
-  test("bare `export` prints help to stderr and exits with code 2", () => {
-    const dir = makeScratchDir("export-bare");
-    copyFixture("valid", dir);
-
-    const result = runCli(["--cwd", dir, "export"]);
-
-    expect(result.status).toBe(2);
-    expect(result.stderr).toContain("Usage:");
   });
 });
 

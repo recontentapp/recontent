@@ -1,11 +1,12 @@
 import {
   pathKey,
-  type Config,
+  type OutputFile,
   type TokenEntry,
   type TokenLayer,
   type TokenType,
 } from "@recontentapp/core";
 import { serializeValueCss } from "../serialize/values.js";
+import type { GeneratorContext } from "./shared/context.js";
 
 const LAYERS: TokenLayer[] = ["ref", "system", "components"];
 
@@ -17,7 +18,7 @@ function escapeHtml(value: string): string {
     .replace(/"/g, "&quot;");
 }
 
-function groupByLayer(registry: Config["registry"]): Record<TokenLayer, TokenEntry[]> {
+function groupByLayer(registry: GeneratorContext["registry"]): Record<TokenLayer, TokenEntry[]> {
   const grouped: Record<TokenLayer, TokenEntry[]> = {
     ref: [],
     system: [],
@@ -255,7 +256,7 @@ function renderLayerSection(layer: TokenLayer, entries: TokenEntry[]): string {
     </section>`;
 }
 
-function renderThemesSection(config: Config): string {
+function renderThemesSection(config: GeneratorContext): string {
   const themeNames = Object.keys(config.themes);
 
   if (themeNames.length === 0) {
@@ -281,7 +282,7 @@ function renderThemesSection(config: Config): string {
     </section>`;
 }
 
-export function generateHtmlReport(config: Config): string {
+export function generateHtmlReport(config: GeneratorContext): string {
   const grouped = groupByLayer(config.registry);
   const totalTokens = config.registry.size;
 
@@ -389,4 +390,15 @@ export function generateHtmlReport(config: Config): string {
   </main>
 </body>
 </html>`;
+}
+
+export type HtmlPluginOptions = {
+  outDir: string;
+};
+
+export function generateHtmlFiles(
+  ctx: GeneratorContext,
+  _options: HtmlPluginOptions,
+): OutputFile[] {
+  return [{ filename: "tokens.html", content: generateHtmlReport(ctx) }];
 }
