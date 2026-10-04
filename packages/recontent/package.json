@@ -9,16 +9,10 @@
   "types": "./dist/index.d.mts",
   "exports": {
     ".": "./dist/index.mjs",
-    "./plugins": "./dist/plugins/index.mjs",
-    "./generators/dtcg": "./dist/generators/dtcg.mjs",
-    "./generators/html": "./dist/generators/html.mjs",
-    "./outputs/css": "./dist/outputs/css.mjs",
-    "./outputs/typescript": "./dist/outputs/typescript.mjs",
-    "./outputs/typescript-native": "./dist/outputs/typescript-native.mjs",
-    "./outputs/stylex": "./dist/outputs/stylex.mjs"
+    "./plugins": "./dist/plugins/index.mjs"
   },
   "scripts": {
-    "build": "tsdown src/index.ts src/plugins/index.ts src/generators/dtcg.ts src/generators/html.ts src/outputs/css.ts src/outputs/typescript.ts src/outputs/typescript-native.ts src/outputs/stylex.ts src/cli/bin.ts",
+    "build": "tsdown src/index.ts src/plugins/index.ts src/cli/bin.ts",
     "typecheck": "tsc --noEmit",
     "test": "NODE_OPTIONS=--experimental-vm-modules jest"
   },

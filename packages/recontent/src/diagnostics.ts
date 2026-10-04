@@ -5,7 +5,7 @@ import {
   type TokenDiagnostic,
   type TokenLayer,
 } from "@recontentapp/core";
-import { isNumericKey } from "./outputs/shared/ts-source.js";
+import { isNumericKey } from "./plugins/shared/ts-source.js";
 
 function looksLikeCompositeObject(value: Record<string, unknown>): string | null {
   if ("layers" in value || "offsetX" in value || "blur" in value) {

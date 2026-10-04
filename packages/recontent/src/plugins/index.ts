@@ -5,6 +5,8 @@ export type {
   EmittedFile,
 } from "@recontentapp/core";
 export { css, type CssPluginOptions } from "./css.js";
+export { dtcg, type DtcgPluginOptions } from "./dtcg.js";
+export { html, type HtmlPluginOptions } from "./html.js";
 export {
   vanillaExtract,
   type VanillaExtractPluginOptions,

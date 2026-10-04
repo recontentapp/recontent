@@ -1,10 +1,10 @@
 import { describe, expect, test } from "@jest/globals";
-import { generateCss } from "../src/outputs/css.js";
-import { generateTypeScriptFiles } from "../src/outputs/typescript.js";
-import { generateTypeScriptNativeFiles } from "../src/outputs/typescript-native.js";
-import { generateStylexFiles } from "../src/outputs/stylex.js";
+import { generateCss } from "../src/plugins/css.js";
+import { generateTypeScriptFiles } from "../src/plugins/typescript.js";
+import { generateTypeScriptNativeFiles } from "../src/plugins/typescript-native.js";
+import { generateStylexFiles } from "../src/plugins/stylex.js";
 import { generateVanillaExtractFiles } from "../src/plugins/vanilla-extract/generate.js";
-import { generateDtcg, generateDtcgThemed } from "../src/generators/dtcg.js";
+import { generateDtcg, generateDtcgThemed } from "../src/plugins/dtcg.js";
 import { goldenConfig } from "./helpers/fixtures.js";
 import type { OutputFile } from "@recontentapp/core";
 

@@ -11,7 +11,7 @@ import {
   defineTheme,
   tokens,
 } from "../src/index.js";
-import { generateStylexFiles, type StylexPluginOptions } from "../src/outputs/stylex.js";
+import { generateStylexFiles, type StylexPluginOptions } from "../src/plugins/stylex.js";
 import {
   assertParses,
   assertTypechecks,

@@ -9,7 +9,7 @@ import {
 import {
   generateTypeScriptNativeFiles,
   type TypeScriptNativePluginOptions,
-} from "../src/outputs/typescript-native.js";
+} from "../src/plugins/typescript-native.js";
 import { assertParses, assertTypechecks, compositeConfig } from "./helpers/fixtures.js";
 import type { Config, OutputFile } from "@recontentapp/core";
 

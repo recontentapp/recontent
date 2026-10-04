@@ -1,8 +1,21 @@
 # Recontent.app
 
 `recontent` is a CLI for design token tooling: define tokens once in a
-`recontent.config.ts`, then generate CSS, vanilla-extract, TypeScript, or
-StyleX output from it.
+`recontent.config.ts`, then generate CSS, vanilla-extract, TypeScript, StyleX,
+DTCG (`.tokens.json`), or an HTML token report from it. Every output is a
+plugin listed in the config and run by `recontent build`:
+
+```ts
+import { css, dtcg, html } from "recontent/plugins";
+
+export default defineConfig({
+  tokens: { ref, system, components },
+  plugins: [css({ outDir: "dist" }), dtcg({ outDir: "tokens" }), html({ outDir: "docs" })],
+});
+```
+
+`dtcg()` writes `tokens.tokens.json` plus one `<theme>.tokens.json` per theme;
+`html()` writes `tokens.html`.
 
 ## Commands
 
@@ -11,8 +24,6 @@ recontent init                    Scaffold a recontent.config.ts
 recontent build [-w]              Run configured plugins and write their output
 recontent doctor                  Validate config, registry, and dependencies
 recontent diff [rev]              Compare tokens against a git revision (default HEAD)
-recontent export html [-o file]   Write a single-file HTML token report
-recontent export dtcg [-o dir]    Write tokens.tokens.json + one <theme>.tokens.json per theme
 ```
 
 ## Global options
@@ -27,7 +38,7 @@ These apply to every command and must be given before the subcommand name
   stopping at the filesystem root or the first directory that has a
   `package.json` but no config of its own.
 - `--cwd <dir>` — the directory every relative path in the run (config
-  discovery, `-o/--output`, plugin output) is resolved against. Defaults to
+  discovery, plugin output) is resolved against. Defaults to
   the process's own working directory. Use this instead of spawning the CLI
   with a different working directory.
 - `--log-level <info|debug>` — defaults to `$RECONTENT_LOG_LEVEL`, then the
@@ -38,9 +49,7 @@ These apply to every command and must be given before the subcommand name
 - `0` — success.
 - `1` — a `recontent`-reported failure: config/registry validation errors
   (`doctor`), a breaking diff with `--fail-on-breaking`, or a plugin error.
-- `2` — a usage error: an unknown command or flag, a missing argument, or
-  bare `recontent export` (which lists the available formats instead of
-  guessing one).
+- `2` — a usage error: an unknown command or flag, or a missing argument.
 
 All human-readable progress goes to stderr; stdout is reserved for command
 payloads. `recontent build 1>/dev/null` still shows progress; `2>/dev/null`

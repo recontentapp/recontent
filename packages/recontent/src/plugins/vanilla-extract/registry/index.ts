@@ -8,7 +8,7 @@ import type { RegistryComponentDefinition } from "./define.js";
 import type { BreakpointBinding, ScaleImport, TokenImport } from "./types.js";
 import { isStampedToken, isTokenScale, type TokenType } from "@recontentapp/core";
 import type { OutputFile } from "@recontentapp/core";
-import type { GeneratorContext } from "../../../outputs/shared/context.js";
+import type { GeneratorContext } from "../../shared/context.js";
 export { MissingDesignTokensError } from "../../errors.js";
 
 export function formatMissingDesignTokensMessage(errors: string[]): string {

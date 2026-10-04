@@ -8,9 +8,7 @@ import { discoverConfigPath, resolveConfigPath } from "@recontentapp/core";
 import { runBuild } from "./commands/build.js";
 import { runDiff } from "./commands/diff.js";
 import { runDoctor } from "./commands/doctor.js";
-import { runDtcgExport } from "./commands/export/dtcg.js";
 import { runInit } from "./commands/init.js";
-import { runHtmlExport } from "./commands/export/html.js";
 import { formatErrorForReport } from "./utils/exit.js";
 
 const require = createRequire(import.meta.url);
@@ -94,7 +92,7 @@ program
 program
   .command("build")
   .description(
-    "Generate configured output targets (css, vanilla-extract, typescript, typescript-native, stylex) from recontent.config.ts",
+    "Generate configured output targets (css, dtcg, html, vanilla-extract, typescript, typescript-native, stylex) from recontent.config.ts",
   )
   .option(CONFIG_OPTION_FLAGS, CONFIG_OPTION_DESC)
   .option("-w, --watch", "Rerun the build whenever the config file (or a file it imports) changes")
@@ -129,38 +127,6 @@ program
       await runDiff({ cwd, configPath, logLevel, rev, failOnBreaking: options.failOnBreaking });
     },
   );
-
-const exportCommand = program
-  .command("export")
-  .description(
-    "Export tokens to a report or a data format. Run `recontent export` to list formats.",
-  )
-  .action(() => {
-    exportCommand.outputHelp({ error: true });
-    process.exitCode = 2;
-  });
-
-exportCommand
-  .command("html")
-  .description("Generate a single HTML file reporting every token defined in recontent.config.ts")
-  .option(CONFIG_OPTION_FLAGS, CONFIG_OPTION_DESC)
-  .option("-o, --output <file>", "Output file path", "tokens.html")
-  .action(async (options: { config?: string; output: string }) => {
-    const { cwd, configPath, logLevel } = resolveGlobalOptions(options.config);
-    await runHtmlExport({ cwd, configPath, logLevel, output: options.output });
-  });
-
-exportCommand
-  .command("dtcg")
-  .description(
-    "Export tokens as DTCG-compatible .tokens.json files into a directory: tokens.tokens.json plus one <theme>.tokens.json per configured theme",
-  )
-  .option(CONFIG_OPTION_FLAGS, CONFIG_OPTION_DESC)
-  .option("-o, --output <dir>", "Output directory for .tokens.json files", ".")
-  .action(async (options: { config?: string; output: string }) => {
-    const { cwd, configPath, logLevel } = resolveGlobalOptions(options.config);
-    await runDtcgExport({ cwd, configPath, logLevel, output: options.output });
-  });
 
 function reportFatalError(error: unknown): void {
   let debug = false;
