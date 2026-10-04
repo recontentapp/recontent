@@ -287,3 +287,27 @@ describe("parses and typechecks", () => {
     assertTypechecks(file!.content);
   });
 });
+
+describe("scale metadata", () => {
+  test("scale exports carry a JSDoc block with description and @deprecated", () => {
+    const ref = defineReferenceTokens({
+      spacing: tokens
+        .dimensionScale({ 0: "0px", 1: "4px" })
+        .describe("Spacing scale")
+        .deprecate("Use system.spacing"),
+      deprecatedOnly: tokens.numberScale({ a: 1 }).deprecate(),
+      plain: tokens.numberScale({ a: 1 }),
+    });
+    const config = defineConfig({
+      tokens: { ref, system: defineSystemTokens({}), components: {} },
+    });
+    const [file] = generate(config);
+    const content = file!.content;
+    const doc = "/**\n * Spacing scale\n * @deprecated Use system.spacing\n */\n";
+    expect(content).toContain(`${doc}export type RefSpacing = 0 | 1;`);
+    expect(content).toContain(`${doc}export const refSpacing = theme.ref.spacing;`);
+    expect(content).toContain("/**\n * @deprecated\n */\nexport type RefDeprecatedOnly");
+    expect(content).not.toMatch(/\*\/\nexport type RefPlain/);
+    expect(content).toMatch(/\n\nexport type RefPlain/);
+  });
+});

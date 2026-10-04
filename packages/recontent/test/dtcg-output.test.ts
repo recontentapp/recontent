@@ -141,3 +141,42 @@ describe("array aliasing (§9.1)", () => {
     expect(output.system.gradient.composed.$value[0]).toBe("{ref.gradient.base}");
   });
 });
+
+describe("scale metadata", () => {
+  function scaleMetadataConfig() {
+    const ref = defineReferenceTokens({
+      spacing: tokens
+        .dimensionScale({ 0: "0px", 1: "4px" })
+        .describe("Spacing scale")
+        .deprecate("Use system.spacing")
+        .extend("com.example", { team: "design" }),
+      plain: tokens.dimensionScale({ a: "1px", b: "2px" }),
+    });
+    return defineConfig({
+      tokens: { ref, system: defineSystemTokens({}), components: {} },
+      themes: { dark: defineTheme(ref, { plain: tokens.dimensionScale({ a: "9px", b: "2px" }) }) },
+    });
+  }
+
+  type Group = { $description?: string; $deprecated?: string; $extensions?: unknown };
+
+  test("scale metadata is emitted on the group node", () => {
+    const output = generateDtcg(scaleMetadataConfig()) as never as {
+      ref: { spacing: Group & { 0: Group }; plain: Group };
+    };
+    expect(output.ref.spacing.$description).toBe("Spacing scale");
+    expect(output.ref.spacing.$deprecated).toBe("Use system.spacing");
+    expect(output.ref.spacing.$extensions).toEqual({ "com.example": { team: "design" } });
+    expect(output.ref.spacing[0].$deprecated).toBeUndefined();
+    expect(output.ref.plain.$description).toBeUndefined();
+    expect(output.ref.plain.$deprecated).toBeUndefined();
+  });
+
+  test("scale metadata is emitted in themed output too", () => {
+    const output = generateDtcgThemed(scaleMetadataConfig(), "dark") as never as {
+      ref: { spacing: Group };
+    };
+    expect(output.ref.spacing.$description).toBe("Spacing scale");
+    expect(output.ref.spacing.$deprecated).toBe("Use system.spacing");
+  });
+});

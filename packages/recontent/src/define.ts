@@ -16,7 +16,7 @@ import type {
 } from "@recontentapp/core";
 import { diagnoseTokenTrees } from "./diagnostics.js";
 import { isRawToken, isStampedToken, isTokenLeaf, isTokenScale, pathKey } from "@recontentapp/core";
-import { withStampedTokenMethods, type ChainableMethods } from "./metadata.js";
+import { withScaleMethods, withStampedTokenMethods, type ChainableMethods } from "./metadata.js";
 
 type TokenTree = Record<string, unknown>;
 
@@ -69,7 +69,7 @@ function stampScale<T extends TokenType, Layer extends TokenLayer>(
     _path: { value: path, enumerable: false },
     _layer: { value: layer, enumerable: false },
   });
-  return result as TokenScale<string | number, T, StampedToken<T, Layer>>;
+  return withScaleMethods(result, scale) as TokenScale<string | number, T, StampedToken<T, Layer>>;
 }
 
 const MAX_TOKEN_TREE_DEPTH = 64;
@@ -149,6 +149,9 @@ function collectEntries(
       layer: scaleLayer,
       type: node.$type,
       keys: Object.keys(node),
+      ...(node.$description !== undefined ? { $description: node.$description } : {}),
+      ...(node.$deprecated !== undefined ? { $deprecated: node.$deprecated } : {}),
+      ...(node.$extensions !== undefined ? { $extensions: node.$extensions } : {}),
     };
 
     for (const [key, value] of Object.entries(node)) {

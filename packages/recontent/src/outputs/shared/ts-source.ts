@@ -170,7 +170,25 @@ export function scaleExportsForConfig(config: GeneratorContext): ScaleExport[] {
   }));
 }
 
+function scaleDocComment(scale: TokenScaleMetadata): string {
+  const lines: string[] = [];
+  if (scale.$description !== undefined) {
+    lines.push(...scale.$description.split(/\r?\n/));
+  }
+  if (scale.$deprecated !== undefined && scale.$deprecated !== false) {
+    lines.push(
+      typeof scale.$deprecated === "string" ? `@deprecated ${scale.$deprecated}` : "@deprecated",
+    );
+  }
+  if (lines.length === 0) {
+    return "";
+  }
+  const body = lines.map((line) => ` * ${line.replace(/\*\//g, "*\\/")}`.trimEnd());
+  return `/**\n${body.join("\n")}\n */\n`;
+}
+
 export function generateScaleExports(scale: ScaleExport, root = "vars"): string {
   const type = scale.metadata.keys.map(quotedKey).join(" | ");
-  return `export type ${scale.typeName} = ${type};\n\nexport const ${scale.exportName} = ${propertyAccess(root, [scale.metadata.layer, ...entryPath({ path: scale.metadata.path, layer: scale.metadata.layer })])};`;
+  const doc = scaleDocComment(scale.metadata);
+  return `${doc}export type ${scale.typeName} = ${type};\n\n${doc}export const ${scale.exportName} = ${propertyAccess(root, [scale.metadata.layer, ...entryPath({ path: scale.metadata.path, layer: scale.metadata.layer })])};`;
 }

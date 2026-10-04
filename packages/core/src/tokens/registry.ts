@@ -2,7 +2,7 @@ import type { TokenLayer } from "./model.js";
 import type { TokenMetadata } from "./model.js";
 import type { TokenType, TokenTypeMap } from "./values.js";
 
-export type TokenScaleMetadata<T extends TokenType = TokenType> = {
+export type TokenScaleMetadata<T extends TokenType = TokenType> = TokenMetadata & {
   path: string[];
   layer: TokenLayer;
   type: T;
