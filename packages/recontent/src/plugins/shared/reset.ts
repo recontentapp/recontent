@@ -23,7 +23,7 @@ type ResetRule = {
  * for vanilla-extract's `globalStyle` object, a `var(...)` reference for
  * plain CSS — in both cases as `raw`, since they're never JS-string-quoted.
  */
-function resetRules(options: CssResetOptions): ResetRule[] {
+export function resetRules(options: CssResetOptions): ResetRule[] {
   const { fontFamily, placeholderColor } = options;
   return [
     {
@@ -69,44 +69,4 @@ function resetRules(options: CssResetOptions): ResetRule[] {
       declarations: [{ property: "color", value: placeholderColor, raw: true }],
     },
   ];
-}
-
-export function generateCssResetSource(options: CssResetOptions): string {
-  const lines = [
-    'import { globalStyle } from "@vanilla-extract/css";',
-    'import { vars } from "./tokens.css";',
-    "",
-  ];
-
-  for (const rule of resetRules(options)) {
-    const indent = rule.media ? "      " : "  ";
-    const declarationLines = rule.declarations.map(
-      ({ property, value, raw }) => `${indent}${property}: ${raw ? value : `"${value}"`},`,
-    );
-    const body = rule.media
-      ? [`  "@media": {`, `    "${rule.media}": {`, ...declarationLines, `    },`, `  },`]
-      : declarationLines;
-
-    lines.push(`globalStyle("${rule.selector}", {`, ...body, "});", "");
-  }
-
-  return `${lines.join("\n")}`.replace(/\n+$/, "\n");
-}
-
-function toKebabCase(property: string): string {
-  return property.replace(/([A-Z])/g, "-$1").toLowerCase();
-}
-
-export function generateCssResetStylesheet(options: CssResetOptions): string {
-  const lines: string[] = [];
-
-  for (const rule of resetRules(options)) {
-    const body = rule.declarations
-      .map(({ property, value }) => `  ${toKebabCase(property)}: ${value};`)
-      .join("\n");
-    const block = `${rule.selector} {\n${body}\n}`;
-    lines.push(rule.media ? `@media ${rule.media} {\n${block}\n}` : block);
-  }
-
-  return `${lines.join("\n\n")}\n`;
 }

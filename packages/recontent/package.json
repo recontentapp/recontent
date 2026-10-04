@@ -12,7 +12,7 @@
     "./plugins": "./dist/plugins/index.mjs"
   },
   "scripts": {
-    "build": "tsdown src/index.ts src/plugins/index.ts src/outputs/dtcg.ts src/outputs/html.ts src/outputs/css.ts src/outputs/typescript.ts src/outputs/typescript-native.ts src/outputs/stylex.ts src/cli/bin.ts",
+    "build": "tsdown src/index.ts src/plugins/index.ts src/cli/bin.ts",
     "typecheck": "tsc --noEmit",
     "test": "NODE_OPTIONS=--experimental-vm-modules jest"
   },

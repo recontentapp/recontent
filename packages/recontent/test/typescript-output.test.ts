@@ -10,7 +10,7 @@ import {
 import {
   generateTypeScriptFiles,
   type TypeScriptPluginOptions,
-} from "../src/outputs/typescript.js";
+} from "../src/plugins/typescript.js";
 import {
   assertParses,
   assertTypechecks,

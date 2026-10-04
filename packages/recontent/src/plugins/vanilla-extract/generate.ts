@@ -36,10 +36,10 @@ import {
   validateBuiltInComponents,
 } from "./registry/index.js";
 import type { BreakpointBinding } from "./registry/types.js";
-import { terminalEntry } from "../../outputs/shared/alias.js";
-import type { GeneratorContext } from "../../outputs/shared/context.js";
-import { generateCssResetSource } from "../../outputs/shared/reset.js";
-import { validateThemeNames } from "../../outputs/shared/theme-source.js";
+import { terminalEntry } from "../shared/alias.js";
+import type { GeneratorContext } from "../shared/context.js";
+import { resetRules, type CssResetOptions } from "../shared/reset.js";
+import { validateThemeNames } from "../shared/theme-source.js";
 import type { ScaleBinding, TokenBinding } from "@recontentapp/core";
 import {
   entryPath,
@@ -52,7 +52,7 @@ import {
   setTreeValue,
   type ScaleExport,
   type SourceTree,
-} from "../../outputs/shared/ts-source.js";
+} from "../shared/ts-source.js";
 
 function variableReference(entry: TokenEntry): string {
   return propertyAccess("vars", [entry.layer, ...entryPath(entry)]);
@@ -319,6 +319,28 @@ function resolveBreakpoints(
     name,
     query: index === 0 ? null : `screen and (min-width: ${token.$value.value}${token.$value.unit})`,
   }));
+}
+
+function generateCssResetSource(options: CssResetOptions): string {
+  const lines = [
+    'import { globalStyle } from "@vanilla-extract/css";',
+    'import { vars } from "./tokens.css";',
+    "",
+  ];
+
+  for (const rule of resetRules(options)) {
+    const indent = rule.media ? "      " : "  ";
+    const declarationLines = rule.declarations.map(
+      ({ property, value, raw }) => `${indent}${property}: ${raw ? value : `"${value}"`},`,
+    );
+    const body = rule.media
+      ? [`  "@media": {`, `    "${rule.media}": {`, ...declarationLines, `    },`, `  },`]
+      : declarationLines;
+
+    lines.push(`globalStyle("${rule.selector}", {`, ...body, "});", "");
+  }
+
+  return `${lines.join("\n")}`.replace(/\n+$/, "\n");
 }
 
 function generateVanillaExtractSource(

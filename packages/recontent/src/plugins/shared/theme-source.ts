@@ -191,7 +191,7 @@ function validateIdentifierGuards(
   }
 }
 
-// Not a `terminalEntry` (outputs/shared/alias.ts) walk: this tracks the last
+// Not a `terminalEntry` (plugins/shared/alias.ts) walk: this tracks the last
 // candidate in an *earlier* layer than the one being emitted, rather than
 // the final entry in the chain, and can stop early on a theme override.
 function resolveAliasCandidate(

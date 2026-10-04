@@ -9,17 +9,17 @@ import {
 import {
   generateTypeScriptFiles,
   type TypeScriptPluginOptions,
-} from "../src/outputs/typescript.js";
+} from "../src/plugins/typescript.js";
 import {
   generateTypeScriptNativeFiles,
   type TypeScriptNativePluginOptions,
-} from "../src/outputs/typescript-native.js";
+} from "../src/plugins/typescript-native.js";
 import {
   generateVanillaExtractFiles,
   type VanillaExtractPluginOptions,
 } from "../src/plugins/vanilla-extract/generate.js";
-import { generateCss } from "../src/outputs/css.js";
-import { generateStylexFiles } from "../src/outputs/stylex.js";
+import { generateCss } from "../src/plugins/css.js";
+import { generateStylexFiles } from "../src/plugins/stylex.js";
 import type { Config } from "@recontentapp/core";
 
 function configWithTheme(themeName: string): Config {

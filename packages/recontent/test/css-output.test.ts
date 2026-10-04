@@ -7,7 +7,7 @@ import {
   defineTheme,
   tokens,
 } from "../src/index.js";
-import { generateCssFiles, generateCss } from "../src/outputs/css.js";
+import { generateCssFiles, generateCss } from "../src/plugins/css.js";
 import {
   aliasChainConfig,
   compositeConfig,
