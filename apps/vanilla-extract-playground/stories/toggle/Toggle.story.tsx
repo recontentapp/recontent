@@ -7,11 +7,11 @@ const meta = {
   argTypes: {
     size: {
       control: "select",
-      options: ["sm", "md"],
+      options: ["md"],
     },
   },
   args: {
-    size: "sm",
+    size: "md",
     defaultValue: "list",
     options: [
       { value: "list", label: "List" },
