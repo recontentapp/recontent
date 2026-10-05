@@ -1,5 +1,4 @@
 import {
-  expandedMembers,
   isStampedToken,
   pathKey,
   type OutputFile,
@@ -32,14 +31,25 @@ type TailwindThemeOptions = {
   radius?: TokenGroup<"dimension">;
   font?: TokenGroup<"fontFamily">;
   fontWeight?: TokenGroup<"fontWeight">;
-  /** Font sizes. */
-  text?: TokenGroup<"dimension">;
+  /**
+   * Font sizes (`dimension`) or whole typography tokens. A typography token also sets the
+   * `--text-<key>--line-height`, `--letter-spacing` and `--font-weight` sub-properties, plus a
+   * `font-family` `@utility`, so `leading-*` and `tracking-*` still override it.
+   */
+  text?: TokenGroup<"dimension" | "typography">;
   tracking?: TokenGroup<"dimension">;
   leading?: TokenGroup<"number" | "dimension">;
   ease?: TokenGroup<"cubicBezier">;
   breakpoint?: TokenGroup<"dimension">;
   container?: TokenGroup<"dimension">;
   blur?: TokenGroup<"dimension">;
+  perspective?: TokenGroup<"dimension">;
+  aspect?: TokenGroup<"number">;
+  /** `shadow-*`. Opacity modifiers and colour utilities (`shadow-card/50`) do not apply to `var()` values. */
+  shadow?: TokenGroup<"shadow">;
+  insetShadow?: TokenGroup<"shadow">;
+  dropShadow?: TokenGroup<"shadow">;
+  textShadow?: TokenGroup<"shadow">;
 };
 
 type ThemeNamespace = keyof TailwindThemeOptions;
@@ -49,11 +59,10 @@ export type TailwindPluginOptions = CssGeneratorOptions & {
   /** Defaults to `tailwind.css`. */
   filename?: string;
   theme?: TailwindThemeOptions;
-  utilities?: { text?: TokenGroup<"typography">; shadow?: TokenGroup<"shadow"> };
-  /** Emit `@custom-variant dark` when a theme named "dark" exists. Defaults to true. */
-  darkVariant?: boolean;
-  /** Emit `--<ns>-*: initial;` to drop Tailwind's defaults: `true` for every namespace in `theme`, or a list. Defaults to false. */
-  resetDefaults?: boolean | ThemeNamespace[];
+  /** Emit a `@custom-variant <theme>` per theme: `true` for every theme, or a list of theme names. Defaults to true. */
+  themeVariants?: boolean | string[];
+  /** Emit `--<ns>-*: initial;` to drop Tailwind's defaults: `true` for every namespace in `theme`, a list, or `"all"` for `--*: initial;`. Defaults to false. */
+  resetDefaults?: boolean | "all" | ThemeNamespace[];
 };
 
 const NAMESPACES: Record<ThemeNamespace, { prefix: string; types: readonly TokenType[] }> = {
@@ -62,14 +71,37 @@ const NAMESPACES: Record<ThemeNamespace, { prefix: string; types: readonly Token
   radius: { prefix: "radius", types: ["dimension"] },
   font: { prefix: "font", types: ["fontFamily"] },
   fontWeight: { prefix: "font-weight", types: ["fontWeight"] },
-  text: { prefix: "text", types: ["dimension"] },
+  text: { prefix: "text", types: ["dimension", "typography"] },
   tracking: { prefix: "tracking", types: ["dimension"] },
   leading: { prefix: "leading", types: ["number", "dimension"] },
   ease: { prefix: "ease", types: ["cubicBezier"] },
   breakpoint: { prefix: "breakpoint", types: ["dimension"] },
   container: { prefix: "container", types: ["dimension"] },
   blur: { prefix: "blur", types: ["dimension"] },
+  perspective: { prefix: "perspective", types: ["dimension"] },
+  aspect: { prefix: "aspect", types: ["number"] },
+  shadow: { prefix: "shadow", types: ["shadow"] },
+  insetShadow: { prefix: "inset-shadow", types: ["shadow"] },
+  dropShadow: { prefix: "drop-shadow", types: ["shadow"] },
+  textShadow: { prefix: "text-shadow", types: ["shadow"] },
 };
+
+/** Tailwind's default `--container-*` keys. `max-w-*` and friends resolve `--spacing-*` before them. */
+const DEFAULT_CONTAINER_KEYS = [
+  "3xs",
+  "2xs",
+  "xs",
+  "sm",
+  "md",
+  "lg",
+  "xl",
+  "2xl",
+  "3xl",
+  "4xl",
+  "5xl",
+  "6xl",
+  "7xl",
+];
 
 type Utility = { name: string; declarations: Record<string, string> };
 
@@ -102,9 +134,13 @@ function collectGroup(group: unknown, key: string[] = [], depth = 0): Leaf[] {
   );
 }
 
+function typographyVar(entry: TokenEntry, varSuffix: string): string {
+  return `var(${cssVarName([...entry.path, varSuffix])})`;
+}
+
 function buildTailwindMapping(
   registry: TokenRegistry,
-  options: Pick<TailwindPluginOptions, "theme" | "utilities">,
+  options: Pick<TailwindPluginOptions, "theme">,
 ): TailwindMapping {
   const themeDecls: Record<string, string> = {};
   const utilities: Utility[] = [];
@@ -131,6 +167,7 @@ function buildTailwindMapping(
   };
 
   const themeOwners = new Map<string, string[]>();
+  const typographyLeaves: { key: string; entry: TokenEntry }[] = [];
   for (const [namespace, group] of Object.entries(options.theme ?? {}) as [
     ThemeNamespace,
     unknown,
@@ -153,91 +190,81 @@ function buildTailwindMapping(
         );
         continue;
       }
-      themeDecls[name] = `var(${cssVarName(entry.path)})`;
       themeOwners.set(name, entry.path);
+      if (entry.$type === "typography") {
+        // `--text-*` sub-properties keep `leading-*`, `tracking-*` and `font-*` composable with `text-<key>`.
+        themeDecls[name] = typographyVar(entry, "font-size");
+        themeDecls[`${name}--line-height`] = typographyVar(entry, "line-height");
+        themeDecls[`${name}--letter-spacing`] = typographyVar(entry, "letter-spacing");
+        themeDecls[`${name}--font-weight`] = typographyVar(entry, "font-weight");
+        typographyLeaves.push({ key: leaf.key.join("-"), entry });
+      } else {
+        themeDecls[name] = `var(${cssVarName(entry.path)})`;
+      }
     }
   }
 
+  // `--text-*` has no font-family slot, so typography tokens add a static `text-<key>` utility for it.
   const utilityNames = new Set<string>();
-  const addUtility = (utility: string, leaf: Leaf, entry: TokenEntry, label: string) => {
-    const name = `${utility}-${leaf.key.join("-")}`;
+  for (const { key, entry } of typographyLeaves) {
+    const name = `text-${key}`;
     if (utilityNames.has(name)) {
-      error(`${label}: duplicate utility ${name}.`, entry.path);
-      return false;
+      error(`theme.text: duplicate utility ${name}.`, entry.path);
+      continue;
     }
-    const key = leaf.key.join("-");
-    const clashes = [`--color-${key}`, ...(utility === "text" ? [`--text-${key}`] : [])].filter(
-      (varName) => varName in themeDecls,
-    );
-    if (clashes.length > 0) {
+    if (`--color-${key}` in themeDecls) {
       error(
-        `${label}: utility ${name} clashes with Tailwind's ${clashes.join(", ")}; rename one of the keys.`,
+        `theme.text: utility ${name} clashes with Tailwind's --color-${key}; rename one of the keys.`,
         entry.path,
       );
-      return false;
+      continue;
     }
     utilityNames.add(name);
-    return true;
-  };
-
-  const { text, shadow } = options.utilities ?? {};
-  if (text !== undefined) {
-    for (const leaf of collectGroup(text)) {
-      const entry = resolve(leaf, "utilities.text", ["typography"]);
-      if (!entry) continue;
-      if (leaf.key.length === 0) {
-        error(
-          "utilities.text: a bare token has no key; wrap it, e.g. { name: token }.",
-          entry.path,
-        );
-        continue;
-      }
-      if (!addUtility("text", leaf, entry, "utilities.text")) continue;
-      const declarations: Record<string, string> = {};
-      for (const { cssProperty, varSuffix } of expandedMembers(
-        "typography",
-        entry.$value as never,
-      )) {
-        declarations[cssPropertyName(cssProperty)] =
-          `var(${cssVarName([...entry.path, varSuffix])})`;
-      }
-      utilities.push({ name: `text-${leaf.key.join("-")}`, declarations });
-    }
+    utilities.push({
+      name,
+      declarations: { "font-family": typographyVar(entry, "font-family") },
+    });
   }
-  if (shadow !== undefined) {
-    for (const leaf of collectGroup(shadow)) {
-      const entry = resolve(leaf, "utilities.shadow", ["shadow"]);
-      if (!entry) continue;
-      if (leaf.key.length === 0) {
-        error(
-          "utilities.shadow: a bare token has no key; wrap it, e.g. { name: token }.",
-          entry.path,
-        );
-        continue;
-      }
-      if (!addUtility("shadow", leaf, entry, "utilities.shadow")) continue;
-      utilities.push({
-        name: `shadow-${leaf.key.join("-")}`,
-        declarations: { "box-shadow": `var(${cssVarName(entry.path)})` },
-      });
-    }
+
+  const containerKeys = new Set([
+    ...DEFAULT_CONTAINER_KEYS,
+    ...Object.keys(themeDecls)
+      .filter((name) => name.startsWith("--container-"))
+      .map((name) => name.slice("--container-".length)),
+  ]);
+  for (const name of Object.keys(themeDecls)) {
+    if (!name.startsWith("--spacing-")) continue;
+    const key = name.slice("--spacing-".length);
+    if (!containerKeys.has(key)) continue;
+    diagnostics.push({
+      severity: "warning",
+      message: `theme.spacing: ${name} also overrides the container size behind max-w-${key}, w-${key} and min-w-${key}; rename the key or use an arbitrary value such as max-w-[32rem].`,
+      ...(themeOwners.has(name) ? { path: themeOwners.get(name)! } : {}),
+    });
   }
 
   return { themeDecls, utilities, diagnostics };
 }
 
-function cssPropertyName(property: string): string {
-  return property.replace(/[A-Z]/g, (char) => `-${char.toLowerCase()}`);
-}
-
-function darkVariantRule(options: CssGeneratorOptions): string {
-  const selector = themeSelectorFor("dark", options);
-  return `@custom-variant dark (&:where(${selector}, ${selector} *));`;
+function themeVariantRules(
+  themeNames: string[],
+  options: TailwindPluginOptions,
+  cssOptions: CssGeneratorOptions,
+): string[] {
+  const { themeVariants = true } = options;
+  if (themeVariants === false) return [];
+  const selected = Array.isArray(themeVariants)
+    ? themeNames.filter((name) => themeVariants.includes(name))
+    : themeNames;
+  return selected.map((name) => {
+    const selector = themeSelectorFor(name, cssOptions);
+    return `@custom-variant ${kebab(name)} (&:where(${selector}, ${selector} *));`;
+  });
 }
 
 function resetNamespaces(options: TailwindPluginOptions): ThemeNamespace[] {
   const { resetDefaults, theme } = options;
-  if (!resetDefaults) return [];
+  if (!resetDefaults || resetDefaults === "all") return [];
   if (Array.isArray(resetDefaults)) return resetDefaults;
   return (Object.keys(theme ?? {}) as ThemeNamespace[]).filter(
     (namespace) => theme?.[namespace] !== undefined,
@@ -259,12 +286,12 @@ export function generateTailwindFiles(
   const cssOptions: CssGeneratorOptions = { themeSelector: "class", ...options };
   const blocks: string[] = ['/* Generated by recontent. Import after `@import "tailwindcss";` */'];
 
-  if ((options.darkVariant ?? true) && "dark" in config.themes) {
-    blocks.push(darkVariantRule(cssOptions));
-  }
+  blocks.push(...themeVariantRules(Object.keys(config.themes), options, cssOptions));
 
   const reset = resetNamespaces(options);
-  if (reset.length > 0) {
+  if (options.resetDefaults === "all") {
+    blocks.push(formatRule("@theme", { "--*": "initial" }));
+  } else if (reset.length > 0) {
     const declarations = Object.fromEntries(
       reset.map((namespace) => [`--${NAMESPACES[namespace].prefix}-*`, "initial"]),
     );

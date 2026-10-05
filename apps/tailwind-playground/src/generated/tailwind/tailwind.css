@@ -28,13 +28,14 @@
 }
 
 :root {
+  --system-colors-background: var(--ref-color-neutral-0);
+  --system-colors-foreground: var(--ref-color-neutral-900);
+  --system-colors-mutedForeground: var(--ref-color-neutral-500);
+  --system-colors-surface: var(--ref-color-neutral-100);
+  --system-colors-border: var(--ref-color-neutral-300);
   --system-colors-accent: var(--ref-color-primary-500);
   --system-colors-accentStrong: var(--ref-color-primary-700);
-  --system-colors-background: var(--ref-color-neutral-0);
-  --system-colors-surface: var(--ref-color-neutral-100);
-  --system-colors-text: var(--ref-color-neutral-900);
-  --system-colors-textMuted: var(--ref-color-neutral-500);
-  --system-colors-border: var(--ref-color-neutral-300);
+  --system-colors-accentForeground: var(--ref-color-neutral-0);
   --system-spacing-sm: var(--ref-spacing-sm);
   --system-spacing-md: var(--ref-spacing-md);
   --system-spacing-lg: var(--ref-spacing-lg);
@@ -64,20 +65,26 @@
 
 .dark {
   --system-colors-background: #18181b;
+  --system-colors-foreground: #f4f4f5;
+  --system-colors-mutedForeground: #a1a1aa;
   --system-colors-surface: #27272a;
-  --system-colors-text: #f4f4f5;
-  --system-colors-textMuted: #a1a1aa;
   --system-colors-border: #3f3f46;
 }
 
 @theme inline {
+  --color-primary-100: var(--ref-color-primary-100);
+  --color-primary-300: var(--ref-color-primary-300);
+  --color-primary-500: var(--ref-color-primary-500);
+  --color-primary-700: var(--ref-color-primary-700);
+  --color-primary-900: var(--ref-color-primary-900);
+  --color-background: var(--system-colors-background);
+  --color-foreground: var(--system-colors-foreground);
+  --color-muted-foreground: var(--system-colors-mutedForeground);
+  --color-surface: var(--system-colors-surface);
+  --color-border: var(--system-colors-border);
   --color-accent: var(--system-colors-accent);
   --color-accent-strong: var(--system-colors-accentStrong);
-  --color-background: var(--system-colors-background);
-  --color-surface: var(--system-colors-surface);
-  --color-text: var(--system-colors-text);
-  --color-text-muted: var(--system-colors-textMuted);
-  --color-border: var(--system-colors-border);
+  --color-accent-foreground: var(--system-colors-accentForeground);
   --spacing-sm: var(--system-spacing-sm);
   --spacing-md: var(--system-spacing-md);
   --spacing-lg: var(--system-spacing-lg);
@@ -87,32 +94,29 @@
   --radius-full: var(--system-radius-full);
   --font-sans: var(--system-fontFamily-sans);
   --font-mono: var(--system-fontFamily-mono);
+  --text-eyebrow: var(--system-typography-eyebrow-font-size);
+  --text-eyebrow--line-height: var(--system-typography-eyebrow-line-height);
+  --text-eyebrow--letter-spacing: var(--system-typography-eyebrow-letter-spacing);
+  --text-eyebrow--font-weight: var(--system-typography-eyebrow-font-weight);
+  --text-heading: var(--system-typography-heading-font-size);
+  --text-heading--line-height: var(--system-typography-heading-line-height);
+  --text-heading--letter-spacing: var(--system-typography-heading-letter-spacing);
+  --text-heading--font-weight: var(--system-typography-heading-font-weight);
+  --text-body: var(--system-typography-body-font-size);
+  --text-body--line-height: var(--system-typography-body-line-height);
+  --text-body--letter-spacing: var(--system-typography-body-letter-spacing);
+  --text-body--font-weight: var(--system-typography-body-font-weight);
+  --shadow-card: var(--system-shadow-card);
 }
 
 @utility text-eyebrow {
   font-family: var(--system-typography-eyebrow-font-family);
-  font-size: var(--system-typography-eyebrow-font-size);
-  font-weight: var(--system-typography-eyebrow-font-weight);
-  letter-spacing: var(--system-typography-eyebrow-letter-spacing);
-  line-height: var(--system-typography-eyebrow-line-height);
 }
 
 @utility text-heading {
   font-family: var(--system-typography-heading-font-family);
-  font-size: var(--system-typography-heading-font-size);
-  font-weight: var(--system-typography-heading-font-weight);
-  letter-spacing: var(--system-typography-heading-letter-spacing);
-  line-height: var(--system-typography-heading-line-height);
 }
 
 @utility text-body {
   font-family: var(--system-typography-body-font-family);
-  font-size: var(--system-typography-body-font-size);
-  font-weight: var(--system-typography-body-font-weight);
-  letter-spacing: var(--system-typography-body-letter-spacing);
-  line-height: var(--system-typography-body-line-height);
-}
-
-@utility shadow-card {
-  box-shadow: var(--system-shadow-card);
 }

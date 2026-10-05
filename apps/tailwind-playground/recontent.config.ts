@@ -47,13 +47,14 @@ const ref = defineReferenceTokens({
 
 const system = defineSystemTokens({
   colors: {
+    background: ref.color.neutral[0],
+    foreground: ref.color.neutral[900],
+    mutedForeground: ref.color.neutral[500],
+    surface: ref.color.neutral[100],
+    border: ref.color.neutral[300],
     accent: ref.color.primary[500],
     accentStrong: ref.color.primary[700],
-    background: ref.color.neutral[0],
-    surface: ref.color.neutral[100],
-    text: ref.color.neutral[900],
-    textMuted: ref.color.neutral[500],
-    border: ref.color.neutral[300],
+    accentForeground: ref.color.neutral[0],
   },
   spacing: ref.spacing,
   radius: ref.radius,
@@ -95,9 +96,9 @@ const system = defineSystemTokens({
 const dark = defineTheme(system, {
   colors: {
     background: tokens.color("#18181b"),
+    foreground: tokens.color("#f4f4f5"),
+    mutedForeground: tokens.color("#a1a1aa"),
     surface: tokens.color("#27272a"),
-    text: tokens.color("#f4f4f5"),
-    textMuted: tokens.color("#a1a1aa"),
     border: tokens.color("#3f3f46"),
   },
 });
@@ -109,12 +110,10 @@ export default defineConfig({
     tailwind({
       outDir: "src/generated/tailwind",
       theme: {
-        color: system.colors,
+        color: { primary: ref.color.primary, ...system.colors },
         spacing: system.spacing,
         radius: system.radius,
         font: system.fontFamily,
-      },
-      utilities: {
         text: system.typography,
         shadow: system.shadow,
       },

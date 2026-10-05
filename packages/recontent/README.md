@@ -22,7 +22,7 @@ export default defineConfig({
 `tailwind()` writes one CSS file (`tailwind.css` by default) to import **after**
 `@import "tailwindcss";`. It contains the same `:root` / theme blocks as
 `css()`, an `@theme inline` block mapping the tokens you pass into Tailwind
-namespaces, and `@utility` blocks for composite tokens. Because the theme is
+namespaces, and `@custom-variant` rules for your themes. Because the theme is
 `inline`, utilities point at the recontent variables, so `.dark` /
 `[data-theme]` overrides work at runtime. Nothing is inferred: only the
 tokens you pass are mapped.
@@ -35,10 +35,8 @@ tailwind({
     spacing: system.spacing, // --spacing-sm, …
     radius: system.radius,
     font: { sans: system.fontFamily }, // an object key names a single token
-  },
-  utilities: {
-    text: system.typography, // @utility text-<key>
-    shadow: system.shadow, // @utility shadow-<key>
+    text: system.typography, // text-<key>, composable with leading-* / tracking-*
+    shadow: system.shadow, // shadow-<key>, composable with ring-*
   },
 });
 ```
@@ -66,15 +64,36 @@ Keys come from the object / scale structure, kebab-cased (`textMuted` →
 | `breakpoint`   | `--breakpoint-*`   |
 | `container`    | `--container-*`    |
 | `blur`         | `--blur-*`         |
+| `perspective`  | `--perspective-*`  |
+| `aspect`       | `--aspect-*`       |
+| `shadow`       | `--shadow-*`       |
+| `insetShadow`  | `--inset-shadow-*` |
+| `dropShadow`   | `--drop-shadow-*`  |
+| `textShadow`   | `--text-shadow-*`  |
 
-Mind Tailwind's own lookups: `--spacing-*` also feeds width, height and `max-w-*` utilities, so spacing keys such as `lg` or `xl` override the container sizes behind `max-w-lg` (use `max-w-[32rem]` or a `container` group instead).
+`text` accepts font sizes (`dimension`) or whole `typography` tokens. A
+typography token emits `--text-<key>` plus its `--line-height`,
+`--letter-spacing` and `--font-weight` sub-properties, and a small
+`@utility text-<key>` for `font-family`, so `text-heading leading-tight`,
+`tracking-*` and the `text-heading/7` line-height modifier all work.
+`shadow` tokens feed Tailwind's composite shadow stack, so `shadow-card ring-2`
+renders both. Tailwind cannot parse a `var()` value, so `shadow-card/50` and
+`shadow-red-500` recolouring do not apply.
+
+Because the theme is `inline`, `--color-*` variables are not emitted at
+runtime. In hand-written CSS use `--theme(--color-accent)` or the recontent
+variable (`var(--system-colors-accent)`).
+
+Mind Tailwind's own lookups: `--spacing-*` also feeds width, height and `max-w-*` utilities, so spacing keys such as `lg` or `xl` override the container sizes behind `max-w-lg` (use `max-w-[32rem]` or a `container` group instead). `recontent doctor` warns when a spacing key does this.
 
 Other options: `filename`, `themeSelector` (`"class"` by default) /
-`themeAttribute`, `darkVariant` (emit `@custom-variant dark` when a `dark`
-theme exists; default `true`), and `resetDefaults` (`true` or a list of
-namespaces, emits `--<ns>-*: initial;` to drop Tailwind's defaults).
-Utility names that collide with each other or with an emitted `--color-*` /
-`--text-*` variable are reported as errors by `recontent doctor` and `build`.
+`themeAttribute`, `themeVariants` (emit `@custom-variant <theme>` for every
+theme, kebab-cased, e.g. `dark:` and `high-contrast:`; `false` or a list of
+theme names to narrow; default `true`), and `resetDefaults` (`true` or a list
+of namespaces emits `--<ns>-*: initial;` to drop Tailwind's defaults; `"all"`
+emits `--*: initial;` to start from an empty theme).
+A typography `text-<key>` that collides with an emitted `--color-<key>`, and
+duplicate keys, are reported as errors by `recontent doctor` and `build`.
 
 ## Commands
 

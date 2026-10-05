@@ -130,6 +130,63 @@ describe("theme mapping", () => {
     expect(listed).toContain("--spacing-*: initial;");
     expect(listed).not.toContain("--color-*: initial;");
   });
+
+  test('resetDefaults: "all" emits --*: initial', () => {
+    const { system } = build();
+    const css = render({ theme: { color: system.colors }, resetDefaults: "all" });
+    expect(css).toContain("@theme {\n  --*: initial;\n}");
+  });
+
+  test("typography maps to --text-* sub-properties plus a font-family utility", () => {
+    const { system } = build();
+    const css = render({ theme: { text: system.typography } });
+    const block = themeBlock(css);
+    expect(block).toContain("--text-heading: var(--system-typography-heading-font-size);");
+    expect(block).toContain(
+      "--text-heading--line-height: var(--system-typography-heading-line-height);",
+    );
+    expect(block).toContain(
+      "--text-heading--letter-spacing: var(--system-typography-heading-letter-spacing);",
+    );
+    expect(block).toContain(
+      "--text-heading--font-weight: var(--system-typography-heading-font-weight);",
+    );
+    expect(css).toContain(
+      "@utility text-heading {\n  font-family: var(--system-typography-heading-font-family);\n}",
+    );
+  });
+
+  test("shadow namespaces", () => {
+    const { system } = build();
+    const css = render({
+      theme: {
+        shadow: system.shadow,
+        insetShadow: { inset: system.shadow.card },
+        dropShadow: { drop: system.shadow.card },
+        textShadow: { text: system.shadow.card },
+      },
+    });
+    const block = themeBlock(css);
+    expect(block).toContain("--shadow-card: var(--system-shadow-card);");
+    expect(block).toContain("--inset-shadow-inset: var(--system-shadow-card);");
+    expect(block).toContain("--drop-shadow-drop: var(--system-shadow-card);");
+    expect(block).toContain("--text-shadow-text: var(--system-shadow-card);");
+    expect(css).not.toContain("@utility");
+  });
+
+  test("perspective and aspect namespaces", () => {
+    const ref = defineReferenceTokens({ perspective: { near: tokens.dimension("400px") } });
+    const system = defineSystemTokens({ ratio: { wide: tokens.number(1.78) } });
+    const config = defineConfig({ tokens: { ref, system, components: {} } });
+    const css = render({ theme: { perspective: ref.perspective, aspect: system.ratio } }, {
+      ref,
+      system,
+      config,
+    } as never);
+    const block = themeBlock(css);
+    expect(block).toContain("--perspective-near: var(--ref-perspective-near);");
+    expect(block).toContain("--aspect-wide: var(--system-ratio-wide);");
+  });
 });
 
 describe("themes", () => {
@@ -152,26 +209,28 @@ describe("themes", () => {
     );
   });
 
-  test("darkVariant: false omits the variant", () => {
-    expect(render({ darkVariant: false })).not.toContain("@custom-variant");
-  });
-});
-
-describe("utilities", () => {
-  test("typography becomes text-<key> using the expanded sub-vars", () => {
-    const { system } = build();
-    const css = render({ utilities: { text: system.typography } });
-    expect(css).toContain("@utility text-heading {");
-    expect(css).toContain("font-family: var(--system-typography-heading-font-family);");
-    expect(css).toContain("font-size: var(--system-typography-heading-font-size);");
-    expect(css).toContain("letter-spacing: var(--system-typography-heading-letter-spacing);");
-    expect(css).toContain("line-height: var(--system-typography-heading-line-height);");
+  test("themeVariants: false omits the variants", () => {
+    expect(render({ themeVariants: false })).not.toContain("@custom-variant");
   });
 
-  test("shadow becomes shadow-<key>", () => {
-    const { system } = build();
-    const css = render({ utilities: { shadow: system.shadow } });
-    expect(css).toContain("@utility shadow-card {\n  box-shadow: var(--system-shadow-card);\n}");
+  test("a variant is emitted for every theme, kebab-cased", () => {
+    const fixture = build();
+    const highContrast = defineTheme(fixture.system, {
+      colors: { accent: tokens.color("#000000") },
+    });
+    const config = defineConfig({
+      tokens: { ref: fixture.ref, system: fixture.system, components: {} },
+      themes: { dark: fixture.config.themes.dark!, highContrast },
+    });
+    const css = render({}, { ...fixture, config });
+    expect(css).toContain("@custom-variant dark (&:where(.dark, .dark *));");
+    expect(css).toContain(
+      "@custom-variant high-contrast (&:where(.highContrast, .highContrast *));",
+    );
+
+    const listed = render({ themeVariants: ["highContrast"] }, { ...fixture, config });
+    expect(listed).not.toContain("@custom-variant dark");
+    expect(listed).toContain("@custom-variant high-contrast");
   });
 });
 
@@ -209,6 +268,15 @@ describe("validate()", () => {
     expect(JSON.stringify(result)).toMatch(/--color-text-muted is produced by both/);
   });
 
+  test("spacing keys that shadow container sizes warn instead of failing", () => {
+    const { system } = build();
+    const result = diagnose({ theme: { spacing: system.spacing } });
+    expect(result).toHaveLength(2);
+    expect(JSON.stringify(result)).not.toMatch(/"severity":"error"/);
+    expect(JSON.stringify(result)).toMatch(/--spacing-md also overrides the container size/);
+    expect(() => render({ theme: { spacing: system.spacing } })).not.toThrow();
+  });
+
   test("text-<k> vs --color-<k> collision", () => {
     const ref = defineReferenceTokens({ fontFamily: { body: tokens.fontFamily("Arial") } });
     const system = defineSystemTokens({
@@ -222,10 +290,11 @@ describe("validate()", () => {
       },
     });
     const config = defineConfig({ tokens: { ref, system, components: {} } });
-    const result = diagnose(
-      { theme: { color: system.colors }, utilities: { text: system.typography } },
-      { ref, system, config } as never,
-    );
+    const result = diagnose({ theme: { color: system.colors, text: system.typography } }, {
+      ref,
+      system,
+      config,
+    } as never);
     expect(JSON.stringify(result)).toMatch(/text-heading clashes with Tailwind's --color-heading/);
   });
 });
@@ -243,8 +312,9 @@ describe("real Tailwind compile", () => {
             color: system.colors,
             spacing: system.spacing,
             radius: system.radius,
+            text: system.typography,
+            shadow: system.shadow,
           },
-          utilities: { text: system.typography, shadow: system.shadow },
         }),
       );
       const source = '@import "tailwindcss";\n@import "./tailwind.css";';
@@ -257,14 +327,23 @@ describe("real Tailwind compile", () => {
         "p-md",
         "rounded-full",
         "text-heading",
+        "text-heading/7",
+        "leading-tight",
+        "tracking-tight",
         "shadow-card",
+        "ring-2",
         "dark:bg-accent",
       ]);
       expect(out).toContain("background-color: var(--system-colors-accent)");
       expect(out).toContain("var(--system-spacing-md)");
       expect(out).toContain("var(--system-radius-full)");
       expect(out).toContain("font-size: var(--system-typography-heading-font-size)");
-      expect(out).toContain("box-shadow: var(--system-shadow-card)");
+      expect(out).toContain("--tw-leading: var(--leading-tight)");
+      expect(out).toContain("--tw-tracking: var(--tracking-tight)");
+      expect(out).toMatch(/\.ring-2 \{[^}]*var\(--tw-ring-shadow\), var\(--tw-shadow\)/);
+      expect(out).toContain("var(--tw-leading, var(--system-typography-heading-line-height))");
+      expect(out).toContain("font-family: var(--system-typography-heading-font-family)");
+      expect(out).toContain("--tw-shadow: var(--system-shadow-card)");
       expect(out).toMatch(/:where\(\.dark, \.dark \*\)/);
     } finally {
       await fs.rm(dir, { recursive: true, force: true });
