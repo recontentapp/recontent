@@ -82,6 +82,10 @@ const system = defineSystemTokens({
       lineHeight: 1.5,
     }),
   },
+  motion: {
+    fast: tokens.duration("150ms"),
+    ease: tokens.cubicBezier([0.4, 0, 0.2, 1]),
+  },
   shadow: {
     card: tokens.shadow({
       color: ref.color.shadow,
@@ -116,6 +120,13 @@ export default defineConfig({
         font: system.fontFamily,
         text: system.typography,
         shadow: system.shadow,
+        duration: { fast: system.motion.fast },
+        defaults: {
+          font: system.fontFamily.sans,
+          monoFont: system.fontFamily.mono,
+          transitionDuration: system.motion.fast,
+          transitionTimingFunction: system.motion.ease,
+        },
       },
     }),
   ],

@@ -35,8 +35,10 @@ tailwind({
     spacing: system.spacing, // --spacing-sm, …
     radius: system.radius,
     font: { sans: system.fontFamily }, // an object key names a single token
-    text: system.typography, // text-<key>, composable with leading-* / tracking-*
-    shadow: system.shadow, // shadow-<key>, composable with ring-*
+    text: system.typography, // text-<key> + font-<key>, composable with leading-* / tracking-*
+    shadow: system.shadow, // shadow-<key>, composable with ring-* and /50
+    duration: system.motion, // duration-<key>
+    defaults: { font: system.fontFamily.sans }, // --default-font-family
   },
 });
 ```
@@ -50,35 +52,52 @@ Keys come from the object / scale structure, kebab-cased (`textMuted` →
 `text-muted`, nested groups join with `-`). A bare token is only allowed for
 `spacing` (it emits Tailwind's `--spacing` base unit).
 
-| `theme` option | Tailwind namespace |
-| -------------- | ------------------ |
-| `color`        | `--color-*`        |
-| `spacing`      | `--spacing-*`      |
-| `radius`       | `--radius-*`       |
-| `font`         | `--font-*`         |
-| `fontWeight`   | `--font-weight-*`  |
-| `text`         | `--text-*`         |
-| `tracking`     | `--tracking-*`     |
-| `leading`      | `--leading-*`      |
-| `ease`         | `--ease-*`         |
-| `breakpoint`   | `--breakpoint-*`   |
-| `container`    | `--container-*`    |
-| `blur`         | `--blur-*`         |
-| `perspective`  | `--perspective-*`  |
-| `aspect`       | `--aspect-*`       |
-| `shadow`       | `--shadow-*`       |
-| `insetShadow`  | `--inset-shadow-*` |
-| `dropShadow`   | `--drop-shadow-*`  |
-| `textShadow`   | `--text-shadow-*`  |
+| `theme` option | Tailwind namespace        |
+| -------------- | ------------------------- |
+| `color`        | `--color-*`               |
+| `spacing`      | `--spacing-*`             |
+| `radius`       | `--radius-*`              |
+| `font`         | `--font-*`                |
+| `fontWeight`   | `--font-weight-*`         |
+| `text`         | `--text-*`                |
+| `tracking`     | `--tracking-*`            |
+| `leading`      | `--leading-*`             |
+| `ease`         | `--ease-*`                |
+| `breakpoint`   | `--breakpoint-*`          |
+| `container`    | `--container-*`           |
+| `blur`         | `--blur-*`                |
+| `perspective`  | `--perspective-*`         |
+| `aspect`       | `--aspect-*`              |
+| `shadow`       | `--shadow-*`              |
+| `insetShadow`  | `--inset-shadow-*`        |
+| `dropShadow`   | `--drop-shadow-*`         |
+| `textShadow`   | `--text-shadow-*`         |
+| `duration`     | `--transition-duration-*` |
 
 `text` accepts font sizes (`dimension`) or whole `typography` tokens. A
 typography token emits `--text-<key>` plus its `--line-height`,
-`--letter-spacing` and `--font-weight` sub-properties, and a small
-`@utility text-<key>` for `font-family`, so `text-heading leading-tight`,
-`tracking-*` and the `text-heading/7` line-height modifier all work.
+`--letter-spacing` and `--font-weight` sub-properties, and a native
+`--font-<key>` for its family. Write `text-heading font-heading`: `leading-*`,
+`tracking-*`, the `text-heading/7` line-height modifier and `font-*` overrides
+(`text-heading font-mono`) all compose, because the family is a regular
+`font-*` utility. Set `typographyUtilities: true` to also emit a
+`text-<key>` `@utility` that applies the family, at the cost of `font-*`
+overrides and the `/7` modifier no longer reaching it.
+
 `shadow` tokens feed Tailwind's composite shadow stack, so `shadow-card ring-2`
-renders both. Tailwind cannot parse a `var()` value, so `shadow-card/50` and
-`shadow-red-500` recolouring do not apply.
+renders both. A shadow that no theme overrides (directly or through an alias)
+is inlined with its colour as a `var()`, so Tailwind can recolour it:
+`shadow-card/50` and `shadow-red-500` work. A shadow a theme overrides stays a
+`var()`, because Tailwind cannot parse one: those modifiers have no effect
+there and `recontent doctor` warns. The same applies to `insetShadow`,
+`dropShadow` and `textShadow`.
+
+`defaults` takes single tokens for Tailwind's `--default-*` keys: `font`
+(`fontFamily`, `--default-font-family`), `monoFont` (`fontFamily`,
+`--default-mono-font-family`), `transitionDuration` (`duration`,
+`--default-transition-duration`) and `transitionTimingFunction`
+(`cubicBezier`, `--default-transition-timing-function`). `resetDefaults`
+does not touch them.
 
 Because the theme is `inline`, `--color-*` variables are not emitted at
 runtime. In hand-written CSS use `--theme(--color-accent)` or the recontent
@@ -91,9 +110,15 @@ Other options: `filename`, `themeSelector` (`"class"` by default) /
 theme, kebab-cased, e.g. `dark:` and `high-contrast:`; `false` or a list of
 theme names to narrow; default `true`), and `resetDefaults` (`true` or a list
 of namespaces emits `--<ns>-*: initial;` to drop Tailwind's defaults; `"all"`
-emits `--*: initial;` to start from an empty theme).
+emits `--*: initial;` to start from an empty theme), `layer` (the
+generated `:root` and theme blocks sit in `@layer theme` by default so your own
+`@layer base`/`theme` CSS can override a token; give another name, or `false`
+to leave them unlayered) and `typographyUtilities` (see above).
 A typography `text-<key>` that collides with an emitted `--color-<key>`, and
-duplicate keys, are reported as errors by `recontent doctor` and `build`.
+duplicate keys (including `--font-<key>` from typography vs a `font` key), are
+reported as errors by `recontent doctor` and `build`. `doctor` also warns when
+a theme is named like a built-in Tailwind variant (`print`, `hover`, `open`, …),
+since its `@custom-variant` would replace it; `dark` is exempt.
 
 ## Commands
 

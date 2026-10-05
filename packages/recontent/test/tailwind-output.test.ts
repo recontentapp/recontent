@@ -26,6 +26,7 @@ function build() {
     spacing: tokens.dimensionScale({ sm: "4px", md: "8px" }),
     radius: tokens.dimensionScale({ full: "9999px" }),
     fontFamily: ref.fontFamily.body,
+    motion: { fast: tokens.duration("150ms") },
     shadow: {
       card: tokens.shadow({
         color: ref.color.primary,
@@ -137,10 +138,12 @@ describe("theme mapping", () => {
     expect(css).toContain("@theme {\n  --*: initial;\n}");
   });
 
-  test("typography maps to --text-* sub-properties plus a font-family utility", () => {
+  test("typography maps to --text-* sub-properties plus a native --font-<key>", () => {
     const { system } = build();
     const css = render({ theme: { text: system.typography } });
     const block = themeBlock(css);
+    expect(block).toContain("--font-heading: var(--system-typography-heading-font-family);");
+    expect(css).not.toContain("@utility");
     expect(block).toContain("--text-heading: var(--system-typography-heading-font-size);");
     expect(block).toContain(
       "--text-heading--line-height: var(--system-typography-heading-line-height);",
@@ -151,12 +154,27 @@ describe("theme mapping", () => {
     expect(block).toContain(
       "--text-heading--font-weight: var(--system-typography-heading-font-weight);",
     );
+  });
+
+  test("typographyUtilities keeps the text-<key> font-family utility", () => {
+    const { system } = build();
+    const css = render({ theme: { text: system.typography }, typographyUtilities: true });
     expect(css).toContain(
       "@utility text-heading {\n  font-family: var(--system-typography-heading-font-family);\n}",
     );
+    expect(themeBlock(css)).toContain("--font-heading:");
   });
 
-  test("shadow namespaces", () => {
+  test("typography clashing with a font key is an error", () => {
+    const { system } = build();
+    expect(() =>
+      render({
+        theme: { text: system.typography, font: { heading: system.fontFamily } },
+      }),
+    ).toThrow(/--font-heading is produced by both/);
+  });
+
+  test("an unthemed shadow is inlined in every shadow namespace", () => {
     const { system } = build();
     const css = render({
       theme: {
@@ -167,11 +185,41 @@ describe("theme mapping", () => {
       },
     });
     const block = themeBlock(css);
-    expect(block).toContain("--shadow-card: var(--system-shadow-card);");
-    expect(block).toContain("--inset-shadow-inset: var(--system-shadow-card);");
-    expect(block).toContain("--drop-shadow-drop: var(--system-shadow-card);");
-    expect(block).toContain("--text-shadow-text: var(--system-shadow-card);");
+    const inlined = "0px 2px 4px 0px var(--ref-color-primary)";
+    expect(block).toContain(`--shadow-card: ${inlined};`);
+    expect(block).toContain(`--inset-shadow-inset: ${inlined};`);
+    expect(block).toContain(`--drop-shadow-drop: ${inlined};`);
+    expect(block).toContain(`--text-shadow-text: ${inlined};`);
     expect(css).not.toContain("@utility");
+  });
+
+  test("a shadow a theme overrides stays a var() and warns", () => {
+    const fixture = build();
+    const night = defineTheme(fixture.system, {
+      shadow: {
+        card: tokens.shadow({
+          color: fixture.ref.color.dark,
+          offsetX: "0px",
+          offsetY: "8px",
+          blur: "16px",
+          spread: "0px",
+        }),
+      },
+    });
+    const config = defineConfig({
+      tokens: { ref: fixture.ref, system: fixture.system, components: {} },
+      themes: { night },
+    });
+    const next = { ...fixture, config };
+    expect(themeBlock(render({ theme: { shadow: fixture.system.shadow } }, next))).toContain(
+      "--shadow-card: var(--system-shadow-card);",
+    );
+    const result = tailwind({ outDir: "out", theme: { shadow: fixture.system.shadow } }).validate!(
+      ctxOf(config),
+    ) as { severity: string; message: string }[];
+    expect(result).toHaveLength(1);
+    expect(result[0]).toMatchObject({ severity: "warning" });
+    expect(result[0]!.message).toMatch(/--shadow-card stays a var\(\)/);
   });
 
   test("perspective and aspect namespaces", () => {
@@ -186,6 +234,89 @@ describe("theme mapping", () => {
     const block = themeBlock(css);
     expect(block).toContain("--perspective-near: var(--ref-perspective-near);");
     expect(block).toContain("--aspect-wide: var(--system-ratio-wide);");
+  });
+});
+
+describe("duration and defaults", () => {
+  function motion() {
+    const ref = defineReferenceTokens({ fontFamily: { body: tokens.fontFamily("Arial") } });
+    const system = defineSystemTokens({
+      motion: {
+        fast: tokens.duration("150ms"),
+        ease: tokens.cubicBezier([0.24, 1, 0.4, 1]),
+      },
+      fontFamily: { sans: ref.fontFamily.body, mono: tokens.fontFamily("Menlo") },
+    });
+    const config = defineConfig({ tokens: { ref, system, components: {} } });
+    return { ref, system, config } as never as ReturnType<typeof build>;
+  }
+
+  test("duration maps to --transition-duration-*", () => {
+    const fixture = motion();
+    const css = render({ theme: { duration: { fast: fixture.system.motion.fast } } }, fixture);
+    expect(themeBlock(css)).toContain("--transition-duration-fast: var(--system-motion-fast);");
+  });
+
+  test("defaults map to --default-* keys", () => {
+    const fixture = motion();
+    const { system } = fixture as never as { system: Record<string, any> };
+    const css = render(
+      {
+        theme: {
+          defaults: {
+            font: system.fontFamily.sans,
+            monoFont: system.fontFamily.mono,
+            transitionDuration: system.motion.fast,
+            transitionTimingFunction: system.motion.ease,
+          },
+        },
+      },
+      fixture,
+    );
+    const block = themeBlock(css);
+    expect(block).toContain("--default-font-family: var(--system-fontFamily-sans);");
+    expect(block).toContain("--default-mono-font-family: var(--system-fontFamily-mono);");
+    expect(block).toContain("--default-transition-duration: var(--system-motion-fast);");
+    expect(block).toContain("--default-transition-timing-function: var(--system-motion-ease);");
+  });
+
+  test("defaults are not part of resetDefaults", () => {
+    const fixture = motion();
+    const { system } = fixture as never as { system: Record<string, any> };
+    const css = render(
+      { theme: { defaults: { font: system.fontFamily.sans } }, resetDefaults: true },
+      fixture,
+    );
+    expect(css).not.toContain("initial");
+  });
+
+  test("a defaults token of the wrong $type is an error", () => {
+    const fixture = motion();
+    const { system } = fixture as never as { system: Record<string, any> };
+    expect(() =>
+      render({ theme: { defaults: { transitionDuration: system.fontFamily.sans } } }, fixture),
+    ).toThrow(/theme\.defaults\.transitionDuration: expected a duration token, got fontFamily/);
+  });
+});
+
+describe("layer", () => {
+  test("token blocks are wrapped in @layer theme, the rest stays top-level", () => {
+    const { system } = build();
+    const css = render({ theme: { color: system.colors, text: system.typography } });
+    expect(css).toMatch(/@layer theme \{\n {2}:root \{\n {4}--ref-color-primary:/);
+    expect(css).toMatch(/\n {2}\.dark \{\n {4}--system-colors-accent: #111111;\n {2}\}\n\}/);
+    expect(css).toMatch(/\n@theme inline \{/);
+    expect(css).toMatch(/\n@custom-variant dark/);
+  });
+
+  test("a custom layer name", () => {
+    expect(render({ layer: "tokens" })).toContain("@layer tokens {");
+  });
+
+  test("layer: false leaves the blocks unlayered", () => {
+    const css = render({ layer: false });
+    expect(css).not.toContain("@layer");
+    expect(css).toMatch(/\n:root \{\n {2}--ref-color-primary:/);
   });
 });
 
@@ -277,6 +408,24 @@ describe("validate()", () => {
     expect(() => render({ theme: { spacing: system.spacing } })).not.toThrow();
   });
 
+  test("a theme named like a built-in variant warns, dark does not", () => {
+    const fixture = build();
+    const print = defineTheme(fixture.system, { colors: { accent: tokens.color("#000000") } });
+    const config = defineConfig({
+      tokens: { ref: fixture.ref, system: fixture.system, components: {} },
+      themes: { dark: fixture.config.themes.dark!, print },
+    });
+    const result = diagnose({}, { ...fixture, config });
+    expect(result).toHaveLength(1);
+    expect(result[0]).toMatchObject({ severity: "warning" });
+    expect((result[0] as { message: string }).message).toMatch(
+      /"print" theme variant replaces Tailwind's built-in/,
+    );
+    expect(diagnose({ themeVariants: ["dark"] }, { ...fixture, config })).toEqual([]);
+    expect(diagnose({ themeVariants: false }, { ...fixture, config })).toEqual([]);
+    expect(diagnose({})).toEqual([]);
+  });
+
   test("text-<k> vs --color-<k> collision", () => {
     const ref = defineReferenceTokens({ fontFamily: { body: tokens.fontFamily("Arial") } });
     const system = defineSystemTokens({
@@ -295,7 +444,9 @@ describe("validate()", () => {
       system,
       config,
     } as never);
-    expect(JSON.stringify(result)).toMatch(/text-heading clashes with Tailwind's --color-heading/);
+    expect(JSON.stringify(result)).toMatch(
+      /text-heading is ambiguous with Tailwind's --color-heading/,
+    );
   });
 });
 
@@ -314,6 +465,7 @@ describe("real Tailwind compile", () => {
             radius: system.radius,
             text: system.typography,
             shadow: system.shadow,
+            duration: system.motion,
           },
         }),
       );
@@ -328,6 +480,10 @@ describe("real Tailwind compile", () => {
         "rounded-full",
         "text-heading",
         "text-heading/7",
+        "font-heading",
+        "text-heading font-mono",
+        "shadow-card/50",
+        "duration-fast",
         "leading-tight",
         "tracking-tight",
         "shadow-card",
@@ -342,8 +498,13 @@ describe("real Tailwind compile", () => {
       expect(out).toContain("--tw-tracking: var(--tracking-tight)");
       expect(out).toMatch(/\.ring-2 \{[^}]*var\(--tw-ring-shadow\), var\(--tw-shadow\)/);
       expect(out).toContain("var(--tw-leading, var(--system-typography-heading-line-height))");
-      expect(out).toContain("font-family: var(--system-typography-heading-font-family)");
-      expect(out).toContain("--tw-shadow: var(--system-shadow-card)");
+      expect(out).toMatch(
+        /\.font-heading \{[^}]*font-family: var\(--system-typography-heading-font-family\)/,
+      );
+      expect(out).toMatch(/\.text-heading \{(?![^}]*font-family)[^}]*\}/);
+      expect(out).toMatch(/\.shadow-card\\\/50 \{[^}]*--tw-shadow-alpha: 50%/);
+      expect(out).toContain("0px 2px 4px 0px var(--tw-shadow-color, var(--ref-color-primary))");
+      expect(out).toMatch(/\.duration-fast \{[^}]*var\(--system-motion-fast\)/);
       expect(out).toMatch(/:where\(\.dark, \.dark \*\)/);
     } finally {
       await fs.rm(dir, { recursive: true, force: true });
