@@ -454,7 +454,11 @@ describe("real Tailwind compile", () => {
   test("utilities and the dark variant resolve against the generated stylesheet", async () => {
     const { compile } = await import("@tailwindcss/node");
     const { system } = build();
-    const dir = await fs.mkdtemp(path.join(process.cwd(), "node_modules", ".recontent-tailwind-"));
+    // Must live under a node_modules dir so `@import "tailwindcss"` resolves. Hoisted installs
+    // (e.g. CI) may not have a package-local one, so create it.
+    const modulesDir = path.join(process.cwd(), "node_modules");
+    await fs.mkdir(modulesDir, { recursive: true });
+    const dir = await fs.mkdtemp(path.join(modulesDir, ".recontent-tailwind-"));
     try {
       await fs.writeFile(
         path.join(dir, "tailwind.css"),
