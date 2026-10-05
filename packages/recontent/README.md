@@ -2,7 +2,7 @@
 
 `recontent` is a CLI for design token tooling: define tokens once in a
 `recontent.config.ts`, then generate CSS, vanilla-extract, TypeScript, StyleX,
-DTCG (`.tokens.json`), or an HTML token report from it. Every output is a
+DTCG (`.tokens.json`), Tailwind v4 CSS, or an HTML token report from it. Every output is a
 plugin listed in the config and run by `recontent build`:
 
 ```ts
@@ -16,6 +16,65 @@ export default defineConfig({
 
 `dtcg()` writes `tokens.tokens.json` plus one `<theme>.tokens.json` per theme;
 `html()` writes `tokens.html`.
+
+## Tailwind
+
+`tailwind()` writes one CSS file (`tailwind.css` by default) to import **after**
+`@import "tailwindcss";`. It contains the same `:root` / theme blocks as
+`css()`, an `@theme inline` block mapping the tokens you pass into Tailwind
+namespaces, and `@utility` blocks for composite tokens. Because the theme is
+`inline`, utilities point at the recontent variables, so `.dark` /
+`[data-theme]` overrides work at runtime. Nothing is inferred: only the
+tokens you pass are mapped.
+
+```ts
+tailwind({
+  outDir: "src/styles",
+  theme: {
+    color: system.colors, // --color-accent, --color-text-muted, …
+    spacing: system.spacing, // --spacing-sm, …
+    radius: system.radius,
+    font: { sans: system.fontFamily }, // an object key names a single token
+  },
+  utilities: {
+    text: system.typography, // @utility text-<key>
+    shadow: system.shadow, // @utility shadow-<key>
+  },
+});
+```
+
+```css
+@import "tailwindcss";
+@import "./styles/tailwind.css";
+```
+
+Keys come from the object / scale structure, kebab-cased (`textMuted` →
+`text-muted`, nested groups join with `-`). A bare token is only allowed for
+`spacing` (it emits Tailwind's `--spacing` base unit).
+
+| `theme` option | Tailwind namespace |
+| -------------- | ------------------ |
+| `color`        | `--color-*`        |
+| `spacing`      | `--spacing-*`      |
+| `radius`       | `--radius-*`       |
+| `font`         | `--font-*`         |
+| `fontWeight`   | `--font-weight-*`  |
+| `text`         | `--text-*`         |
+| `tracking`     | `--tracking-*`     |
+| `leading`      | `--leading-*`      |
+| `ease`         | `--ease-*`         |
+| `breakpoint`   | `--breakpoint-*`   |
+| `container`    | `--container-*`    |
+| `blur`         | `--blur-*`         |
+
+Mind Tailwind's own lookups: `--spacing-*` also feeds width, height and `max-w-*` utilities, so spacing keys such as `lg` or `xl` override the container sizes behind `max-w-lg` (use `max-w-[32rem]` or a `container` group instead).
+
+Other options: `filename`, `themeSelector` (`"class"` by default) /
+`themeAttribute`, `darkVariant` (emit `@custom-variant dark` when a `dark`
+theme exists; default `true`), and `resetDefaults` (`true` or a list of
+namespaces, emits `--<ns>-*: initial;` to drop Tailwind's defaults).
+Utility names that collide with each other or with an emitted `--color-*` /
+`--text-*` variable are reported as errors by `recontent doctor` and `build`.
 
 ## Commands
 

@@ -15,14 +15,6 @@ exports[`golden snapshots css 1`] = `
   --ref-palette-200: #222222;
 }
 
-[data-theme="dark"] {
-  --ref-color-black: #eeeeee;
-}
-
-[data-theme="highContrast"] {
-  --system-colors-accent: #ff0000;
-}
-
 :root {
   /* Primary accent color. */
   --system-colors-accent: var(--ref-color-black);
@@ -44,6 +36,14 @@ exports[`golden snapshots css 1`] = `
   /* Primary accent color. */
   --button-background: var(--system-colors-accent);
   --button-border: var(--system-border-default);
+}
+
+[data-theme="dark"] {
+  --ref-color-black: #eeeeee;
+}
+
+[data-theme="highContrast"] {
+  --system-colors-accent: #ff0000;
 }"
 `;
 

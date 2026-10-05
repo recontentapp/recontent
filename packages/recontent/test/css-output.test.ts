@@ -278,18 +278,18 @@ describe("themes", () => {
 });
 
 describe("structure & options", () => {
-  test("block order is :root(ref) -> theme blocks -> :root(system) -> :root(components), and empty blocks are skipped", () => {
+  test("block order is :root(ref) -> :root(system) -> :root(components) -> theme blocks, and empty blocks are skipped", () => {
     const { config } = themedConfig({ layer: "ref" });
     const css = generateCss(config);
     const blocks = css.split(/\n\n/);
     expect(blocks.length).toBe(4);
     expect(blocks[0]).toMatch(/^:root \{/);
     expect(blocks[0]).toMatch(/--ref-color-black/);
-    expect(blocks[1]).toMatch(/^\[data-theme="dark"\] \{/);
+    expect(blocks[1]).toMatch(/^:root \{/);
+    expect(blocks[1]).toMatch(/--system-colors-accent/);
     expect(blocks[2]).toMatch(/^:root \{/);
-    expect(blocks[2]).toMatch(/--system-colors-accent/);
-    expect(blocks[3]).toMatch(/^:root \{/);
-    expect(blocks[3]).toMatch(/--button-background/);
+    expect(blocks[2]).toMatch(/--button-background/);
+    expect(blocks[3]).toMatch(/^\[data-theme="dark"\] \{/);
   });
 
   test("default selector is [data-theme=\"x\"]; themeSelector 'class' emits .x; themeAttribute is honoured", () => {
