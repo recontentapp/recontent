@@ -4,6 +4,7 @@ import {
   dtcg,
   html,
   stylex,
+  tailwind,
   typescript,
   typescriptNative,
   vanillaExtract,
@@ -92,4 +93,10 @@ test("html() emits tokens.html under outDir", async () => {
   const plugin = html({ outDir: "src/generated/html" });
   const files = await plugin.generate!(ctx());
   expect(files.map((f) => f.path)).toEqual(["src/generated/html/tokens.html"]);
+});
+
+test("tailwind() emits files under outDir", async () => {
+  const plugin = tailwind({ outDir: "src/generated/tailwind" });
+  const files = await plugin.generate!(ctx());
+  expect(files.map((f) => f.path)).toEqual(["src/generated/tailwind/tailwind.css"]);
 });

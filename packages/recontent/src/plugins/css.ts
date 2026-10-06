@@ -65,7 +65,7 @@ function entryDeclarations(entry: TokenEntry): Record<string, string> {
   return expandedEntryDeclarations(entry, entry.$value);
 }
 
-function formatRule(
+export function formatRule(
   selector: string,
   declarations: Record<string, string>,
   comments: Record<string, string> = {},
@@ -115,7 +115,7 @@ function themeOverrideDeclarations(
   return expandedEntryDeclarations(entry, overridden);
 }
 
-function themeSelectorFor(themeName: string, options: CssGeneratorOptions): string {
+export function themeSelectorFor(themeName: string, options: CssGeneratorOptions): string {
   if (options.themeSelector === "class") {
     return `.${themeName}`;
   }
@@ -142,6 +142,16 @@ export function generateCss(config: GeneratorContext, options: CssGeneratorOptio
     blocks.push(formatRule(":root", byLayer.ref.declarations, byLayer.ref.comments));
   }
 
+  if (Object.keys(byLayer.system.declarations).length > 0) {
+    blocks.push(formatRule(":root", byLayer.system.declarations, byLayer.system.comments));
+  }
+
+  if (Object.keys(byLayer.components.declarations).length > 0) {
+    blocks.push(formatRule(":root", byLayer.components.declarations, byLayer.components.comments));
+  }
+
+  // Theme blocks come last: they share `:root`'s specificity, so they must follow
+  // every `:root` block to override it when the theme class sits on <html>.
   for (const [themeName, override] of Object.entries(themes)) {
     const themeDeclarations: Record<string, string> = {};
     for (const [key, overridden] of override.entries()) {
@@ -157,14 +167,6 @@ export function generateCss(config: GeneratorContext, options: CssGeneratorOptio
     if (Object.keys(themeDeclarations).length > 0) {
       blocks.push(formatRule(themeSelectorFor(themeName, options), themeDeclarations));
     }
-  }
-
-  if (Object.keys(byLayer.system.declarations).length > 0) {
-    blocks.push(formatRule(":root", byLayer.system.declarations, byLayer.system.comments));
-  }
-
-  if (Object.keys(byLayer.components.declarations).length > 0) {
-    blocks.push(formatRule(":root", byLayer.components.declarations, byLayer.components.comments));
   }
 
   return blocks.join("\n\n");

@@ -6,7 +6,7 @@
     },
     "packages/recontent": {
       "project": ["src/**/*.{ts,tsx}"],
-      "ignoreDependencies": ["@base-ui/react", "@stylexjs/stylex"]
+      "ignoreDependencies": ["@base-ui/react", "@stylexjs/stylex", "tailwindcss"]
     },
     "apps/vanilla-extract-playground": {
       "entry": ["recontent.config.ts"],
@@ -20,6 +20,11 @@
       "entry": ["recontent.config.ts"],
       "project": ["src/**/*.{ts,tsx}", "*.ts"],
       "ignore": ["src/generated/**"]
+    },
+    "apps/tailwind-playground": {
+      "entry": ["recontent.config.ts"],
+      "project": ["src/**/*.{ts,tsx}", "*.ts"],
+      "ignoreDependencies": ["tailwindcss"]
     }
   }
 }
