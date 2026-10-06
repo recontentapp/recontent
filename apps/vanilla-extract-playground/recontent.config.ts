@@ -142,6 +142,12 @@ const ref = defineReferenceTokens({
     lg: tokens.dimension("48rem"),
     fullscreen: tokens.dimension("96rem"),
   },
+  fontFamily: {
+    sans: tokens.fontFamily(
+      '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
+    ),
+    mono: tokens.fontFamily('"SF Mono", Monaco, Consolas, monospace'),
+  },
   iconScale: tokens.dimensionScale({
     xs: "10px",
     sm: "12px",
@@ -151,134 +157,6 @@ const ref = defineReferenceTokens({
     "2xl": "24px",
     "3xl": "30px",
     "4xl": "36px",
-  }),
-  typographyScale: tokens.typographyScale({
-    "heading-branding-page-l": {
-      fontFamily:
-        '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
-      fontSize: "48px",
-      fontWeight: "semibold",
-      lineHeight: 1.2083,
-    },
-    "heading-branding-page": {
-      fontFamily:
-        '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
-      fontSize: "32px",
-      fontWeight: "semibold",
-      lineHeight: 1.25,
-    },
-    "heading-page-l": {
-      fontFamily:
-        '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
-      fontSize: "24px",
-      fontWeight: "bold",
-      lineHeight: 1.25,
-    },
-    "heading-page": {
-      fontFamily:
-        '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
-      fontSize: "22px",
-      fontWeight: "semibold",
-      lineHeight: 1.3636,
-    },
-    "heading-section-1": {
-      fontFamily:
-        '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
-      fontSize: "20px",
-      fontWeight: "semibold",
-      lineHeight: 1.5,
-    },
-    "heading-section-2": {
-      fontFamily:
-        '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
-      fontSize: "18px",
-      fontWeight: "semibold",
-      lineHeight: 1.3333,
-    },
-    "heading-section-3": {
-      fontFamily:
-        '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
-      fontSize: "16px",
-      fontWeight: "semibold",
-      lineHeight: 1.5,
-    },
-    "heading-section-4": {
-      fontFamily:
-        '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
-      fontSize: "14px",
-      fontWeight: "semibold",
-      lineHeight: 1.4286,
-    },
-    "paragraph-body-xl-strong": {
-      fontFamily:
-        '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
-      fontSize: "18px",
-      fontWeight: "medium",
-      lineHeight: 1.3333,
-    },
-    "paragraph-body-xl": {
-      fontFamily:
-        '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
-      fontSize: "18px",
-      fontWeight: "regular",
-      lineHeight: 1.3333,
-    },
-    "paragraph-body-l-strong": {
-      fontFamily:
-        '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
-      fontSize: "16px",
-      fontWeight: "medium",
-      lineHeight: 1.5,
-    },
-    "paragraph-body-l": {
-      fontFamily:
-        '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
-      fontSize: "16px",
-      fontWeight: "regular",
-      lineHeight: 1.5,
-    },
-    "paragraph-body-m-strong": {
-      fontFamily:
-        '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
-      fontSize: "14px",
-      fontWeight: "semibold",
-      lineHeight: 1.4286,
-    },
-    "paragraph-body-m": {
-      fontFamily:
-        '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
-      fontSize: "14px",
-      fontWeight: "regular",
-      lineHeight: 1.4286,
-    },
-    clickable: {
-      fontFamily:
-        '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
-      fontSize: "14px",
-      fontWeight: "medium",
-      lineHeight: 1.4286,
-    },
-    "tiny-caption-strong": {
-      fontFamily:
-        '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
-      fontSize: "12px",
-      fontWeight: "bold",
-      lineHeight: 1.3333,
-    },
-    "tiny-caption": {
-      fontFamily:
-        '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
-      fontSize: "12px",
-      fontWeight: "medium",
-      lineHeight: 1.3333,
-    },
-    "tiny-subcaption": {
-      fontFamily:
-        '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
-      fontSize: "10px",
-      fontWeight: "medium",
-      lineHeight: 1,
-    },
   }),
 });
 
@@ -313,10 +191,8 @@ const system = defineSystemTokens({
   spacing: ref.spacing,
   radius: ref.radius,
   typography: {
-    bodyFontFamily: tokens.fontFamily(
-      '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
-    ),
-    codeFontFamily: tokens.fontFamily('"SF Mono", Monaco, Consolas, monospace'),
+    bodyFontFamily: ref.fontFamily.sans,
+    codeFontFamily: ref.fontFamily.mono,
   },
   motion: {
     fast: tokens.duration("175ms"),
@@ -393,7 +269,116 @@ const system = defineSystemTokens({
     thin: { color: ref.color.secondary[200], width: "1px" },
     thick: { color: ref.color.secondary[200], width: "2px" },
   }),
-  textScale: ref.typographyScale,
+  textScale: tokens.typographyScale({
+    "heading-branding-page-l": {
+      fontFamily: ref.fontFamily.sans,
+      fontSize: "48px",
+      fontWeight: "semibold",
+      lineHeight: 1.2083,
+    },
+    "heading-branding-page": {
+      fontFamily: ref.fontFamily.sans,
+      fontSize: "32px",
+      fontWeight: "semibold",
+      lineHeight: 1.25,
+    },
+    "heading-page-l": {
+      fontFamily: ref.fontFamily.sans,
+      fontSize: "24px",
+      fontWeight: "bold",
+      lineHeight: 1.25,
+    },
+    "heading-page": {
+      fontFamily: ref.fontFamily.sans,
+      fontSize: "22px",
+      fontWeight: "semibold",
+      lineHeight: 1.3636,
+    },
+    "heading-section-1": {
+      fontFamily: ref.fontFamily.sans,
+      fontSize: "20px",
+      fontWeight: "semibold",
+      lineHeight: 1.5,
+    },
+    "heading-section-2": {
+      fontFamily: ref.fontFamily.sans,
+      fontSize: "18px",
+      fontWeight: "semibold",
+      lineHeight: 1.3333,
+    },
+    "heading-section-3": {
+      fontFamily: ref.fontFamily.sans,
+      fontSize: "16px",
+      fontWeight: "semibold",
+      lineHeight: 1.5,
+    },
+    "heading-section-4": {
+      fontFamily: ref.fontFamily.sans,
+      fontSize: "14px",
+      fontWeight: "semibold",
+      lineHeight: 1.4286,
+    },
+    "paragraph-body-xl-strong": {
+      fontFamily: ref.fontFamily.sans,
+      fontSize: "18px",
+      fontWeight: "medium",
+      lineHeight: 1.3333,
+    },
+    "paragraph-body-xl": {
+      fontFamily: ref.fontFamily.sans,
+      fontSize: "18px",
+      fontWeight: "regular",
+      lineHeight: 1.3333,
+    },
+    "paragraph-body-l-strong": {
+      fontFamily: ref.fontFamily.sans,
+      fontSize: "16px",
+      fontWeight: "medium",
+      lineHeight: 1.5,
+    },
+    "paragraph-body-l": {
+      fontFamily: ref.fontFamily.sans,
+      fontSize: "16px",
+      fontWeight: "regular",
+      lineHeight: 1.5,
+    },
+    "paragraph-body-m-strong": {
+      fontFamily: ref.fontFamily.sans,
+      fontSize: "14px",
+      fontWeight: "semibold",
+      lineHeight: 1.4286,
+    },
+    "paragraph-body-m": {
+      fontFamily: ref.fontFamily.sans,
+      fontSize: "14px",
+      fontWeight: "regular",
+      lineHeight: 1.4286,
+    },
+    clickable: {
+      fontFamily: ref.fontFamily.sans,
+      fontSize: "14px",
+      fontWeight: "medium",
+      lineHeight: 1.4286,
+    },
+    "tiny-caption-strong": {
+      fontFamily: ref.fontFamily.sans,
+      fontSize: "12px",
+      fontWeight: "bold",
+      lineHeight: 1.3333,
+    },
+    "tiny-caption": {
+      fontFamily: ref.fontFamily.sans,
+      fontSize: "12px",
+      fontWeight: "medium",
+      lineHeight: 1.3333,
+    },
+    "tiny-subcaption": {
+      fontFamily: ref.fontFamily.sans,
+      fontSize: "10px",
+      fontWeight: "medium",
+      lineHeight: 1,
+    },
+  }),
   transitionScale: tokens.transitionScale({
     fast: { duration: "100ms", timingFunction: [0.24, 1, 0.4, 1] },
     slow: { duration: "400ms", timingFunction: [0.24, 1, 0.4, 1] },

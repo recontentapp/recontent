@@ -136,6 +136,10 @@ export const vars = createThemeContract({
       lg: null,
       fullscreen: null,
     },
+    fontFamily: {
+      sans: null,
+      mono: null,
+    },
     iconScale: {
       xs: null,
       sm: null,
@@ -145,134 +149,6 @@ export const vars = createThemeContract({
       "2xl": null,
       "3xl": null,
       "4xl": null,
-    },
-    typographyScale: {
-      "heading-branding-page-l": {
-        fontFamily: null,
-        fontSize: null,
-        fontWeight: null,
-        letterSpacing: null,
-        lineHeight: null,
-      },
-      "heading-branding-page": {
-        fontFamily: null,
-        fontSize: null,
-        fontWeight: null,
-        letterSpacing: null,
-        lineHeight: null,
-      },
-      "heading-page-l": {
-        fontFamily: null,
-        fontSize: null,
-        fontWeight: null,
-        letterSpacing: null,
-        lineHeight: null,
-      },
-      "heading-page": {
-        fontFamily: null,
-        fontSize: null,
-        fontWeight: null,
-        letterSpacing: null,
-        lineHeight: null,
-      },
-      "heading-section-1": {
-        fontFamily: null,
-        fontSize: null,
-        fontWeight: null,
-        letterSpacing: null,
-        lineHeight: null,
-      },
-      "heading-section-2": {
-        fontFamily: null,
-        fontSize: null,
-        fontWeight: null,
-        letterSpacing: null,
-        lineHeight: null,
-      },
-      "heading-section-3": {
-        fontFamily: null,
-        fontSize: null,
-        fontWeight: null,
-        letterSpacing: null,
-        lineHeight: null,
-      },
-      "heading-section-4": {
-        fontFamily: null,
-        fontSize: null,
-        fontWeight: null,
-        letterSpacing: null,
-        lineHeight: null,
-      },
-      "paragraph-body-xl-strong": {
-        fontFamily: null,
-        fontSize: null,
-        fontWeight: null,
-        letterSpacing: null,
-        lineHeight: null,
-      },
-      "paragraph-body-xl": {
-        fontFamily: null,
-        fontSize: null,
-        fontWeight: null,
-        letterSpacing: null,
-        lineHeight: null,
-      },
-      "paragraph-body-l-strong": {
-        fontFamily: null,
-        fontSize: null,
-        fontWeight: null,
-        letterSpacing: null,
-        lineHeight: null,
-      },
-      "paragraph-body-l": {
-        fontFamily: null,
-        fontSize: null,
-        fontWeight: null,
-        letterSpacing: null,
-        lineHeight: null,
-      },
-      "paragraph-body-m-strong": {
-        fontFamily: null,
-        fontSize: null,
-        fontWeight: null,
-        letterSpacing: null,
-        lineHeight: null,
-      },
-      "paragraph-body-m": {
-        fontFamily: null,
-        fontSize: null,
-        fontWeight: null,
-        letterSpacing: null,
-        lineHeight: null,
-      },
-      clickable: {
-        fontFamily: null,
-        fontSize: null,
-        fontWeight: null,
-        letterSpacing: null,
-        lineHeight: null,
-      },
-      "tiny-caption-strong": {
-        fontFamily: null,
-        fontSize: null,
-        fontWeight: null,
-        letterSpacing: null,
-        lineHeight: null,
-      },
-      "tiny-caption": {
-        fontFamily: null,
-        fontSize: null,
-        fontWeight: null,
-        letterSpacing: null,
-        lineHeight: null,
-      },
-      "tiny-subcaption": {
-        fontFamily: null,
-        fontSize: null,
-        fontWeight: null,
-        letterSpacing: null,
-        lineHeight: null,
-      },
     },
   },
   system: {
@@ -589,28 +465,6 @@ export type RefIconScale = "xs" | "sm" | "base" | "lg" | "xl" | "2xl" | "3xl" | 
 
 export const refIconScale = vars.ref.iconScale;
 
-export type RefTypographyScale =
-  | "heading-branding-page-l"
-  | "heading-branding-page"
-  | "heading-page-l"
-  | "heading-page"
-  | "heading-section-1"
-  | "heading-section-2"
-  | "heading-section-3"
-  | "heading-section-4"
-  | "paragraph-body-xl-strong"
-  | "paragraph-body-xl"
-  | "paragraph-body-l-strong"
-  | "paragraph-body-l"
-  | "paragraph-body-m-strong"
-  | "paragraph-body-m"
-  | "clickable"
-  | "tiny-caption-strong"
-  | "tiny-caption"
-  | "tiny-subcaption";
-
-export const refTypographyScale = vars.ref.typographyScale;
-
 export type SystemColorsSecondary = 200;
 
 export const systemColorsSecondary = vars.system.colors.secondary;
@@ -801,6 +655,10 @@ export const themeClass = createTheme(vars, {
       lg: "48rem",
       fullscreen: "96rem",
     },
+    fontFamily: {
+      sans: "-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif",
+      mono: "SF Mono, Monaco, Consolas, monospace",
+    },
     iconScale: {
       xs: "10px",
       sm: "12px",
@@ -810,152 +668,6 @@ export const themeClass = createTheme(vars, {
       "2xl": "24px",
       "3xl": "30px",
       "4xl": "36px",
-    },
-    typographyScale: {
-      "heading-branding-page-l": {
-        fontFamily:
-          "-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif",
-        fontSize: "48px",
-        fontWeight: "600",
-        letterSpacing: "0px",
-        lineHeight: "1.2083",
-      },
-      "heading-branding-page": {
-        fontFamily:
-          "-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif",
-        fontSize: "32px",
-        fontWeight: "600",
-        letterSpacing: "0px",
-        lineHeight: "1.25",
-      },
-      "heading-page-l": {
-        fontFamily:
-          "-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif",
-        fontSize: "24px",
-        fontWeight: "700",
-        letterSpacing: "0px",
-        lineHeight: "1.25",
-      },
-      "heading-page": {
-        fontFamily:
-          "-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif",
-        fontSize: "22px",
-        fontWeight: "600",
-        letterSpacing: "0px",
-        lineHeight: "1.3636",
-      },
-      "heading-section-1": {
-        fontFamily:
-          "-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif",
-        fontSize: "20px",
-        fontWeight: "600",
-        letterSpacing: "0px",
-        lineHeight: "1.5",
-      },
-      "heading-section-2": {
-        fontFamily:
-          "-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif",
-        fontSize: "18px",
-        fontWeight: "600",
-        letterSpacing: "0px",
-        lineHeight: "1.3333",
-      },
-      "heading-section-3": {
-        fontFamily:
-          "-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif",
-        fontSize: "16px",
-        fontWeight: "600",
-        letterSpacing: "0px",
-        lineHeight: "1.5",
-      },
-      "heading-section-4": {
-        fontFamily:
-          "-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif",
-        fontSize: "14px",
-        fontWeight: "600",
-        letterSpacing: "0px",
-        lineHeight: "1.4286",
-      },
-      "paragraph-body-xl-strong": {
-        fontFamily:
-          "-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif",
-        fontSize: "18px",
-        fontWeight: "500",
-        letterSpacing: "0px",
-        lineHeight: "1.3333",
-      },
-      "paragraph-body-xl": {
-        fontFamily:
-          "-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif",
-        fontSize: "18px",
-        fontWeight: "400",
-        letterSpacing: "0px",
-        lineHeight: "1.3333",
-      },
-      "paragraph-body-l-strong": {
-        fontFamily:
-          "-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif",
-        fontSize: "16px",
-        fontWeight: "500",
-        letterSpacing: "0px",
-        lineHeight: "1.5",
-      },
-      "paragraph-body-l": {
-        fontFamily:
-          "-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif",
-        fontSize: "16px",
-        fontWeight: "400",
-        letterSpacing: "0px",
-        lineHeight: "1.5",
-      },
-      "paragraph-body-m-strong": {
-        fontFamily:
-          "-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif",
-        fontSize: "14px",
-        fontWeight: "600",
-        letterSpacing: "0px",
-        lineHeight: "1.4286",
-      },
-      "paragraph-body-m": {
-        fontFamily:
-          "-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif",
-        fontSize: "14px",
-        fontWeight: "400",
-        letterSpacing: "0px",
-        lineHeight: "1.4286",
-      },
-      clickable: {
-        fontFamily:
-          "-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif",
-        fontSize: "14px",
-        fontWeight: "500",
-        letterSpacing: "0px",
-        lineHeight: "1.4286",
-      },
-      "tiny-caption-strong": {
-        fontFamily:
-          "-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif",
-        fontSize: "12px",
-        fontWeight: "700",
-        letterSpacing: "0px",
-        lineHeight: "1.3333",
-      },
-      "tiny-caption": {
-        fontFamily:
-          "-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif",
-        fontSize: "12px",
-        fontWeight: "500",
-        letterSpacing: "0px",
-        lineHeight: "1.3333",
-      },
-      "tiny-subcaption": {
-        fontFamily:
-          "-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif",
-        fontSize: "10px",
-        fontWeight: "500",
-        letterSpacing: "0px",
-        lineHeight: "1",
-      },
     },
   },
   system: {
@@ -1014,9 +726,8 @@ export const themeClass = createTheme(vars, {
       full: vars.ref.radius.full,
     },
     typography: {
-      bodyFontFamily:
-        "-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif",
-      codeFontFamily: "SF Mono, Monaco, Consolas, monospace",
+      bodyFontFamily: vars.ref.fontFamily.sans,
+      codeFontFamily: vars.ref.fontFamily.mono,
     },
     motion: {
       fast: "175ms",
@@ -1040,130 +751,130 @@ export const themeClass = createTheme(vars, {
     },
     textScale: {
       "heading-branding-page-l": {
-        fontFamily: vars.ref.typographyScale["heading-branding-page-l"].fontFamily,
-        fontSize: vars.ref.typographyScale["heading-branding-page-l"].fontSize,
-        fontWeight: vars.ref.typographyScale["heading-branding-page-l"].fontWeight,
-        letterSpacing: vars.ref.typographyScale["heading-branding-page-l"].letterSpacing,
-        lineHeight: vars.ref.typographyScale["heading-branding-page-l"].lineHeight,
+        fontFamily: vars.ref.fontFamily.sans,
+        fontSize: "48px",
+        fontWeight: "600",
+        letterSpacing: "0px",
+        lineHeight: "1.2083",
       },
       "heading-branding-page": {
-        fontFamily: vars.ref.typographyScale["heading-branding-page"].fontFamily,
-        fontSize: vars.ref.typographyScale["heading-branding-page"].fontSize,
-        fontWeight: vars.ref.typographyScale["heading-branding-page"].fontWeight,
-        letterSpacing: vars.ref.typographyScale["heading-branding-page"].letterSpacing,
-        lineHeight: vars.ref.typographyScale["heading-branding-page"].lineHeight,
+        fontFamily: vars.ref.fontFamily.sans,
+        fontSize: "32px",
+        fontWeight: "600",
+        letterSpacing: "0px",
+        lineHeight: "1.25",
       },
       "heading-page-l": {
-        fontFamily: vars.ref.typographyScale["heading-page-l"].fontFamily,
-        fontSize: vars.ref.typographyScale["heading-page-l"].fontSize,
-        fontWeight: vars.ref.typographyScale["heading-page-l"].fontWeight,
-        letterSpacing: vars.ref.typographyScale["heading-page-l"].letterSpacing,
-        lineHeight: vars.ref.typographyScale["heading-page-l"].lineHeight,
+        fontFamily: vars.ref.fontFamily.sans,
+        fontSize: "24px",
+        fontWeight: "700",
+        letterSpacing: "0px",
+        lineHeight: "1.25",
       },
       "heading-page": {
-        fontFamily: vars.ref.typographyScale["heading-page"].fontFamily,
-        fontSize: vars.ref.typographyScale["heading-page"].fontSize,
-        fontWeight: vars.ref.typographyScale["heading-page"].fontWeight,
-        letterSpacing: vars.ref.typographyScale["heading-page"].letterSpacing,
-        lineHeight: vars.ref.typographyScale["heading-page"].lineHeight,
+        fontFamily: vars.ref.fontFamily.sans,
+        fontSize: "22px",
+        fontWeight: "600",
+        letterSpacing: "0px",
+        lineHeight: "1.3636",
       },
       "heading-section-1": {
-        fontFamily: vars.ref.typographyScale["heading-section-1"].fontFamily,
-        fontSize: vars.ref.typographyScale["heading-section-1"].fontSize,
-        fontWeight: vars.ref.typographyScale["heading-section-1"].fontWeight,
-        letterSpacing: vars.ref.typographyScale["heading-section-1"].letterSpacing,
-        lineHeight: vars.ref.typographyScale["heading-section-1"].lineHeight,
+        fontFamily: vars.ref.fontFamily.sans,
+        fontSize: "20px",
+        fontWeight: "600",
+        letterSpacing: "0px",
+        lineHeight: "1.5",
       },
       "heading-section-2": {
-        fontFamily: vars.ref.typographyScale["heading-section-2"].fontFamily,
-        fontSize: vars.ref.typographyScale["heading-section-2"].fontSize,
-        fontWeight: vars.ref.typographyScale["heading-section-2"].fontWeight,
-        letterSpacing: vars.ref.typographyScale["heading-section-2"].letterSpacing,
-        lineHeight: vars.ref.typographyScale["heading-section-2"].lineHeight,
+        fontFamily: vars.ref.fontFamily.sans,
+        fontSize: "18px",
+        fontWeight: "600",
+        letterSpacing: "0px",
+        lineHeight: "1.3333",
       },
       "heading-section-3": {
-        fontFamily: vars.ref.typographyScale["heading-section-3"].fontFamily,
-        fontSize: vars.ref.typographyScale["heading-section-3"].fontSize,
-        fontWeight: vars.ref.typographyScale["heading-section-3"].fontWeight,
-        letterSpacing: vars.ref.typographyScale["heading-section-3"].letterSpacing,
-        lineHeight: vars.ref.typographyScale["heading-section-3"].lineHeight,
+        fontFamily: vars.ref.fontFamily.sans,
+        fontSize: "16px",
+        fontWeight: "600",
+        letterSpacing: "0px",
+        lineHeight: "1.5",
       },
       "heading-section-4": {
-        fontFamily: vars.ref.typographyScale["heading-section-4"].fontFamily,
-        fontSize: vars.ref.typographyScale["heading-section-4"].fontSize,
-        fontWeight: vars.ref.typographyScale["heading-section-4"].fontWeight,
-        letterSpacing: vars.ref.typographyScale["heading-section-4"].letterSpacing,
-        lineHeight: vars.ref.typographyScale["heading-section-4"].lineHeight,
+        fontFamily: vars.ref.fontFamily.sans,
+        fontSize: "14px",
+        fontWeight: "600",
+        letterSpacing: "0px",
+        lineHeight: "1.4286",
       },
       "paragraph-body-xl-strong": {
-        fontFamily: vars.ref.typographyScale["paragraph-body-xl-strong"].fontFamily,
-        fontSize: vars.ref.typographyScale["paragraph-body-xl-strong"].fontSize,
-        fontWeight: vars.ref.typographyScale["paragraph-body-xl-strong"].fontWeight,
-        letterSpacing: vars.ref.typographyScale["paragraph-body-xl-strong"].letterSpacing,
-        lineHeight: vars.ref.typographyScale["paragraph-body-xl-strong"].lineHeight,
+        fontFamily: vars.ref.fontFamily.sans,
+        fontSize: "18px",
+        fontWeight: "500",
+        letterSpacing: "0px",
+        lineHeight: "1.3333",
       },
       "paragraph-body-xl": {
-        fontFamily: vars.ref.typographyScale["paragraph-body-xl"].fontFamily,
-        fontSize: vars.ref.typographyScale["paragraph-body-xl"].fontSize,
-        fontWeight: vars.ref.typographyScale["paragraph-body-xl"].fontWeight,
-        letterSpacing: vars.ref.typographyScale["paragraph-body-xl"].letterSpacing,
-        lineHeight: vars.ref.typographyScale["paragraph-body-xl"].lineHeight,
+        fontFamily: vars.ref.fontFamily.sans,
+        fontSize: "18px",
+        fontWeight: "400",
+        letterSpacing: "0px",
+        lineHeight: "1.3333",
       },
       "paragraph-body-l-strong": {
-        fontFamily: vars.ref.typographyScale["paragraph-body-l-strong"].fontFamily,
-        fontSize: vars.ref.typographyScale["paragraph-body-l-strong"].fontSize,
-        fontWeight: vars.ref.typographyScale["paragraph-body-l-strong"].fontWeight,
-        letterSpacing: vars.ref.typographyScale["paragraph-body-l-strong"].letterSpacing,
-        lineHeight: vars.ref.typographyScale["paragraph-body-l-strong"].lineHeight,
+        fontFamily: vars.ref.fontFamily.sans,
+        fontSize: "16px",
+        fontWeight: "500",
+        letterSpacing: "0px",
+        lineHeight: "1.5",
       },
       "paragraph-body-l": {
-        fontFamily: vars.ref.typographyScale["paragraph-body-l"].fontFamily,
-        fontSize: vars.ref.typographyScale["paragraph-body-l"].fontSize,
-        fontWeight: vars.ref.typographyScale["paragraph-body-l"].fontWeight,
-        letterSpacing: vars.ref.typographyScale["paragraph-body-l"].letterSpacing,
-        lineHeight: vars.ref.typographyScale["paragraph-body-l"].lineHeight,
+        fontFamily: vars.ref.fontFamily.sans,
+        fontSize: "16px",
+        fontWeight: "400",
+        letterSpacing: "0px",
+        lineHeight: "1.5",
       },
       "paragraph-body-m-strong": {
-        fontFamily: vars.ref.typographyScale["paragraph-body-m-strong"].fontFamily,
-        fontSize: vars.ref.typographyScale["paragraph-body-m-strong"].fontSize,
-        fontWeight: vars.ref.typographyScale["paragraph-body-m-strong"].fontWeight,
-        letterSpacing: vars.ref.typographyScale["paragraph-body-m-strong"].letterSpacing,
-        lineHeight: vars.ref.typographyScale["paragraph-body-m-strong"].lineHeight,
+        fontFamily: vars.ref.fontFamily.sans,
+        fontSize: "14px",
+        fontWeight: "600",
+        letterSpacing: "0px",
+        lineHeight: "1.4286",
       },
       "paragraph-body-m": {
-        fontFamily: vars.ref.typographyScale["paragraph-body-m"].fontFamily,
-        fontSize: vars.ref.typographyScale["paragraph-body-m"].fontSize,
-        fontWeight: vars.ref.typographyScale["paragraph-body-m"].fontWeight,
-        letterSpacing: vars.ref.typographyScale["paragraph-body-m"].letterSpacing,
-        lineHeight: vars.ref.typographyScale["paragraph-body-m"].lineHeight,
+        fontFamily: vars.ref.fontFamily.sans,
+        fontSize: "14px",
+        fontWeight: "400",
+        letterSpacing: "0px",
+        lineHeight: "1.4286",
       },
       clickable: {
-        fontFamily: vars.ref.typographyScale.clickable.fontFamily,
-        fontSize: vars.ref.typographyScale.clickable.fontSize,
-        fontWeight: vars.ref.typographyScale.clickable.fontWeight,
-        letterSpacing: vars.ref.typographyScale.clickable.letterSpacing,
-        lineHeight: vars.ref.typographyScale.clickable.lineHeight,
+        fontFamily: vars.ref.fontFamily.sans,
+        fontSize: "14px",
+        fontWeight: "500",
+        letterSpacing: "0px",
+        lineHeight: "1.4286",
       },
       "tiny-caption-strong": {
-        fontFamily: vars.ref.typographyScale["tiny-caption-strong"].fontFamily,
-        fontSize: vars.ref.typographyScale["tiny-caption-strong"].fontSize,
-        fontWeight: vars.ref.typographyScale["tiny-caption-strong"].fontWeight,
-        letterSpacing: vars.ref.typographyScale["tiny-caption-strong"].letterSpacing,
-        lineHeight: vars.ref.typographyScale["tiny-caption-strong"].lineHeight,
+        fontFamily: vars.ref.fontFamily.sans,
+        fontSize: "12px",
+        fontWeight: "700",
+        letterSpacing: "0px",
+        lineHeight: "1.3333",
       },
       "tiny-caption": {
-        fontFamily: vars.ref.typographyScale["tiny-caption"].fontFamily,
-        fontSize: vars.ref.typographyScale["tiny-caption"].fontSize,
-        fontWeight: vars.ref.typographyScale["tiny-caption"].fontWeight,
-        letterSpacing: vars.ref.typographyScale["tiny-caption"].letterSpacing,
-        lineHeight: vars.ref.typographyScale["tiny-caption"].lineHeight,
+        fontFamily: vars.ref.fontFamily.sans,
+        fontSize: "12px",
+        fontWeight: "500",
+        letterSpacing: "0px",
+        lineHeight: "1.3333",
       },
       "tiny-subcaption": {
-        fontFamily: vars.ref.typographyScale["tiny-subcaption"].fontFamily,
-        fontSize: vars.ref.typographyScale["tiny-subcaption"].fontSize,
-        fontWeight: vars.ref.typographyScale["tiny-subcaption"].fontWeight,
-        letterSpacing: vars.ref.typographyScale["tiny-subcaption"].letterSpacing,
-        lineHeight: vars.ref.typographyScale["tiny-subcaption"].lineHeight,
+        fontFamily: vars.ref.fontFamily.sans,
+        fontSize: "10px",
+        fontWeight: "500",
+        letterSpacing: "0px",
+        lineHeight: "1",
       },
     },
     transitionScale: {
