@@ -26,11 +26,25 @@ export function serializeColorCss(value: TokenTypeMap["color"]): string {
     }
     return value.hex;
   }
-  const [r, g, b] = value.components;
-  if (value.alpha < 1) {
-    return `color(${value.colorSpace} ${r} ${g} ${b} / ${value.alpha})`;
+  const [a, b, c] = value.components;
+  const alpha = value.alpha < 1 ? ` / ${value.alpha}` : "";
+  switch (value.colorSpace) {
+    // These spaces have dedicated CSS functions; `color()` only accepts predefined spaces.
+    case "oklch":
+    case "oklab":
+    case "lab":
+    case "lch":
+      return `${value.colorSpace}(${a} ${b} ${c}${alpha})`;
+    case "hsl":
+    case "hwb":
+      return `${value.colorSpace}(${a} ${percent(b)} ${percent(c)}${alpha})`;
+    default:
+      return `color(${value.colorSpace} ${a} ${b} ${c}${alpha})`;
   }
-  return `color(${value.colorSpace} ${r} ${g} ${b})`;
+}
+
+function percent(component: number | "none"): string {
+  return component === "none" ? component : `${component}%`;
 }
 
 export function serializeFontWeight(value: TokenTypeMap["fontWeight"]): number {

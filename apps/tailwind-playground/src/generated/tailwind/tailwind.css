@@ -4,11 +4,18 @@
 
 @layer theme {
   :root {
-    --ref-color-primary-100: #e0f2fe;
-    --ref-color-primary-300: #7dd3fc;
-    --ref-color-primary-500: #0ea5e9;
-    --ref-color-primary-700: #0369a1;
-    --ref-color-primary-900: #0c4a6e;
+    --ref-color-primary-1: oklch(0.9925 0.0035 237.32);
+    --ref-color-primary-2: oklch(0.9808 0.0088 237.32);
+    --ref-color-primary-3: oklch(0.9589 0.0224 237.32);
+    --ref-color-primary-4: oklch(0.9341 0.0362 237.32);
+    --ref-color-primary-5: oklch(0.9023 0.052 237.32);
+    --ref-color-primary-6: oklch(0.8612 0.065 237.32);
+    --ref-color-primary-7: oklch(0.8064 0.0822 237.32);
+    --ref-color-primary-8: oklch(0.7302 0.1122 237.32);
+    --ref-color-primary-9: #0ea5e9;
+    --ref-color-primary-10: oklch(0.6465 0.1397 237.32);
+    --ref-color-primary-11: oklch(0.5474 0.1201 237.32);
+    --ref-color-primary-12: oklch(0.3286 0.0673 237.32);
     --ref-color-neutral-0: #ffffff;
     --ref-color-neutral-100: #f4f4f5;
     --ref-color-neutral-300: #d4d4d8;
@@ -34,8 +41,8 @@
     --system-colors-mutedForeground: var(--ref-color-neutral-500);
     --system-colors-surface: var(--ref-color-neutral-100);
     --system-colors-border: var(--ref-color-neutral-300);
-    --system-colors-accent: var(--ref-color-primary-500);
-    --system-colors-accentStrong: var(--ref-color-primary-700);
+    --system-colors-accent: var(--ref-color-primary-9);
+    --system-colors-accentStrong: var(--ref-color-primary-10);
     --system-colors-accentForeground: var(--ref-color-neutral-0);
     --system-spacing-sm: var(--ref-spacing-sm);
     --system-spacing-md: var(--ref-spacing-md);
@@ -76,11 +83,18 @@
 }
 
 @theme inline {
-  --color-primary-100: var(--ref-color-primary-100);
-  --color-primary-300: var(--ref-color-primary-300);
-  --color-primary-500: var(--ref-color-primary-500);
-  --color-primary-700: var(--ref-color-primary-700);
-  --color-primary-900: var(--ref-color-primary-900);
+  --color-primary-1: var(--ref-color-primary-1);
+  --color-primary-2: var(--ref-color-primary-2);
+  --color-primary-3: var(--ref-color-primary-3);
+  --color-primary-4: var(--ref-color-primary-4);
+  --color-primary-5: var(--ref-color-primary-5);
+  --color-primary-6: var(--ref-color-primary-6);
+  --color-primary-7: var(--ref-color-primary-7);
+  --color-primary-8: var(--ref-color-primary-8);
+  --color-primary-9: var(--ref-color-primary-9);
+  --color-primary-10: var(--ref-color-primary-10);
+  --color-primary-11: var(--ref-color-primary-11);
+  --color-primary-12: var(--ref-color-primary-12);
   --color-background: var(--system-colors-background);
   --color-foreground: var(--system-colors-foreground);
   --color-muted-foreground: var(--system-colors-mutedForeground);

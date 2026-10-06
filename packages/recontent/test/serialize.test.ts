@@ -198,3 +198,22 @@ describe("serializeValueCss throws for expanded composite types", () => {
     expect(() => serializeValueCss("transition", transition.$value)).toThrow();
   });
 });
+
+describe("serializeColorCss for non-sRGB spaces", () => {
+  test("uses dedicated functions for oklch, oklab, lab and lch", () => {
+    const oklch = tokens.color({ colorSpace: "oklch", components: [0.6, 0.15, 250] });
+    expect(serializeColorCss(oklch.$value)).toBe("oklch(0.6 0.15 250)");
+    const lab = tokens.color({ colorSpace: "lab", components: [50, 20, -30], alpha: 0.5 });
+    expect(serializeColorCss(lab.$value)).toBe("lab(50 20 -30 / 0.5)");
+  });
+
+  test("adds percent signs for hsl and hwb", () => {
+    const hsl = tokens.color({ colorSpace: "hsl", components: [210, 50, 40] });
+    expect(serializeColorCss(hsl.$value)).toBe("hsl(210 50% 40%)");
+  });
+
+  test("keeps color() for predefined spaces", () => {
+    const p3 = tokens.color({ colorSpace: "display-p3", components: [0.1, 0.2, 0.3] });
+    expect(serializeColorCss(p3.$value)).toBe("color(display-p3 0.1 0.2 0.3)");
+  });
+});

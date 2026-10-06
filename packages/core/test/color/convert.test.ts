@@ -1,5 +1,5 @@
 import { expect, test } from "@jest/globals";
-import { toSrgbHex } from "../../src/color/convert.js";
+import { fitOklchToSrgb, toOklch, toSrgbHex } from "../../src/color/convert.js";
 
 function assertHexClose(actual: string, expected: string) {
   // Allow +/-1 per channel for rounding across conversion matrices.
@@ -98,3 +98,53 @@ test("toSrgbHex clamps out-of-gamut values instead of throwing", () => {
   expect(hex).toMatch(/^#[0-9a-f]{6}$/);
   expect(hex).toBe("#ff0080");
 });
+
+test("toOklch round-trips through toSrgbHex", () => {
+  for (const hex of [
+    [1, 0, 0],
+    [51 / 255, 102 / 255, 230 / 255],
+    [230 / 255, 230 / 255, 26 / 255],
+    [0, 0, 0],
+    [1, 1, 1],
+  ] as const) {
+    const oklch = toOklch("srgb", hex);
+    expect(toSrgbHex("oklch", oklch)).toBe(toSrgbHex("srgb", hex));
+  }
+});
+
+test("toOklch matches known reference values", () => {
+  const [l, c, h] = toOklch("srgb", [1, 0, 0]);
+  expect(l).toBeCloseTo(0.628, 3);
+  expect(c).toBeCloseTo(0.2577, 3);
+  expect(h).toBeCloseTo(29.23, 1);
+  expect(toOklch("srgb", [1, 1, 1])[0]).toBeCloseTo(1, 4);
+  expect(toOklch("srgb", [0.5, 0.5, 0.5])[1]).toBeCloseTo(0, 4);
+});
+
+test("fitOklchToSrgb leaves in-gamut colors untouched and reduces chroma otherwise", () => {
+  expect(fitOklchToSrgb([0.7, 0.05, 250])).toEqual([0.7, 0.05, 250]);
+  const [l, c, h] = fitOklchToSrgb([0.7, 0.4, 250]);
+  expect(l).toBe(0.7);
+  expect(h).toBe(250);
+  expect(c).toBeGreaterThan(0.05);
+  expect(c).toBeLessThan(0.4);
+  const [r, g, b] = toSrgbRgbUnclamped(l, c, h);
+  for (const v of [r, g, b]) {
+    expect(v).toBeGreaterThanOrEqual(-1e-3);
+    expect(v).toBeLessThanOrEqual(1 + 1e-3);
+  }
+});
+
+function toSrgbRgbUnclamped(l: number, c: number, h: number): [number, number, number] {
+  // Re-derive through toOklch: if the fitted color were out of gamut, the clamped round trip
+  // would not preserve chroma.
+  const hex = toSrgbHex("oklch", [l, c, h]);
+  const rgb = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255) as [
+    number,
+    number,
+    number,
+  ];
+  const back = toOklch("srgb", rgb);
+  expect(back[1]).toBeCloseTo(c, 2);
+  return rgb;
+}

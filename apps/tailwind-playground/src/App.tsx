@@ -2,11 +2,18 @@ import { useEffect, useState } from "react";
 
 // Full class names so Tailwind's scanner picks them up.
 const shadeClasses = {
-  "100": "bg-primary-100",
-  "300": "bg-primary-300",
-  "500": "bg-primary-500",
-  "700": "bg-primary-700",
-  "900": "bg-primary-900",
+  "1": "bg-primary-1",
+  "2": "bg-primary-2",
+  "3": "bg-primary-3",
+  "4": "bg-primary-4",
+  "5": "bg-primary-5",
+  "6": "bg-primary-6",
+  "7": "bg-primary-7",
+  "8": "bg-primary-8",
+  "9": "bg-primary-9",
+  "10": "bg-primary-10",
+  "11": "bg-primary-11",
+  "12": "bg-primary-12",
 } as const;
 const primaryShades = Object.keys(shadeClasses) as (keyof typeof shadeClasses)[];
 

@@ -9,13 +9,7 @@ import { tailwind } from "recontent/plugins";
 
 const ref = defineReferenceTokens({
   color: {
-    primary: tokens.colorScale({
-      100: tokens.color("#e0f2fe"),
-      300: tokens.color("#7dd3fc"),
-      500: tokens.color("#0ea5e9"),
-      700: tokens.color("#0369a1"),
-      900: tokens.color("#0c4a6e"),
-    }),
+    primary: tokens.generateColorScale({ base: "#0ea5e9" }),
     neutral: tokens.colorScale({
       0: tokens.color("#ffffff"),
       100: tokens.color("#f4f4f5"),
@@ -52,8 +46,8 @@ const system = defineSystemTokens({
     mutedForeground: ref.color.neutral[500],
     surface: ref.color.neutral[100],
     border: ref.color.neutral[300],
-    accent: ref.color.primary[500],
-    accentStrong: ref.color.primary[700],
+    accent: ref.color.primary[9],
+    accentStrong: ref.color.primary[10],
     accentForeground: ref.color.neutral[0],
   },
   spacing: ref.spacing,

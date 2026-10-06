@@ -22,8 +22,11 @@ import {
   isRawToken,
   isStampedToken,
   isTokenLeaf,
+  fitOklchToSrgb,
+  toOklch,
   toSrgbHex,
 } from "@recontentapp/core";
+import { generateScale, SCALE_STEPS } from "./color-scale.js";
 import { withRawTokenMethods, withScaleMethods, type ChainableMethods } from "./metadata.js";
 
 type ColorInput =
@@ -458,6 +461,94 @@ function colorScale<Key extends string | number>(
   return scaleFrom("color", scale, color);
 }
 
+type ScaleStep = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12;
+const DEFAULT_SCALE_STEPS: readonly ScaleStep[] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
+
+type GenerateColorScaleInput<Key extends string | number> = {
+  /**
+   * The color the scale is built around. For an accent scale it is used verbatim as step 9,
+   * unless it is close to the page background.
+   */
+  base: ColorInput | RawToken<"color">;
+  /**
+   * Whether the scale sits on a white page ("light") or a near-black one ("dark").
+   * Defaults to "light".
+   */
+  appearance?: "light" | "dark";
+  /**
+   * Generate a gray scale (backgrounds, borders and text) tinted towards `base`, instead of
+   * an accent scale. Step 9 is then not pinned to `base`.
+   */
+  neutral?: boolean;
+  /** Exactly 12 keys for steps 1-12, from background to text. Defaults to 1..12. */
+  steps?: readonly Key[];
+};
+
+function colorValueOf(input: ColorInput | RawToken<"color">): ColorValue {
+  return isRawToken(input) ? input.$value : color(input).$value;
+}
+
+/**
+ * Generates a 12-step UI color scale from a single color, the way Radix Colors' custom palette
+ * tool does: the two closest hand-tuned reference scales are blended, re-hued to `base`, and
+ * shifted to sit on the page background. Steps 1-2 are backgrounds, 3-5 interactive components, 6-8
+ * borders, 9-10 solid colors (9 is `base`, 10 its hover state) and 11-12 text.
+ * Generated steps are fitted to the sRGB gamut and emitted as oklch colors.
+ */
+function generateColorScale<Key extends string | number = ScaleStep>(
+  input: GenerateColorScaleInput<Key>,
+): ChainableScale<Key, "color", RawToken<"color"> | StampedToken<"color">> {
+  const steps = (input.steps ?? DEFAULT_SCALE_STEPS) as readonly Key[];
+  if (steps.length !== SCALE_STEPS) {
+    throw new Error(
+      `tokens.generateColorScale(...) requires exactly ${SCALE_STEPS} steps, received ${steps.length}.`,
+    );
+  }
+  if (new Set(steps.map(String)).size !== steps.length) {
+    throw new Error("tokens.generateColorScale(...) requires unique steps.");
+  }
+
+  const appearance = input.appearance ?? "light";
+  if (appearance !== "light" && appearance !== "dark") {
+    throw new Error(
+      `Invalid appearance: ${JSON.stringify(appearance)}. Expected "light" or "dark".`,
+    );
+  }
+
+  const baseValue = colorValueOf(input.base);
+  const { steps: generated, baseIndex } = generateScale({
+    base: toOklch(baseValue.colorSpace, baseValue.components),
+    baseHex: toSrgbHex(baseValue.colorSpace, baseValue.components),
+    appearance,
+    neutral: input.neutral ?? false,
+  });
+
+  const scale = {} as Record<Key, ColorInput | RawToken<"color">>;
+  steps.forEach((step, index) => {
+    if (index === baseIndex) {
+      scale[step] = input.base;
+      return;
+    }
+    const [l, c, h] = fitOklchToSrgb(generated[index]!);
+    scale[step] = {
+      colorSpace: "oklch",
+      components: [roundTo(l, 4), floorTo(c, 4), roundTo(h, 2)],
+    };
+  });
+  return colorScale(scale);
+}
+
+function roundTo(value: number, digits: number): number {
+  const factor = 10 ** digits;
+  return Math.round(value * factor) / factor;
+}
+
+// Floors so that rounding can never push a gamut-fitted chroma back out of gamut.
+function floorTo(value: number, digits: number): number {
+  const factor = 10 ** digits;
+  return Math.floor(value * factor) / factor;
+}
+
 function dimensionScale<Key extends string | number>(
   scale: Record<Key, string | RawToken<"dimension"> | StampedToken<"dimension">>,
 ): ChainableScale<Key, "dimension", RawToken<"dimension"> | StampedToken<"dimension">> {
@@ -527,6 +618,7 @@ export const tokens = {
   cubicBezier,
   number,
   colorScale,
+  generateColorScale,
   dimensionScale,
   numberScale,
   durationScale,

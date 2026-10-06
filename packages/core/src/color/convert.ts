@@ -133,6 +133,18 @@ const LMS_TO_XYZ: Vec3[] = [
   [-0.0763729366746601, -0.4214933324022432, 1.5869240198367816],
 ];
 
+const XYZ_TO_LMS: Vec3[] = [
+  [0.819022437996703, 0.3619062600528904, -0.1288737815209879],
+  [0.0329836539323885, 0.9292868615863434, 0.0361446663506424],
+  [0.0481771893596242, 0.2642395317527308, 0.6335478284694309],
+];
+
+const LMS_TO_OKLAB: Vec3[] = [
+  [0.210454268309314, 0.7936177747023054, -0.0040720430116193],
+  [1.9779985324311684, -2.42859224204858, 0.450593709617411],
+  [0.0259040424655478, 0.7827717124575296, -0.8086757549230774],
+];
+
 const OKLAB_TO_LMS: Vec3[] = [
   [1.0, 0.3963377773761749, 0.2158037573099136],
   [1.0, -0.1055613458156586, -0.0638541728258133],
@@ -235,4 +247,40 @@ export function toSrgbHex(colorSpace: ColorSpace, components: readonly Component
       .toString(16)
       .padStart(2, "0");
   return `#${toByte(r)}${toByte(g)}${toByte(b)}`;
+}
+
+/** Converts a color in any supported space to OKLCH: [L 0..1, C >= 0, h 0..360). */
+export function toOklch(colorSpace: ColorSpace, components: readonly Component[]): Vec3 {
+  const xyz = toXyzD65(colorSpace, none0(components));
+  const lms = multiplyMatrix(XYZ_TO_LMS, xyz).map(Math.cbrt) as Vec3;
+  const [l, a, b] = multiplyMatrix(LMS_TO_OKLAB, lms);
+  const hue = (Math.atan2(b, a) * 180) / Math.PI;
+  return [l, Math.hypot(a, b), (hue + 360) % 360];
+}
+
+const GAMUT_EPSILON = 1e-4;
+
+function oklchInSrgbGamut(oklch: Vec3): boolean {
+  const rgb = xyzD65ToSrgb(oklabToXyz(oklchToOklab(oklch)));
+  return rgb.every((v) => v >= -GAMUT_EPSILON && v <= 1 + GAMUT_EPSILON);
+}
+
+/**
+ * Returns the OKLCH color with the same lightness and hue as `oklch` and the highest chroma
+ * that still fits in sRGB (at most the input chroma). Unlike clamping channels, this keeps
+ * the perceived lightness and hue of the color.
+ */
+export function fitOklchToSrgb(oklch: Vec3): Vec3 {
+  const [l, c, h] = oklch;
+  if (l <= 0 || l >= 1) return [Math.min(1, Math.max(0, l)), 0, h];
+  if (oklchInSrgbGamut(oklch)) return oklch;
+
+  let lo = 0;
+  let hi = c;
+  for (let i = 0; i < 24; i++) {
+    const mid = (lo + hi) / 2;
+    if (oklchInSrgbGamut([l, mid, h])) lo = mid;
+    else hi = mid;
+  }
+  return [l, lo, h];
 }
