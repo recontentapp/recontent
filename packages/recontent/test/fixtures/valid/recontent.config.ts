@@ -5,7 +5,7 @@ import {
   defineSystemTokens,
   tokens,
 } from "recontent";
-import { css, dtcg, html } from "recontent/plugins";
+import { css, docs, dtcg } from "recontent/plugins";
 
 const ref = defineReferenceTokens({
   color: {
@@ -20,7 +20,7 @@ const ref = defineReferenceTokens({
 
 const system = defineSystemTokens({
   color: {
-    accent: ref.color.brand.primary,
+    accent: ref.color.brand.primary.describe("Primary accent color."),
   },
   spacing: {
     sm: ref.spacing[4],
@@ -31,5 +31,9 @@ const components = defineComponentTokens({});
 
 export default defineConfig({
   tokens: { ref, system, components },
-  plugins: [css({ outDir: "dist" }), dtcg({ outDir: "dist" }), html({ outDir: "dist" })],
+  plugins: [
+    css({ outDir: "dist" }),
+    dtcg({ outDir: "dist" }),
+    docs({ outDir: "dist", markdown: true }),
+  ],
 });

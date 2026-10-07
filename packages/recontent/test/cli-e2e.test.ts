@@ -117,19 +117,25 @@ describe("recontent build", () => {
     expect(css).toContain("#2563eb");
   });
 
-  test("runs the configured dtcg and html plugins", () => {
-    const dir = makeScratchDir("build-dtcg-html");
+  test("runs the configured dtcg and docs plugins", () => {
+    const dir = makeScratchDir("build-dtcg-docs");
     copyFixture("valid", dir);
 
     const result = runCli(["--cwd", dir, "build"]);
 
     expect(result.status).toBe(0);
 
-    const htmlPath = path.join(dir, "dist/tokens.html");
+    const htmlPath = path.join(dir, "dist/design.html");
     expect(existsSync(htmlPath)).toBe(true);
     const html = readFileSync(htmlPath, "utf-8");
     expect(html).toContain("<!DOCTYPE html>");
     expect(html).toContain("system.color.accent");
+
+    const mdPath = path.join(dir, "dist/design.md");
+    expect(existsSync(mdPath)).toBe(true);
+    const md = readFileSync(mdPath, "utf-8");
+    expect(md).toContain("system.color.accent");
+    expect(md).toContain("Primary accent color.");
 
     const dtcgPath = path.join(dir, "dist/tokens.tokens.json");
     expect(existsSync(dtcgPath)).toBe(true);

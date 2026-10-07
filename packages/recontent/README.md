@@ -2,20 +2,41 @@
 
 `recontent` is a CLI for design token tooling: define tokens once in a
 `recontent.config.ts`, then generate CSS, vanilla-extract, TypeScript, StyleX,
-DTCG (`.tokens.json`), Tailwind v4 CSS, or an HTML token report from it. Every output is a
+DTCG (`.tokens.json`), Tailwind v4 CSS, or token documentation (HTML and/or Markdown) from it. Every output is a
 plugin listed in the config and run by `recontent build`:
 
 ```ts
-import { css, dtcg, html } from "recontent/plugins";
+import { css, docs, dtcg } from "recontent/plugins";
 
 export default defineConfig({
   tokens: { ref, system, components },
-  plugins: [css({ outDir: "dist" }), dtcg({ outDir: "tokens" }), html({ outDir: "docs" })],
+  plugins: [
+    css({ outDir: "dist" }),
+    dtcg({ outDir: "tokens" }),
+    docs({ outDir: "docs", markdown: true }),
+  ],
 });
 ```
 
-`dtcg()` writes `tokens.tokens.json` plus one `<theme>.tokens.json` per theme;
-`html()` writes `tokens.html`.
+`dtcg()` writes `tokens.tokens.json` plus one `<theme>.tokens.json` per theme.
+
+## Docs
+
+`docs()` writes a design-token documentation site: `design.html` is a single
+self-contained page with one tab per layer (Reference, System, Components), a
+theme switcher, live previews, and visible descriptions and deprecations;
+`design.md` is the same content as Markdown tables.
+
+```ts
+docs({
+  outDir: "docs",
+  html: true, // default: write design.html
+  markdown: false, // default: write design.md
+  title: "Design tokens", // page / document title
+});
+```
+
+At least one of `html` or `markdown` must be enabled.
 
 ## Tailwind
 

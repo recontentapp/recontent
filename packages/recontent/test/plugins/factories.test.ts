@@ -2,7 +2,7 @@ import { expect, test } from "@jest/globals";
 import {
   css,
   dtcg,
-  html,
+  docs,
   stylex,
   tailwind,
   typescript,
@@ -89,10 +89,31 @@ test("dtcg() emits tokens.tokens.json plus one file per theme under outDir", asy
   ]);
 });
 
-test("html() emits tokens.html under outDir", async () => {
-  const plugin = html({ outDir: "src/generated/html" });
+test("docs() emits design.html by default under outDir", async () => {
+  const plugin = docs({ outDir: "src/generated/docs" });
   const files = await plugin.generate!(ctx());
-  expect(files.map((f) => f.path)).toEqual(["src/generated/html/tokens.html"]);
+  expect(files.map((f) => f.path)).toEqual(["src/generated/docs/design.html"]);
+});
+
+test("docs({ markdown: true }) emits design.html and design.md", async () => {
+  const plugin = docs({ outDir: "src/generated/docs", markdown: true });
+  const files = await plugin.generate!(ctx());
+  expect(files.map((f) => f.path)).toEqual([
+    "src/generated/docs/design.html",
+    "src/generated/docs/design.md",
+  ]);
+});
+
+test("docs({ html: false, markdown: true }) emits only design.md", async () => {
+  const plugin = docs({ outDir: "src/generated/docs", html: false, markdown: true });
+  const files = await plugin.generate!(ctx());
+  expect(files.map((f) => f.path)).toEqual(["src/generated/docs/design.md"]);
+});
+
+test("docs() throws when both html and markdown are disabled", () => {
+  expect(() => docs({ outDir: "docs", html: false, markdown: false })).toThrow(
+    /at least one of `html` or `markdown`/,
+  );
 });
 
 test("tailwind() emits files under outDir", async () => {
