@@ -45,7 +45,7 @@ function tokenFactoryForValue(value: unknown): string {
     return "tokens.color(...)";
   }
 
-  if (typeof value === "string" && /^-?\d*\.?\d+(?:px|rem)$/.test(value.trim())) {
+  if (typeof value === "string" && /^-?\d*\.?\d+(?:px|rem|em)$/.test(value.trim())) {
     return "tokens.dimension(...)";
   }
 

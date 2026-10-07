@@ -7,7 +7,7 @@ export type ColorValue = {
   hex: string;
 };
 
-export type DimensionValue = { value: number; unit: "px" | "rem" };
+export type DimensionValue = { value: number; unit: "px" | "rem" | "em" };
 export type FontFamilyValue = { value: string[] };
 export type FontWeightName =
   | "thin"

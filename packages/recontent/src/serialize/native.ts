@@ -10,7 +10,8 @@ export function serializeDimensionNative(
   value: TokenTypeMap["dimension"],
   rootFontSize: number,
 ): number {
-  const px = value.unit === "rem" ? value.value * rootFontSize : value.value;
+  // Native has no cascading font size, so `em` resolves against the root font size like `rem`.
+  const px = value.unit === "px" ? value.value : value.value * rootFontSize;
   return roundTo(px, 4);
 }
 
