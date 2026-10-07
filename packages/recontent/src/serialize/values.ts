@@ -58,7 +58,12 @@ function serializeStrokeStyleDtcg(value: TokenTypeMap["strokeStyle"]): unknown {
   if ("style" in value) {
     return value.style;
   }
-  return { dashArray: value.dashArray, lineCap: value.lineCap };
+  return { dashArray: value.dashArray.map(serializeDimensionDtcg), lineCap: value.lineCap };
+}
+
+// DTCG only defines `px` and `rem` for dimensions, so `em` is emitted as `rem` with the same value.
+function serializeDimensionDtcg(value: TokenTypeMap["dimension"]): TokenTypeMap["dimension"] {
+  return value.unit === "em" ? { value: value.value, unit: "rem" } : value;
 }
 
 function serializeStrokeStyleCss(value: TokenTypeMap["strokeStyle"]): string {
@@ -137,7 +142,7 @@ export function serializeValueDtcg<T extends TokenType>(type: T, value: TokenTyp
     case "color":
       return serializeColorDtcg(value as TokenTypeMap["color"]);
     case "dimension":
-      return value as TokenTypeMap["dimension"];
+      return serializeDimensionDtcg(value as TokenTypeMap["dimension"]);
     case "fontFamily":
       return (value as TokenTypeMap["fontFamily"]).value;
     case "fontWeight":

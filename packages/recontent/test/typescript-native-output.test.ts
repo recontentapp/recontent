@@ -24,6 +24,7 @@ describe("scalars", () => {
     const ref = defineReferenceTokens({
       px: tokens.dimension("16px"),
       rem: tokens.dimension("1.5rem"),
+      em: tokens.dimension("0.5em"),
     });
     const config = defineConfig({
       tokens: { ref, system: defineSystemTokens({}), components: {} },
@@ -31,6 +32,7 @@ describe("scalars", () => {
     const [file] = generate(config);
     expect(file!.content).toMatch(/"px": 16,/);
     expect(file!.content).toMatch(/"rem": 24,/);
+    expect(file!.content).toMatch(/"em": 8,/);
   });
 
   test("duration: s multiplies by 1000", () => {

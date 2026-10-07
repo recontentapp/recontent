@@ -19,6 +19,16 @@ test("tokens.fontFamily rejects a family containing a carriage return", () => {
   expect(() => tokens.fontFamily("A\rB")).toThrow(/control characters/);
 });
 
+test("tokens.dimension accepts px, rem and em", () => {
+  expect(tokens.dimension("16px").$value).toEqual({ value: 16, unit: "px" });
+  expect(tokens.dimension("1.5rem").$value).toEqual({ value: 1.5, unit: "rem" });
+  expect(tokens.dimension("-0.05em").$value).toEqual({ value: -0.05, unit: "em" });
+});
+
+test("tokens.dimension rejects unknown units", () => {
+  expect(() => tokens.dimension("1pt")).toThrow(/Invalid dimension/);
+});
+
 test("tokens.strokeStyle accepts a keyword", () => {
   const token = tokens.strokeStyle("dashed");
   expect(token.$type).toBe("strokeStyle");

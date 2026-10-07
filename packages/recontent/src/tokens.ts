@@ -131,14 +131,14 @@ function color(input: ColorInput): RawToken<"color"> & ChainableMethods<RawToken
 }
 
 function dimension(input: string): RawToken<"dimension"> & ChainableMethods<RawToken<"dimension">> {
-  const match = input.trim().match(/^(-?\d*\.?\d+)(px|rem)$/);
+  const match = input.trim().match(/^(-?\d*\.?\d+)(px|rem|em)$/);
   if (!match) {
-    throw new Error(`Invalid dimension: ${input}. Expected format like "16px" or "1rem".`);
+    throw new Error(`Invalid dimension: ${input}. Expected format like "16px", "1rem" or "1.5em".`);
   }
 
   return createRawToken("dimension", {
     value: Number(match[1]),
-    unit: match[2] as "px" | "rem",
+    unit: match[2] as "px" | "rem" | "em",
   });
 }
 

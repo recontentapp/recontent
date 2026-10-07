@@ -180,3 +180,41 @@ describe("scale metadata", () => {
     expect(output.ref.spacing.$deprecated).toBe("Use system.spacing");
   });
 });
+
+describe("em dimensions", () => {
+  // DTCG only supports px and rem, so em is emitted as rem.
+  test("em is emitted as rem, including inside composites and dash arrays", () => {
+    const ref = defineReferenceTokens({
+      gap: tokens.dimension("0.5em"),
+      px: tokens.dimension("4px"),
+      type: tokens.typography({
+        fontFamily: "Inter",
+        fontSize: "1.25em",
+        fontWeight: 400,
+        letterSpacing: "-0.05em",
+      }),
+      dash: tokens.strokeStyle({ dashArray: ["0.5em", "2px"], lineCap: "round" }),
+    });
+    const config = defineConfig({
+      tokens: { ref, system: defineSystemTokens({}), components: {} },
+    });
+    const output = generateDtcg(config) as never as {
+      ref: {
+        gap: { $value: unknown };
+        px: { $value: unknown };
+        type: { $value: { fontSize: unknown; letterSpacing: unknown } };
+        dash: { $value: { dashArray: unknown[] } };
+      };
+    };
+
+    expect(output.ref.gap.$value).toEqual({ value: 0.5, unit: "rem" });
+    expect(output.ref.px.$value).toEqual({ value: 4, unit: "px" });
+    expect(output.ref.type.$value.fontSize).toEqual({ value: 1.25, unit: "rem" });
+    expect(output.ref.type.$value.letterSpacing).toEqual({ value: -0.05, unit: "rem" });
+    expect(output.ref.dash.$value.dashArray).toEqual([
+      { value: 0.5, unit: "rem" },
+      { value: 2, unit: "px" },
+    ]);
+    expect(JSON.stringify(output)).not.toContain('"em"');
+  });
+});
