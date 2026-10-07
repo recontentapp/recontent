@@ -314,7 +314,7 @@ function code(text: string): string {
   return `\`${text}\``;
 }
 
-export function formatDiffMarkdown(diff: TokenDiff): string {
+function formatDiffMarkdown(diff: TokenDiff): string {
   if (isDiffEmpty(diff)) {
     return "No token changes between the working tree and HEAD.";
   }
@@ -400,7 +400,7 @@ export type DiffContext = {
 
 // The comparison context lives inside the object (rather than in a separate
 // line) so stdout is a single self-contained JSON document.
-export function formatDiffJson(diff: TokenDiff, context: DiffContext): string {
+function formatDiffJson(diff: TokenDiff, context: DiffContext): string {
   return JSON.stringify({ ...context, ...diff }, null, 2);
 }
 
