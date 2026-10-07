@@ -2,7 +2,7 @@ import { promises as fsp } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { loadConfig, type LogLevel } from "@recontentapp/core";
-import { diffConfigs, formatDiff, hasBreakingChanges } from "../diff/diff.js";
+import { diffConfigs, formatDiff, hasBreakingChanges, type DiffFormat } from "../diff/diff.js";
 import { createLogger } from "../../logger.js";
 import {
   archiveRevision,
@@ -17,6 +17,7 @@ export type DiffOptions = {
   logLevel?: LogLevel;
   rev?: string;
   failOnBreaking?: boolean;
+  format?: DiffFormat;
 };
 
 export async function runDiff(options: DiffOptions): Promise<void> {
@@ -53,9 +54,14 @@ export async function runDiff(options: DiffOptions): Promise<void> {
 
   const diff = diffConfigs(baseConfig, headConfig);
 
-  logger.info(`Comparing ${relPath} against ${rev}`);
-  logger.info("");
-  logger.info(formatDiff(diff));
+  // The diff is the command's payload (stdout, so `--format json` can be
+  // piped). The markdown header stays on stderr; JSON carries the same
+  // information as fields, so nothing but the object is ever printed.
+  const format = options.format ?? "markdown";
+  if (format === "markdown") {
+    logger.info(`Comparing ${relPath} against ${rev}`);
+  }
+  console.log(formatDiff(diff, format, { config: relPath, rev }));
 
   if (options.failOnBreaking && hasBreakingChanges(diff)) {
     process.exitCode = 1;

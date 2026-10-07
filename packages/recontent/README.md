@@ -127,6 +127,7 @@ recontent init                    Scaffold a recontent.config.ts
 recontent build [-w]              Run configured plugins and write their output
 recontent doctor                  Validate config, registry, and dependencies
 recontent diff [rev]              Compare tokens against a git revision (default HEAD)
+                                  --format <markdown|json> (default markdown)
 ```
 
 ## Global options

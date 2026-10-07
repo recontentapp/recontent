@@ -303,41 +303,52 @@ function diffCompositeMembers(
 }
 
 function formatChangedLine(path: string, from: string, to: string): string[] {
-  return [`  ${path}`, `    - ${from}`, `    + ${to}`];
+  return [`# ${path}`, `- ${from}`, `+ ${to}`];
 }
 
-export function formatDiff(diff: TokenDiff): string {
+export type DiffFormat = "markdown" | "json";
+
+export const DIFF_FORMATS: readonly DiffFormat[] = ["markdown", "json"];
+
+function code(text: string): string {
+  return `\`${text}\``;
+}
+
+export function formatDiffMarkdown(diff: TokenDiff): string {
   if (isDiffEmpty(diff)) {
     return "No token changes between the working tree and HEAD.";
   }
 
-  const lines: string[] = [];
+  const sections: string[] = [];
   const breakingCount = diff.removed.length + diff.renamed.length + diff.retyped.length;
 
   if (breakingCount > 0) {
-    lines.push(`Breaking (${breakingCount})`);
+    const lines = [`## Breaking (${breakingCount})`, ""];
     for (const { from, to } of diff.renamed) {
-      lines.push(`  renamed   ${pathStr(from)} -> ${pathStr(to)}   (${describeEntry(to)})`);
+      lines.push(
+        `- **renamed** ${code(pathStr(from))} -> ${code(pathStr(to))} (${describeEntry(to)})`,
+      );
     }
     for (const { from, to } of diff.retyped) {
-      lines.push(`  retyped   ${pathStr(from)}   ${from.$type} -> ${to.$type}`);
+      lines.push(`- **retyped** ${code(pathStr(from))}: ${from.$type} -> ${to.$type}`);
     }
     for (const entry of diff.removed) {
-      lines.push(`  removed   ${pathStr(entry)}   (${describeEntry(entry)})`);
+      lines.push(`- **removed** ${code(pathStr(entry))} (${describeEntry(entry)})`);
     }
-    lines.push("");
+    sections.push(lines.join("\n"));
   }
 
   if (diff.added.length > 0) {
-    lines.push(`Added (${diff.added.length})`);
+    const lines = [`## Added (${diff.added.length})`, ""];
     for (const entry of diff.added) {
-      lines.push(`  ${pathStr(entry)}   (${describeEntry(entry)})`);
+      lines.push(`- ${code(pathStr(entry))} (${describeEntry(entry)})`);
     }
-    lines.push("");
+    sections.push(lines.join("\n"));
   }
 
   if (diff.changed.length > 0) {
-    lines.push(`Changed (${diff.changed.length})`);
+    // A single fenced `diff` block, so GitHub/GitLab colour the -/+ lines.
+    const lines = [`## Changed (${diff.changed.length})`, "", "```diff"];
     for (const { from, to } of diff.changed) {
       if (isCompositeType(from.$type)) {
         const memberChanges = diffCompositeMembers(from.$type, from.$value, to.$value);
@@ -352,7 +363,8 @@ export function formatDiff(diff: TokenDiff): string {
       }
       lines.push(...formatChangedLine(pathStr(from), shortValue(from), shortValue(to)));
     }
-    lines.push("");
+    lines.push("```");
+    sections.push(lines.join("\n"));
   }
 
   const themeNames = new Set([
@@ -361,20 +373,41 @@ export function formatDiff(diff: TokenDiff): string {
     ...Object.keys(diff.themes.changedThemes),
   ]);
   if (themeNames.size > 0) {
-    lines.push("Themes");
+    const lines = ["## Themes", ""];
     for (const name of diff.themes.addedThemes) {
-      lines.push(`  ${name}: added`);
+      lines.push(`- ${code(name)}: added`);
     }
     for (const name of diff.themes.removedThemes) {
-      lines.push(`  ${name}: removed`);
+      lines.push(`- ${code(name)}: removed`);
     }
     for (const [name, themeDiff] of Object.entries(diff.themes.changedThemes)) {
       lines.push(
-        `  ${name}: +${themeDiff.added.length} override, -${themeDiff.removed.length}, ~${themeDiff.changed.length} changed`,
+        `- ${code(name)}: +${themeDiff.added.length} override, -${themeDiff.removed.length}, ~${themeDiff.changed.length} changed`,
       );
     }
-    lines.push("");
+    sections.push(lines.join("\n"));
   }
 
-  return lines.join("\n").trimEnd();
+  return sections.join("\n\n");
+}
+
+export type DiffContext = {
+  /** Config path, relative to the git root. */
+  config: string;
+  /** The revision the config was compared against. */
+  rev: string;
+};
+
+// The comparison context lives inside the object (rather than in a separate
+// line) so stdout is a single self-contained JSON document.
+export function formatDiffJson(diff: TokenDiff, context: DiffContext): string {
+  return JSON.stringify({ ...context, ...diff }, null, 2);
+}
+
+export function formatDiff(
+  diff: TokenDiff,
+  format: DiffFormat = "markdown",
+  context: DiffContext = { config: "", rev: "HEAD" },
+): string {
+  return format === "json" ? formatDiffJson(diff, context) : formatDiffMarkdown(diff);
 }

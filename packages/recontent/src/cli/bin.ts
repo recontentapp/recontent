@@ -2,11 +2,12 @@
 
 import { createRequire } from "node:module";
 import path from "node:path";
-import { Command, CommanderError } from "commander";
+import { Command, CommanderError, Option } from "commander";
 import type { LogLevel } from "@recontentapp/core";
 import { discoverConfigPath, resolveConfigPath } from "@recontentapp/core";
 import { runBuild } from "./commands/build.js";
 import { runDiff } from "./commands/diff.js";
+import { DIFF_FORMATS, type DiffFormat } from "./diff/diff.js";
 import { runDoctor } from "./commands/doctor.js";
 import { runInit } from "./commands/init.js";
 import { formatErrorForReport } from "./utils/exit.js";
@@ -121,10 +122,23 @@ program
   )
   .option(CONFIG_OPTION_FLAGS, CONFIG_OPTION_DESC)
   .option("--fail-on-breaking", "Exit with code 1 when tokens are removed, renamed, or retyped")
+  .addOption(
+    new Option("--format <format>", "Output format").choices(DIFF_FORMATS).default("markdown"),
+  )
   .action(
-    async (rev: string | undefined, options: { config?: string; failOnBreaking?: boolean }) => {
+    async (
+      rev: string | undefined,
+      options: { config?: string; failOnBreaking?: boolean; format: DiffFormat },
+    ) => {
       const { cwd, configPath, logLevel } = resolveGlobalOptions(options.config);
-      await runDiff({ cwd, configPath, logLevel, rev, failOnBreaking: options.failOnBreaking });
+      await runDiff({
+        cwd,
+        configPath,
+        logLevel,
+        rev,
+        failOnBreaking: options.failOnBreaking,
+        format: options.format,
+      });
     },
   );
 

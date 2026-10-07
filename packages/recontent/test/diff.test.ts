@@ -233,6 +233,44 @@ test("formatDiff reports only the nested member that changed inside a composite 
   expect(output).not.toContain('"value"');
 });
 
+test("formatDiff renders markdown sections with a fenced diff block by default", () => {
+  const base = config(
+    new Map([
+      ["ref.color.red", entry(["ref", "color", "red"], { $value: color("#ff0000") })],
+      ["ref.color.blue", entry(["ref", "color", "blue"], { $value: color("#0000ff") })],
+    ]),
+  );
+  const head = config(
+    new Map([
+      ["ref.color.blue", entry(["ref", "color", "blue"], { $value: color("#0000fe") })],
+      ["ref.color.green", entry(["ref", "color", "green"], { $value: color("#00ff00") })],
+    ]),
+  );
+  const output = formatDiff(diffConfigs(base, head));
+  expect(output).toBe(formatDiff(diffConfigs(base, head), "markdown"));
+  expect(output).toContain("## Breaking (1)");
+  expect(output).toContain("- **removed** `ref.color.red`");
+  expect(output).toContain("## Added (1)");
+  expect(output).toContain("- `ref.color.green`");
+  expect(output).toContain(
+    "## Changed (1)\n\n```diff\n# ref.color.blue\n- #0000ff\n+ #0000fe\n```",
+  );
+});
+
+test("formatDiff json is the raw diff plus its comparison context, empty or not", () => {
+  const registry: TokenRegistry = new Map([
+    ["ref.color.black", entry(["ref", "color", "black"], { $value: color("#000000") })],
+  ]);
+  const empty = diffConfigs(config(registry), config(registry));
+  const context = { config: "recontent.config.ts", rev: "HEAD" };
+  expect(JSON.parse(formatDiff(empty, "json", context))).toEqual({ ...context, ...empty });
+
+  const added = diffConfigs(config(new Map()), config(registry));
+  const parsed = JSON.parse(formatDiff(added, "json", context));
+  expect(parsed.added).toHaveLength(1);
+  expect(parsed.added[0].path).toEqual(["ref", "color", "black"]);
+});
+
 test("findExternalImports allows recontent and type-only imports", () => {
   expect(findExternalImports('import { defineConfig } from "recontent";', "config.ts")).toEqual([]);
   expect(findExternalImports('import type X from "./types";', "config.ts")).toEqual([]);
@@ -310,6 +348,7 @@ export default defineConfig({
 describe("runDiff against a config that imports a sibling file", () => {
   let repoDir: string;
   let logSpy: ReturnType<typeof jest.spyOn>;
+  let stdoutSpy: ReturnType<typeof jest.spyOn>;
 
   beforeEach(async () => {
     repoDir = await mkdtemp(path.join(process.cwd(), "test", "diff-fixture-"));
@@ -341,10 +380,12 @@ describe("runDiff against a config that imports a sibling file", () => {
     await writeFile(path.join(repoDir, "recontent.config.ts"), CONFIG_HEAD, "utf-8");
 
     logSpy = jest.spyOn(console, "error").mockImplementation(() => {});
+    stdoutSpy = jest.spyOn(console, "log").mockImplementation(() => {});
   });
 
   afterEach(async () => {
     logSpy.mockRestore();
+    stdoutSpy.mockRestore();
     process.exitCode = undefined;
     await rm(repoDir, { recursive: true, force: true });
   });
@@ -356,11 +397,25 @@ describe("runDiff against a config that imports a sibling file", () => {
       rev: "HEAD",
     });
 
-    const output = logSpy.mock.calls.map((call: unknown[]) => call.join(" ")).join("\n");
+    const output = stdoutSpy.mock.calls.map((call: unknown[]) => call.join(" ")).join("\n");
     expect(output).toContain("ref.color.blue");
     expect(output).toContain("#2563eb");
     expect(output).toContain("#1d4ed8");
     expect(output).toContain("ref.color.red");
+  });
+
+  test("--format json prints only the parseable diff on stdout", async () => {
+    await runDiff({
+      cwd: repoDir,
+      configPath: path.join(repoDir, "recontent.config.ts"),
+      rev: "HEAD",
+      format: "json",
+    });
+
+    expect(stdoutSpy).toHaveBeenCalledTimes(1);
+    const parsed = JSON.parse(String(stdoutSpy.mock.calls[0]![0]));
+    expect(parsed.removed.map((e: TokenEntry) => e.path.join("."))).toEqual(["ref.color.red"]);
+    expect(parsed.changed).toHaveLength(1);
   });
 
   test("--fail-on-breaking exits 1 on the removed token", async () => {
@@ -396,6 +451,7 @@ describe("runDiff rejects a revision that is not an ancestor of HEAD (S1)", () =
   let repoDir: string;
   let sentinelPath: string;
   let logSpy: ReturnType<typeof jest.spyOn>;
+  let stdoutSpy: ReturnType<typeof jest.spyOn>;
   let previousSentinelEnv: string | undefined;
 
   beforeEach(async () => {
@@ -465,10 +521,12 @@ describe("runDiff rejects a revision that is not an ancestor of HEAD (S1)", () =
     await writeFile(path.join(repoDir, "recontent.config.ts"), CONFIG_HEAD, "utf-8");
 
     logSpy = jest.spyOn(console, "error").mockImplementation(() => {});
+    stdoutSpy = jest.spyOn(console, "log").mockImplementation(() => {});
   });
 
   afterEach(async () => {
     logSpy.mockRestore();
+    stdoutSpy.mockRestore();
     process.exitCode = undefined;
     if (previousSentinelEnv === undefined) {
       delete process.env.RECONTENT_DIFF_TEST_SENTINEL;

@@ -177,7 +177,7 @@ describe("recontent diff", () => {
   function git(args: string[], cwd: string): void {
     const result = spawnSync("git", args, { cwd, encoding: "utf-8" });
     if (result.status !== 0) {
-      throw new Error(`git ${args.join(" ")} failed: ${result.stderr}`);
+      throw new Error(`git ${args.join(" ")} failed: ${result.stdout}`);
     }
   }
 
@@ -197,7 +197,7 @@ describe("recontent diff", () => {
     const result = runCli(["--cwd", dir, "diff"]);
 
     expect(result.status).toBe(0);
-    expect(result.stderr).toContain("No token changes between the working tree and HEAD");
+    expect(result.stdout).toContain("No token changes between the working tree and HEAD");
   });
 
   test("reports a changed token value against HEAD", () => {
@@ -212,8 +212,39 @@ describe("recontent diff", () => {
     const result = runCli(["--cwd", dir, "diff"]);
 
     expect(result.status).toBe(0);
-    expect(result.stderr).toContain("Changed");
-    expect(result.stderr).toContain("ref.color.brand.primary");
+    expect(result.stdout).toContain("Changed");
+    expect(result.stdout).toContain("ref.color.brand.primary");
+  });
+
+  test("--format json prints the diff as JSON on stdout", () => {
+    const dir = makeScratchDir("diff-json");
+    copyFixture("valid", dir);
+    initRepoWithCommit(dir);
+
+    const configPath = path.join(dir, "recontent.config.ts");
+    const original = readFileSync(configPath, "utf-8");
+    writeFileSync(configPath, original.replace("#2563eb", "#ff0000"));
+
+    const result = runCli(["--cwd", dir, "diff", "--format", "json"]);
+
+    expect(result.status).toBe(0);
+    expect(result.stderr).toBe("");
+    const parsed = JSON.parse(result.stdout);
+    expect(parsed.config).toBe("recontent.config.ts");
+    expect(parsed.rev).toBe("HEAD");
+    expect(parsed.changed).toHaveLength(1);
+    expect(parsed.changed[0].to.path.join(".")).toBe("ref.color.brand.primary");
+  });
+
+  test("rejects an unknown --format with a usage error", () => {
+    const dir = makeScratchDir("diff-bad-format");
+    copyFixture("valid", dir);
+    initRepoWithCommit(dir);
+
+    const result = runCli(["--cwd", dir, "diff", "--format", "yaml"]);
+
+    expect(result.status).toBe(2);
+    expect(result.stderr).toContain("markdown");
   });
 
   test("--fail-on-breaking exits 1 when a token is removed", () => {
@@ -234,7 +265,7 @@ describe("recontent diff", () => {
 
     const withoutBreaking = runCli(["--cwd", dir, "diff"]);
     expect(withoutBreaking.status).toBe(0);
-    expect(withoutBreaking.stderr).toContain("Breaking");
+    expect(withoutBreaking.stdout).toContain("Breaking");
 
     const withBreaking = runCli(["--cwd", dir, "diff", "--fail-on-breaking"]);
     expect(withBreaking.status).toBe(1);
