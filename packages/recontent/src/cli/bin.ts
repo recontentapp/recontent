@@ -93,7 +93,7 @@ program
 program
   .command("build")
   .description(
-    "Generate configured output targets (css, dtcg, html, vanilla-extract, typescript, typescript-native, stylex) from recontent.config.ts",
+    "Generate configured output targets (css, dtcg, docs, vanilla-extract, typescript, typescript-native, stylex) from recontent.config.ts",
   )
   .option(CONFIG_OPTION_FLAGS, CONFIG_OPTION_DESC)
   .option("-w, --watch", "Rerun the build whenever the config file (or a file it imports) changes")
