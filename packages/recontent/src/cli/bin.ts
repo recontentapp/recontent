@@ -2,7 +2,7 @@
 
 import { createRequire } from "node:module";
 import path from "node:path";
-import { Command, CommanderError, Option } from "commander";
+import { Argument, Command, CommanderError, Option } from "commander";
 import type { LogLevel } from "@recontentapp/core";
 import { discoverConfigPath, resolveConfigPath } from "@recontentapp/core";
 import { runBuild } from "./commands/build.js";
@@ -10,6 +10,7 @@ import { runDiff } from "./commands/diff.js";
 import { DIFF_FORMATS, type DiffFormat } from "./diff/diff.js";
 import { runDoctor } from "./commands/doctor.js";
 import { runInit } from "./commands/init.js";
+import { PRESETS, PRESET_NAMES } from "./presets/index.js";
 import { formatErrorForReport } from "./utils/exit.js";
 
 const require = createRequire(import.meta.url);
@@ -79,15 +80,20 @@ const CONFIG_OPTION_DESC = "Path to config file (default: discovered by searchin
 
 program
   .command("init")
-  .description("Scaffold a recontent.config.ts file with default ref and system design tokens")
+  .description("Scaffold a recontent.config.ts from a design-system preset")
+  .addArgument(new Argument("<preset>", "Design system preset to start from").choices(PRESET_NAMES))
+  .addHelpText(
+    "after",
+    `\nPresets:\n${PRESETS.map((preset) => `  ${preset.name.padEnd(16)}${preset.description}`).join("\n")}`,
+  )
   .option(CONFIG_OPTION_FLAGS, "Path to write the config file to (default: recontent.config.ts)")
   .option("--force", "Overwrite an existing recontent.config.ts")
-  .action(async (options: { config?: string; force?: boolean }) => {
+  .action(async (preset: string, options: { config?: string; force?: boolean }) => {
     const { cwd, configPath } = resolveGlobalOptions(options.config, {
       discover: false,
       fallback: "recontent.config.ts",
     });
-    await runInit({ cwd, configPath, force: options.force });
+    await runInit({ cwd, configPath, preset, force: options.force });
   });
 
 program
