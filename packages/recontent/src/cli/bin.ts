@@ -82,12 +82,16 @@ program
   .description("Scaffold a recontent.config.ts file with default ref and system design tokens")
   .option(CONFIG_OPTION_FLAGS, "Path to write the config file to (default: recontent.config.ts)")
   .option("--force", "Overwrite an existing recontent.config.ts")
-  .action(async (options: { config?: string; force?: boolean }) => {
+  .option(
+    "--from <paths...>",
+    "Generate the config from DTCG tokens: a *.resolver.json, *.tokens.json/*.json files, or a directory",
+  )
+  .action(async (options: { config?: string; force?: boolean; from?: string[] }) => {
     const { cwd, configPath } = resolveGlobalOptions(options.config, {
       discover: false,
       fallback: "recontent.config.ts",
     });
-    await runInit({ cwd, configPath, force: options.force });
+    await runInit({ cwd, configPath, force: options.force, from: options.from });
   });
 
 program

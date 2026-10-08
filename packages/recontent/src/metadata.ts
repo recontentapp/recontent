@@ -1,9 +1,9 @@
 import type { RawToken, StampedToken, TokenLayer, TokenType } from "@recontentapp/core";
 
 export type ChainableMethods<Token> = {
-  describe(description: string): Token;
-  deprecate(reason?: string): Token;
-  extend(namespace: string, value: Record<string, unknown>): Token;
+  describe(description: string): Token & ChainableMethods<Token>;
+  deprecate(reason?: string): Token & ChainableMethods<Token>;
+  extend(namespace: string, value: Record<string, unknown>): Token & ChainableMethods<Token>;
 };
 
 function attachChainable<

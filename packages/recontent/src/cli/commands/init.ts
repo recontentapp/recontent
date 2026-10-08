@@ -1,5 +1,7 @@
 import { createLogger } from "../../logger.js";
 import { exitWithError } from "../utils/exit.js";
+import { generateConfigFromDtcg } from "../dtcg-import/index.js";
+import type { DtcgImportStats } from "../dtcg-import/index.js";
 import { writeOutputFile } from "../utils/fs.js";
 
 const CONFIG_TEMPLATE = `import {
@@ -56,14 +58,22 @@ export type InitOptions = {
   cwd: string;
   configPath: string;
   force?: boolean;
+  /** DTCG sources (resolver, token files or directories) to generate the config from. */
+  from?: string[];
 };
 
+function describeImport({ tokens, ref, system, themes, skipped }: DtcgImportStats): string {
+  return `Imported ${tokens} tokens (${ref} ref, ${system} system), ${themes} themes; skipped ${skipped}`;
+}
+
 export async function runInit(options: InitOptions): Promise<void> {
-  const { configPath, cwd } = options;
+  const { configPath, cwd, from } = options;
+
+  const imported = from ? generateConfigFromDtcg({ sources: from, cwd }) : undefined;
 
   // `writeMode: "once"` checks existsSync() before writing — not perfectly
   // atomic, but avoids inverting control flow through a catch block.
-  const { written } = await writeOutputFile(configPath, CONFIG_TEMPLATE, cwd, {
+  const { written } = await writeOutputFile(configPath, imported?.source ?? CONFIG_TEMPLATE, cwd, {
     writeMode: options.force ? "always" : "once",
   });
 
@@ -74,5 +84,10 @@ export async function runInit(options: InitOptions): Promise<void> {
     return;
   }
 
-  createLogger().info(`Created ${configPath}`);
+  const logger = createLogger();
+  logger.info(`Created ${configPath}`);
+  if (imported) {
+    logger.info(describeImport(imported.stats));
+    for (const warning of imported.warnings) logger.warn(warning);
+  }
 }
