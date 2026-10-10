@@ -27,6 +27,7 @@ import {
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { afterEach, beforeAll, describe, expect, test } from "@jest/globals";
+import { PRESET_NAMES } from "../src/cli/presets/index.js";
 
 const dirname = path.dirname(fileURLToPath(import.meta.url));
 const packageRoot = path.resolve(dirname, "..");
@@ -69,7 +70,7 @@ function runCli(args: string[], options?: { cwd?: string }) {
 describe("recontent init", () => {
   test("scaffolds a config file and exits 0", () => {
     const dir = makeScratchDir("init");
-    const result = runCli(["--cwd", dir, "init"]);
+    const result = runCli(["--cwd", dir, "init", "neutral"]);
 
     expect(result.status).toBe(0);
     const configPath = path.join(dir, "recontent.config.ts");
@@ -79,12 +80,12 @@ describe("recontent init", () => {
 
   test("refuses to overwrite an existing config without --force", () => {
     const dir = makeScratchDir("init-noforce");
-    expect(runCli(["--cwd", dir, "init"]).status).toBe(0);
+    expect(runCli(["--cwd", dir, "init", "neutral"]).status).toBe(0);
 
     const configPath = path.join(dir, "recontent.config.ts");
     writeFileSync(configPath, "// user-edited, do not clobber\n");
 
-    const result = runCli(["--cwd", dir, "init"]);
+    const result = runCli(["--cwd", dir, "init", "neutral"]);
     expect(result.status).toBe(1);
     expect(result.stderr).toContain("already exists");
     expect(readFileSync(configPath, "utf-8")).toBe("// user-edited, do not clobber\n");
@@ -92,13 +93,41 @@ describe("recontent init", () => {
 
   test("--force overwrites an existing config", () => {
     const dir = makeScratchDir("init-force");
-    runCli(["--cwd", dir, "init"]);
+    runCli(["--cwd", dir, "init", "neutral"]);
     const configPath = path.join(dir, "recontent.config.ts");
     writeFileSync(configPath, "// stale\n");
 
-    const result = runCli(["--cwd", dir, "init", "--force"]);
+    const result = runCli(["--cwd", dir, "init", "neutral", "--force"]);
     expect(result.status).toBe(0);
     expect(readFileSync(configPath, "utf-8")).toContain("defineConfig(");
+  });
+
+  test("requires a preset", () => {
+    const dir = makeScratchDir("init-nopreset");
+    const result = runCli(["--cwd", dir, "init"]);
+
+    expect(result.status).toBe(2);
+    expect(result.stderr).toContain("preset");
+    expect(existsSync(path.join(dir, "recontent.config.ts"))).toBe(false);
+  });
+
+  test("rejects an unknown preset and lists the choices", () => {
+    const dir = makeScratchDir("init-unknown");
+    const result = runCli(["--cwd", dir, "init", "bootstrap"]);
+
+    expect(result.status).toBe(2);
+    for (const name of PRESET_NAMES) {
+      expect(result.stderr).toContain(name);
+    }
+  });
+
+  test.each(PRESET_NAMES)("the %s preset scaffolds a config that passes doctor", (name) => {
+    const dir = makeScratchDir(`init-${name}`);
+
+    expect(runCli(["--cwd", dir, "init", name]).status).toBe(0);
+    const doctor = runCli(["--cwd", dir, "doctor"]);
+    expect(doctor.stderr).toContain("No issues found");
+    expect(doctor.status).toBe(0);
   });
 });
 
