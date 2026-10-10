@@ -101,24 +101,6 @@ test("a warning-severity validate diagnostic does not short-circuit generate", a
   expect(result.diagnostics).toEqual([{ severity: "warning", message: "heads up" }]);
 });
 
-test("dependencies merge across plugins", async () => {
-  const a: RecontentPlugin = { name: "a", dependencies: () => ({ foo: "^1.0.0" }) };
-  const b: RecontentPlugin = { name: "b", dependencies: () => ({ bar: "^2.0.0" }) };
-  const ctxCollector: Record<string, string>[] = [];
-  for (const plugin of [a, b]) {
-    ctxCollector.push(
-      plugin.dependencies!({
-        registry: new Map(),
-        themes: {},
-        root: "/project",
-        logger: { info: () => {}, warn: () => {}, error: () => {}, debug: () => {} },
-        mode: "build",
-      }),
-    );
-  }
-  expect(Object.assign({}, ...ctxCollector)).toEqual({ foo: "^1.0.0", bar: "^2.0.0" });
-});
-
 test("buildEnd receives the full file list from every plugin", async () => {
   let seen: string[] = [];
   const a: RecontentPlugin = { name: "a", generate: () => [{ path: "a.txt", content: "a" }] };

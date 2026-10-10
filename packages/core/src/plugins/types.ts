@@ -33,10 +33,8 @@ export interface RecontentPlugin {
   enforce?: "pre" | "post";
 
   buildStart?(ctx: PluginContext): void | Promise<void>;
-  /** Errors abort the build before anything is written. Also drives `doctor`. */
+  /** Errors abort the build before anything is written. */
   validate?(ctx: PluginContext): PluginDiagnostic[] | Promise<PluginDiagnostic[]>;
-  /** npm package name -> semver range. Drives `doctor`'s dependency check. */
-  dependencies?(ctx: PluginContext): Record<string, string>;
   generate?(ctx: PluginContext): EmittedFile[] | Promise<EmittedFile[]>;
   buildEnd?(ctx: PluginContext & { files: EmittedFile[] }): void | Promise<void>;
 }

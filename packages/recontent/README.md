@@ -110,7 +110,7 @@ renders both. A shadow that no theme overrides (directly or through an alias)
 is inlined with its colour as a `var()`, so Tailwind can recolour it:
 `shadow-card/50` and `shadow-red-500` work. A shadow a theme overrides stays a
 `var()`, because Tailwind cannot parse one: those modifiers have no effect
-there and `recontent doctor` warns. The same applies to `insetShadow`,
+there and `build` warns. The same applies to `insetShadow`,
 `dropShadow` and `textShadow`.
 
 `defaults` takes single tokens for Tailwind's `--default-*` keys: `font`
@@ -124,7 +124,7 @@ Because the theme is `inline`, `--color-*` variables are not emitted at
 runtime. In hand-written CSS use `--theme(--color-accent)` or the recontent
 variable (`var(--system-colors-accent)`).
 
-Mind Tailwind's own lookups: `--spacing-*` also feeds width, height and `max-w-*` utilities, so spacing keys such as `lg` or `xl` override the container sizes behind `max-w-lg` (use `max-w-[32rem]` or a `container` group instead). `recontent doctor` warns when a spacing key does this.
+Mind Tailwind's own lookups: `--spacing-*` also feeds width, height and `max-w-*` utilities, so spacing keys such as `lg` or `xl` override the container sizes behind `max-w-lg` (use `max-w-[32rem]` or a `container` group instead). `build` warns when a spacing key does this.
 
 Other options: `filename`, `themeSelector` (`"class"` by default) /
 `themeAttribute`, `themeVariants` (emit `@custom-variant <theme>` for every
@@ -137,7 +137,7 @@ generated `:root` and theme blocks sit in `@layer theme` by default so your own
 to leave them unlayered) and `typographyUtilities` (see above).
 A typography `text-<key>` that collides with an emitted `--color-<key>`, and
 duplicate keys (including `--font-<key>` from typography vs a `font` key), are
-reported as errors by `recontent doctor` and `build`. `doctor` also warns when
+reported as errors by `build`, which also warns when
 a theme is named like a built-in Tailwind variant (`print`, `hover`, `open`, …),
 since its `@custom-variant` would replace it; `dark` is exempt.
 
@@ -147,7 +147,6 @@ since its `@custom-variant` would replace it; `dark` is exempt.
 recontent init <preset>           Scaffold a recontent.config.ts (presets: neutral, material)
 recontent init --from <sources>   Generate recontent.config.ts from DTCG tokens
 recontent build [-w]              Run configured plugins and write their output
-recontent doctor                  Validate config, registry, and dependencies
 recontent diff [rev]              Compare tokens against a git revision (default HEAD)
                                   --format <markdown|json> (default markdown)
 ```
@@ -309,7 +308,7 @@ renders both. A shadow that no theme overrides (directly or through an alias)
 is inlined with its colour as a `var()`, so Tailwind can recolour it:
 `shadow-card/50` and `shadow-red-500` work. A shadow a theme overrides stays a
 `var()`, because Tailwind cannot parse one: those modifiers have no effect
-there and `recontent doctor` warns. The same applies to `insetShadow`,
+there and `build` warns. The same applies to `insetShadow`,
 `dropShadow` and `textShadow`.
 
 `defaults` takes single tokens for Tailwind's `--default-*` keys: `font`
@@ -323,7 +322,7 @@ Because the theme is `inline`, `--color-*` variables are not emitted at
 runtime. In hand-written CSS use `--theme(--color-accent)` or the recontent
 variable (`var(--system-colors-accent)`).
 
-Mind Tailwind's own lookups: `--spacing-*` also feeds width, height and `max-w-*` utilities, so spacing keys such as `lg` or `xl` override the container sizes behind `max-w-lg` (use `max-w-[32rem]` or a `container` group instead). `recontent doctor` warns when a spacing key does this.
+Mind Tailwind's own lookups: `--spacing-*` also feeds width, height and `max-w-*` utilities, so spacing keys such as `lg` or `xl` override the container sizes behind `max-w-lg` (use `max-w-[32rem]` or a `container` group instead). `build` warns when a spacing key does this.
 
 Other options: `filename`, `themeSelector` (`"class"` by default) /
 `themeAttribute`, `themeVariants` (emit `@custom-variant <theme>` for every
@@ -336,7 +335,7 @@ generated `:root` and theme blocks sit in `@layer theme` by default so your own
 to leave them unlayered) and `typographyUtilities` (see above).
 A typography `text-<key>` that collides with an emitted `--color-<key>`, and
 duplicate keys (including `--font-<key>` from typography vs a `font` key), are
-reported as errors by `recontent doctor` and `build`. `doctor` also warns when
+reported as errors by `build`, which also warns when
 a theme is named like a built-in Tailwind variant (`print`, `hover`, `open`, …),
 since its `@custom-variant` would replace it; `dark` is exempt.
 
@@ -346,7 +345,6 @@ since its `@custom-variant` would replace it; `dark` is exempt.
 recontent init                    Scaffold a recontent.config.ts
 recontent init --from <sources>   Generate recontent.config.ts from DTCG tokens
 recontent build [-w]              Run configured plugins and write their output
-recontent doctor                  Validate config, registry, and dependencies
 recontent diff [rev]              Compare tokens against a git revision (default HEAD)
                                   --format <markdown|json> (default markdown)
 ```
@@ -375,8 +373,8 @@ These apply to every command and must be given before the subcommand name
 ## Exit codes
 
 - `0` — success.
-- `1` — a `recontent`-reported failure: config/registry validation errors
-  (`doctor`), a breaking diff with `--fail-on-breaking`, or a plugin error.
+- `1` — a `recontent`-reported failure: config/registry validation errors,
+  a breaking diff with `--fail-on-breaking`, or a plugin error.
 - `2` — a usage error: an unknown command or flag, or a missing argument.
 
 All human-readable progress goes to stderr; stdout is reserved for command

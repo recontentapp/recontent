@@ -126,13 +126,11 @@ describe("recontent init", () => {
     }
   });
 
-  test.each(PRESET_NAMES)("the %s preset scaffolds a config that passes doctor", (name) => {
+  test.each(PRESET_NAMES)("the %s preset scaffolds a config that builds", (name) => {
     const dir = makeScratchDir(`init-${name}`);
 
     expect(runCli(["--cwd", dir, "init", name]).status).toBe(0);
-    const doctor = runCli(["--cwd", dir, "doctor"]);
-    expect(doctor.stderr).toContain("No issues found");
-    expect(doctor.status).toBe(0);
+    expect(runCli(["--cwd", dir, "build"]).status).toBe(0);
   });
 });
 
@@ -146,7 +144,7 @@ describe("recontent init --from", () => {
     return { dir, result };
   }
 
-  test("generates a config from a resolver that passes doctor", () => {
+  test("generates a config from a resolver that builds", () => {
     const { dir, result } = initFromFixture("init-from");
 
     expect(result.status).toBe(0);
@@ -155,9 +153,7 @@ describe("recontent init --from", () => {
     const config = readFileSync(path.join(dir, "recontent.config.ts"), "utf-8");
     expect(config).toContain("defineTheme(");
 
-    const doctor = runCli(["--cwd", dir, "doctor"]);
-    expect(doctor.status).toBe(0);
-    expect(doctor.stderr + doctor.stdout).toContain("No issues found");
+    expect(runCli(["--cwd", dir, "build"]).status).toBe(0);
   });
 
   test("accepts token files and directories", () => {
@@ -174,7 +170,7 @@ describe("recontent init --from", () => {
 
     expect(result.status).toBe(0);
     expect(result.stderr).toContain("0 themes");
-    expect(runCli(["--cwd", dir, "doctor"]).status).toBe(0);
+    expect(runCli(["--cwd", dir, "build"]).status).toBe(0);
   });
 
   test("refuses to overwrite an existing config without --force", () => {
@@ -332,6 +328,17 @@ describe("recontent init --from", () => {
 });
 
 describe("recontent build", () => {
+  test("aborts without writing output when an alias is broken", () => {
+    const dir = makeScratchDir("build-broken-alias");
+    copyFixture("broken-alias", dir);
+
+    const result = runCli(["--cwd", dir, "build"]);
+
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain("Broken alias");
+    expect(existsSync(path.join(dir, "dist/tokens.css"))).toBe(false);
+  });
+
   test("runs the configured css plugin and writes tokens.css", () => {
     const dir = makeScratchDir("build");
     copyFixture("valid", dir);
@@ -382,29 +389,6 @@ describe("recontent build", () => {
 
     expect(result.status).not.toBe(0);
     expect(result.stderr.toLowerCase()).toContain("recontent.config");
-  });
-});
-
-describe("recontent doctor", () => {
-  test("exits 0 and reports no issues for a valid config", () => {
-    const dir = makeScratchDir("doctor-valid");
-    copyFixture("valid", dir);
-
-    const result = runCli(["--cwd", dir, "doctor"]);
-
-    expect(result.status).toBe(0);
-    expect(result.stderr).toContain("No issues found");
-  });
-
-  test("exits 1 and reports a missing plugin dependency", () => {
-    const dir = makeScratchDir("doctor-missing-dep");
-    copyFixture("missing-dependency", dir);
-
-    const result = runCli(["--cwd", dir, "doctor"]);
-
-    expect(result.status).toBe(1);
-    expect(result.stderr).toContain("@recontent-e2e/does-not-exist");
-    expect(result.stderr).toContain("Missing dependency");
   });
 });
 
