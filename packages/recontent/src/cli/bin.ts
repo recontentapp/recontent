@@ -81,20 +81,36 @@ const CONFIG_OPTION_DESC = "Path to config file (default: discovered by searchin
 program
   .command("init")
   .description("Scaffold a recontent.config.ts from a design-system preset")
-  .addArgument(new Argument("<preset>", "Design system preset to start from").choices(PRESET_NAMES))
+  .addArgument(
+    new Argument("[preset]", "Design system preset to start from (omit with --from)").choices(
+      PRESET_NAMES,
+    ),
+  )
   .addHelpText(
     "after",
     `\nPresets:\n${PRESETS.map((preset) => `  ${preset.name.padEnd(16)}${preset.description}`).join("\n")}`,
   )
   .option(CONFIG_OPTION_FLAGS, "Path to write the config file to (default: recontent.config.ts)")
   .option("--force", "Overwrite an existing recontent.config.ts")
-  .action(async (preset: string, options: { config?: string; force?: boolean }) => {
-    const { cwd, configPath } = resolveGlobalOptions(options.config, {
-      discover: false,
-      fallback: "recontent.config.ts",
-    });
-    await runInit({ cwd, configPath, preset, force: options.force });
-  });
+  .option(
+    "--from <paths...>",
+    "Generate the config from DTCG tokens instead of a preset: a *.resolver.json, *.tokens.json/*.json files, or a directory",
+  )
+  .action(
+    async (
+      preset: string | undefined,
+      options: { config?: string; force?: boolean; from?: string[] },
+    ) => {
+      if (!preset && !options.from) {
+        program.error("error: missing required argument 'preset' (or pass --from <paths...>)");
+      }
+      const { cwd, configPath } = resolveGlobalOptions(options.config, {
+        discover: false,
+        fallback: "recontent.config.ts",
+      });
+      await runInit({ cwd, configPath, preset, force: options.force, from: options.from });
+    },
+  );
 
 program
   .command("build")
