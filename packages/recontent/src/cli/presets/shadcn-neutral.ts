@@ -142,7 +142,7 @@ const system = defineSystemTokens({
       fontFamily: ref.fontFamily.sans,
       fontSize: "1.5rem",
       fontWeight: 600,
-      letterSpacing: "-0.025em",
+      letterSpacing: "-0.0375rem",
       lineHeight: 1.3333,
     }),
   },
