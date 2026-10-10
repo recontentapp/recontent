@@ -123,7 +123,7 @@ since its `@custom-variant` would replace it; `dark` is exempt.
 ## Commands
 
 ```
-recontent init <preset>           Scaffold a recontent.config.ts (presets: shadcn-neutral, material)
+recontent init <preset>           Scaffold a recontent.config.ts (presets: neutral, material)
 recontent build [-w]              Run configured plugins and write their output
 recontent doctor                  Validate config, registry, and dependencies
 recontent diff [rev]              Compare tokens against a git revision (default HEAD)

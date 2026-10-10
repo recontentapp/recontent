@@ -9,7 +9,6 @@ const source = `import {
   tokens,
 } from "recontent";
 
-// shadcn/ui "neutral" base color, in OKLCH.
 const oklch = (l: number, c = 0, h = 0, alpha = 1) =>
   tokens.color({ colorSpace: "oklch", components: [l, c, h], alpha });
 
@@ -179,8 +178,8 @@ export default defineConfig({
 });
 `;
 
-export const shadcnNeutral: InitPreset = {
-  name: "shadcn-neutral",
+export const neutral: InitPreset = {
+  name: "neutral",
   description: 'shadcn/ui "neutral" base color: OKLCH color roles, radius, shadows, light and dark',
   source,
 };

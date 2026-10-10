@@ -70,7 +70,7 @@ function runCli(args: string[], options?: { cwd?: string }) {
 describe("recontent init", () => {
   test("scaffolds a config file and exits 0", () => {
     const dir = makeScratchDir("init");
-    const result = runCli(["--cwd", dir, "init", "shadcn-neutral"]);
+    const result = runCli(["--cwd", dir, "init", "neutral"]);
 
     expect(result.status).toBe(0);
     const configPath = path.join(dir, "recontent.config.ts");
@@ -80,12 +80,12 @@ describe("recontent init", () => {
 
   test("refuses to overwrite an existing config without --force", () => {
     const dir = makeScratchDir("init-noforce");
-    expect(runCli(["--cwd", dir, "init", "shadcn-neutral"]).status).toBe(0);
+    expect(runCli(["--cwd", dir, "init", "neutral"]).status).toBe(0);
 
     const configPath = path.join(dir, "recontent.config.ts");
     writeFileSync(configPath, "// user-edited, do not clobber\n");
 
-    const result = runCli(["--cwd", dir, "init", "shadcn-neutral"]);
+    const result = runCli(["--cwd", dir, "init", "neutral"]);
     expect(result.status).toBe(1);
     expect(result.stderr).toContain("already exists");
     expect(readFileSync(configPath, "utf-8")).toBe("// user-edited, do not clobber\n");
@@ -93,11 +93,11 @@ describe("recontent init", () => {
 
   test("--force overwrites an existing config", () => {
     const dir = makeScratchDir("init-force");
-    runCli(["--cwd", dir, "init", "shadcn-neutral"]);
+    runCli(["--cwd", dir, "init", "neutral"]);
     const configPath = path.join(dir, "recontent.config.ts");
     writeFileSync(configPath, "// stale\n");
 
-    const result = runCli(["--cwd", dir, "init", "shadcn-neutral", "--force"]);
+    const result = runCli(["--cwd", dir, "init", "neutral", "--force"]);
     expect(result.status).toBe(0);
     expect(readFileSync(configPath, "utf-8")).toContain("defineConfig(");
   });

@@ -1,14 +1,13 @@
 import { material } from "./material.js";
-import { shadcnNeutral } from "./shadcn-neutral.js";
+import { neutral } from "./neutral.js";
 
 export type InitPreset = {
   name: string;
   description: string;
-  /** Full contents of the generated `recontent.config.ts`. */
   source: string;
 };
 
-export const PRESETS: readonly InitPreset[] = [shadcnNeutral, material];
+export const PRESETS: readonly InitPreset[] = [neutral, material];
 
 export const PRESET_NAMES: string[] = PRESETS.map((preset) => preset.name);
 
