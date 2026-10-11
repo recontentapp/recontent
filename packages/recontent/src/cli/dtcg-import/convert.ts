@@ -1,6 +1,7 @@
 import { COLOR_SPACES, componentRanges, FONT_WEIGHT_NUMERIC } from "@recontentapp/core";
 import type { ColorSpace } from "@recontentapp/core";
 import { escapeString } from "../../plugins/shared/ts-source.js";
+import { tokens } from "../../tokens.js";
 import { aliasTarget, containsJsonPointer, isObject } from "./types.js";
 
 /** An argument or expression ready to paste into the generated config, or why there is none. */
@@ -14,8 +15,6 @@ const DURATION_UNITS = ["ms", "s"];
 const STROKE_STYLES = ["solid", "dashed", "dotted", "double", "groove", "ridge", "outset", "inset"];
 const LINE_CAPS = ["round", "butt", "square"];
 const HEX_RE = /^#(?:[0-9a-f]{3,4}|[0-9a-f]{6}|[0-9a-f]{8})$/i;
-// eslint-disable-next-line no-control-regex
-const CONTROL_CHAR_RE = /[\u0000-\u0008\u000A-\u001F\u007F\u2028\u2029]/;
 
 const TYPOGRAPHY_KEYS = ["fontFamily", "fontSize", "fontWeight", "letterSpacing", "lineHeight"];
 
@@ -116,11 +115,13 @@ function fontFamilyArg(value: unknown): Converted {
     return skip(`unsupported fontFamily ${describe(value)}`);
   }
   // The factory splits on commas and strips quotes itself, so stacks pass through as-is.
-  const names = families as string[];
-  if (names.some((name) => CONTROL_CHAR_RE.test(name))) {
-    return skip("fontFamily contains control characters");
+  const stack = (families as string[]).join(", ");
+  try {
+    tokens.fontFamily(stack);
+  } catch {
+    return skip(`unsupported fontFamily ${describe(value)}`);
   }
-  return ok(quote(names.join(", ")));
+  return ok(quote(stack));
 }
 
 function fontWeightArg(value: unknown): Converted {

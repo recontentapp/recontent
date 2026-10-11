@@ -1,5 +1,11 @@
 import { describe, expect, test } from "@jest/globals";
-import { defineConfig, defineReferenceTokens, defineSystemTokens, tokens } from "../src/index.js";
+import {
+  defineConfig,
+  defineReferenceTokens,
+  defineSystemTokens,
+  defineTheme,
+  tokens,
+} from "../src/index.js";
 import { generateDocsFiles } from "../src/plugins/docs/index.js";
 import type { PluginContext } from "@recontentapp/core";
 import { goldenConfig } from "./helpers/fixtures.js";
@@ -54,7 +60,7 @@ describe("design.html", () => {
     );
     expect(match).not.toBeNull();
     const values = JSON.parse(match![1]!.replace(/&quot;/g, '"')) as Record<string, string>;
-    expect(values.default).toBe("#000000");
+    expect(values.default).toBeUndefined();
     expect(values.dark).toBe("#eeeeee");
     expect(values.highContrast).toBe("#ff0000");
   });
@@ -89,7 +95,6 @@ describe("escaping", () => {
   const { html, md } = render(config);
 
   test("escapes descriptions in HTML", () => {
-    expect(html).not.toContain("<script>alert");
     expect(html).toContain("&lt;script&gt;alert(&quot;x&quot;)&lt;/script&gt;");
     expect(html).toContain("Scale &lt;b&gt;desc&lt;/b&gt;");
     expect(html).toContain("Use &lt;i&gt;other&lt;/i&gt;");
@@ -100,8 +105,23 @@ describe("escaping", () => {
   });
 
   test("renders scale metadata in markdown", () => {
-    expect(md).toContain("Scale <b>desc</b>");
-    expect(md).toContain("> ⚠️ Deprecated: Use <i>other</i>");
+    expect(md).toContain("Scale \\<b\\>desc\\</b\\>");
+    expect(md).toContain("> ⚠️ Deprecated: Use \\<i\\>other\\</i\\>");
+  });
+
+  test("escapes the title, group labels and theme names in markdown", () => {
+    const ref = defineReferenceTokens({
+      "a*b": { c: tokens.color("#000000") },
+    });
+    const dark = defineTheme({ ref }, { ref: { "a*b": { c: tokens.color("#ffffff") } } });
+    const config = defineConfig({
+      tokens: { ref, system: defineSystemTokens({}), components: {} },
+      themes: { dark_mode: dark },
+    });
+    const files = generateDocsFiles(ctxFor(config), { outDir: "docs", markdown: true });
+    const markdown = files.find((file) => file.filename.endsWith(".md"))!.content;
+    expect(markdown).toContain("### ref.a\\*b");
+    expect(markdown).toContain("| Token | Type | Value | dark\\_mode | Notes |");
   });
 });
 

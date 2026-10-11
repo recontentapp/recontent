@@ -16,6 +16,7 @@ import type {
   TokenTypeMap,
 } from "@recontentapp/core";
 import { compositeMembers, isCompositeType, pathKey } from "@recontentapp/core";
+import { code } from "../../markdown.js";
 
 type ThemeOverrideDiff = {
   added: { key: string; value: unknown }[];
@@ -337,10 +338,6 @@ function formatChangedLine(path: string, from: string, to: string): string[] {
 export type DiffFormat = "markdown" | "json";
 
 export const DIFF_FORMATS: readonly DiffFormat[] = ["markdown", "json"];
-
-function code(text: string): string {
-  return `\`${text}\``;
-}
 
 function formatDiffMarkdown(diff: TokenDiff, rev: string): string {
   if (isDiffEmpty(diff)) {

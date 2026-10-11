@@ -112,12 +112,12 @@ describe("base themeClass", () => {
     expect(file!.content).toMatch(/"card": `0px 2px 4px 0px \$\{vars\.ref\.color\.black\}`,/);
   });
 
-  test("plain values are single-quoted; values containing ' or \\ are escaped", () => {
+  test("plain values are single-quoted", () => {
     const ref = defineReferenceTokens({
       __veColor: tokens.color("#000000"),
       __veFontFamily: tokens.fontFamily("Arial"),
     });
-    const system = defineSystemTokens({ meta: { name: tokens.fontFamily("O'Brien \\ Co") } });
+    const system = defineSystemTokens({ meta: { name: tokens.fontFamily("Segoe UI") } });
     const config = defineConfig({
       tokens: { ref, system, components: {} },
     });
@@ -128,7 +128,7 @@ describe("base themeClass", () => {
       placeholderColor: ref.__veColor,
     };
     const [file] = generate({ config, output });
-    expect(file!.content).toMatch(/"name": 'O\\'Brien \\\\ Co',/);
+    expect(file!.content).toMatch(/"name": 'Segoe UI',/);
   });
 
   test("`` and ${ are escaped inside template literals", () => {

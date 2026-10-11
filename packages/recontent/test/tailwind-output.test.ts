@@ -313,6 +313,14 @@ describe("layer", () => {
     expect(render({ layer: "tokens" })).toContain("@layer tokens {");
   });
 
+  test("a layer that is not a CSS identifier throws", () => {
+    expect(() => render({ layer: "theme { } body" })).toThrow(/Invalid tailwind layer/);
+  });
+
+  test("a dotted layer name is accepted", () => {
+    expect(render({ layer: "base.tokens" })).toContain("@layer base.tokens {");
+  });
+
   test("layer: false leaves the blocks unlayered", () => {
     const css = render({ layer: false });
     expect(css).not.toContain("@layer");

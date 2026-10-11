@@ -12,8 +12,19 @@ const QUERIES: Partial<Record<Breakpoint, string>> = {
 
 const ORDER = ["xs", "sm", "md", "lg", "xl", "xxl"] as const;
 
+const mediaQueryLists = new Map<string, MediaQueryList>();
+
+function mediaQuery(query: string): MediaQueryList {
+  let mql = mediaQueryLists.get(query);
+  if (!mql) {
+    mql = matchMedia(query);
+    mediaQueryLists.set(query, mql);
+  }
+  return mql;
+}
+
 function subscribeAll(onChange: () => void): () => void {
-  const queries = Object.values(QUERIES).map((query) => matchMedia(query));
+  const queries = Object.values(QUERIES).map(mediaQuery);
   for (const mql of queries) {
     mql.addEventListener("change", onChange);
   }
@@ -28,7 +39,7 @@ function currentBreakpoint(): Breakpoint {
   let current: Breakpoint = "xs";
   for (const breakpoint of ORDER) {
     const query = QUERIES[breakpoint];
-    if (query && matchMedia(query).matches) {
+    if (query && mediaQuery(query).matches) {
       current = breakpoint;
     }
   }
@@ -59,11 +70,11 @@ export function useMediaQuery(breakpoint: Breakpoint): boolean {
       if (!query) {
         return () => {};
       }
-      const mql = matchMedia(query);
+      const mql = mediaQuery(query);
       mql.addEventListener("change", onChange);
       return () => mql.removeEventListener("change", onChange);
     },
-    () => (query ? matchMedia(query).matches : true),
+    () => (query ? mediaQuery(query).matches : true),
     () => !query,
   );
 }

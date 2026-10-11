@@ -1,4 +1,4 @@
-import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { mkdtemp, readFile, rm, stat, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { afterEach, beforeEach, describe, expect, test } from "@jest/globals";
@@ -41,6 +41,31 @@ describe("writeOutputFile", () => {
     const result = await writeOutputFile(filePath, "regenerated", dir, { writeMode: "once" });
     expect(result.written).toBe(false);
     expect(await readFile(filePath, "utf8")).toBe("user-edited");
+  });
+
+  test("a file that already holds the content is not rewritten", async () => {
+    const filePath = path.join(dir, "same.txt");
+    await writeOutputFile(filePath, "content", dir);
+    const before = (await stat(filePath)).mtimeMs;
+    await new Promise((resolve) => setTimeout(resolve, 20));
+
+    const result = await writeOutputFile(filePath, "content", dir);
+    expect(result).toMatchObject({ written: false, skipReason: "unchanged" });
+    expect((await stat(filePath)).mtimeMs).toBe(before);
+
+    const changed = await writeOutputFile(filePath, "other", dir);
+    expect(changed.written).toBe(true);
+    expect(await readFile(filePath, "utf8")).toBe("other");
+  });
+
+  test("a path that resolves outside the base directory is rejected", async () => {
+    await expect(writeOutputFile("../escape.txt", "x", dir)).rejects.toThrow(/outside of/);
+    await expect(writeOutputFile(path.join(tmpdir(), "escape.txt"), "x", dir)).rejects.toThrow(
+      /outside of/,
+    );
+    await expect(writeOutputFile("nested/../ok.txt", "x", dir)).resolves.toMatchObject({
+      written: true,
+    });
   });
 
   test("a relative path resolves against the passed base directory, not process.cwd()", async () => {

@@ -1,4 +1,3 @@
-import type { TokenRegistry } from "@recontentapp/core";
 import { generateCss } from "../css.js";
 import type { GeneratorContext } from "../shared/context.js";
 import type { DocGroup, DocToken, DocsModel } from "./model.js";
@@ -76,40 +75,45 @@ function nameHtml(token: DocToken): string {
   return `<code class="tname${token.deprecated ? " is-deprecated" : ""}">${escapeHtml(token.path)}</code><span class="pill">${escapeHtml(token.type)}</span>${capsule}`;
 }
 
-function valueHtml(token: DocToken, hasThemes: boolean): string {
-  const data = hasThemes ? ` data-values="${escapeHtml(JSON.stringify(token.values))}"` : "";
-  return `<span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val"${data}>${escapeHtml(token.values.default ?? "")}</code></span>`;
+function valueHtml(token: DocToken): string {
+  // The default is the element's text; only theme overrides need to travel as data.
+  const { default: defaultValue = "", ...overrides } = token.values;
+  const data =
+    Object.keys(overrides).length > 0
+      ? ` data-values="${escapeHtml(JSON.stringify(overrides))}"`
+      : "";
+  return `<span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val"${data}>${escapeHtml(defaultValue)}</code></span>`;
 }
 
-function cardHtml(token: DocToken, hasThemes: boolean): string {
+function cardHtml(token: DocToken): string {
   return `<div class="card" id="${escapeHtml(tokenId(token.path))}">
   <div class="swatch">${previewHtml(token)}</div>
   <div class="card-body">
     <div class="name">${nameHtml(token)}</div>
-    ${valueHtml(token, hasThemes)}
+    ${valueHtml(token)}
     ${annotationsHtml(token)}
   </div>
 </div>`;
 }
 
-function rowHtml(token: DocToken, hasThemes: boolean): string {
+function rowHtml(token: DocToken): string {
   return `<div class="row" id="${escapeHtml(tokenId(token.path))}">
   <div class="row-main">
     <div class="name">${nameHtml(token)}</div>
     ${annotationsHtml(token)}
   </div>
   <div class="row-preview">${previewHtml(token)}</div>
-  <div class="row-value">${valueHtml(token, hasThemes)}</div>
+  <div class="row-value">${valueHtml(token)}</div>
 </div>`;
 }
 
-function groupHtml(layer: string, group: DocGroup, hasThemes: boolean): string {
+function groupHtml(layer: string, group: DocGroup): string {
   const isGrid = group.tokens.every((token) => token.type === "color");
   const scale = group.scale;
   const deprecated = scale?.deprecated;
   const body = isGrid
-    ? `<div class="grid">${group.tokens.map((t) => cardHtml(t, hasThemes)).join("\n")}</div>`
-    : `<div class="list">${group.tokens.map((t) => rowHtml(t, hasThemes)).join("\n")}</div>`;
+    ? `<div class="grid">${group.tokens.map(cardHtml).join("\n")}</div>`
+    : `<div class="list">${group.tokens.map(rowHtml).join("\n")}</div>`;
   return `<section class="group" id="${escapeHtml(groupId(layer, group.path))}">
   <h3>${escapeHtml(group.label)} <span class="count">${group.tokens.length}</span></h3>
   ${scale?.description ? `<p class="lead">${escapeHtml(scale.description)}</p>` : ""}
@@ -118,21 +122,8 @@ function groupHtml(layer: string, group: DocGroup, hasThemes: boolean): string {
 </section>`;
 }
 
-/** Strips descriptions so they can't terminate the `/* … *\/` comments `generateCss` emits. */
-function withoutDescriptions(registry: TokenRegistry): TokenRegistry {
-  const stripped: TokenRegistry = new Map();
-  for (const [key, entry] of registry) {
-    const { $description: _description, ...rest } = entry;
-    stripped.set(key, rest);
-  }
-  return stripped;
-}
-
 function tokenCss(ctx: GeneratorContext): string {
-  return generateCss({ ...ctx, registry: withoutDescriptions(ctx.registry) }).replace(
-    /<\/(style)/gi,
-    "<\\/$1",
-  );
+  return generateCss(ctx).replace(/<\/(style)/gi, "<\\/$1");
 }
 
 const STYLES = `
@@ -322,14 +313,19 @@ const SCRIPT = `
   });
 
   var select = document.getElementById("theme");
+  var themed = null;
   function applyTheme(theme) {
     var root = document.documentElement;
     if (theme) root.setAttribute("data-theme", theme); else root.removeAttribute("data-theme");
-    document.querySelectorAll("[data-values]").forEach(function (el) {
-      var values = JSON.parse(el.getAttribute("data-values"));
-      var overridden = Boolean(theme) && values[theme] !== undefined;
-      el.textContent = overridden ? values[theme] : values["default"];
-      el.parentNode.classList.toggle("overridden", overridden);
+    if (!themed) {
+      themed = Array.prototype.map.call(document.querySelectorAll("[data-values]"), function (el) {
+        return { el: el, base: el.textContent, values: JSON.parse(el.getAttribute("data-values")) };
+      });
+    }
+    themed.forEach(function (t) {
+      var overridden = Boolean(theme) && t.values[theme] !== undefined;
+      t.el.textContent = overridden ? t.values[theme] : t.base;
+      t.el.parentNode.classList.toggle("overridden", overridden);
     });
   }
   if (select) select.addEventListener("change", function () { applyTheme(select.value); });
@@ -373,7 +369,7 @@ export function renderHtml(model: DocsModel, ctx: GeneratorContext): string {
       const content =
         groups.length === 0
           ? `<p class="empty">No ${LAYER_TITLES[layer].toLowerCase()} tokens defined.</p>`
-          : groups.map((g) => groupHtml(layer, g, hasThemes)).join("\n");
+          : groups.map((g) => groupHtml(layer, g)).join("\n");
       return `<div data-panel="${layer}" data-count="${total}" role="tabpanel">
   <h2 class="title">${LAYER_TITLES[layer]}</h2>
   <p class="sub">${total} token${total === 1 ? "" : "s"}</p>

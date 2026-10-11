@@ -180,6 +180,24 @@ describe("tokens, groups and metadata", () => {
     expect(warnings).toHaveLength(2);
   });
 
+  test("renames a __proto__ token instead of dropping it", () => {
+    const { source, warnings } = generate(
+      { "tokens.json": { ["__proto__"]: { $type: "number", $value: 1 } } },
+      ["tokens.json"],
+    );
+    expect(source).toContain(`"__proto___": tokens.number(1)`);
+    expect(warnings).toHaveLength(1);
+  });
+
+  test("a token file name cannot inject code into the generated header", () => {
+    const { source } = generate(
+      { ["x\nglobalThis.PWNED=1;\n//.tokens.json"]: { a: { $type: "number", $value: 1 } } },
+      ["."],
+    );
+    expect(source).not.toMatch(/^globalThis/m);
+    expect(source).toContain("x\\nglobalThis.PWNED=1;");
+  });
+
   test("keeps descriptions and deprecations, drops extensions", () => {
     const { source } = generate(
       {

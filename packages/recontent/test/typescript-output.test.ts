@@ -66,6 +66,20 @@ describe("scalars", () => {
   });
 });
 
+describe("tree shape", () => {
+  test("a group with a child named value keeps its siblings", () => {
+    const ref = defineReferenceTokens({
+      size: { value: tokens.dimension("1px"), large: tokens.dimension("2px") },
+    });
+    const config = defineConfig({
+      tokens: { ref, system: defineSystemTokens({}), components: {} },
+    });
+    const [file] = generate(config);
+    expect(file!.content).toMatch(/"large": '2px',/);
+    expect(file!.content).toMatch(/"value": '1px',/);
+  });
+});
+
 describe("alias roots", () => {
   test("system references themeRef; components (full path, no stripped layer prefix) also terminate at themeRef", () => {
     const { config } = aliasChainConfig();

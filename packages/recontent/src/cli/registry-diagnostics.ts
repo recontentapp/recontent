@@ -1,9 +1,9 @@
+import { pathKey, type TokenDiagnostic, type TokenRegistry } from "@recontentapp/core";
 import {
-  pathKey,
-  type TokenDiagnostic,
-  type TokenEntry,
-  type TokenRegistry,
-} from "@recontentapp/core";
+  AliasTargetNotFoundError,
+  CircularAliasError,
+  walkAliasChain,
+} from "../plugins/shared/alias.js";
 
 export function diagnoseRegistry(registry: TokenRegistry): TokenDiagnostic[] {
   const diagnostics: TokenDiagnostic[] = [];
@@ -12,28 +12,22 @@ export function diagnoseRegistry(registry: TokenRegistry): TokenDiagnostic[] {
     if (!entry.alias) continue;
 
     const entryKey = pathKey(entry.path);
-    const seen = new Set<string>([entryKey]);
-    let current: TokenEntry = entry;
-
-    while (current.alias) {
-      const aliasKey = pathKey(current.alias);
-      const target = registry.get(aliasKey);
-      if (!target) {
+    try {
+      for (const _ of walkAliasChain(registry, entry));
+    } catch (error) {
+      if (error instanceof AliasTargetNotFoundError) {
         diagnostics.push({
           path: entry.path,
-          message: `Broken alias at "${entryKey}": target "${aliasKey}" does not exist in the registry.`,
+          message: `Broken alias at "${entryKey}": target "${error.key}" does not exist in the registry.`,
         });
-        break;
-      }
-      if (seen.has(aliasKey)) {
+      } else if (error instanceof CircularAliasError) {
         diagnostics.push({
           path: entry.path,
-          message: `Circular alias at "${entryKey}": alias chain revisits "${aliasKey}".`,
+          message: `Circular alias at "${entryKey}": alias chain revisits "${error.key}".`,
         });
-        break;
+      } else {
+        throw error;
       }
-      seen.add(aliasKey);
-      current = target;
     }
   }
 

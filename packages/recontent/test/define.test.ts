@@ -54,6 +54,11 @@ test('a token name "__proto__" throws instead of silently vanishing', () => {
   expect(configWithRef(ref)).toThrow(/"__proto__" is a reserved name/);
 });
 
+test('a "__proto__" token name throws when it goes through defineReferenceTokens', () => {
+  const input = { ["__proto__"]: { black: tokens.color("#000000") } };
+  expect(configWithRef(defineReferenceTokens(input))).toThrow(/"__proto__" is a reserved name/);
+});
+
 test('a token name "constructor" throws', () => {
   expect(configWithRef({ constructor: { black: tokens.color("#000000") } })).toThrow(
     /"constructor" is a reserved name/,

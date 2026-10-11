@@ -1,6 +1,6 @@
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import path from "node:path";
-import { isObject, sourceKey } from "./types.js";
+import { isObject, setOwn, sourceKey } from "./types.js";
 import type { JsonObject, Warn } from "./types.js";
 
 /** A non-default modifier context: its tokens override or extend the base. */
@@ -39,9 +39,9 @@ function pushDownTypes(node: JsonObject, inherited?: string): JsonObject {
     if (key === "$type" && !("$value" in node)) continue;
     if (key === "$extensions") continue;
     if (key.startsWith("$") && key !== "$root") {
-      result[key] = structuredClone(value);
+      setOwn(result, key, structuredClone(value));
     } else if (isObject(value)) {
-      result[key] = pushDownTypes(value, type);
+      setOwn(result, key, pushDownTypes(value, type));
     }
   }
   if ("$value" in node && type !== undefined) result.$type = type;
@@ -61,7 +61,7 @@ function mergeInto(
 ): void {
   for (const [key, value] of Object.entries(source)) {
     if (path.length === 0 && key === "$schema") continue;
-    const existing = target[key];
+    const existing = Object.hasOwn(target, key) ? target[key] : undefined;
     if (isObject(value) && isObject(existing) && !isToken(value) && !isToken(existing)) {
       mergeInto(existing, value, [...path, key], onConflict);
       continue;
@@ -69,12 +69,11 @@ function mergeInto(
     if (isToken(existing) && JSON.stringify(existing) !== JSON.stringify(value)) {
       onConflict?.([...path, key]);
     }
-    target[key] = structuredClone(value);
+    setOwn(target, key, structuredClone(value));
   }
 }
 
-function readDocument(file: string): JsonObject {
-  const json = readJson(file);
+function readDocument(file: string, json: unknown = readJson(file)): JsonObject {
   if (!isObject(json)) {
     throw new Error(`DTCG file "${file}" must contain a JSON object.`);
   }
@@ -93,8 +92,11 @@ function listTokenFiles(directory: string): string[] {
 
 type Entry = { kind: "set" | "modifier"; name: string; definition: JsonObject };
 
-function loadResolver(file: string, warn: Warn): { base: JsonObject; contexts: ThemeContext[] } {
-  const resolver = readJson(file);
+function loadResolver(
+  file: string,
+  resolver: unknown,
+  warn: Warn,
+): { base: JsonObject; contexts: ThemeContext[] } {
   if (!isObject(resolver) || !Array.isArray(resolver.resolutionOrder)) {
     throw new Error(`Resolver "${file}" must contain a resolutionOrder array.`);
   }
@@ -214,17 +216,19 @@ export function loadSources(sources: string[], cwd: string, warn: Warn): LoadedS
     throw new Error("No *.tokens.json files found in the given DTCG sources.");
   }
 
-  const resolvers = files.filter((file) => isResolver(file, readJson(file)));
+  const parsed = new Map(files.map((file) => [file, readJson(file)]));
+  const resolvers = files.filter((file) => isResolver(file, parsed.get(file)));
   if (resolvers.length > 0) {
     if (files.length > 1) {
       throw new Error("A resolver file must be the only --from source.");
     }
-    return { ...loadResolver(resolvers[0]!, warn), files: [display(resolvers[0]!)] };
+    const resolver = resolvers[0]!;
+    return { ...loadResolver(resolver, parsed.get(resolver), warn), files: [display(resolver)] };
   }
 
   const base: JsonObject = {};
   for (const file of files) {
-    mergeInto(base, readDocument(file), [], (conflict) => {
+    mergeInto(base, readDocument(file, parsed.get(file)), [], (conflict) => {
       warn(
         `Token "${sourceKey(conflict)}" is defined with different values; "${display(file)}" wins.`,
       );

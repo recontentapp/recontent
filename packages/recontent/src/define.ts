@@ -5,10 +5,10 @@ import type {
   LogLevel,
   RawToken,
   RecontentPlugin,
-  ResolveConfigInput,
   StampedToken,
   ThemeOverride,
   TokenLayer,
+  TokenMetadata,
   TokenRegistry,
   TokenScaleMetadata,
   TokenScale,
@@ -19,6 +19,14 @@ import { isRawToken, isStampedToken, isTokenLeaf, isTokenScale, pathKey } from "
 import { withScaleMethods, withStampedTokenMethods, type ChainableMethods } from "./metadata.js";
 
 type TokenTree = Record<string, unknown>;
+
+function metadataFields(source: TokenMetadata): TokenMetadata {
+  return {
+    ...(source.$description !== undefined ? { $description: source.$description } : {}),
+    ...(source.$deprecated !== undefined ? { $deprecated: source.$deprecated } : {}),
+    ...(source.$extensions !== undefined ? { $extensions: source.$extensions } : {}),
+  };
+}
 
 type StampTree<T, Layer extends TokenLayer> =
   T extends TokenScale<infer Key, infer Token, infer _Value>
@@ -40,9 +48,7 @@ function stampToken<T extends TokenType, Layer extends TokenLayer>(
     $value: token.$value,
     _path: path,
     _layer: layer,
-    ...(token.$description !== undefined ? { $description: token.$description } : {}),
-    ...(token.$deprecated !== undefined ? { $deprecated: token.$deprecated } : {}),
-    ...(token.$extensions !== undefined ? { $extensions: token.$extensions } : {}),
+    ...metadataFields(token),
   };
 
   if (isStampedToken(token)) {
@@ -57,12 +63,11 @@ function stampScale<T extends TokenType, Layer extends TokenLayer>(
   path: string[],
   layer: Layer,
 ): TokenScale<string | number, T, StampedToken<T, Layer>> {
-  const result: Record<string | number, StampedToken<T, Layer>> = {};
-  for (const [key, value] of Object.entries(scale) as Array<
-    [string, RawToken<T> | StampedToken<T>]
-  >) {
-    result[key] = stampToken(value, [...path, key], layer);
-  }
+  const result: Record<string | number, StampedToken<T, Layer>> = Object.fromEntries(
+    (Object.entries(scale) as Array<[string, RawToken<T> | StampedToken<T>]>).map(
+      ([key, value]) => [key, stampToken(value, [...path, key], layer)],
+    ),
+  );
   Object.defineProperties(result, {
     _kind: { value: "scale", enumerable: false },
     $type: { value: scale.$type, enumerable: false },
@@ -74,17 +79,21 @@ function stampScale<T extends TokenType, Layer extends TokenLayer>(
 
 const MAX_TOKEN_TREE_DEPTH = 64;
 
+function assertWithinMaxDepth(depth: number, path: string[]): void {
+  if (depth > MAX_TOKEN_TREE_DEPTH) {
+    throw new Error(
+      `Token tree nesting exceeds ${MAX_TOKEN_TREE_DEPTH} levels at "${path.join(".")}"; check for a self-referencing object.`,
+    );
+  }
+}
+
 function walkAndStamp<Layer extends TokenLayer>(
   input: unknown,
   path: string[],
   layer: Layer,
   depth = 0,
 ): unknown {
-  if (depth > MAX_TOKEN_TREE_DEPTH) {
-    throw new Error(
-      `Token tree nesting exceeds ${MAX_TOKEN_TREE_DEPTH} levels at "${path.join(".")}"; check for a self-referencing object.`,
-    );
-  }
+  assertWithinMaxDepth(depth, path);
 
   if (isTokenScale(input)) {
     return stampScale(input, path, layer);
@@ -98,11 +107,13 @@ function walkAndStamp<Layer extends TokenLayer>(
     return input;
   }
 
-  const result: Record<string, unknown> = {};
-  for (const [key, value] of Object.entries(input)) {
-    result[key] = walkAndStamp(value, [...path, key], layer, depth + 1);
-  }
-  return result;
+  // fromEntries defines own properties, so a "__proto__" key survives to be rejected by collectEntries.
+  return Object.fromEntries(
+    Object.entries(input).map(([key, value]) => [
+      key,
+      walkAndStamp(value, [...path, key], layer, depth + 1),
+    ]),
+  );
 }
 
 const INVALID_NAME_CHARS = /[.{}]/;
@@ -135,11 +146,7 @@ function collectEntries(
   scale?: TokenScaleMetadata,
   depth = 0,
 ): void {
-  if (depth > MAX_TOKEN_TREE_DEPTH) {
-    throw new Error(
-      `Token tree nesting exceeds ${MAX_TOKEN_TREE_DEPTH} levels at "${path.join(".")}"; check for a self-referencing object.`,
-    );
-  }
+  assertWithinMaxDepth(depth, path);
 
   if (isTokenScale(node)) {
     const scalePath = node._path ?? path;
@@ -149,9 +156,7 @@ function collectEntries(
       layer: scaleLayer,
       type: node.$type,
       keys: Object.keys(node),
-      ...(node.$description !== undefined ? { $description: node.$description } : {}),
-      ...(node.$deprecated !== undefined ? { $deprecated: node.$deprecated } : {}),
-      ...(node.$extensions !== undefined ? { $extensions: node.$extensions } : {}),
+      ...metadataFields(node),
     };
 
     for (const [key, value] of Object.entries(node)) {
@@ -161,31 +166,15 @@ function collectEntries(
     return;
   }
 
-  if (isRawToken(node)) {
+  if (isRawToken(node) || isStampedToken(node)) {
     registry.set(pathKey(path), {
       path,
       $type: node.$type,
       $value: node.$value,
+      ...(isStampedToken(node) && node._alias ? { alias: node._alias } : {}),
       layer,
       ...(scale ? { scale } : {}),
-      ...(node.$description !== undefined ? { $description: node.$description } : {}),
-      ...(node.$deprecated !== undefined ? { $deprecated: node.$deprecated } : {}),
-      ...(node.$extensions !== undefined ? { $extensions: node.$extensions } : {}),
-    });
-    return;
-  }
-
-  if (isStampedToken(node)) {
-    registry.set(pathKey(path), {
-      path,
-      $type: node.$type,
-      $value: node.$value,
-      ...(node._alias ? { alias: node._alias } : {}),
-      layer,
-      ...(scale ? { scale } : {}),
-      ...(node.$description !== undefined ? { $description: node.$description } : {}),
-      ...(node.$deprecated !== undefined ? { $deprecated: node.$deprecated } : {}),
-      ...(node.$extensions !== undefined ? { $extensions: node.$extensions } : {}),
+      ...metadataFields(node),
     });
     return;
   }
@@ -221,7 +210,6 @@ export type DefineConfigInput = {
   themes?: Record<string, ThemeOverride>;
   plugins?: RecontentPlugin | RecontentPlugin[];
   logLevel?: LogLevel;
-  resolve?: ResolveConfigInput;
   observability?: ObservabilityConfigInput;
   introspection?: IntrospectionConfigInput;
 };
@@ -275,7 +263,6 @@ export function defineConfig(input: DefineConfigInput): Config {
     themes: input.themes ?? {},
     plugins: normalizePlugins(input.plugins),
     logLevel: normalizeLogLevel(input.logLevel),
-    resolve: input.resolve,
     observability: input.observability
       ? normalizeObservabilityConfig(input.observability)
       : undefined,

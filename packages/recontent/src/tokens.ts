@@ -27,6 +27,7 @@ import {
   toSrgbHex,
 } from "@recontentapp/core";
 import { generateScale, SCALE_STEPS } from "./color-scale.js";
+import { roundTo } from "./serialize/native.js";
 import { withRawTokenMethods, withScaleMethods, type ChainableMethods } from "./metadata.js";
 
 type ColorInput =
@@ -105,7 +106,7 @@ function validateComponentRanges(
   components.forEach((component, index) => {
     if (component === "none") return;
     const range = ranges[index]!;
-    if (component < range.min || component > range.max) {
+    if (!Number.isFinite(component) || component < range.min || component > range.max) {
       throw new Error(
         `Invalid component ${index} for colorSpace "${colorSpace}": ${component}. Expected a value between ${range.min} and ${range.max}.`,
       );
@@ -120,6 +121,9 @@ function color(input: ColorInput): RawToken<"color"> & ChainableMethods<RawToken
 
   validateComponentRanges(input.colorSpace, input.components);
   const alpha = input.alpha ?? 1;
+  if (!Number.isFinite(alpha) || alpha < 0 || alpha > 1) {
+    throw new Error(`Invalid alpha: ${alpha}. Expected a number between 0 and 1.`);
+  }
   const value: ColorValue = {
     colorSpace: input.colorSpace,
     components: input.components,
@@ -142,8 +146,8 @@ function dimension(input: string): RawToken<"dimension"> & ChainableMethods<RawT
   });
 }
 
-// eslint-disable-next-line no-control-regex
-const CONTROL_CHAR_RE = /[\u0000-\u0008\u000A-\u001F\u007F\u2028\u2029]/;
+// Family names are emitted unquoted into CSS, so only characters that can't end a declaration are allowed.
+const FONT_FAMILY_NAME_RE = /^[\p{L}\p{N} _.-]+$/u;
 
 function fontFamily(
   input: string,
@@ -154,8 +158,10 @@ function fontFamily(
     .filter(Boolean);
 
   for (const family of families) {
-    if (CONTROL_CHAR_RE.test(family)) {
-      throw new Error(`Invalid fontFamily: ${JSON.stringify(input)} contains control characters.`);
+    if (!FONT_FAMILY_NAME_RE.test(family)) {
+      throw new Error(
+        `Invalid fontFamily: ${JSON.stringify(input)}. Family names may only contain letters, digits, spaces, hyphens, underscores and dots.`,
+      );
     }
   }
 
@@ -166,7 +172,7 @@ function fontWeight(
   input: number | FontWeightName,
 ): RawToken<"fontWeight"> & ChainableMethods<RawToken<"fontWeight">> {
   if (typeof input === "number") {
-    if (input < 1 || input > 1000) {
+    if (!(input >= 1 && input <= 1000)) {
       throw new Error(`Invalid fontWeight: ${input}. Expected a number between 1 and 1000.`);
     }
     return createRawToken("fontWeight", { value: input });
@@ -190,10 +196,16 @@ function duration(input: string): RawToken<"duration"> & ChainableMethods<RawTok
 function cubicBezier(
   value: [number, number, number, number],
 ): RawToken<"cubicBezier"> & ChainableMethods<RawToken<"cubicBezier">> {
+  if (value.length !== 4 || !value.every(Number.isFinite)) {
+    throw new Error(`Invalid cubicBezier: ${JSON.stringify(value)}. Expected four finite numbers.`);
+  }
   return createRawToken("cubicBezier", { value });
 }
 
 function number(value: number): RawToken<"number"> & ChainableMethods<RawToken<"number">> {
+  if (!Number.isFinite(value)) {
+    throw new Error(`Invalid number: ${value}. Expected a finite number.`);
+  }
   return createRawToken("number", { value });
 }
 
@@ -366,6 +378,8 @@ type GradientInput = {
   stops: Array<GradientStopInput | RawToken<"gradient"> | StampedToken<"gradient">>;
 };
 
+const ANGLE_RE = /^-?(?:\d+\.?\d*|\.\d+)(?:deg|grad|rad|turn)$/;
+
 function clampPosition(position: number): number {
   return Math.min(1, Math.max(0, position));
 }
@@ -390,9 +404,16 @@ function gradient(
     throw new Error("tokens.gradient(...) requires at least 2 stops.");
   }
 
+  const angle = input.angle ?? "180deg";
+  if (!ANGLE_RE.test(angle)) {
+    throw new Error(
+      `Invalid gradient angle: ${JSON.stringify(angle)}. Expected format like "90deg".`,
+    );
+  }
+
   const value: GradientValue = {
     kind: input.kind ?? "linear",
-    angle: input.angle ?? "180deg",
+    angle,
     stops: input.stops.map(toGradientStop),
   };
   return createRawToken("gradient", value);
@@ -446,12 +467,14 @@ function scaleFrom<Key extends string | number, T extends TokenType, Value>(
   scale: Record<Key, Value>,
   factory: (input: Exclude<Value, RawToken<T> | StampedToken<T>>) => RawToken<T>,
 ): ChainableScale<Key, T, RawToken<T> | StampedToken<T>> {
-  const result = {} as Record<Key, RawToken<T> | StampedToken<T>>;
-  for (const [step, input] of Object.entries(scale) as Array<[string, Value]>) {
-    result[step as Key] = isTokenLeaf(input)
-      ? (input as RawToken<T> | StampedToken<T>)
-      : factory(input as Exclude<Value, RawToken<T> | StampedToken<T>>);
-  }
+  const result = Object.fromEntries(
+    (Object.entries(scale) as Array<[string, Value]>).map(([step, input]) => [
+      step,
+      isTokenLeaf(input)
+        ? (input as RawToken<T> | StampedToken<T>)
+        : factory(input as Exclude<Value, RawToken<T> | StampedToken<T>>),
+    ]),
+  ) as Record<Key, RawToken<T> | StampedToken<T>>;
   return createScale(type, result);
 }
 
@@ -536,11 +559,6 @@ function generateColorScale<Key extends string | number = ScaleStep>(
     };
   });
   return colorScale(scale);
-}
-
-function roundTo(value: number, digits: number): number {
-  const factor = 10 ** digits;
-  return Math.round(value * factor) / factor;
 }
 
 // Floors so that rounding can never push a gamut-fitted chroma back out of gamut.

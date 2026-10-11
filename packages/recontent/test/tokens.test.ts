@@ -11,12 +11,50 @@ test("tokens.color rejects a short hex string with non-hex characters", () => {
   expect(() => tokens.color("#zzz")).toThrow(/Invalid hex color/);
 });
 
-test("tokens.fontFamily rejects a family containing a newline", () => {
-  expect(() => tokens.fontFamily("A\nB")).toThrow(/control characters/);
+test.each(["A\nB", "A\rB", "Arial; } body{display:none} :root{--x:1", "A'B", "A(B)", "A/*B"])(
+  "tokens.fontFamily rejects %j",
+  (family) => {
+    expect(() => tokens.fontFamily(family)).toThrow(/Invalid fontFamily/);
+  },
+);
+
+test("tokens.fontFamily accepts quoted, spaced and non-ASCII family names", () => {
+  expect(
+    tokens.fontFamily(`"Helvetica Neue", Noto Sans JP, -apple-system, ヒラギノ`).$value,
+  ).toEqual({
+    value: ["Helvetica Neue", "Noto Sans JP", "-apple-system", "ヒラギノ"],
+  });
 });
 
-test("tokens.fontFamily rejects a family containing a carriage return", () => {
-  expect(() => tokens.fontFamily("A\rB")).toThrow(/control characters/);
+test("tokens.number and tokens.fontWeight reject NaN and infinities", () => {
+  expect(() => tokens.number(NaN)).toThrow(/Invalid number/);
+  expect(() => tokens.number(Infinity)).toThrow(/Invalid number/);
+  expect(() => tokens.fontWeight(NaN)).toThrow(/Invalid fontWeight/);
+});
+
+test("tokens.color rejects an out-of-range or NaN alpha and NaN components", () => {
+  const components: [number, number, number] = [0, 0, 0];
+  expect(() => tokens.color({ colorSpace: "srgb", components, alpha: NaN })).toThrow(/alpha/);
+  expect(() => tokens.color({ colorSpace: "srgb", components, alpha: 2 })).toThrow(/alpha/);
+  expect(() => tokens.color({ colorSpace: "srgb", components: [NaN, 0, 0] })).toThrow(
+    /Invalid component/,
+  );
+});
+
+test("tokens.cubicBezier rejects non-finite values", () => {
+  expect(() => tokens.cubicBezier([0, NaN, 1, 1])).toThrow(/Invalid cubicBezier/);
+});
+
+test("tokens.gradient rejects an angle that is not a CSS angle", () => {
+  const stops = [
+    { color: "#000000", position: 0 },
+    { color: "#ffffff", position: 1 },
+  ];
+  expect(() => tokens.gradient({ angle: "0deg); } body{display:none", stops })).toThrow(
+    /Invalid gradient angle/,
+  );
+  expect(tokens.gradient({ angle: "0.25turn", stops }).$value.angle).toBe("0.25turn");
+  expect(tokens.gradient({ angle: "-45deg", stops }).$value.angle).toBe("-45deg");
 });
 
 test("tokens.dimension accepts px, rem and em", () => {
