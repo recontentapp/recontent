@@ -168,6 +168,19 @@ export function diffConfigs(base: Config, head: Config): TokenDiff {
   for (const key of baseKeys) {
     if (!headKeys.has(key)) removedCandidates.push(base.registry.get(key)!);
   }
+
+  const { renamed, added, removed } = findRenames(addedCandidates, removedCandidates);
+  const renamedKeys = new Map(
+    renamed.map(({ from, to }) => [pathKey(from.path), pathKey(to.path)]),
+  );
+
+  // An alias that merely follows its target's rename is reported once, as the rename.
+  const fingerprintFollowingRenames = (entry: TokenEntry): string => {
+    if (!entry.alias) return fingerprintValue(entry);
+    const target = pathKey(entry.alias);
+    return `alias:${renamedKeys.get(target) ?? target}`;
+  };
+
   for (const key of baseKeys) {
     if (!headKeys.has(key)) continue;
     const from = base.registry.get(key)!;
@@ -176,12 +189,10 @@ export function diffConfigs(base: Config, head: Config): TokenDiff {
       retyped.push({ from, to });
       continue;
     }
-    if (fingerprintValue(from) !== fingerprintValue(to)) {
+    if (fingerprintFollowingRenames(from) !== fingerprintValue(to)) {
       changed.push({ from, to });
     }
   }
-
-  const { renamed, added, removed } = findRenames(addedCandidates, removedCandidates);
 
   return {
     added,
@@ -193,8 +204,25 @@ export function diffConfigs(base: Config, head: Config): TokenDiff {
   };
 }
 
+function removedOverrides(diff: TokenDiff): { theme: string; key: string }[] {
+  return Object.entries(diff.themes.changedThemes).flatMap(([theme, themeDiff]) =>
+    themeDiff.removed.map(({ key }) => ({ theme, key })),
+  );
+}
+
+/** Removing a token, a theme, or a theme's override breaks consumers that reference it. */
+export function countBreakingChanges(diff: TokenDiff): number {
+  return (
+    diff.removed.length +
+    diff.renamed.length +
+    diff.retyped.length +
+    diff.themes.removedThemes.length +
+    removedOverrides(diff).length
+  );
+}
+
 export function hasBreakingChanges(diff: TokenDiff): boolean {
-  return diff.removed.length > 0 || diff.renamed.length > 0 || diff.retyped.length > 0;
+  return countBreakingChanges(diff) > 0;
 }
 
 function isDiffEmpty(diff: TokenDiff): boolean {
@@ -314,13 +342,13 @@ function code(text: string): string {
   return `\`${text}\``;
 }
 
-function formatDiffMarkdown(diff: TokenDiff): string {
+function formatDiffMarkdown(diff: TokenDiff, rev: string): string {
   if (isDiffEmpty(diff)) {
-    return "No token changes between the working tree and HEAD.";
+    return `No token changes between the working tree and ${rev}.`;
   }
 
   const sections: string[] = [];
-  const breakingCount = diff.removed.length + diff.renamed.length + diff.retyped.length;
+  const breakingCount = countBreakingChanges(diff);
 
   if (breakingCount > 0) {
     const lines = [`## Breaking (${breakingCount})`, ""];
@@ -334,6 +362,12 @@ function formatDiffMarkdown(diff: TokenDiff): string {
     }
     for (const entry of diff.removed) {
       lines.push(`- **removed** ${code(pathStr(entry))} (${describeEntry(entry)})`);
+    }
+    for (const name of diff.themes.removedThemes) {
+      lines.push(`- **removed theme** ${code(name)}`);
+    }
+    for (const { theme, key } of removedOverrides(diff)) {
+      lines.push(`- **removed override** ${code(key)} in theme ${code(theme)}`);
     }
     sections.push(lines.join("\n"));
   }
@@ -367,18 +401,12 @@ function formatDiffMarkdown(diff: TokenDiff): string {
     sections.push(lines.join("\n"));
   }
 
-  const themeNames = new Set([
-    ...diff.themes.addedThemes,
-    ...diff.themes.removedThemes,
-    ...Object.keys(diff.themes.changedThemes),
-  ]);
-  if (themeNames.size > 0) {
+  // Removed themes are listed under Breaking.
+  const themeCount = diff.themes.addedThemes.length + Object.keys(diff.themes.changedThemes).length;
+  if (themeCount > 0) {
     const lines = ["## Themes", ""];
     for (const name of diff.themes.addedThemes) {
       lines.push(`- ${code(name)}: added`);
-    }
-    for (const name of diff.themes.removedThemes) {
-      lines.push(`- ${code(name)}: removed`);
     }
     for (const [name, themeDiff] of Object.entries(diff.themes.changedThemes)) {
       lines.push(
@@ -401,7 +429,24 @@ export type DiffContext = {
 // The comparison context lives inside the object (rather than in a separate
 // line) so stdout is a single self-contained JSON document.
 function formatDiffJson(diff: TokenDiff, context: DiffContext): string {
-  return JSON.stringify({ ...context, ...diff }, null, 2);
+  const breaking = countBreakingChanges(diff);
+  return JSON.stringify(
+    {
+      ...context,
+      breaking: breaking > 0,
+      counts: {
+        added: diff.added.length,
+        removed: diff.removed.length,
+        renamed: diff.renamed.length,
+        retyped: diff.retyped.length,
+        changed: diff.changed.length,
+        breaking,
+      },
+      ...diff,
+    },
+    null,
+    2,
+  );
 }
 
 export function formatDiff(
@@ -409,5 +454,5 @@ export function formatDiff(
   format: DiffFormat = "markdown",
   context: DiffContext = { config: "", rev: "HEAD" },
 ): string {
-  return format === "json" ? formatDiffJson(diff, context) : formatDiffMarkdown(diff);
+  return format === "json" ? formatDiffJson(diff, context) : formatDiffMarkdown(diff, context.rev);
 }

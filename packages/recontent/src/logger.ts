@@ -8,14 +8,14 @@ export function createLogger(logLevel: LogLevel = "info"): Logger {
       console.error(message);
     },
     warn(message: string): void {
-      console.error(`[recontent:warning] ${message}`);
+      console.error(`warning: ${message}`);
     },
     error(message: string): void {
-      console.error(`[recontent:error] ${message}`);
+      console.error(`error: ${message}`);
     },
     debug(message: string): void {
       if (logLevel === "debug") {
-        console.error(`[recontent:debug] ${message}`);
+        console.error(`debug: ${message}`);
       }
     },
   };

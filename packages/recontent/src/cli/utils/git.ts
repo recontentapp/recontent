@@ -23,6 +23,12 @@ export function resolveGitRoot(cwd: string): string {
   return result.stdout.trim();
 }
 
+export function assertHasCommits(gitRoot: string): void {
+  if (run(["rev-parse", "--verify", "--quiet", "HEAD"], gitRoot).status !== 0) {
+    throw new Error(`No commits yet in the git repository at "${gitRoot}".`);
+  }
+}
+
 export function assertRevision(gitRoot: string, rev: string): void {
   if (rev.startsWith("-")) {
     throw new Error(`Not a valid git revision: "${rev}".`);

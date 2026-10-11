@@ -2,11 +2,14 @@ import { promises as fsp } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { loadConfig, type LogLevel } from "@recontentapp/core";
-import { diffConfigs, formatDiff, hasBreakingChanges, type DiffFormat } from "../diff/diff.js";
+import { countBreakingChanges, diffConfigs, formatDiff, type DiffFormat } from "../diff/diff.js";
 import { createLogger } from "../../logger.js";
+import { exitWithError } from "../utils/exit.js";
+import { plural } from "../utils/format.js";
 import {
   archiveRevision,
   assertAncestorOfHead,
+  assertHasCommits,
   assertRevision,
   resolveGitRoot,
 } from "../utils/git.js";
@@ -31,6 +34,7 @@ export async function runDiff(options: DiffOptions): Promise<void> {
     throw new Error(`Config file "${configPath}" is outside the git repository at "${gitRoot}".`);
   }
 
+  assertHasCommits(gitRoot);
   assertRevision(gitRoot, rev);
   assertAncestorOfHead(gitRoot, rev);
 
@@ -63,7 +67,8 @@ export async function runDiff(options: DiffOptions): Promise<void> {
   }
   console.log(formatDiff(diff, format, { config: relPath, rev }));
 
-  if (options.failOnBreaking && hasBreakingChanges(diff)) {
-    process.exitCode = 1;
+  const breaking = countBreakingChanges(diff);
+  if (options.failOnBreaking && breaking > 0) {
+    exitWithError(`${plural(breaking, "breaking change")} found`);
   }
 }
