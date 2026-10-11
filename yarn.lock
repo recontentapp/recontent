@@ -3613,13 +3613,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/semver@npm:7.7.1":
-  version: 7.7.1
-  resolution: "@types/semver@npm:7.7.1"
-  checksum: 10c0/c938aef3bf79a73f0f3f6037c16e2e759ff40c54122ddf0b2583703393d8d3127130823facb880e694caa324eb6845628186aac1997ee8b31dc2d18fafe26268
-  languageName: node
-  linkType: hard
-
 "@types/stack-utils@npm:^2.0.3":
   version: 2.0.3
   resolution: "@types/stack-utils@npm:2.0.3"
@@ -7560,10 +7553,8 @@ __metadata:
     "@swc/jest": "npm:0.2.39"
     "@tailwindcss/node": "npm:4.3.3"
     "@types/node": "npm:24.1.0"
-    "@types/semver": "npm:7.7.1"
     commander: "npm:^15.0.0"
     jest: "npm:30.2.0"
-    semver: "npm:^7.7.2"
     tailwindcss: "npm:4.3.3"
     tsdown: "npm:0.22.9"
     typescript: "npm:^6.0.3"

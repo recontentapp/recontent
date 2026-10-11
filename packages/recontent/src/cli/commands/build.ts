@@ -6,6 +6,7 @@ import { runPlugins } from "../../plugins/runner.js";
 import { ensureDependencies } from "../install-dependencies.js";
 import { loadConfig, type LogLevel } from "@recontentapp/core";
 import { collectLocalImports } from "../config-graph.js";
+import { diagnoseRegistry } from "../registry-diagnostics.js";
 import { exitWithError } from "../utils/exit.js";
 import { writeOutputFile } from "../utils/fs.js";
 
@@ -135,6 +136,24 @@ async function buildOnce(
   for (const diagnostic of config.diagnostics) {
     logger.warn(diagnostic.message);
   }
+
+  const abort = (message: string) => {
+    if (exitOnError) {
+      exitWithError(message);
+    } else {
+      logger.error(message);
+    }
+  };
+
+  const registryDiagnostics = diagnoseRegistry(config.registry);
+  if (registryDiagnostics.length > 0) {
+    for (const diagnostic of registryDiagnostics) {
+      logger.error(diagnostic.message);
+    }
+    abort("Build aborted: the token registry contains broken or circular aliases.");
+    return;
+  }
+
   logger.debug(
     `Loaded build config with ${config.plugins.length} plugin(s), ${config.registry.size} token(s), and ${Object.keys(config.themes).length} theme(s).`,
   );
@@ -153,11 +172,7 @@ async function buildOnce(
     result = await runPlugins(config, { root: configDir, mode, logger });
   } catch (error) {
     if (error instanceof MissingDesignTokensError) {
-      if (exitOnError) {
-        exitWithError(error.message);
-        return;
-      }
-      logger.error(error.message);
+      abort(error.message);
       return;
     }
     throw error;
@@ -172,12 +187,7 @@ async function buildOnce(
   }
 
   if (result.diagnostics.some((diagnostic) => diagnostic.severity === "error")) {
-    const message = "Build aborted: one or more plugins reported an error.";
-    if (exitOnError) {
-      exitWithError(message);
-      return;
-    }
-    logger.error(message);
+    abort("Build aborted: one or more plugins reported an error.");
     return;
   }
 

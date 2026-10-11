@@ -8,7 +8,6 @@ import { discoverConfigPath, resolveConfigPath } from "@recontentapp/core";
 import { runBuild } from "./commands/build.js";
 import { runDiff } from "./commands/diff.js";
 import { DIFF_FORMATS, type DiffFormat } from "./diff/diff.js";
-import { runDoctor } from "./commands/doctor.js";
 import { runInit } from "./commands/init.js";
 import { PRESETS, PRESET_NAMES } from "./presets/index.js";
 import { formatErrorForReport } from "./utils/exit.js";
@@ -122,17 +121,6 @@ program
   .action(async (options: { config?: string; watch?: boolean }) => {
     const { cwd, configPath, logLevel } = resolveGlobalOptions(options.config);
     await runBuild({ cwd, configPath, logLevel, watch: options.watch });
-  });
-
-program
-  .command("doctor")
-  .description(
-    "Validate config, registry, and resolvable dependencies (unknown token values, broken aliases, missing/mismatched runtime dependencies)",
-  )
-  .option(CONFIG_OPTION_FLAGS, CONFIG_OPTION_DESC)
-  .action(async (options: { config?: string }) => {
-    const { cwd, configPath, logLevel } = resolveGlobalOptions(options.config);
-    await runDoctor({ cwd, configPath, logLevel });
   });
 
 program
