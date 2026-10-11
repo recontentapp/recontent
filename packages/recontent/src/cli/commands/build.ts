@@ -3,7 +3,6 @@ import path from "node:path";
 import { createLogger } from "../../logger.js";
 import { MissingDesignTokensError } from "../../plugins/errors.js";
 import { runPlugins } from "../../plugins/runner.js";
-import { ensureDependencies } from "../install-dependencies.js";
 import { loadConfig, type LogLevel } from "@recontentapp/core";
 import { collectLocalImports } from "../config-graph.js";
 import { diagnoseRegistry } from "../registry-diagnostics.js";
@@ -163,7 +162,6 @@ async function buildOnce(
   );
 
   const configDir = path.dirname(options.configPath);
-  ensureDependencies(configDir, config.resolve, effectiveLogLevel);
 
   if (config.plugins.length === 0) {
     logger.warn(
@@ -206,12 +204,11 @@ async function buildOnce(
   let written = 0;
   let skipped = 0;
   for (const file of result.files) {
-    const { path: outputPath, written: wasWritten } = await writeOutputFile(
-      file.path,
-      file.content,
-      configDir,
-      { writeMode: file.writeMode },
-    );
+    const {
+      path: outputPath,
+      written: wasWritten,
+      skipReason,
+    } = await writeOutputFile(file.path, file.content, configDir, { writeMode: file.writeMode });
     const shownPath = displayPath(options.cwd, outputPath);
     if (wasWritten) {
       written += 1;
@@ -219,7 +216,9 @@ async function buildOnce(
       logger.debug(`Wrote ${file.content.length.toLocaleString()} bytes to ${shownPath}.`);
     } else {
       skipped += 1;
-      logger.info(`Skipped ${shownPath} (already exists)`);
+      logger.info(
+        `Skipped ${shownPath} (${skipReason === "exists" ? "already exists" : "unchanged"})`,
+      );
     }
   }
   logger.info(`Wrote ${plural(written, "file")}${skipped > 0 ? ` (${skipped} skipped)` : ""}`);

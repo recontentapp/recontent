@@ -72,7 +72,10 @@ export function formatRule(
 ): string {
   const lines = Object.entries(declarations).flatMap(([name, value]) => {
     const comment = comments[name];
-    return [...(comment ? [`  /* ${comment} */`] : []), `  ${name}: ${value};`];
+    return [
+      ...(comment ? [`  /* ${comment.replaceAll("*/", "*\\/")} */`] : []),
+      `  ${name}: ${value};`,
+    ];
   });
   return `${selector} {\n${lines.join("\n")}\n}`;
 }

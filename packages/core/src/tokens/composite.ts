@@ -116,66 +116,17 @@ export function expandedMembers(
   type: ExpandedCompositeType,
   value: TokenTypeMap[ExpandedCompositeType],
 ): ExpandedMember[] {
-  switch (type) {
-    case "typography": {
-      const typography = value as TypographyValue;
-      return [
-        {
-          cssProperty: "fontFamily",
-          varSuffix: "font-family",
-          type: "fontFamily",
-          member: typography.fontFamily,
-        },
-        {
-          cssProperty: "fontSize",
-          varSuffix: "font-size",
-          type: "dimension",
-          member: typography.fontSize,
-        },
-        {
-          cssProperty: "fontWeight",
-          varSuffix: "font-weight",
-          type: "fontWeight",
-          member: typography.fontWeight,
-        },
-        {
-          cssProperty: "letterSpacing",
-          varSuffix: "letter-spacing",
-          type: "dimension",
-          member: typography.letterSpacing,
-        },
-        {
-          cssProperty: "lineHeight",
-          varSuffix: "line-height",
-          type: "number",
-          member: typography.lineHeight,
-        },
-      ];
-    }
-    case "transition": {
-      const transition = value as TransitionValue;
-      return [
-        {
-          cssProperty: "transitionDuration",
-          varSuffix: "transition-duration",
-          type: "duration",
-          member: transition.duration,
-        },
-        {
-          cssProperty: "transitionDelay",
-          varSuffix: "transition-delay",
-          type: "duration",
-          member: transition.delay,
-        },
-        {
-          cssProperty: "transitionTimingFunction",
-          varSuffix: "transition-timing-function",
-          type: "cubicBezier",
-          member: transition.timingFunction,
-        },
-      ];
-    }
-    default:
-      throw new Error(`Unknown expanded composite token type: ${type satisfies never}`);
-  }
+  return compositeMembers(type, value).map(({ key, type: memberType, member }) => {
+    const cssProperty = type === "transition" ? `transition${capitalize(key)}` : key;
+    return {
+      cssProperty,
+      varSuffix: cssProperty.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`),
+      type: memberType,
+      member,
+    };
+  });
+}
+
+function capitalize(value: string): string {
+  return value.charAt(0).toUpperCase() + value.slice(1);
 }

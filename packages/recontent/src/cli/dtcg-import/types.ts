@@ -7,6 +7,19 @@ export function isObject(value: unknown): value is JsonObject {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
+/**
+ * Assigns an own property even for `__proto__`, which a plain `target[key] = value`
+ * would turn into a prototype change.
+ */
+export function setOwn(target: JsonObject, key: string, value: unknown): void {
+  Object.defineProperty(target, key, {
+    value,
+    enumerable: true,
+    writable: true,
+    configurable: true,
+  });
+}
+
 /** A token read out of a DTCG document, before conversion. */
 export type FlatToken = {
   /** Original DTCG path, `$root` kept as-is. Aliases address tokens by this. */

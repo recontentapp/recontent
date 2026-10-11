@@ -309,6 +309,18 @@ describe("structure & options", () => {
     expect(files[0]!.content).toMatch(/\.dark \{/);
   });
 
+  test("a description cannot close the comment it is emitted in", () => {
+    const ref = defineReferenceTokens({
+      evil: tokens.color("#000000").describe("x */ body{display:none} /* y"),
+    });
+    const config = defineConfig({
+      tokens: { ref, system: defineSystemTokens({}), components: {} },
+    });
+    const css = generateCss(config);
+    expect(css).toContain("/* x *\\/ body{display:none} /* y */");
+    expect(css.replace(/\/\*[\s\S]*?\*\//g, "")).not.toContain("display:none");
+  });
+
   test("a tokenless config yields an empty string", () => {
     const config = defineConfig({
       tokens: {

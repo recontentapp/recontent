@@ -6,6 +6,7 @@ import type {
   TokenScaleMetadata,
 } from "@recontentapp/core";
 import { pathKey } from "@recontentapp/core";
+import { walkAliasChain } from "./alias.js";
 import type { GeneratorContext } from "./context.js";
 
 export type SourceValue = { value: string; source?: true };
@@ -68,32 +69,15 @@ export function resolveEntryValue(
   entry: TokenEntry,
   overrides?: ThemeOverride,
 ): TokenEntry["$value"] {
-  const visited = new Set<string>();
-
-  function walk(current: TokenEntry): TokenEntry["$value"] {
-    const key = pathKey(current.path);
-    if (visited.has(key)) {
-      throw new Error(`Circular alias detected at token path: ${key}`);
-    }
-    visited.add(key);
-
-    const overridden = overrides?.get(key);
+  let last = entry;
+  for (const current of walkAliasChain(registry, entry)) {
+    const overridden = overrides?.get(pathKey(current.path));
     if (overridden !== undefined) {
       return overridden;
     }
-    if (!current.alias) {
-      return current.$value;
-    }
-
-    const aliasKey = pathKey(current.alias);
-    const aliased = registry.get(aliasKey);
-    if (!aliased) {
-      throw new Error(`Alias target not found: ${aliasKey}`);
-    }
-    return walk(aliased);
+    last = current;
   }
-
-  return walk(entry);
+  return last.$value;
 }
 
 export function setTreeValue(
@@ -104,7 +88,7 @@ export function setTreeValue(
   let current = tree;
   for (const segment of path.slice(0, -1)) {
     const child = current[segment];
-    if (!child || "value" in child) {
+    if (!child || isSourceValue(child)) {
       current[segment] = Object.create(null) as SourceTree;
     }
     current = current[segment] as SourceTree;
@@ -141,9 +125,12 @@ function scaleNameSegments(scale: TokenScaleMetadata): string[] {
   return scale.path[0] === scale.layer ? scale.path : [scale.layer, ...scale.path];
 }
 
+export function capitalize(value: string): string {
+  return value.charAt(0).toUpperCase() + value.slice(1);
+}
+
 function capitalizeSegment(segment: string): string {
-  const normalized = segment.replace(/[^a-zA-Z0-9_$]/g, "");
-  return normalized ? normalized.charAt(0).toUpperCase() + normalized.slice(1) : "";
+  return capitalize(segment.replace(/[^a-zA-Z0-9_$]/g, ""));
 }
 
 function scaleExportNames(scale: TokenScaleMetadata): {

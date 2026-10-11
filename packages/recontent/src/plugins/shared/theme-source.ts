@@ -9,8 +9,10 @@ import {
   type TokenType,
   type TokenTypeMap,
 } from "@recontentapp/core";
+import { getEntry, walkAliasChain } from "./alias.js";
 import type { GeneratorContext } from "./context.js";
 import {
+  capitalize,
   entryPath,
   formatTree,
   propertyAccess,
@@ -126,10 +128,6 @@ export function validateThemeAttribute(themeAttribute: string, target: string): 
   }
 }
 
-function capitalize(value: string): string {
-  return value.charAt(0).toUpperCase() + value.slice(1);
-}
-
 function themeConstName(themeName: string | undefined): string {
   return themeName === undefined ? "theme" : themeName;
 }
@@ -202,30 +200,51 @@ function resolveAliasCandidate(
   emittingLayerIndex: number,
 ): TokenEntry | undefined {
   let candidate: TokenEntry | undefined;
-  const visited = new Set<string>([pathKey(seedPath)]);
-  let aliasPath: string[] | undefined = startAliasPath;
+  const chain = walkAliasChain(
+    registry,
+    getEntry(registry, startAliasPath),
+    new Set([pathKey(seedPath)]),
+  );
 
-  while (aliasPath) {
-    const key = pathKey(aliasPath);
-    if (visited.has(key)) {
-      throw new Error(`Circular alias detected at token path: ${key}`);
-    }
-    const target = registry.get(key);
-    if (!target) {
-      throw new Error(`Alias target not found: ${key}`);
-    }
-    visited.add(key);
-
+  for (const target of chain) {
     if (LAYER_INDEX[target.layer] < emittingLayerIndex) {
       candidate = target;
     }
-    if (override?.has(key)) {
+    if (override?.has(pathKey(target.path))) {
       break;
     }
-    aliasPath = target.alias;
   }
 
   return candidate;
+}
+
+/**
+ * Emits a reference to an earlier layer's constant when `aliasPath`'s chain
+ * reaches one; returns false when the value has to be inlined instead.
+ */
+function emitAliasReference(
+  tree: SourceTree,
+  entry: TokenEntry,
+  aliasPath: string[],
+  registry: TokenRegistry,
+  override: ThemeOverride | undefined,
+  themeName: string | undefined,
+): boolean {
+  const candidate = resolveAliasCandidate(
+    registry,
+    entry.path,
+    aliasPath,
+    override,
+    LAYER_INDEX[entry.layer],
+  );
+  if (!candidate) {
+    return false;
+  }
+  setTreeValue(tree, entryPath(entry), {
+    value: propertyAccess(layerConstName(themeName, candidate.layer), entryPath(candidate)),
+    source: true,
+  });
+  return true;
 }
 
 function emitScalarEntry(
@@ -238,41 +257,18 @@ function emitScalarEntry(
   report: LossReporter,
 ): void {
   const overridden = override?.get(pathKey(entry.path));
-  if (overridden !== undefined) {
-    setTreeValue(
-      tree,
-      entryPath(entry),
-      spec.scalar(entry.$type, overridden as TokenTypeMap[TokenType], report, entry.path),
-    );
+
+  if (
+    overridden === undefined &&
+    entry.alias &&
+    emitAliasReference(tree, entry, entry.alias, registry, override, themeName)
+  ) {
     return;
   }
 
-  if (entry.alias) {
-    const candidate = resolveAliasCandidate(
-      registry,
-      entry.path,
-      entry.alias,
-      override,
-      LAYER_INDEX[entry.layer],
-    );
-    if (candidate) {
-      setTreeValue(tree, entryPath(entry), {
-        value: propertyAccess(layerConstName(themeName, candidate.layer), entryPath(candidate)),
-        source: true,
-      });
-      return;
-    }
-
-    const resolved = resolveEntryValue(registry, entry, override);
-    setTreeValue(
-      tree,
-      entryPath(entry),
-      spec.scalar(entry.$type, resolved as TokenTypeMap[TokenType], report, entry.path),
-    );
-    return;
-  }
-
-  setTreeValue(tree, entryPath(entry), spec.scalar(entry.$type, entry.$value, report, entry.path));
+  // Resolves to the override when there is one, else follows the alias chain.
+  const value = resolveEntryValue(registry, entry, override) as TokenTypeMap[TokenType];
+  setTreeValue(tree, entryPath(entry), spec.scalar(entry.$type, value, report, entry.path));
 }
 
 function emitCompositeEntry(
@@ -286,29 +282,17 @@ function emitCompositeEntry(
 ): void {
   const overridden = override?.get(pathKey(entry.path));
 
-  if (overridden === undefined && entry.alias) {
-    const candidate = resolveAliasCandidate(
-      registry,
-      entry.path,
-      entry.alias,
-      override,
-      LAYER_INDEX[entry.layer],
-    );
-    if (candidate) {
-      setTreeValue(tree, entryPath(entry), {
-        value: propertyAccess(layerConstName(themeName, candidate.layer), entryPath(candidate)),
-        source: true,
-      });
-      return;
-    }
+  if (
+    overridden === undefined &&
+    entry.alias &&
+    emitAliasReference(tree, entry, entry.alias, registry, override, themeName)
+  ) {
+    return;
   }
 
   const resolvedValue = (overridden ?? entry.$value) as TokenTypeMap[TokenType];
   const member = (memberAlias: string[]): { ref?: string; value: TokenTypeMap[TokenType] } => {
-    const target = registry.get(pathKey(memberAlias));
-    if (!target) {
-      throw new Error(`Alias target not found: ${pathKey(memberAlias)}`);
-    }
+    const target = getEntry(registry, memberAlias);
     const value = resolveEntryValue(registry, target, override) as TokenTypeMap[TokenType];
     const candidate = resolveAliasCandidate(
       registry,

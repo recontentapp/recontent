@@ -4650,15 +4650,27 @@
         });
 
         var select = document.getElementById("theme");
+        var themed = null;
         function applyTheme(theme) {
           var root = document.documentElement;
           if (theme) root.setAttribute("data-theme", theme);
           else root.removeAttribute("data-theme");
-          document.querySelectorAll("[data-values]").forEach(function (el) {
-            var values = JSON.parse(el.getAttribute("data-values"));
-            var overridden = Boolean(theme) && values[theme] !== undefined;
-            el.textContent = overridden ? values[theme] : values["default"];
-            el.parentNode.classList.toggle("overridden", overridden);
+          if (!themed) {
+            themed = Array.prototype.map.call(
+              document.querySelectorAll("[data-values]"),
+              function (el) {
+                return {
+                  el: el,
+                  base: el.textContent,
+                  values: JSON.parse(el.getAttribute("data-values")),
+                };
+              },
+            );
+          }
+          themed.forEach(function (t) {
+            var overridden = Boolean(theme) && t.values[theme] !== undefined;
+            t.el.textContent = overridden ? t.values[theme] : t.base;
+            t.el.parentNode.classList.toggle("overridden", overridden);
           });
         }
         if (select)

@@ -19,6 +19,18 @@ function generate(config: Config, options: TypeScriptNativePluginOptions = NATIV
   return generateTypeScriptNativeFiles(config, options);
 }
 
+test("a group with a child named value keeps its siblings", () => {
+  const ref = defineReferenceTokens({
+    size: { value: tokens.dimension("1px"), large: tokens.dimension("2px") },
+  });
+  const config = defineConfig({
+    tokens: { ref, system: defineSystemTokens({}), components: {} },
+  });
+  const [file] = generateTypeScriptNativeFiles(config, { outDir: "dist-test" });
+  expect(file!.content).toMatch(/"large": 2,/);
+  expect(file!.content).toMatch(/"value": 1,/);
+});
+
 describe("scalars", () => {
   test("dimension: px passes through, rem multiplies by rootFontSize (default 16), rounded to 4 decimals", () => {
     const ref = defineReferenceTokens({

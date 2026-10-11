@@ -32,11 +32,12 @@ import {
   serializeValueCss,
   type MemberResolver,
 } from "../serialize/values.js";
-import { terminalEntry } from "./shared/alias.js";
+import { CircularAliasError, getEntry, terminalEntry } from "./shared/alias.js";
 import type { GeneratorContext } from "./shared/context.js";
 import { resetRules, type CssResetOptions } from "./shared/reset.js";
 import { validateThemeNames } from "./shared/theme-source.js";
 import {
+  capitalize,
   escapeString,
   entryPath,
   escapeTemplateLiteral,
@@ -53,8 +54,7 @@ function sanitizeSegment(segment: string): string {
 }
 
 function capitalizeSegment(segment: string): string {
-  const sanitized = sanitizeSegment(segment);
-  return sanitized.charAt(0).toUpperCase() + sanitized.slice(1);
+  return capitalize(sanitizeSegment(segment));
 }
 
 /**
@@ -157,18 +157,6 @@ function resolveVariableReference(
   return `vars.${flat}`;
 }
 
-function resolveMemberReference(
-  registry: TokenRegistry,
-  keys: Map<string, string>,
-  memberAlias: string[],
-): string {
-  const target = registry.get(pathKey(memberAlias));
-  if (!target) {
-    throw new Error(`Alias target not found: ${pathKey(memberAlias)}`);
-  }
-  return resolveVariableReference(registry, keys, target);
-}
-
 /**
  * Post-order DFS over the alias graph: dependencies (alias/member targets)
  * are visited before the entry that references them, so by the time an entry
@@ -209,10 +197,7 @@ function topologicalEntries(config: GeneratorContext): TokenEntry[] {
 
   function visit(startKey: string): void {
     if (visited.has(startKey)) return;
-    const startEntry = registry.get(startKey);
-    if (!startEntry) {
-      throw new Error(`Alias target not found: ${startKey}`);
-    }
+    const startEntry = getEntry(registry, startKey);
     visiting.add(startKey);
     const stack: Frame[] = [
       { key: startKey, entry: startEntry, deps: dependencies(startEntry), index: 0 },
@@ -225,12 +210,9 @@ function topologicalEntries(config: GeneratorContext): TokenEntry[] {
         frame.index++;
         if (visited.has(dependency)) continue;
         if (visiting.has(dependency)) {
-          throw new Error(`Circular alias detected at token path: ${dependency}`);
+          throw new CircularAliasError(dependency);
         }
-        const dependencyEntry = registry.get(dependency);
-        if (!dependencyEntry) {
-          throw new Error(`Alias target not found: ${dependency}`);
-        }
+        const dependencyEntry = getEntry(registry, dependency);
         visiting.add(dependency);
         stack.push({
           key: dependency,
@@ -272,10 +254,7 @@ function expandedVarLines(
   const base = pathKey(entry.path);
 
   if (entry.alias) {
-    const target = config.registry.get(pathKey(entry.alias));
-    if (!target) {
-      throw new Error(`Alias target not found: ${pathKey(entry.alias)}`);
-    }
+    const target = getEntry(config.registry, entry.alias);
     // Walk to the terminal (non-alias) entry sharing this composite's shape,
     // so each cssProperty references that entry's own flattened member key.
     const current = terminalEntry(config.registry, target);
@@ -298,7 +277,11 @@ function expandedVarLines(
     ({ cssProperty, type: memberType, member }) => {
       const flat = keys.get(`${base}.${cssProperty}`)!;
       if (member.alias) {
-        const reference = resolveMemberReference(config.registry, keys, member.alias);
+        const reference = resolveVariableReference(
+          config.registry,
+          keys,
+          getEntry(config.registry, member.alias),
+        );
         return { key: flat, expression: derivedTemplate(reference) };
       }
       return {
@@ -332,7 +315,7 @@ function inlineCompositeVarLine(
       return escapeTemplateLiteral(serializeValueCss(memberType, member.$value));
     }
     hasAlias = true;
-    return `\${${resolveMemberReference(config.registry, keys, member.alias)}}`;
+    return `\${${resolveVariableReference(config.registry, keys, getEntry(config.registry, member.alias))}}`;
   };
   const template = serializeCompositeCss(type, value, resolve);
 
@@ -590,7 +573,5 @@ export function generateStylexFiles(
 }
 
 export function stylex(options: StylexPluginOptions): RecontentPlugin {
-  return outputPlugin("recontent:stylex", options, generateStylexFiles, () => ({
-    "@stylexjs/stylex": "^0.19.0",
-  }));
+  return outputPlugin("recontent:stylex", options, generateStylexFiles);
 }

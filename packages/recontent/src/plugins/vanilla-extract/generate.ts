@@ -13,7 +13,6 @@ import {
   type TokenType,
   type TokenTypeMap,
   type ThemeOverride,
-  type TokenRegistry,
   pathKey,
 } from "@recontentapp/core";
 import { registryComponents, type BuiltInComponentOptions } from "./registry/manifest.js";
@@ -36,7 +35,7 @@ import {
   validateBuiltInComponents,
 } from "./registry/index.js";
 import type { BreakpointBinding } from "./registry/types.js";
-import { terminalEntry } from "../shared/alias.js";
+import { getEntry, terminalEntry } from "../shared/alias.js";
 import type { GeneratorContext } from "../shared/context.js";
 import { resetRules, type CssResetOptions } from "../shared/reset.js";
 import { validateThemeNames } from "../shared/theme-source.js";
@@ -67,18 +66,6 @@ function resolveVariableReference(
   return variableReference(current);
 }
 
-function resolveMemberReference(
-  registry: TokenRegistry,
-  memberAlias: string[],
-  override: ThemeOverride | undefined,
-): string {
-  const target = registry.get(pathKey(memberAlias));
-  if (!target) {
-    throw new Error(`Alias target not found: ${pathKey(memberAlias)}`);
-  }
-  return resolveVariableReference(registry, target, override);
-}
-
 function setExpandedComposite(
   config: GeneratorContext,
   tree: SourceTree,
@@ -90,11 +77,11 @@ function setExpandedComposite(
   const overridden = override?.get(pathKey(entry.path));
 
   if (overridden === undefined && entry.alias) {
-    const target = config.registry.get(pathKey(entry.alias));
-    if (!target) {
-      throw new Error(`Alias target not found: ${pathKey(entry.alias)}`);
-    }
-    const targetRef = resolveVariableReference(config.registry, target, override);
+    const targetRef = resolveVariableReference(
+      config.registry,
+      getEntry(config.registry, entry.alias),
+      override,
+    );
     for (const { cssProperty } of expandedMembers(
       type,
       entry.$value as TokenTypeMap[typeof type],
@@ -111,7 +98,11 @@ function setExpandedComposite(
   for (const { cssProperty, type: memberType, member } of expandedMembers(type, resolved)) {
     if (member.alias) {
       setTreeValue(tree, [...base, cssProperty], {
-        value: resolveMemberReference(config.registry, member.alias, override),
+        value: resolveVariableReference(
+          config.registry,
+          getEntry(config.registry, member.alias),
+          override,
+        ),
         source: true,
       });
       continue;
@@ -146,7 +137,7 @@ function setInlineComposite(
     if (!member.alias) {
       return escapeTemplateLiteral(serializeValueCss(memberType, member.$value));
     }
-    return `\${${resolveMemberReference(config.registry, member.alias, override)}}`;
+    return `\${${resolveVariableReference(config.registry, getEntry(config.registry, member.alias), override)}}`;
   };
   const template = serializeCompositeCss(type, value, resolve);
   setTreeValue(tree, path, { value: `\`${template}\``, source: true });

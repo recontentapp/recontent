@@ -17,6 +17,9 @@ import { formatRule, generateCss, themeSelectorFor, type CssGeneratorOptions } f
 import { outputPlugin } from "./factory.js";
 import type { GeneratorContext } from "./shared/context.js";
 
+// Dot-separated CSS identifiers, e.g. `theme` or `base.tokens`.
+const CSS_LAYER_NAME_RE = /^[A-Za-z_][\w-]*(?:\.[A-Za-z_][\w-]*)*$/;
+
 const MAX_GROUP_DEPTH = 64;
 
 /** A single stamped token, a scale, or a plain object nesting either. The object structure defines the Tailwind key. */
@@ -493,6 +496,11 @@ export function generateTailwindFiles(
   const base = generateCss(config, cssOptions);
   if (base) {
     const { layer = "theme" } = options;
+    if (layer !== false && !CSS_LAYER_NAME_RE.test(layer)) {
+      throw new Error(
+        `Invalid tailwind layer "${layer}": expected a CSS identifier such as "theme".`,
+      );
+    }
     blocks.push(layer === false ? base : `@layer ${layer} {\n${base.replace(/^(?=.)/gm, "  ")}\n}`);
   }
 
