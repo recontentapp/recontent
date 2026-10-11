@@ -2,63 +2,59 @@ import { createLogger } from "../../logger.js";
 import { exitWithError } from "../utils/exit.js";
 import { generateConfigFromDtcg } from "../dtcg-import/index.js";
 import type { DtcgImportStats } from "../dtcg-import/index.js";
-import { findPreset, PRESET_NAMES } from "../presets/index.js";
-import { writeOutputFile } from "../utils/fs.js";
+import { getPreset } from "../presets/index.js";
+import { plural } from "../utils/format.js";
+import { displayPath, writeOutputFile } from "../utils/fs.js";
 
 export type InitOptions = {
   cwd: string;
   configPath: string;
-  /** Preset to scaffold from; ignored when `from` is given. */
-  preset?: string;
   force?: boolean;
-  /** DTCG sources (resolver, token files or directories) to generate the config from. */
-  from?: string[];
+  /** A preset name, or DTCG sources (resolver, token files or directories) to generate the config from. */
+  source: { preset: string } | { from: string[] };
 };
 
 function describeImport({ tokens, ref, system, themes, skipped }: DtcgImportStats): string {
-  return `Imported ${tokens} tokens (${ref} ref, ${system} system), ${themes} themes; skipped ${skipped}`;
+  const imported = `Imported ${plural(tokens, "token")} (${ref} ref, ${system} system) and ${plural(themes, "theme")}`;
+  return skipped > 0 ? `${imported}; skipped ${plural(skipped, "entry", "entries")}` : imported;
 }
 
 export async function runInit(options: InitOptions): Promise<void> {
-  const { configPath, cwd, from } = options;
+  const { configPath, cwd, source } = options;
 
-  const imported = from ? generateConfigFromDtcg({ sources: from, cwd }) : undefined;
-
-  let source: string;
-  let presetName: string | undefined;
-  if (imported) {
-    source = imported.source;
+  let text: string;
+  let imported: ReturnType<typeof generateConfigFromDtcg> | undefined;
+  let preset: ReturnType<typeof getPreset> | undefined;
+  if ("from" in source) {
+    imported = generateConfigFromDtcg({ sources: source.from, cwd });
+    text = imported.source;
   } else {
-    const preset = options.preset ? findPreset(options.preset) : undefined;
-    if (!preset) {
-      exitWithError(
-        `Unknown preset "${options.preset}". Available presets: ${PRESET_NAMES.join(", ")}.`,
-      );
-      return;
-    }
-    source = preset.source;
-    presetName = preset.name;
+    preset = getPreset(source.preset);
+    text = preset.source;
   }
+
+  const shownPath = displayPath(cwd, configPath);
 
   // `writeMode: "once"` checks existsSync() before writing — not perfectly
   // atomic, but avoids inverting control flow through a catch block.
-  const { written } = await writeOutputFile(configPath, source, cwd, {
+  const { written } = await writeOutputFile(configPath, text, cwd, {
     writeMode: options.force ? "always" : "once",
   });
 
   if (!written) {
-    exitWithError(
-      `recontent.config.ts already exists at "${configPath}". Use --force to overwrite.`,
-    );
+    exitWithError(`${shownPath} already exists. Use --force to overwrite.`);
     return;
   }
 
   const logger = createLogger();
   logger.info(
-    presetName ? `Created ${configPath} from the "${presetName}" preset` : `Created ${configPath}`,
+    preset ? `Created ${shownPath} from the "${preset.name}" preset` : `Created ${shownPath}`,
   );
   if (imported) {
     logger.info(describeImport(imported.stats));
     for (const warning of imported.warnings) logger.warn(warning);
   }
+  logger.info(
+    `Next: add plugins from "recontent/plugins" to ${shownPath}, then run \`recontent build\`.`,
+  );
 }

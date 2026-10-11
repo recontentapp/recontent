@@ -129,6 +129,9 @@ export async function loadConfig(
   options?: { resolveFrom?: string },
 ): Promise<Config> {
   const resolved = resolveConfigPath(configPath ?? DEFAULT_CONFIG);
+  if (!fs.existsSync(resolved)) {
+    throw new ConfigLoadError(`Config file not found: "${resolved}".`);
+  }
   const configDir = options?.resolveFrom ?? path.dirname(resolved);
 
   let module: Record<string, unknown>;
@@ -144,10 +147,7 @@ export async function loadConfig(
   } catch (cause) {
     if (cause instanceof ConfigLoadError) throw cause;
     const message = cause instanceof Error ? cause.message : "Unknown error loading config";
-    throw new ConfigLoadError(
-      `Failed to load config at "${resolved}": ${message}\nMake sure recontent.config.ts exists and exports the result of defineConfig().`,
-      { cause },
-    );
+    throw new ConfigLoadError(`Failed to load config at "${resolved}": ${message}`, { cause });
   }
 
   const config = extractConfig(module);

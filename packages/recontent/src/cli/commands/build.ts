@@ -7,8 +7,9 @@ import { ensureDependencies } from "../install-dependencies.js";
 import { loadConfig, type LogLevel } from "@recontentapp/core";
 import { collectLocalImports } from "../config-graph.js";
 import { diagnoseRegistry } from "../registry-diagnostics.js";
-import { exitWithError } from "../utils/exit.js";
-import { writeOutputFile } from "../utils/fs.js";
+import { exitWithError, reportError, summarizeDiagnostics } from "../utils/exit.js";
+import { displayPath, writeOutputFile } from "../utils/fs.js";
+import { plural } from "../utils/format.js";
 
 export type BuildOptions = {
   cwd: string;
@@ -33,8 +34,7 @@ async function watchBuild(options: BuildOptions): Promise<void> {
     try {
       await buildOnce(options, { exitOnError: false });
     } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      logger.error(message);
+      reportError(error, options.logLevel === "debug");
     }
   };
 
@@ -136,8 +136,12 @@ async function buildOnce(
   for (const diagnostic of config.diagnostics) {
     logger.warn(diagnostic.message);
   }
+  let warnings = config.diagnostics.length;
 
-  const abort = (message: string) => {
+  // Each diagnostic is logged where it is found; aborting only adds the
+  // closing "N errors, M warnings" line, so no error is reported twice.
+  const abort = (errors: number) => {
+    const message = `build failed: ${summarizeDiagnostics(errors, warnings)}`;
     if (exitOnError) {
       exitWithError(message);
     } else {
@@ -150,7 +154,7 @@ async function buildOnce(
     for (const diagnostic of registryDiagnostics) {
       logger.error(diagnostic.message);
     }
-    abort("Build aborted: the token registry contains broken or circular aliases.");
+    abort(registryDiagnostics.length);
     return;
   }
 
@@ -162,7 +166,9 @@ async function buildOnce(
   ensureDependencies(configDir, config.resolve, effectiveLogLevel);
 
   if (config.plugins.length === 0) {
-    logger.info("No plugins configured in recontent.config.ts");
+    logger.warn(
+      `No plugins configured in ${displayPath(options.cwd, options.configPath)}; add some from "recontent/plugins" to generate output.`,
+    );
     return;
   }
 
@@ -172,37 +178,49 @@ async function buildOnce(
     result = await runPlugins(config, { root: configDir, mode, logger });
   } catch (error) {
     if (error instanceof MissingDesignTokensError) {
-      abort(error.message);
+      for (const message of error.errors) {
+        logger.error(message);
+      }
+      abort(error.errors.length);
       return;
     }
     throw error;
   }
 
+  let errors = 0;
   for (const diagnostic of result.diagnostics) {
     if (diagnostic.severity === "error") {
+      errors += 1;
       logger.error(diagnostic.message);
     } else {
+      warnings += 1;
       logger.warn(diagnostic.message);
     }
   }
 
-  if (result.diagnostics.some((diagnostic) => diagnostic.severity === "error")) {
-    abort("Build aborted: one or more plugins reported an error.");
+  if (errors > 0) {
+    abort(errors);
     return;
   }
 
+  let written = 0;
+  let skipped = 0;
   for (const file of result.files) {
-    const { path: outputPath, written } = await writeOutputFile(
+    const { path: outputPath, written: wasWritten } = await writeOutputFile(
       file.path,
       file.content,
       configDir,
       { writeMode: file.writeMode },
     );
-    if (written) {
-      logger.info(`Wrote ${outputPath}`);
-      logger.debug(`Wrote ${file.content.length.toLocaleString()} bytes to ${outputPath}.`);
+    const shownPath = displayPath(options.cwd, outputPath);
+    if (wasWritten) {
+      written += 1;
+      logger.info(`Wrote ${shownPath}`);
+      logger.debug(`Wrote ${file.content.length.toLocaleString()} bytes to ${shownPath}.`);
     } else {
-      logger.info(`Skipped ${outputPath} (already exists)`);
+      skipped += 1;
+      logger.info(`Skipped ${shownPath} (already exists)`);
     }
   }
+  logger.info(`Wrote ${plural(written, "file")}${skipped > 0 ? ` (${skipped} skipped)` : ""}`);
 }

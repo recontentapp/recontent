@@ -263,12 +263,100 @@ test("formatDiff json is the raw diff plus its comparison context, empty or not"
   ]);
   const empty = diffConfigs(config(registry), config(registry));
   const context = { config: "recontent.config.ts", rev: "HEAD" };
-  expect(JSON.parse(formatDiff(empty, "json", context))).toEqual({ ...context, ...empty });
+  expect(JSON.parse(formatDiff(empty, "json", context))).toMatchObject({ ...context, ...empty });
 
   const added = diffConfigs(config(new Map()), config(registry));
   const parsed = JSON.parse(formatDiff(added, "json", context));
   expect(parsed.added).toHaveLength(1);
   expect(parsed.added[0].path).toEqual(["ref", "color", "black"]);
+});
+
+test("formatDiff json carries a breaking verdict and counts", () => {
+  const registry: TokenRegistry = new Map([
+    ["ref.color.black", entry(["ref", "color", "black"], { $value: color("#000000") })],
+  ]);
+  const context = { config: "recontent.config.ts", rev: "HEAD" };
+
+  const removed = JSON.parse(
+    formatDiff(diffConfigs(config(registry), config(new Map())), "json", context),
+  );
+  expect(removed.breaking).toBe(true);
+  expect(removed.counts).toEqual({
+    added: 0,
+    removed: 1,
+    renamed: 0,
+    retyped: 0,
+    changed: 0,
+    breaking: 1,
+  });
+
+  const unchanged = JSON.parse(
+    formatDiff(diffConfigs(config(registry), config(registry)), "json", context),
+  );
+  expect(unchanged.breaking).toBe(false);
+});
+
+test("formatDiff names the compared revision when nothing changed", () => {
+  const diff = diffConfigs(config(new Map()), config(new Map()));
+  expect(formatDiff(diff, "markdown", { config: "recontent.config.ts", rev: "origin/main" })).toBe(
+    "No token changes between the working tree and origin/main.",
+  );
+});
+
+test("diffConfigs counts removed themes and removed theme overrides as breaking", () => {
+  const override = (keys: string[]): ThemeOverride =>
+    new Map(keys.map((key) => [key, color("#000000")])) as ThemeOverride;
+  const registry: TokenRegistry = new Map();
+
+  const removedTheme = diffConfigs(config(registry, { dark: override(["a"]) }), config(registry));
+  expect(removedTheme.themes.removedThemes).toEqual(["dark"]);
+  expect(hasBreakingChanges(removedTheme)).toBe(true);
+  expect(formatDiff(removedTheme)).toContain("**removed theme** `dark`");
+
+  const removedOverride = diffConfigs(
+    config(registry, { dark: override(["a", "b"]) }),
+    config(registry, { dark: override(["a"]) }),
+  );
+  expect(hasBreakingChanges(removedOverride)).toBe(true);
+  expect(formatDiff(removedOverride)).toContain("**removed override** `b` in theme `dark`");
+
+  const addedOverride = diffConfigs(
+    config(registry, { dark: override(["a"]) }),
+    config(registry, { dark: override(["a", "b"]) }),
+  );
+  expect(hasBreakingChanges(addedOverride)).toBe(false);
+});
+
+test("diffConfigs does not report an alias that only follows a renamed token", () => {
+  const base = config(
+    new Map([
+      ["ref.color.blue600", entry(["ref", "color", "blue600"], { $value: color("#0064e0") })],
+      [
+        "system.color.accent",
+        entry(["system", "color", "accent"], {
+          layer: "system",
+          $value: color("#0064e0"),
+          alias: ["ref", "color", "blue600"],
+        }),
+      ],
+    ]),
+  );
+  const head = config(
+    new Map([
+      ["ref.color.brand600", entry(["ref", "color", "brand600"], { $value: color("#0064e0") })],
+      [
+        "system.color.accent",
+        entry(["system", "color", "accent"], {
+          layer: "system",
+          $value: color("#0064e0"),
+          alias: ["ref", "color", "brand600"],
+        }),
+      ],
+    ]),
+  );
+  const diff = diffConfigs(base, head);
+  expect(diff.renamed).toHaveLength(1);
+  expect(diff.changed).toHaveLength(0);
 });
 
 test("findExternalImports allows recontent and type-only imports", () => {

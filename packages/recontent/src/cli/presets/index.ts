@@ -11,6 +11,10 @@ export const PRESETS: readonly InitPreset[] = [neutral, material];
 
 export const PRESET_NAMES: string[] = PRESETS.map((preset) => preset.name);
 
-export function findPreset(name: string): InitPreset | undefined {
-  return PRESETS.find((preset) => preset.name === name);
+export function getPreset(name: string): InitPreset {
+  const preset = PRESETS.find((candidate) => candidate.name === name);
+  if (!preset) {
+    throw new Error(`Unknown preset "${name}". Available presets: ${PRESET_NAMES.join(", ")}.`);
+  }
+  return preset;
 }

@@ -72,6 +72,52 @@ function runCli(args: string[], options?: { cwd?: string }) {
   };
 }
 
+describe("recontent (global behavior)", () => {
+  test("a bare invocation prints help on stdout and exits 0", () => {
+    const result = runCli([]);
+
+    expect(result.status).toBe(0);
+    expect(result.stdout).toContain("Usage: recontent");
+  });
+
+  test("a usage error is a single line plus a pointer to --help, not the full help", () => {
+    const result = runCli(["bogus"]);
+
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain("error: unknown command 'bogus'");
+    expect(result.stderr).toContain("--help");
+    expect(result.stderr).not.toContain("Usage:");
+  });
+
+  test("global options work after the subcommand", () => {
+    const dir = makeScratchDir("global-after");
+    copyFixture("valid", dir);
+
+    expect(runCli(["build", "--cwd", dir, "--log-level", "debug"]).status).toBe(0);
+    expect(existsSync(path.join(dir, "dist/tokens.css"))).toBe(true);
+  });
+
+  test("rejects a --cwd that is not a directory", () => {
+    const result = runCli(["--cwd", "/nonexistent/recontent", "build"]);
+
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain("directory not found");
+  });
+
+  test("blames RECONTENT_LOG_LEVEL, not --log-level, for a bad environment value", () => {
+    const dir = makeScratchDir("log-level-env");
+    copyFixture("valid", dir);
+    const result = spawnSync("node", [binPath, "--cwd", dir, "build"], {
+      encoding: "utf-8",
+      env: { ...process.env, RECONTENT_LOG_LEVEL: "loud" },
+    });
+
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain('$RECONTENT_LOG_LEVEL must be "info" or "debug"');
+    expect(result.stderr).not.toContain("--log-level");
+  });
+});
+
 describe("recontent init", () => {
   test("scaffolds a config file and exits 0", () => {
     const dir = makeScratchDir("init");
@@ -107,11 +153,25 @@ describe("recontent init", () => {
     expect(readFileSync(configPath, "utf-8")).toContain("defineConfig(");
   });
 
+  test("honors -c for the file it writes, and says so in its messages", () => {
+    const dir = makeScratchDir("init-config-flag");
+    const result = runCli(["--cwd", dir, "init", "neutral", "-c", "tokens.config.ts"]);
+
+    expect(result.status).toBe(0);
+    expect(result.stderr).toContain("Created tokens.config.ts");
+    expect(result.stderr).toContain("recontent build");
+    expect(existsSync(path.join(dir, "tokens.config.ts"))).toBe(true);
+
+    const again = runCli(["--cwd", dir, "init", "neutral", "-c", "tokens.config.ts"]);
+    expect(again.status).toBe(1);
+    expect(again.stderr).toContain("tokens.config.ts already exists");
+  });
+
   test("requires a preset", () => {
     const dir = makeScratchDir("init-nopreset");
     const result = runCli(["--cwd", dir, "init"]);
 
-    expect(result.status).toBe(2);
+    expect(result.status).toBe(1);
     expect(result.stderr).toContain("preset");
     expect(existsSync(path.join(dir, "recontent.config.ts"))).toBe(false);
   });
@@ -120,7 +180,7 @@ describe("recontent init", () => {
     const dir = makeScratchDir("init-unknown");
     const result = runCli(["--cwd", dir, "init", "bootstrap"]);
 
-    expect(result.status).toBe(2);
+    expect(result.status).toBe(1);
     for (const name of PRESET_NAMES) {
       expect(result.stderr).toContain(name);
     }
@@ -148,12 +208,24 @@ describe("recontent init --from", () => {
     const { dir, result } = initFromFixture("init-from");
 
     expect(result.status).toBe(0);
-    expect(result.stderr).toContain("Imported 30 tokens (18 ref, 12 system), 2 themes; skipped 6");
-    expect(result.stderr).toContain('[recontent:warning] Skipped "misc.fluid"');
+    expect(result.stderr).toContain(
+      "Imported 30 tokens (18 ref, 12 system) and 2 themes; skipped 6 entries",
+    );
+    expect(result.stderr).toContain('warning: Skipped "misc.fluid"');
     const config = readFileSync(path.join(dir, "recontent.config.ts"), "utf-8");
     expect(config).toContain("defineTheme(");
 
     expect(runCli(["--cwd", dir, "build"]).status).toBe(0);
+  });
+
+  test("is mutually exclusive with a preset", () => {
+    const dir = makeScratchDir("init-from-and-preset");
+    copyFixture("dtcg", dir);
+    const result = runCli(["--cwd", dir, "init", "--from", resolver, "neutral"]);
+
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain("mutually exclusive");
+    expect(existsSync(path.join(dir, "recontent.config.ts"))).toBe(false);
   });
 
   test("accepts token files and directories", () => {
@@ -165,11 +237,12 @@ describe("recontent init --from", () => {
       "init",
       "--from",
       "primitives.tokens.json",
+      "--from",
       "semantic.tokens.json",
     ]);
 
     expect(result.status).toBe(0);
-    expect(result.stderr).toContain("0 themes");
+    expect(result.stderr).toContain("and 0 themes");
     expect(runCli(["--cwd", dir, "build"]).status).toBe(0);
   });
 
@@ -339,6 +412,38 @@ describe("recontent build", () => {
     expect(existsSync(path.join(dir, "dist/tokens.css"))).toBe(false);
   });
 
+  test("reports each error once, then closes with a count summary", () => {
+    const dir = makeScratchDir("build-summary");
+    copyFixture("broken-alias", dir);
+
+    const lines = runCli(["--cwd", dir, "build"]).stderr.trim().split("\n");
+
+    expect(lines).toHaveLength(2);
+    expect(lines[0]).toMatch(/^error: Broken alias/);
+    expect(lines[1]).toBe("error: build failed: 1 error, 0 warnings");
+  });
+
+  test("lists written files relative to --cwd and summarizes them", () => {
+    const dir = makeScratchDir("build-wrote");
+    copyFixture("valid", dir);
+
+    const { stderr } = runCli(["--cwd", dir, "build"]);
+
+    expect(stderr).toContain("Wrote dist/tokens.css\n");
+    expect(stderr).not.toContain(dir);
+    expect(stderr).toMatch(/Wrote \d+ files\n$/);
+  });
+
+  test("warns, and still exits 0, when the config has no plugins", () => {
+    const dir = makeScratchDir("build-no-plugins");
+    expect(runCli(["--cwd", dir, "init", "neutral"]).status).toBe(0);
+
+    const result = runCli(["--cwd", dir, "build"]);
+
+    expect(result.status).toBe(0);
+    expect(result.stderr).toContain("warning: No plugins configured in recontent.config.ts");
+  });
+
   test("runs the configured css plugin and writes tokens.css", () => {
     const dir = makeScratchDir("build");
     copyFixture("valid", dir);
@@ -382,6 +487,28 @@ describe("recontent build", () => {
     expect(json.system.color.accent.$value).toBe("{ref.color.brand.primary}");
   });
 
+  test("a missing -c file is reported as such, without a stale default-name hint", () => {
+    const dir = makeScratchDir("build-missing-explicit");
+    const result = runCli(["--cwd", dir, "build", "-c", "other.config.ts"]);
+
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain("Config file not found");
+    expect(result.stderr).toContain("other.config.ts");
+    expect(result.stderr).not.toContain("Make sure");
+  });
+
+  test("reports a config load error once, without internal paths", () => {
+    const dir = makeScratchDir("build-bad-import");
+    writeFileSync(path.join(dir, "recontent.config.ts"), 'import "does-not-exist-pkg";\n');
+
+    const result = runCli(["--cwd", dir, "build"]);
+
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain("Failed to load config");
+    expect(result.stderr).not.toContain("caused by");
+    expect(result.stderr).not.toContain("Require stack");
+  });
+
   test("fails with a non-zero exit code when the config file is missing", () => {
     const dir = makeScratchDir("build-missing-config");
 
@@ -419,6 +546,26 @@ describe("recontent diff", () => {
     expect(result.stdout).toContain("No token changes between the working tree and HEAD");
   });
 
+  test("names the compared revision when nothing changed", () => {
+    const dir = makeScratchDir("diff-none-rev");
+    copyFixture("valid", dir);
+    initRepoWithCommit(dir);
+    git(["tag", "v1"], dir);
+
+    expect(runCli(["--cwd", dir, "diff", "v1"]).stdout).toContain("and v1.");
+  });
+
+  test("says there are no commits yet in a fresh repository", () => {
+    const dir = makeScratchDir("diff-no-commits");
+    copyFixture("valid", dir);
+    git(["init", "-q"], dir);
+
+    const result = runCli(["--cwd", dir, "diff"]);
+
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain("No commits yet");
+  });
+
   test("reports a changed token value against HEAD", () => {
     const dir = makeScratchDir("diff-changed");
     copyFixture("valid", dir);
@@ -451,6 +598,8 @@ describe("recontent diff", () => {
     const parsed = JSON.parse(result.stdout);
     expect(parsed.config).toBe("recontent.config.ts");
     expect(parsed.rev).toBe("HEAD");
+    expect(parsed.breaking).toBe(false);
+    expect(parsed.counts.changed).toBe(1);
     expect(parsed.changed).toHaveLength(1);
     expect(parsed.changed[0].to.path.join(".")).toBe("ref.color.brand.primary");
   });
@@ -462,7 +611,7 @@ describe("recontent diff", () => {
 
     const result = runCli(["--cwd", dir, "diff", "--format", "yaml"]);
 
-    expect(result.status).toBe(2);
+    expect(result.status).toBe(1);
     expect(result.stderr).toContain("markdown");
   });
 
@@ -488,5 +637,6 @@ describe("recontent diff", () => {
 
     const withBreaking = runCli(["--cwd", dir, "diff", "--fail-on-breaking"]);
     expect(withBreaking.status).toBe(1);
+    expect(withBreaking.stderr).toContain("error: 2 breaking changes found");
   });
 });

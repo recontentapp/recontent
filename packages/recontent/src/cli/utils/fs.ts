@@ -22,3 +22,8 @@ export async function writeOutputFile(
   await writeFile(resolved, content, "utf8");
   return { path: resolved, written: true };
 }
+
+/** `filePath` as shown to users: relative to `cwd`, so output doesn't differ between machines. */
+export function displayPath(cwd: string, filePath: string): string {
+  return path.relative(cwd, filePath) || ".";
+}
