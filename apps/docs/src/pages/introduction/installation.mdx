@@ -1,0 +1,70 @@
+---
+title: "Installation"
+description: "Install the recontent CLI in a project or a monorepo."
+---
+
+# Installation
+
+Recontent ships as a single npm package, [`recontent`](https://www.npmjs.com/package/recontent). It
+provides the CLI, the `defineConfig` / `tokens` API you import in `recontent.config.ts`, and the
+built-in plugins from `recontent/plugins`.
+
+## Install
+
+Add it as a dev dependency of the project that owns the tokens:
+
+:::code-group
+
+```bash [npm]
+npm install --save-dev recontent
+```
+
+```bash [yarn]
+yarn add --dev recontent
+```
+
+```bash [pnpm]
+pnpm add --save-dev recontent
+```
+
+:::
+
+Use a current Node.js LTS. The repository's own CI runs on Node 24.
+
+Run the CLI through your package manager (`npx recontent`, `yarn recontent`, `pnpm recontent`), or
+add scripts:
+
+```json [package.json]
+{
+  "scripts": {
+    "tokens": "recontent build",
+    "tokens:watch": "recontent build --watch"
+  }
+}
+```
+
+## Monorepos
+
+Install `recontent` in the package that contains `recontent.config.ts`. The config is loaded with
+`recontent` resolved from the config's own directory, so each package uses the version it
+installed.
+
+Every path the plugins write (`outDir`) is relative to the directory containing the config file,
+not to where you run the command. To run from the repository root, point at the config with `-c`:
+
+```bash
+recontent build -c packages/design-system/recontent.config.ts
+```
+
+## Config discovery
+
+Without `-c, --config`, `recontent` looks for `recontent.config.ts`, `.mts`, `.js` or `.mjs` in the
+current directory and then in each parent directory. The search stops at the first directory that
+has a `package.json` but no config, so it never wanders into an unrelated project.
+
+Use `--cwd <dir>` to resolve relative paths (including `-c`) against another directory. See the
+[CLI overview](/cli) for every global option.
+
+## Next
+
+Continue with [Getting started](/introduction/getting-started).

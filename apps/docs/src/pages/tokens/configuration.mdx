@@ -1,0 +1,101 @@
+---
+title: "Configuration"
+description: "Reference for defineConfig and the options a recontent.config.ts accepts."
+---
+
+# Configuration
+
+A project is configured by `recontent.config.ts`. Its default export must be the result of
+`defineConfig()`; a named `config` export is accepted too.
+
+```ts twoslash
+import { defineConfig, defineReferenceTokens, defineSystemTokens, tokens } from "recontent";
+import { css } from "recontent/plugins";
+
+const ref = defineReferenceTokens({ color: { white: tokens.color("#ffffff") } });
+const system = defineSystemTokens({ color: { background: ref.color.white } });
+
+export default defineConfig({
+  tokens: { ref, system, components: {} },
+  themes: {},
+  plugins: [css({ outDir: "src/generated" })],
+  logLevel: "info",
+});
+```
+
+Config files are loaded with [jiti](https://github.com/unjs/jiti), so TypeScript works with no
+build step. `recontent` and `recontent/plugins` are resolved from the config's directory, and
+`paths` aliases from a `tsconfig.json` next to it are honored. The config can be `recontent.config.ts`,
+`.mts`, `.js` or `.mjs`; see [config discovery](/cli#config-discovery).
+
+## defineConfig(input)
+
+`defineConfig` validates the input and returns the object the CLI consumes.
+
+### `tokens`
+
+|          |                                                                |
+| -------- | -------------------------------------------------------------- |
+| Type     | `{ ref: TokenTree; system: TokenTree; components: TokenTree }` |
+| Required | Yes                                                            |
+
+The three layers, as returned by [`defineReferenceTokens`, `defineSystemTokens` and
+`defineComponentTokens`](/guides/defining-tokens). All three keys are required; pass `{}` for a
+layer you do not use.
+
+The trees are walked once:
+
+- every token becomes a registry entry keyed by its path (`ref.color.blue.9`);
+- a name containing `.`, `{` or `}`, starting with `$` or equal to `__proto__`, `constructor` or
+  `prototype` throws;
+- a value that is not a token (a bare string, number or plain object) produces a **warning**
+  (`Unknown token value at "…". Use tokens.color(...) instead of an anonymous value.`) and is
+  ignored;
+- nesting deeper than 64 levels throws.
+
+### `themes`
+
+|         |                                 |
+| ------- | ------------------------------- |
+| Type    | `Record<string, ThemeOverride>` |
+| Default | `{}`                            |
+
+Named themes created with [`defineTheme`](/guides/working-with-themes). The keys are the theme
+names the plugins use in selectors and export names.
+
+### `plugins`
+
+|         |                                        |
+| ------- | -------------------------------------- |
+| Type    | `RecontentPlugin \| RecontentPlugin[]` |
+| Default | `[]`                                   |
+
+The outputs to generate: [built-in plugins](/plugins/css) or [your own](/plugin-api). Every entry
+must be an object with a `name` string, otherwise `defineConfig` throws. With no plugins,
+`recontent build` only validates and prints a warning.
+
+### `logLevel`
+
+|         |                     |
+| ------- | ------------------- |
+| Type    | `"info" \| "debug"` |
+| Default | `"info"`            |
+
+The verbosity of `recontent` for this project. `--log-level` and `$RECONTENT_LOG_LEVEL` take
+precedence, in that order. Any other value throws.
+
+### Other options
+
+The input type also accepts `observability` and `introspection` blocks. No `recontent` command reads
+them, so they are not documented here. A config that sets neither of those must provide `tokens`:
+`defineConfig` throws otherwise.
+
+## Types
+
+```ts twoslash
+import type { DefineConfigInput } from "recontent";
+
+const input: DefineConfigInput = { logLevel: "debug", plugins: [] };
+```
+
+`DefineConfigInput` is exported for code that builds configs programmatically.

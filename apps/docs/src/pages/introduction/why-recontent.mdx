@@ -1,0 +1,64 @@
+---
+title: "Why Recontent"
+description: "The problem Recontent solves, how tokens are layered and who it is for."
+---
+
+# Why Recontent
+
+## The problem
+
+A design system's decisions (colors, spacing, type, motion) end up copied into many places: a CSS
+file, a Tailwind config, a TypeScript constants module, a Figma library, a docs page. Each copy
+drifts. Renaming a token means hunting for every place that mentions it, and nothing tells you
+which change will break a consumer.
+
+## One source, many outputs
+
+Recontent keeps the decisions in one typed file, `recontent.config.ts`, and treats everything else
+as generated output. Plugins turn the same token registry into CSS variables, a Tailwind theme,
+vanilla-extract or StyleX variables, TypeScript constants, DTCG files or a documentation page. Add
+an output by adding a plugin; the tokens do not change.
+
+Because the config is TypeScript, mistakes show up early: a color scale with a missing step, a
+theme override for a token that does not exist, or an alias to the wrong type fail in the editor or
+at `recontent build`, not in production.
+
+## Three token layers
+
+Tokens live in three layers, each with its own `define*Tokens` function:
+
+| Layer                 | Function                | Holds                                                     | Example                                     |
+| --------------------- | ----------------------- | --------------------------------------------------------- | ------------------------------------------- |
+| **Reference** (`ref`) | `defineReferenceTokens` | Raw values: the palette, the spacing scale, font stacks.  | `ref.color.blue[9]` is `#2563eb`            |
+| **System** (`system`) | `defineSystemTokens`    | Meaning: what a value is _for_. Usually aliases to `ref`. | `system.color.accent` → `ref.color.blue[9]` |
+| **Components**        | `defineComponentTokens` | Decisions specific to one component.                      | `button.background` → `system.color.accent` |
+
+Code consumes the system and component layers; the reference layer is the vocabulary behind them.
+Themes override tokens where the _meaning_ stays and the _value_ changes (dark mode, density,
+brand), without touching component code. See [Defining tokens](/guides/defining-tokens) and
+[Working with themes](/guides/working-with-themes).
+
+## Aligned with DTCG
+
+Token types and value shapes follow the
+[Design Tokens Community Group format](https://www.designtokens.org/): colors carry a color space,
+dimensions have a unit, composites such as shadow and typography have fixed members. That keeps
+Recontent interoperable:
+
+- the [DTCG plugin](/plugins/dtcg) exports `.tokens.json` files for Figma, Tokens Studio and other
+  tools;
+- [`recontent init --from`](/cli/init#importing-dtcg-tokens) generates a config from DTCG files you
+  already have.
+
+## Built for humans, agents and CI
+
+Recontent is a command line tool. A person runs `recontent build --watch`, an agent runs
+`recontent build` and reads the diagnostics, and CI runs [`recontent diff`](/guides/diffs) to fail a
+pull request that removes or renames a token. Output is plain text on stdout and stderr, with
+meaningful exit codes.
+
+## Who it is for
+
+- Engineers who maintain a design system and want a single, reviewable source of truth.
+- Designers who work with tokens and need exports their tools understand.
+- Teams starting a design system, who can begin from a preset instead of an empty file.

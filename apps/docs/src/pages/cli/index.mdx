@@ -1,0 +1,75 @@
+---
+title: "CLI overview"
+description: "Global options, config discovery, output streams and exit codes of the recontent CLI."
+---
+
+# CLI overview
+
+```bash
+recontent [options] <command>
+```
+
+| Command               | Description                                                        |
+| --------------------- | ------------------------------------------------------------------ |
+| [`init`](/cli/init)   | Scaffold a `recontent.config.ts` from a preset or from DTCG files. |
+| [`build`](/cli/build) | Run the configured plugins and write their output.                 |
+| [`diff`](/cli/diff)   | Compare the config's tokens against a previous git revision.       |
+
+Running `recontent` with no arguments prints the help, like `recontent --help`.
+
+## Global options
+
+These come before or after the command name.
+
+| Option                | Description                                                                                                                                         |
+| --------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `-c, --config <path>` | Path to the config file. Without it, the config is [discovered](#config-discovery). For `init`, the file to create (default `recontent.config.ts`). |
+| `--cwd <dir>`         | Directory that every relative path in the run is resolved against. Default: the current directory. It must exist.                                   |
+| `--log-level <level>` | `info` or `debug`. See [Log level](#log-level).                                                                                                     |
+| `-V, --version`       | Print the version.                                                                                                                                  |
+| `-h, --help`          | Print help for the CLI or a command.                                                                                                                |
+
+`-c` accepts an absolute path, a path relative to `--cwd`, or a path starting with `~`.
+
+## Config discovery
+
+Without `-c`, `recontent` looks for `recontent.config.ts`, `recontent.config.mts`,
+`recontent.config.js` and `recontent.config.mjs`, in that order, starting in `--cwd` and moving up to
+each parent directory. The search stops:
+
+- at the first directory that contains one of those files (it is used), or
+- at the first directory that contains a `package.json` without a config (the project root, so an
+  unrelated config higher up is never picked), or
+- at the filesystem root.
+
+If nothing is found, the error lists the directories searched.
+
+All paths a plugin writes are relative to the directory containing the config, wherever you run
+the command from.
+
+## Log level
+
+`info` is the default. `debug` adds diagnostic lines (`debug: …`) and includes the stack trace of an
+error. The level comes from, in order of precedence:
+
+1. `--log-level`;
+2. the `RECONTENT_LOG_LEVEL` environment variable;
+3. `logLevel` in the [config](/tokens/configuration#loglevel).
+
+Any other value is an error.
+
+## Output streams
+
+- **stdout** carries only a command's result: help and version text, and the output of
+  `recontent diff`. It is safe to redirect or pipe.
+- **stderr** carries everything else: progress (`Wrote …`), warnings (`warning: …`) and errors
+  (`error: …`).
+
+## Exit codes
+
+| Code | Meaning                                                                                                                                                                                                       |
+| ---- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `0`  | Success, or help and version output.                                                                                                                                                                          |
+| `1`  | Any failure: invalid usage or option value, a config that cannot be loaded, a build that reports errors, `init` on an existing file without `--force`, or `diff --fail-on-breaking` finding breaking changes. |
+
+Warnings never change the exit code.

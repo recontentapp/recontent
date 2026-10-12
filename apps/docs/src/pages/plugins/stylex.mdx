@@ -1,0 +1,65 @@
+---
+title: "StyleX"
+description: "Generate StyleX variables and themes from your tokens."
+---
+
+# StyleX
+
+`stylex()` generates [StyleX](https://stylexjs.com/) variables (`stylex.defineVars`), one StyleX
+theme per Recontent theme and typed key helpers for your scales.
+
+```ts twoslash
+// [!include ~/snippets/stylex.config.ts]
+```
+
+## Options
+
+```ts
+stylex(options: StylexPluginOptions): RecontentPlugin
+```
+
+| Option             | Type                 | Default  | Description                                    |
+| ------------------ | -------------------- | -------- | ---------------------------------------------- |
+| `outDir`           | `string`             | required | Output directory, relative to the config file. |
+| `fontFamily`       | a `fontFamily` token | required | Set on `body` by the generated reset.          |
+| `placeholderColor` | a `color` token      | required | Color of input placeholders in the reset.      |
+
+Plugin name: `recontent:stylex`.
+
+## Emitted files
+
+| File               | Content                                                                 |
+| ------------------ | ----------------------------------------------------------------------- |
+| `tokens.stylex.ts` | `export const vars = stylex.defineVars({ … })`: one flat key per token. |
+| `themes.ts`        | `<name>Theme = stylex.createTheme(vars, { … })` for each theme.         |
+| `scales.ts`        | A key union and a constant per scale (`RefColorGray`, `refColorGray`).  |
+| `reset.gen.css`    | A small CSS reset. Import it once.                                      |
+
+StyleX variables must be flat, so a token's path is turned into a camelCase key:
+`system.color.background` becomes `systemColorBackground`, and `ref.spacing.0-5` becomes
+`refSpacing05`. Typography and transition tokens get one key per member (`systemTypographyBodyFontSize`).
+If two tokens would produce the same key the build fails with a collision error; rename one of them.
+
+Aliases are emitted as derived variables, so a theme that overrides a referenced token changes
+everything that follows it.
+
+## Using it
+
+```tsx
+import * as stylex from "@stylexjs/stylex";
+import { vars } from "./generated/tokens.stylex";
+import { darkTheme } from "./generated/themes";
+import "./generated/reset.gen.css";
+
+const styles = stylex.create({
+  page: { backgroundColor: vars.systemColorBackground, color: vars.systemColorText },
+});
+
+export function App({ dark }: { dark: boolean }) {
+  return <main {...stylex.props(dark && darkTheme, styles.page)} />;
+}
+```
+
+Install `@stylexjs/stylex` and the StyleX plugin for your bundler. The
+[StyleX playground](https://github.com/recontentapp/recontentapp/tree/master/apps/stylex-playground)
+shows a working Vite setup.

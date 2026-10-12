@@ -1,0 +1,150 @@
+---
+title: "Composites"
+description: "Tokens made of several values: shadow, border, strokeStyle, transition, gradient and typography."
+---
+
+# Composites
+
+A composite token groups several values that belong together. Each member can be a raw value or a
+token from another layer, which makes it an alias, so a composite can follow your palette and
+spacing.
+
+| Type                          | CSS output                         |
+| ----------------------------- | ---------------------------------- |
+| [`shadow`](#shadow)           | one variable, a `box-shadow` list  |
+| [`border`](#border)           | one variable: `1px solid var(--…)` |
+| [`strokeStyle`](#strokestyle) | one variable: a style keyword      |
+| [`gradient`](#gradient)       | one variable: `linear-gradient(…)` |
+| [`transition`](#transition)   | three variables, one per member    |
+| [`typography`](#typography)   | five variables, one per member     |
+
+`transition` and `typography` have no single CSS value, so the CSS, Tailwind, vanilla-extract and
+StyleX plugins expand them into one variable per member
+(`--system-typography-body-font-size`).
+
+Wherever a member takes a dimension, color or number, you can write the input of the matching
+factory (`"16px"`, `"#2563eb"`, `1.5`) or pass a token.
+
+## shadow
+
+```ts twoslash
+import { tokens } from "recontent";
+
+const card = tokens.shadow({
+  color: "#00000026",
+  offsetX: "0px",
+  offsetY: "4px",
+  blur: "12px",
+  spread: "0px",
+});
+
+const layered = tokens.shadow([
+  { color: "#0000001a", offsetX: "0px", offsetY: "1px", blur: "3px", spread: "0px" },
+  { color: "#0000001a", offsetX: "0px", offsetY: "1px", blur: "2px", spread: "-1px", inset: true },
+]);
+```
+
+One layer or an array of layers. Every layer requires `color`, `offsetX`, `offsetY`, `blur` and
+`spread`; `inset` is optional. A layer can also be an existing shadow token, which is included by reference.
+
+CSS: `0px 4px 12px 0px #00000026`, joined with commas for several layers.
+
+## border
+
+```ts twoslash
+import { tokens } from "recontent";
+
+const hairline = tokens.border({ color: "#e4e4e7", width: "1px", style: "solid" });
+```
+
+| Member  | Type                          | Default   |
+| ------- | ----------------------------- | --------- |
+| `color` | color                         | required  |
+| `width` | dimension                     | required  |
+| `style` | a `strokeStyle` name or token | `"solid"` |
+
+CSS: `1px solid #e4e4e7`.
+
+## strokeStyle
+
+```ts twoslash
+import { tokens } from "recontent";
+
+tokens.strokeStyle("dashed");
+tokens.strokeStyle({ dashArray: ["4px", "2px"], lineCap: "round" });
+```
+
+A keyword (`solid`, `dashed`, `dotted`, `double`, `groove`, `ridge`, `outset` or `inset`) or a
+custom dash: a non-empty `dashArray` of dimensions plus a `lineCap` of `round`, `butt` or `square`.
+CSS has no custom dash, so the CSS output writes `dashed` for one; the DTCG output keeps the full
+value.
+
+## transition
+
+```ts twoslash
+import { tokens } from "recontent";
+
+const fast = tokens.transition({
+  duration: "150ms",
+  delay: "0ms",
+  timingFunction: [0.4, 0, 0.2, 1],
+});
+```
+
+| Member           | Type         | Default  |
+| ---------------- | ------------ | -------- |
+| `duration`       | duration     | required |
+| `delay`          | duration     | `"0ms"`  |
+| `timingFunction` | cubic bezier | required |
+
+CSS variables, for a token at `system.motion.fast`: `--system-motion-fast-transition-duration`,
+`-transition-delay` and `-transition-timing-function`.
+
+## gradient
+
+```ts twoslash
+import { tokens } from "recontent";
+
+const brand = tokens.gradient({
+  kind: "linear",
+  angle: "90deg",
+  stops: [
+    { color: "#2563eb", position: 0 },
+    { color: "#7c3aed", position: 1 },
+  ],
+});
+```
+
+| Option  | Type                              | Default    | Notes                                                                                                                        |
+| ------- | --------------------------------- | ---------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| `kind`  | `"linear" \| "radial" \| "conic"` | `"linear"` |                                                                                                                              |
+| `angle` | string                            | `"180deg"` | A number with `deg`, `grad`, `rad` or `turn`.                                                                                |
+| `stops` | at least 2                        | required   | `{ color, position }`; `position` is 0 to 1 and is clamped. A stop can also be a gradient token, whose stops are spliced in. |
+
+CSS: `linear-gradient(90deg, #2563eb 0%, #7c3aed 100%)`, `radial-gradient(…)` or
+`conic-gradient(from 90deg, …)`.
+
+## typography
+
+```ts twoslash
+import { tokens } from "recontent";
+
+const heading = tokens.typography({
+  fontFamily: "Inter, system-ui, sans-serif",
+  fontSize: "1.5rem",
+  fontWeight: 600,
+  letterSpacing: "-0.02em",
+  lineHeight: 1.25,
+});
+```
+
+| Member          | Type                | Default  |
+| --------------- | ------------------- | -------- |
+| `fontFamily`    | font family         | required |
+| `fontSize`      | dimension           | required |
+| `fontWeight`    | font weight or name | required |
+| `letterSpacing` | dimension           | `"0px"`  |
+| `lineHeight`    | number              | `1.4`    |
+
+CSS variables, for a token at `system.typography.body`: `--system-typography-body-font-family`,
+`-font-size`, `-font-weight`, `-letter-spacing` and `-line-height`.

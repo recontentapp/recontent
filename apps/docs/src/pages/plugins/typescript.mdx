@@ -1,0 +1,90 @@
+---
+title: "TypeScript"
+description: "Generate typed token constants for the web or for React Native."
+---
+
+# TypeScript
+
+Two plugins generate a `tokens.ts` module of typed constants, for code that needs token values at
+runtime: charts, canvas drawing, email templates, tests, or React Native.
+
+| Plugin               | Values are written as                   | Use it for            |
+| -------------------- | --------------------------------------- | --------------------- |
+| `typescript()`       | CSS strings (`"16px"`, `"#2563eb"`)     | Web code, charts, SSR |
+| `typescriptNative()` | React Native numbers and strings (`16`) | React Native, Expo    |
+
+They write the same file name, so give each its own `outDir` if you use both.
+
+## typescript()
+
+```ts twoslash
+// [!include ~/snippets/typescript.config.ts]
+```
+
+```ts
+typescript(options: TypeScriptPluginOptions): RecontentPlugin
+```
+
+| Option   | Type     | Default  | Description                                    |
+| -------- | -------- | -------- | ---------------------------------------------- |
+| `outDir` | `string` | required | Output directory, relative to the config file. |
+
+Plugin name: `recontent:typescript`. Emits `tokens.ts`.
+
+### Generated module
+
+```ts
+export const theme = { ref: themeRef, system: themeSystem, components: themeComponents };
+export const dark = { ref: darkRef, system: darkSystem, components: darkComponents };
+
+export type RefSpacing = "sm" | "md";
+export const refSpacing = theme.ref.spacing;
+
+export const themes = { theme, dark } as const;
+export type ThemeName = keyof typeof themes;
+export type Theme = (typeof themes)[ThemeName];
+export type BaseTheme = typeof theme;
+```
+
+- `theme` holds the base tokens, nested by layer and path. Aliases are references to the token they
+  point at, so the file reads like your config.
+- Each theme in your config is an additional constant with the same shape, named after the theme
+  (`dark`), with that theme's overrides applied.
+- Each [scale](/tokens/scales) gets a key union and a constant (`RefSpacing`, `refSpacing`), named
+  after its layer and path.
+- All values are `as const`, so `theme.system.color.text` has a literal type.
+- Composites: `shadow`, `border` and `gradient` are CSS strings; `typography` and `transition` are
+  objects keyed by CSS property (`fontSize`, `transitionDuration`…).
+
+Theme names must be valid TypeScript identifiers and cannot collide with the generated names.
+
+## typescriptNative()
+
+```ts
+typescriptNative(options: TypeScriptNativePluginOptions): RecontentPlugin
+```
+
+| Option         | Type     | Default  | Description                                                         |
+| -------------- | -------- | -------- | ------------------------------------------------------------------- |
+| `outDir`       | `string` | required | Output directory, relative to the config file.                      |
+| `rootFontSize` | `number` | `16`     | Pixels per `rem` and `em`, since native has no cascading font size. |
+
+Plugin name: `recontent:typescript-native`. Emits `tokens.ts` with the same structure as above and
+values in the shapes React Native expects:
+
+| Token type   | Output                                                                                                                  |
+| ------------ | ----------------------------------------------------------------------------------------------------------------------- |
+| `dimension`  | A number of pixels: `1rem` becomes `16`                                                                                 |
+| `duration`   | A number of milliseconds                                                                                                |
+| `fontFamily` | The first family in the list                                                                                            |
+| `fontWeight` | A string (`"400"`)                                                                                                      |
+| `color`      | A CSS color string (non-sRGB colors are approximated, with a warning)                                                   |
+| `border`     | `{ borderColor, borderWidth, borderStyle }`                                                                             |
+| `shadow`     | `{ shadowColor, shadowOffset, shadowRadius, shadowOpacity }`                                                            |
+| `typography` | `{ fontFamily, fontSize, fontWeight, letterSpacing, lineHeight }`, with `lineHeight` in pixels (multiplier × font size) |
+| `transition` | `{ duration, delay, timingFunction }`                                                                                   |
+| `gradient`   | `{ kind, angle, stops }`                                                                                                |
+
+React Native has no equivalent for some CSS features. The plugin picks the closest value and prints a
+warning: only the first layer of a multi-layer shadow is kept, `inset` and `spread` are dropped, a
+custom `strokeStyle` dash becomes `dashed`, and `double`, `groove` and the like become `solid`.

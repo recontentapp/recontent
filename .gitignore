@@ -193,3 +193,6 @@ dist
 .turbo
 
 storybook-static/
+
+# Vocs
+.vocs/

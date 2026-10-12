@@ -25,6 +25,15 @@
       "entry": ["recontent.config.ts"],
       "project": ["src/**/*.{ts,tsx}", "*.ts"],
       "ignoreDependencies": ["tailwindcss"]
+    },
+    "apps/docs": {
+      "entry": [
+        "vocs.config.ts",
+        "src/pages/**/*.{md,mdx,tsx}",
+        "src/snippets/*.config.ts",
+        "test/*.test.mjs"
+      ],
+      "project": ["src/**/*.ts", "test/*.mjs", "*.ts"]
     }
   }
 }

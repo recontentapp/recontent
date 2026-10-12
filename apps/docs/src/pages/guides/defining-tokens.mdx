@@ -1,0 +1,156 @@
+---
+title: "Defining tokens"
+description: "Write reference, system and component tokens, alias between layers and document them."
+---
+
+# Defining tokens
+
+Tokens are declared in `recontent.config.ts` with three functions, one per layer. Each takes a
+plain object tree and returns the same tree with every token _stamped_ with its layer and path, so
+later layers can reference earlier ones with full autocomplete.
+
+## The three layers
+
+```ts twoslash
+import {
+  defineComponentTokens,
+  defineReferenceTokens,
+  defineSystemTokens,
+  tokens,
+} from "recontent";
+
+// Raw values: the vocabulary.
+const ref = defineReferenceTokens({
+  color: {
+    blue: tokens.colorScale({ 500: "#3b82f6", 700: "#1d4ed8" }),
+    white: tokens.color("#ffffff"),
+  },
+  spacing: tokens.dimensionScale({ sm: "8px", md: "16px" }),
+});
+
+// Meaning: what the values are for.
+const system = defineSystemTokens({
+  color: {
+    accent: ref.color.blue[500],
+    onAccent: ref.color.white,
+  },
+  spacing: ref.spacing,
+});
+
+// Decisions that belong to one component.
+const components = defineComponentTokens({
+  button: {
+    background: system.color.accent,
+    foreground: system.color.onAccent,
+    paddingX: system.spacing.md,
+  },
+});
+```
+
+The `tokens.*` factories create the values; see the [Tokens reference](/tokens/primitives) for every
+type. Inside a layer, nest objects freely: every group name becomes part of the token path.
+
+Token paths are prefixed by layer, except for components:
+
+| Layer      | Example path          | CSS variable            |
+| ---------- | --------------------- | ----------------------- |
+| Reference  | `ref.color.blue.500`  | `--ref-color-blue-500`  |
+| System     | `system.color.accent` | `--system-color-accent` |
+| Components | `button.background`   | `--button-background`   |
+
+## Aliasing across layers
+
+Using a token from `defineReferenceTokens` or `defineSystemTokens` as the value of another token
+creates an **alias**, not a copy. In the example above, `system.color.accent` points at
+`ref.color.blue[500]`:
+
+- the CSS plugin emits `--system-color-accent: var(--ref-color-blue-500);`;
+- a [theme](/guides/working-with-themes) that overrides `ref.color.blue.500` changes every token
+  that aliases it;
+- [`recontent diff`](/guides/diffs) tells an alias change apart from a value change.
+
+Use a raw value (`tokens.color("#ffffff")`) where a token has no reason to be shared. Composites
+alias their members the same way:
+
+```ts twoslash
+import { defineReferenceTokens, defineSystemTokens, tokens } from "recontent";
+
+const ref = defineReferenceTokens({
+  fontFamily: { sans: tokens.fontFamily("Inter, system-ui, sans-serif") },
+  fontSize: { base: tokens.dimension("1rem") },
+});
+
+const system = defineSystemTokens({
+  typography: {
+    body: tokens.typography({
+      fontFamily: ref.fontFamily.sans,
+      fontSize: ref.fontSize.base,
+      fontWeight: "regular",
+      lineHeight: 1.5,
+    }),
+  },
+});
+```
+
+## Scales
+
+A scale is a group of tokens of one type with a fixed set of keys, such as a spacing ramp or a color
+palette. Create one with a `tokens.*Scale()` factory (see [Scales](/tokens/scales)). Generators use
+scale metadata to emit typed key unions and to bind whole scales to plugin options, for example
+`Box: { spacing: system.spacing }` in the [vanilla-extract plugin](/plugins/vanilla-extract).
+
+`tokens.generateColorScale()` builds a 12-step color scale from a single color:
+
+```ts twoslash
+import { defineReferenceTokens, tokens } from "recontent";
+
+const ref = defineReferenceTokens({
+  color: { brand: tokens.generateColorScale({ base: "#2563eb" }) },
+});
+
+const accent = ref.color.brand[9]; // your base color, used verbatim
+```
+
+## Descriptions and deprecations
+
+Every token and scale has three chainable methods:
+
+```ts twoslash
+import { defineSystemTokens, tokens } from "recontent";
+
+const system = defineSystemTokens({
+  color: {
+    surface: tokens.color("#ffffff").describe("Default page background"),
+    legacyBlue: tokens.color("#0000ff").deprecate("Use color.accent"),
+    brand: tokens.color("#2563eb").extend("figma", { variableId: "VariableID:1:2" }),
+  },
+});
+```
+
+| Method                     | Effect                                                                              |
+| -------------------------- | ----------------------------------------------------------------------------------- |
+| `.describe(text)`          | Sets `$description`. Becomes a CSS comment, and shows in the Docs and DTCG outputs. |
+| `.deprecate(reason?)`      | Sets `$deprecated` (`true`, or your reason). Exported to DTCG and shown in docs.    |
+| `.extend(namespace, data)` | Adds `$extensions[namespace]`. Exported to DTCG.                                    |
+
+Each method returns a new token, so calls chain.
+
+## Naming rules
+
+A group or token name cannot contain `.`, `{` or `}`, cannot start with `$`, and cannot be
+`__proto__`, `constructor` or `prototype`. Numeric names such as `500` are fine.
+
+Writing a bare value instead of a token (`accent: "#2563eb"`) is reported as a warning at build
+time, naming the factory to use, and the value is ignored.
+
+## Importing existing DTCG tokens
+
+If your tokens already exist in the DTCG format, generate the config instead of writing it:
+
+```bash
+recontent init --from tokens/
+```
+
+Literal tokens become `ref` tokens, tokens that reference others become `system` tokens, and each
+extra theme or modifier context becomes a theme. See
+[`init --from`](/cli/init#importing-dtcg-tokens) for the accepted inputs and what is skipped.

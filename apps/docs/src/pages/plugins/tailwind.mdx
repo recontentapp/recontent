@@ -1,0 +1,104 @@
+---
+title: "Tailwind"
+description: "Generate a Tailwind CSS v4 theme from your tokens."
+---
+
+# Tailwind
+
+`tailwind()` writes one CSS file for Tailwind CSS **v4**: your token variables plus a `@theme inline`
+block that maps them to Tailwind's theme namespaces. Utilities such as `bg-accent`, `p-4` or
+`font-sans` then resolve to your tokens, and themes keep working at runtime because the utilities
+point at variables.
+
+```ts twoslash
+// [!include ~/snippets/tailwind.config.ts]
+```
+
+Import the result after Tailwind:
+
+```css [src/index.css]
+@import "tailwindcss";
+@import "./generated/tailwind.css";
+```
+
+## Options
+
+```ts
+tailwind(options: TailwindPluginOptions): RecontentPlugin
+```
+
+| Option                | Type                              | Default          | Description                                                                                                                        |
+| --------------------- | --------------------------------- | ---------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| `outDir`              | `string`                          | required         | Output directory, relative to the config file.                                                                                     |
+| `filename`            | `string`                          | `"tailwind.css"` | Name of the generated file.                                                                                                        |
+| `theme`               | `object`                          | none             | Which tokens to expose to Tailwind. See [Namespaces](#namespaces).                                                                 |
+| `themeVariants`       | `boolean \| string[]`             | `true`           | Emit a `@custom-variant` per theme: `true` for all, a list of theme names, or `false`.                                             |
+| `resetDefaults`       | `boolean \| "all" \| Namespace[]` | `false`          | Drop Tailwind's default values. `true` resets every namespace in `theme`; a list resets just those; `"all"` emits `--*: initial;`. |
+| `typographyUtilities` | `boolean`                         | `false`          | Emit a `text-<key>` utility that also sets the font family of each typography token.                                               |
+| `layer`               | `string \| false`                 | `"theme"`        | Wrap the variables in `@layer <name>`, or `false` for no layer.                                                                    |
+| `themeSelector`       | `"class" \| "attribute"`          | `"class"`        | Same as the [CSS plugin](/plugins/css#options).                                                                                    |
+| `themeAttribute`      | `string`                          | `"data-theme"`   | Same as the CSS plugin.                                                                                                            |
+
+Plugin name: `recontent:tailwind`.
+
+## Namespaces
+
+`theme` maps a Tailwind namespace to tokens. Each value is a token, a scale, or a nested object of
+them, and **the object's structure defines the Tailwind key**: `color: { accent: system.color.accent }`
+becomes `--color-accent` and the `bg-accent` / `text-accent` utilities; a scale adds its step
+(`primary` with step `500` gives `--color-primary-500`). Only tokens from `defineReferenceTokens`,
+`defineSystemTokens` and `defineComponentTokens` can be used, and each namespace accepts specific
+token types.
+
+| `theme` key   | Tailwind variable          | Accepts                                                                                                                          |
+| ------------- | -------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| `color`       | `--color-*`                | color                                                                                                                            |
+| `spacing`     | `--spacing`, `--spacing-*` | dimension (a bare token sets the `--spacing` base unit)                                                                          |
+| `radius`      | `--radius-*`               | dimension                                                                                                                        |
+| `font`        | `--font-*`                 | fontFamily                                                                                                                       |
+| `fontWeight`  | `--font-weight-*`          | fontWeight                                                                                                                       |
+| `text`        | `--text-*`                 | dimension, or a typography token (also sets `--text-<key>--line-height`, `--letter-spacing`, `--font-weight` and `--font-<key>`) |
+| `tracking`    | `--tracking-*`             | dimension                                                                                                                        |
+| `leading`     | `--leading-*`              | number, dimension                                                                                                                |
+| `ease`        | `--ease-*`                 | cubicBezier                                                                                                                      |
+| `breakpoint`  | `--breakpoint-*`           | dimension                                                                                                                        |
+| `container`   | `--container-*`            | dimension                                                                                                                        |
+| `blur`        | `--blur-*`                 | dimension                                                                                                                        |
+| `perspective` | `--perspective-*`          | dimension                                                                                                                        |
+| `aspect`      | `--aspect-*`               | number                                                                                                                           |
+| `shadow`      | `--shadow-*`               | shadow                                                                                                                           |
+| `insetShadow` | `--inset-shadow-*`         | shadow                                                                                                                           |
+| `dropShadow`  | `--drop-shadow-*`          | shadow                                                                                                                           |
+| `textShadow`  | `--text-shadow-*`          | shadow                                                                                                                           |
+| `duration`    | `--transition-duration-*`  | duration                                                                                                                         |
+| `defaults`    | `--default-*`              | `font`, `monoFont`, `transitionDuration`, `transitionTimingFunction`: one token each                                             |
+
+Except for shadows, the mapped variable points at the token's CSS variable
+(`--color-accent: var(--system-color-accent)`), so themes apply. A shadow that no theme overrides is
+inlined, so Tailwind's opacity and color modifiers work on it (`shadow-card/50`).
+
+## Theme variants
+
+With `themeVariants` on, each theme gets a variant, so `dark:bg-surface` applies when the theme
+class (or attribute) is present:
+
+```css
+@custom-variant dark (&:where(.dark, .dark *));
+```
+
+## Emitted files
+
+| File                           | Content                                                                                                                                                                                      |
+| ------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `tailwind.css` (or `filename`) | In order: `@custom-variant` rules, the `@theme { --color-*: initial; }` reset, the token variables and theme blocks (inside `@layer theme`), `@theme inline { … }` and any `@utility` rules. |
+
+## Diagnostics
+
+Errors stop the build; warnings are printed.
+
+| Severity | When                                                                                                                                                                                             |
+| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| error    | A token has a type its namespace does not accept; a bare token is used in a namespace other than `spacing`; two tokens produce the same variable; `text-<key>` would clash with `--color-<key>`. |
+| warning  | A `spacing` key also names a container size (`sm`, `md`, `lg`…), which would change `max-w-*`, `w-*` and `min-w-*`.                                                                              |
+| warning  | A shadow is overridden by a theme, so it stays a `var()` and opacity modifiers do not apply.                                                                                                     |
+| warning  | A theme is named like a built-in Tailwind variant (`sm`, `first`, `hover`…).                                                                                                                     |

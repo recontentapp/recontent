@@ -1,0 +1,148 @@
+---
+title: "Plugin API"
+description: "Write your own Recontent plugin to validate tokens or generate any file."
+---
+
+# Plugin API
+
+A plugin is an object with a `name` and up to four lifecycle hooks. It receives the resolved tokens
+and returns the files to write. Everything the built-in plugins do goes through this interface, so
+you can add outputs the same way: a Swift or Kotlin file, a Style Dictionary JSON, a linter, an
+icon sheet.
+
+Types are exported from `recontent/plugins`:
+
+```ts twoslash
+import type {
+  EmittedFile,
+  PluginContext,
+  PluginDiagnostic,
+  RecontentPlugin,
+} from "recontent/plugins";
+```
+
+## RecontentPlugin
+
+```ts
+interface RecontentPlugin {
+  name: string;
+  enforce?: "pre" | "post";
+  buildStart?(ctx: PluginContext): void | Promise<void>;
+  validate?(ctx: PluginContext): PluginDiagnostic[] | Promise<PluginDiagnostic[]>;
+  generate?(ctx: PluginContext): EmittedFile[] | Promise<EmittedFile[]>;
+  buildEnd?(ctx: PluginContext & { files: EmittedFile[] }): void | Promise<void>;
+}
+```
+
+| Member       | Description                                                                                                                                    |
+| ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| `name`       | Required. Namespaced, for example `"acme:a11y-contrast"` (built-ins use `recontent:css`). Used in logs, diagnostics and file-collision errors. |
+| `enforce`    | `"pre"` runs the plugin before plugins without `enforce`, `"post"` after them. Within each group, the order of the `plugins` array is kept.    |
+| `buildStart` | Called first, once per build, for every plugin.                                                                                                |
+| `validate`   | Return diagnostics for problems you find. Any `"error"` aborts the build before anything is written.                                           |
+| `generate`   | Return the files to write.                                                                                                                     |
+| `buildEnd`   | Called after generation with the files of **all** plugins in `ctx.files`. Nothing has been written yet.                                        |
+
+All hooks may be `async`. Each hook runs for every plugin before the next hook starts: all
+`buildStart`s, then all `validate`s, then all `generate`s, then all `buildEnd`s. If a hook throws,
+the build fails with the error's message and exit code `1`.
+
+## PluginContext
+
+| Field      | Type                            | Description                                                             |
+| ---------- | ------------------------------- | ----------------------------------------------------------------------- |
+| `registry` | `Map<string, TokenEntry>`       | Every token, keyed by its dotted path (`"system.color.accent"`).        |
+| `themes`   | `Record<string, ThemeOverride>` | Each theme's overrides: a `Map` from token key to the overriding value. |
+| `root`     | `string`                        | Absolute path of the directory containing the config.                   |
+| `logger`   | `Logger`                        | `info`, `warn`, `error` and `debug` methods. All write to stderr.       |
+| `mode`     | `"build" \| "watch" \| "check"` | `"watch"` under `build --watch`, otherwise `"build"`.                   |
+
+A `TokenEntry` describes one token:
+
+| Field                                        | Description                                                                               |
+| -------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| `path`                                       | `string[]`, for example `["system", "color", "accent"]`.                                  |
+| `layer`                                      | `"ref"`, `"system"` or `"components"`.                                                    |
+| `$type`                                      | The token type (`"color"`, `"dimension"`, …).                                             |
+| `$value`                                     | The resolved value, shaped by `$type` (see below). For an alias, the value of its target. |
+| `alias`                                      | `string[]`: the path of the token this one points at, if it is an alias.                  |
+| `scale`                                      | Metadata of the [scale](/tokens/scales) the token belongs to, if any.                     |
+| `$description`, `$deprecated`, `$extensions` | Metadata set with `.describe()`, `.deprecate()` and `.extend()`.                          |
+
+Values are structured, never strings:
+
+| `$type`                                                    | `$value`                                                                                                                |
+| ---------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `color`                                                    | `{ colorSpace, components, alpha, hex }`                                                                                |
+| `dimension`, `duration`                                    | `{ value, unit }`                                                                                                       |
+| `fontFamily`                                               | `{ value: string[] }`                                                                                                   |
+| `fontWeight`, `number`                                     | `{ value: number }` (a name for `fontWeight` is possible: use the table in [Primitives](/tokens/primitives#fontweight)) |
+| `cubicBezier`                                              | `{ value: [number, number, number, number] }`                                                                           |
+| `strokeStyle`                                              | `{ style }` or `{ dashArray, lineCap }`                                                                                 |
+| `shadow`, `border`, `transition`, `gradient`, `typography` | Objects whose members are `{ $value, alias? }`                                                                          |
+
+To apply a theme to a token, check `ctx.themes[name].get(key)` first, then fall back to the entry's
+own `$value`.
+
+## EmittedFile
+
+```ts
+type EmittedFile = {
+  path: string;
+  content: string;
+  writeMode?: "always" | "once";
+};
+```
+
+- `path` is relative to the directory containing the config: the plugin, not the CLI, owns its output
+  directory (that is why built-in plugins take an `outDir`). A path that resolves outside that
+  directory is refused.
+- `writeMode: "always"` (the default) rewrites the file when its content changed. `"once"` creates the
+  file if it does not exist and never touches it again. Use it for files the user is meant to edit.
+- Two plugins emitting the same `path` is an error that names both plugins.
+
+## PluginDiagnostic
+
+```ts
+type PluginDiagnostic = {
+  severity: "error" | "warning";
+  message: string;
+  path?: string[]; // the token, when the diagnostic is about one
+};
+```
+
+Errors and warnings are printed, in order, as `error: <message>` and `warning: <message>`. Prefix the
+message with your plugin's name so users know where it came from. Errors abort the build.
+
+## Example
+
+This plugin warns about undocumented system tokens and writes every color as JSON. It is a complete
+config, so you can run it as is.
+
+```ts twoslash
+// [!include ~/snippets/custom-plugin.config.ts]
+```
+
+Run `recontent build` and it prints one warning for every system token without a description and
+writes `src/generated/colors.json`:
+
+```json
+{
+  "ref.color.blue": "#2563eb",
+  "system.color.accent": "#2563eb"
+}
+```
+
+## Packaging a plugin
+
+A plugin is just a function that returns the object above, so publish it as an ordinary package
+whose peer dependency is `recontent`, and call it from the config like a built-in:
+
+```ts
+import { acmeColors } from "@acme/recontent-plugin-colors";
+
+export default defineConfig({
+  tokens: { ref, system, components },
+  plugins: [css({ outDir: "src/generated" }), acmeColors({ outDir: "src/generated" })],
+});
+```

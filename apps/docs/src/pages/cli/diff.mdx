@@ -1,0 +1,54 @@
+---
+title: "diff"
+description: "Compare the config's tokens against a previous git revision."
+---
+
+# diff
+
+Compares the tokens and themes in your working tree with those at an earlier git revision.
+
+```bash
+recontent diff [rev] [--fail-on-breaking] [--format <format>]
+```
+
+For a walkthrough with a GitHub Actions workflow, see the [Diffs guide](/guides/diffs).
+
+## Arguments and options
+
+| Argument / option    | Description                                                                                              |
+| -------------------- | -------------------------------------------------------------------------------------------------------- |
+| `[rev]`              | The git revision to compare against. Default: `HEAD`. Must be an ancestor of `HEAD`.                     |
+| `--fail-on-breaking` | Exit with code `1` when tokens, themes or theme overrides are removed, or tokens are renamed or retyped. |
+| `--format <format>`  | `markdown` (default) or `json`.                                                                          |
+
+Uses the [global options](/cli#global-options) `-c`, `--cwd` and `--log-level`.
+
+## Requirements
+
+- The config must be inside a git repository, and the repository needs at least one commit.
+- `rev` must be a valid revision and an ancestor of `HEAD`. This is enforced because diffing loads
+  and executes the config at that revision.
+- The history needed to confirm that must be present. In a shallow clone, fetch more depth first.
+
+The whole tree at `rev` is extracted to a temporary directory, so a config that imports other files
+loads correctly there. Nothing in your working tree or git state is changed.
+
+## Output
+
+The diff is written to **stdout**. In `markdown` format, a line `Comparing <config> against <rev>` is
+written to stderr, so redirecting stdout leaves just the markdown.
+
+- `markdown`: sections for **Breaking**, **Added**, **Changed** (a `diff` code block) and **Themes**,
+  or `No token changes between the working tree and <rev>.` when nothing differs.
+- `json`: one document with `config`, `rev`, `breaking` (boolean), `counts`
+  (`added`, `removed`, `renamed`, `retyped`, `changed`, `breaking`) and the lists `added`, `removed`,
+  `renamed`, `retyped`, `changed` and `themes`.
+
+## Exit codes
+
+| Code | When                                                                                                     |
+| ---- | -------------------------------------------------------------------------------------------------------- |
+| `0`  | The diff was printed (even if it contains breaking changes, without `--fail-on-breaking`).               |
+| `1`  | An error, or `--fail-on-breaking` with at least one breaking change (`error: 2 breaking changes found`). |
+
+See [What counts as breaking](/guides/diffs#what-counts-as-breaking).

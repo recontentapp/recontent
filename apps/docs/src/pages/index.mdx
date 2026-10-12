@@ -1,0 +1,32 @@
+---
+title: "Recontent"
+description: "Define design tokens once. Generate CSS, Tailwind, vanilla-extract, StyleX, TypeScript and DTCG."
+---
+
+# Recontent
+
+Recontent is a design system toolchain. You describe your design tokens once, in a typed
+`recontent.config.ts`, and the `recontent` CLI generates what your project consumes: CSS variables,
+a Tailwind theme, vanilla-extract or StyleX variables, TypeScript constants, DTCG files and a
+token catalogue. It runs from your terminal, from an agent or from CI.
+
+```ts twoslash
+// [!include ~/snippets/landing.config.ts]
+```
+
+```bash
+recontent build
+```
+
+That one config produces CSS custom properties (with a `.dark` theme block), a Tailwind v4 `@theme`
+file and a typed `tokens.ts`. Change a token, run `build` again, and every output follows.
+
+## Where to go next
+
+- **New here?** Follow [Getting started](/introduction/getting-started), then read
+  [Why Recontent](/introduction/why-recontent).
+- **Writing tokens?** See [Defining tokens](/guides/defining-tokens) and
+  [Working with themes](/guides/working-with-themes).
+- **Looking something up?** The [Tokens reference](/tokens/configuration), the
+  [Built-in plugins](/plugins/css) and the [CLI reference](/cli) list every option.
+- **Writing your own output?** Read the [Plugin API](/plugin-api).

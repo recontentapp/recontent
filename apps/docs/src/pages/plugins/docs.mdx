@@ -1,0 +1,51 @@
+---
+title: "Docs"
+description: "Generate a browsable token catalogue as HTML and Markdown."
+---
+
+# Docs
+
+`docs()` writes a catalogue of your tokens: every token with its type, value, alias, description and
+deprecation, grouped by layer and scale, with a column for each theme. Use the HTML for a static page
+your team can open or host, and the Markdown for repositories and agents.
+
+```ts twoslash
+// [!include ~/snippets/docs.config.ts]
+```
+
+## Options
+
+```ts
+docs(options: DocsPluginOptions): RecontentPlugin
+```
+
+| Option     | Type      | Default           | Description                                    |
+| ---------- | --------- | ----------------- | ---------------------------------------------- |
+| `outDir`   | `string`  | required          | Output directory, relative to the config file. |
+| `html`     | `boolean` | `true`            | Write `design.html`.                           |
+| `markdown` | `boolean` | `false`           | Write `design.md`.                             |
+| `title`    | `string`  | `"Design tokens"` | Page and document title.                       |
+
+At least one of `html` and `markdown` must be enabled, or `docs()` throws.
+
+Plugin name: `recontent:docs`.
+
+## Emitted files
+
+| File          | Content                                                                              |
+| ------------- | ------------------------------------------------------------------------------------ |
+| `design.html` | A single self-contained page, with a theme switcher that swaps the displayed values. |
+| `design.md`   | The same catalogue as Markdown tables.                                               |
+
+Both list, per layer and group, the token's path, type, resolved value, the value in each theme, the
+alias it points to and its description or deprecation notice:
+
+```md
+## System
+
+### system.color
+
+| Token                     | Type  | Value     | dark      | Notes                                  |
+| ------------------------- | ----- | --------- | --------- | -------------------------------------- |
+| `system.color.background` | color | `#ffffff` | `#18181b` | → `ref.color.white`<br>Page background |
+```

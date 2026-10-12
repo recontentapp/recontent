@@ -6,6 +6,7 @@
   },
   "ignorePatterns": [
     "**/dist/**",
+    "**/.vocs/**",
     "**/storybook-static/**",
     "**/*.gen.ts",
     "**/*.gen.tsx",

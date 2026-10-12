@@ -1,0 +1,136 @@
+---
+title: "Vanilla Extract"
+description: "Generate vanilla-extract theme contracts and an optional registry of ready-made React components."
+---
+
+# Vanilla Extract
+
+`vanillaExtract()` generates typed [vanilla-extract](https://vanilla-extract.style/) variables for
+your tokens. It can also generate a set of accessible React components, already wired to your
+tokens.
+
+```ts twoslash
+// [!include ~/snippets/vanilla-extract.config.ts]
+```
+
+Add the vanilla-extract bundler plugin for your tool (for Vite, `@vanilla-extract/vite-plugin`),
+and install `@vanilla-extract/css`. Components also need `react`.
+
+## Options
+
+```ts
+vanillaExtract(options: VanillaExtractPluginOptions): RecontentPlugin
+```
+
+| Option              | Type                                         | Default  | Description                                                                            |
+| ------------------- | -------------------------------------------- | -------- | -------------------------------------------------------------------------------------- |
+| `outDir`            | `string`                                     | required | Output directory, relative to the config file.                                         |
+| `fontFamily`        | a `fontFamily` token                         | required | Set on `body` by the generated reset.                                                  |
+| `placeholderColor`  | a `color` token                              | required | Color of input placeholders in the reset.                                              |
+| `focusRingColor`    | a `color` token                              | none     | Focus ring color used by components. Without it no focus-ring styles are generated.    |
+| `breakpoints`       | a `dimension` scale                          | none     | Breakpoints for responsive props and `useBreakpoint`. See [Breakpoints](#breakpoints). |
+| `builtInComponents` | `{ [ComponentName]: options }` or `string[]` | none     | The [components](#component-registry) to generate, with the tokens each one uses.      |
+
+Plugin name: `recontent:vanilla-extract`.
+
+## Emitted files
+
+| File                                            | Written when           | Content                                                                                                                                                      |
+| ----------------------------------------------- | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `tokens.css.ts`                                 | always                 | `vars` (the theme contract), `refVars`, `systemVars`, `componentVars`, a typed const and key union per scale, `themeClass` and `<name>ThemeClass` per theme. |
+| `reset.gen.css.ts`                              | always                 | A small CSS reset, as `globalStyle` calls.                                                                                                                   |
+| `components/<id>/<Name>.gen.css.ts`, `.gen.tsx` | per selected component | Styles and the React component.                                                                                                                              |
+| `renderElement.gen.tsx`, `responsive.gen.ts`    | with components        | Shared internals.                                                                                                                                            |
+| `iconMap.tsx`                                   | with components        | **Created once** and never overwritten: map icon names to your icon library.                                                                                 |
+| `components.dependencies.json`                  | with components        | The npm packages the selected components need.                                                                                                               |
+| `useBreakpoint.gen.ts`                          | with `breakpoints`     | A React hook for the current breakpoint.                                                                                                                     |
+
+## Using the tokens
+
+Apply `themeClass` to an element, and a theme class to switch themes. Everything inside is styled
+with the variables:
+
+```ts [card.css.ts]
+import { style } from "@vanilla-extract/css";
+import { vars } from "./generated/tokens.css";
+
+export const card = style({
+  background: vars.system.color.background,
+  color: vars.system.color.text,
+});
+```
+
+```tsx [App.tsx]
+import "./generated/reset.gen.css";
+import { darkThemeClass, themeClass } from "./generated/tokens.css";
+import { card } from "./card.css";
+
+export function App({ dark }: { dark: boolean }) {
+  return (
+    <main className={dark ? darkThemeClass : themeClass}>
+      <div className={card}>…</div>
+    </main>
+  );
+}
+```
+
+## Breakpoints
+
+`breakpoints` must be a `dimension` scale whose first entry is `0` (the base condition, which emits
+no media query), in ascending order, with the same unit after the first. Breakpoints become literal
+`@media (min-width: …)` conditions, because media queries cannot read variables, so **a theme cannot
+override a breakpoint**.
+
+```ts
+breakpoints: tokens.dimensionScale({ xs: "0px", sm: "576px", md: "768px", lg: "992px" }),
+```
+
+## Component registry
+
+`builtInComponents` generates source files into your project. They are regenerated from your tokens on
+every build, so do not edit them (the `.gen` in their names marks that), but they are plain React and
+vanilla-extract code you can read, and they add no runtime dependency on Recontent.
+
+Select components by name and bind each to the tokens it uses:
+
+```ts
+builtInComponents: {
+  Stack: { spacing: system.spacing },
+  Button: { /* variants, sizes, borderRadius… */ },
+}
+```
+
+Every option a component requires is checked when you build; a missing one stops the build with
+messages such as `Component "stack" requires config "spacing"`. A list of names
+(`builtInComponents: ["Stack"]`) is accepted too, but it provides no options, so it only works for
+components that need none.
+
+An option is one of:
+
+- a **token** (`borderRadius: ref.radius.element`) of the expected type;
+- a **scale** (`spacing: system.spacing`) of the expected type, which becomes a typed prop;
+- an **icon name** (`indicatorIcon: "chevronDown"`), resolved through `iconMap.tsx`;
+- **variants** or **sizes**: an object of named groups of the options above (`Button`'s `primary` and
+  `secondary` variants).
+
+If a component needs other components or internal helpers, they are generated for you.
+`components.dependencies.json` lists the packages to install for your selection, for example
+`@base-ui/react` for headless behavior, and `react-day-picker` and `date-fns` for `DateInput`.
+
+The full list of 51 components:
+
+| Group      | Components                                                                                                                                                         |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Layout     | `Box`, `Stack`, `StackItem`, `Grid`, `Divider`                                                                                                                     |
+| Content    | `Text`, `Icon`, `Avatar`, `Badge`, `QuoteBlock`, `Code`, `KeyboardShortcut`, `Link`, `MetadataList`, `TreeList`, `Timeline`                                        |
+| Actions    | `Button`, `IconButton`, `DropdownButton`, `ActionBar`, `SegmentedControls`, `Toggle`                                                                               |
+| Forms      | `Field`, `TextInput`, `NumberInput`, `DateInput`, `Textarea`, `Select`, `Autocomplete`, `FileInput`, `Slider`, `Checkbox`, `RadioList`, `Switch`, `SelectableCard` |
+| Navigation | `Breadcrumb`, `Outline`, `Pagination`, `Tabs`, `Steps`                                                                                                             |
+| Disclosure | `Collapsible`, `Accordion`                                                                                                                                         |
+| Feedback   | `Banner`, `Skeleton`, `Spinner`, `ProgressBar`, `Toast`                                                                                                            |
+| Overlays   | `Dialog`, `Drawer`, `Tooltip`, `Popover`                                                                                                                           |
+
+See the
+[vanilla-extract playground](https://github.com/recontentapp/recontentapp/tree/master/apps/vanilla-extract-playground)
+for a complete `recontent.config.ts` that binds every component, and its Storybook stories for each
+one in action (`yarn workspace vanilla-extract-playground storybook` in the repository).

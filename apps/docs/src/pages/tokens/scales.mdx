@@ -1,0 +1,105 @@
+---
+title: "Scales"
+description: "Group tokens of one type into a scale, or generate a color scale from one color."
+---
+
+# Scales
+
+A scale is a group of tokens of the same type with a fixed set of keys: a spacing ramp, a type
+scale, a color palette. A scale is more than a plain nested object because Recontent knows its type
+and keys, which it uses to:
+
+- emit typed key unions and helper constants in the TypeScript, vanilla-extract and StyleX outputs
+  (`RefSpacing = "sm" | "md"`);
+- check a theme override: a replacement scale must have the same keys and the same type;
+- bind a whole scale to a plugin option, such as `Box: { spacing: system.spacing }` in the
+  [vanilla-extract plugin](/plugins/vanilla-extract).
+
+Each factory takes an object whose keys are the steps. Keys can be strings or numbers. Each value is
+either the input its [primitive](/tokens/primitives) or [composite](/tokens/composites) factory
+accepts, or an existing token (which becomes an alias):
+
+```ts twoslash
+import { defineReferenceTokens, defineSystemTokens, tokens } from "recontent";
+
+const ref = defineReferenceTokens({
+  spacing: tokens.dimensionScale({
+    sm: "8px", // a raw input
+    md: tokens.dimension("16px"), // a token
+    lg: "24px",
+  }),
+});
+
+// A scale from an earlier layer becomes a scale of aliases.
+const system = defineSystemTokens({ spacing: ref.spacing });
+```
+
+Scales have `.describe()`, `.deprecate()` and `.extend()` too, applied to the scale as a whole.
+
+## Factories
+
+| Factory                       | Step value                         | Token type    |
+| ----------------------------- | ---------------------------------- | ------------- |
+| `tokens.colorScale()`         | what `tokens.color()` accepts      | `color`       |
+| `tokens.generateColorScale()` | _generated, see below_             | `color`       |
+| `tokens.dimensionScale()`     | what `tokens.dimension()` accepts  | `dimension`   |
+| `tokens.numberScale()`        | a number                           | `number`      |
+| `tokens.durationScale()`      | what `tokens.duration()` accepts   | `duration`    |
+| `tokens.cubicBezierScale()`   | `[x1, y1, x2, y2]`                 | `cubicBezier` |
+| `tokens.borderScale()`        | what `tokens.border()` accepts     | `border`      |
+| `tokens.shadowScale()`        | what `tokens.shadow()` accepts     | `shadow`      |
+| `tokens.transitionScale()`    | what `tokens.transition()` accepts | `transition`  |
+| `tokens.gradientScale()`      | what `tokens.gradient()` accepts   | `gradient`    |
+| `tokens.typographyScale()`    | what `tokens.typography()` accepts | `typography`  |
+
+There are no scale factories for `fontFamily`, `fontWeight` or `strokeStyle`; use a plain group.
+
+## generateColorScale
+
+```ts twoslash
+import { tokens } from "recontent";
+
+const brand = tokens.generateColorScale({ base: "#2563eb" });
+const neutral = tokens.generateColorScale({ base: "#71717a", neutral: true });
+const darkBrand = tokens.generateColorScale({ base: "#2563eb", appearance: "dark" });
+const named = tokens.generateColorScale({
+  base: "#2563eb",
+  steps: [
+    "bg",
+    "bgSubtle",
+    "tint",
+    "tintHover",
+    "tintActive",
+    "line",
+    "lineStrong",
+    "lineStronger",
+    "solid",
+    "solidHover",
+    "textMuted",
+    "text",
+  ],
+});
+```
+
+Builds a 12-step UI color scale from one color, in the manner of Radix Colors' custom palette tool:
+the two closest hand-tuned reference scales are blended, re-hued to your color and shifted to sit on
+the page background. The generated steps are fitted into the sRGB gamut and emitted as `oklch`
+colors.
+
+| Step  | Role                                                |
+| ----- | --------------------------------------------------- |
+| 1-2   | Backgrounds                                         |
+| 3-5   | Interactive components                              |
+| 6-8   | Borders                                             |
+| 9-10  | Solid colors (9 is your `base`, 10 its hover state) |
+| 11-12 | Text                                                |
+
+| Option       | Type                                        | Default   | Description                                                                                                                        |
+| ------------ | ------------------------------------------- | --------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| `base`       | `string \| ColorInput \| RawToken<"color">` | required  | The color the scale is built around. For an accent scale it is used verbatim as step 9, unless it is close to the page background. |
+| `appearance` | `"light" \| "dark"`                         | `"light"` | Whether the scale sits on a white page or a near-black one.                                                                        |
+| `neutral`    | `boolean`                                   | `false`   | Generate a gray scale (backgrounds, borders, text) tinted towards `base`. Step 9 is then not pinned to `base`.                     |
+| `steps`      | `readonly Key[]`                            | `1`-`12`  | Exactly 12 unique keys, from background to text.                                                                                   |
+
+Pair a light and a dark scale by overriding the scale in a [theme](/guides/working-with-themes), as
+long as the keys match.

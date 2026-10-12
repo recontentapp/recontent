@@ -1,0 +1,77 @@
+---
+title: "Getting started"
+description: "Scaffold a config from a preset, add a plugin and generate your first outputs."
+---
+
+# Getting started
+
+This takes a few minutes and ends with CSS variables generated from a token config.
+
+## 1. Scaffold a config
+
+[`recontent init`](/cli/init) writes a `recontent.config.ts` from a preset:
+
+```bash
+recontent init neutral
+```
+
+There are two presets: `neutral` (shadcn/ui's neutral base: OKLCH colors, radius, shadows, light and
+dark) and `material` (Material 3 baseline: tonal palettes, color roles, type scale, elevation,
+motion). Already have tokens in the DTCG format? Import them with
+[`recontent init --from`](/cli/init#importing-dtcg-tokens).
+
+## 2. Add a plugin
+
+The scaffolded config defines tokens and themes but no outputs. Add a plugin from
+`recontent/plugins`:
+
+```ts [recontent.config.ts]
+import { defineConfig /* ... */ } from "recontent";
+import { css } from "recontent/plugins";
+
+// ref, system, components and dark are defined above
+
+export default defineConfig({
+  tokens: { ref, system, components },
+  themes: { dark },
+  plugins: [css({ outDir: "src/generated" })],
+});
+```
+
+`outDir` is relative to the directory containing the config.
+
+## 3. Build
+
+```bash
+recontent build
+```
+
+```text
+Wrote src/generated/tokens.css
+Wrote 1 file
+```
+
+## 4. Use the output
+
+Import the generated file once, then use the variables:
+
+```css
+@import "./generated/tokens.css";
+
+body {
+  background: var(--system-color-background);
+  color: var(--system-color-foreground);
+}
+```
+
+Each token becomes a variable named after its path, so `system.color.background` is
+`--system-color-background`. The dark theme is a `.dark` block that overrides only the tokens it
+changes: add `class="dark"` to `<html>` to switch.
+
+## 5. Keep going
+
+- Edit tokens in `recontent.config.ts` and run `recontent build --watch` to rebuild on save.
+- Add more outputs: [Tailwind](/plugins/tailwind), [vanilla-extract](/plugins/vanilla-extract),
+  [StyleX](/plugins/stylex), [TypeScript](/plugins/typescript), [DTCG](/plugins/dtcg).
+- Learn how tokens are structured in [Defining tokens](/guides/defining-tokens).
+- Catch breaking changes in pull requests with [`recontent diff`](/guides/diffs).

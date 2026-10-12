@@ -1,0 +1,25 @@
+{
+  "name": "docs",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vocs dev",
+    "build": "vocs build",
+    "preview": "vocs preview",
+    "typecheck": "tsc --noEmit",
+    "test": "node --test"
+  },
+  "devDependencies": {
+    "@types/node": "24.1.0",
+    "@types/react": "19.3.0",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "react-server-dom-webpack": "19.3.0",
+    "recontent": "*",
+    "typescript": "6.0.3",
+    "vite": "8.3.4",
+    "vocs": "2.10.2",
+    "waku": "1.0.0-rc.3"
+  }
+}
