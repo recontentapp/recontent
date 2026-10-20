@@ -56,9 +56,11 @@ export type BaseTheme = typeof theme;
 - Composites: `shadow`, `border` and `gradient` are CSS strings; `typography` and `transition` are
   objects keyed by CSS property (`fontSize`, `transitionDuration`…).
 
-Theme names must be valid TypeScript identifiers and cannot collide with the generated names.
-
 ## typescriptNative()
+
+```ts twoslash
+// [!include ~/snippets/typescript-native.config.ts]
+```
 
 ```ts
 typescriptNative(options: TypeScriptNativePluginOptions): RecontentPlugin
@@ -88,3 +90,16 @@ values in the shapes React Native expects:
 React Native has no equivalent for some CSS features. The plugin picks the closest value and prints a
 warning: only the first layer of a multi-layer shadow is kept, `inset` and `spread` are dropped, a
 custom `strokeStyle` dash becomes `dashed`, and `double`, `groove` and the like become `solid`.
+
+## Diagnostics
+
+These apply to both plugins unless noted. Errors fail the build; warnings are printed.
+
+| Severity | When                                                                                                                                                                                           |
+| -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| error    | A theme name is not a valid TypeScript identifier, or it collides with a generated export (`theme`, `themes`, `Theme`, `ThemeName`, `BaseTheme`…), a reserved word or another theme's exports. |
+| error    | Two scales produce the same exported name (`RefSpacing`). Rename one of them.                                                                                                                  |
+| error    | `typescriptNative()`: a shadow or gradient stop aliases another shadow or gradient token.                                                                                                      |
+| warning  | `typescriptNative()`: a color is not sRGB, so its closest sRGB approximation is used.                                                                                                          |
+| warning  | `typescriptNative()`: a shadow has several layers, or sets `inset` or a non-zero `spread`.                                                                                                     |
+| warning  | `typescriptNative()`: a gradient is `conic`, or a radial gradient has an `angle`.                                                                                                              |

@@ -11,15 +11,15 @@ Compares the tokens and themes in your working tree with those at an earlier git
 recontent diff [rev] [--fail-on-breaking] [--format <format>]
 ```
 
-For a walkthrough with a GitHub Actions workflow, see the [Diffs guide](/guides/diffs).
+For a walkthrough with a GitHub Actions workflow, see the [Catching breaking changes](/guides/diffs) guide.
 
 ## Arguments and options
 
-| Argument / option    | Description                                                                                              |
-| -------------------- | -------------------------------------------------------------------------------------------------------- |
-| `[rev]`              | The git revision to compare against. Default: `HEAD`. Must be an ancestor of `HEAD`.                     |
-| `--fail-on-breaking` | Exit with code `1` when tokens, themes or theme overrides are removed, or tokens are renamed or retyped. |
-| `--format <format>`  | `markdown` (default) or `json`.                                                                          |
+| Argument / option    | Description                                                                                      |
+| -------------------- | ------------------------------------------------------------------------------------------------ |
+| `[rev]`              | The git revision to compare against. Default: `HEAD`. Must be an ancestor of `HEAD`.             |
+| `--fail-on-breaking` | Exit with code `1` when the diff has a [breaking change](/guides/diffs#what-counts-as-breaking). |
+| `--format <format>`  | `markdown` (default) or `json`.                                                                  |
 
 Uses the [global options](/cli#global-options) `-c`, `--cwd` and `--log-level`.
 

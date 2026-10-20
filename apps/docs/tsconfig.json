@@ -7,5 +7,5 @@
     "declaration": false,
     "declarationMap": false
   },
-  "include": ["src", "vocs.config.ts", "sidebar.ts"]
+  "include": ["src", "vocs.config.ts", "sidebar.ts", "recontent.config.ts"]
 }

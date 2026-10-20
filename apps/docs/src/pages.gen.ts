@@ -12,6 +12,7 @@ type Page =
   | { path: '/cli/init'; render: 'static' }
   | { path: '/guides/defining-tokens'; render: 'static' }
   | { path: '/guides/diffs'; render: 'static' }
+  | { path: '/guides/troubleshooting'; render: 'static' }
   | { path: '/guides/using-plugins'; render: 'static' }
   | { path: '/guides/working-with-themes'; render: 'static' }
   | { path: '/'; render: 'static' }

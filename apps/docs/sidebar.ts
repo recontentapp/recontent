@@ -4,9 +4,9 @@ export const sidebar: NonNullable<Config["sidebar"]> = [
   {
     text: "Introduction",
     items: [
+      { text: "Why Recontent", link: "/introduction/why-recontent" },
       { text: "Installation", link: "/introduction/installation" },
       { text: "Getting started", link: "/introduction/getting-started" },
-      { text: "Why Recontent", link: "/introduction/why-recontent" },
     ],
   },
   {
@@ -15,7 +15,8 @@ export const sidebar: NonNullable<Config["sidebar"]> = [
       { text: "Defining tokens", link: "/guides/defining-tokens" },
       { text: "Working with themes", link: "/guides/working-with-themes" },
       { text: "Using plugins", link: "/guides/using-plugins" },
-      { text: "Diffs", link: "/guides/diffs" },
+      { text: "Catching breaking changes", link: "/guides/diffs" },
+      { text: "Troubleshooting", link: "/guides/troubleshooting" },
     ],
   },
   {
@@ -29,16 +30,17 @@ export const sidebar: NonNullable<Config["sidebar"]> = [
     ],
   },
   {
-    text: "Built-in plugins",
+    text: "Plugins reference",
     collapsed: true,
     items: [
       { text: "CSS", link: "/plugins/css" },
       { text: "Tailwind", link: "/plugins/tailwind" },
-      { text: "Vanilla Extract", link: "/plugins/vanilla-extract" },
+      { text: "vanilla-extract", link: "/plugins/vanilla-extract" },
       { text: "StyleX", link: "/plugins/stylex" },
       { text: "TypeScript", link: "/plugins/typescript" },
       { text: "DTCG", link: "/plugins/dtcg" },
       { text: "Docs", link: "/plugins/docs" },
+      { text: "Writing a plugin", link: "/plugin-api" },
     ],
   },
   {
@@ -51,5 +53,4 @@ export const sidebar: NonNullable<Config["sidebar"]> = [
       { text: "diff", link: "/cli/diff" },
     ],
   },
-  { text: "Plugin API", link: "/plugin-api" },
 ];

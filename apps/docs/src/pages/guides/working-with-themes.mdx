@@ -54,8 +54,9 @@ identifier for the TypeScript, vanilla-extract and StyleX outputs. Pick a name s
 ### What an override can be
 
 - **Only some tokens.** Anything you leave out keeps its base value.
-- **Raw tokens only.** Write `tokens.color("#18181b")`, not `ref.color.gray[900]`. Outputs
-  already resolve aliases, so an override is always a concrete value.
+- **Raw tokens only.** Write `tokens.color("#18181b")`, not `ref.color.gray[900]`: the types reject
+  aliases in overrides. To change what an alias resolves to in a theme, override the token it
+  points at (see [How overrides resolve](#how-overrides-resolve)).
 - **A token of the same type.** The tree is type-checked against the one you pass in: a typo in a
   path, a key that does not exist or a value of the wrong type is a compile error. A runtime check
   also rejects a path that matches no token.
@@ -91,6 +92,17 @@ How this reaches your code depends on the plugin:
 | TypeScript      | A fully resolved `dark` constant, plus `themes`, `ThemeName` and `Theme` types.                                        |
 | DTCG            | A `dark.tokens.json` file with every token resolved for that theme.                                                    |
 | Docs            | A column per theme in the token tables.                                                                                |
+
+## Which layer to override
+
+Both patterns work, because aliases follow overrides. Pick by what changes:
+
+- **Override `ref` scales when the palette changes.** A dark appearance of the same colors (the
+  `appearance: "dark"` example above) is one override, and every system token that aliases the
+  scale follows it.
+- **Override `system` tokens when only the mapping changes.** If `background` should point at a
+  different color in dark mode while the palette stays the same, override `background` and leave
+  `ref` alone.
 
 ## Switching at runtime
 

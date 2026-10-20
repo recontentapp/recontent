@@ -2,13 +2,13 @@ import { defineConfig } from "vocs/config";
 import { sidebar } from "./sidebar.ts";
 
 export default defineConfig({
-  title: "Recontent",
+  title: "Recontent.app",
   description:
     "Define design tokens once. Generate CSS, Tailwind, vanilla-extract, StyleX, TypeScript and DTCG.",
   baseUrl: process.env.DOCS_BASE_URL, // set once hosting is chosen
   renderStrategy: "full-static",
   logoUrl: { light: "/logo-light.svg", dark: "/logo-dark.svg" },
-  iconUrl: "/favicon.svg",
+  iconUrl: "/favicon.png",
   editLink: {
     link: "https://github.com/recontentapp/recontentapp/edit/master/apps/docs/src/pages/:path",
     text: "Suggest changes",

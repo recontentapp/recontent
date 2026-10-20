@@ -137,11 +137,9 @@ Each method returns a new token, so calls chain.
 
 ## Naming rules
 
-A group or token name cannot contain `.`, `{` or `}`, cannot start with `$`, and cannot be
-`__proto__`, `constructor` or `prototype`. Numeric names such as `500` are fine.
-
-Writing a bare value instead of a token (`accent: "#2563eb"`) is reported as a warning at build
-time, naming the factory to use, and the value is ignored.
+Numeric names such as `500` are fine. A few characters and names are rejected, and a bare value
+(`accent: "#2563eb"`) is ignored with a warning: see the rules in
+[`tokens`](/tokens/configuration#tokens).
 
 ## Importing existing DTCG tokens
 

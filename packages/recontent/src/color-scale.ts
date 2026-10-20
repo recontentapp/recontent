@@ -1,5 +1,4 @@
-// Generates a 12-step UI color scale from one color, following the approach of Radix Colors'
-// custom palette generator (https://www.radix-ui.com/colors/custom): rather than computing
+// Generates a 12-step UI color scale from one color: rather than computing
 // lightness steps, it starts from hand-tuned reference scales, blends the two closest to the
 // input color, re-hues them, and moves the lightness curve to sit on the page background.
 import { toOklch } from "@recontentapp/core";
@@ -10,7 +9,6 @@ type Appearance = "light" | "dark";
 
 export const SCALE_STEPS = 12;
 
-/** The page color step 1 sits on: white for light scales, Radix's near-black for dark ones. */
 const BACKGROUNDS: Record<Appearance, Oklch> = {
   light: toOklch("srgb", [1, 1, 1]),
   dark: toOklch("srgb", [17 / 255, 17 / 255, 17 / 255]),

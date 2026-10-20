@@ -49,10 +49,9 @@ plugins are independent of each other, so their order does not change the output
 
 ## What a build does
 
-1. Loads the config and reports warnings about the token trees.
-2. Checks aliases (a missing or circular alias is an error).
-3. Runs each plugin's validation. Any error stops the build **before anything is written**.
-4. Generates the files and writes them.
+A build loads the config, checks the aliases, lets each plugin validate and only then writes the
+files, so an error stops it **before anything is written**. See [`build`](/cli/build#what-it-does)
+for the steps.
 
 Files whose content has not changed are not rewritten, so file watchers and HMR stay quiet. A few
 files are created once and never overwritten, because you own them afterwards (for example the

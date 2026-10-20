@@ -331,8 +331,8 @@ test("tokens.generateColorScale uses the base verbatim as step 9", () => {
   expect(scale[9].$value.colorSpace).toBe("srgb");
 });
 
-test("tokens.generateColorScale reproduces the Radix indigo scale for Radix's indigo 9", () => {
-  const radixIndigo = [
+test("tokens.generateColorScale reproduces an indigo scale", () => {
+  const indigo = [
     "#fdfdfe",
     "#f7f9ff",
     "#edf2fe",
@@ -348,10 +348,9 @@ test("tokens.generateColorScale reproduces the Radix indigo scale for Radix's in
   ];
   const scale = tokens.generateColorScale({ base: "#3e63dd" });
   STEPS.forEach((step, i) => {
-    // Step 10 is a derived hover color that Radix tunes by hand.
     const tolerance = step === 10 ? 20 : 8;
     const actual = channels(scale[step].$value.hex!);
-    const expected = channels(radixIndigo[i]!);
+    const expected = channels(indigo[i]!);
     actual.forEach((value, c) =>
       expect(Math.abs(value - expected[c]!)).toBeLessThanOrEqual(tolerance),
     );

@@ -1,9 +1,9 @@
 ---
-title: "Vanilla Extract"
+title: "vanilla-extract"
 description: "Generate vanilla-extract theme contracts and an optional registry of ready-made React components."
 ---
 
-# Vanilla Extract
+# vanilla-extract
 
 `vanillaExtract()` generates typed [vanilla-extract](https://vanilla-extract.style/) variables for
 your tokens. It can also generate a set of accessible React components, already wired to your
@@ -13,8 +13,39 @@ tokens.
 // [!include ~/snippets/vanilla-extract.config.ts]
 ```
 
+## Setup
+
 Add the vanilla-extract bundler plugin for your tool (for Vite, `@vanilla-extract/vite-plugin`),
 and install `@vanilla-extract/css`. Components also need `react`.
+
+## Usage
+
+Apply `themeClass` to an element, and a theme class to switch themes. Everything inside is styled
+with the variables:
+
+```ts [card.css.ts]
+import { style } from "@vanilla-extract/css";
+import { vars } from "./generated/tokens.css";
+
+export const card = style({
+  background: vars.system.color.background,
+  color: vars.system.color.text,
+});
+```
+
+```tsx [App.tsx]
+import "./generated/reset.gen.css";
+import { darkThemeClass, themeClass } from "./generated/tokens.css";
+import { card } from "./card.css";
+
+export function App({ dark }: { dark: boolean }) {
+  return (
+    <main className={dark ? darkThemeClass : themeClass}>
+      <div className={card}>…</div>
+    </main>
+  );
+}
+```
 
 ## Options
 
@@ -44,35 +75,6 @@ Plugin name: `recontent:vanilla-extract`.
 | `iconMap.tsx`                                   | with components        | **Created once** and never overwritten: map icon names to your icon library.                                                                                 |
 | `components.dependencies.json`                  | with components        | The npm packages the selected components need.                                                                                                               |
 | `useBreakpoint.gen.ts`                          | with `breakpoints`     | A React hook for the current breakpoint.                                                                                                                     |
-
-## Using the tokens
-
-Apply `themeClass` to an element, and a theme class to switch themes. Everything inside is styled
-with the variables:
-
-```ts [card.css.ts]
-import { style } from "@vanilla-extract/css";
-import { vars } from "./generated/tokens.css";
-
-export const card = style({
-  background: vars.system.color.background,
-  color: vars.system.color.text,
-});
-```
-
-```tsx [App.tsx]
-import "./generated/reset.gen.css";
-import { darkThemeClass, themeClass } from "./generated/tokens.css";
-import { card } from "./card.css";
-
-export function App({ dark }: { dark: boolean }) {
-  return (
-    <main className={dark ? darkThemeClass : themeClass}>
-      <div className={card}>…</div>
-    </main>
-  );
-}
-```
 
 ## Breakpoints
 
@@ -134,3 +136,15 @@ See the
 [vanilla-extract playground](https://github.com/recontentapp/recontentapp/tree/master/apps/vanilla-extract-playground)
 for a complete `recontent.config.ts` that binds every component, and its Storybook stories for each
 one in action (`yarn workspace vanilla-extract-playground storybook` in the repository).
+
+## Diagnostics
+
+Each of these fails the build.
+
+| When                                                                                                                                           |
+| ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| A component is selected without an option it requires: `Component "stack" requires config "spacing"`. All missing options are listed together. |
+| A component option is not the expected token or scale, or points at a token that is not registered.                                            |
+| `breakpoints` is not a `dimension` scale, is empty, does not start at `0`, mixes units after the first entry or is not in ascending order.     |
+| A theme overrides a breakpoint token.                                                                                                          |
+| A theme name is not a valid TypeScript identifier.                                                                                             |

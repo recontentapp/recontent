@@ -12,6 +12,29 @@ theme per Recontent theme and typed key helpers for your scales.
 // [!include ~/snippets/stylex.config.ts]
 ```
 
+## Setup
+
+Install `@stylexjs/stylex` and the StyleX plugin for your bundler. The
+[StyleX playground](https://github.com/recontentapp/recontentapp/tree/master/apps/stylex-playground)
+shows a working Vite setup.
+
+## Usage
+
+```tsx
+import * as stylex from "@stylexjs/stylex";
+import { vars } from "./generated/tokens.stylex";
+import { darkTheme } from "./generated/themes";
+import "./generated/reset.gen.css";
+
+const styles = stylex.create({
+  page: { backgroundColor: vars.systemColorBackground, color: vars.systemColorText },
+});
+
+export function App({ dark }: { dark: boolean }) {
+  return <main {...stylex.props(dark && darkTheme, styles.page)} />;
+}
+```
+
 ## Options
 
 ```ts
@@ -38,28 +61,15 @@ Plugin name: `recontent:stylex`.
 StyleX variables must be flat, so a token's path is turned into a camelCase key:
 `system.color.background` becomes `systemColorBackground`, and `ref.spacing.0-5` becomes
 `refSpacing05`. Typography and transition tokens get one key per member (`systemTypographyBodyFontSize`).
-If two tokens would produce the same key the build fails with a collision error; rename one of them.
 
 Aliases are emitted as derived variables, so a theme that overrides a referenced token changes
 everything that follows it.
 
-## Using it
+## Diagnostics
 
-```tsx
-import * as stylex from "@stylexjs/stylex";
-import { vars } from "./generated/tokens.stylex";
-import { darkTheme } from "./generated/themes";
-import "./generated/reset.gen.css";
+Each of these fails the build.
 
-const styles = stylex.create({
-  page: { backgroundColor: vars.systemColorBackground, color: vars.systemColorText },
-});
-
-export function App({ dark }: { dark: boolean }) {
-  return <main {...stylex.props(dark && darkTheme, styles.page)} />;
-}
-```
-
-Install `@stylexjs/stylex` and the StyleX plugin for your bundler. The
-[StyleX playground](https://github.com/recontentapp/recontentapp/tree/master/apps/stylex-playground)
-shows a working Vite setup.
+| When                                                                                                                         |
+| ---------------------------------------------------------------------------------------------------------------------------- |
+| Two tokens flatten to the same key: `StyleX key collision: token paths "…" and "…" both flatten to "…"`. Rename one of them. |
+| A theme name is not a valid TypeScript identifier (`my-dark`).                                                               |

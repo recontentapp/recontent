@@ -5,7 +5,8 @@ description: "Scaffold a config from a preset, add a plugin and generate your fi
 
 # Getting started
 
-This takes a few minutes and ends with CSS variables generated from a token config.
+This takes a few minutes and ends with CSS variables generated from a token config. It assumes
+`recontent` is [installed](/introduction/installation).
 
 ## 1. Scaffold a config
 
@@ -15,9 +16,13 @@ This takes a few minutes and ends with CSS variables generated from a token conf
 recontent init neutral
 ```
 
-There are two presets: `neutral` (shadcn/ui's neutral base: OKLCH colors, radius, shadows, light and
-dark) and `material` (Material 3 baseline: tonal palettes, color roles, type scale, elevation,
-motion). Already have tokens in the DTCG format? Import them with
+There are two presets:
+
+- `neutral`: shadcn/ui's neutral base, with OKLCH colors, radius, shadows, light and dark.
+- `material`: the Material 3 baseline, with tonal palettes, color roles, a type scale, elevation
+  and motion.
+
+Already have tokens in the DTCG format? Import them with
 [`recontent init --from`](/cli/init#importing-dtcg-tokens).
 
 ## 2. Add a plugin
@@ -37,8 +42,6 @@ export default defineConfig({
   plugins: [css({ outDir: "src/generated" })],
 });
 ```
-
-`outDir` is relative to the directory containing the config.
 
 ## 3. Build
 
@@ -65,7 +68,8 @@ body {
 ```
 
 Each token becomes a variable named after its path, so `system.color.background` is
-`--system-color-background`. The dark theme is a `.dark` block that overrides only the tokens it
+`--system-color-background`. In `neutral`, the `system` layer has the groups `color`, `radius`,
+`spacing`, `shadow` and `typography`. The dark theme is a `.dark` block that overrides only the tokens it
 changes: add `class="dark"` to `<html>` to switch.
 
 ## 5. Keep going

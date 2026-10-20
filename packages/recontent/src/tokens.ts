@@ -512,8 +512,7 @@ function colorValueOf(input: ColorInput | RawToken<"color">): ColorValue {
 }
 
 /**
- * Generates a 12-step UI color scale from a single color, the way Radix Colors' custom palette
- * tool does: the two closest hand-tuned reference scales are blended, re-hued to `base`, and
+ * Generates a 12-step UI color scale from a single color: the two closest hand-tuned reference scales are blended, re-hued to `base`, and
  * shifted to sit on the page background. Steps 1-2 are backgrounds, 3-5 interactive components, 6-8
  * borders, 9-10 solid colors (9 is `base`, 10 its hover state) and 11-12 text.
  * Generated steps are fitted to the sRGB gamut and emitted as oklch colors.

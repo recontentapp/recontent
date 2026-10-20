@@ -49,8 +49,7 @@ Install `recontent` in the package that contains `recontent.config.ts`. The conf
 `recontent` resolved from the config's own directory, so each package uses the version it
 installed.
 
-Every path the plugins write (`outDir`) is relative to the directory containing the config file,
-not to where you run the command. To run from the repository root, point at the config with `-c`:
+To run from the repository root, point at the config with `-c`:
 
 ```bash
 recontent build -c packages/design-system/recontent.config.ts
@@ -58,12 +57,9 @@ recontent build -c packages/design-system/recontent.config.ts
 
 ## Config discovery
 
-Without `-c, --config`, `recontent` looks for `recontent.config.ts`, `.mts`, `.js` or `.mjs` in the
-current directory and then in each parent directory. The search stops at the first directory that
-has a `package.json` but no config, so it never wanders into an unrelated project.
-
-Use `--cwd <dir>` to resolve relative paths (including `-c`) against another directory. See the
-[CLI overview](/cli) for every global option.
+Without `-c, --config`, `recontent` looks for the config in the current directory and then in each
+parent directory. See [config discovery](/cli#config-discovery) for the rules, and the
+[CLI overview](/cli#global-options) for every global option.
 
 ## Next
 

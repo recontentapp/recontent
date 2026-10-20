@@ -14,11 +14,30 @@ point at variables.
 // [!include ~/snippets/tailwind.config.ts]
 ```
 
-Import the result after Tailwind:
+## Setup
+
+Install Tailwind CSS v4, then import the generated file after Tailwind:
 
 ```css [src/index.css]
 @import "tailwindcss";
 @import "./generated/tailwind.css";
+```
+
+The [Tailwind playground](https://github.com/recontentapp/recontentapp/tree/master/apps/tailwind-playground)
+shows a working Vite setup.
+
+## Usage
+
+Utilities resolve to your tokens: `bg-accent`, `p-4` or `font-sans`, depending on the
+[namespaces](#namespaces) you expose.
+
+### Theme variants
+
+With `themeVariants` on, each theme gets a variant, so `dark:bg-surface` applies when the theme
+class (or attribute) is present:
+
+```css
+@custom-variant dark (&:where(.dark, .dark *));
 ```
 
 ## Options
@@ -77,20 +96,11 @@ Except for shadows, the mapped variable points at the token's CSS variable
 (`--color-accent: var(--system-color-accent)`), so themes apply. A shadow that no theme overrides is
 inlined, so Tailwind's opacity and color modifiers work on it (`shadow-card/50`).
 
-## Theme variants
-
-With `themeVariants` on, each theme gets a variant, so `dark:bg-surface` applies when the theme
-class (or attribute) is present:
-
-```css
-@custom-variant dark (&:where(.dark, .dark *));
-```
-
 ## Emitted files
 
-| File                           | Content                                                                                                                                                                                      |
-| ------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `tailwind.css` (or `filename`) | In order: `@custom-variant` rules, the `@theme { --color-*: initial; }` reset, the token variables and theme blocks (inside `@layer theme`), `@theme inline { … }` and any `@utility` rules. |
+| File                           | Content                                                                                                                                                                                                               |
+| ------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `tailwind.css` (or `filename`) | In order: `@custom-variant` rules, the `@theme` reset of Tailwind defaults (only with `resetDefaults`), the token variables and theme blocks (inside `@layer theme`), `@theme inline { … }` and any `@utility` rules. |
 
 ## Diagnostics
 

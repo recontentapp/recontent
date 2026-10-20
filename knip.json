@@ -29,6 +29,7 @@
     "apps/docs": {
       "entry": [
         "vocs.config.ts",
+        "recontent.config.ts",
         "src/pages/**/*.{md,mdx,tsx}",
         "src/snippets/*.config.ts",
         "test/*.test.mjs"

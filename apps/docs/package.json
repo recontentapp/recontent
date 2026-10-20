@@ -4,8 +4,9 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vocs dev",
-    "build": "vocs build",
+    "dev:tokens": "recontent build -c recontent.config.ts",
+    "dev": "yarn dev:tokens && vocs dev",
+    "build": "yarn dev:tokens && vocs build",
     "preview": "vocs preview",
     "typecheck": "tsc --noEmit",
     "test": "node --test"

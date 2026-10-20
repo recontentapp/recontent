@@ -12,6 +12,20 @@ and works with any framework or none.
 // [!include ~/snippets/basic.config.ts]
 ```
 
+## Usage
+
+With the default `themeSelector: "class"`, put the theme name on the root element's class:
+
+```html
+<html class="dark"></html>
+```
+
+With `themeSelector: "attribute"`, use the attribute instead:
+
+```html
+<html data-theme="dark"></html>
+```
+
 ## Options
 
 ```ts
@@ -32,7 +46,7 @@ Plugin name: `recontent:css`.
 | ------------ | ---------------------------------------- |
 | `tokens.css` | All variables, then one block per theme. |
 
-## Output
+## Output details
 
 `tokens.css` contains, in order:
 
@@ -65,15 +79,12 @@ Plugin name: `recontent:css`.
   are expanded into one variable per member (`--system-typography-body-font-size`).
   See [Composites](/tokens/composites).
 - **Theme blocks** come last, so with the same specificity as `:root` they win.
-- Theme names must contain only letters, digits, `_` and `-`, and not start with a digit or `-`.
 
-## Using a theme
+## Diagnostics
 
-```html
-<html class="dark">
-  <!-- themeSelector: "class" (default) -->
-  <html data-theme="dark">
-    <!-- themeSelector: "attribute" -->
-  </html>
-</html>
-```
+Both checks fail the build.
+
+| When                                                                                                |
+| --------------------------------------------------------------------------------------------------- |
+| A theme name has characters other than letters, digits, `_` and `-`, or starts with a digit or `-`. |
+| `themeAttribute` does not match `/^[A-Za-z][\w-]*$/`.                                               |
