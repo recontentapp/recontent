@@ -13,11 +13,11 @@
   "devDependencies": {
     "@stylexjs/rollup-plugin": "0.19.0",
     "@stylexjs/stylex": "0.19.0",
-    "@types/react": "19.0.0",
-    "@types/react-dom": "19.0.0",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
     "@vitejs/plugin-react": "4.3.0",
-    "react": "19.0.0",
-    "react-dom": "19.0.0",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
     "recontent": "*",
     "typescript": "6.0.3",
     "vite": "6.0.0"

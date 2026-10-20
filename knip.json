@@ -34,7 +34,8 @@
         "src/snippets/*.config.ts",
         "test/*.test.mjs"
       ],
-      "project": ["src/**/*.ts", "test/*.mjs", "*.ts"]
+      "project": ["src/**/*.ts", "test/*.mjs", "*.ts"],
+      "ignore": ["src/pages.gen.ts"]
     }
   }
 }
