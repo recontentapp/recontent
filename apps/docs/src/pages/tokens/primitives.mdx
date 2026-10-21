@@ -1,0 +1,146 @@
+---
+title: "Primitives"
+description: "The single-value token types and the tokens.* factories that create them."
+---
+
+# Primitives
+
+Primitive tokens hold one value. Create them with the `tokens` object:
+
+```ts twoslash
+import { tokens } from "recontent";
+
+const brand = tokens.color("#2563eb");
+const gap = tokens.dimension("16px");
+```
+
+Every factory validates its input and throws with a descriptive message if it is invalid, so a bad
+value fails when the config loads. Every token it returns also has `.describe()`, `.deprecate()` and
+`.extend()` (see [Defining tokens](/guides/defining-tokens#descriptions-and-deprecations)).
+
+The table below shows what each type becomes in the two most common outputs. See each
+[plugin](/plugins/css) for the rest.
+
+| Type                          | CSS                             | DTCG `$value`                            |
+| ----------------------------- | ------------------------------- | ---------------------------------------- |
+| [`color`](#color)             | `#2563eb`, `oklch(0.5 0.2 262)` | `{ colorSpace, components, alpha, hex }` |
+| [`dimension`](#dimension)     | `16px`                          | `{ value, unit }`                        |
+| [`fontFamily`](#fontfamily)   | `Inter, sans-serif`             | `["Inter", "sans-serif"]`                |
+| [`fontWeight`](#fontweight)   | `600`                           | `600`                                    |
+| [`duration`](#duration)       | `150ms`                         | `{ value, unit }`                        |
+| [`cubicBezier`](#cubicbezier) | `cubic-bezier(0.4, 0, 0.2, 1)`  | `[0.4, 0, 0.2, 1]`                       |
+| [`number`](#number)           | `1.5`                           | `1.5`                                    |
+
+## color
+
+```ts twoslash
+import { tokens } from "recontent";
+
+tokens.color("#2563eb");
+tokens.color("#2563eb80"); // with alpha
+tokens.color({ colorSpace: "oklch", components: [0.55, 0.2, 262], alpha: 0.9 });
+```
+
+Takes a hex string (`#rgb`, `#rgba`, `#rrggbb` or `#rrggbbaa`, with or without `#`) or an object:
+
+| Field        | Type                                                     | Notes                                        |
+| ------------ | -------------------------------------------------------- | -------------------------------------------- |
+| `colorSpace` | one of the spaces below                                  |                                              |
+| `components` | `[number \| "none", number \| "none", number \| "none"]` | Each must be inside the range for the space. |
+| `alpha`      | `number`                                                 | Between 0 and 1. Defaults to `1`.            |
+
+| Color space                                                               | Components                               |
+| ------------------------------------------------------------------------- | ---------------------------------------- |
+| `srgb`, `srgb-linear`, `display-p3`, `a98-rgb`, `prophoto-rgb`, `rec2020` | each 0 to 1                              |
+| `hsl`, `hwb`                                                              | hue 0 to 360, then 0 to 100 and 0 to 100 |
+| `lab`                                                                     | L 0 to 100, a and b −125 to 125          |
+| `lch`                                                                     | L 0 to 100, C 0 to 150, H 0 to 360       |
+| `oklab`                                                                   | L 0 to 1, a and b −0.4 to 0.4            |
+| `oklch`                                                                   | L 0 to 1, C 0 to 0.4, H 0 to 360         |
+| `xyz-d65`, `xyz-d50`                                                      | each 0 to 1                              |
+
+A fallback `hex` is computed for every color. CSS output: sRGB colors are written as hex
+(`#rrggbb`, or `#rrggbbaa` with alpha); `oklch`, `oklab`, `lab`, `lch`, `hsl` and `hwb` use their
+CSS functions (`oklch(0.55 0.2 262 / 0.9)`); other spaces use `color(display-p3 …)`.
+
+## dimension
+
+```ts twoslash
+import { tokens } from "recontent";
+
+tokens.dimension("16px");
+tokens.dimension("1.5rem");
+tokens.dimension("-0.02em");
+```
+
+A number followed by `px`, `rem` or `em`. DTCG only defines `px` and `rem`, so the
+[DTCG plugin](/plugins/dtcg) writes `em` as `rem` with the same number. The
+[native TypeScript output](/plugins/typescript#typescriptnative) converts every dimension to pixels.
+
+## fontFamily
+
+```ts twoslash
+import { tokens } from "recontent";
+
+tokens.fontFamily('Inter, "Segoe UI", system-ui, sans-serif');
+```
+
+A comma-separated list of families. Surrounding quotes are removed and each family may contain only
+letters, digits, spaces, `-`, `_` and `.`. Families are written unquoted in CSS, so this restriction
+keeps a value from ending a declaration.
+
+## fontWeight
+
+```ts twoslash
+import { tokens } from "recontent";
+
+tokens.fontWeight(600);
+tokens.fontWeight("semibold");
+```
+
+A number from 1 to 1000, or a name. Names resolve to numbers:
+
+| Name                                       | Weight |
+| ------------------------------------------ | ------ |
+| `thin`, `hairline`                         | 100    |
+| `extralight`, `extra-light`, `ultra-light` | 200    |
+| `light`                                    | 300    |
+| `book`                                     | 350    |
+| `regular`, `normal`                        | 400    |
+| `medium`                                   | 500    |
+| `semibold`, `semi-bold`, `demi-bold`       | 600    |
+| `bold`                                     | 700    |
+| `extrabold`, `extra-bold`, `ultra-bold`    | 800    |
+| `black`, `heavy`                           | 900    |
+| `extrablack`, `extra-black`, `ultra-black` | 950    |
+
+## duration
+
+```ts twoslash
+import { tokens } from "recontent";
+
+tokens.duration("150ms");
+tokens.duration("0.3s");
+```
+
+A number followed by `ms` or `s`.
+
+## cubicBezier
+
+```ts twoslash
+import { tokens } from "recontent";
+
+tokens.cubicBezier([0.4, 0, 0.2, 1]);
+```
+
+Four finite numbers: the control points `x1, y1, x2, y2`.
+
+## number
+
+```ts twoslash
+import { tokens } from "recontent";
+
+tokens.number(1.5);
+```
+
+A finite, unitless number: a line height, an aspect ratio, an opacity.

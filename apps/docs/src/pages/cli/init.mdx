@@ -1,0 +1,68 @@
+---
+title: "init"
+description: "Scaffold a recontent.config.ts from a preset or from existing DTCG tokens."
+---
+
+# init
+
+Creates a `recontent.config.ts` with tokens and themes, and no plugins. Add plugins afterwards, then
+run [`recontent build`](/cli/build).
+
+```bash
+recontent init <preset> [--force]
+recontent init --from <path>... [--force]
+```
+
+## Presets
+
+| Preset     | Description                                                                                       |
+| ---------- | ------------------------------------------------------------------------------------------------- |
+| `neutral`  | shadcn/ui "neutral" base color: OKLCH color roles, radius, shadows, light and dark.               |
+| `material` | Material 3 baseline (seed `#6750A4`): tonal palettes, color roles, type scale, elevation, motion. |
+
+## Options
+
+| Option          | Description                                                                                 |
+| --------------- | ------------------------------------------------------------------------------------------- |
+| `[preset]`      | One of the presets above. Required unless `--from` is used; the two are mutually exclusive. |
+| `--from <path>` | Generate the config from DTCG tokens instead. Repeatable.                                   |
+| `--force`       | Overwrite the config file if it exists. Without it, `init` fails with exit code `1`.        |
+
+The file is written to `-c, --config` if given, otherwise to `recontent.config.ts` in `--cwd`.
+Unlike other commands, `init` does not search for an existing config.
+
+## Importing DTCG tokens
+
+`--from` accepts, and can be repeated for:
+
+- a **resolver** file (`*.resolver.json`, or any JSON with a resolver `$schema`). It must be the only
+  source;
+- one or more **token files** (`*.json`);
+- **directories**, which are searched recursively for `*.tokens.json`.
+
+Several token files are merged in the order given; when the same token is defined twice with
+different values, the later one wins and a warning is printed.
+
+```bash
+recontent init --from design/tokens/
+recontent init --from design/resolver.json -c packages/tokens/recontent.config.ts
+```
+
+How the tokens are mapped:
+
+- Tokens with a **literal value** become `ref` tokens. Tokens whose value is an alias (`{color.blue}`),
+  or that contain an alias inside a composite, become `system` tokens. An alias is pointed at the
+  final reference token.
+- Group names, descriptions and deprecations are kept.
+- A missing `$type` is inferred from the value where possible, with a warning.
+- In a resolver, the default context of each modifier becomes the base tokens, and every other
+  context becomes a theme, named after the context (or `<modifier>-<context>` if there are several
+  modifiers). A theme contains literal overrides for the tokens it changes.
+
+Anything Recontent cannot represent is skipped, and the command prints a warning for each:
+unsupported types (such as `string`), colors that are not hex strings or one of the supported
+[color spaces](/tokens/primitives#color), dimensions in units other than `px`, `rem` and `em`,
+aliases to missing tokens, and JSON pointers into other files. The final line reports how many
+tokens and themes were imported and how many entries were skipped.
+
+Check the generated file before building: it is plain TypeScript you are expected to edit.

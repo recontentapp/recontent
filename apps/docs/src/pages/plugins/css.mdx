@@ -1,0 +1,90 @@
+---
+title: "CSS"
+description: "Generate CSS custom properties, with a block per theme."
+---
+
+# CSS
+
+`css()` writes every token as a CSS custom property, with one block per theme. It needs no runtime
+and works with any framework or none.
+
+```ts twoslash
+// [!include ~/snippets/basic.config.ts]
+```
+
+## Usage
+
+With the default `themeSelector: "class"`, put the theme name on the root element's class:
+
+```html
+<html class="dark"></html>
+```
+
+With `themeSelector: "attribute"`, use the attribute instead:
+
+```html
+<html data-theme="dark"></html>
+```
+
+## Options
+
+```ts
+css(options: CssPluginOptions): RecontentPlugin
+```
+
+| Option           | Type                     | Default        | Description                                                                                |
+| ---------------- | ------------------------ | -------------- | ------------------------------------------------------------------------------------------ |
+| `outDir`         | `string`                 | required       | Output directory, relative to the config file.                                             |
+| `themeSelector`  | `"class" \| "attribute"` | `"class"`      | How a theme block is selected: `.dark` or `[data-theme="dark"]`.                           |
+| `themeAttribute` | `string`                 | `"data-theme"` | The attribute used when `themeSelector` is `"attribute"`. Must match `/^[A-Za-z][\w-]*$/`. |
+
+Plugin name: `recontent:css`.
+
+## Emitted files
+
+| File         | Content                                  |
+| ------------ | ---------------------------------------- |
+| `tokens.css` | All variables, then one block per theme. |
+
+## Output details
+
+`tokens.css` contains, in order:
+
+1. a `:root` block for the **ref** layer, then one for **system**, then one for **components**
+   (empty layers are omitted);
+2. one block per theme, containing only the variables that theme overrides.
+
+```css
+:root {
+  --ref-color-gray-50: #fafafa;
+  --ref-color-gray-900: #18181b;
+}
+
+:root {
+  --system-color-background: var(--ref-color-gray-50);
+  --system-color-text: var(--ref-color-gray-900);
+}
+
+.dark {
+  --system-color-background: #18181b;
+  --system-color-text: #fafafa;
+}
+```
+
+- **Names**: `--` followed by the token path joined with `-`. Component tokens have no layer
+  prefix (`--button-background`).
+- **Aliases** are `var()` references, so a theme override of a referenced token flows through.
+- **Descriptions** (`.describe()`) become a comment above the variable.
+- **Composites**: `shadow`, `border` and `gradient` are one variable; `typography` and `transition`
+  are expanded into one variable per member (`--system-typography-body-font-size`).
+  See [Composites](/tokens/composites).
+- **Theme blocks** come last, so with the same specificity as `:root` they win.
+
+## Diagnostics
+
+Both checks fail the build.
+
+| When                                                                                                |
+| --------------------------------------------------------------------------------------------------- |
+| A theme name has characters other than letters, digits, `_` and `-`, or starts with a digit or `-`. |
+| `themeAttribute` does not match `/^[A-Za-z][\w-]*$/`.                                               |

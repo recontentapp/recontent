@@ -1,0 +1,81 @@
+---
+title: "Using plugins"
+description: "Configure outputs with plugins, combine them and rebuild while you work."
+---
+
+# Using plugins
+
+The tokens in a config do nothing by themselves. Plugins turn them into files. Every built-in
+plugin is a function exported from `recontent/plugins`, and you list the ones you want in
+`defineConfig`:
+
+```ts twoslash
+import { defineConfig, defineReferenceTokens, tokens } from "recontent";
+import { css, dtcg, typescript } from "recontent/plugins";
+
+const ref = defineReferenceTokens({
+  color: { white: tokens.color("#ffffff") },
+});
+
+export default defineConfig({
+  tokens: { ref, system: {}, components: {} },
+  plugins: [
+    css({ outDir: "src/generated/css" }),
+    typescript({ outDir: "src/generated/ts" }),
+    dtcg({ outDir: "tokens" }),
+  ],
+});
+```
+
+Each plugin has its own page with its options and emitted files: [CSS](/plugins/css),
+[Tailwind](/plugins/tailwind), [vanilla-extract](/plugins/vanilla-extract),
+[StyleX](/plugins/stylex), [TypeScript](/plugins/typescript), [DTCG](/plugins/dtcg) and
+[Docs](/plugins/docs).
+
+## outDir
+
+Almost every plugin takes an `outDir`. It is relative to the directory that contains the config
+file (not to where you ran `recontent`), and a plugin can never write outside that directory.
+
+Two plugins may not write the same file. If they do, the build stops with an error naming both
+plugins. Give each plugin its own `outDir`; in particular `typescript()` and `typescriptNative()`
+both write `tokens.ts`, so they need different directories.
+
+## Order
+
+Plugins run in the order of the `plugins` array. A plugin can opt into running earlier or later
+with `enforce: "pre"` or `"post"`, which only matters for [custom plugins](/plugin-api). The built-in
+plugins are independent of each other, so their order does not change the output.
+
+## What a build does
+
+A build loads the config, checks the aliases, lets each plugin validate and only then writes the
+files, so an error stops it **before anything is written**. See [`build`](/cli/build#what-it-does)
+for the steps.
+
+Files whose content has not changed are not rewritten, so file watchers and HMR stay quiet. A few
+files are created once and never overwritten, because you own them afterwards (for example the
+icon map the vanilla-extract plugin generates).
+
+## Rebuilding while you work
+
+`recontent build --watch` reruns the build whenever the config, or a file it imports, changes. Run
+it next to your dev server in a second process (this example uses the `concurrently` package):
+
+```json [package.json]
+{
+  "scripts": {
+    "dev": "concurrently \"recontent build --watch\" \"vite\"",
+    "build": "recontent build && vite build"
+  }
+}
+```
+
+The generated files are ordinary source files, so Vite, Storybook or your framework picks the
+changes up with its usual HMR. A failed rebuild prints the error and keeps watching.
+
+## Committing the output
+
+Generated files can be committed or ignored. Commit them if you want output changes visible in
+review or if consumers cannot run the CLI; ignore them and run `recontent build` in your install or
+build step otherwise. Either way, run a build in CI so a stale config is caught.

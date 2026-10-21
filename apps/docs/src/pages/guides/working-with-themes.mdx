@@ -1,0 +1,139 @@
+---
+title: "Working with themes"
+description: "Override tokens per theme with defineTheme and switch themes at runtime."
+---
+
+# Working with themes
+
+A theme is a set of overrides on top of the base tokens. The base values are the default theme;
+every other theme replaces only the tokens it names.
+
+## defineTheme
+
+`defineTheme(tokens, overrides)` takes a token tree (usually the system layer) and a partial
+object that mirrors it:
+
+```ts twoslash
+import {
+  defineConfig,
+  defineReferenceTokens,
+  defineSystemTokens,
+  defineTheme,
+  tokens,
+} from "recontent";
+
+const ref = defineReferenceTokens({
+  color: { gray: tokens.colorScale({ 50: "#fafafa", 900: "#18181b" }) },
+});
+
+const system = defineSystemTokens({
+  color: {
+    background: ref.color.gray[50],
+    text: ref.color.gray[900],
+  },
+});
+
+const dark = defineTheme(system, {
+  color: {
+    background: tokens.color("#18181b"),
+    text: tokens.color("#fafafa"),
+  },
+});
+
+export default defineConfig({
+  tokens: { ref, system, components: {} },
+  themes: { dark },
+});
+```
+
+The key in `themes` is the theme's name. It must be a valid identifier for the targets you use:
+letters, digits, `_` and `-` (not starting with a digit or `-`) for CSS, and a valid TypeScript
+identifier for the TypeScript, vanilla-extract and StyleX outputs. Pick a name such as `dark` or
+`highContrast` and all of them work.
+
+### What an override can be
+
+- **Only some tokens.** Anything you leave out keeps its base value.
+- **Raw tokens only.** Write `tokens.color("#18181b")`, not `ref.color.gray[900]`: the types reject
+  aliases in overrides. To change what an alias resolves to in a theme, override the token it
+  points at (see [How overrides resolve](#how-overrides-resolve)).
+- **A token of the same type.** The tree is type-checked against the one you pass in: a typo in a
+  path, a key that does not exist or a value of the wrong type is a compile error. A runtime check
+  also rejects a path that matches no token.
+- **A whole scale, with the same keys.** Replacing a scale (for example with
+  `tokens.generateColorScale({ ..., appearance: "dark" })`) is allowed only if it has exactly the
+  original keys and type.
+
+```ts twoslash
+import { defineReferenceTokens, defineTheme, tokens } from "recontent";
+
+const ref = defineReferenceTokens({
+  color: { brand: tokens.generateColorScale({ base: "#2563eb" }) },
+});
+
+const dark = defineTheme(ref, {
+  color: { brand: tokens.generateColorScale({ base: "#2563eb", appearance: "dark" }) },
+});
+```
+
+## How overrides resolve
+
+Tokens that _alias_ an overridden token follow it. If `system.color.accent` aliases
+`ref.color.blue[9]` and a theme overrides `ref.color.blue[9]`, `system.color.accent` changes in that
+theme with no override of its own. Overriding the system token directly changes only that token.
+
+How this reaches your code depends on the plugin:
+
+| Output          | How a theme is emitted                                                                                                 |
+| --------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| CSS, Tailwind   | A `.dark { … }` block (or `[data-theme="dark"]`) that redeclares overridden variables. Aliases follow through `var()`. |
+| vanilla-extract | `darkThemeClass`, created with `createTheme` against the shared variable contract.                                     |
+| StyleX          | `darkTheme`, created with `stylex.createTheme`.                                                                        |
+| TypeScript      | A fully resolved `dark` constant, plus `themes`, `ThemeName` and `Theme` types.                                        |
+| DTCG            | A `dark.tokens.json` file with every token resolved for that theme.                                                    |
+| Docs            | A column per theme in the token tables.                                                                                |
+
+## Which layer to override
+
+Both patterns work, because aliases follow overrides. Pick by what changes:
+
+- **Override `ref` scales when the palette changes.** A dark appearance of the same colors (the
+  `appearance: "dark"` example above) is one override, and every system token that aliases the
+  scale follows it.
+- **Override `system` tokens when only the mapping changes.** If `background` should point at a
+  different color in dark mode while the palette stays the same, override `background` and leave
+  `ref` alone.
+
+## Switching at runtime
+
+For CSS and Tailwind, theme blocks use a class selector by default. Put the class on the root
+element:
+
+```html
+<html class="dark"></html>
+```
+
+To use an attribute selector instead, set `themeSelector: "attribute"` on the plugin (the attribute
+defaults to `data-theme`, configurable with `themeAttribute`):
+
+```ts
+css({ outDir: "src/generated", themeSelector: "attribute", themeAttribute: "data-mode" });
+```
+
+```html
+<html data-mode="dark"></html>
+```
+
+Tailwind also gets a `@custom-variant` per theme, so you can write `dark:bg-surface`; see the
+[Tailwind plugin](/plugins/tailwind#theme-variants).
+
+For a user's system preference, set the class or attribute from `matchMedia("(prefers-color-scheme: dark)")`
+in a few lines of JavaScript; Recontent does not emit `@media` rules, so the choice stays in your
+code.
+
+## Density, brand and other axes
+
+Themes are not limited to light and dark. Any set of overrides is a theme, so `compact`,
+`highContrast` or `brandB` work the same way. Themes are independent: each is applied alone, on top
+of the base tokens. If you need to combine two axes (dark and compact), define the combination as
+its own theme, or scope each to a different element.

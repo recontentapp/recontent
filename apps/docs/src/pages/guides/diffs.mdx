@@ -1,0 +1,130 @@
+---
+title: "Catching breaking changes"
+description: "Compare your tokens against a previous revision and fail CI on breaking changes."
+---
+
+# Catching breaking changes
+
+`recontent diff` compares the tokens in your working tree with the tokens at an earlier git
+revision and prints what changed. Use it in pull requests to see the effect of a token change and
+to block removals and renames that would break consumers.
+
+```bash
+recontent diff main
+```
+
+````md
+## Breaking (2)
+
+- **renamed** `system.color.bg` -> `system.color.background` (color, alias -> ref.color.gray.50)
+- **removed** `system.color.legacyBlue` (color #0000ff)
+
+## Added (1)
+
+- `system.color.accent` (color, alias -> ref.color.blue.9)
+
+## Changed (1)
+
+```diff
+# ref.color.gray.900
+- #18181b
++ #09090b
+```
+````
+
+The revision defaults to `HEAD`, so a bare `recontent diff` shows uncommitted changes.
+
+## What counts as breaking
+
+A change is **breaking** when code that used a token would stop working:
+
+| Change                                                     | Breaking |
+| ---------------------------------------------------------- | -------- |
+| A token is removed                                         | Yes      |
+| A token is renamed (same type and value, new path)         | Yes      |
+| A token changes type (for example `dimension` to `number`) | Yes      |
+| A theme is removed                                         | Yes      |
+| A theme stops overriding a token                           | Yes      |
+| A token is added                                           | No       |
+| A token's value or alias changes                           | No       |
+| A theme is added, or gains/changes overrides               | No       |
+
+Renames are detected by pairing one removed and one added token that have the same type and the
+same value (or the same alias). If several tokens share a value, the pairing is ambiguous and they
+are reported as a removal plus an addition, which is still breaking.
+
+## Failing a build
+
+Add `--fail-on-breaking` to exit with code `1` when any breaking change is found:
+
+```bash
+recontent diff origin/main --fail-on-breaking
+```
+
+Without the flag the exit code is `0` even when the diff has breaking changes. Errors (an invalid
+revision, a missing config) always exit `1`.
+
+## GitHub Actions
+
+`diff` reads your config at the base revision, so the base must be present in the checkout.
+`actions/checkout` fetches a single commit by default, which is not enough: set `fetch-depth: 0`.
+
+```yaml [.github/workflows/tokens.yml]
+name: Tokens
+
+on: pull_request
+
+jobs:
+  diff:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # `diff` needs the base branch's history
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - run: npm ci
+
+      - name: Diff tokens against the base branch
+        run: npx recontent diff "origin/${{ github.base_ref }}" > token-diff.md
+
+      - name: Comment on the pull request
+        run: gh pr comment "${{ github.event.pull_request.number }}" --body-file token-diff.md
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+      - name: Fail on breaking changes
+        run: npx recontent diff "origin/${{ github.base_ref }}" --fail-on-breaking > /dev/null
+```
+
+The markdown goes to stdout, and progress messages go to stderr, so redirecting stdout gives you a
+clean file to post as a comment. Skip the comment step for a plain gate.
+
+:::warning
+With a shallow clone, `diff` fails with "this looks like a shallow clone missing the required
+history". Fetch more depth (`fetch-depth: 0`, or `git fetch --unshallow`) and run it again.
+:::
+
+## Only ancestors of HEAD
+
+Diffing loads and executes the config from the other revision. To avoid running code from a
+branch you do not trust, `diff` only accepts revisions that are ancestors of `HEAD`. Comparing
+against an unmerged branch is rejected with an explanation; merge or rebase first.
+
+## Machine-readable output
+
+`--format json` prints a single JSON document instead of markdown, for scripts:
+
+```bash
+recontent diff main --format json
+```
+
+It contains `config`, `rev`, a `breaking` flag, `counts` (`added`, `removed`, `renamed`, `retyped`,
+`changed`, `breaking`) and the full lists behind each count, including theme changes.

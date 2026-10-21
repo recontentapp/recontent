@@ -1,0 +1,202 @@
+---
+title: "Configuration"
+description: "Reference for defineConfig, the define* token functions and defineTheme."
+---
+
+# Configuration
+
+A project is configured by `recontent.config.ts`. Its default export must be the result of
+`defineConfig()`; a named `config` export is accepted too.
+
+```ts twoslash
+import { defineConfig, defineReferenceTokens, defineSystemTokens, tokens } from "recontent";
+import { css } from "recontent/plugins";
+
+const ref = defineReferenceTokens({ color: { white: tokens.color("#ffffff") } });
+const system = defineSystemTokens({ color: { background: ref.color.white } });
+
+export default defineConfig({
+  tokens: { ref, system, components: {} },
+  themes: {},
+  plugins: [css({ outDir: "src/generated" })],
+  logLevel: "info",
+});
+```
+
+Config files are loaded with [jiti](https://github.com/unjs/jiti), so TypeScript works with no
+build step. `recontent` and `recontent/plugins` are resolved from the config's directory, and
+`paths` aliases from a `tsconfig.json` next to it are honored. For the accepted file names, see
+[config discovery](/cli#config-discovery).
+
+## defineConfig(input)
+
+`defineConfig` validates the input and returns the object the CLI consumes.
+
+### `tokens`
+
+|          |                                                                |
+| -------- | -------------------------------------------------------------- |
+| Type     | `{ ref: TokenTree; system: TokenTree; components: TokenTree }` |
+| Required | Yes                                                            |
+
+The three layers, as returned by [`defineReferenceTokens`, `defineSystemTokens` and
+`defineComponentTokens`](/guides/defining-tokens). All three keys are required; pass `{}` for a
+layer you do not use.
+
+The trees are walked once:
+
+- every token becomes a registry entry keyed by its path (`ref.color.blue.9`);
+- a name containing `.`, `{` or `}`, starting with `$` or equal to `__proto__`, `constructor` or
+  `prototype` throws;
+- a value that is not a token (a bare string, number or plain object) produces a **warning**
+  (`Unknown token value at "…". Use tokens.color(...) instead of an anonymous value.`) and is
+  ignored;
+- nesting deeper than 64 levels throws.
+
+### `themes`
+
+|         |                                 |
+| ------- | ------------------------------- |
+| Type    | `Record<string, ThemeOverride>` |
+| Default | `{}`                            |
+
+Named themes created with [`defineTheme`](/guides/working-with-themes). The keys are the theme
+names the plugins use in selectors and export names.
+
+### `plugins`
+
+|         |                                        |
+| ------- | -------------------------------------- |
+| Type    | `RecontentPlugin \| RecontentPlugin[]` |
+| Default | `[]`                                   |
+
+The outputs to generate: [built-in plugins](/plugins/css) or [your own](/plugin-api). Every entry
+must be an object with a `name` string, otherwise `defineConfig` throws. With no plugins,
+`recontent build` only validates and prints a warning.
+
+### `logLevel`
+
+|         |                     |
+| ------- | ------------------- |
+| Type    | `"info" \| "debug"` |
+| Default | `"info"`            |
+
+The verbosity of `recontent` for this project. `--log-level` and `$RECONTENT_LOG_LEVEL` take
+precedence, in that order. Any other value throws.
+
+## define\* functions
+
+The `define*` functions turn a plain object tree into tokens a config can use. For a walkthrough,
+see [Defining tokens](/guides/defining-tokens) and [Working with themes](/guides/working-with-themes).
+
+### Layer functions
+
+```ts
+defineReferenceTokens<T>(input: T): StampTree<T, "ref">
+defineSystemTokens<T>(input: T): StampTree<T, "system">
+defineComponentTokens<T>(input: T): StampTree<T, "components">
+```
+
+Each takes a tree of groups (plain objects) whose leaves are tokens from the
+[`tokens` factories](/tokens/primitives), scales, or tokens from another layer. It returns a tree
+with the same shape and typing in which every token is _stamped_ with its layer and path.
+
+| Function                | Layer        | Path prefix | Example path          |
+| ----------------------- | ------------ | ----------- | --------------------- |
+| `defineReferenceTokens` | `ref`        | `ref`       | `ref.color.blue.500`  |
+| `defineSystemTokens`    | `system`     | `system`    | `system.color.accent` |
+| `defineComponentTokens` | `components` | none        | `button.background`   |
+
+A stamped token keeps its type and value. When a token is built from another stamped token (such as
+`ref.color.blue[500]`), the result is an **alias**: it records the path it points at, and outputs
+keep the reference instead of copying the value.
+
+Passing the result to `defineConfig` is what registers the tokens, see [`tokens`](#tokens). The
+functions themselves do no registration, so calling one without using its result has no effect.
+
+#### Layer function errors
+
+The names and depth rules are checked when the config is built, not when a layer function is called:
+
+- a group or token name containing `.`, `{` or `}`, starting with `$`, or equal to `__proto__`,
+  `constructor` or `prototype` throws;
+- a tree nested deeper than 64 levels throws.
+
+A value that is not a token is not an error: it is reported as a warning and ignored. See
+[`tokens`](#tokens).
+
+### Metadata methods
+
+Every stamped token and scale has three chainable methods. Each returns a new token and leaves the
+original untouched.
+
+```ts
+token.describe(description: string)
+token.deprecate(reason?: string)
+token.extend(namespace: string, data: Record<string, unknown>)
+```
+
+| Method                     | Sets                            | Notes                                                                    |
+| -------------------------- | ------------------------------- | ------------------------------------------------------------------------ |
+| `.describe(text)`          | `$description`                  |                                                                          |
+| `.deprecate(reason?)`      | `$deprecated`                   | `true` without a reason, otherwise the reason string.                    |
+| `.extend(namespace, data)` | `$extensions[namespace] = data` | Other namespaces are kept; calling it again for a namespace replaces it. |
+
+The tokens returned by the `tokens.*` factories have the same methods. On a scale, the metadata
+belongs to the scale, not to each step.
+
+```ts twoslash
+import { defineSystemTokens, tokens } from "recontent";
+
+const system = defineSystemTokens({
+  color: {
+    surface: tokens.color("#ffffff").describe("Default page background").deprecate("Use card"),
+  },
+});
+```
+
+### defineTheme
+
+```ts
+defineTheme(tokens: TokenTree, overrides: PartialTree): ThemeOverride
+```
+
+| Parameter   | Description                                                                              |
+| ----------- | ---------------------------------------------------------------------------------------- |
+| `tokens`    | The tree the theme applies to: the result of a layer function, or a group inside of one. |
+| `overrides` | A partial tree that mirrors `tokens`, with raw tokens at the leaves.                     |
+
+It returns a `ThemeOverride`: a `Map` from a token's dotted path to its overriding value. Register
+it in [`themes`](#themes), where its key becomes the theme's name.
+
+```ts twoslash
+import { defineReferenceTokens, defineTheme, tokens } from "recontent";
+
+const ref = defineReferenceTokens({
+  color: { background: tokens.color("#ffffff") },
+});
+
+const dark = defineTheme(ref, { color: { background: tokens.color("#18181b") } });
+```
+
+What the types accept:
+
+- **Leaves** must be raw tokens of the same type as the token they replace. Aliases are rejected.
+- **Keys** must exist in `tokens`. A typo is a compile error.
+- **Scales** can be replaced as a whole, but only with the same keys and the same token type.
+
+#### defineTheme errors
+
+An override at a path that matches no token throws
+`Theme override at "<path>" does not match an existing token path.`. This catches what the types
+cannot, such as an override built with a cast.
+
+## Types
+
+```ts twoslash
+import type { DefineConfigInput } from "recontent";
+
+const input: DefineConfigInput = { logLevel: "debug", plugins: [] };
+```
+
+`DefineConfigInput` is exported for code that builds configs programmatically.

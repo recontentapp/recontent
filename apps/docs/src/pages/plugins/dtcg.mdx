@@ -1,0 +1,85 @@
+---
+title: "DTCG"
+description: "Export tokens as Design Tokens Community Group JSON for Figma, Tokens Studio and other tools."
+---
+
+# DTCG
+
+`dtcg()` exports your tokens in the
+[Design Tokens Community Group](https://www.designtokens.org/) format, which design tools and token
+pipelines read. Use it to sync tokens to Figma (through a plugin such as Tokens Studio), or to
+feed another build tool.
+
+```ts twoslash
+// [!include ~/snippets/dtcg.config.ts]
+```
+
+## Options
+
+```ts
+dtcg(options: DtcgPluginOptions): RecontentPlugin
+```
+
+| Option   | Type     | Default  | Description                                    |
+| -------- | -------- | -------- | ---------------------------------------------- |
+| `outDir` | `string` | required | Output directory, relative to the config file. |
+
+Plugin name: `recontent:dtcg`.
+
+## Emitted files
+
+| File                  | Content                                                  |
+| --------------------- | -------------------------------------------------------- |
+| `tokens.tokens.json`  | The base tokens, as a nested DTCG document.              |
+| `<theme>.tokens.json` | One per theme, with every token resolved for that theme. |
+
+## Format
+
+The document nests tokens by path (`system` → `color` → `background`). Each token has `$type` and
+`$value`, plus `$description`, `$deprecated` and `$extensions` when you set them.
+
+- **Aliases** are DTCG references: `"$value": "{ref.color.white}"`.
+- **Colors** are `{ colorSpace, components, alpha, hex }` objects.
+- **Dimensions** are `{ value, unit }`. DTCG defines only `px` and `rem`, so `em` is written as `rem`
+  with the same number.
+- **Font weights** are numbers; named weights are converted.
+- **Composites** (`shadow`, `border`, `transition`, `gradient`, `typography`) use the DTCG shape. A
+  single-layer shadow is an object, and several layers are an array.
+- **Scales** keep their `$description`, `$deprecated` and `$extensions` on the group.
+- **Group types**: when every token below a group has the same type, and there are at least two, the
+  type is set once as the group's `$type` instead of on each token. If all tokens share a type, it
+  ends up at the document root, as below.
+- Gradients record their `kind` and `angle` under `$extensions["com.recontent"]`, because DTCG
+  gradients have neither. Anything you pass in `.extend("com.recontent", { … })` is merged there.
+
+```json
+{
+  "ref": {
+    "color": {
+      "white": {
+        "$value": { "colorSpace": "srgb", "components": [1, 1, 1], "alpha": 1, "hex": "#ffffff" }
+      },
+      "gray900": {
+        "$value": {
+          "colorSpace": "srgb",
+          "components": [0.094, 0.094, 0.106],
+          "alpha": 1,
+          "hex": "#18181b"
+        }
+      }
+    }
+  },
+  "system": {
+    "color": {
+      "background": {
+        "$value": "{ref.color.white}",
+        "$description": "Page background"
+      }
+    }
+  },
+  "$type": "color"
+}
+```
+
+The reverse direction is [`recontent init --from`](/cli/init#importing-dtcg-tokens), which generates a
+config from DTCG files.

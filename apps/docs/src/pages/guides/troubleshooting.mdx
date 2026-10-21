@@ -1,0 +1,87 @@
+---
+title: "Troubleshooting"
+description: "The errors and warnings you are most likely to meet, what causes them and how to fix them."
+---
+
+# Troubleshooting
+
+Every message below is printed to stderr. Run with `--log-level debug` to add a stack trace to an
+error. See [Log level](/cli#log-level).
+
+## Config not found
+
+```text
+error: Could not find a recontent.config.{ts,mts,js,mjs} file. Searched:
+  - /path/to/project
+Pass -c/--config to point at one explicitly.
+```
+
+The search starts in the current directory and stops at the first directory with a `package.json`,
+so a config in a parent folder of a package is not found. Run the command from the folder that holds
+the config, or pass `-c <path>`. See [config discovery](/cli#config-discovery).
+
+## Broken alias
+
+```text
+error: Broken alias at "system.color.bg": target "ref.color.white" does not exist in the registry.
+```
+
+A token points at a token that is not in the config. Add the layer that defines the target to
+`tokens` in `defineConfig`, for example `ref` (pass `{}` only for layers that are really unused).
+
+## Bare value instead of a token
+
+```text
+warning: Unknown token value at "system.bad". Use tokens.color(...) instead of an anonymous value.
+```
+
+A string, number or plain object that is not a token is ignored. Wrap the value in the matching
+`tokens.*` factory. See [Primitives](/tokens/primitives).
+
+## File path collision
+
+```text
+error: File path collision at "o/tokens.css": both plugin "recontent:css" and plugin "acme:x" emitted this file.
+```
+
+Two different plugins write the same path, usually because they share an `outDir` and a file name.
+Give one of them its own `outDir`. The common case is `typescript()` with `typescriptNative()`,
+which both write `tokens.ts`. See [outDir](/guides/using-plugins#outdir).
+
+## Theme name rejected
+
+```text
+error: Theme name "my-dark" cannot be used with the "stylex" output target: theme names must be valid TypeScript identifiers.
+```
+
+The key in `themes` becomes a class name, a file name or an export name, so each plugin restricts
+it. Use a name like `dark` or `highContrast`, which every plugin accepts. See
+[Working with themes](/guides/working-with-themes#definetheme).
+
+## Key collision in StyleX
+
+```text
+error: StyleX key collision: token paths "ref.a.bC" and "ref.aB.c" both flatten to "refABC". Rename one of these tokens to avoid an ambiguous generated key.
+```
+
+StyleX variables are flat, so two paths that join to the same camelCase key clash. Rename one of the
+tokens. See [StyleX](/plugins/stylex#emitted-files).
+
+## `diff` cannot compare against a revision
+
+```text
+error: Not a valid git revision: "origin/main".
+error: Could not determine whether "origin/main" is an ancestor of HEAD: this looks like a shallow clone missing the required history. …
+```
+
+`diff` needs the history between the revision and `HEAD`. In CI, check out with `fetch-depth: 0`;
+locally, run `git fetch --unshallow`. See [Catching breaking changes](/guides/diffs#github-actions).
+
+## No plugins configured
+
+```text
+warning: No plugins configured in recontent.config.ts; add some from "recontent/plugins" to generate output.
+```
+
+The build only validates your tokens. Add a plugin to `plugins`. See
+[Using plugins](/guides/using-plugins).
