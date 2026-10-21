@@ -26,12 +26,12 @@ export function Themes() {
   return (
     <section className="lp-section lp-wrap">
       <h2 className="lp-h2">
-        Override the meaning, or the vocabulary. <span className="lp-hl">Nothing else moves.</span>
+        Repaint everything. <span className="lp-hl">Rewrite nothing.</span>
       </h2>
       <p className="lp-sub">
-        A theme replaces only the tokens it names. Override <code>system</code> for dark mode,{" "}
-        <code>ref</code> for a rebrand. Component code doesn&apos;t change, and the output only
-        contains the difference.
+        Dark mode swaps a few <code>system</code> colors. A rebrand swaps the <code>ref</code>{" "}
+        palette. Every alias follows, your components stay untouched, and the CSS ships only what
+        changed.
       </p>
       <p className="lp-more">
         <Link to="/guides/working-with-themes" className="lp-link">

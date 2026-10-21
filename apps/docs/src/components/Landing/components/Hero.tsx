@@ -29,10 +29,8 @@ export function Hero() {
           </span>
         </h1>
         <p className="lp-lede">
-          Raw values, meaning and component decisions live in typed layers in one{" "}
-          <code>recontent.config.ts</code>. Your design system&apos;s structure is enforced by the
-          compiler, not by convention. Then it compiles to CSS, Tailwind, vanilla-extract, StyleX,
-          TypeScript and DTCG.
+          Recontent stores all your design decisions in typed layers so that your design tokens are
+          enforced by a tool, not by convention.
         </p>
         <div className="lp-hero-actions">
           <Install />

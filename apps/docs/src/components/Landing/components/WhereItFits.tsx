@@ -12,29 +12,29 @@ const stack: Brick[][] = [
   [
     {
       title: "Recontent",
-      text: "Design tokens, defined once and typed in recontent.config.ts.",
+      text: "Typed layers for your design tokens",
       tone: "yellow",
       studs: 6,
     },
   ],
   [
     {
-      title: "Styling",
-      text: "StyleX, Tailwind, vanilla-extract or plain CSS.",
+      title: "Styling solution",
+      text: "CSS modules, Tailwind, StyleX & more",
       tone: "blue",
       studs: 3,
     },
     {
       title: "Components",
-      text: "Your codebase's own building blocks.",
+      text: "Your codebase's own building blocks",
       tone: "green",
       studs: 3,
     },
   ],
   [
     {
-      title: "Pages & experiences",
-      text: "What your users see and touch.",
+      title: "Screens & Pages",
+      text: "A consistent experience without drift for users",
       tone: "coral",
       studs: 5,
     },
@@ -61,11 +61,11 @@ export function WhereItFits() {
     <section className="lp-section lp-wrap lp-fits" id="where-it-fits">
       <div>
         <h2 className="lp-h2">
-          The brick everything else <span className="lp-hl">snaps onto</span>.
+          Aiming at <span className="lp-hl">consistency</span> & limiting drift
         </h2>
         <p className="lp-sub">
-          Recontent doesn&apos;t replace your styling library or your components. It sits underneath
-          them, so the tokens they share are defined once and checked everywhere.
+          Recontent sits at the base of your design system, exposing design tokens for consistent
+          use across your stack.
         </p>
         <p className="lp-more">
           <Link to="/guides/using-plugins" className="lp-link">

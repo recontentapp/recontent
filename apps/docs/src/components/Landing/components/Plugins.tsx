@@ -67,15 +67,15 @@ export function Plugins() {
   return (
     <section className="lp-section lp-wrap lp-centered">
       <h2 className="lp-h2">
-        Tokens go{" "}
+        One config.{" "}
         <span className="lp-underlined">
-          where they&apos;re used.
+          Every output.
           <Underline color="#2db87c" />
         </span>
       </h2>
       <p className="lp-sub">
-        Every output is a plugin, one line in your config. Eight ship with Recontent, and the API
-        they&apos;re built on is yours for everything else: Swift, Kotlin, a linter.
+        Everything is a plugin that can be added in your config so that your design tokens can go
+        wherever you need them: stylesheets, Figma, docs, native apps & more.
       </p>
       <ul className="lp-plugins">
         {builtInPlugins.map((plugin) => (
