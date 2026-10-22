@@ -7,16 +7,11 @@ import {
 } from "recontent";
 import { css } from "recontent/plugins";
 
-// Tokens for the landing page (src/components/Landing/landing.css).
-// Two layers: ref holds the raw palette and scales, system gives them a role. Light is the base
-// theme; `dark` overrides it.
-// Fluid values (clamp()) and optical one-offs stay in the stylesheet: dimensions cannot express them.
-
 const ref = defineReferenceTokens({
   color: {
     white: tokens.color("#ffffff"),
     ink: tokens.color("#1b1a17"),
-    // Ink at 8% and 12% opacity, for subtle fills on paper.
+    lightInk: tokens.color("#5c5647"),
     inkAlpha: tokens.colorScale({ 8: "#1b1a1714", 12: "#1b1a171f" }),
     stone: tokens.color("#b9b2a0"),
     cream: tokens.colorScale({ 50: "#fff9e6", 100: "#fff1c2" }),
@@ -61,10 +56,9 @@ const ref = defineReferenceTokens({
   radius: tokens.dimensionScale({ sm: "6px", md: "8px", lg: "10px", full: "999px" }),
 });
 
-// The page's signature: hard, blur-free offset shadows.
-function hardShadow<Color>(offset: string, color: Color) {
+const hardShadow = <Color>(offset: string, color: Color) => {
   return { color, offsetX: offset, offsetY: offset, blur: "0px", spread: "0px" };
-}
+};
 
 const system = defineSystemTokens({
   color: {
@@ -75,26 +69,22 @@ const system = defineSystemTokens({
     inverse: ref.color.ink,
     onInverse: ref.color.cream[50],
     overlay: ref.color.inkAlpha[8],
-    // Text and fills on top of the bright accents: ink in every theme.
     onAccent: ref.color.ink,
     overlayStrong: ref.color.inkAlpha[12],
     // The closing call-to-action band.
     callout: ref.color.yellow[300],
-    // Bold marks: shadows, highlights, buttons, focus rings.
     accent: {
       yellow: ref.color.yellow[300],
       green: ref.color.green[500],
       coral: ref.color.coral[500],
       blue: ref.color.blue[600],
     },
-    // Soft fills that pair with the accents.
     tone: {
       yellow: ref.color.yellow[100],
       green: ref.color.green[100],
       coral: ref.color.coral[100],
       blue: ref.color.blue[100],
     },
-    // Code panels sit on the inverse color.
     syntax: {
       comment: ref.color.stone,
       string: ref.color.green[300],
@@ -121,7 +111,6 @@ const system = defineSystemTokens({
     focus: tokens.border({ color: ref.color.blue[600], width: "3px", style: "solid" }),
   },
   shadow: {
-    // Resting offsets: small for buttons and cards, large for panels.
     sm: tokens.shadowScale({
       ink: hardShadow("4px", ref.color.ink),
       yellow: hardShadow("4px", ref.color.yellow[300]),
@@ -135,7 +124,6 @@ const system = defineSystemTokens({
       coral: hardShadow("6px", ref.color.coral[500]),
       blue: hardShadow("6px", ref.color.blue[600]),
     }),
-    // Pressed: the element moves towards its shadow.
     press: tokens.shadowScale({
       ink: hardShadow("2px", ref.color.ink),
       coral: hardShadow("2px", ref.color.coral[500]),
@@ -143,20 +131,10 @@ const system = defineSystemTokens({
   },
   motion: {
     duration: tokens.duration("120ms"),
-    // The CSS `ease` keyword.
     easing: tokens.cubicBezier([0.25, 0.1, 0.25, 1]),
   },
 });
 
-const darkLine = ref.color.cream[50];
-// Hard shadows that read as depth on the dark page instead of a second outline.
-const darkShadow = "#5c5647";
-
-// Dark: ink becomes the page, lines turn cream and the CTA band dims to amber. Accents, syntax
-// and `onAccent` keep their values.
-// Applied on .lp-root (not :root), so overrides target system tokens: ref changes would not reach
-// system variables already resolved at :root. Color overrides must be raw values; composites can
-// still point at ref.
 const dark = defineTheme(system, {
   color: {
     background: tokens.color("#1b1a17"),
@@ -176,27 +154,27 @@ const dark = defineTheme(system, {
     error: { text: tokens.color("#ff9a85") },
   },
   border: {
-    thin: tokens.border({ color: darkLine, width: "2px", style: "solid" }),
-    default: tokens.border({ color: darkLine, width: "3px", style: "solid" }),
-    heavy: tokens.border({ color: darkLine, width: "4px", style: "solid" }),
+    thin: tokens.border({ color: ref.color.cream[50], width: "2px", style: "solid" }),
+    default: tokens.border({ color: ref.color.cream[50], width: "3px", style: "solid" }),
+    heavy: tokens.border({ color: ref.color.cream[50], width: "4px", style: "solid" }),
     focus: tokens.border({ color: "#7aa7ff", width: "3px", style: "solid" }),
   },
   shadow: {
     sm: tokens.shadowScale({
-      ink: hardShadow("4px", darkShadow),
+      ink: hardShadow("4px", ref.color.lightInk),
       yellow: hardShadow("4px", ref.color.yellow[300]),
       green: hardShadow("4px", ref.color.green[500]),
       coral: hardShadow("4px", ref.color.coral[500]),
       blue: hardShadow("4px", ref.color.blue[600]),
     }),
     lg: tokens.shadowScale({
-      ink: hardShadow("6px", darkShadow),
+      ink: hardShadow("6px", ref.color.lightInk),
       green: hardShadow("6px", ref.color.green[500]),
       coral: hardShadow("6px", ref.color.coral[500]),
       blue: hardShadow("6px", ref.color.blue[600]),
     }),
     press: tokens.shadowScale({
-      ink: hardShadow("2px", darkShadow),
+      ink: hardShadow("2px", ref.color.lightInk),
       coral: hardShadow("2px", ref.color.coral[500]),
     }),
   },
