@@ -1,9 +1,9 @@
 import { createTheme, createThemeContract } from "@vanilla-extract/css";
 
 export const vars = createThemeContract({
-  ref: {
-    color: {
-      danger: {
+  "ref": {
+    "color": {
+      "danger": {
         "50": null,
         "100": null,
         "200": null,
@@ -17,7 +17,7 @@ export const vars = createThemeContract({
         "300-32": null,
         "500-32": null,
       },
-      info: {
+      "info": {
         "50": null,
         "100": null,
         "200": null,
@@ -29,7 +29,7 @@ export const vars = createThemeContract({
         "800": null,
         "900": null,
       },
-      primary: {
+      "primary": {
         "25": null,
         "50": null,
         "100": null,
@@ -45,7 +45,7 @@ export const vars = createThemeContract({
         "700-32": null,
         "900-32": null,
       },
-      secondary: {
+      "secondary": {
         "25": null,
         "50": null,
         "100": null,
@@ -63,7 +63,7 @@ export const vars = createThemeContract({
         "900-20": null,
         "900-50": null,
       },
-      success: {
+      "success": {
         "50": null,
         "100": null,
         "200": null,
@@ -75,7 +75,7 @@ export const vars = createThemeContract({
         "800": null,
         "900": null,
       },
-      warning: {
+      "warning": {
         "50": null,
         "100": null,
         "200": null,
@@ -87,7 +87,7 @@ export const vars = createThemeContract({
         "800": null,
         "900": null,
       },
-      white: {
+      "white": {
         "10": null,
         "32": null,
         "60": null,
@@ -95,7 +95,7 @@ export const vars = createThemeContract({
         "100": null,
       },
     },
-    spacing: {
+    "spacing": {
       "0": null,
       "2": null,
       "4": null,
@@ -112,76 +112,76 @@ export const vars = createThemeContract({
       "72": null,
       "80": null,
     },
-    radius: {
-      none: null,
-      inner: null,
-      element: null,
-      container: null,
-      page: null,
-      full: null,
+    "radius": {
+      "none": null,
+      "inner": null,
+      "element": null,
+      "container": null,
+      "page": null,
+      "full": null,
     },
-    fontSize: {
-      xs: null,
-      sm: null,
-      base: null,
-      lg: null,
-      xl: null,
+    "fontSize": {
+      "xs": null,
+      "sm": null,
+      "base": null,
+      "lg": null,
+      "xl": null,
       "2xl": null,
       "3xl": null,
       "4xl": null,
     },
-    overlayWidth: {
-      sm: null,
-      md: null,
-      lg: null,
-      fullscreen: null,
+    "overlayWidth": {
+      "sm": null,
+      "md": null,
+      "lg": null,
+      "fullscreen": null,
     },
-    fontFamily: {
-      sans: null,
-      mono: null,
+    "fontFamily": {
+      "sans": null,
+      "mono": null,
     },
-    iconScale: {
-      xs: null,
-      sm: null,
-      base: null,
-      lg: null,
-      xl: null,
+    "iconScale": {
+      "xs": null,
+      "sm": null,
+      "base": null,
+      "lg": null,
+      "xl": null,
       "2xl": null,
       "3xl": null,
       "4xl": null,
     },
   },
-  system: {
-    colors: {
-      accent: null,
-      onAccent: null,
-      backgroundSurface: null,
-      backgroundBody: null,
-      backgroundCard: null,
-      backgroundMuted: null,
-      textPrimary: null,
-      textSecondary: null,
-      textDisabled: null,
-      border: null,
-      borderEmphasized: null,
-      skeleton: null,
-      success: null,
-      warning: null,
-      error: null,
-      onSuccess: null,
-      onWarning: null,
-      onError: null,
-      secondary: {
+  "system": {
+    "colors": {
+      "accent": null,
+      "onAccent": null,
+      "backgroundSurface": null,
+      "backgroundBody": null,
+      "backgroundCard": null,
+      "backgroundMuted": null,
+      "textPrimary": null,
+      "textSecondary": null,
+      "textDisabled": null,
+      "border": null,
+      "borderEmphasized": null,
+      "skeleton": null,
+      "success": null,
+      "warning": null,
+      "error": null,
+      "onSuccess": null,
+      "onWarning": null,
+      "onError": null,
+      "secondary": {
         "200": null,
       },
-      textScale: {
-        primary: null,
-        secondary: null,
-        disabled: null,
-        accent: null,
+      "textScale": {
+        "primary": null,
+        "secondary": null,
+        "disabled": null,
+        "accent": null,
       },
     },
-    spacing: {
+    "spacing": {
       "0": null,
       "2": null,
       "4": null,
@@ -198,204 +198,192 @@ export const vars = createThemeContract({
       "72": null,
       "80": null,
     },
-    radius: {
-      none: null,
-      inner: null,
-      element: null,
-      container: null,
-      page: null,
-      full: null,
+    "radius": {
+      "none": null,
+      "inner": null,
+      "element": null,
+      "container": null,
+      "page": null,
+      "full": null,
     },
-    typography: {
-      bodyFontFamily: null,
-      codeFontFamily: null,
+    "typography": {
+      "bodyFontFamily": null,
+      "codeFontFamily": null,
     },
-    motion: {
-      fast: null,
-      medium: null,
-      mediumMax: null,
-      slowMin: null,
-      standard: null,
+    "motion": {
+      "fast": null,
+      "medium": null,
+      "mediumMax": null,
+      "slowMin": null,
+      "standard": null,
     },
-    elevationScale: {
-      sm: null,
-      md: null,
-      lg: null,
-      inset: null,
+    "elevationScale": {
+      "sm": null,
+      "md": null,
+      "lg": null,
+      "inset": null,
     },
-    border: {
-      default: null,
+    "border": {
+      "default": null,
     },
-    borderScale: {
-      thin: null,
-      thick: null,
+    "borderScale": {
+      "thin": null,
+      "thick": null,
     },
-    textScale: {
+    "textScale": {
       "heading-branding-page-l": {
-        fontFamily: null,
-        fontSize: null,
-        fontWeight: null,
-        letterSpacing: null,
-        lineHeight: null,
+        "fontFamily": null,
+        "fontSize": null,
+        "fontWeight": null,
+        "letterSpacing": null,
+        "lineHeight": null,
       },
       "heading-branding-page": {
-        fontFamily: null,
-        fontSize: null,
-        fontWeight: null,
-        letterSpacing: null,
-        lineHeight: null,
+        "fontFamily": null,
+        "fontSize": null,
+        "fontWeight": null,
+        "letterSpacing": null,
+        "lineHeight": null,
       },
       "heading-page-l": {
-        fontFamily: null,
-        fontSize: null,
-        fontWeight: null,
-        letterSpacing: null,
-        lineHeight: null,
+        "fontFamily": null,
+        "fontSize": null,
+        "fontWeight": null,
+        "letterSpacing": null,
+        "lineHeight": null,
       },
       "heading-page": {
-        fontFamily: null,
-        fontSize: null,
-        fontWeight: null,
-        letterSpacing: null,
-        lineHeight: null,
+        "fontFamily": null,
+        "fontSize": null,
+        "fontWeight": null,
+        "letterSpacing": null,
+        "lineHeight": null,
       },
       "heading-section-1": {
-        fontFamily: null,
-        fontSize: null,
-        fontWeight: null,
-        letterSpacing: null,
-        lineHeight: null,
+        "fontFamily": null,
+        "fontSize": null,
+        "fontWeight": null,
+        "letterSpacing": null,
+        "lineHeight": null,
       },
       "heading-section-2": {
-        fontFamily: null,
-        fontSize: null,
-        fontWeight: null,
-        letterSpacing: null,
-        lineHeight: null,
+        "fontFamily": null,
+        "fontSize": null,
+        "fontWeight": null,
+        "letterSpacing": null,
+        "lineHeight": null,
       },
       "heading-section-3": {
-        fontFamily: null,
-        fontSize: null,
-        fontWeight: null,
-        letterSpacing: null,
-        lineHeight: null,
+        "fontFamily": null,
+        "fontSize": null,
+        "fontWeight": null,
+        "letterSpacing": null,
+        "lineHeight": null,
       },
       "heading-section-4": {
-        fontFamily: null,
-        fontSize: null,
-        fontWeight: null,
-        letterSpacing: null,
-        lineHeight: null,
+        "fontFamily": null,
+        "fontSize": null,
+        "fontWeight": null,
+        "letterSpacing": null,
+        "lineHeight": null,
       },
       "paragraph-body-xl-strong": {
-        fontFamily: null,
-        fontSize: null,
-        fontWeight: null,
-        letterSpacing: null,
-        lineHeight: null,
+        "fontFamily": null,
+        "fontSize": null,
+        "fontWeight": null,
+        "letterSpacing": null,
+        "lineHeight": null,
       },
       "paragraph-body-xl": {
-        fontFamily: null,
-        fontSize: null,
-        fontWeight: null,
-        letterSpacing: null,
-        lineHeight: null,
+        "fontFamily": null,
+        "fontSize": null,
+        "fontWeight": null,
+        "letterSpacing": null,
+        "lineHeight": null,
       },
       "paragraph-body-l-strong": {
-        fontFamily: null,
-        fontSize: null,
-        fontWeight: null,
-        letterSpacing: null,
-        lineHeight: null,
+        "fontFamily": null,
+        "fontSize": null,
+        "fontWeight": null,
+        "letterSpacing": null,
+        "lineHeight": null,
       },
       "paragraph-body-l": {
-        fontFamily: null,
-        fontSize: null,
-        fontWeight: null,
-        letterSpacing: null,
-        lineHeight: null,
+        "fontFamily": null,
+        "fontSize": null,
+        "fontWeight": null,
+        "letterSpacing": null,
+        "lineHeight": null,
       },
       "paragraph-body-m-strong": {
-        fontFamily: null,
-        fontSize: null,
-        fontWeight: null,
-        letterSpacing: null,
-        lineHeight: null,
+        "fontFamily": null,
+        "fontSize": null,
+        "fontWeight": null,
+        "letterSpacing": null,
+        "lineHeight": null,
       },
       "paragraph-body-m": {
-        fontFamily: null,
-        fontSize: null,
-        fontWeight: null,
-        letterSpacing: null,
-        lineHeight: null,
+        "fontFamily": null,
+        "fontSize": null,
+        "fontWeight": null,
+        "letterSpacing": null,
+        "lineHeight": null,
       },
-      clickable: {
-        fontFamily: null,
-        fontSize: null,
-        fontWeight: null,
-        letterSpacing: null,
-        lineHeight: null,
+      "clickable": {
+        "fontFamily": null,
+        "fontSize": null,
+        "fontWeight": null,
+        "letterSpacing": null,
+        "lineHeight": null,
       },
       "tiny-caption-strong": {
-        fontFamily: null,
-        fontSize: null,
-        fontWeight: null,
-        letterSpacing: null,
-        lineHeight: null,
+        "fontFamily": null,
+        "fontSize": null,
+        "fontWeight": null,
+        "letterSpacing": null,
+        "lineHeight": null,
       },
       "tiny-caption": {
-        fontFamily: null,
-        fontSize: null,
-        fontWeight: null,
-        letterSpacing: null,
-        lineHeight: null,
+        "fontFamily": null,
+        "fontSize": null,
+        "fontWeight": null,
+        "letterSpacing": null,
+        "lineHeight": null,
       },
       "tiny-subcaption": {
-        fontFamily: null,
-        fontSize: null,
-        fontWeight: null,
-        letterSpacing: null,
-        lineHeight: null,
+        "fontFamily": null,
+        "fontSize": null,
+        "fontWeight": null,
+        "letterSpacing": null,
+        "lineHeight": null,
       },
     },
-    transitionScale: {
-      fast: {
-        transitionDuration: null,
-        transitionDelay: null,
-        transitionTimingFunction: null,
+    "transitionScale": {
+      "fast": {
+        "transitionDuration": null,
+        "transitionDelay": null,
+        "transitionTimingFunction": null,
       },
-      slow: {
-        transitionDuration: null,
-        transitionDelay: null,
-        transitionTimingFunction: null,
+      "slow": {
+        "transitionDuration": null,
+        "transitionDelay": null,
+        "transitionTimingFunction": null,
       },
     },
-    gradients: {
-      accent: null,
+    "gradients": {
+      "accent": null,
     },
   },
-  components: {
-    switch: {
-      trackWidth: null,
-      trackHeight: null,
-      thumbSize: null,
+  "components": {
+    "switch": {
+      "trackWidth": null,
+      "trackHeight": null,
+      "thumbSize": null,
     },
   },
 });
 
-export type RefColorDanger =
-  | 50
-  | 100
-  | 200
-  | 300
-  | 400
-  | 500
-  | 600
-  | 700
-  | 800
-  | 900
-  | "300-32"
-  | "500-32";
+export type RefColorDanger = 50 | 100 | 200 | 300 | 400 | 500 | 600 | 700 | 800 | 900 | "300-32" | "500-32";
 
 export const refColorDanger = vars.ref.color.danger;
 
@@ -403,41 +391,11 @@ export type RefColorInfo = 50 | 100 | 200 | 300 | 400 | 500 | 600 | 700 | 800 | 
 
 export const refColorInfo = vars.ref.color.info;
 
-export type RefColorPrimary =
-  | 25
-  | 50
-  | 100
-  | 200
-  | 300
-  | 400
-  | 500
-  | 600
-  | 700
-  | 800
-  | 900
-  | "200-32"
-  | "700-32"
-  | "900-32";
+export type RefColorPrimary = 25 | 50 | 100 | 200 | 300 | 400 | 500 | 600 | 700 | 800 | 900 | "200-32" | "700-32" | "900-32";
 
 export const refColorPrimary = vars.ref.color.primary;
 
-export type RefColorSecondary =
-  | 25
-  | 50
-  | 100
-  | 200
-  | 300
-  | 400
-  | 500
-  | 600
-  | 700
-  | 750
-  | 800
-  | 900
-  | "900-10"
-  | "900-15"
-  | "900-20"
-  | "900-50";
+export type RefColorSecondary = 25 | 50 | 100 | 200 | 300 | 400 | 500 | 600 | 700 | 750 | 800 | 900 | "900-10" | "900-15" | "900-20" | "900-50";
 
 export const refColorSecondary = vars.ref.color.secondary;
 
@@ -489,25 +447,7 @@ export type SystemBorderScale = "thin" | "thick";
 
 export const systemBorderScale = vars.system.borderScale;
 
-export type SystemTextScale =
-  | "heading-branding-page-l"
-  | "heading-branding-page"
-  | "heading-page-l"
-  | "heading-page"
-  | "heading-section-1"
-  | "heading-section-2"
-  | "heading-section-3"
-  | "heading-section-4"
-  | "paragraph-body-xl-strong"
-  | "paragraph-body-xl"
-  | "paragraph-body-l-strong"
-  | "paragraph-body-l"
-  | "paragraph-body-m-strong"
-  | "paragraph-body-m"
-  | "clickable"
-  | "tiny-caption-strong"
-  | "tiny-caption"
-  | "tiny-subcaption";
+export type SystemTextScale = "heading-branding-page-l" | "heading-branding-page" | "heading-page-l" | "heading-page" | "heading-section-1" | "heading-section-2" | "heading-section-3" | "heading-section-4" | "paragraph-body-xl-strong" | "paragraph-body-xl" | "paragraph-body-l-strong" | "paragraph-body-l" | "paragraph-body-m-strong" | "paragraph-body-m" | "clickable" | "tiny-caption-strong" | "tiny-caption" | "tiny-subcaption";
 
 export const systemTextScale = vars.system.textScale;
 
@@ -520,187 +460,187 @@ export const systemVars = vars.system;
 export const componentVars = vars.components;
 
 export const themeClass = createTheme(vars, {
-  ref: {
-    color: {
-      danger: {
-        "50": "#fef2f2",
-        "100": "#fee2e2",
-        "200": "#fecaca",
-        "300": "#fca5a5",
-        "400": "#f87171",
-        "500": "#ef4444",
-        "600": "#dc2626",
-        "700": "#b91c1c",
-        "800": "#991b1b",
-        "900": "#7f1d1d",
-        "300-32": "#fca5a552",
-        "500-32": "#ef444452",
+  "ref": {
+    "color": {
+      "danger": {
+        "50": '#fef2f2',
+        "100": '#fee2e2',
+        "200": '#fecaca',
+        "300": '#fca5a5',
+        "400": '#f87171',
+        "500": '#ef4444',
+        "600": '#dc2626',
+        "700": '#b91c1c',
+        "800": '#991b1b',
+        "900": '#7f1d1d',
+        "300-32": '#fca5a552',
+        "500-32": '#ef444452',
       },
-      info: {
-        "50": "#eff6ff",
-        "100": "#dbeafe",
-        "200": "#bfdbfe",
-        "300": "#93c5fd",
-        "400": "#60a5fa",
-        "500": "#3b82f6",
-        "600": "#2563eb",
-        "700": "#1d4ed8",
-        "800": "#1e40af",
-        "900": "#1e3a8a",
+      "info": {
+        "50": '#eff6ff',
+        "100": '#dbeafe',
+        "200": '#bfdbfe',
+        "300": '#93c5fd',
+        "400": '#60a5fa',
+        "500": '#3b82f6',
+        "600": '#2563eb',
+        "700": '#1d4ed8',
+        "800": '#1e40af',
+        "900": '#1e3a8a',
       },
-      primary: {
-        "25": "#fafafa",
-        "50": "#fafafa",
-        "100": "#f4f4f5",
-        "200": "#e4e4e7",
-        "300": "#d4d4d8",
-        "400": "#a1a1aa",
-        "500": "#71717a",
-        "600": "#52525b",
-        "700": "#18181b",
-        "800": "#27272a",
-        "900": "#09090b",
-        "200-32": "#e4e4e752",
-        "700-32": "#18181b52",
-        "900-32": "#09090b52",
+      "primary": {
+        "25": '#fafafa',
+        "50": '#fafafa',
+        "100": '#f4f4f5',
+        "200": '#e4e4e7',
+        "300": '#d4d4d8',
+        "400": '#a1a1aa',
+        "500": '#71717a',
+        "600": '#52525b',
+        "700": '#18181b',
+        "800": '#27272a',
+        "900": '#09090b',
+        "200-32": '#e4e4e752',
+        "700-32": '#18181b52',
+        "900-32": '#09090b52',
       },
-      secondary: {
-        "25": "#ffffff",
-        "50": "#fafafa",
-        "100": "#f4f4f5",
-        "200": "#e4e4e7",
-        "300": "#d4d4d8",
-        "400": "#a1a1aa",
-        "500": "#71717a",
-        "600": "#52525b",
-        "700": "#3f3f46",
-        "750": "#27272a",
-        "800": "#18181b",
-        "900": "#09090b",
-        "900-10": "#09090b1a",
-        "900-15": "#09090b26",
-        "900-20": "#09090b33",
-        "900-50": "#09090b80",
+      "secondary": {
+        "25": '#ffffff',
+        "50": '#fafafa',
+        "100": '#f4f4f5',
+        "200": '#e4e4e7',
+        "300": '#d4d4d8',
+        "400": '#a1a1aa',
+        "500": '#71717a',
+        "600": '#52525b',
+        "700": '#3f3f46',
+        "750": '#27272a',
+        "800": '#18181b',
+        "900": '#09090b',
+        "900-10": '#09090b1a',
+        "900-15": '#09090b26',
+        "900-20": '#09090b33',
+        "900-50": '#09090b80',
       },
-      success: {
-        "50": "#f0fdf4",
-        "100": "#dcfce7",
-        "200": "#bbf7d0",
-        "300": "#86efac",
-        "400": "#4ade80",
-        "500": "#22c55e",
-        "600": "#16a34a",
-        "700": "#15803d",
-        "800": "#166534",
-        "900": "#14532d",
+      "success": {
+        "50": '#f0fdf4',
+        "100": '#dcfce7',
+        "200": '#bbf7d0',
+        "300": '#86efac',
+        "400": '#4ade80',
+        "500": '#22c55e',
+        "600": '#16a34a',
+        "700": '#15803d',
+        "800": '#166534',
+        "900": '#14532d',
       },
-      warning: {
-        "50": "#fffbeb",
-        "100": "#fef3c7",
-        "200": "#fde68a",
-        "300": "#fcd34d",
-        "400": "#fbbf24",
-        "500": "#f59e0b",
-        "600": "#d97706",
-        "700": "#b45309",
-        "800": "#92400e",
-        "900": "#78350f",
+      "warning": {
+        "50": '#fffbeb',
+        "100": '#fef3c7',
+        "200": '#fde68a',
+        "300": '#fcd34d',
+        "400": '#fbbf24',
+        "500": '#f59e0b',
+        "600": '#d97706',
+        "700": '#b45309',
+        "800": '#92400e',
+        "900": '#78350f',
       },
-      white: {
-        "10": "#ffffff1a",
-        "32": "#ffffff52",
-        "60": "#ffffff99",
-        "90": "#ffffffe5",
-        "100": "#ffffff",
+      "white": {
+        "10": '#ffffff1a',
+        "32": '#ffffff52',
+        "60": '#ffffff99',
+        "90": '#ffffffe5',
+        "100": '#ffffff',
       },
     },
-    spacing: {
-      "0": "0px",
-      "2": "2px",
-      "4": "4px",
-      "8": "8px",
-      "12": "12px",
-      "16": "16px",
-      "20": "20px",
-      "24": "24px",
-      "32": "32px",
-      "40": "40px",
-      "48": "48px",
-      "56": "56px",
-      "64": "64px",
-      "72": "72px",
-      "80": "80px",
+    "spacing": {
+      "0": '0px',
+      "2": '2px',
+      "4": '4px',
+      "8": '8px',
+      "12": '12px',
+      "16": '16px',
+      "20": '20px',
+      "24": '24px',
+      "32": '32px',
+      "40": '40px',
+      "48": '48px',
+      "56": '56px',
+      "64": '64px',
+      "72": '72px',
+      "80": '80px',
     },
-    radius: {
-      none: "0px",
-      inner: "4px",
-      element: "6px",
-      container: "8px",
-      page: "12px",
-      full: "9999px",
+    "radius": {
+      "none": '0px',
+      "inner": '4px',
+      "element": '6px',
+      "container": '8px',
+      "page": '12px',
+      "full": '9999px',
     },
-    fontSize: {
-      xs: "10px",
-      sm: "12px",
-      base: "14px",
-      lg: "17px",
-      xl: "20px",
-      "2xl": "24px",
-      "3xl": "30px",
-      "4xl": "36px",
+    "fontSize": {
+      "xs": '10px',
+      "sm": '12px',
+      "base": '14px',
+      "lg": '17px',
+      "xl": '20px',
+      "2xl": '24px',
+      "3xl": '30px',
+      "4xl": '36px',
     },
-    overlayWidth: {
-      sm: "24rem",
-      md: "32rem",
-      lg: "48rem",
-      fullscreen: "96rem",
+    "overlayWidth": {
+      "sm": '24rem',
+      "md": '32rem',
+      "lg": '48rem',
+      "fullscreen": '96rem',
     },
-    fontFamily: {
-      sans: "-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif",
-      mono: "SF Mono, Monaco, Consolas, monospace",
+    "fontFamily": {
+      "sans": '-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif',
+      "mono": 'SF Mono, Monaco, Consolas, monospace',
     },
-    iconScale: {
-      xs: "10px",
-      sm: "12px",
-      base: "14px",
-      lg: "17px",
-      xl: "20px",
-      "2xl": "24px",
-      "3xl": "30px",
-      "4xl": "36px",
+    "iconScale": {
+      "xs": '10px',
+      "sm": '12px',
+      "base": '14px',
+      "lg": '17px',
+      "xl": '20px',
+      "2xl": '24px',
+      "3xl": '30px',
+      "4xl": '36px',
     },
   },
-  system: {
-    colors: {
-      accent: vars.ref.color.primary[700],
-      onAccent: vars.ref.color.white[100],
-      backgroundSurface: vars.ref.color.white[100],
-      backgroundBody: vars.ref.color.secondary[50],
-      backgroundCard: vars.ref.color.white[100],
-      backgroundMuted: vars.ref.color.secondary[50],
-      textPrimary: vars.ref.color.secondary[900],
-      textSecondary: vars.ref.color.secondary[500],
-      textDisabled: vars.ref.color.secondary[400],
-      border: vars.ref.color.secondary[200],
-      borderEmphasized: vars.ref.color.secondary[400],
-      skeleton: vars.ref.color.secondary[200],
-      success: vars.ref.color.success[500],
-      warning: vars.ref.color.warning[500],
-      error: vars.ref.color.danger[500],
-      onSuccess: vars.ref.color.white[100],
-      onWarning: vars.ref.color.secondary[900],
-      onError: vars.ref.color.white[100],
-      secondary: {
+  "system": {
+    "colors": {
+      "accent": vars.ref.color.primary[700],
+      "onAccent": vars.ref.color.white[100],
+      "backgroundSurface": vars.ref.color.white[100],
+      "backgroundBody": vars.ref.color.secondary[50],
+      "backgroundCard": vars.ref.color.white[100],
+      "backgroundMuted": vars.ref.color.secondary[50],
+      "textPrimary": vars.ref.color.secondary[900],
+      "textSecondary": vars.ref.color.secondary[500],
+      "textDisabled": vars.ref.color.secondary[400],
+      "border": vars.ref.color.secondary[200],
+      "borderEmphasized": vars.ref.color.secondary[400],
+      "skeleton": vars.ref.color.secondary[200],
+      "success": vars.ref.color.success[500],
+      "warning": vars.ref.color.warning[500],
+      "error": vars.ref.color.danger[500],
+      "onSuccess": vars.ref.color.white[100],
+      "onWarning": vars.ref.color.secondary[900],
+      "onError": vars.ref.color.white[100],
+      "secondary": {
         "200": vars.ref.color.primary[700],
       },
-      textScale: {
-        primary: vars.ref.color.secondary[900],
-        secondary: vars.ref.color.secondary[500],
-        disabled: vars.ref.color.secondary[400],
-        accent: vars.ref.color.primary[700],
+      "textScale": {
+        "primary": vars.ref.color.secondary[900],
+        "secondary": vars.ref.color.secondary[500],
+        "disabled": vars.ref.color.secondary[400],
+        "accent": vars.ref.color.primary[700],
       },
     },
-    spacing: {
+    "spacing": {
       "0": vars.ref.spacing[0],
       "2": vars.ref.spacing[2],
       "4": vars.ref.spacing[4],
@@ -717,187 +657,187 @@ export const themeClass = createTheme(vars, {
       "72": vars.ref.spacing[72],
       "80": vars.ref.spacing[80],
     },
-    radius: {
-      none: vars.ref.radius.none,
-      inner: vars.ref.radius.inner,
-      element: vars.ref.radius.element,
-      container: vars.ref.radius.container,
-      page: vars.ref.radius.page,
-      full: vars.ref.radius.full,
+    "radius": {
+      "none": vars.ref.radius.none,
+      "inner": vars.ref.radius.inner,
+      "element": vars.ref.radius.element,
+      "container": vars.ref.radius.container,
+      "page": vars.ref.radius.page,
+      "full": vars.ref.radius.full,
     },
-    typography: {
-      bodyFontFamily: vars.ref.fontFamily.sans,
-      codeFontFamily: vars.ref.fontFamily.mono,
+    "typography": {
+      "bodyFontFamily": vars.ref.fontFamily.sans,
+      "codeFontFamily": vars.ref.fontFamily.mono,
     },
-    motion: {
-      fast: "175ms",
-      medium: "410ms",
-      mediumMax: "550ms",
-      slowMin: "730ms",
-      standard: "cubic-bezier(0.24, 1, 0.4, 1)",
+    "motion": {
+      "fast": '175ms',
+      "medium": '410ms',
+      "mediumMax": '550ms',
+      "slowMin": '730ms',
+      "standard": 'cubic-bezier(0.24, 1, 0.4, 1)',
     },
-    elevationScale: {
-      sm: `0px 0px 2px 0px ${vars.ref.color.secondary["900-20"]}, 0px 2px 10px 0px ${vars.ref.color.secondary["900-10"]}`,
-      md: `0px 0px 3px 0px ${vars.ref.color.secondary["900-10"]}, 0px 4px 20px 0px ${vars.ref.color.secondary["900-15"]}`,
-      lg: `0px 0px 4px 0px ${vars.ref.color.secondary["900-10"]}, 0px 8px 40px 0px ${vars.ref.color.secondary["900-15"]}`,
-      inset: `inset 0px 1px 2px 0px ${vars.ref.color.secondary["900-10"]}`,
+    "elevationScale": {
+      "sm": `0px 0px 2px 0px ${vars.ref.color.secondary["900-20"]}, 0px 2px 10px 0px ${vars.ref.color.secondary["900-10"]}`,
+      "md": `0px 0px 3px 0px ${vars.ref.color.secondary["900-10"]}, 0px 4px 20px 0px ${vars.ref.color.secondary["900-15"]}`,
+      "lg": `0px 0px 4px 0px ${vars.ref.color.secondary["900-10"]}, 0px 8px 40px 0px ${vars.ref.color.secondary["900-15"]}`,
+      "inset": `inset 0px 1px 2px 0px ${vars.ref.color.secondary["900-10"]}`,
     },
-    border: {
-      default: `1px solid ${vars.ref.color.secondary[200]}`,
+    "border": {
+      "default": `1px solid ${vars.ref.color.secondary[200]}`,
     },
-    borderScale: {
-      thin: `1px solid ${vars.ref.color.secondary[200]}`,
-      thick: `2px solid ${vars.ref.color.secondary[200]}`,
+    "borderScale": {
+      "thin": `1px solid ${vars.ref.color.secondary[200]}`,
+      "thick": `2px solid ${vars.ref.color.secondary[200]}`,
     },
-    textScale: {
+    "textScale": {
       "heading-branding-page-l": {
-        fontFamily: vars.ref.fontFamily.sans,
-        fontSize: "48px",
-        fontWeight: "600",
-        letterSpacing: "0px",
-        lineHeight: "1.2083",
+        "fontFamily": vars.ref.fontFamily.sans,
+        "fontSize": '48px',
+        "fontWeight": '600',
+        "letterSpacing": '0px',
+        "lineHeight": '1.2083',
       },
       "heading-branding-page": {
-        fontFamily: vars.ref.fontFamily.sans,
-        fontSize: "32px",
-        fontWeight: "600",
-        letterSpacing: "0px",
-        lineHeight: "1.25",
+        "fontFamily": vars.ref.fontFamily.sans,
+        "fontSize": '32px',
+        "fontWeight": '600',
+        "letterSpacing": '0px',
+        "lineHeight": '1.25',
       },
       "heading-page-l": {
-        fontFamily: vars.ref.fontFamily.sans,
-        fontSize: "24px",
-        fontWeight: "700",
-        letterSpacing: "0px",
-        lineHeight: "1.25",
+        "fontFamily": vars.ref.fontFamily.sans,
+        "fontSize": '24px',
+        "fontWeight": '700',
+        "letterSpacing": '0px',
+        "lineHeight": '1.25',
       },
       "heading-page": {
-        fontFamily: vars.ref.fontFamily.sans,
-        fontSize: "22px",
-        fontWeight: "600",
-        letterSpacing: "0px",
-        lineHeight: "1.3636",
+        "fontFamily": vars.ref.fontFamily.sans,
+        "fontSize": '22px',
+        "fontWeight": '600',
+        "letterSpacing": '0px',
+        "lineHeight": '1.3636',
       },
       "heading-section-1": {
-        fontFamily: vars.ref.fontFamily.sans,
-        fontSize: "20px",
-        fontWeight: "600",
-        letterSpacing: "0px",
-        lineHeight: "1.5",
+        "fontFamily": vars.ref.fontFamily.sans,
+        "fontSize": '20px',
+        "fontWeight": '600',
+        "letterSpacing": '0px',
+        "lineHeight": '1.5',
       },
       "heading-section-2": {
-        fontFamily: vars.ref.fontFamily.sans,
-        fontSize: "18px",
-        fontWeight: "600",
-        letterSpacing: "0px",
-        lineHeight: "1.3333",
+        "fontFamily": vars.ref.fontFamily.sans,
+        "fontSize": '18px',
+        "fontWeight": '600',
+        "letterSpacing": '0px',
+        "lineHeight": '1.3333',
       },
       "heading-section-3": {
-        fontFamily: vars.ref.fontFamily.sans,
-        fontSize: "16px",
-        fontWeight: "600",
-        letterSpacing: "0px",
-        lineHeight: "1.5",
+        "fontFamily": vars.ref.fontFamily.sans,
+        "fontSize": '16px',
+        "fontWeight": '600',
+        "letterSpacing": '0px',
+        "lineHeight": '1.5',
       },
       "heading-section-4": {
-        fontFamily: vars.ref.fontFamily.sans,
-        fontSize: "14px",
-        fontWeight: "600",
-        letterSpacing: "0px",
-        lineHeight: "1.4286",
+        "fontFamily": vars.ref.fontFamily.sans,
+        "fontSize": '14px',
+        "fontWeight": '600',
+        "letterSpacing": '0px',
+        "lineHeight": '1.4286',
       },
       "paragraph-body-xl-strong": {
-        fontFamily: vars.ref.fontFamily.sans,
-        fontSize: "18px",
-        fontWeight: "500",
-        letterSpacing: "0px",
-        lineHeight: "1.3333",
+        "fontFamily": vars.ref.fontFamily.sans,
+        "fontSize": '18px',
+        "fontWeight": '500',
+        "letterSpacing": '0px',
+        "lineHeight": '1.3333',
       },
       "paragraph-body-xl": {
-        fontFamily: vars.ref.fontFamily.sans,
-        fontSize: "18px",
-        fontWeight: "400",
-        letterSpacing: "0px",
-        lineHeight: "1.3333",
+        "fontFamily": vars.ref.fontFamily.sans,
+        "fontSize": '18px',
+        "fontWeight": '400',
+        "letterSpacing": '0px',
+        "lineHeight": '1.3333',
       },
       "paragraph-body-l-strong": {
-        fontFamily: vars.ref.fontFamily.sans,
-        fontSize: "16px",
-        fontWeight: "500",
-        letterSpacing: "0px",
-        lineHeight: "1.5",
+        "fontFamily": vars.ref.fontFamily.sans,
+        "fontSize": '16px',
+        "fontWeight": '500',
+        "letterSpacing": '0px',
+        "lineHeight": '1.5',
       },
       "paragraph-body-l": {
-        fontFamily: vars.ref.fontFamily.sans,
-        fontSize: "16px",
-        fontWeight: "400",
-        letterSpacing: "0px",
-        lineHeight: "1.5",
+        "fontFamily": vars.ref.fontFamily.sans,
+        "fontSize": '16px',
+        "fontWeight": '400',
+        "letterSpacing": '0px',
+        "lineHeight": '1.5',
       },
       "paragraph-body-m-strong": {
-        fontFamily: vars.ref.fontFamily.sans,
-        fontSize: "14px",
-        fontWeight: "600",
-        letterSpacing: "0px",
-        lineHeight: "1.4286",
+        "fontFamily": vars.ref.fontFamily.sans,
+        "fontSize": '14px',
+        "fontWeight": '600',
+        "letterSpacing": '0px',
+        "lineHeight": '1.4286',
       },
       "paragraph-body-m": {
-        fontFamily: vars.ref.fontFamily.sans,
-        fontSize: "14px",
-        fontWeight: "400",
-        letterSpacing: "0px",
-        lineHeight: "1.4286",
+        "fontFamily": vars.ref.fontFamily.sans,
+        "fontSize": '14px',
+        "fontWeight": '400',
+        "letterSpacing": '0px',
+        "lineHeight": '1.4286',
       },
-      clickable: {
-        fontFamily: vars.ref.fontFamily.sans,
-        fontSize: "14px",
-        fontWeight: "500",
-        letterSpacing: "0px",
-        lineHeight: "1.4286",
+      "clickable": {
+        "fontFamily": vars.ref.fontFamily.sans,
+        "fontSize": '14px',
+        "fontWeight": '500',
+        "letterSpacing": '0px',
+        "lineHeight": '1.4286',
       },
       "tiny-caption-strong": {
-        fontFamily: vars.ref.fontFamily.sans,
-        fontSize: "12px",
-        fontWeight: "700",
-        letterSpacing: "0px",
-        lineHeight: "1.3333",
+        "fontFamily": vars.ref.fontFamily.sans,
+        "fontSize": '12px',
+        "fontWeight": '700',
+        "letterSpacing": '0px',
+        "lineHeight": '1.3333',
       },
       "tiny-caption": {
-        fontFamily: vars.ref.fontFamily.sans,
-        fontSize: "12px",
-        fontWeight: "500",
-        letterSpacing: "0px",
-        lineHeight: "1.3333",
+        "fontFamily": vars.ref.fontFamily.sans,
+        "fontSize": '12px',
+        "fontWeight": '500',
+        "letterSpacing": '0px',
+        "lineHeight": '1.3333',
       },
       "tiny-subcaption": {
-        fontFamily: vars.ref.fontFamily.sans,
-        fontSize: "10px",
-        fontWeight: "500",
-        letterSpacing: "0px",
-        lineHeight: "1",
+        "fontFamily": vars.ref.fontFamily.sans,
+        "fontSize": '10px',
+        "fontWeight": '500',
+        "letterSpacing": '0px',
+        "lineHeight": '1',
       },
     },
-    transitionScale: {
-      fast: {
-        transitionDuration: "100ms",
-        transitionDelay: "0ms",
-        transitionTimingFunction: "cubic-bezier(0.24, 1, 0.4, 1)",
+    "transitionScale": {
+      "fast": {
+        "transitionDuration": '100ms',
+        "transitionDelay": '0ms',
+        "transitionTimingFunction": 'cubic-bezier(0.24, 1, 0.4, 1)',
       },
-      slow: {
-        transitionDuration: "400ms",
-        transitionDelay: "0ms",
-        transitionTimingFunction: "cubic-bezier(0.24, 1, 0.4, 1)",
+      "slow": {
+        "transitionDuration": '400ms',
+        "transitionDelay": '0ms',
+        "transitionTimingFunction": 'cubic-bezier(0.24, 1, 0.4, 1)',
       },
     },
-    gradients: {
-      accent: `linear-gradient(135deg, ${vars.ref.color.primary[700]} 0%, ${vars.ref.color.primary[500]} 100%)`,
+    "gradients": {
+      "accent": `linear-gradient(135deg, ${vars.ref.color.primary[700]} 0%, ${vars.ref.color.primary[500]} 100%)`,
     },
   },
-  components: {
-    switch: {
-      trackWidth: "32px",
-      trackHeight: "18px",
-      thumbSize: "14px",
+  "components": {
+    "switch": {
+      "trackWidth": '32px',
+      "trackHeight": '18px',
+      "thumbSize": '14px',
     },
   },
 });

@@ -8,6 +8,7 @@
     "dev": "yarn dev:tokens && vocs dev",
     "build": "yarn dev:tokens && vocs build",
     "preview": "vocs preview",
+    "deploy": "wrangler deploy",
     "typecheck": "tsc --noEmit",
     "test": "node --test"
   },
@@ -21,6 +22,7 @@
     "typescript": "6.0.3",
     "vite": "8.3.4",
     "vocs": "2.10.2",
-    "waku": "1.0.0-rc.3"
+    "waku": "1.0.0-rc.3",
+    "wrangler": "4.151.3"
   }
 }

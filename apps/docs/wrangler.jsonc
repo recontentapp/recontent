@@ -1,0 +1,9 @@
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "recontent-docs",
+  "compatibility_date": "2026-10-22",
+  "assets": {
+    "directory": "./dist/public",
+    "not_found_handling": "404-page",
+  },
+}

@@ -24,33 +24,33 @@ export const refColorNeutral = {
 export type RefSpacing = "sm" | "md" | "lg" | "xl";
 
 export const refSpacing = {
-  sm: vars.refSpacingSm,
-  md: vars.refSpacingMd,
-  lg: vars.refSpacingLg,
-  xl: vars.refSpacingXl,
+  "sm": vars.refSpacingSm,
+  "md": vars.refSpacingMd,
+  "lg": vars.refSpacingLg,
+  "xl": vars.refSpacingXl,
 } as const;
 
 export type RefRadius = "sm" | "md" | "full";
 
 export const refRadius = {
-  sm: vars.refRadiusSm,
-  md: vars.refRadiusMd,
-  full: vars.refRadiusFull,
+  "sm": vars.refRadiusSm,
+  "md": vars.refRadiusMd,
+  "full": vars.refRadiusFull,
 } as const;
 
 export type SystemSpacing = "sm" | "md" | "lg" | "xl";
 
 export const systemSpacing = {
-  sm: vars.systemSpacingSm,
-  md: vars.systemSpacingMd,
-  lg: vars.systemSpacingLg,
-  xl: vars.systemSpacingXl,
+  "sm": vars.systemSpacingSm,
+  "md": vars.systemSpacingMd,
+  "lg": vars.systemSpacingLg,
+  "xl": vars.systemSpacingXl,
 } as const;
 
 export type SystemRadius = "sm" | "md" | "full";
 
 export const systemRadius = {
-  sm: vars.systemRadiusSm,
-  md: vars.systemRadiusMd,
-  full: vars.systemRadiusFull,
+  "sm": vars.systemRadiusSm,
+  "md": vars.systemRadiusMd,
+  "full": vars.systemRadiusFull,
 } as const;

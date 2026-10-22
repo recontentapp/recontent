@@ -1,6 +1,7 @@
 :root {
   --ref-color-white: #ffffff;
   --ref-color-ink: #1b1a17;
+  --ref-color-lightInk: #5c5647;
   --ref-color-inkAlpha-8: #1b1a1714;
   --ref-color-inkAlpha-12: #1b1a171f;
   --ref-color-stone: #b9b2a0;
@@ -19,8 +20,7 @@
   --ref-color-blue-100: #d3e2ff;
   --ref-color-blue-600: #2563eb;
   --ref-fontFamily-display: Arial Black, Helvetica Neue, Arial, Segoe UI, system-ui, sans-serif;
-  --ref-fontFamily-body:
-    system-ui, -apple-system, Segoe UI, Roboto, Helvetica Neue, Arial, sans-serif;
+  --ref-fontFamily-body: system-ui, -apple-system, Segoe UI, Roboto, Helvetica Neue, Arial, sans-serif;
   --ref-fontFamily-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, Liberation Mono, monospace;
   --ref-fontWeight-medium: 500;
   --ref-fontWeight-semibold: 600;
@@ -121,15 +121,15 @@
   --system-border-default: 3px solid var(--ref-color-cream-50);
   --system-border-heavy: 4px solid var(--ref-color-cream-50);
   --system-border-focus: 3px solid #7aa7ff;
-  --system-shadow-sm-ink: 4px 4px 0px 0px #5c5647;
+  --system-shadow-sm-ink: 4px 4px 0px 0px var(--ref-color-lightInk);
   --system-shadow-sm-yellow: 4px 4px 0px 0px var(--ref-color-yellow-300);
   --system-shadow-sm-green: 4px 4px 0px 0px var(--ref-color-green-500);
   --system-shadow-sm-coral: 4px 4px 0px 0px var(--ref-color-coral-500);
   --system-shadow-sm-blue: 4px 4px 0px 0px var(--ref-color-blue-600);
-  --system-shadow-lg-ink: 6px 6px 0px 0px #5c5647;
+  --system-shadow-lg-ink: 6px 6px 0px 0px var(--ref-color-lightInk);
   --system-shadow-lg-green: 6px 6px 0px 0px var(--ref-color-green-500);
   --system-shadow-lg-coral: 6px 6px 0px 0px var(--ref-color-coral-500);
   --system-shadow-lg-blue: 6px 6px 0px 0px var(--ref-color-blue-600);
-  --system-shadow-press-ink: 2px 2px 0px 0px #5c5647;
+  --system-shadow-press-ink: 2px 2px 0px 0px var(--ref-color-lightInk);
   --system-shadow-press-coral: 2px 2px 0px 0px var(--ref-color-coral-500);
 }
