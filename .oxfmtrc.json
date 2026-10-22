@@ -6,6 +6,8 @@
     "**/storybook-static/**",
     "**/*.gen.ts",
     "**/*.gen.tsx",
-    "**/*.gen.css.ts"
+    "**/*.gen.css.ts",
+    "**/generated/**",
+    "apps/vanilla-extract-playground/docs/**"
   ]
 }

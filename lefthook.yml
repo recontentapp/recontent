@@ -3,9 +3,9 @@ pre-commit:
   commands:
     lint:
       glob: "*.{js,jsx,mjs,cjs,ts,tsx}"
-      run: yarn oxlint --fix {staged_files}
+      run: pnpm exec oxlint --fix {staged_files}
       stage_fixed: true
     format:
       glob: "*"
-      run: yarn oxfmt --no-error-on-unmatched-pattern {staged_files}
+      run: pnpm exec oxfmt --no-error-on-unmatched-pattern {staged_files}
       stage_fixed: true

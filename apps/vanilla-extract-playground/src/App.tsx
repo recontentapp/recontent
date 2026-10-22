@@ -10,7 +10,7 @@ export function App() {
         <Stack gap={8}>
           <h1 className={title}>recontent playground</h1>
           <p className={copy}>
-            Edit <code>recontent.config.ts</code>, then run <code>yarn dev:tokens</code> to
+            Edit <code>recontent.config.ts</code>, then run <code>pnpm dev:tokens</code> to
             regenerate this component and its tokens.
           </p>
         </Stack>

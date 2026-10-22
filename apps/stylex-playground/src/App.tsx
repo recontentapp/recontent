@@ -84,7 +84,7 @@ export function App() {
         <span {...stylex.props(styles.eyebrow)}>stylex output</span>
         <h1 {...stylex.props(styles.title)}>recontent stylex playground</h1>
         <p {...stylex.props(styles.copy)}>
-          Edit <code>recontent.config.ts</code>, then run <code>yarn dev:tokens</code> to regenerate{" "}
+          Edit <code>recontent.config.ts</code>, then run <code>pnpm dev:tokens</code> to regenerate{" "}
           <code>src/generated/stylex</code> and its StyleX vars.
         </p>
 

@@ -33,18 +33,18 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: "24.11.0"
-          cache: yarn
+          cache: pnpm
           registry-url: https://registry.npmjs.org
 
-      - name: Enable Corepack
-        run: corepack enable
-
       - name: Install dependencies
-        run: yarn install --immutable
+        run: pnpm install --frozen-lockfile
 
       - name: Ensure npm supports trusted publishing
         run: npm install -g npm@latest
@@ -58,8 +58,8 @@ jobs:
           fi
 
       - name: Build
-        run: yarn build
+        run: pnpm build
 
       - name: Publish to npm
         working-directory: ${{ steps.package.outputs.dir }}
-        run: npm publish --provenance --access public
+        run: pnpm publish --provenance --access public --no-git-checks
