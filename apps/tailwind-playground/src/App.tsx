@@ -31,7 +31,7 @@ export function App() {
         <h1 className="font-heading text-heading">recontent tailwind playground</h1>
         <p className="font-body text-body text-muted-foreground">
           Edit <code className="font-mono text-accent-strong">recontent.config.ts</code>, then run{" "}
-          <code className="font-mono text-accent-strong">yarn dev:tokens</code> to regenerate{" "}
+          <code className="font-mono text-accent-strong">pnpm dev:tokens</code> to regenerate{" "}
           <code className="font-mono text-accent-strong">src/generated/tailwind</code>.
         </p>
 

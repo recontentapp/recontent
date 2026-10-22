@@ -5,8 +5,8 @@
   "type": "module",
   "scripts": {
     "dev:tokens": "recontent build -c recontent.config.ts",
-    "dev": "yarn dev:tokens && vocs dev",
-    "build": "yarn dev:tokens && vocs build",
+    "dev": "pnpm dev:tokens && vocs dev",
+    "build": "pnpm dev:tokens && vocs build",
     "preview": "vocs preview",
     "deploy": "wrangler deploy",
     "typecheck": "tsc --noEmit",
@@ -15,10 +15,11 @@
   "devDependencies": {
     "@types/node": "24.1.0",
     "@types/react": "19.3.0",
+    "@typescript/native": "npm:typescript@7.0.2",
     "react": "19.3.0",
     "react-dom": "19.3.0",
     "react-server-dom-webpack": "19.3.0",
-    "recontent": "*",
+    "recontent": "workspace:*",
     "typescript": "6.0.3",
     "vite": "8.3.4",
     "vocs": "2.10.2",

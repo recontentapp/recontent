@@ -17,9 +17,9 @@
     "test": "NODE_OPTIONS=--experimental-vm-modules jest"
   },
   "dependencies": {
-    "@recontentapp/core": "0.1.2",
+    "@recontentapp/core": "workspace:*",
     "commander": "^15.0.0",
-    "typescript": "^6.0.3"
+    "typescript": "npm:@typescript/typescript6@^6.0.2"
   },
   "devDependencies": {
     "@babel/core": "8.0.1",
@@ -31,6 +31,7 @@
     "@swc/jest": "0.2.39",
     "@tailwindcss/node": "4.3.3",
     "@types/node": "24.1.0",
+    "@typescript/native": "npm:typescript@7.0.2",
     "jest": "30.2.0",
     "tailwindcss": "4.3.3",
     "tsdown": "0.22.9"

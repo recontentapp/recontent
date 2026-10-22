@@ -1,0 +1,11 @@
+packages:
+  - packages/*
+  - apps/*
+allowBuilds:
+  "@swc/core": true
+  es5-ext: false
+  esbuild: true
+  lefthook: true
+  unrs-resolver: true
+  vue-demi: false
+  workerd: true

@@ -5,8 +5,8 @@
  * argument parsing and process-exit contract in a way unit tests on
  * individual command modules cannot.
  *
- * Requires `yarn build` to have run first (CI's `test` job depends on
- * `build` and downloads its artifacts before running `yarn test`).
+ * Requires `pnpm build` to have run first (CI's `test` job depends on
+ * `build` and downloads its artifacts before running `pnpm test`).
  *
  * Fixtures live under `test/fixtures/**` and are copied into a scratch
  * directory nested inside the repo (rather than under the OS tmpdir) so that
@@ -43,7 +43,7 @@ const scratchRoot = path.join(repoRoot, "packages/recontent/test/.e2e-tmp");
 
 beforeAll(() => {
   if (!existsSync(binPath)) {
-    throw new Error(`${binPath} does not exist. Run "yarn build" before running this test file.`);
+    throw new Error(`${binPath} does not exist. Run "pnpm build" before running this test file.`);
   }
 });
 

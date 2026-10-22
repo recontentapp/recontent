@@ -20,13 +20,21 @@ It ships as a command line interface, so humans, agents and CI use it the same w
 ## Development
 
 ```bash
-yarn install
-yarn build        # packages, playgrounds and the docs site
-yarn typecheck
-yarn test
-yarn lint
-yarn format:check
-yarn knip
+pnpm install
+pnpm build        # packages, playgrounds and the docs site
+pnpm typecheck
+pnpm test
+pnpm lint
+pnpm format:check
+pnpm knip
 ```
 
-To work on the docs, run `yarn workspace docs dev`.
+To work on the docs, run `pnpm --filter docs dev`.
+
+### TypeScript 6 and 7
+
+`tsc` is the native TypeScript 7 compiler, installed as `@typescript/native` (an alias of
+`typescript@7`). TypeScript 7 has no programmatic API yet, so code that does `import ts from
+"typescript"` gets TypeScript 6 through `typescript: npm:@typescript/typescript6` (which only
+provides `tsc6`, so the two `tsc` binaries never collide). `apps/docs` uses the real
+`typescript@6` because twoslash needs its `lib.*.d.ts` files.

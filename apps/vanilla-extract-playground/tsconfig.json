@@ -2,7 +2,9 @@
   "extends": "../../tsconfig.json",
   "compilerOptions": {
     "rootDir": ".",
-    "types": ["vite/client"]
+    "types": ["vite/client"],
+    "declaration": false,
+    "declarationMap": false
   },
   "include": ["src", "stories", "recontent.config.ts", ".storybook"]
 }
