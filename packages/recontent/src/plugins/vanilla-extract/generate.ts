@@ -9,30 +9,31 @@ import {
   type RawToken,
   type StampedToken,
   type TokenEntry,
-  type TokenLayer,
+  // type TokenLayer,
   type TokenType,
   type TokenTypeMap,
   type ThemeOverride,
   pathKey,
 } from "@recontentapp/core";
-import { registryComponents, type BuiltInComponentOptions } from "./registry/manifest.js";
+// TODO(built-in components): not ready for release, re-enable together with the commented logic below.
+// import { registryComponents, type BuiltInComponentOptions } from "./registry/manifest.js";
 import {
   serializeCompositeCss,
   serializeValueCss,
   type MemberResolver,
 } from "../../serialize/values.js";
 import {
-  generateBuiltInComponentFiles,
-  generateInternalModuleFiles,
+  // generateBuiltInComponentFiles,
+  // generateInternalModuleFiles,
   generateUseBreakpointFiles,
-  getBuiltInComponentDependencies,
-  formatMissingDesignTokensMessage,
-  getInternalModuleDependencies,
-  getUseBreakpointDependencies,
-  MissingDesignTokensError,
-  normalizeBuiltInComponents,
-  resolveBuiltInComponentIds,
-  validateBuiltInComponents,
+  // getBuiltInComponentDependencies,
+  // formatMissingDesignTokensMessage,
+  // getInternalModuleDependencies,
+  // getUseBreakpointDependencies,
+  // MissingDesignTokensError,
+  // normalizeBuiltInComponents,
+  // resolveBuiltInComponentIds,
+  // validateBuiltInComponents,
 } from "./registry/index.js";
 import type { BreakpointBinding } from "./registry/types.js";
 import { getEntry, terminalEntry } from "../shared/alias.js";
@@ -194,28 +195,28 @@ function valuesTree(config: GeneratorContext, themeName?: string): SourceTree {
   return tree;
 }
 
-function scaleExportKey(layer: TokenLayer, path: string[]): string {
-  return `${layer}:${pathKey(path)}`;
-}
-
-function resolveScaleBinding<T extends TokenType>(
-  scaleExportIndex: Map<string, ScaleExport>,
-  scale: ScaleBinding<T>,
-  expectedType: T,
-  label: string,
-): ScaleExport {
-  if (!isTokenScale(scale) || scale.$type !== expectedType) {
-    throw new Error(`Component config "${label}" must be a ${expectedType} TokenScale.`);
-  }
-  if (!scale._layer || !scale._path) {
-    throw new Error(`Component config "${label}" must reference a defined token scale.`);
-  }
-  const found = scaleExportIndex.get(scaleExportKey(scale._layer, scale._path));
-  if (!found) {
-    throw new Error(`Component config "${label}" references a scale with no generated export.`);
-  }
-  return found;
-}
+// function scaleExportKey(layer: TokenLayer, path: string[]): string {
+//   return `${layer}:${pathKey(path)}`;
+// }
+//
+// function resolveScaleBinding<T extends TokenType>(
+//   scaleExportIndex: Map<string, ScaleExport>,
+//   scale: ScaleBinding<T>,
+//   expectedType: T,
+//   label: string,
+// ): ScaleExport {
+//   if (!isTokenScale(scale) || scale.$type !== expectedType) {
+//     throw new Error(`Component config "${label}" must be a ${expectedType} TokenScale.`);
+//   }
+//   if (!scale._layer || !scale._path) {
+//     throw new Error(`Component config "${label}" must reference a defined token scale.`);
+//   }
+//   const found = scaleExportIndex.get(scaleExportKey(scale._layer, scale._path));
+//   if (!found) {
+//     throw new Error(`Component config "${label}" references a scale with no generated export.`);
+//   }
+//   return found;
+// }
 
 function resolveTokenBinding<T extends TokenType>(
   registry: GeneratorContext["registry"],
@@ -377,7 +378,7 @@ function generateVanillaExtractSource(
 
 export type VanillaExtractPluginOptions = {
   outDir: string;
-  builtInComponents?: BuiltInComponentOptions | readonly string[];
+  // builtInComponents?: BuiltInComponentOptions | readonly string[];
   /** Optional. When omitted, no focus-ring styles are generated. */
   focusRingColor?: TokenBinding<"color">;
   fontFamily: TokenBinding<"fontFamily">;
@@ -389,78 +390,78 @@ export function generateVanillaExtractFiles(
   config: GeneratorContext,
   output: VanillaExtractPluginOptions,
 ): OutputFile[] {
-  const selection = normalizeBuiltInComponents(output.builtInComponents);
-  const builtInComponents = selection.names;
-  const resolvedComponentIds = resolveBuiltInComponentIds(builtInComponents);
-
-  if (builtInComponents.length > 0) {
-    const errors = validateBuiltInComponents(config, builtInComponents, selection.options);
-    if (errors.length > 0) {
-      throw new MissingDesignTokensError(formatMissingDesignTokensMessage(errors), errors);
-    }
-  }
+  //   const selection = normalizeBuiltInComponents(output.builtInComponents);
+  //   const builtInComponents = selection.names;
+  //   const resolvedComponentIds = resolveBuiltInComponentIds(builtInComponents);
+  //
+  //   if (builtInComponents.length > 0) {
+  //     const errors = validateBuiltInComponents(config, builtInComponents, selection.options);
+  //     if (errors.length > 0) {
+  //       throw new MissingDesignTokensError(formatMissingDesignTokensMessage(errors), errors);
+  //     }
+  //   }
 
   const resolvedBreakpoints = resolveBreakpoints(config, output.breakpoints);
 
   const scaleExports = scaleExportsForConfig(config);
-  const scaleExportIndex = new Map(
-    scaleExports.map((scaleExport) => [
-      scaleExportKey(scaleExport.metadata.layer, scaleExport.metadata.path),
-      scaleExport,
-    ]),
-  );
-  const scaleBindings: Record<string, { typeName: string; exportName: string }> = {};
-  const tokenBindings: Record<string, { reference: string }> = {};
-  const iconBindings: Record<string, string> = {};
-
-  for (const id of resolvedComponentIds) {
-    const component = registryComponents[id];
-    if (!component) continue;
-    const componentOptions = (selection.options as Record<string, unknown>)[component.name] ?? {};
-    for (const contract of component.contracts) {
-      const binding = (componentOptions as Record<string, unknown>)[contract.key];
-      if (binding === undefined) continue;
-      if (contract.kind === "token") {
-        tokenBindings[`${id}.${contract.key}`] = resolveTokenBinding(
-          config.registry,
-          binding as TokenBinding<TokenType>,
-          contract.type,
-          `${component.name}.${contract.key}`,
-        );
-      } else if (contract.kind === "scale") {
-        const scale = resolveScaleBinding(
-          scaleExportIndex,
-          binding as ScaleBinding<TokenType>,
-          contract.type,
-          `${component.name}.${contract.key}`,
-        );
-        scaleBindings[`${id}.${contract.key}`] = {
-          typeName: scale.typeName,
-          exportName: scale.exportName,
-        };
-      } else if (contract.kind === "icon") {
-        iconBindings[`${id}.${contract.key}`] = binding as string;
-      } else {
-        const variants = binding as Record<string, Record<string, unknown>>;
-        for (const [name, variant] of Object.entries(variants)) {
-          for (const field of contract.fields) {
-            if (field.kind === "icon") {
-              iconBindings[`${id}.${contract.key}.${name}.${field.key}`] = variant[
-                field.key
-              ] as string;
-              continue;
-            }
-            tokenBindings[`${id}.${contract.key}.${name}.${field.key}`] = resolveTokenBinding(
-              config.registry,
-              variant[field.key] as TokenBinding<TokenType>,
-              field.type,
-              `${component.name}.${contract.key}.${name}.${field.key}`,
-            );
-          }
-        }
-      }
-    }
-  }
+  //   const scaleExportIndex = new Map(
+  //     scaleExports.map((scaleExport) => [
+  //       scaleExportKey(scaleExport.metadata.layer, scaleExport.metadata.path),
+  //       scaleExport,
+  //     ]),
+  //   );
+  //   const scaleBindings: Record<string, { typeName: string; exportName: string }> = {};
+  //   const tokenBindings: Record<string, { reference: string }> = {};
+  //   const iconBindings: Record<string, string> = {};
+  //
+  //   for (const id of resolvedComponentIds) {
+  //     const component = registryComponents[id];
+  //     if (!component) continue;
+  //     const componentOptions = (selection.options as Record<string, unknown>)[component.name] ?? {};
+  //     for (const contract of component.contracts) {
+  //       const binding = (componentOptions as Record<string, unknown>)[contract.key];
+  //       if (binding === undefined) continue;
+  //       if (contract.kind === "token") {
+  //         tokenBindings[`${id}.${contract.key}`] = resolveTokenBinding(
+  //           config.registry,
+  //           binding as TokenBinding<TokenType>,
+  //           contract.type,
+  //           `${component.name}.${contract.key}`,
+  //         );
+  //       } else if (contract.kind === "scale") {
+  //         const scale = resolveScaleBinding(
+  //           scaleExportIndex,
+  //           binding as ScaleBinding<TokenType>,
+  //           contract.type,
+  //           `${component.name}.${contract.key}`,
+  //         );
+  //         scaleBindings[`${id}.${contract.key}`] = {
+  //           typeName: scale.typeName,
+  //           exportName: scale.exportName,
+  //         };
+  //       } else if (contract.kind === "icon") {
+  //         iconBindings[`${id}.${contract.key}`] = binding as string;
+  //       } else {
+  //         const variants = binding as Record<string, Record<string, unknown>>;
+  //         for (const [name, variant] of Object.entries(variants)) {
+  //           for (const field of contract.fields) {
+  //             if (field.kind === "icon") {
+  //               iconBindings[`${id}.${contract.key}.${name}.${field.key}`] = variant[
+  //                 field.key
+  //               ] as string;
+  //               continue;
+  //             }
+  //             tokenBindings[`${id}.${contract.key}.${name}.${field.key}`] = resolveTokenBinding(
+  //               config.registry,
+  //               variant[field.key] as TokenBinding<TokenType>,
+  //               field.type,
+  //               `${component.name}.${contract.key}.${name}.${field.key}`,
+  //             );
+  //           }
+  //         }
+  //       }
+  //     }
+  //   }
 
   const fontFamilyBinding = resolveTokenBinding(
     config.registry,
@@ -474,10 +475,10 @@ export function generateVanillaExtractFiles(
     "color",
     "placeholderColor",
   );
-  const focusRingColorBinding =
-    output.focusRingColor === undefined
-      ? undefined
-      : resolveTokenBinding(config.registry, output.focusRingColor, "color", "focusRingColor");
+  //   const focusRingColorBinding =
+  //     output.focusRingColor === undefined
+  //       ? undefined
+  //       : resolveTokenBinding(config.registry, output.focusRingColor, "color", "focusRingColor");
 
   const files: OutputFile[] = [
     {
@@ -492,30 +493,30 @@ export function generateVanillaExtractFiles(
       }),
     },
   ];
-  if (builtInComponents.length > 0) {
-    files.push(
-      ...generateBuiltInComponentFiles(resolvedComponentIds, {
-        scaleBindings,
-        tokenBindings,
-        iconBindings,
-        breakpoints: resolvedBreakpoints,
-        focusRingColor: focusRingColorBinding,
-      }),
-      ...generateInternalModuleFiles(resolvedComponentIds, resolvedBreakpoints, iconBindings),
-      {
-        filename: "components.dependencies.json",
-        content: `${JSON.stringify(
-          {
-            ...getBuiltInComponentDependencies(resolvedComponentIds),
-            ...getInternalModuleDependencies(resolvedComponentIds, resolvedBreakpoints),
-            ...getUseBreakpointDependencies(resolvedBreakpoints),
-          },
-          null,
-          2,
-        )}\n`,
-      },
-    );
-  }
+  //   if (builtInComponents.length > 0) {
+  //     files.push(
+  //       ...generateBuiltInComponentFiles(resolvedComponentIds, {
+  //         scaleBindings,
+  //         tokenBindings,
+  //         iconBindings,
+  //         breakpoints: resolvedBreakpoints,
+  //         focusRingColor: focusRingColorBinding,
+  //       }),
+  //       ...generateInternalModuleFiles(resolvedComponentIds, resolvedBreakpoints, iconBindings),
+  //       {
+  //         filename: "components.dependencies.json",
+  //         content: `${JSON.stringify(
+  //           {
+  //             ...getBuiltInComponentDependencies(resolvedComponentIds),
+  //             ...getInternalModuleDependencies(resolvedComponentIds, resolvedBreakpoints),
+  //             ...getUseBreakpointDependencies(resolvedBreakpoints),
+  //           },
+  //           null,
+  //           2,
+  //         )}\n`,
+  //       },
+  //     );
+  //   }
   files.push(...generateUseBreakpointFiles(resolvedBreakpoints));
   return files;
 }

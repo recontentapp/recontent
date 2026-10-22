@@ -42,9 +42,8 @@ npx recontent diff main --fail-on-breaking   # catch removed or renamed tokens i
 
 ## Built-in plugins
 
-`css`, `tailwind`, `vanillaExtract` (with an optional registry of React components), `stylex`,
-`typescript`, `typescriptNative`, `dtcg` and `docs`, all from `recontent/plugins`. Write your own
-with the `RecontentPlugin` interface.
+`css`, `tailwind`, `vanillaExtract`, `stylex`, `typescript`, `typescriptNative`, `dtcg` and `docs`, all
+from `recontent/plugins`. Write your own with the `RecontentPlugin` interface.
 
 The documentation source lives in
 [`apps/docs`](https://github.com/recontentapp/recontentapp/tree/master/apps/docs).

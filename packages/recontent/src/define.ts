@@ -1,7 +1,5 @@
-import { normalizeObservabilityConfig, type ObservabilityConfigInput } from "@recontentapp/core";
 import type {
   Config,
-  IntrospectionConfigInput,
   LogLevel,
   RawToken,
   RecontentPlugin,
@@ -210,8 +208,7 @@ export type DefineConfigInput = {
   themes?: Record<string, ThemeOverride>;
   plugins?: RecontentPlugin | RecontentPlugin[];
   logLevel?: LogLevel;
-  observability?: ObservabilityConfigInput;
-  introspection?: IntrospectionConfigInput;
+  // introspection?: IntrospectionConfigInput;
 };
 
 function normalizePlugins(
@@ -251,11 +248,12 @@ export function defineConfig(input: DefineConfigInput): Config {
     collectEntries(input.tokens.ref, ["ref"], "ref", registry);
     collectEntries(input.tokens.system, ["system"], "system", registry);
     collectEntries(input.tokens.components, [], "components", registry);
-  } else if (!input.observability && !input.introspection) {
-    throw new Error(
-      "defineConfig requires either tokens, an observability block, or an introspection block.",
-    );
+  } else {
+    throw new Error("defineConfig requires tokens to be defined.");
   }
+  // } else if (!input.introspection) {
+  //   throw new Error("defineConfig requires either tokens or an introspection block.");
+  // }
 
   return {
     registry,
@@ -263,9 +261,6 @@ export function defineConfig(input: DefineConfigInput): Config {
     themes: input.themes ?? {},
     plugins: normalizePlugins(input.plugins),
     logLevel: normalizeLogLevel(input.logLevel),
-    observability: input.observability
-      ? normalizeObservabilityConfig(input.observability)
-      : undefined,
-    introspection: input.introspection,
+    // introspection: input.introspection,
   };
 }
