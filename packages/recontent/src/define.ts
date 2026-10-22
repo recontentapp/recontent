@@ -1,5 +1,6 @@
 import type {
   Config,
+  IntrospectionConfigInput,
   LogLevel,
   RawToken,
   RecontentPlugin,
@@ -208,7 +209,7 @@ export type DefineConfigInput = {
   themes?: Record<string, ThemeOverride>;
   plugins?: RecontentPlugin | RecontentPlugin[];
   logLevel?: LogLevel;
-  // introspection?: IntrospectionConfigInput;
+  introspection?: IntrospectionConfigInput;
 };
 
 function normalizePlugins(
@@ -248,12 +249,9 @@ export function defineConfig(input: DefineConfigInput): Config {
     collectEntries(input.tokens.ref, ["ref"], "ref", registry);
     collectEntries(input.tokens.system, ["system"], "system", registry);
     collectEntries(input.tokens.components, [], "components", registry);
-  } else {
-    throw new Error("defineConfig requires tokens to be defined.");
+  } else if (!input.introspection) {
+    throw new Error("defineConfig requires either tokens or an introspection block.");
   }
-  // } else if (!input.introspection) {
-  //   throw new Error("defineConfig requires either tokens or an introspection block.");
-  // }
 
   return {
     registry,
@@ -261,6 +259,6 @@ export function defineConfig(input: DefineConfigInput): Config {
     themes: input.themes ?? {},
     plugins: normalizePlugins(input.plugins),
     logLevel: normalizeLogLevel(input.logLevel),
-    // introspection: input.introspection,
+    introspection: input.introspection,
   };
 }

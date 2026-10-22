@@ -37,6 +37,10 @@ export default defineConfig({
       outDir: "src/generated",
       fontFamily: system.fontFamily.sans,
       placeholderColor: system.color.muted,
+      focusRingColor: system.color.accent,
+      builtInComponents: {
+        Stack: { spacing: system.spacing },
+      },
     }),
   ],
 });
