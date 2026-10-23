@@ -123,7 +123,7 @@ references in CSS), so a theme override flows through everywhere it is used.
 
 All exported from `recontent/plugins`. A plugin is a plain object with a few lifecycle hooks, so
 adding your own output (Swift, Kotlin, a contrast linter) takes a function. See the
-[Plugin API](https://github.com/recontentapp/recontent/blob/master/apps/docs/src/pages/plugin-api.mdx).
+[Plugin API](https://recontent.app/plugin-api).
 
 ## CLI
 
@@ -147,14 +147,14 @@ npx recontent diff origin/master --fail-on-breaking
 
 ## Documentation
 
-The documentation lives in [`apps/docs`](https://github.com/recontentapp/recontent/tree/master/apps/docs).
+Read the full documentation at [recontent.app](https://recontent.app).
 Good places to start:
 
-- [Why Recontent](https://github.com/recontentapp/recontent/blob/master/apps/docs/src/pages/introduction/why-recontent.mdx)
-- [Getting started](https://github.com/recontentapp/recontent/blob/master/apps/docs/src/pages/introduction/getting-started.mdx)
-- [Defining tokens](https://github.com/recontentapp/recontent/blob/master/apps/docs/src/pages/guides/defining-tokens.mdx)
-- [Working with themes](https://github.com/recontentapp/recontent/blob/master/apps/docs/src/pages/guides/working-with-themes.mdx)
-- [Catching breaking changes](https://github.com/recontentapp/recontent/blob/master/apps/docs/src/pages/guides/diffs.mdx)
+- [Why Recontent](https://recontent.app/introduction/why-recontent)
+- [Getting started](https://recontent.app/introduction/getting-started)
+- [Defining tokens](https://recontent.app/guides/defining-tokens)
+- [Working with themes](https://recontent.app/guides/working-with-themes)
+- [Catching breaking changes](https://recontent.app/guides/diffs)
 
 ## Contributing
 
