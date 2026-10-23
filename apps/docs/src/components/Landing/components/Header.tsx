@@ -46,7 +46,7 @@ export function Header({ theme, onToggleTheme }: { theme: Theme; onToggleTheme: 
               <a
                 target="_blank"
                 rel="noopener noreferrer"
-                href="https://github.com/recontentapp/recontentapp"
+                href="https://github.com/recontentapp/recontent"
               >
                 GitHub
               </a>

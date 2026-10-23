@@ -10,10 +10,10 @@ export default defineConfig({
   logoUrl: { light: "/logo-light.svg", dark: "/logo-dark.svg" },
   iconUrl: "/favicon.png",
   editLink: {
-    link: "https://github.com/recontentapp/recontentapp/edit/master/apps/docs/src/pages/:path",
+    link: "https://github.com/recontentapp/recontent/edit/master/apps/docs/src/pages/:path",
     text: "Suggest changes",
   },
-  socials: [{ icon: "github", link: "https://github.com/recontentapp/recontentapp" }],
+  socials: [{ icon: "github", link: "https://github.com/recontentapp/recontent" }],
   topNav: [
     { text: "npm", link: "https://www.npmjs.com/package/recontent", external: true },
     { text: "Changelog", link: "/changelog" },
