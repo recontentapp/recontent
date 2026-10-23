@@ -13,6 +13,7 @@ Recontent stores all your design decisions in typed layers<br/>so that your desi
 ## Getting started
 
 1. Install & scaffold `recontent.config.ts`
+
 ```bash
 npm install --save-dev recontent
 
@@ -24,15 +25,16 @@ npx recontent init --from <path>
 ```
 
 2. Define your design tokens
+
 ```ts
 import {
   defineConfig,
   defineReferenceTokens,
   defineSystemTokens,
   defineTheme,
-  tokens
-} from "recontent"
-import { css } from "recontent/plugins"
+  tokens,
+} from "recontent";
+import { css } from "recontent/plugins";
 
 // Raw values: the vocabulary
 const ref = defineReferenceTokens({
@@ -40,7 +42,7 @@ const ref = defineReferenceTokens({
     blue: tokens.generateColorScale({ base: "#2563eb" }),
     gray: tokens.colorScale({ 50: "#fafafa", 900: "#18181b" }),
   },
-})
+});
 
 // Meaning: what a value is for
 const system = defineSystemTokens({
@@ -49,7 +51,7 @@ const system = defineSystemTokens({
     text: ref.color.gray[900],
     accent: ref.color.blue[9],
   },
-})
+});
 
 // Same meaning, different values
 const dark = defineTheme(system, {
@@ -57,7 +59,7 @@ const dark = defineTheme(system, {
     background: tokens.color("#18181b"),
     text: tokens.color("#fafafa"),
   },
-})
+});
 
 export default defineConfig({
   tokens: { ref, system, components },
@@ -67,11 +69,13 @@ export default defineConfig({
 ```
 
 3. Build your outputs
+
 ```bash
 npx recontent build   # add --watch to rebuild on save
 ```
 
 4. Consume them
+
 ```css
 @import "./generated/tokens.css";
 
