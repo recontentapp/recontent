@@ -1,6 +1,16 @@
 {
   "name": "recontent",
-  "version": "0.1.0",
+  "version": "0.2.0",
+  "keywords": [
+    "design tokens",
+    "dtcg"
+  ],
+  "homepage": "https://recontent.app",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/recontentapp/recontent"
+  },
   "bin": "./dist/cli/bin.mjs",
   "files": [
     "dist"
