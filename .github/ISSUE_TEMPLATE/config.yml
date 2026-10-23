@@ -1,0 +1,4 @@
+contact_links:
+  - name: Documentation
+    url: https://recontent.app
+    about: Guides, plugin reference and the Plugin API
