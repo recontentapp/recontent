@@ -1,1 +1,1 @@
-# Recontent.app core
+# @recontentapp/core
