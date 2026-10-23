@@ -11,25 +11,6 @@ jobs:
       contents: read
       id-token: write
     steps:
-      - name: Resolve package from release tag
-        id: package
-        run: |
-          tag="${{ github.event.release.tag_name }}"
-          case "$tag" in
-            core-v*)
-              echo "dir=packages/core" >> "$GITHUB_OUTPUT"
-              echo "version=${tag#core-v}" >> "$GITHUB_OUTPUT"
-              ;;
-            recontent-v*)
-              echo "dir=packages/recontent" >> "$GITHUB_OUTPUT"
-              echo "version=${tag#recontent-v}" >> "$GITHUB_OUTPUT"
-              ;;
-            *)
-              echo "Unrecognized tag '$tag'. Expected 'core-vX.Y.Z' or 'recontent-vX.Y.Z'." >&2
-              exit 1
-              ;;
-          esac
-
       - name: Checkout
         uses: actions/checkout@v4
 
@@ -49,17 +30,22 @@ jobs:
       - name: Ensure npm supports trusted publishing
         run: npm install -g npm@latest
 
-      - name: Verify package.json version matches release tag
+      - name: Verify package versions match release tag
+        env:
+          TAG: ${{ github.event.release.tag_name }}
         run: |
-          pkg_version=$(node -p "require('./${{ steps.package.outputs.dir }}/package.json').version")
-          if [ "$pkg_version" != "${{ steps.package.outputs.version }}" ]; then
-            echo "Tag version (${{ steps.package.outputs.version }}) does not match ${{ steps.package.outputs.dir }}/package.json version ($pkg_version)" >&2
-            exit 1
-          fi
+          for dir in packages/core packages/recontent; do
+            pkg_version=$(node -p "require('./$dir/package.json').version")
+            if [ "$pkg_version" != "$TAG" ]; then
+              echo "Tag version ($TAG) does not match $dir/package.json version ($pkg_version)" >&2
+              exit 1
+            fi
+          done
 
       - name: Build
         run: pnpm build
 
+      # Publishes core before recontent (dependency order) and skips versions already on npm,
+      # so a partially failed run can be re-run
       - name: Publish to npm
-        working-directory: ${{ steps.package.outputs.dir }}
-        run: pnpm publish --provenance --access public --no-git-checks
+        run: pnpm publish --recursive --provenance --access public --no-git-checks
