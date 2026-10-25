@@ -3,6 +3,12 @@ export type {
   PluginContext,
   PluginDiagnostic,
   EmittedFile,
+  ComponentManifest,
+  ComponentInfo,
+  PropInfo,
+  InheritedProps,
+  GitInfo,
+  FileHistory,
 } from "@recontentapp/core";
 export { css, type CssPluginOptions } from "./css.js";
 export { dtcg, type DtcgPluginOptions } from "./dtcg.js";

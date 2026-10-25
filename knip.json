@@ -6,10 +6,17 @@
     },
     "packages/recontent": {
       "project": ["src/**/*.{ts,tsx}"],
-      "ignoreDependencies": ["@base-ui/react", "@stylexjs/stylex", "tailwindcss"]
+      "ignoreDependencies": [
+        "@base-ui/react",
+        "@stylexjs/stylex",
+        "@types/react",
+        "class-variance-authority",
+        "react",
+        "tailwindcss"
+      ]
     },
     "apps/vanilla-extract-playground": {
-      "entry": ["recontent.config.ts"],
+      "entry": ["recontent.config.ts", "src/components.ts"],
       "project": ["src/**/*.{ts,tsx}", "stories/**/*.{ts,tsx}", "*.ts"],
       "ignore": ["src/generated/**"],
       "storybook": {

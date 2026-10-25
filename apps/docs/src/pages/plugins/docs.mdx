@@ -49,3 +49,35 @@ alias it points to and its description or deprecation notice:
 | ------------------------- | ----- | --------- | --------- | -------------------------------------- |
 | `system.color.background` | color | `#ffffff` | `#18181b` | → `ref.color.white`<br>Page background |
 ```
+
+## Components and git
+
+When the config sets [`introspection`](/tokens/configuration#introspection), `design.html` gets a
+**Component APIs** tab and `design.md` a `## Component APIs` section. Each component lists its
+description, a deprecation notice, a props table (name, type or allowed values, default, required,
+notes), an `Also accepts:` line for props inherited from libraries, and its source location.
+
+```md
+## Component APIs
+
+### Button
+
+Triggers an action.
+
+Source: [`src/button.tsx:12`](https://github.com/acme/ds/blob/1a2b3c4/src/button.tsx#L12) · Updated 2025-03-01
+
+| Prop      | Type                   | Default   | Required | Notes          |
+| --------- | ---------------------- | --------- | -------- | -------------- |
+| `label`   | `string`               | —         | yes      |                |
+| `variant` | `"solid" \| "outline"` | `"solid"` | no       | Visual weight. |
+
+Also accepts: `ButtonHTMLAttributes` (263 props from @types/react)
+```
+
+In a git work tree, the source location links to the repository when `origin` is a GitHub, GitLab or
+Bitbucket remote, the date is the last commit that touched the file, and the output ends with
+`Generated from <sha> on <branch>`, plus `(uncommitted changes)` when the tree is dirty. Without git,
+all of this is left out.
+
+Because the footer names a commit, committed docs change with every build that follows a new commit.
+Regenerate them in CI rather than by hand if you commit them.

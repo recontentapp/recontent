@@ -1,6 +1,6 @@
 import type {
   Config,
-  // IntrospectionConfigInput,
+  IntrospectionConfigInput,
   LogLevel,
   RawToken,
   RecontentPlugin,
@@ -209,7 +209,7 @@ export type DefineConfigInput = {
   themes?: Record<string, ThemeOverride>;
   plugins?: RecontentPlugin | RecontentPlugin[];
   logLevel?: LogLevel;
-  // introspection?: IntrospectionConfigInput;
+  introspection?: IntrospectionConfigInput;
 };
 
 function normalizePlugins(
@@ -227,6 +227,30 @@ function normalizePlugins(
     }
   }
   return list;
+}
+
+function normalizeIntrospection(
+  introspection: IntrospectionConfigInput | undefined,
+): IntrospectionConfigInput | undefined {
+  if (introspection === undefined) return undefined;
+  const { entry, tsconfig, exclude } = introspection;
+  if (typeof entry !== "string" || entry === "") {
+    throw new Error("defineConfig's `introspection.entry` must be a non-empty string.");
+  }
+  if (tsconfig !== undefined && (typeof tsconfig !== "string" || tsconfig === "")) {
+    throw new Error("defineConfig's `introspection.tsconfig` must be a non-empty string.");
+  }
+  if (
+    exclude !== undefined &&
+    (!Array.isArray(exclude) || exclude.some((n) => typeof n !== "string"))
+  ) {
+    throw new Error("defineConfig's `introspection.exclude` must be an array of export names.");
+  }
+  return {
+    entry,
+    ...(tsconfig !== undefined ? { tsconfig } : {}),
+    ...(exclude !== undefined ? { exclude } : {}),
+  };
 }
 
 function normalizeLogLevel(logLevel: LogLevel | undefined): LogLevel {
@@ -249,11 +273,9 @@ export function defineConfig(input: DefineConfigInput): Config {
     collectEntries(input.tokens.ref, ["ref"], "ref", registry);
     collectEntries(input.tokens.system, ["system"], "system", registry);
     collectEntries(input.tokens.components, [], "components", registry);
+  } else if (!input.introspection) {
+    throw new Error("defineConfig requires either tokens or an introspection block.");
   }
-  // TODO(introspection): not ready, re-enable the check below together with the other introspection lines.
-  // else if (!input.introspection) {
-  //   throw new Error("defineConfig requires either tokens or an introspection block.");
-  // }
 
   return {
     registry,
@@ -261,6 +283,6 @@ export function defineConfig(input: DefineConfigInput): Config {
     themes: input.themes ?? {},
     plugins: normalizePlugins(input.plugins),
     logLevel: normalizeLogLevel(input.logLevel),
-    // introspection: input.introspection,
+    introspection: normalizeIntrospection(input.introspection),
   };
 }

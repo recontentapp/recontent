@@ -1,5 +1,7 @@
+import { renderComponentMarkdown } from "../../introspection/markdown.js";
 import { code, escapeText } from "../../markdown.js";
-import type { DocGroup, DocToken, DocsModel } from "./model.js";
+import type { DocToken } from "../shared/doc-token.js";
+import type { DocGroup, DocsModel } from "./model.js";
 
 const LAYER_TITLES = { ref: "Reference", system: "System", components: "Components" } as const;
 
@@ -62,6 +64,14 @@ export function renderMarkdown(model: DocsModel): string {
     }
     for (const group of groups) sections.push(renderGroup(group, model.themes));
   }
+
+  if (model.components.length > 0) {
+    sections.push("## Component APIs");
+    for (const component of model.components) {
+      sections.push(renderComponentMarkdown(component, model.git, 3));
+    }
+  }
+  if (model.footer) sections.push(`_${escapeText(model.footer)}_`);
 
   return `${sections.join("\n\n")}\n`;
 }

@@ -10,6 +10,8 @@ import { runBuild } from "./commands/build.js";
 import { runDiff } from "./commands/diff.js";
 import { DIFF_FORMATS, type DiffFormat } from "./diff/diff.js";
 import { runInit } from "./commands/init.js";
+import { runInspect, type InspectTarget } from "./commands/inspect/index.js";
+import { FORMATS, type Format } from "./commands/inspect/render.js";
 import { PRESETS, PRESET_NAMES } from "./presets/index.js";
 import { reportError } from "./utils/exit.js";
 
@@ -153,6 +155,67 @@ program
       });
     },
   );
+
+const inspect = program
+  .command("inspect")
+  .description("Show what the config defines: tokens, components and git metadata")
+  .addHelpText(
+    "after",
+    `
+Start with \`recontent inspect\` for an overview, then drill down:
+  recontent inspect tokens [path...]       groups with counts; a path shows one token or everything under it
+  recontent inspect components [name...]   one line per component; a name shows its props in full
+
+Output is markdown by default. --format json returns full detail for the whole selection
+(never a summary) under { schemaVersion, kind, ... }, with data on stdout and logs on stderr.
+An unknown path or name exits 1 and suggests the closest matches.`,
+  );
+
+function inspectFormat(command: Command): Format {
+  return command.optsWithGlobals<{ format: Format }>().format;
+}
+
+async function runInspectTarget(target: InspectTarget, format: Format): Promise<void> {
+  const { cwd, configPath, logLevel } = resolveGlobalOptions();
+  await runInspect({ cwd, configPath, logLevel, format, target });
+}
+
+// Defined once here: commander lets a parent's options appear after its subcommand, so
+// `inspect tokens --format json` works, and subcommands read it back from their parent.
+inspect
+  .addOption(new Option("--format <format>", "Output format").choices(FORMATS).default("markdown"))
+  .action(async (options: { format: Format }) => {
+    await runInspectTarget({ kind: "overview" }, options.format);
+  });
+
+inspect
+  .command("tokens [path...]")
+  .description("List token groups, or the tokens at or under the given dotted paths")
+  .option("--type <type>", "Only tokens of this type (e.g. color)")
+  .option("--theme <theme>", "Show values for this theme only")
+  .option("--deprecated", "Only deprecated tokens")
+  .action(
+    async (
+      paths: string[],
+      options: { type?: string; theme?: string; deprecated?: boolean },
+      command: Command,
+    ) => {
+      await runInspectTarget({ kind: "tokens", paths, ...options }, inspectFormat(command));
+    },
+  );
+
+inspect
+  .command("components [name...]")
+  .description(
+    "List components, or the props of the given components (Tabs also matches Tabs.Item)",
+  )
+  .option("--deprecated", "Only deprecated components")
+  .action(async (names: string[], options: { deprecated?: boolean }, command: Command) => {
+    await runInspectTarget(
+      { kind: "components", names, deprecated: options.deprecated },
+      inspectFormat(command),
+    );
+  });
 
 function reportFatalError(error: unknown): void {
   let debug = false;

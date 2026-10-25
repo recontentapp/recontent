@@ -414,12 +414,21 @@ importers:
       '@types/node':
         specifier: 24.1.0
         version: 24.1.0
+      '@types/react':
+        specifier: 19.3.0
+        version: 19.3.0
       '@typescript/native':
         specifier: npm:typescript@7.0.2
         version: typescript@7.0.2
+      class-variance-authority:
+        specifier: 0.7.1
+        version: 0.7.1
       jest:
         specifier: 30.2.0
         version: 30.2.0(@types/node@24.1.0)(supports-color@10.2.2)
+      react:
+        specifier: 19.3.0
+        version: 19.3.0
       tailwindcss:
         specifier: 4.3.3
         version: 4.3.3

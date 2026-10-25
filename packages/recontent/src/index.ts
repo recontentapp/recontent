@@ -7,3 +7,4 @@ export {
 } from "./define.js";
 export type { DefineConfigInput } from "./define.js";
 export { defineTheme } from "./theme.js";
+export { sourceUrl } from "./git.js";

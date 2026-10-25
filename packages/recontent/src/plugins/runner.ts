@@ -1,7 +1,9 @@
 import path from "node:path";
 import type {
+  ComponentManifest,
   Config,
   EmittedFile,
+  GitInfo,
   Logger,
   PluginContext,
   PluginDiagnostic,
@@ -31,6 +33,8 @@ export type RunPluginsOptions = {
   root: string;
   mode: PluginContext["mode"];
   logger: Logger;
+  components?: ComponentManifest;
+  git?: GitInfo;
 };
 
 export type RunPluginsResult = {
@@ -49,6 +53,8 @@ export async function runPlugins(
     root: options.root,
     logger: options.logger,
     mode: options.mode,
+    components: options.components,
+    git: options.git,
   };
 
   for (const plugin of plugins) {

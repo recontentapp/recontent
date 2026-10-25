@@ -1,9 +1,11 @@
 import fs from "node:fs";
 import path from "node:path";
+import type { LogLevel } from "@recontentapp/core";
+import type ts from "typescript";
 import { createLogger } from "../../logger.js";
 import { MissingDesignTokensError } from "../../plugins/errors.js";
 import { runPlugins } from "../../plugins/runner.js";
-import { loadConfig, type LogLevel } from "@recontentapp/core";
+import { loadProject } from "../../project.js";
 import { collectLocalImports } from "../config-graph.js";
 import { diagnoseRegistry } from "../registry-diagnostics.js";
 import { exitWithError, reportError, summarizeDiagnostics } from "../utils/exit.js";
@@ -26,12 +28,17 @@ export async function runBuild(options: BuildOptions): Promise<void> {
   await buildOnce(options, { exitOnError: true });
 }
 
+/** What a build leaves behind for the next one in watch mode. */
+type BuildState = { program?: ts.Program; files?: string[] };
+
 async function watchBuild(options: BuildOptions): Promise<void> {
   const logger = createLogger(options.logLevel);
 
+  let state: BuildState = {};
+
   const safeBuild = async () => {
     try {
-      await buildOnce(options, { exitOnError: false });
+      state = await buildOnce(options, { exitOnError: false, oldProgram: state.program });
     } catch (error) {
       reportError(error, options.logLevel === "debug");
     }
@@ -57,6 +64,8 @@ async function watchBuild(options: BuildOptions): Promise<void> {
       files = new Set([options.configPath]);
     }
     files.add(options.configPath);
+    // Editing a component changes the docs generated from its props.
+    for (const file of state.files ?? []) files.add(file);
 
     const sameSet =
       files.size === trackedFiles.size && [...files].every((file) => trackedFiles.has(file));
@@ -127,15 +136,19 @@ async function watchBuild(options: BuildOptions): Promise<void> {
 
 async function buildOnce(
   options: BuildOptions,
-  { exitOnError }: { exitOnError: boolean },
-): Promise<void> {
-  const config = await loadConfig(options.configPath);
-  const effectiveLogLevel = options.logLevel ?? config.logLevel;
-  const logger = createLogger(effectiveLogLevel);
+  { exitOnError, oldProgram }: { exitOnError: boolean; oldProgram?: ts.Program },
+): Promise<BuildState> {
+  const { config, logger, root, components, git, program, files } = await loadProject({
+    configPath: options.configPath,
+    logLevel: options.logLevel,
+    components: true,
+    oldProgram,
+  });
+  const state: BuildState = { program, files };
   for (const diagnostic of config.diagnostics) {
     logger.warn(diagnostic.message);
   }
-  let warnings = config.diagnostics.length;
+  let warnings = config.diagnostics.length + (components?.warnings.length ?? 0);
 
   // Each diagnostic is logged where it is found; aborting only adds the
   // closing "N errors, M warnings" line, so no error is reported twice.
@@ -154,33 +167,33 @@ async function buildOnce(
       logger.error(diagnostic.message);
     }
     abort(registryDiagnostics.length);
-    return;
+    return state;
   }
 
   logger.debug(
     `Loaded build config with ${config.plugins.length} plugin(s), ${config.registry.size} token(s), and ${Object.keys(config.themes).length} theme(s).`,
   );
 
-  const configDir = path.dirname(options.configPath);
+  const configDir = root;
 
   if (config.plugins.length === 0) {
     logger.warn(
       `No plugins configured in ${displayPath(options.cwd, options.configPath)}; add some from "recontent/plugins" to generate output.`,
     );
-    return;
+    return state;
   }
 
   const mode = options.watch ? "watch" : "build";
   let result;
   try {
-    result = await runPlugins(config, { root: configDir, mode, logger });
+    result = await runPlugins(config, { root: configDir, mode, logger, components, git });
   } catch (error) {
     if (error instanceof MissingDesignTokensError) {
       for (const message of error.errors) {
         logger.error(message);
       }
       abort(error.errors.length);
-      return;
+      return state;
     }
     throw error;
   }
@@ -198,7 +211,7 @@ async function buildOnce(
 
   if (errors > 0) {
     abort(errors);
-    return;
+    return state;
   }
 
   let written = 0;
@@ -222,4 +235,5 @@ async function buildOnce(
     }
   }
   logger.info(`Wrote ${plural(written, "file")}${skipped > 0 ? ` (${skipped} skipped)` : ""}`);
+  return state;
 }

@@ -1,6 +1,6 @@
 import { expect, test } from "@jest/globals";
 import { runPlugins, sortPlugins } from "../../src/plugins/runner.js";
-import type { Config, RecontentPlugin } from "@recontentapp/core";
+import type { Config, PluginContext, RecontentPlugin } from "@recontentapp/core";
 
 test("sortPlugins stably partitions pre / unenforced / post", () => {
   const plugin = (name: string, enforce?: "pre" | "post"): RecontentPlugin => ({ name, enforce });
@@ -113,4 +113,24 @@ test("buildEnd receives the full file list from every plugin", async () => {
   };
   await runPlugins(baseConfig([a, b]), runOptions);
   expect(seen.sort()).toEqual(["a.txt", "b.txt"]);
+});
+
+test("plugins see ctx.components and ctx.git when provided, and neither otherwise", async () => {
+  const seen: Array<Pick<PluginContext, "components" | "git">> = [];
+  const plugin: RecontentPlugin = {
+    name: "a",
+    buildStart: (ctx) => {
+      seen.push({ components: ctx.components, git: ctx.git });
+    },
+  };
+  const components = { schemaVersion: "1" as const, components: [], warnings: [] };
+  const git = { commit: "abc1234", dirty: false, shallow: false, root: "" };
+
+  await runPlugins(baseConfig([plugin]), { ...runOptions, components, git });
+  await runPlugins(baseConfig([plugin]), runOptions);
+
+  expect(seen).toEqual([
+    { components, git },
+    { components: undefined, git: undefined },
+  ]);
 });

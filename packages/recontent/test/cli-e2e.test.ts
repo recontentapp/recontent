@@ -60,10 +60,11 @@ function copyFixture(name: string, destDir: string): void {
   cpSync(path.join(fixturesDir, name), destDir, { recursive: true });
 }
 
-function runCli(args: string[], options?: { cwd?: string }) {
+function runCli(args: string[], options?: { cwd?: string; env?: NodeJS.ProcessEnv }) {
   const result = spawnSync("node", [binPath, ...args], {
     cwd: options?.cwd ?? packageRoot,
     encoding: "utf-8",
+    env: options?.env ? { ...process.env, ...options.env } : process.env,
   });
   return {
     status: result.status,
@@ -638,5 +639,264 @@ describe("recontent diff", () => {
     const withBreaking = runCli(["--cwd", dir, "diff", "--fail-on-breaking"]);
     expect(withBreaking.status).toBe(1);
     expect(withBreaking.stderr).toContain("error: 2 breaking changes found");
+  });
+});
+
+describe("recontent inspect", () => {
+  function inspectProject(prefix = "inspect"): string {
+    const dir = makeScratchDir(prefix);
+    copyFixture("inspect", dir);
+    return dir;
+  }
+
+  describe("for humans and agents (markdown)", () => {
+    test("the overview lists counts, themes and components, and ends with a Next hint", () => {
+      const result = runCli(["--cwd", inspectProject(), "inspect"]);
+
+      expect(result.status).toBe(0);
+      expect(result.stdout).toContain("# Overview");
+      expect(result.stdout).toMatch(/\| ref \| 3 \|/);
+      expect(result.stdout).toMatch(/\| system \| 4 \|/);
+      expect(result.stdout).toContain("Themes: `dark`");
+      expect(result.stdout).toContain("`Button`, `Legacy`");
+      expect(result.stdout.trimEnd().split("\n").at(-1)).toMatch(
+        /^Next: `recontent inspect tokens system/,
+      );
+    });
+
+    test("tokens without a path lists groups, not individual tokens", () => {
+      const result = runCli(["--cwd", inspectProject(), "inspect", "tokens"]);
+
+      expect(result.status).toBe(0);
+      expect(result.stdout).toContain("| `system.color` | system | 3 |");
+      expect(result.stdout).not.toContain("system.color.accent");
+      expect(result.stdout).toContain("Next: `recontent inspect tokens system");
+    });
+
+    test("tokens with a path lists the subtree with CSS variables and theme values", () => {
+      const result = runCli(["--cwd", inspectProject(), "inspect", "tokens", "system.color"]);
+
+      expect(result.status).toBe(0);
+      expect(result.stdout).toContain("| Token | Type | Value | dark | CSS variable | Notes |");
+      expect(result.stdout).toContain("`system.color.accent`");
+      expect(result.stdout).toContain("var(--system-color-accent)");
+      expect(result.stdout).toContain("`#60a5fa`");
+      expect(result.stdout).toContain("**Deprecated**: Use system.color.accent.");
+      expect(result.stdout).not.toContain("system.spacing");
+    });
+
+    test("--type, --theme and --deprecated narrow the tokens", () => {
+      const dir = inspectProject();
+
+      const dimension = runCli(["--cwd", dir, "inspect", "tokens", "--type", "dimension"]);
+      expect(dimension.stdout).toContain("system.spacing.sm");
+      expect(dimension.stdout).not.toContain("system.color");
+
+      const deprecated = runCli(["--cwd", dir, "inspect", "tokens", "--deprecated"]);
+      expect(deprecated.stdout).toContain("system.color.legacy");
+      expect(deprecated.stdout).not.toContain("system.color.surface");
+
+      const unknownTheme = runCli(["--cwd", dir, "inspect", "tokens", "--theme", "drak"]);
+      expect(unknownTheme.status).toBe(1);
+      expect(unknownTheme.stderr).toContain("Did you mean `dark`?");
+    });
+
+    test("components lists one line each; a name shows the props table", () => {
+      const dir = inspectProject();
+
+      const list = runCli(["--cwd", dir, "inspect", "components"]);
+      expect(list.status).toBe(0);
+      expect(list.stdout).toContain("- `Button` (2 props) — Triggers an action.");
+      expect(list.stdout).toContain("- `Legacy` (1 prop, deprecated)");
+
+      const detail = runCli(["--cwd", dir, "inspect", "components", "Button"]);
+      expect(detail.status).toBe(0);
+      expect(detail.stdout).toContain("## Button");
+      expect(detail.stdout).toMatch(/Source: \[?`src\/button\.tsx:\d+`/);
+      expect(detail.stdout).toContain('| `variant` | `"solid" \\| "outline"` | `"solid"` | no |');
+      expect(detail.stdout).toContain("| `label` | `string` | — | yes |");
+      expect(detail.stdout).toContain("Also accepts: `ButtonHTMLAttributes`");
+      expect(detail.stdout).not.toContain("## Legacy");
+    });
+  });
+
+  describe("for scripts (json)", () => {
+    function json(args: string[], dir: string) {
+      const result = runCli(["--cwd", dir, "inspect", ...args, "--format", "json"]);
+      return { ...result, data: JSON.parse(result.stdout) as Record<string, any> };
+    }
+
+    test("every form parses, is versioned and kind-tagged, and returns full detail", () => {
+      const dir = inspectProject();
+
+      const overview = json([], dir);
+      expect(overview.status).toBe(0);
+      expect(overview.data).toMatchObject({
+        schemaVersion: "1",
+        kind: "overview",
+        themes: ["dark"],
+        components: ["Button", "Legacy"],
+      });
+      expect(overview.data.tokens.total).toBe(7);
+
+      const tokens = json(["tokens"], dir);
+      expect(tokens.data).toMatchObject({ schemaVersion: "1", kind: "tokens" });
+      expect(tokens.data.tokens).toHaveLength(7);
+      expect(tokens.data.tokens[0]).toHaveProperty("cssVar");
+      expect(
+        tokens.data.tokens.find((t: any) => t.path === "ref.color.brand.primary").values,
+      ).toEqual({
+        default: "#2563eb",
+        dark: "#60a5fa",
+      });
+
+      const components = json(["components"], dir);
+      expect(components.data).toMatchObject({ schemaVersion: "1", kind: "components" });
+      expect(components.data.components.map((c: any) => c.name)).toEqual(["Button", "Legacy"]);
+      expect(components.data.components[0].props.map((p: any) => p.name)).toEqual([
+        "label",
+        "variant",
+      ]);
+    });
+
+    test("a selection narrows the output", () => {
+      const dir = inspectProject();
+      expect(json(["tokens", "system.spacing"], dir).data.tokens).toHaveLength(1);
+      expect(json(["components", "Legacy"], dir).data.components).toHaveLength(1);
+      expect(json(["tokens", "--deprecated"], dir).data.tokens).toHaveLength(1);
+    });
+
+    test("an empty result from filters alone is a success", () => {
+      const result = json(["components", "--deprecated", "Button"], inspectProject());
+      expect(result.status).toBe(0);
+      expect(result.data.components).toEqual([]);
+    });
+
+    test("stdout holds nothing but JSON; logs and warnings go to stderr", () => {
+      const result = runCli([
+        "--cwd",
+        inspectProject(),
+        "--log-level",
+        "debug",
+        "inspect",
+        "components",
+        "--format",
+        "json",
+      ]);
+
+      expect(result.status).toBe(0);
+      expect(() => JSON.parse(result.stdout)).not.toThrow();
+      expect(result.stderr).toContain("debug: introspection:");
+    });
+
+    test("git metadata is included when the project is in a work tree", () => {
+      const result = json(["components"], inspectProject());
+      expect(result.data.git).toMatchObject({ commit: expect.stringMatching(/^[0-9a-f]{40}$/) });
+    });
+  });
+
+  describe("recovery from mistakes", () => {
+    test.each([
+      [["tokens", "system.colr"], "Did you mean `system.color`?"],
+      [["tokens", "system.color.acent"], "Did you mean `system.color.accent`?"],
+      [["components", "Buton"], "Did you mean `Button`?"],
+    ])("inspect %s exits 1 with a suggestion on stderr", (args, hint) => {
+      const result = runCli(["--cwd", inspectProject(), "inspect", ...args]);
+
+      expect(result.status).toBe(1);
+      expect(result.stderr).toContain(hint);
+      expect(result.stdout).toBe("");
+    });
+
+    test("inspect components without an introspection block exits 1 with a hint", () => {
+      const dir = makeScratchDir("inspect-no-block");
+      copyFixture("valid", dir);
+      const result = runCli(["--cwd", dir, "inspect", "components"]);
+
+      expect(result.status).toBe(1);
+      expect(result.stderr).toContain("no `introspection` block");
+    });
+
+    test("the overview without an introspection block succeeds and omits components", () => {
+      const dir = makeScratchDir("inspect-overview-no-block");
+      copyFixture("valid", dir);
+      const result = runCli(["--cwd", dir, "inspect"]);
+
+      expect(result.status).toBe(0);
+      expect(result.stdout).toContain("## Tokens");
+      expect(result.stdout).not.toContain("## Components");
+    });
+  });
+
+  test("inspect tokens never builds a TS program, so a broken entry doesn't matter", () => {
+    const dir = makeScratchDir("inspect-broken-entry");
+    copyFixture("inspect-broken-entry", dir);
+
+    expect(runCli(["--cwd", dir, "inspect", "tokens", "ref"]).status).toBe(0);
+
+    const components = runCli(["--cwd", dir, "inspect", "components"]);
+    expect(components.status).toBe(1);
+    expect(components.stderr).toContain("does-not-exist.ts");
+  });
+
+  test("the command is discoverable from --help", () => {
+    const result = runCli(["inspect", "--help"]);
+
+    expect(result.status).toBe(0);
+    expect(result.stdout).toContain("recontent inspect tokens [path...]");
+    expect(result.stdout).toContain("recontent inspect components [name...]");
+    expect(runCli(["--help"]).stdout).toContain("inspect");
+  });
+});
+
+describe("recontent build with introspection", () => {
+  test("the docs plugin gets component APIs, source links' inputs and the git footer", () => {
+    const dir = makeScratchDir("build-introspection");
+    copyFixture("inspect", dir);
+    const result = runCli(["--cwd", dir, "build"]);
+
+    expect(result.status).toBe(0);
+    const markdown = readFileSync(path.join(dir, "docs/design.md"), "utf-8");
+    expect(markdown).toContain("## Component APIs");
+    expect(markdown).toContain("### Button");
+    expect(markdown).toMatch(/_Generated from [0-9a-f]{7} on /);
+  });
+
+  test("outside a git work tree the build still works, without history or a footer", () => {
+    const dir = makeScratchDir("build-no-git");
+    copyFixture("inspect", dir);
+    const env = { GIT_CEILING_DIRECTORIES: scratchRoot };
+
+    expect(runCli(["--cwd", dir, "build"], { env }).status).toBe(0);
+    const markdown = readFileSync(path.join(dir, "docs/design.md"), "utf-8");
+    expect(markdown).toContain("### Button");
+    expect(markdown).not.toContain("Generated from");
+    expect(markdown).not.toContain("Updated");
+
+    const components = runCli(["--cwd", dir, "inspect", "components", "--format", "json"], { env });
+    expect(components.status).toBe(0);
+    const data = JSON.parse(components.stdout);
+    expect(data.git).toBeUndefined();
+    expect(data.components[0].history).toBeUndefined();
+  });
+
+  test("a config with introspection but no tokens builds the docs", () => {
+    const dir = makeScratchDir("build-introspection-only");
+    copyFixture("inspect", dir);
+    writeFileSync(
+      path.join(dir, "recontent.config.ts"),
+      `import { defineConfig } from "recontent";
+import { docs } from "recontent/plugins";
+
+export default defineConfig({
+  introspection: { entry: "src/index.ts" },
+  plugins: [docs({ outDir: "docs", markdown: true })],
+});
+`,
+    );
+
+    const result = runCli(["--cwd", dir, "build"]);
+    expect(result.status).toBe(0);
+    expect(readFileSync(path.join(dir, "docs/design.md"), "utf-8")).toContain("### Button");
   });
 });

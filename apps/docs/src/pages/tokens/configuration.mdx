@@ -37,7 +37,7 @@ build step. `recontent` and `recontent/plugins` are resolved from the config's d
 |          |                                                                |
 | -------- | -------------------------------------------------------------- |
 | Type     | `{ ref: TokenTree; system: TokenTree; components: TokenTree }` |
-| Required | Yes                                                            |
+| Required | Yes, unless [`introspection`](#introspection) is set           |
 
 The three layers, as returned by [`defineReferenceTokens`, `defineSystemTokens` and
 `defineComponentTokens`](/guides/defining-tokens). All three keys are required; pass `{}` for a
@@ -52,6 +52,52 @@ The trees are walked once:
   (`Unknown token value at "…". Use tokens.color(...) instead of an anonymous value.`) and is
   ignored;
 - nesting deeper than 64 levels throws.
+
+### `introspection`
+
+|          |                                                            |
+| -------- | ---------------------------------------------------------- |
+| Type     | `{ entry: string; tsconfig?: string; exclude?: string[] }` |
+| Required | Yes, unless [`tokens`](#tokens) is set                     |
+
+Tells Recontent where your React components are, so that [`recontent inspect`](/cli/inspect) and
+plugins can read their props. `defineConfig` throws when neither `tokens` nor `introspection` is set.
+
+```ts
+export default defineConfig({
+  tokens: { ref, system, components },
+  introspection: {
+    entry: "src/components/index.ts",
+    exclude: ["ThemeProvider"],
+  },
+  plugins: [docs({ outDir: "docs", markdown: true })],
+});
+```
+
+| Field      | Description                                                                                                                                                                                                                                     |
+| ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `entry`    | Required. A barrel file, relative to the config. Every export that resolves to a React component is introspected.                                                                                                                               |
+| `tsconfig` | The tsconfig used to resolve types and path aliases, relative to the config. Default: the nearest `tsconfig.json` above `entry`. It must include `entry`: for a solution-style tsconfig, point at the project file such as `tsconfig.app.json`. |
+| `exclude`  | Export names to skip, such as `"ThemeProvider"` or `"Dialog.Root"`.                                                                                                                                                                             |
+
+An export is a component when its name is PascalCase and it is callable with a return type React can
+render, or a class with a `render` method. This covers plain functions, `FC`, `memo`, `forwardRef`,
+`lazy` and class components alike, because the TypeScript checker has already resolved them. Hooks,
+constants, enums, types and PascalCase helpers such as `FormatDate(date): string` are skipped.
+
+Subcomponents are reported one level deep with a dotted name: `Object.assign(Tabs, { Item })` and
+`Tabs.Item = Item` give `Tabs.Item`, and `export * as Dialog from "./dialog"` gives `Dialog.Root`,
+`Dialog.Trigger`.
+
+For each component the manifest lists the props declared in your project and, separately, a count of
+the props inherited from libraries (`ButtonHTMLAttributes` from `@types/react`, for instance). A union
+of props types lists every member's props, and a prop is required only when every member requires
+it. Descriptions, `@default` and `@deprecated` come from JSDoc; without `@default`, a destructuring
+default in the implementation is used.
+
+The TypeScript program is built only when something reads components: `recontent build` with
+`introspection` set, `recontent inspect` and `recontent inspect components`. `recontent build --watch`
+rebuilds when a component file changes.
 
 ### `themes`
 
