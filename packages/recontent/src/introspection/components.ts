@@ -19,6 +19,8 @@ export type Candidate = {
   /** Alias-resolved symbol, pointing at the component's own declaration when possible. */
   symbol: ts.Symbol;
   type: ts.Type;
+  /** The signatures through which it renders, at least one. */
+  matches: Match[];
 };
 
 const PASCAL_CASE = /^[A-Z][A-Za-z0-9]*$/;
@@ -149,7 +151,7 @@ export function findComponents(
     const type = checker.getTypeOfSymbol(symbol);
     const matches = componentSignatures(analysis, type);
     if (matches.length > 0) {
-      found.push({ name, symbol, type });
+      found.push({ name, symbol, type, matches });
       const loose = matches.every((match) => match.loose) ? matches[0]!.loose : undefined;
       if (loose) {
         warnings.push(

@@ -18,7 +18,7 @@ export type PropInfo = {
   /** Set when the non-nullable type is a union of literals. */
   values?: (string | number | boolean)[];
   required: boolean;
-  /** `@default` tag, else the destructuring default in the implementation. */
+  /** `@default` tag, else the destructuring default in the implementation, as written in source (`"\"solid\""`), not evaluated: unlike `values`, which holds JSON values. */
   defaultValue?: string;
   description?: string;
   deprecated?: true | string;

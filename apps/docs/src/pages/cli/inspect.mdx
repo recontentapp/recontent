@@ -29,7 +29,7 @@ recontent inspect components           # one line per component
 recontent inspect components Button    # its props: type or allowed values, default, required, notes
 ```
 
-Every overview ends with a `Next:` line that names a command to try.
+Every overview, even an empty one, ends with a `Next:` line that names a command to try.
 
 | Command                        | Without arguments         | With arguments                                                                       |
 | ------------------------------ | ------------------------- | ------------------------------------------------------------------------------------ |
@@ -41,12 +41,12 @@ Options for `tokens`:
 
 | Option            | Description                                                                            |
 | ----------------- | -------------------------------------------------------------------------------------- |
-| `--type <type>`   | Only tokens of this type, such as `color` or `dimension`.                              |
+| `--type <type>`   | Only tokens of this type, such as `color` or `dimension`. An unknown type is an error. |
 | `--theme <theme>` | Show only this theme's column next to the default value. An unknown theme is an error. |
 | `--deprecated`    | Only deprecated tokens.                                                                |
 
-`components` takes `--deprecated` too. A filter that matches nothing prints an empty result and exits
-`0`.
+`components` takes `--deprecated` too. A filter that matches nothing (a valid type no token has,
+`--deprecated` with nothing deprecated) prints an empty result and exits `0`.
 
 `--no-cache` (for `inspect` and `inspect components`) neither reads nor writes the
 [introspection cache](/tokens/configuration#cache).
@@ -65,7 +65,7 @@ reading source:
 
 - identifiers are printed exactly as they are used: token paths, CSS variables, component and prop names;
 - the drill-down keeps each answer small, so an agent can ask for `system.color` or `Select` and nothing else;
-- an unknown path or name exits `1` and suggests the closest matches on stderr, so a typo is
+- an unknown path, name, type or theme exits `2` and suggests the closest matches on stderr, so a typo is
   recoverable:
 
   ```text
@@ -89,10 +89,16 @@ summary, so `recontent inspect tokens --format json` is every token.
 
 - **stdout** carries the result and nothing else. Logs and warnings, such as an introspection warning,
   go to stderr.
-- Exit code `0` is success, including an empty result from `--type`, `--deprecated` or an empty
-  project. Exit code `1` is an error: a path or name that matches nothing, an unknown `--theme`,
-  broken token aliases, an introspection failure, or `inspect components` in a config without an
-  `introspection` block.
+- With `--theme`, every token has that theme in `values`: a theme that does not override a token
+  reads as its default, so the value is the default's.
+- Exit code `0` is success, including an empty result from `--deprecated` or an empty project.
+  Exit code `2` means the request matched nothing: an unknown path, name, type or `--theme`. Exit code
+  `1` means the project is broken: token aliases, an introspection failure, or `inspect components` in
+  a config without an `introspection` block.
+- With `--format json`, an error is also printed on stdout, so that a script never parses prose:
+  `{ schemaVersion, kind: "error", errors: [{ message, input?, suggestions? }] }`. The same text is on stderr.
+- The overview is the exception to `1`: with a broken `introspection` block it still prints the
+  tokens and exits `0`, with `components: { error }` in JSON and an `_Unavailable: …_` line in markdown.
 
 ```bash
 # Fail CI when a deprecated component is still exported
@@ -104,6 +110,6 @@ test "$(recontent inspect components --deprecated --format json | jq '.component
 `inspect tokens` only loads the config, so it is instant, and keeps working when `introspection` is
 misconfigured. `inspect` and `inspect components` need the components: building a TypeScript
 program from the configured entry takes about two seconds for 50 components, so the result is
-[cached](/tokens/configuration#cache) in `.recontent/cache.json` and later calls skip the program
+[cached](/tokens/configuration#cache) in `.recontent/` and later calls skip the program
 until a source file changes. Run with `--log-level debug` to see the timings and whether the cache
 was used.

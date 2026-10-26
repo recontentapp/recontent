@@ -132,8 +132,7 @@ function propRowHtml(prop: PropInfo): string {
   const type = prop.values
     ? prop.values.map((value) => JSON.stringify(value)).join(" | ")
     : prop.type;
-  const resolved =
-    prop.resolved && !prop.values ? `<br><code>${escapeHtml(prop.resolved)}</code>` : "";
+  const resolved = prop.resolved ? `<br><code>${escapeHtml(prop.resolved)}</code>` : "";
   const notes = [
     prop.description ? `<p class="desc">${escapeHtml(prop.description)}</p>` : "",
     prop.deprecated

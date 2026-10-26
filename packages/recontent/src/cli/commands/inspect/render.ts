@@ -15,7 +15,16 @@ export type Overview = {
   tokens: DocToken[];
   themes: string[];
   components?: ComponentInfo[];
+  /** Why `components` is missing although the config asks for them. */
+  componentsError?: string;
 };
+
+export type InspectError = { message: string; input?: string; suggestions?: string[] };
+
+/** What `--format json` prints on stdout in place of a result. */
+export function renderErrors(errors: InspectError[]): string {
+  return JSON.stringify({ schemaVersion: SCHEMA_VERSION, kind: "error", errors }, null, 2);
+}
 
 function countBy<T>(items: T[], key: (item: T) => string): Record<string, number> {
   const counts: Record<string, number> = {};
@@ -36,7 +45,7 @@ const next = (...commands: string[]) =>
   `Next: ${commands.map((command) => code(`recontent inspect ${command}`)).join(" · ")}`;
 
 export function renderOverview(overview: Overview, format: Format): string {
-  const { tokens, themes, components } = overview;
+  const { tokens, themes, components, componentsError } = overview;
   const layers = LAYERS.map((layer) => {
     const inLayer = tokens.filter((token) => token.layer === layer);
     return { layer, count: inLayer.length, types: countBy(inLayer, (token) => token.type) };
@@ -50,7 +59,11 @@ export function renderOverview(overview: Overview, format: Format): string {
         config: overview.config,
         tokens: { total: tokens.length, layers },
         themes,
-        ...(components ? { components: components.map((component) => component.name) } : {}),
+        ...(components
+          ? { components: components.map((component) => component.name) }
+          : componentsError !== undefined
+            ? { components: { error: componentsError } }
+            : {}),
       },
       null,
       2,
@@ -75,6 +88,8 @@ export function renderOverview(overview: Overview, format: Format): string {
   if (components) {
     lines.push("", `## Components (${components.length})`, "");
     lines.push(components.map((component) => code(component.name)).join(", ") || "_None found._");
+  } else if (componentsError !== undefined) {
+    lines.push("", "## Components", "", `_Unavailable: ${escapeText(componentsError)}_`);
   }
 
   const hints: string[] = [];
@@ -113,8 +128,15 @@ export function renderTokens(
   }));
 
   if (format === "json") {
+    // A theme that does not override a token reads as its default, so a requested theme is always there.
+    const requested = options.theme;
+    const complete = shown.map((token) =>
+      requested && token.values[requested] === undefined && token.values.default !== undefined
+        ? { ...token, values: { ...token.values, [requested]: token.values.default } }
+        : token,
+    );
     return JSON.stringify(
-      { schemaVersion: SCHEMA_VERSION, kind: "tokens", tokens: shown },
+      { schemaVersion: SCHEMA_VERSION, kind: "tokens", tokens: complete },
       null,
       2,
     );
@@ -123,7 +145,10 @@ export function renderTokens(
   if (summary) {
     const groups = new Map<string, DocToken[]>();
     for (const token of tokens) {
-      groups.set(groupOf(token), [...(groups.get(groupOf(token)) ?? []), token]);
+      const group = groupOf(token);
+      const inGroup = groups.get(group);
+      if (inGroup) inGroup.push(token);
+      else groups.set(group, [token]);
     }
     const lines = [
       "# Tokens",
@@ -137,10 +162,10 @@ export function renderTokens(
           `| ${code(group)} | ${inGroup[0]!.layer} | ${inGroup.length} | ${escapeText(countList(countBy(inGroup, (token) => token.type)))} |`,
         );
       }
-      const first =
-        [...groups.keys()].find((group) => group.startsWith("system.")) ?? [...groups.keys()][0]!;
-      lines.push("", next(`tokens ${first}`));
     }
+    const first =
+      [...groups.keys()].find((group) => group.startsWith("system.")) ?? [...groups.keys()][0];
+    lines.push("", next(first ? `tokens ${first}` : "--help"));
     return lines.join("\n");
   }
 
@@ -170,6 +195,17 @@ export function renderTokens(
   return lines.join("\n");
 }
 
+/** The first sentence, else as many whole words as fit, with an ellipsis when something was cut. */
+function shorten(text: string, max = 100): string {
+  const flat = text.replace(/\s+/g, " ").trim();
+  const sentence = flat.match(/^.*?[.!?](?=\s|$)/)?.[0] ?? flat;
+  if (sentence.length <= max) return sentence;
+  const cut = sentence.lastIndexOf(" ", max);
+  // Counting code points, so that a surrogate pair is never split.
+  const head = cut > 0 ? sentence.slice(0, cut) : Array.from(sentence).slice(0, max).join("");
+  return `${head.replace(/[,;:\s]+$/, "")}…`;
+}
+
 export function renderComponents(
   components: ComponentInfo[],
   options: { format: Format; summary: boolean },
@@ -191,11 +227,11 @@ export function renderComponents(
         ...(component.deprecated ? ["deprecated"] : []),
       ].join(", ");
       const description = component.description
-        ? ` — ${escapeText(component.description.slice(0, 100))}`
+        ? ` — ${escapeText(shorten(component.description))}`
         : "";
       lines.push(`- ${code(component.name)} (${tags})${description}`);
     }
-    if (components[0]) lines.push("", next(`components ${components[0].name}`));
+    lines.push("", next(components[0] ? `components ${components[0].name}` : "--help"));
     return lines.join("\n");
   }
 

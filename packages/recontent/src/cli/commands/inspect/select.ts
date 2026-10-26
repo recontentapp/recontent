@@ -1,5 +1,22 @@
-import type { ComponentInfo } from "@recontentapp/core";
+import type { ComponentInfo, TokenType } from "@recontentapp/core";
 import type { DocToken } from "../../../plugins/shared/doc-token.js";
+
+/** Every token type; the keys are checked against `TokenType` in both directions. */
+const TOKEN_TYPES = Object.keys({
+  color: 0,
+  dimension: 0,
+  fontFamily: 0,
+  fontWeight: 0,
+  duration: 0,
+  cubicBezier: 0,
+  number: 0,
+  strokeStyle: 0,
+  shadow: 0,
+  border: 0,
+  transition: 0,
+  gradient: 0,
+  typography: 0,
+} satisfies Record<TokenType, 0>);
 
 function distance(a: string, b: string): number {
   let previous = Array.from({ length: b.length + 1 }, (_, i) => i);
@@ -29,13 +46,16 @@ export function closestMatches(input: string, candidates: Iterable<string>): str
     .map(({ candidate }) => candidate);
 }
 
-export type Selection<T> = { selected: T[]; errors: string[] };
+/** What was asked for that does not exist, with the closest things that do. */
+export type SelectionError = { message: string; input: string; suggestions: string[] };
 
-function unknown(kind: string, input: string, candidates: Iterable<string>): string {
-  const matches = closestMatches(input, candidates);
+export type Selection<T> = { selected: T[]; errors: SelectionError[] };
+
+function unknown(kind: string, input: string, candidates: Iterable<string>): SelectionError {
+  const suggestions = closestMatches(input, candidates);
   const hint =
-    matches.length > 0 ? ` Did you mean ${matches.map((m) => `\`${m}\``).join(", ")}?` : "";
-  return `No ${kind} matches "${input}".${hint}`;
+    suggestions.length > 0 ? ` Did you mean ${suggestions.map((m) => `\`${m}\``).join(", ")}?` : "";
+  return { message: `No ${kind} matches "${input}".${hint}`, input, suggestions };
 }
 
 /** A selector names an exact item or, followed by `.`, everything beneath it. */
@@ -66,7 +86,7 @@ export function selectTokens(
   themes: string[],
   query: TokenQuery,
 ): Selection<DocToken> {
-  const errors: string[] = [];
+  const errors: SelectionError[] = [];
   if (query.theme !== undefined && !themes.includes(query.theme)) {
     errors.push(unknown("theme", query.theme, themes));
   }
@@ -79,7 +99,11 @@ export function selectTokens(
     }
     selected = tokens.filter((token) => query.paths.some((path) => matches(path, token.path)));
   }
-  if (query.type !== undefined) selected = selected.filter((token) => token.type === query.type);
+  if (query.type !== undefined) {
+    if (!TOKEN_TYPES.includes(query.type))
+      errors.push(unknown("token type", query.type, TOKEN_TYPES));
+    selected = selected.filter((token) => token.type === query.type);
+  }
   if (query.deprecated) selected = selected.filter((token) => token.deprecated);
   return { selected, errors };
 }
@@ -88,7 +112,7 @@ export function selectComponents(
   components: ComponentInfo[],
   query: { names: string[]; deprecated?: boolean },
 ): Selection<ComponentInfo> {
-  const errors: string[] = [];
+  const errors: SelectionError[] = [];
   let selected = components;
   if (query.names.length > 0) {
     const names = components.map((component) => component.name);

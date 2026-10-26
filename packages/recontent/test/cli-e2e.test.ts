@@ -16,12 +16,15 @@
  */
 import { spawnSync } from "node:child_process";
 import {
+  copyFileSync,
   cpSync,
   existsSync,
   mkdirSync,
   mkdtempSync,
+  readdirSync,
   readFileSync,
   rmSync,
+  symlinkSync,
   writeFileSync,
 } from "node:fs";
 import path from "node:path";
@@ -685,8 +688,12 @@ describe("recontent inspect", () => {
       expect(deprecated.stdout).not.toContain("system.color.surface");
 
       const unknownTheme = runCli(["--cwd", dir, "inspect", "tokens", "--theme", "drak"]);
-      expect(unknownTheme.status).toBe(1);
+      expect(unknownTheme.status).toBe(2);
       expect(unknownTheme.stderr).toContain("Did you mean `dark`?");
+
+      const unknownType = runCli(["--cwd", dir, "inspect", "tokens", "--type", "colr"]);
+      expect(unknownType.status).toBe(2);
+      expect(unknownType.stderr).toContain("Did you mean `color`?");
     });
 
     test("components lists one line each; a name shows the props table", () => {
@@ -796,12 +803,38 @@ describe("recontent inspect", () => {
       [["tokens", "system.colr"], "Did you mean `system.color`?"],
       [["tokens", "system.color.acent"], "Did you mean `system.color.accent`?"],
       [["components", "Buton"], "Did you mean `Button`?"],
-    ])("inspect %s exits 1 with a suggestion on stderr", (args, hint) => {
+    ])("inspect %s exits 2 with a suggestion on stderr", (args, hint) => {
       const result = runCli(["--cwd", inspectProject(), "inspect", ...args]);
 
-      expect(result.status).toBe(1);
+      expect(result.status).toBe(2);
       expect(result.stderr).toContain(hint);
       expect(result.stdout).toBe("");
+    });
+
+    test("--format json also prints the error on stdout, with the suggestions", () => {
+      const result = runCli([
+        "--cwd",
+        inspectProject(),
+        "inspect",
+        "tokens",
+        "system.colr",
+        "--format",
+        "json",
+      ]);
+
+      expect(result.status).toBe(2);
+      expect(result.stderr).toContain("Did you mean `system.color`?");
+      expect(JSON.parse(result.stdout)).toEqual({
+        schemaVersion: "1",
+        kind: "error",
+        errors: [
+          {
+            message: expect.stringContaining("system.colr"),
+            input: "system.colr",
+            suggestions: expect.arrayContaining(["system.color"]),
+          },
+        ],
+      });
     });
 
     test("inspect components without an introspection block exits 1 with a hint", () => {
@@ -833,6 +866,27 @@ describe("recontent inspect", () => {
     const components = runCli(["--cwd", dir, "inspect", "components"]);
     expect(components.status).toBe(1);
     expect(components.stderr).toContain("does-not-exist.ts");
+
+    const asJson = runCli(["--cwd", dir, "inspect", "components", "--format", "json"]);
+    expect(asJson.status).toBe(1);
+    expect(JSON.parse(asJson.stdout)).toMatchObject({
+      kind: "error",
+      errors: [{ message: expect.stringContaining("does-not-exist.ts") }],
+    });
+  });
+
+  test("the overview survives a broken entry and says why components are missing", () => {
+    const dir = makeScratchDir("inspect-overview-broken-entry");
+    copyFixture("inspect-broken-entry", dir);
+
+    const markdown = runCli(["--cwd", dir, "inspect"]);
+    expect(markdown.status).toBe(0);
+    expect(markdown.stdout).toContain("## Tokens");
+    expect(markdown.stdout).toMatch(/## Components\n\n_Unavailable: .*does-not-exist\.ts/);
+
+    const json = JSON.parse(runCli(["--cwd", dir, "inspect", "--format", "json"]).stdout);
+    expect(json.tokens.total).toBeGreaterThan(0);
+    expect(json.components.error).toContain("does-not-exist.ts");
   });
 
   test("the command is discoverable from --help", () => {
@@ -937,14 +991,17 @@ export default defineConfig({
       expect(existsSync(path.join(dir, "docs/design.html"))).toBe(false);
     });
 
-    test("a plugin that depends on components needs an introspection block", () => {
-      const dir = buildProject("build-no-block", configWith("", 'docs({ outDir: "docs" })'));
+    test("docs() works without introspection, just without component APIs", () => {
+      const dir = buildProject(
+        "build-no-block",
+        configWith("", 'docs({ outDir: "docs", markdown: true })'),
+      );
       const result = runCli(["--cwd", dir, "build"]);
 
-      expect(result.status).toBe(1);
-      expect(result.stderr).toContain(
-        "`recontent:docs` depends on components; add `introspection` to defineConfig()",
-      );
+      expect(result.status).toBe(0);
+      const markdown = readFileSync(path.join(dir, "docs/design.md"), "utf-8");
+      expect(markdown).toContain("system.color.surface");
+      expect(markdown).not.toContain("Component APIs");
     });
   });
 
@@ -991,12 +1048,16 @@ export default defineConfig({
     const cached = (result: { stderr: string }) => result.stderr.includes("reused the cache");
     const debug = (dir: string, ...args: string[]) =>
       runCli(["--cwd", dir, "--log-level", "debug", ...args]);
+    const cacheFiles = (dir: string) =>
+      existsSync(path.join(dir, ".recontent"))
+        ? readdirSync(path.join(dir, ".recontent")).filter((name) => /^cache-\w+\.json$/.test(name))
+        : [];
 
     test("a second build reuses it, and so does inspect", () => {
       const dir = buildProject("cache-reuse");
 
       expect(cached(debug(dir, "build"))).toBe(false);
-      expect(existsSync(path.join(dir, ".recontent/cache.json"))).toBe(true);
+      expect(cacheFiles(dir)).toHaveLength(1);
       expect(readFileSync(path.join(dir, ".recontent/.gitignore"), "utf-8")).toBe("*\n");
       expect(cached(debug(dir, "build"))).toBe(true);
       expect(cached(debug(dir, "inspect", "components"))).toBe(true);
@@ -1027,10 +1088,51 @@ export default defineConfig({
       expect(cached(debug(dir, "inspect", "components", "--no-cache"))).toBe(false);
     });
 
+    test("a new file next to the project's own files is a miss", () => {
+      const dir = buildProject("cache-new-file");
+      runCli(["--cwd", dir, "build"]);
+      expect(cached(debug(dir, "inspect", "components"))).toBe(true);
+
+      writeFileSync(path.join(dir, "src/unrelated.ts"), "export {};\n");
+
+      expect(cached(debug(dir, "inspect", "components"))).toBe(false);
+    });
+
+    test("it keeps a .gitignore it did not write, and does not follow a symlink in its place", () => {
+      const kept = buildProject("cache-gitignore");
+      mkdirSync(path.join(kept, ".recontent"));
+      writeFileSync(path.join(kept, ".recontent/.gitignore"), "cache-*.json\n");
+      runCli(["--cwd", kept, "build"]);
+      expect(readFileSync(path.join(kept, ".recontent/.gitignore"), "utf-8")).toBe(
+        "cache-*.json\n",
+      );
+
+      const linked = buildProject("cache-symlink");
+      const target = path.join(linked, "precious.txt");
+      writeFileSync(target, "keep me\n");
+      mkdirSync(path.join(linked, ".recontent"));
+      symlinkSync(target, path.join(linked, ".recontent/.gitignore"));
+      expect(runCli(["--cwd", linked, "build"]).status).toBe(0);
+      expect(readFileSync(target, "utf-8")).toBe("keep me\n");
+    });
+
+    test("two configs in one directory each keep their own cache", () => {
+      const dir = buildProject("cache-two-configs");
+      copyFileSync(path.join(dir, "recontent.config.ts"), path.join(dir, "other.config.ts"));
+      const run = (config: string) => debug(dir, "--config", config, "inspect", "components");
+
+      run("recontent.config.ts");
+      run("other.config.ts");
+
+      expect(cacheFiles(dir)).toHaveLength(2);
+      expect(cached(run("recontent.config.ts"))).toBe(true);
+      expect(cached(run("other.config.ts"))).toBe(true);
+    });
+
     test("a corrupt cache is a miss, not an error", () => {
       const dir = buildProject("cache-corrupt");
       runCli(["--cwd", dir, "build"]);
-      writeFileSync(path.join(dir, ".recontent/cache.json"), "{ not json");
+      writeFileSync(path.join(dir, ".recontent", cacheFiles(dir)[0]!), "{ not json");
 
       const result = debug(dir, "inspect", "components");
       expect(result.status).toBe(0);

@@ -113,13 +113,13 @@ build with token-only plugins does not touch it, and a broken `introspection` bl
 
 #### Cache
 
-The result is kept in `.recontent/cache.json` next to the config (the folder ignores itself, so there
-is nothing to add to `.gitignore`) and used as long as the Recontent and TypeScript versions, the
+The result is kept in `.recontent/cache-<hash>.json` next to the config, one file per config (the folder
+ignores itself unless it already has a `.gitignore`, so there is nothing to add to yours) and used as long as the Recontent and TypeScript versions, the
 `introspection` block, the tsconfig and every file the program read, dependencies' declarations
 included, are unchanged. `recontent inspect` called repeatedly, as agents do, is then near instant.
 
-A new file that changes how an import resolves without touching an existing one, such as adding
-`button.ts` next to `button/index.ts`, is not detected. Pass `--no-cache` to `build` or `inspect` to
+Adding a file is detected in the directories of the project's own files, so adding `button.ts` next to
+`button/index.ts` is. It is not in the config's own directory, nor in a dependency's. Pass `--no-cache` to `build` or `inspect` to
 neither read nor write the cache, in CI for instance, or to debug introspection.
 
 #### History

@@ -28,19 +28,23 @@ export function sortPlugins(plugins: RecontentPlugin[]): RecontentPlugin[] {
   return [...pre, ...normal, ...post];
 }
 
+function consumesComponents(plugin: RecontentPlugin): boolean {
+  return plugin.dependsOn.includes("components") || plugin.dependsOn.includes("components?");
+}
+
 /**
- * Whether any plugin consumes components, i.e. whether the project needs
- * introspecting. A plugin that does while the config has no `introspection`
- * block is a config error.
+ * Whether the project needs introspecting: it has an `introspection` block and
+ * a plugin consumes components. A plugin that requires them (`"components"`,
+ * not `"components?"`) while the config has no block is a config error.
  */
 export function needsComponents(config: Config): boolean {
-  const consumer = config.plugins.find((plugin) => plugin.dependsOn.includes("components"));
-  if (consumer && !config.introspection) {
+  const required = config.plugins.find((plugin) => plugin.dependsOn.includes("components"));
+  if (required && !config.introspection) {
     throw new Error(
-      `\`${consumer.name}\` depends on components; add \`introspection\` to defineConfig().`,
+      `\`${required.name}\` depends on components; add \`introspection\` to defineConfig().`,
     );
   }
-  return consumer !== undefined;
+  return config.introspection !== undefined && config.plugins.some(consumesComponents);
 }
 
 export type RunPluginsOptions = {
@@ -66,8 +70,7 @@ export async function runPlugins(
 ): Promise<RunPluginsResult> {
   const failures: string[] = [];
   const plugins = sortPlugins(config.plugins).filter((plugin) => {
-    const blocked =
-      options.componentsError !== undefined && plugin.dependsOn.includes("components");
+    const blocked = options.componentsError !== undefined && consumesComponents(plugin);
     if (blocked) failures.push(`[${plugin.name}] ${options.componentsError}`);
     return !blocked;
   });
@@ -79,7 +82,7 @@ export async function runPlugins(
     mode: options.mode,
   };
   const contextFor = (plugin: RecontentPlugin): PluginContext =>
-    plugin.dependsOn.includes("components") ? { ...base, components: options.components } : base;
+    consumesComponents(plugin) ? { ...base, components: options.components } : base;
 
   for (const plugin of plugins) {
     await plugin.buildStart?.(contextFor(plugin));

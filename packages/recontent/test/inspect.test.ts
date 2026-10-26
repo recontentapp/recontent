@@ -5,6 +5,7 @@ import {
   selectComponents,
   selectTokens,
 } from "../src/cli/commands/inspect/select.js";
+import { renderComponents, renderTokens } from "../src/cli/commands/inspect/render.js";
 import type { DocToken } from "../src/plugins/shared/doc-token.js";
 
 function token(path: string, type: DocToken["type"], extra: Partial<DocToken> = {}): DocToken {
@@ -70,18 +71,36 @@ describe("selectTokens", () => {
     expect(select({ paths: ["ref"], deprecated: true })).toEqual({ selected: [], errors: [] });
   });
 
+  test("an unknown type is an error with the closest matches", () => {
+    const { selected, errors } = select({ type: "colr" });
+    expect(selected).toEqual([]);
+    expect(errors).toEqual([
+      {
+        message: 'No token type matches "colr". Did you mean `color`?',
+        input: "colr",
+        suggestions: ["color"],
+      },
+    ]);
+  });
+
   test("an unknown path is an error with the closest matches", () => {
     const { selected, errors } = select({ paths: ["system.color.acent"] });
     expect(selected).toEqual([]);
-    expect(errors).toEqual([expect.stringContaining("Did you mean `system.color.accent`?")]);
+    expect(errors).toEqual([
+      {
+        message: expect.stringContaining("Did you mean `system.color.accent`?"),
+        input: "system.color.acent",
+        suggestions: ["system.color.accent"],
+      },
+    ]);
   });
 
   test("an unknown group suggests the group", () => {
-    expect(select({ paths: ["system.colr"] }).errors[0]).toContain("`system.color`");
+    expect(select({ paths: ["system.colr"] }).errors[0]?.suggestions).toContain("system.color");
   });
 
   test("an unknown theme is an error, a known one is not", () => {
-    expect(select({ theme: "drak" }).errors[0]).toContain("Did you mean `dark`?");
+    expect(select({ theme: "drak" }).errors[0]?.message).toContain("Did you mean `dark`?");
     expect(select({ theme: "dark" }).errors).toEqual([]);
   });
 });
@@ -126,7 +145,11 @@ describe("selectComponents", () => {
 
   test("an unknown name suggests the closest component", () => {
     expect(select({ names: ["Buton"] }).errors).toEqual([
-      'No component matches "Buton". Did you mean `Button`?',
+      {
+        message: 'No component matches "Buton". Did you mean `Button`?',
+        input: "Buton",
+        suggestions: ["Button"],
+      },
     ]);
   });
 });
@@ -138,5 +161,48 @@ describe("closestMatches", () => {
       "Buttons",
     ]);
     expect(closestMatches("zzzzzz", ["Button"])).toEqual([]);
+  });
+});
+
+describe("renderComponents", () => {
+  test("a long description is cut at a sentence or a word, never mid-word", () => {
+    const sentence = component("A", { description: "Triggers an action. Then does more." });
+    const long = component("B", {
+      description: `${"word ".repeat(30)}end`,
+    });
+    const lines = renderComponents([sentence, long], { format: "markdown", summary: true });
+
+    expect(lines).toContain("- `A` (0 props) — Triggers an action.\n");
+    expect(lines).toMatch(/- `B` \(0 props\) — (word ){10,}word…\n/);
+  });
+
+  test("an empty list still ends with a Next hint", () => {
+    expect(renderComponents([], { format: "markdown", summary: true }).trimEnd()).toMatch(
+      /Next: `recontent inspect --help`$/,
+    );
+  });
+});
+
+describe("renderTokens", () => {
+  const tokens = [
+    token("system.color.accent", "color", { values: { default: "#fff", dark: "#000" } }),
+    token("system.color.surface", "color", { values: { default: "#eee" } }),
+  ];
+
+  test("with --theme, json holds that theme for every token, falling back to the default", () => {
+    const { tokens: shown } = JSON.parse(
+      renderTokens(tokens, { format: "json", themes: ["dark"], theme: "dark", summary: false }),
+    );
+
+    expect(shown.map((t: DocToken) => t.values)).toEqual([
+      { default: "#fff", dark: "#000" },
+      { default: "#eee", dark: "#eee" },
+    ]);
+  });
+
+  test("a summary of no tokens still ends with a Next hint", () => {
+    expect(renderTokens([], { format: "markdown", themes: [], summary: true }).trimEnd()).toMatch(
+      /Next: `recontent inspect --help`$/,
+    );
   });
 });

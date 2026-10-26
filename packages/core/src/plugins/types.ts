@@ -24,7 +24,7 @@ export type PluginContext = {
   root: string;
   logger: Logger;
   mode: "build" | "watch" | "check";
-  /** Sorted by name. Only set for plugins that declare `dependsOn: ["components"]`. */
+  /** Sorted by name. Only set for plugins that declare `"components"` or `"components?"` in `dependsOn`, and only when `introspection` is configured. */
   components?: ComponentInfo[];
 };
 
@@ -34,9 +34,10 @@ export interface RecontentPlugin {
   name: string;
   /** Vite semantics: "pre" runs before unenforced plugins, "post" after. */
   enforce?: "pre" | "post";
-  /** What the plugin consumes. `"components"` requires `introspection` in defineConfig()
-   *  and is the only way `ctx.components` gets filled in. */
-  dependsOn: ("tokens" | "components")[];
+  /** What the plugin consumes. `"components"` requires `introspection` in defineConfig(); `"components?"`
+   *  uses the components when it is configured and works without them otherwise. Either way it is the
+   *  only way `ctx.components` gets filled in. */
+  dependsOn: ("tokens" | "components" | "components?")[];
 
   buildStart?(ctx: PluginContext): void | Promise<void>;
   /** Errors abort the build before anything is written. */

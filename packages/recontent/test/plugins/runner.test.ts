@@ -183,6 +183,20 @@ describe("dependsOn", () => {
     expect(needsComponents(config({ entry: "src/index.ts" }))).toBe(true);
   });
 
+  test("a plugin whose components are optional runs without introspection, and gets them with it", async () => {
+    const optional = record("docs", ["tokens", "components?"]);
+
+    expect(needsComponents(baseConfig([optional]))).toBe(false);
+    expect(
+      needsComponents({ ...baseConfig([optional]), introspection: { entry: "src/index.ts" } }),
+    ).toBe(true);
+
+    await runPlugins(baseConfig([optional]), runOptions);
+    expect(seen["docs"]).toBeUndefined();
+    await runPlugins(baseConfig([optional]), { ...runOptions, components });
+    expect(seen["docs"]).toBe(components);
+  });
+
   test("a plugin depending on components without an introspection block is a config error", () => {
     expect(() =>
       needsComponents(baseConfig([record("recontent:docs", ["tokens", "components"])])),

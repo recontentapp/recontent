@@ -6,7 +6,7 @@ import type {
   TypeParameterInfo,
 } from "@recontentapp/core";
 import ts from "typescript";
-import { componentSignatures, resolveAlias, type Analysis, type Candidate } from "./components.js";
+import { resolveAlias, type Analysis, type Candidate } from "./components.js";
 
 type Origin = InheritedProps & { symbol?: ts.Symbol };
 
@@ -344,7 +344,7 @@ export function describeComponent(
   root: string,
 ): ComponentInfo {
   const { checker } = analysis;
-  const { symbol, type } = candidate;
+  const { symbol, type, matches } = candidate;
   const declaration = locate(checker, symbol);
   const located = declaration ?? declarationOf(symbol);
   if (!located) throw new Error(`Cannot find the declaration of ${candidate.name}.`);
@@ -352,7 +352,6 @@ export function describeComponent(
   // Props are the first parameter of whatever signature renders the component. A
   // union of props (`{ href } | { onClick }`) is merged member by member, because
   // the checker only reports the properties every member shares.
-  const matches = componentSignatures(analysis, type);
   const propsTypes = new Set<ts.Type>();
   for (const { signature } of matches) {
     const parameter = signature.parameters[0];

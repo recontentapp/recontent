@@ -52,9 +52,8 @@ alias it points to and its description or deprecation notice:
 
 ## Components
 
-`docs()` depends on the project's components, so the config must set
-[`introspection`](/tokens/configuration#introspection); without it the build fails and names
-`recontent:docs`. `design.html` gets a
+Components are optional for `docs()`. Without an [`introspection`](/tokens/configuration#introspection)
+block, the docs cover the tokens only, as for any token-only design system. With one, `design.html` gets a
 **Component APIs** tab and `design.md` a `## Component APIs` section. Each component lists its
 description, a deprecation notice, a props table (name, type or allowed values, default, required,
 notes), an `Also accepts:` line for props inherited from libraries, and its source location.
@@ -84,5 +83,5 @@ touched the component's file, and committing that file changes the docs.
 A prop typed with one of your own aliases shows its expansion under the type, and a generic component
 shows its type parameters next to its name, as `Accordion<Value extends string>`.
 
-If introspection fails, `docs()` fails with the error attributed to it while the other plugins
+If `introspection` is configured but fails, `docs()` fails with the error attributed to it while the other plugins
 still write their files.

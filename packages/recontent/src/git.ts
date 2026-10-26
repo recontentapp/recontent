@@ -120,9 +120,11 @@ export function readHead(cwd: string): string | undefined {
  * every file would read as touched by the grafted commit — all of them are
  * absent, with the reason in `warning`.
  *
- * One `git log`, newest commit first, killed as soon as every file has been
- * seen, so the cost follows the age of the oldest last change, not the size of
- * the history.
+ * Only tracked files are looked up (one cheap `git ls-files`), then one
+ * `git log`, newest commit first, killed as soon as every file has been seen,
+ * so the cost follows the age of the oldest last change, not the size of the
+ * history. Pathspecs are literal: a `*` or a leading `:` in a file name
+ * matches nothing else.
  */
 export async function readLastUpdated(
   root: string,
@@ -152,9 +154,21 @@ export async function readLastUpdated(
   }
   if (pending.size === 0) return { dates };
 
+  // An untracked file never shows up in the log, which would then be read to the root commit.
+  const tracked = spawnSync(
+    "git",
+    ["--literal-pathspecs", "ls-files", "-z", "--", ...pending.keys()],
+    { cwd: gitRoot, encoding: "utf-8", maxBuffer: 64 * 1024 * 1024 },
+  );
+  if (tracked.status !== 0) return { dates };
+  const trackedNames = new Set(tracked.stdout.split("\0").filter(Boolean));
+  for (const name of pending.keys()) if (!trackedNames.has(name)) pending.delete(name);
+  if (pending.size === 0) return { dates };
+
   const git = spawn(
     "git",
     [
+      "--literal-pathspecs",
       "-c",
       "core.quotePath=false",
       "log",

@@ -227,10 +227,12 @@ function normalizePlugins(
     }
     if (
       !Array.isArray(plugin.dependsOn) ||
-      plugin.dependsOn.some((input) => input !== "tokens" && input !== "components")
+      plugin.dependsOn.some(
+        (input) => input !== "tokens" && input !== "components" && input !== "components?",
+      )
     ) {
       throw new Error(
-        `Plugin "${plugin.name}" must declare \`dependsOn\`, an array of "tokens" and/or "components".`,
+        `Plugin "${plugin.name}" must declare \`dependsOn\`, an array of "tokens", "components" and/or "components?".`,
       );
     }
   }

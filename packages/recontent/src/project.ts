@@ -16,6 +16,7 @@ import { createLogger } from "./logger.js";
 export type Project = {
   config: Config;
   logger: Logger;
+  configPath: string;
   /** Directory containing the config file. */
   root: string;
 };
@@ -26,7 +27,7 @@ export async function loadProject(options: {
 }): Promise<Project> {
   const config = await loadConfig(options.configPath);
   const logger = createLogger(options.logLevel ?? config.logLevel);
-  return { config, logger, root: path.dirname(options.configPath) };
+  return { config, logger, configPath: options.configPath, root: path.dirname(options.configPath) };
 }
 
 export type Components = {
@@ -54,7 +55,7 @@ export async function loadComponents(
     cache?: { version: string };
   },
 ): Promise<Components> {
-  const { config, logger, root } = project;
+  const { config, logger, configPath, root } = project;
   const introspection = config.introspection!;
   const { entry, tsconfigPath } = resolveInputs(introspection, root);
 
@@ -70,7 +71,7 @@ export async function loadComponents(
       head: introspection.history ? readHead(root) : undefined,
     });
 
-  const cached = key === undefined ? undefined : readCache(root, key);
+  const cached = key === undefined ? undefined : readCache(root, configPath, key);
   if (cached) {
     logger.debug("introspection: reused the cache.");
     for (const warning of cached.warnings) logger.warn(warning);
@@ -100,14 +101,23 @@ export async function loadComponents(
     if (warning) warnings.push(warning);
   }
 
+  const watch = watchableFiles(entry, result.files);
   if (key !== undefined) {
-    writeCache(root, key, { components: result.components, warnings, files: result.files });
+    writeCache(root, configPath, key, {
+      components: result.components,
+      warnings,
+      files: result.files,
+      // Not the config's own: `.recontent` and the plugins' output are created there after this is stamped.
+      directories: [...new Set(watch.map((file) => path.dirname(file)))].filter(
+        (directory) => directory !== root,
+      ),
+    });
   }
   for (const warning of warnings) logger.warn(warning);
   return {
     components: result.components,
     warnings,
-    watch: watchableFiles(entry, result.files),
+    watch,
     program: result.program,
   };
 }

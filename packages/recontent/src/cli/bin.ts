@@ -119,9 +119,9 @@ program
   });
 
 const NO_CACHE_HELP =
-  "Neither read nor write the component introspection cache (.recontent/cache.json next to the " +
-  "config). The cache goes stale when a new file changes how an import resolves without touching " +
-  "an existing one; use this flag then, in CI, or to debug introspection";
+  "Neither read nor write the component introspection cache (a file in .recontent/ next to " +
+  "the config). The cache goes stale when a new file changes how an import resolves outside the " +
+  "directories of the project's own files; use this flag then, in CI, or to debug introspection";
 
 /** Introspection results are cached unless `--no-cache`; the version invalidates them across upgrades. */
 function cacheOption(options: { cache: boolean }): { version: string } | undefined {
@@ -185,7 +185,9 @@ Start with \`recontent inspect\` for an overview, then drill down:
 
 Output is markdown by default. --format json returns full detail for the whole selection
 (never a summary) under { schemaVersion, kind, ... }, with data on stdout and logs on stderr.
-An unknown path or name exits 1 and suggests the closest matches.`,
+An unknown path, name, type or theme exits 2 and suggests the closest matches; with --format json
+the errors are also printed on stdout as { schemaVersion, kind: "error", errors }. Exit 1 is for a
+broken project.`,
   );
 
 function inspectOptions(command: Command): { format: Format; cache: boolean } {
