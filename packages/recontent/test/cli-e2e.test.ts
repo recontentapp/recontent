@@ -459,25 +459,13 @@ describe("recontent build", () => {
     expect(css).toContain("#2563eb");
   });
 
-  test("runs the configured dtcg and docs plugins", () => {
-    const dir = makeScratchDir("build-dtcg-docs");
+  test("runs the configured dtcg plugin", () => {
+    const dir = makeScratchDir("build-dtcg");
     copyFixture("valid", dir);
 
     const result = runCli(["--cwd", dir, "build"]);
 
     expect(result.status).toBe(0);
-
-    const htmlPath = path.join(dir, "dist/design.html");
-    expect(existsSync(htmlPath)).toBe(true);
-    const html = readFileSync(htmlPath, "utf-8");
-    expect(html).toContain("<!DOCTYPE html>");
-    expect(html).toContain("system.color.accent");
-
-    const mdPath = path.join(dir, "dist/design.md");
-    expect(existsSync(mdPath)).toBe(true);
-    const md = readFileSync(mdPath, "utf-8");
-    expect(md).toContain("system.color.accent");
-    expect(md).toContain("Primary accent color.");
 
     const dtcgPath = path.join(dir, "dist/tokens.tokens.json");
     expect(existsSync(dtcgPath)).toBe(true);
@@ -789,9 +777,17 @@ describe("recontent inspect", () => {
       expect(result.stderr).toContain("debug: introspection:");
     });
 
-    test("git metadata is included when the project is in a work tree", () => {
-      const result = json(["components"], inspectProject());
-      expect(result.data.git).toMatchObject({ commit: expect.stringMatching(/^[0-9a-f]{40}$/) });
+    test("nothing about the repository leaks into the output", () => {
+      const dir = inspectProject();
+      for (const args of [[], ["components"]]) {
+        expect(json(args, dir).data.git).toBeUndefined();
+      }
+      expect(runCli(["--cwd", dir, "inspect"]).stdout).not.toContain("Git:");
+    });
+
+    test("inherited props are listed by name", () => {
+      const button = json(["components", "Button"], inspectProject()).data.components[0];
+      expect(button.inherits[0].props).toContain("onClick");
     });
   });
 
@@ -850,41 +846,56 @@ describe("recontent inspect", () => {
 });
 
 describe("recontent build with introspection", () => {
-  test("the docs plugin gets component APIs, source links' inputs and the git footer", () => {
-    const dir = makeScratchDir("build-introspection");
+  const configWith = (
+    introspection: string,
+    plugins: string,
+  ) => `import { defineConfig, defineReferenceTokens, defineSystemTokens, defineComponentTokens, tokens } from "recontent";
+import { css, docs } from "recontent/plugins";
+
+const ref = defineReferenceTokens({ color: { white: tokens.color("#ffffff") } });
+const system = defineSystemTokens({ color: { surface: ref.color.white } });
+
+export default defineConfig({
+  tokens: { ref, system, components: defineComponentTokens({}) },
+  ${introspection}
+  plugins: [${plugins}],
+});
+`;
+
+  function buildProject(prefix: string, config?: string): string {
+    const dir = makeScratchDir(prefix);
     copyFixture("inspect", dir);
+    if (config) writeFileSync(path.join(dir, "recontent.config.ts"), config);
+    return dir;
+  }
+
+  const gitIn = (dir: string, args: string[]) => {
+    const result = spawnSync("git", args, { cwd: dir, encoding: "utf-8" });
+    if (result.status !== 0) throw new Error(result.stderr);
+  };
+
+  test("the docs plugin gets component APIs, and the output holds no repository state", () => {
+    const dir = buildProject("build-introspection");
     const result = runCli(["--cwd", dir, "build"]);
 
     expect(result.status).toBe(0);
+    const html = readFileSync(path.join(dir, "docs/design.html"), "utf-8");
+    expect(html).toContain("<!DOCTYPE html>");
+    expect(html).toContain("system.color.accent");
+
     const markdown = readFileSync(path.join(dir, "docs/design.md"), "utf-8");
+    expect(markdown).toContain("system.color.accent");
+    expect(markdown).toContain("Primary accent color.");
     expect(markdown).toContain("## Component APIs");
     expect(markdown).toContain("### Button");
-    expect(markdown).toMatch(/_Generated from [0-9a-f]{7} on /);
-  });
-
-  test("outside a git work tree the build still works, without history or a footer", () => {
-    const dir = makeScratchDir("build-no-git");
-    copyFixture("inspect", dir);
-    const env = { GIT_CEILING_DIRECTORIES: scratchRoot };
-
-    expect(runCli(["--cwd", dir, "build"], { env }).status).toBe(0);
-    const markdown = readFileSync(path.join(dir, "docs/design.md"), "utf-8");
-    expect(markdown).toContain("### Button");
+    expect(markdown).toContain("Source: `src/button.tsx:");
     expect(markdown).not.toContain("Generated from");
     expect(markdown).not.toContain("Updated");
-
-    const components = runCli(["--cwd", dir, "inspect", "components", "--format", "json"], { env });
-    expect(components.status).toBe(0);
-    const data = JSON.parse(components.stdout);
-    expect(data.git).toBeUndefined();
-    expect(data.components[0].history).toBeUndefined();
   });
 
   test("a config with introspection but no tokens builds the docs", () => {
-    const dir = makeScratchDir("build-introspection-only");
-    copyFixture("inspect", dir);
-    writeFileSync(
-      path.join(dir, "recontent.config.ts"),
+    const dir = buildProject(
+      "build-introspection-only",
       `import { defineConfig } from "recontent";
 import { docs } from "recontent/plugins";
 
@@ -898,5 +909,132 @@ export default defineConfig({
     const result = runCli(["--cwd", dir, "build"]);
     expect(result.status).toBe(0);
     expect(readFileSync(path.join(dir, "docs/design.md"), "utf-8")).toContain("### Button");
+  });
+
+  describe("introspection happens only for plugins that consume components", () => {
+    const broken = 'introspection: { entry: "src/does-not-exist.ts" },';
+
+    test("token-only plugins never trigger it, so a broken entry is harmless", () => {
+      const dir = buildProject("build-lazy", configWith(broken, 'css({ outDir: "out" })'));
+      const result = runCli(["--cwd", dir, "build"]);
+
+      expect(result.status).toBe(0);
+      expect(existsSync(path.join(dir, "out/tokens.css"))).toBe(true);
+    });
+
+    test("a failure fails the plugin that depends on components, not the others", () => {
+      const dir = buildProject(
+        "build-partial",
+        configWith(broken, 'css({ outDir: "out" }), docs({ outDir: "docs" })'),
+      );
+      const result = runCli(["--cwd", dir, "build"]);
+
+      expect(result.status).toBe(1);
+      expect(result.stderr).toContain("error: [recontent:docs]");
+      expect(result.stderr).toContain("does-not-exist.ts");
+      expect(result.stderr).toContain("build failed: 1 error");
+      expect(existsSync(path.join(dir, "out/tokens.css"))).toBe(true);
+      expect(existsSync(path.join(dir, "docs/design.html"))).toBe(false);
+    });
+
+    test("a plugin that depends on components needs an introspection block", () => {
+      const dir = buildProject("build-no-block", configWith("", 'docs({ outDir: "docs" })'));
+      const result = runCli(["--cwd", dir, "build"]);
+
+      expect(result.status).toBe(1);
+      expect(result.stderr).toContain(
+        "`recontent:docs` depends on components; add `introspection` to defineConfig()",
+      );
+    });
+  });
+
+  describe("history is opt-in", () => {
+    const withHistory = configWith(
+      'introspection: { entry: "src/index.ts", history: true },',
+      'docs({ outDir: "docs", markdown: true })',
+    );
+
+    test("lastUpdatedAt comes from git when asked for", () => {
+      const dir = buildProject("build-history", withHistory);
+      gitIn(dir, ["init", "-q"]);
+      gitIn(dir, ["add", "-A"]);
+      gitIn(dir, [
+        "-c",
+        "user.email=e2e@example.com",
+        "-c",
+        "user.name=e2e",
+        "commit",
+        "-q",
+        "-m",
+        "initial",
+      ]);
+
+      expect(runCli(["--cwd", dir, "build"]).status).toBe(0);
+      expect(readFileSync(path.join(dir, "docs/design.md"), "utf-8")).toMatch(
+        /Source: `src\/button\.tsx:\d+` · Updated \d{4}-\d{2}-\d{2}/,
+      );
+    });
+
+    test("outside a git work tree it warns once and still builds", () => {
+      const dir = buildProject("build-history-no-git", withHistory);
+      const result = runCli(["--cwd", dir, "build"], {
+        env: { GIT_CEILING_DIRECTORIES: scratchRoot },
+      });
+
+      expect(result.status).toBe(0);
+      expect(result.stderr.match(/not a git repository/g)).toHaveLength(1);
+      expect(readFileSync(path.join(dir, "docs/design.md"), "utf-8")).not.toContain("Updated");
+    });
+  });
+
+  describe("the introspection cache", () => {
+    const cached = (result: { stderr: string }) => result.stderr.includes("reused the cache");
+    const debug = (dir: string, ...args: string[]) =>
+      runCli(["--cwd", dir, "--log-level", "debug", ...args]);
+
+    test("a second build reuses it, and so does inspect", () => {
+      const dir = buildProject("cache-reuse");
+
+      expect(cached(debug(dir, "build"))).toBe(false);
+      expect(existsSync(path.join(dir, ".recontent/cache.json"))).toBe(true);
+      expect(readFileSync(path.join(dir, ".recontent/.gitignore"), "utf-8")).toBe("*\n");
+      expect(cached(debug(dir, "build"))).toBe(true);
+      expect(cached(debug(dir, "inspect", "components"))).toBe(true);
+    });
+
+    test("it is invalidated when a source file changes", () => {
+      const dir = buildProject("cache-invalidate");
+      runCli(["--cwd", dir, "build"]);
+
+      const file = path.join(dir, "src/button.tsx");
+      writeFileSync(file, readFileSync(file, "utf-8").replace("label", "caption"));
+
+      const result = debug(dir, "inspect", "components", "Button", "--format", "json");
+      expect(cached(result)).toBe(false);
+      expect(JSON.parse(result.stdout).components[0].props.map((p: any) => p.name)).toContain(
+        "caption",
+      );
+    });
+
+    test("--no-cache neither reads nor writes it", () => {
+      const dir = buildProject("cache-off");
+
+      expect(runCli(["--cwd", dir, "build", "--no-cache"]).status).toBe(0);
+      expect(existsSync(path.join(dir, ".recontent"))).toBe(false);
+
+      runCli(["--cwd", dir, "build"]);
+      expect(cached(debug(dir, "build", "--no-cache"))).toBe(false);
+      expect(cached(debug(dir, "inspect", "components", "--no-cache"))).toBe(false);
+    });
+
+    test("a corrupt cache is a miss, not an error", () => {
+      const dir = buildProject("cache-corrupt");
+      runCli(["--cwd", dir, "build"]);
+      writeFileSync(path.join(dir, ".recontent/cache.json"), "{ not json");
+
+      const result = debug(dir, "inspect", "components");
+      expect(result.status).toBe(0);
+      expect(cached(result)).toBe(false);
+    });
   });
 });

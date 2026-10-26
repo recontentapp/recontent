@@ -12,6 +12,7 @@ export * as Sheet from "./c-compound/sheet";
 export * from "./d-props/d1-d4";
 export * from "./d-props/d5-d8";
 export * from "./d-props/d9-d13";
+export * from "./d-props/d14-d15";
 export * from "./e-libraries/e1";
 export * from "./e-libraries/e2";
 export { Dialog } from "@base-ui/react/dialog";

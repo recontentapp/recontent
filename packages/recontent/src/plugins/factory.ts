@@ -4,15 +4,17 @@ import type { OutputFile, PluginContext, RecontentPlugin } from "@recontentapp/c
 /**
  * Builds a `RecontentPlugin` around a generator that produces `OutputFile[]`
  * relative to `options.outDir` — the shape shared by every output target's
- * plugin (css, stylex, typescript, typescript-native, vanilla-extract).
+ * plugin (css, stylex, typescript, typescript-native, vanilla-extract, docs).
  */
 export function outputPlugin<Options extends { outDir: string }>(
   name: string,
+  dependsOn: RecontentPlugin["dependsOn"],
   options: Options,
   generate: (ctx: PluginContext, options: Options) => OutputFile[],
 ): RecontentPlugin {
   return {
     name,
+    dependsOn,
     generate: (ctx) =>
       generate(ctx, options).map((file) => ({
         path: path.posix.join(options.outDir, file.filename),

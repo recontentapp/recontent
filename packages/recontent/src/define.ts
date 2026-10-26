@@ -225,6 +225,14 @@ function normalizePlugins(
         "defineConfig's `plugins` must be RecontentPlugin instances (objects with at least a `name` string).",
       );
     }
+    if (
+      !Array.isArray(plugin.dependsOn) ||
+      plugin.dependsOn.some((input) => input !== "tokens" && input !== "components")
+    ) {
+      throw new Error(
+        `Plugin "${plugin.name}" must declare \`dependsOn\`, an array of "tokens" and/or "components".`,
+      );
+    }
   }
   return list;
 }
@@ -233,7 +241,7 @@ function normalizeIntrospection(
   introspection: IntrospectionConfigInput | undefined,
 ): IntrospectionConfigInput | undefined {
   if (introspection === undefined) return undefined;
-  const { entry, tsconfig, exclude } = introspection;
+  const { entry, tsconfig, exclude, history } = introspection;
   if (typeof entry !== "string" || entry === "") {
     throw new Error("defineConfig's `introspection.entry` must be a non-empty string.");
   }
@@ -246,10 +254,14 @@ function normalizeIntrospection(
   ) {
     throw new Error("defineConfig's `introspection.exclude` must be an array of export names.");
   }
+  if (history !== undefined && typeof history !== "boolean") {
+    throw new Error("defineConfig's `introspection.history` must be a boolean.");
+  }
   return {
     entry,
     ...(tsconfig !== undefined ? { tsconfig } : {}),
     ...(exclude !== undefined ? { exclude } : {}),
+    ...(history !== undefined ? { history } : {}),
   };
 }
 

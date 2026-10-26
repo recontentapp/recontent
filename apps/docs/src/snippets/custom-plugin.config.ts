@@ -5,6 +5,7 @@ import type { RecontentPlugin } from "recontent/plugins";
 function colorList(options: { outDir: string }): RecontentPlugin {
   return {
     name: "acme:color-list",
+    dependsOn: ["tokens"],
 
     validate({ registry }) {
       return [...registry.values()]

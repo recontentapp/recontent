@@ -313,5 +313,10 @@ export function generateTypeScriptNativeFiles(
 }
 
 export function typescriptNative(options: TypeScriptNativePluginOptions): RecontentPlugin {
-  return outputPlugin("recontent:typescript-native", options, generateTypeScriptNativeFiles);
+  return outputPlugin(
+    "recontent:typescript-native",
+    ["tokens"],
+    options,
+    generateTypeScriptNativeFiles,
+  );
 }

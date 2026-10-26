@@ -5,7 +5,7 @@ import {
   defineSystemTokens,
   tokens,
 } from "recontent";
-import { css, docs, dtcg } from "recontent/plugins";
+import { css, dtcg } from "recontent/plugins";
 
 const ref = defineReferenceTokens({
   color: {
@@ -31,9 +31,5 @@ const components = defineComponentTokens({});
 
 export default defineConfig({
   tokens: { ref, system, components },
-  plugins: [
-    css({ outDir: "dist" }),
-    dtcg({ outDir: "dist" }),
-    docs({ outDir: "dist", markdown: true }),
-  ],
+  plugins: [css({ outDir: "dist" }), dtcg({ outDir: "dist" })],
 });

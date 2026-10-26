@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "recontent": "recontent",
     "dev:tokens": "recontent build -c recontent.config.ts",
     "start": "pnpm dev:tokens && vite",
     "build": "pnpm dev:tokens && vite build",

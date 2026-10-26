@@ -1,5 +1,10 @@
 import path from "node:path";
-import type { ComponentInfo, InheritedProps, PropInfo } from "@recontentapp/core";
+import type {
+  ComponentInfo,
+  InheritedProps,
+  PropInfo,
+  TypeParameterInfo,
+} from "@recontentapp/core";
 import ts from "typescript";
 import { componentSignatures, resolveAlias, type Analysis, type Candidate } from "./components.js";
 
@@ -93,6 +98,52 @@ function typeText(checker: ts.TypeChecker, symbol: ts.Symbol, optional: boolean)
   return optional ? text.replace(/ \| undefined$/, "") : text;
 }
 
+/**
+ * The prop's type with the project's own alias expanded, e.g. `Width` →
+ * `number | "100%" | "auto"`, or `undefined` when there is no such alias.
+ * Library aliases stay as written: `MouseEventHandler<…>` reads better than
+ * what it expands to.
+ */
+function resolvedText(
+  analysis: Analysis,
+  symbol: ts.Symbol,
+  type: ts.Type,
+  declared: string,
+): string | undefined {
+  const { checker } = analysis;
+  const nonNull = checker.getNonNullableType(type);
+  const aliasDeclaration = nonNull.aliasSymbol?.declarations?.[0];
+  if (!aliasDeclaration || isExternal(analysis, aliasDeclaration.getSourceFile())) return undefined;
+  const text = checker
+    .typeToString(
+      nonNull,
+      declarationOf(symbol),
+      ts.TypeFormatFlags.NoTruncation | ts.TypeFormatFlags.InTypeAlias,
+    )
+    .replace(/ \| undefined$/, "");
+  return text === declared ? undefined : text;
+}
+
+function typeParametersOf(
+  checker: ts.TypeChecker,
+  signature: ts.Signature,
+  location: ts.Node,
+): TypeParameterInfo[] | undefined {
+  const parameters = signature.getTypeParameters();
+  if (!parameters?.length) return undefined;
+  const render = (type: ts.Type) =>
+    checker.typeToString(type, location, ts.TypeFormatFlags.NoTruncation);
+  return parameters.map((parameter) => {
+    const constraint = parameter.getConstraint();
+    const fallback = parameter.getDefault();
+    return {
+      name: parameter.symbol.name,
+      ...(constraint ? { constraint: render(constraint) } : {}),
+      ...(fallback ? { default: render(fallback) } : {}),
+    };
+  });
+}
+
 function literalValues(
   checker: ts.TypeChecker,
   type: ts.Type,
@@ -103,7 +154,7 @@ function literalValues(
     if (member.isStringLiteral() || member.isNumberLiteral()) {
       values.push(member.value);
     } else if (member.flags & ts.TypeFlags.BooleanLiteral) {
-      values.push((member as unknown as { intrinsicName: string }).intrinsicName === "true");
+      values.push(member === checker.getTrueType());
     } else {
       return undefined;
     }
@@ -249,12 +300,12 @@ function groupInherited(analysis: Analysis, symbols: ts.Symbol[]): InheritedProp
     const key = `${pkg ?? ""}\0${name}`;
     const origin = origins.get(key);
     if (origin) {
-      origin.count += 1;
+      origin.props.push(symbol.name);
     } else {
       origins.set(key, {
         name,
         ...(pkg ? { package: pkg } : {}),
-        count: 1,
+        props: [symbol.name],
         symbol: ownerName && checker.getSymbolAtLocation(ownerName),
       });
     }
@@ -272,12 +323,16 @@ function groupInherited(analysis: Analysis, symbols: ts.Symbol[]): InheritedProp
   for (const origin of all) {
     if (!isBaseOfAnother(origin)) continue;
     const root = roots.find((candidate) => ancestors.get(candidate)!.has(origin.symbol!));
-    if (root) root.count += origin.count;
+    if (root) root.props.push(...origin.props);
     else roots.push(origin);
   }
 
   return roots
-    .map(({ name, package: pkg, count }) => ({ name, ...(pkg ? { package: pkg } : {}), count }))
+    .map(({ name, package: pkg, props }) => ({
+      name,
+      ...(pkg ? { package: pkg } : {}),
+      props: props.sort((a, b) => a.localeCompare(b)),
+    }))
     .sort((a, b) => a.name.localeCompare(b.name));
 }
 
@@ -287,7 +342,7 @@ export function describeComponent(
   analysis: Analysis,
   candidate: Candidate,
   root: string,
-): { info: Omit<ComponentInfo, "history">; warning?: string } {
+): ComponentInfo {
   const { checker } = analysis;
   const { symbol, type } = candidate;
   const declaration = locate(checker, symbol);
@@ -297,8 +352,9 @@ export function describeComponent(
   // Props are the first parameter of whatever signature renders the component. A
   // union of props (`{ href } | { onClick }`) is merged member by member, because
   // the checker only reports the properties every member shares.
+  const matches = componentSignatures(analysis, type);
   const propsTypes = new Set<ts.Type>();
-  for (const signature of componentSignatures(analysis, type)) {
+  for (const { signature } of matches) {
     const parameter = signature.parameters[0];
     if (!parameter) continue;
     const propsType = checker.getNonNullableType(
@@ -335,14 +391,15 @@ export function describeComponent(
       continue;
     }
 
-    const texts = [
-      ...new Set(
-        own.map(({ symbol: property }) =>
-          typeText(checker, property, !!(property.flags & ts.SymbolFlags.Optional)),
-        ),
-      ),
-    ];
-    const text = texts.join(" | ");
+    const rendered = own.map(({ symbol: property, type: propType }) => {
+      const declared = typeText(checker, property, !!(property.flags & ts.SymbolFlags.Optional));
+      return { declared, resolved: resolvedText(analysis, property, propType, declared) };
+    });
+    const unique = (texts: string[]) => [...new Set(texts)].join(" | ");
+    const text = unique(rendered.map(({ declared }) => declared));
+    const resolved = rendered.some((entry) => entry.resolved !== undefined)
+      ? unique(rendered.map((entry) => entry.resolved ?? entry.declared))
+      : undefined;
     const literals = own.map(({ type: propType }) => literalValues(checker, propType));
     const values = literals.every((list) => list !== undefined)
       ? inSourceOrder(
@@ -356,6 +413,8 @@ export function describeComponent(
     props.push({
       name,
       type: text,
+      // Literal unions already say it all in `values`.
+      ...(resolved && !values ? { resolved } : {}),
       ...(values ? { values } : {}),
       // Required only when every member of a props union has it, and requires it.
       required:
@@ -370,8 +429,12 @@ export function describeComponent(
   const inherits = groupInherited(analysis, inherited);
   const { description, deprecated } = jsDoc(checker, symbol);
   const file = located.getSourceFile();
-  const info = {
+  const typeParameters = matches
+    .map(({ signature }) => typeParametersOf(checker, signature, located))
+    .find((parameters) => parameters !== undefined);
+  const info: ComponentInfo = {
     name: candidate.name,
+    ...(typeParameters ? { typeParameters } : {}),
     sourceFilePath: path.relative(root, file.fileName).split(path.sep).join("/"),
     line: file.getLineAndCharacterOfPosition(located.getStart(file)).line + 1,
     ...(description ? { description } : {}),
@@ -379,13 +442,11 @@ export function describeComponent(
     props,
     inherits,
   };
-  const inheritedCount = inherits.reduce((total, group) => total + group.count, 0);
-  return {
-    info,
-    ...(props.length === 0 && inheritedCount > 0
-      ? {
-          warning: `${candidate.name} has no own props (all ${inheritedCount} props are inherited).`,
-        }
-      : {}),
-  };
+  const inheritedCount = inherits.reduce((total, group) => total + group.props.length, 0);
+  if (props.length === 0 && inheritedCount > 0) {
+    analysis.warnings.push(
+      `${candidate.name} has no own props (all ${inheritedCount} props are inherited).`,
+    );
+  }
+  return info;
 }

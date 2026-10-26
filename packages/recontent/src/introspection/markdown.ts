@@ -1,11 +1,31 @@
-import type { ComponentInfo, GitInfo, PropInfo } from "@recontentapp/core";
-import { sourceUrl } from "../git.js";
+import type { ComponentInfo, InheritedProps, PropInfo } from "@recontentapp/core";
 import { code, escapeText } from "../markdown.js";
 
-function typeCell(prop: PropInfo): string {
-  return code(
-    prop.values ? prop.values.map((value) => JSON.stringify(value)).join(" | ") : prop.type,
+/** `Accordion<Value extends string>` for a generic component, else its name. */
+export function displayName({ name, typeParameters }: ComponentInfo): string {
+  if (!typeParameters?.length) return name;
+  const parameters = typeParameters.map(
+    (parameter) =>
+      parameter.name +
+      (parameter.constraint ? ` extends ${parameter.constraint}` : "") +
+      (parameter.default ? ` = ${parameter.default}` : ""),
   );
+  return `${name}<${parameters.join(", ")}>`;
+}
+
+/** "Updated 2025-03-01" when the component has a last commit date. */
+export function updatedText(component: ComponentInfo): string | undefined {
+  return component.lastUpdatedAt ? `Updated ${component.lastUpdatedAt.slice(0, 10)}` : undefined;
+}
+
+/** "53 props" */
+export function propCount({ props }: InheritedProps): string {
+  return `${props.length} ${props.length === 1 ? "prop" : "props"}`;
+}
+
+function typeCell(prop: PropInfo): string {
+  if (prop.values) return code(prop.values.map((value) => JSON.stringify(value)).join(" | "));
+  return prop.resolved ? `${code(prop.type)}<br>${code(prop.resolved)}` : code(prop.type);
 }
 
 function notes(prop: PropInfo): string {
@@ -21,12 +41,12 @@ function notes(prop: PropInfo): string {
   return parts.join("<br>");
 }
 
-/** `src/button.tsx:12`, linked to the repository when there is a web remote. */
-function sourceLine(component: ComponentInfo, git: GitInfo | undefined): string {
-  const label = code(`${component.sourceFilePath}:${component.line}`);
-  const url = git && sourceUrl(git, component.sourceFilePath, component.line);
-  const updated = component.history?.updated.date.slice(0, 10);
-  return [`Source: ${url ? `[${label}](${url})` : label}`, updated ? `Updated ${updated}` : ""]
+/** `src/button.tsx:12` */
+function sourceLine(component: ComponentInfo): string {
+  return [
+    `Source: ${code(`${component.sourceFilePath}:${component.line}`)}`,
+    updatedText(component),
+  ]
     .filter(Boolean)
     .join(" · ");
 }
@@ -34,18 +54,14 @@ function sourceLine(component: ComponentInfo, git: GitInfo | undefined): string 
 function inheritsLine(component: ComponentInfo): string | undefined {
   if (component.inherits.length === 0) return undefined;
   const groups = component.inherits.map(
-    ({ name, package: pkg, count }) =>
-      `${code(name)} (${count} ${count === 1 ? "prop" : "props"}${pkg ? ` from ${pkg}` : ""})`,
+    (group) =>
+      `${code(group.name)} (${propCount(group)}${group.package ? ` from ${group.package}` : ""})`,
   );
   return `Also accepts: ${groups.join(", ")}`;
 }
 
-export function renderComponentMarkdown(
-  component: ComponentInfo,
-  git: GitInfo | undefined,
-  headingLevel: number,
-): string {
-  const lines = [`${"#".repeat(headingLevel)} ${escapeText(component.name)}`, ""];
+export function renderComponentMarkdown(component: ComponentInfo, headingLevel: number): string {
+  const lines = [`${"#".repeat(headingLevel)} ${escapeText(displayName(component))}`, ""];
   if (component.description) lines.push(escapeText(component.description), "");
   if (component.deprecated) {
     lines.push(
@@ -55,7 +71,7 @@ export function renderComponentMarkdown(
       "",
     );
   }
-  lines.push(sourceLine(component, git), "");
+  lines.push(sourceLine(component), "");
 
   if (component.props.length === 0) {
     lines.push("_No own props._", "");

@@ -118,13 +118,30 @@ program
     await runInit({ cwd, configPath, force: options.force, source });
   });
 
+const NO_CACHE_HELP =
+  "Neither read nor write the component introspection cache (.recontent/cache.json next to the " +
+  "config). The cache goes stale when a new file changes how an import resolves without touching " +
+  "an existing one; use this flag then, in CI, or to debug introspection";
+
+/** Introspection results are cached unless `--no-cache`; the version invalidates them across upgrades. */
+function cacheOption(options: { cache: boolean }): { version: string } | undefined {
+  return options.cache ? { version: packageJson.version } : undefined;
+}
+
 program
   .command("build")
   .description("Run the plugins configured in the config file to generate their output")
   .option("-w, --watch", "Rerun the build whenever the config file (or a file it imports) changes")
-  .action(async (options: { watch?: boolean }) => {
+  .option("--no-cache", NO_CACHE_HELP)
+  .action(async (options: { watch?: boolean; cache: boolean }) => {
     const { cwd, configPath, logLevel } = resolveGlobalOptions();
-    await runBuild({ cwd, configPath, logLevel, watch: options.watch });
+    await runBuild({
+      cwd,
+      configPath,
+      logLevel,
+      watch: options.watch,
+      cache: cacheOption(options),
+    });
   });
 
 program
@@ -158,7 +175,7 @@ program
 
 const inspect = program
   .command("inspect")
-  .description("Show what the config defines: tokens, components and git metadata")
+  .description("Show what the config defines: tokens and components")
   .addHelpText(
     "after",
     `
@@ -171,21 +188,32 @@ Output is markdown by default. --format json returns full detail for the whole s
 An unknown path or name exits 1 and suggests the closest matches.`,
   );
 
-function inspectFormat(command: Command): Format {
-  return command.optsWithGlobals<{ format: Format }>().format;
+function inspectOptions(command: Command): { format: Format; cache: boolean } {
+  return command.optsWithGlobals<{ format: Format; cache: boolean }>();
 }
 
-async function runInspectTarget(target: InspectTarget, format: Format): Promise<void> {
+async function runInspectTarget(
+  target: InspectTarget,
+  options: { format: Format; cache: boolean },
+): Promise<void> {
   const { cwd, configPath, logLevel } = resolveGlobalOptions();
-  await runInspect({ cwd, configPath, logLevel, format, target });
+  await runInspect({
+    cwd,
+    configPath,
+    logLevel,
+    format: options.format,
+    target,
+    cache: cacheOption(options),
+  });
 }
 
 // Defined once here: commander lets a parent's options appear after its subcommand, so
 // `inspect tokens --format json` works, and subcommands read it back from their parent.
 inspect
   .addOption(new Option("--format <format>", "Output format").choices(FORMATS).default("markdown"))
-  .action(async (options: { format: Format }) => {
-    await runInspectTarget({ kind: "overview" }, options.format);
+  .option("--no-cache", NO_CACHE_HELP)
+  .action(async (options: { format: Format; cache: boolean }) => {
+    await runInspectTarget({ kind: "overview" }, options);
   });
 
 inspect
@@ -200,7 +228,7 @@ inspect
       options: { type?: string; theme?: string; deprecated?: boolean },
       command: Command,
     ) => {
-      await runInspectTarget({ kind: "tokens", paths, ...options }, inspectFormat(command));
+      await runInspectTarget({ kind: "tokens", paths, ...options }, inspectOptions(command));
     },
   );
 
@@ -213,7 +241,7 @@ inspect
   .action(async (names: string[], options: { deprecated?: boolean }, command: Command) => {
     await runInspectTarget(
       { kind: "components", names, deprecated: options.deprecated },
-      inspectFormat(command),
+      inspectOptions(command),
     );
   });
 

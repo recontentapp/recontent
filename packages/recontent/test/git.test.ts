@@ -3,7 +3,7 @@ import { mkdirSync, mkdtempSync, realpathSync, rmSync, writeFileSync } from "nod
 import os from "node:os";
 import path from "node:path";
 import { afterAll, beforeAll, describe, expect, test } from "@jest/globals";
-import { parseRemote, readFileHistory, readGitInfo, sourceUrl } from "../src/git.js";
+import { readHead, readLastUpdated } from "../src/git.js";
 
 let repo: string;
 let outside: string;
@@ -34,7 +34,6 @@ beforeAll(() => {
   git(["init", "-q", "-b", "main"]);
   git(["config", "user.email", "test@example.com"]);
   git(["config", "user.name", "test"]);
-  git(["remote", "add", "origin", "git@github.com:acme/ds.git"]);
 });
 
 afterAll(() => {
@@ -42,120 +41,61 @@ afterAll(() => {
   rmSync(outside, { recursive: true, force: true });
 });
 
-describe("parseRemote", () => {
-  test.each([
-    ["git@github.com:acme/ds.git", "https://github.com/acme/ds"],
-    ["git@github.com:acme/ds", "https://github.com/acme/ds"],
-    ["ssh://git@github.com/acme/ds.git", "https://github.com/acme/ds"],
-    ["https://github.com/acme/ds.git", "https://github.com/acme/ds"],
-    ["https://github.com/acme/ds", "https://github.com/acme/ds"],
-    ["https://gitlab.com/acme/group/ds.git", "https://gitlab.com/acme/group/ds"],
-    ["git@bitbucket.org:acme/ds.git", "https://bitbucket.org/acme/ds"],
-  ])("%s", (remote, webUrl) => {
-    expect(parseRemote(remote).webUrl).toBe(webUrl);
+describe("readHead", () => {
+  test("is undefined outside a work tree and before the first commit", () => {
+    expect(readHead(outside)).toBeUndefined();
+    expect(readHead(repo)).toBeUndefined();
   });
 
-  test("an unknown host has no web URL", () => {
-    expect(parseRemote("git@git.internal.example:acme/ds.git")).toEqual({
-      url: "git@git.internal.example:acme/ds.git",
-    });
-  });
-
-  test("credentials never leak into the URL", () => {
-    expect(parseRemote("https://user:secret@github.com/acme/ds.git")).toEqual({
-      url: "https://github.com/acme/ds.git",
-      webUrl: "https://github.com/acme/ds",
-    });
-  });
-});
-
-describe("readGitInfo", () => {
-  test("is undefined outside a work tree", () => {
-    expect(readGitInfo(outside)).toBeUndefined();
-  });
-
-  test("is undefined before the first commit", () => {
-    expect(readGitInfo(repo)).toBeUndefined();
-  });
-
-  test("reports commit, branch, dirty and the web remote", () => {
+  test("is HEAD's sha", () => {
     const first = commit("ds/button.tsx", "export const a = 1;\n", "2024-01-01T10:00:00Z");
-
-    expect(readGitInfo(path.join(repo, "ds"))).toEqual({
-      commit: first,
-      branch: "main",
-      dirty: false,
-      shallow: false,
-      root: "ds",
-      remote: { url: "git@github.com:acme/ds.git", webUrl: "https://github.com/acme/ds" },
-    });
-
-    writeFileSync(path.join(repo, "ds/button.tsx"), "export const a = 2;\n");
-    expect(readGitInfo(path.join(repo, "ds"))?.dirty).toBe(true);
-    git(["checkout", "--", "."]);
-  });
-
-  test("a detached HEAD has no branch", () => {
-    git(["checkout", "-q", "--detach"]);
-    expect(readGitInfo(repo)?.branch).toBeUndefined();
-    git(["checkout", "-q", "main"]);
+    expect(readHead(path.join(repo, "ds"))).toBe(first);
   });
 });
 
-describe("readFileHistory", () => {
-  test("reports the first and last commit touching each file", () => {
-    const created = git(["rev-parse", "HEAD"]);
-    const other = commit("ds/card.tsx", "export const b = 1;\n", "2024-02-01T10:00:00Z");
-    const updated = commit("ds/button.tsx", "export const a = 3;\n", "2024-03-01T10:00:00Z");
+describe("readLastUpdated", () => {
+  const file = (name: string) => path.join(repo, name);
 
-    const files = [path.join(repo, "ds/button.tsx"), path.join(repo, "ds/card.tsx")];
-    const history = readFileHistory(repo, files);
+  test("reports the date of the last commit touching each file", async () => {
+    commit("ds/card.tsx", "export const b = 1;\n", "2024-02-01T10:00:00Z");
+    commit("ds/button.tsx", "export const a = 3;\n", "2024-03-01T10:00:00Z");
 
-    expect(history.get(files[0]!)).toEqual({
-      created: { commit: created, date: "2024-01-01T10:00:00Z" },
-      updated: { commit: updated, date: "2024-03-01T10:00:00Z" },
-    });
-    expect(history.get(files[1]!)).toEqual({
-      created: { commit: other, date: "2024-02-01T10:00:00Z" },
-      updated: { commit: other, date: "2024-02-01T10:00:00Z" },
-    });
+    const { dates, warning } = await readLastUpdated(repo, [
+      file("ds/button.tsx"),
+      file("ds/card.tsx"),
+    ]);
+
+    expect(warning).toBeUndefined();
+    expect(dates.get(file("ds/button.tsx"))).toBe("2024-03-01T10:00:00Z");
+    expect(dates.get(file("ds/card.tsx"))).toBe("2024-02-01T10:00:00Z");
   });
 
-  test("untracked files have no history", () => {
-    const untracked = path.join(repo, "ds/new.tsx");
+  test("untracked files are absent, and a path outside the work tree does not affect the others", async () => {
+    const untracked = file("ds/new.tsx");
     writeFileSync(untracked, "export const c = 1;\n");
-    expect(readFileHistory(repo, [untracked]).size).toBe(0);
-  });
-});
+    const stray = path.join(outside, "stray.tsx");
+    writeFileSync(stray, "export const d = 1;\n");
 
-describe("sourceUrl", () => {
-  const info = {
-    commit: "abc123",
-    dirty: false,
-    shallow: false,
-    root: "packages/ui",
-    remote: { url: "git@github.com:acme/ds.git", webUrl: "https://github.com/acme/ds" },
-  };
+    const { dates, warning } = await readLastUpdated(repo, [untracked, stray, file("ds/card.tsx")]);
 
-  test("links a file at the commit, relative to the git root", () => {
-    expect(sourceUrl(info, "src/button.tsx", 12)).toBe(
-      "https://github.com/acme/ds/blob/abc123/packages/ui/src/button.tsx#L12",
-    );
-    expect(sourceUrl(info, "src/button.tsx")).toBe(
-      "https://github.com/acme/ds/blob/abc123/packages/ui/src/button.tsx",
-    );
+    expect(warning).toBeUndefined();
+    expect([...dates.keys()]).toEqual([file("ds/card.tsx")]);
   });
 
-  test("Bitbucket uses its own path and anchor", () => {
-    const bitbucket = { ...info, remote: { url: "", webUrl: "https://bitbucket.org/acme/ds" } };
-    expect(sourceUrl(bitbucket, "src/button.tsx", 3)).toBe(
-      "https://bitbucket.org/acme/ds/src/abc123/packages/ui/src/button.tsx#lines-3",
-    );
+  test("outside a work tree it warns once and reports nothing", async () => {
+    const { dates, warning } = await readLastUpdated(outside, [path.join(outside, "stray.tsx")]);
+
+    expect(dates.size).toBe(0);
+    expect(warning).toMatch(/not a git repository/);
   });
 
-  test("has no link without a web remote, or for files outside the repository", () => {
-    expect(sourceUrl({ ...info, remote: undefined }, "src/button.tsx")).toBeUndefined();
-    expect(sourceUrl({ ...info, root: "" }, "../../outside.tsx")).toBeUndefined();
-    expect(sourceUrl(info, "../../node_modules/lib/index.d.ts")).toBeUndefined();
+  test("a shallow clone warns instead of reporting the grafted commit's date for everything", async () => {
+    const clone = path.join(outside, "clone");
+    git(["clone", "-q", "--depth", "1", `file://${repo}`, clone], outside);
+
+    const { dates, warning } = await readLastUpdated(clone, [path.join(clone, "ds/button.tsx")]);
+
+    expect(dates.size).toBe(0);
+    expect(warning).toMatch(/shallow clone/);
   });
 });

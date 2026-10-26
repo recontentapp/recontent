@@ -1,5 +1,9 @@
-import { pathKey, type ComponentInfo, type GitInfo, type TokenLayer } from "@recontentapp/core";
-import type { GeneratorContext } from "../shared/context.js";
+import {
+  pathKey,
+  type ComponentInfo,
+  type PluginContext,
+  type TokenLayer,
+} from "@recontentapp/core";
 import { buildToken, deprecation, type DocToken } from "../shared/doc-token.js";
 
 const DOC_LAYERS: TokenLayer[] = ["ref", "system", "components"];
@@ -19,23 +23,11 @@ export type DocsModel = {
   tokenCount: number;
   layers: DocLayer[];
   components: ComponentInfo[];
-  git?: GitInfo;
-  /** "Generated from <sha> on <branch>", when the project is in a git work tree. */
-  footer?: string;
 };
-
-type DocsContext = GeneratorContext & {
-  components?: { components: ComponentInfo[] };
-  git?: GitInfo;
-};
-
-function footerText(git: GitInfo): string {
-  return `Generated from ${git.commit.slice(0, 7)}${git.branch ? ` on ${git.branch}` : ""}${git.dirty ? " (uncommitted changes)" : ""}`;
-}
 
 const numericCompare = (a: string, b: string) => a.localeCompare(b, undefined, { numeric: true });
 
-export function buildDocsModel(ctx: DocsContext, title: string): DocsModel {
+export function buildDocsModel(ctx: PluginContext, title: string): DocsModel {
   const themes = Object.keys(ctx.themes);
   const entries = [...ctx.registry.values()].sort((a, b) =>
     numericCompare(pathKey(a.path), pathKey(b.path)),
@@ -70,7 +62,6 @@ export function buildDocsModel(ctx: DocsContext, title: string): DocsModel {
     themes,
     tokenCount: ctx.registry.size,
     layers,
-    components: ctx.components?.components ?? [],
-    ...(ctx.git ? { git: ctx.git, footer: footerText(ctx.git) } : {}),
+    components: ctx.components ?? [],
   };
 }

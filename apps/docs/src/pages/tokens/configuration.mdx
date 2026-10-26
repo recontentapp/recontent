@@ -55,10 +55,10 @@ The trees are walked once:
 
 ### `introspection`
 
-|          |                                                            |
-| -------- | ---------------------------------------------------------- |
-| Type     | `{ entry: string; tsconfig?: string; exclude?: string[] }` |
-| Required | Yes, unless [`tokens`](#tokens) is set                     |
+|          |                                                                               |
+| -------- | ----------------------------------------------------------------------------- |
+| Type     | `{ entry: string; tsconfig?: string; exclude?: string[]; history?: boolean }` |
+| Required | Yes, unless [`tokens`](#tokens) is set                                        |
 
 Tells Recontent where your React components are, so that [`recontent inspect`](/cli/inspect) and
 plugins can read their props. `defineConfig` throws when neither `tokens` nor `introspection` is set.
@@ -79,6 +79,7 @@ export default defineConfig({
 | `entry`    | Required. A barrel file, relative to the config. Every export that resolves to a React component is introspected.                                                                                                                               |
 | `tsconfig` | The tsconfig used to resolve types and path aliases, relative to the config. Default: the nearest `tsconfig.json` above `entry`. It must include `entry`: for a solution-style tsconfig, point at the project file such as `tsconfig.app.json`. |
 | `exclude`  | Export names to skip, such as `"ThemeProvider"` or `"Dialog.Root"`.                                                                                                                                                                             |
+| `history`  | Default `false`. Reads the date of the last commit that touched each component's file into `lastUpdatedAt`, shown as `Updated 2025-03-01` in the docs. See [History](#history).                                                                 |
 
 An export is a component when its name is PascalCase and it is callable with a return type React can
 render, or a class with a `render` method. This covers plain functions, `FC`, `memo`, `forwardRef`,
@@ -89,15 +90,49 @@ Subcomponents are reported one level deep with a dotted name: `Object.assign(Tab
 `Tabs.Item = Item` give `Tabs.Item`, and `export * as Dialog from "./dialog"` gives `Dialog.Root`,
 `Dialog.Trigger`.
 
-For each component the manifest lists the props declared in your project and, separately, a count of
+For each component Recontent lists the props declared in your project and, separately, the names of
 the props inherited from libraries (`ButtonHTMLAttributes` from `@types/react`, for instance). A union
 of props types lists every member's props, and a prop is required only when every member requires
 it. Descriptions, `@default` and `@deprecated` come from JSDoc; without `@default`, a destructuring
 default in the implementation is used.
 
-The TypeScript program is built only when something reads components: `recontent build` with
-`introspection` set, `recontent inspect` and `recontent inspect components`. `recontent build --watch`
-rebuilds when a component file changes.
+A prop typed with one of your own aliases keeps its name in `type` (`Width`) and gets the expansion in
+`resolved` (`number | "100%" | "auto"`). Library aliases such as `MouseEventHandler<…>` are left as
+written. A generic component lists its type parameters: `Accordion<Value extends string>`.
+
+Two kinds of exports are accepted only on weak evidence and reported with a warning that names them:
+a function without types, whose return type is `any`, and a class that has a `render` method but
+does not extend `React.Component`. Add them to `exclude` if they are not components. The same goes
+for an entry that exports PascalCase values but no components at all, which is almost always a setup
+problem such as `@types/react` not resolving from the entry.
+
+The TypeScript program is built only when a plugin that depends on components is configured (such
+as [`docs()`](/plugins/docs)) or when you run `recontent inspect` or `recontent inspect components`; a
+build with token-only plugins does not touch it, and a broken `introspection` block cannot stop them.
+`recontent build --watch` rebuilds when a component file changes, within the entry's package.
+
+#### Cache
+
+The result is kept in `.recontent/cache.json` next to the config (the folder ignores itself, so there
+is nothing to add to `.gitignore`) and used as long as the Recontent and TypeScript versions, the
+`introspection` block, the tsconfig and every file the program read, dependencies' declarations
+included, are unchanged. `recontent inspect` called repeatedly, as agents do, is then near instant.
+
+A new file that changes how an import resolves without touching an existing one, such as adding
+`button.ts` next to `button/index.ts`, is not detected. Pass `--no-cache` to `build` or `inspect` to
+neither read nor write the cache, in CI for instance, or to debug introspection.
+
+#### History
+
+With `history: true`, `lastUpdatedAt` is the date of the last commit touching the component's file,
+read from `git log` and stopping as soon as every file has been seen. It is off by default so that
+no `git` process runs and generated docs depend only on your sources and config: with it on, committed
+docs change whenever a component's file is committed, so regenerate them in CI rather than by hand.
+
+- The date is per file: components sharing a file share it, and uncommitted edits are not reflected.
+- In a shallow clone, such as `actions/checkout`'s default, `lastUpdatedAt` is left out with a warning
+  rather than set to the one commit that was fetched. Fetch more history to get it.
+- Outside a git work tree, or without `git`, it is left out with a single warning.
 
 ### `themes`
 

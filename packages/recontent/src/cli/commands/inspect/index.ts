@@ -1,5 +1,5 @@
 import type { LogLevel } from "@recontentapp/core";
-import { loadProject } from "../../../project.js";
+import { loadComponents, loadProject } from "../../../project.js";
 import { buildToken, type DocToken } from "../../../plugins/shared/doc-token.js";
 import { diagnoseRegistry } from "../../registry-diagnostics.js";
 import { exitWithError } from "../../utils/exit.js";
@@ -19,6 +19,8 @@ export type InspectOptions = {
   logLevel?: LogLevel;
   format: Format;
   target: InspectTarget;
+  /** Where the introspection cache is read and written; absent for `--no-cache`. */
+  cache?: { version: string };
 };
 
 const numericCompare = (a: string, b: string) => a.localeCompare(b, undefined, { numeric: true });
@@ -32,10 +34,8 @@ export async function runInspect(options: InspectOptions): Promise<void> {
   const project = await loadProject({
     configPath: options.configPath,
     logLevel: options.logLevel,
-    // Tokens never need a TS program; only look at components when asked.
-    components: target.kind !== "tokens",
   });
-  const { config, logger, components, git } = project;
+  const { config, logger } = project;
   const configName = displayPath(options.cwd, options.configPath);
 
   if (target.kind === "components" && !config.introspection) {
@@ -44,6 +44,12 @@ export async function runInspect(options: InspectOptions): Promise<void> {
     );
     return;
   }
+
+  // Tokens never need a TS program; only look at components when asked.
+  const components =
+    target.kind !== "tokens" && config.introspection
+      ? (await loadComponents(project, { cache: options.cache })).components
+      : undefined;
 
   for (const diagnostic of config.diagnostics) logger.warn(diagnostic.message);
   const brokenAliases = diagnoseRegistry(config.registry);
@@ -62,12 +68,7 @@ export async function runInspect(options: InspectOptions): Promise<void> {
 
   switch (target.kind) {
     case "overview":
-      print(
-        renderOverview(
-          { config: configName, tokens, themes, components: components?.components, git },
-          format,
-        ),
-      );
+      print(renderOverview({ config: configName, tokens, themes, components }, format));
       return;
     case "tokens": {
       const { selected, errors } = selectTokens(tokens, themes, target);
@@ -81,13 +82,13 @@ export async function runInspect(options: InspectOptions): Promise<void> {
       return;
     }
     case "components": {
-      const { selected, errors } = selectComponents(components?.components ?? [], target);
+      const { selected, errors } = selectComponents(components ?? [], target);
       if (errors.length > 0) {
         exitWithError(errors.join("\nerror: "));
         return;
       }
       const summary = target.names.length === 0;
-      print(renderComponents(selected, { format, git, summary }));
+      print(renderComponents(selected, { format, summary }));
       return;
     }
   }

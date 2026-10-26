@@ -7,7 +7,7 @@ import {
   tokens,
 } from "../src/index.js";
 import { generateDocsFiles } from "../src/plugins/docs/index.js";
-import type { ComponentManifest, GitInfo, PluginContext } from "@recontentapp/core";
+import type { ComponentInfo, PluginContext } from "@recontentapp/core";
 import { goldenConfig } from "./helpers/fixtures.js";
 
 function ctxFor(config: ReturnType<typeof goldenConfig>["config"]): PluginContext {
@@ -159,52 +159,57 @@ describe("design.md", () => {
   });
 });
 
-describe("components and git", () => {
-  const components: ComponentManifest = {
-    schemaVersion: "1",
-    warnings: [],
-    components: [
-      {
-        name: "Button",
-        sourceFilePath: "src/button.tsx",
-        line: 12,
-        description: "Triggers an action.",
-        history: {
-          created: { commit: "a".repeat(40), date: "2024-01-01T10:00:00Z" },
-          updated: { commit: "b".repeat(40), date: "2024-03-01T10:00:00Z" },
+describe("components", () => {
+  const components: ComponentInfo[] = [
+    {
+      name: "Button",
+      sourceFilePath: "src/button.tsx",
+      line: 12,
+      lastUpdatedAt: "2024-03-01T10:00:00Z",
+      description: "Triggers an action.",
+      props: [
+        {
+          name: "variant",
+          type: "Variant",
+          values: ["solid", "outline"],
+          required: false,
+          defaultValue: '"solid"',
+          description: "Visual weight.",
         },
-        props: [
-          {
-            name: "variant",
-            type: "Variant",
-            values: ["solid", "outline"],
-            required: false,
-            defaultValue: '"solid"',
-            description: "Visual weight.",
-          },
-          { name: "label", type: "string", required: true, deprecated: "Use children." },
-        ],
-        inherits: [{ name: "ButtonHTMLAttributes", package: "@types/react", count: 263 }],
-      },
-      {
-        name: "Spacer",
-        sourceFilePath: "src/spacer.tsx",
-        line: 1,
-        deprecated: true,
-        props: [],
-        inherits: [],
-      },
-    ],
-  };
-  const git: GitInfo = {
-    commit: "1234567890abcdef1234567890abcdef12345678",
-    branch: "main",
-    dirty: true,
-    shallow: false,
-    root: "ds",
-    remote: { url: "git@github.com:acme/ds.git", webUrl: "https://github.com/acme/ds" },
-  };
-  const withExtras = { ...ctxFor(goldenConfig().config), components, git };
+        { name: "label", type: "string", required: true, deprecated: "Use children." },
+        {
+          name: "width",
+          type: "Width",
+          resolved: 'number | "auto"',
+          required: false,
+        },
+      ],
+      inherits: [
+        {
+          name: "ButtonHTMLAttributes",
+          package: "@types/react",
+          props: ["aria-label", "onClick", "type"],
+        },
+      ],
+    },
+    {
+      name: "Accordion",
+      typeParameters: [{ name: "Value", constraint: "string" }],
+      sourceFilePath: "src/accordion.tsx",
+      line: 3,
+      props: [],
+      inherits: [],
+    },
+    {
+      name: "Spacer",
+      sourceFilePath: "src/spacer.tsx",
+      line: 1,
+      deprecated: true,
+      props: [],
+      inherits: [],
+    },
+  ];
+  const withComponents = { ...ctxFor(goldenConfig().config), components };
 
   function renderWith(ctx: PluginContext) {
     const files = generateDocsFiles(ctx, { outDir: "docs", markdown: true });
@@ -212,66 +217,72 @@ describe("components and git", () => {
     return { html: byName["design.html"]!, md: byName["design.md"]! };
   }
 
-  test("markdown gets a props table, an inherited-props line, a source link and a footer", () => {
-    const { md } = renderWith(withExtras);
+  test("markdown gets a props table, an inherited-props line and a plain source line", () => {
+    const { md } = renderWith(withComponents);
 
     expect(md).toContain("## Component APIs");
     expect(md).toContain("### Button");
     expect(md).toContain("Triggers an action.");
-    expect(md).toContain(
-      "Source: [`src/button.tsx:12`](https://github.com/acme/ds/blob/1234567890abcdef1234567890abcdef12345678/ds/src/button.tsx#L12) · Updated 2024-03-01",
-    );
+    expect(md).toContain("Source: `src/button.tsx:12` · Updated 2024-03-01");
     expect(md).toContain(
       '| `variant` | `"solid" \\| "outline"` | `"solid"` | no | Visual weight. |',
     );
     expect(md).toContain("| `label` | `string` | — | yes | **Deprecated**: Use children. |");
-    expect(md).toContain("Also accepts: `ButtonHTMLAttributes` (263 props from @types/react)");
+    expect(md).toContain("Also accepts: `ButtonHTMLAttributes` (3 props from @types/react)");
     expect(md).toContain("> ⚠️ Deprecated");
-    expect(md).toContain("_Generated from 1234567 on main (uncommitted changes)_");
   });
 
-  test("html gets a Component APIs tab, a source link and a footer", () => {
-    const { html } = renderWith(withExtras);
+  test("a resolved alias is shown under the type, and type parameters next to the name", () => {
+    const { md, html } = renderWith(withComponents);
+
+    expect(md).toContain('| `width` | `Width`<br>`number \\| "auto"` | — | no |  |');
+    expect(md).toContain("### Accordion\\<Value extends string\\>");
+    expect(html).toContain("Accordion&lt;Value extends string&gt;");
+    expect(html).toContain("<code>Width</code><br><code>number | &quot;auto&quot;</code>");
+  });
+
+  test("html gets a Component APIs tab with a plain source location", () => {
+    const { html } = renderWith(withComponents);
 
     expect(html).toContain('data-tab="api"');
     expect(html).toContain('data-panel="api"');
     expect(html).toContain('id="c-Button"');
     expect(html).toContain(
-      'href="https://github.com/acme/ds/blob/1234567890abcdef1234567890abcdef12345678/ds/src/button.tsx#L12"',
+      '<p class="source"><code>src/button.tsx:12</code> · Updated 2024-03-01</p>',
     );
-    expect(html).toContain("Generated from 1234567 on main (uncommitted changes)");
+    expect(html).not.toContain('<a href="http');
   });
 
-  test("without a web remote the source is plain text; without history there is no date", () => {
+  test("without lastUpdatedAt there is no date", () => {
     const { md } = renderWith({
-      ...withExtras,
-      git: { ...git, remote: undefined },
-      components: {
-        ...components,
-        components: [{ ...components.components[0]!, history: undefined }],
-      },
+      ...withComponents,
+      components: [{ ...components[0]!, lastUpdatedAt: undefined }],
     });
 
     expect(md).toContain("Source: `src/button.tsx:12`\n");
     expect(md).not.toContain("Updated");
   });
 
-  test("nothing is added when the context has no components or git", () => {
+  test("output depends on sources and config only: no footer, no repository state", () => {
+    const { md, html } = renderWith(withComponents);
+
+    for (const output of [md, html]) {
+      expect(output).not.toContain("Generated from");
+      expect(output).not.toContain('class="foot"');
+    }
+  });
+
+  test("nothing is added when the context has no components", () => {
     const plain = renderWith(ctxFor(goldenConfig().config));
 
     expect(plain.md).not.toContain("Component APIs");
-    expect(plain.md).not.toContain("Generated from");
     expect(plain.html).not.toContain('data-tab="api"');
-    expect(plain.html).not.toContain("Generated from");
   });
 
   test("component text is escaped in html", () => {
     const { html } = renderWith({
-      ...withExtras,
-      components: {
-        ...components,
-        components: [{ ...components.components[0]!, description: "<script>alert(1)</script>" }],
-      },
+      ...withComponents,
+      components: [{ ...components[0]!, description: "<script>alert(1)</script>" }],
     });
 
     expect(html).not.toContain("<script>alert(1)</script>");

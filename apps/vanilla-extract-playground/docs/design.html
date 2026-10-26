@@ -107,6 +107,15 @@ code { font-family: var(--hig-mono); font-size: 0.82em; }
 .track { display: block; width: 120px; height: 8px; border-radius: 4px; background: var(--hig-bg-2); position: relative; }
 .demo { position: absolute; top: -4px; left: 0; width: 16px; height: 16px; border-radius: 50%; background: var(--hig-blue); }
 .row:hover .demo { transform: translateX(104px); }
+.source { margin: 0 0 16px; font-size: 14px; color: var(--hig-text-2); }
+.source a { color: var(--hig-blue); text-decoration: none; }
+.source a:hover { text-decoration: underline; }
+.props { width: 100%; border-collapse: collapse; font-size: 14px; }
+.props th { text-align: left; font-weight: 500; color: var(--hig-text-2); padding: 10px 18px; background: var(--hig-bg-2); }
+.props td { vertical-align: top; padding: 10px 18px; border-top: 1px solid var(--hig-bg-2); word-break: break-word; }
+.props td:first-child { white-space: nowrap; }
+.req { color: var(--hig-orange-text); margin-left: 2px; }
+.foot { margin: 0; padding: 24px; text-align: center; font-size: 13px; color: var(--hig-text-2); }
 [hidden] { display: none !important; }
 @media (max-width: 800px) {
   .bar { padding: 0 16px; }
@@ -413,12 +422,13 @@ code { font-family: var(--hig-mono); font-size: 0.82em; }
   <h1>Design tokens</h1>
   
 </header>
-<div class="tabs"><div class="seg" role="tablist" aria-label="Token layers"><button type="button" role="tab" data-tab="ref" aria-selected="false">Reference<span class="n">120</span></button><button type="button" role="tab" data-tab="system" aria-selected="false">System<span class="n">79</span></button><button type="button" role="tab" data-tab="components" aria-selected="false">Components<span class="n">3</span></button></div></div>
+<div class="tabs"><div class="seg" role="tablist" aria-label="Token layers"><button type="button" role="tab" data-tab="ref" aria-selected="false">Reference<span class="n">120</span></button><button type="button" role="tab" data-tab="system" aria-selected="false">System<span class="n">79</span></button><button type="button" role="tab" data-tab="components" aria-selected="false">Components<span class="n">3</span></button><button type="button" role="tab" data-tab="api" aria-selected="false">Component APIs<span class="n">51</span></button></div></div>
 <div class="layout">
   <aside class="side">
 <nav data-side="ref" aria-label="Reference groups"><a href="#g-ref-ref-color-danger">ref.color.danger</a><a href="#g-ref-ref-color-info">ref.color.info</a><a href="#g-ref-ref-color-primary">ref.color.primary</a><a href="#g-ref-ref-color-secondary">ref.color.secondary</a><a href="#g-ref-ref-color-success">ref.color.success</a><a href="#g-ref-ref-color-warning">ref.color.warning</a><a href="#g-ref-ref-color-white">ref.color.white</a><a href="#g-ref-ref-fontFamily">ref.fontFamily</a><a href="#g-ref-ref-fontSize">ref.fontSize</a><a href="#g-ref-ref-iconScale">ref.iconScale</a><a href="#g-ref-ref-overlayWidth">ref.overlayWidth</a><a href="#g-ref-ref-radius">ref.radius</a><a href="#g-ref-ref-spacing">ref.spacing</a></nav>
 <nav data-side="system" aria-label="System groups"><a href="#g-system-system-border">system.border</a><a href="#g-system-system-borderScale">system.borderScale</a><a href="#g-system-system-colors">system.colors</a><a href="#g-system-system-colors-secondary">system.colors.secondary</a><a href="#g-system-system-colors-textScale">system.colors.textScale</a><a href="#g-system-system-elevationScale">system.elevationScale</a><a href="#g-system-system-gradients">system.gradients</a><a href="#g-system-system-motion">system.motion</a><a href="#g-system-system-radius">system.radius</a><a href="#g-system-system-spacing">system.spacing</a><a href="#g-system-system-textScale">system.textScale</a><a href="#g-system-system-transitionScale">system.transitionScale</a><a href="#g-system-system-typography">system.typography</a></nav>
 <nav data-side="components" aria-label="Components groups"><a href="#g-components-switch">switch</a></nav>
+<nav data-side="api" aria-label="Component APIs"><a href="#c-Accordion">Accordion</a><a href="#c-ActionBar">ActionBar</a><a href="#c-Autocomplete">Autocomplete</a><a href="#c-Avatar">Avatar</a><a href="#c-Badge">Badge</a><a href="#c-Banner">Banner</a><a href="#c-Box">Box</a><a href="#c-Breadcrumb">Breadcrumb</a><a href="#c-Button">Button</a><a href="#c-Checkbox">Checkbox</a><a href="#c-Code">Code</a><a href="#c-Collapsible">Collapsible</a><a href="#c-DateInput">DateInput</a><a href="#c-Dialog">Dialog</a><a href="#c-Divider">Divider</a><a href="#c-Drawer">Drawer</a><a href="#c-DropdownButton">DropdownButton</a><a href="#c-Field">Field</a><a href="#c-FileInput">FileInput</a><a href="#c-Grid">Grid</a><a href="#c-Icon">Icon</a><a href="#c-IconButton">IconButton</a><a href="#c-KeyboardShortcut">KeyboardShortcut</a><a href="#c-Link">Link</a><a href="#c-MetadataList">MetadataList</a><a href="#c-NumberInput">NumberInput</a><a href="#c-Outline">Outline</a><a href="#c-Pagination">Pagination</a><a href="#c-Popover">Popover</a><a href="#c-ProgressBar">ProgressBar</a><a href="#c-QuoteBlock">QuoteBlock</a><a href="#c-RadioList">RadioList</a><a href="#c-SegmentedControls">SegmentedControls</a><a href="#c-Select">Select</a><a href="#c-SelectableCard">SelectableCard</a><a href="#c-Skeleton">Skeleton</a><a href="#c-Slider">Slider</a><a href="#c-Spinner">Spinner</a><a href="#c-Stack">Stack</a><a href="#c-StackItem">StackItem</a><a href="#c-Steps">Steps</a><a href="#c-Switch">Switch</a><a href="#c-Tabs">Tabs</a><a href="#c-Text">Text</a><a href="#c-Textarea">Textarea</a><a href="#c-TextInput">TextInput</a><a href="#c-Timeline">Timeline</a><a href="#c-ToastProvider">ToastProvider</a><a href="#c-Toggle">Toggle</a><a href="#c-Tooltip">Tooltip</a><a href="#c-TreeList">TreeList</a></nav>
   </aside>
   <main>
 <div data-panel="ref" data-count="120" role="tabpanel">
@@ -2184,11 +2194,4324 @@ code { font-family: var(--hig-mono); font-size: 0.82em; }
 </div></div>
 </section>
 </div>
+<div data-panel="api" data-count="51" role="tabpanel">
+  <h2 class="title">Component APIs</h2>
+  <p class="sub">51 components</p>
+  <section class="group" id="c-Accordion">
+  <h3>Accordion <span class="count">10</span></h3>
+  
+  
+  <p class="source"><a href="https://github.com/recontentapp/recontent/blob/f543a3ef8e4b179f82a29e38b21bfa91a01d7706/apps/vanilla-extract-playground/src/generated/components/accordion/Accordion.gen.tsx#L34"><code>src/generated/components/accordion/Accordion.gen.tsx:34</code></a> · Updated 2026-09-17</p>
+  <div class="list"><table class="props">
+  <thead><tr><th>Prop</th><th>Type</th><th>Default</th><th></th></tr></thead>
+  <tbody><tr>
+  <td><code class="">className</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">data-testid</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">defaultValue</code></td>
+  <td><code>Value[]</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">disabled</code></td>
+  <td><code>boolean</code></td>
+  <td><code>false</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">id</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">items</code><span class="req" title="Required">*</span></td>
+  <td><code>AccordionItemData&lt;Value&gt;[]</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">multiple</code></td>
+  <td><code>boolean</code></td>
+  <td><code>false</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">onValueChange</code></td>
+  <td><code>(value: Value[]) =&gt; void</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">render</code></td>
+  <td><code>RenderProp&lt;&quot;div&quot;&gt;</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">value</code></td>
+  <td><code>Value[]</code></td>
+  <td></td>
+  <td></td>
+</tr></tbody>
+</table></div>
+  <p class="lead">Also accepts: <code>AriaAttributes</code> (53 props from @types/react)</p>
+</section>
+<section class="group" id="c-ActionBar">
+  <h3>ActionBar <span class="count">7</span></h3>
+  
+  
+  <p class="source"><a href="https://github.com/recontentapp/recontent/blob/f543a3ef8e4b179f82a29e38b21bfa91a01d7706/apps/vanilla-extract-playground/src/generated/components/action-bar/ActionBar.gen.tsx#L14"><code>src/generated/components/action-bar/ActionBar.gen.tsx:14</code></a> · Updated 2026-09-17</p>
+  <div class="list"><table class="props">
+  <thead><tr><th>Prop</th><th>Type</th><th>Default</th><th></th></tr></thead>
+  <tbody><tr>
+  <td><code class="">children</code></td>
+  <td><code>ReactNode</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">className</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">data-testid</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">id</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">open</code></td>
+  <td><code>boolean</code></td>
+  <td><code>true</code></td>
+  <td><p class="desc">Hides the bar without unmounting its children's state when false.</p></td>
+</tr>
+<tr>
+  <td><code class="">placement</code></td>
+  <td><code>&quot;bottom-start&quot; | &quot;bottom&quot; | &quot;bottom-end&quot;</code></td>
+  <td><code>&quot;bottom&quot;</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">render</code></td>
+  <td><code>RenderProp&lt;&quot;div&quot;&gt;</code></td>
+  <td></td>
+  <td></td>
+</tr></tbody>
+</table></div>
+  <p class="lead">Also accepts: <code>AriaAttributes</code> (53 props from @types/react)</p>
+</section>
+<section class="group" id="c-Autocomplete">
+  <h3>Autocomplete <span class="count">20</span></h3>
+  
+  
+  <p class="source"><a href="https://github.com/recontentapp/recontent/blob/f543a3ef8e4b179f82a29e38b21bfa91a01d7706/apps/vanilla-extract-playground/src/generated/components/autocomplete/Autocomplete.gen.tsx#L57"><code>src/generated/components/autocomplete/Autocomplete.gen.tsx:57</code></a> · Updated 2026-09-17</p>
+  <div class="list"><table class="props">
+  <thead><tr><th>Prop</th><th>Type</th><th>Default</th><th></th></tr></thead>
+  <tbody><tr>
+  <td><code class="">className</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">data-testid</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">defaultOpen</code></td>
+  <td><code>boolean</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">defaultValue</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">disabled</code></td>
+  <td><code>boolean</code></td>
+  <td><code>false</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">emptyState</code></td>
+  <td><code>ReactNode</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">id</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">invalid</code></td>
+  <td><code>boolean</code></td>
+  <td><code>false</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">name</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">onBlur</code></td>
+  <td><code>FocusEventHandler</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">onFocus</code></td>
+  <td><code>FocusEventHandler</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">onItemClick</code></td>
+  <td><code>(value: Value, event: React.MouseEvent&lt;HTMLElement&gt;) =&gt; void</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">onOpenChange</code></td>
+  <td><code>(open: boolean) =&gt; void</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">onValueChange</code></td>
+  <td><code>(value: string) =&gt; void</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">open</code></td>
+  <td><code>boolean</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">options</code><span class="req" title="Required">*</span></td>
+  <td><code>AutocompleteOption&lt;Value&gt;[]</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">placeholder</code></td>
+  <td><code>ReactNode</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">render</code></td>
+  <td><code>RenderProp&lt;&quot;input&quot;&gt;</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">required</code></td>
+  <td><code>boolean</code></td>
+  <td><code>false</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">value</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr></tbody>
+</table></div>
+  <p class="lead">Also accepts: <code>AriaAttributes</code> (53 props from @types/react)</p>
+</section>
+<section class="group" id="c-Avatar">
+  <h3>Avatar <span class="count">9</span></h3>
+  
+  
+  <p class="source"><a href="https://github.com/recontentapp/recontent/blob/f543a3ef8e4b179f82a29e38b21bfa91a01d7706/apps/vanilla-extract-playground/src/generated/components/avatar/Avatar.gen.tsx#L21"><code>src/generated/components/avatar/Avatar.gen.tsx:21</code></a> · Updated 2026-09-17</p>
+  <div class="list"><table class="props">
+  <thead><tr><th>Prop</th><th>Type</th><th>Default</th><th></th></tr></thead>
+  <tbody><tr>
+  <td><code class="">alt</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">className</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">data-testid</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">id</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">render</code></td>
+  <td><code>RenderProp&lt;&quot;span&quot;&gt;</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">shape</code></td>
+  <td><code>&quot;circle&quot; | &quot;square&quot;</code></td>
+  <td><code>&quot;circle&quot;</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">size</code></td>
+  <td><code>&quot;base&quot; | &quot;xs&quot; | &quot;sm&quot; | &quot;lg&quot; | &quot;xl&quot; | &quot;2xl&quot; | &quot;3xl&quot; | &quot;4xl&quot;</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">src</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">text</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr></tbody>
+</table></div>
+  <p class="lead">Also accepts: <code>AriaAttributes</code> (53 props from @types/react)</p>
+</section>
+<section class="group" id="c-Badge">
+  <h3>Badge <span class="count">8</span></h3>
+  
+  
+  <p class="source"><a href="https://github.com/recontentapp/recontent/blob/f543a3ef8e4b179f82a29e38b21bfa91a01d7706/apps/vanilla-extract-playground/src/generated/components/badge/Badge.gen.tsx#L17"><code>src/generated/components/badge/Badge.gen.tsx:17</code></a> · Updated 2026-09-17</p>
+  <div class="list"><table class="props">
+  <thead><tr><th>Prop</th><th>Type</th><th>Default</th><th></th></tr></thead>
+  <tbody><tr>
+  <td><code class="">children</code></td>
+  <td><code>ReactNode</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">className</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">data-testid</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">icon</code></td>
+  <td><code>&quot;search&quot; | &quot;info&quot; | &quot;alert&quot; | &quot;check&quot; | &quot;chevronDown&quot; | &quot;close&quot;</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">id</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">render</code></td>
+  <td><code>RenderProp&lt;&quot;span&quot;&gt;</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">size</code></td>
+  <td><code>&quot;sm&quot; | &quot;md&quot;</code></td>
+  <td><code>&quot;sm&quot;</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">variant</code></td>
+  <td><code>&quot;info&quot; | &quot;success&quot; | &quot;warning&quot; | &quot;danger&quot;</code></td>
+  <td><code>&quot;info&quot;</code></td>
+  <td></td>
+</tr></tbody>
+</table></div>
+  <p class="lead">Also accepts: <code>AriaAttributes</code> (53 props from @types/react)</p>
+</section>
+<section class="group" id="c-Banner">
+  <h3>Banner <span class="count">10</span></h3>
+  
+  
+  <p class="source"><a href="https://github.com/recontentapp/recontent/blob/f543a3ef8e4b179f82a29e38b21bfa91a01d7706/apps/vanilla-extract-playground/src/generated/components/banner/Banner.gen.tsx#L37"><code>src/generated/components/banner/Banner.gen.tsx:37</code></a> · Updated 2026-09-17</p>
+  <div class="list"><table class="props">
+  <thead><tr><th>Prop</th><th>Type</th><th>Default</th><th></th></tr></thead>
+  <tbody><tr>
+  <td><code class="">actions</code></td>
+  <td><code>ReactNode</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">children</code></td>
+  <td><code>ReactNode</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">className</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">data-testid</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">icon</code></td>
+  <td><code>false | &quot;search&quot; | &quot;info&quot; | &quot;alert&quot; | &quot;check&quot; | &quot;chevronDown&quot; | &quot;close&quot;</code></td>
+  <td></td>
+  <td><p class="desc">`false` opts out of the status' default icon.</p></td>
+</tr>
+<tr>
+  <td><code class="">id</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">onDismiss</code></td>
+  <td><code>() =&gt; void</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">render</code></td>
+  <td><code>RenderProp&lt;&quot;div&quot;&gt;</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">status</code></td>
+  <td><code>&quot;info&quot; | &quot;success&quot; | &quot;warning&quot; | &quot;danger&quot;</code></td>
+  <td><code>&quot;info&quot;</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">title</code></td>
+  <td><code>ReactNode</code></td>
+  <td></td>
+  <td></td>
+</tr></tbody>
+</table></div>
+  <p class="lead">Also accepts: <code>AriaAttributes</code> (53 props from @types/react)</p>
+</section>
+<section class="group" id="c-Box">
+  <h3>Box <span class="count">33</span></h3>
+  
+  
+  <p class="source"><a href="https://github.com/recontentapp/recontent/blob/f543a3ef8e4b179f82a29e38b21bfa91a01d7706/apps/vanilla-extract-playground/src/generated/components/box/Box.gen.tsx#L69"><code>src/generated/components/box/Box.gen.tsx:69</code></a> · Updated 2026-09-17</p>
+  <div class="list"><table class="props">
+  <thead><tr><th>Prop</th><th>Type</th><th>Default</th><th></th></tr></thead>
+  <tbody><tr>
+  <td><code class="">backgroundColor</code></td>
+  <td><code>200</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">border</code></td>
+  <td><code>&quot;thin&quot; | &quot;thick&quot;</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">borderRadius</code></td>
+  <td><code>&quot;none&quot; | &quot;page&quot; | &quot;inner&quot; | &quot;element&quot; | &quot;container&quot; | &quot;full&quot;</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">boxShadow</code></td>
+  <td><code>&quot;sm&quot; | &quot;lg&quot; | &quot;md&quot; | &quot;inset&quot;</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">children</code></td>
+  <td><code>ReactNode</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">className</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">data-testid</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">display</code></td>
+  <td><code>Responsive&lt;&quot;block&quot; | &quot;inline-block&quot; | &quot;inline&quot; | &quot;flex&quot; | &quot;inline-flex&quot; | &quot;grid&quot; | &quot;none&quot;&gt;</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">gap</code></td>
+  <td><code>Responsive&lt;BoxSpacingToken&gt;</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">height</code></td>
+  <td><code>Responsive&lt;CSSProperties[&quot;height&quot;]&gt;</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">id</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">margin</code></td>
+  <td><code>Responsive&lt;BoxSpacingToken&gt;</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">marginBottom</code></td>
+  <td><code>Responsive&lt;BoxSpacingToken&gt;</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">marginLeft</code></td>
+  <td><code>Responsive&lt;BoxSpacingToken&gt;</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">marginRight</code></td>
+  <td><code>Responsive&lt;BoxSpacingToken&gt;</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">marginTop</code></td>
+  <td><code>Responsive&lt;BoxSpacingToken&gt;</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">marginX</code></td>
+  <td><code>Responsive&lt;BoxSpacingToken&gt;</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">marginY</code></td>
+  <td><code>Responsive&lt;BoxSpacingToken&gt;</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">maxHeight</code></td>
+  <td><code>Responsive&lt;CSSProperties[&quot;maxHeight&quot;]&gt;</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">maxWidth</code></td>
+  <td><code>Responsive&lt;CSSProperties[&quot;maxWidth&quot;]&gt;</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">minHeight</code></td>
+  <td><code>Responsive&lt;CSSProperties[&quot;minHeight&quot;]&gt;</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">minWidth</code></td>
+  <td><code>Responsive&lt;CSSProperties[&quot;minWidth&quot;]&gt;</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">overflow</code></td>
+  <td><code>CSSProperties[&quot;overflow&quot;]</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">padding</code></td>
+  <td><code>Responsive&lt;BoxSpacingToken&gt;</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">paddingBottom</code></td>
+  <td><code>Responsive&lt;BoxSpacingToken&gt;</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">paddingLeft</code></td>
+  <td><code>Responsive&lt;BoxSpacingToken&gt;</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">paddingRight</code></td>
+  <td><code>Responsive&lt;BoxSpacingToken&gt;</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">paddingTop</code></td>
+  <td><code>Responsive&lt;BoxSpacingToken&gt;</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">paddingX</code></td>
+  <td><code>Responsive&lt;BoxSpacingToken&gt;</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">paddingY</code></td>
+  <td><code>Responsive&lt;BoxSpacingToken&gt;</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">position</code></td>
+  <td><code>&quot;static&quot; | &quot;relative&quot; | &quot;absolute&quot; | &quot;fixed&quot; | &quot;sticky&quot;</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">render</code></td>
+  <td><code>RenderProp</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">width</code></td>
+  <td><code>Responsive&lt;CSSProperties[&quot;width&quot;]&gt;</code></td>
+  <td></td>
+  <td></td>
+</tr></tbody>
+</table></div>
+  <p class="lead">Also accepts: <code>AriaAttributes</code> (53 props from @types/react)</p>
+</section>
+<section class="group" id="c-Breadcrumb">
+  <h3>Breadcrumb <span class="count">7</span></h3>
+  
+  
+  <p class="source"><a href="https://github.com/recontentapp/recontent/blob/f543a3ef8e4b179f82a29e38b21bfa91a01d7706/apps/vanilla-extract-playground/src/generated/components/breadcrumb/Breadcrumb.gen.tsx#L31"><code>src/generated/components/breadcrumb/Breadcrumb.gen.tsx:31</code></a> · Updated 2026-09-17</p>
+  <div class="list"><table class="props">
+  <thead><tr><th>Prop</th><th>Type</th><th>Default</th><th></th></tr></thead>
+  <tbody><tr>
+  <td><code class="">className</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">data-testid</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">id</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">items</code><span class="req" title="Required">*</span></td>
+  <td><code>BreadcrumbItem[]</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">maxVisibleItems</code></td>
+  <td><code>number</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">render</code></td>
+  <td><code>RenderProp&lt;&quot;nav&quot;&gt;</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">separator</code></td>
+  <td><code>ReactNode</code></td>
+  <td></td>
+  <td></td>
+</tr></tbody>
+</table></div>
+  <p class="lead">Also accepts: <code>AriaAttributes</code> (53 props from @types/react)</p>
+</section>
+<section class="group" id="c-Button">
+  <h3>Button <span class="count">16</span></h3>
+  
+  
+  <p class="source"><a href="https://github.com/recontentapp/recontent/blob/f543a3ef8e4b179f82a29e38b21bfa91a01d7706/apps/vanilla-extract-playground/src/generated/components/button/Button.gen.tsx#L28"><code>src/generated/components/button/Button.gen.tsx:28</code></a> · Updated 2026-09-17</p>
+  <div class="list"><table class="props">
+  <thead><tr><th>Prop</th><th>Type</th><th>Default</th><th></th></tr></thead>
+  <tbody><tr>
+  <td><code class="">children</code></td>
+  <td><code>ReactNode</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">className</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">data-testid</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">disabled</code></td>
+  <td><code>boolean</code></td>
+  <td><code>false</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">endContent</code></td>
+  <td><code>ReactElement</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">id</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">loading</code></td>
+  <td><code>boolean</code></td>
+  <td><code>false</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">name</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">onClick</code></td>
+  <td><code>MouseEventHandler&lt;HTMLButtonElement&gt;</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">render</code></td>
+  <td><code>RenderProp&lt;&quot;button&quot;&gt;</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">size</code></td>
+  <td><code>&quot;sm&quot; | &quot;md&quot;</code></td>
+  <td><code>&quot;sm&quot;</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">startContent</code></td>
+  <td><code>ReactElement</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">type</code></td>
+  <td><code>&quot;button&quot; | &quot;submit&quot; | &quot;reset&quot;</code></td>
+  <td><code>&quot;button&quot;</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">value</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">variant</code></td>
+  <td><code>&quot;primary&quot; | &quot;secondary&quot;</code></td>
+  <td><code>&quot;primary&quot;</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">width</code></td>
+  <td><code>Width</code></td>
+  <td></td>
+  <td></td>
+</tr></tbody>
+</table></div>
+  <p class="lead">Also accepts: <code>AriaAttributes</code> (53 props from @types/react)</p>
+</section>
+<section class="group" id="c-Checkbox">
+  <h3>Checkbox <span class="count">16</span></h3>
+  
+  
+  <p class="source"><a href="https://github.com/recontentapp/recontent/blob/f543a3ef8e4b179f82a29e38b21bfa91a01d7706/apps/vanilla-extract-playground/src/generated/components/checkbox/Checkbox.gen.tsx#L26"><code>src/generated/components/checkbox/Checkbox.gen.tsx:26</code></a> · Updated 2026-10-04</p>
+  <div class="list"><table class="props">
+  <thead><tr><th>Prop</th><th>Type</th><th>Default</th><th></th></tr></thead>
+  <tbody><tr>
+  <td><code class="">checked</code></td>
+  <td><code>boolean</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">className</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">data-testid</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">defaultChecked</code></td>
+  <td><code>boolean</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">disabled</code></td>
+  <td><code>boolean</code></td>
+  <td><code>false</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">id</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">indeterminate</code></td>
+  <td><code>boolean</code></td>
+  <td><code>false</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">invalid</code></td>
+  <td><code>boolean</code></td>
+  <td><code>false</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">label</code></td>
+  <td><code>ReactNode</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">name</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">onBlur</code></td>
+  <td><code>FocusEventHandler</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">onCheckedChange</code></td>
+  <td><code>(checked: boolean) =&gt; void</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">onFocus</code></td>
+  <td><code>FocusEventHandler</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">render</code></td>
+  <td><code>RenderProp&lt;&quot;button&quot;&gt;</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">required</code></td>
+  <td><code>boolean</code></td>
+  <td><code>false</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">value</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr></tbody>
+</table></div>
+  <p class="lead">Also accepts: <code>AriaAttributes</code> (53 props from @types/react)</p>
+</section>
+<section class="group" id="c-Code">
+  <h3>Code <span class="count">5</span></h3>
+  
+  
+  <p class="source"><a href="https://github.com/recontentapp/recontent/blob/f543a3ef8e4b179f82a29e38b21bfa91a01d7706/apps/vanilla-extract-playground/src/generated/components/code/Code.gen.tsx#L10"><code>src/generated/components/code/Code.gen.tsx:10</code></a> · Updated 2026-09-17</p>
+  <div class="list"><table class="props">
+  <thead><tr><th>Prop</th><th>Type</th><th>Default</th><th></th></tr></thead>
+  <tbody><tr>
+  <td><code class="">children</code></td>
+  <td><code>ReactNode</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">className</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">data-testid</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">id</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">render</code></td>
+  <td><code>RenderProp&lt;&quot;code&quot;&gt;</code></td>
+  <td></td>
+  <td></td>
+</tr></tbody>
+</table></div>
+  <p class="lead">Also accepts: <code>AriaAttributes</code> (53 props from @types/react)</p>
+</section>
+<section class="group" id="c-Collapsible">
+  <h3>Collapsible <span class="count">10</span></h3>
+  
+  
+  <p class="source"><a href="https://github.com/recontentapp/recontent/blob/f543a3ef8e4b179f82a29e38b21bfa91a01d7706/apps/vanilla-extract-playground/src/generated/components/collapsible/Collapsible.gen.tsx#L25"><code>src/generated/components/collapsible/Collapsible.gen.tsx:25</code></a> · Updated 2026-09-17</p>
+  <div class="list"><table class="props">
+  <thead><tr><th>Prop</th><th>Type</th><th>Default</th><th></th></tr></thead>
+  <tbody><tr>
+  <td><code class="">children</code><span class="req" title="Required">*</span></td>
+  <td><code>ReactNode</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">className</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">data-testid</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">defaultOpen</code></td>
+  <td><code>boolean</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">disabled</code></td>
+  <td><code>boolean</code></td>
+  <td><code>false</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">id</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">onOpenChange</code></td>
+  <td><code>(open: boolean) =&gt; void</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">open</code></td>
+  <td><code>boolean</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">render</code></td>
+  <td><code>RenderProp&lt;&quot;div&quot;&gt;</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">trigger</code><span class="req" title="Required">*</span></td>
+  <td><code>ReactNode</code></td>
+  <td></td>
+  <td></td>
+</tr></tbody>
+</table></div>
+  <p class="lead">Also accepts: <code>AriaAttributes</code> (53 props from @types/react)</p>
+</section>
+<section class="group" id="c-DateInput">
+  <h3>DateInput <span class="count">20</span></h3>
+  
+  
+  <p class="source"><a href="https://github.com/recontentapp/recontent/blob/f543a3ef8e4b179f82a29e38b21bfa91a01d7706/apps/vanilla-extract-playground/src/generated/components/date-input/DateInput.gen.tsx#L49"><code>src/generated/components/date-input/DateInput.gen.tsx:49</code></a> · Updated 2026-10-04</p>
+  <div class="list"><table class="props">
+  <thead><tr><th>Prop</th><th>Type</th><th>Default</th><th></th></tr></thead>
+  <tbody><tr>
+  <td><code class="">className</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">clearable</code></td>
+  <td><code>boolean</code></td>
+  <td><code>false</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">data-testid</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">defaultValue</code></td>
+  <td><code>Date | null</code></td>
+  <td><code>null</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">disabled</code></td>
+  <td><code>boolean</code></td>
+  <td><code>false</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">granularity</code></td>
+  <td><code>&quot;day&quot; | &quot;month&quot; | &quot;year&quot;</code></td>
+  <td><code>&quot;day&quot;</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">id</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">invalid</code></td>
+  <td><code>boolean</code></td>
+  <td><code>false</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">isDateUnavailable</code></td>
+  <td><code>(date: Date) =&gt; boolean</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">locale</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">max</code></td>
+  <td><code>Date</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">min</code></td>
+  <td><code>Date</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">name</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">onBlur</code></td>
+  <td><code>FocusEventHandler</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">onFocus</code></td>
+  <td><code>FocusEventHandler</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">onValueChange</code></td>
+  <td><code>(date: Date | null) =&gt; void</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">readOnly</code></td>
+  <td><code>boolean</code></td>
+  <td><code>false</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">render</code></td>
+  <td><code>RenderProp&lt;&quot;input&quot;&gt;</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">required</code></td>
+  <td><code>boolean</code></td>
+  <td><code>false</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">value</code></td>
+  <td><code>Date | null</code></td>
+  <td></td>
+  <td></td>
+</tr></tbody>
+</table></div>
+  <p class="lead">Also accepts: <code>AriaAttributes</code> (53 props from @types/react)</p>
+</section>
+<section class="group" id="c-Dialog">
+  <h3>Dialog <span class="count">14</span></h3>
+  
+  
+  <p class="source"><a href="https://github.com/recontentapp/recontent/blob/f543a3ef8e4b179f82a29e38b21bfa91a01d7706/apps/vanilla-extract-playground/src/generated/components/dialog/Dialog.gen.tsx#L38"><code>src/generated/components/dialog/Dialog.gen.tsx:38</code></a> · Updated 2026-09-17</p>
+  <div class="list"><table class="props">
+  <thead><tr><th>Prop</th><th>Type</th><th>Default</th><th></th></tr></thead>
+  <tbody><tr>
+  <td><code class="">children</code></td>
+  <td><code>ReactNode</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">className</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">data-testid</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">defaultOpen</code></td>
+  <td><code>boolean</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">description</code></td>
+  <td><code>ReactNode</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">dismissible</code></td>
+  <td><code>boolean</code></td>
+  <td><code>true</code></td>
+  <td><p class="desc">Allows closing via backdrop click, Escape and the close button.</p></td>
+</tr>
+<tr>
+  <td><code class="">footer</code></td>
+  <td><code>ReactNode</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">id</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">onOpenChange</code></td>
+  <td><code>(open: boolean) =&gt; void</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">open</code></td>
+  <td><code>boolean</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">render</code></td>
+  <td><code>RenderProp&lt;&quot;div&quot;&gt;</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">size</code></td>
+  <td><code>&quot;sm&quot; | &quot;lg&quot; | &quot;md&quot; | &quot;fullscreen&quot;</code></td>
+  <td><code>&quot;md&quot;</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">title</code><span class="req" title="Required">*</span></td>
+  <td><code>ReactNode</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">trigger</code></td>
+  <td><code>ReactNode</code></td>
+  <td></td>
+  <td></td>
+</tr></tbody>
+</table></div>
+  <p class="lead">Also accepts: <code>AriaAttributes</code> (53 props from @types/react)</p>
+</section>
+<section class="group" id="c-Divider">
+  <h3>Divider <span class="count">5</span></h3>
+  
+  
+  <p class="source"><a href="https://github.com/recontentapp/recontent/blob/f543a3ef8e4b179f82a29e38b21bfa91a01d7706/apps/vanilla-extract-playground/src/generated/components/divider/Divider.gen.tsx#L10"><code>src/generated/components/divider/Divider.gen.tsx:10</code></a> · Updated 2026-09-17</p>
+  <div class="list"><table class="props">
+  <thead><tr><th>Prop</th><th>Type</th><th>Default</th><th></th></tr></thead>
+  <tbody><tr>
+  <td><code class="">className</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">data-testid</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">id</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">orientation</code></td>
+  <td><code>&quot;horizontal&quot; | &quot;vertical&quot;</code></td>
+  <td><code>&quot;horizontal&quot;</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">render</code></td>
+  <td><code>RenderProp&lt;&quot;div&quot;&gt;</code></td>
+  <td></td>
+  <td></td>
+</tr></tbody>
+</table></div>
+  <p class="lead">Also accepts: <code>AriaAttributes</code> (53 props from @types/react)</p>
+</section>
+<section class="group" id="c-Drawer">
+  <h3>Drawer <span class="count">14</span></h3>
+  
+  
+  <p class="source"><a href="https://github.com/recontentapp/recontent/blob/f543a3ef8e4b179f82a29e38b21bfa91a01d7706/apps/vanilla-extract-playground/src/generated/components/drawer/Drawer.gen.tsx#L37"><code>src/generated/components/drawer/Drawer.gen.tsx:37</code></a> · Updated 2026-09-17</p>
+  <div class="list"><table class="props">
+  <thead><tr><th>Prop</th><th>Type</th><th>Default</th><th></th></tr></thead>
+  <tbody><tr>
+  <td><code class="">children</code></td>
+  <td><code>ReactNode</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">className</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">data-testid</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">defaultOpen</code></td>
+  <td><code>boolean</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">dismissible</code></td>
+  <td><code>boolean</code></td>
+  <td><code>true</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">footer</code></td>
+  <td><code>ReactNode</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">id</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">onOpenChange</code></td>
+  <td><code>(open: boolean) =&gt; void</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">open</code></td>
+  <td><code>boolean</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">placement</code></td>
+  <td><code>&quot;left&quot; | &quot;right&quot; | &quot;top&quot; | &quot;bottom&quot;</code></td>
+  <td><code>&quot;right&quot;</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">render</code></td>
+  <td><code>RenderProp&lt;&quot;div&quot;&gt;</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">size</code></td>
+  <td><code>&quot;sm&quot; | &quot;lg&quot; | &quot;md&quot; | &quot;full&quot;</code></td>
+  <td><code>&quot;md&quot;</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">title</code></td>
+  <td><code>ReactNode</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">trigger</code></td>
+  <td><code>ReactNode</code></td>
+  <td></td>
+  <td></td>
+</tr></tbody>
+</table></div>
+  <p class="lead">Also accepts: <code>AriaAttributes</code> (53 props from @types/react)</p>
+</section>
+<section class="group" id="c-DropdownButton">
+  <h3>DropdownButton <span class="count">14</span></h3>
+  
+  
+  <p class="source"><a href="https://github.com/recontentapp/recontent/blob/f543a3ef8e4b179f82a29e38b21bfa91a01d7706/apps/vanilla-extract-playground/src/generated/components/dropdown-button/DropdownButton.gen.tsx#L43"><code>src/generated/components/dropdown-button/DropdownButton.gen.tsx:43</code></a> · Updated 2026-09-17</p>
+  <div class="list"><table class="props">
+  <thead><tr><th>Prop</th><th>Type</th><th>Default</th><th></th></tr></thead>
+  <tbody><tr>
+  <td><code class="">align</code></td>
+  <td><code>&quot;start&quot; | &quot;center&quot; | &quot;end&quot;</code></td>
+  <td><code>&quot;start&quot;</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">className</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">data-testid</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">defaultOpen</code></td>
+  <td><code>boolean</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">disabled</code></td>
+  <td><code>boolean</code></td>
+  <td><code>false</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">id</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">items</code><span class="req" title="Required">*</span></td>
+  <td><code>DropdownButtonItem[]</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">label</code><span class="req" title="Required">*</span></td>
+  <td><code>ReactNode</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">onOpenChange</code></td>
+  <td><code>(open: boolean) =&gt; void</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">open</code></td>
+  <td><code>boolean</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">render</code></td>
+  <td><code>RenderProp&lt;&quot;button&quot;&gt;</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">side</code></td>
+  <td><code>&quot;top&quot; | &quot;right&quot; | &quot;bottom&quot; | &quot;left&quot;</code></td>
+  <td><code>&quot;bottom&quot;</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">size</code></td>
+  <td><code>&quot;sm&quot; | &quot;md&quot;</code></td>
+  <td><code>&quot;sm&quot;</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">variant</code></td>
+  <td><code>&quot;primary&quot; | &quot;secondary&quot;</code></td>
+  <td><code>&quot;primary&quot;</code></td>
+  <td></td>
+</tr></tbody>
+</table></div>
+  <p class="lead">Also accepts: <code>AriaAttributes</code> (53 props from @types/react)</p>
+</section>
+<section class="group" id="c-Field">
+  <h3>Field <span class="count">10</span></h3>
+  
+  
+  <p class="source"><a href="https://github.com/recontentapp/recontent/blob/f543a3ef8e4b179f82a29e38b21bfa91a01d7706/apps/vanilla-extract-playground/src/generated/components/field/Field.gen.tsx#L29"><code>src/generated/components/field/Field.gen.tsx:29</code></a> · Updated 2026-09-17</p>
+  <div class="list"><table class="props">
+  <thead><tr><th>Prop</th><th>Type</th><th>Default</th><th></th></tr></thead>
+  <tbody><tr>
+  <td><code class="">children</code><span class="req" title="Required">*</span></td>
+  <td><code>ReactNode</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">className</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">data-testid</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">description</code></td>
+  <td><code>ReactNode</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">error</code></td>
+  <td><code>ReactNode</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">id</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">label</code></td>
+  <td><code>ReactNode</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">optionalText</code></td>
+  <td><code>ReactNode</code></td>
+  <td></td>
+  <td><p class="desc">Shown next to the label when the field is not required.</p></td>
+</tr>
+<tr>
+  <td><code class="">render</code></td>
+  <td><code>RenderProp&lt;&quot;div&quot;&gt;</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">required</code></td>
+  <td><code>boolean</code></td>
+  <td><code>false</code></td>
+  <td></td>
+</tr></tbody>
+</table></div>
+  <p class="lead">Also accepts: <code>AriaAttributes</code> (53 props from @types/react)</p>
+</section>
+<section class="group" id="c-FileInput">
+  <h3>FileInput <span class="count">19</span></h3>
+  
+  
+  <p class="source"><a href="https://github.com/recontentapp/recontent/blob/f543a3ef8e4b179f82a29e38b21bfa91a01d7706/apps/vanilla-extract-playground/src/generated/components/file-input/FileInput.gen.tsx#L43"><code>src/generated/components/file-input/FileInput.gen.tsx:43</code></a> · Updated 2026-09-17</p>
+  <div class="list"><table class="props">
+  <thead><tr><th>Prop</th><th>Type</th><th>Default</th><th></th></tr></thead>
+  <tbody><tr>
+  <td><code class="">accept</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">className</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">data-testid</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">defaultFiles</code></td>
+  <td><code>File[]</code></td>
+  <td><code>[]</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">disabled</code></td>
+  <td><code>boolean</code></td>
+  <td><code>false</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">dropzone</code></td>
+  <td><code>boolean</code></td>
+  <td><code>true</code></td>
+  <td><p class="desc">Renders the large drop target instead of a plain button.</p></td>
+</tr>
+<tr>
+  <td><code class="">files</code></td>
+  <td><code>File[]</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">id</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">invalid</code></td>
+  <td><code>boolean</code></td>
+  <td><code>false</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">label</code></td>
+  <td><code>ReactNode</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">maxSizeBytes</code></td>
+  <td><code>number</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">multiple</code></td>
+  <td><code>boolean</code></td>
+  <td><code>false</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">name</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">onBlur</code></td>
+  <td><code>FocusEventHandler</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">onFilesChange</code></td>
+  <td><code>(files: File[]) =&gt; void</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">onFocus</code></td>
+  <td><code>FocusEventHandler</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">onRejected</code></td>
+  <td><code>(reason: &quot;type&quot; | &quot;size&quot;, files: File[]) =&gt; void</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">render</code></td>
+  <td><code>RenderProp&lt;&quot;input&quot;&gt;</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">required</code></td>
+  <td><code>boolean</code></td>
+  <td><code>false</code></td>
+  <td></td>
+</tr></tbody>
+</table></div>
+  <p class="lead">Also accepts: <code>AriaAttributes</code> (53 props from @types/react)</p>
+</section>
+<section class="group" id="c-Grid">
+  <h3>Grid <span class="count">13</span></h3>
+  
+  
+  <p class="source"><a href="https://github.com/recontentapp/recontent/blob/f543a3ef8e4b179f82a29e38b21bfa91a01d7706/apps/vanilla-extract-playground/src/generated/components/grid/Grid.gen.tsx#L34"><code>src/generated/components/grid/Grid.gen.tsx:34</code></a> · Updated 2026-09-17</p>
+  <div class="list"><table class="props">
+  <thead><tr><th>Prop</th><th>Type</th><th>Default</th><th></th></tr></thead>
+  <tbody><tr>
+  <td><code class="">align</code></td>
+  <td><code>&quot;start&quot; | &quot;center&quot; | &quot;end&quot; | &quot;stretch&quot;</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">autoFlow</code></td>
+  <td><code>&quot;row&quot; | &quot;column&quot; | &quot;dense&quot; | &quot;row dense&quot; | &quot;column dense&quot;</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">children</code></td>
+  <td><code>ReactNode</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">className</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">columnGap</code></td>
+  <td><code>Responsive&lt;GridSpacingToken&gt;</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">columns</code></td>
+  <td><code>Responsive&lt;number | string&gt;</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">data-testid</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">gap</code></td>
+  <td><code>Responsive&lt;GridSpacingToken&gt;</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">id</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">justify</code></td>
+  <td><code>&quot;start&quot; | &quot;center&quot; | &quot;end&quot; | &quot;stretch&quot; | &quot;space-between&quot;</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">render</code></td>
+  <td><code>RenderProp</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">rowGap</code></td>
+  <td><code>Responsive&lt;GridSpacingToken&gt;</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">rows</code></td>
+  <td><code>Responsive&lt;number | string&gt;</code></td>
+  <td></td>
+  <td></td>
+</tr></tbody>
+</table></div>
+  <p class="lead">Also accepts: <code>AriaAttributes</code> (53 props from @types/react)</p>
+</section>
+<section class="group" id="c-Icon">
+  <h3>Icon <span class="count">7</span></h3>
+  
+  
+  <p class="source"><a href="https://github.com/recontentapp/recontent/blob/f543a3ef8e4b179f82a29e38b21bfa91a01d7706/apps/vanilla-extract-playground/src/generated/components/icon/Icon.gen.tsx#L14"><code>src/generated/components/icon/Icon.gen.tsx:14</code></a> · Updated 2026-09-17</p>
+  <div class="list"><table class="props">
+  <thead><tr><th>Prop</th><th>Type</th><th>Default</th><th></th></tr></thead>
+  <tbody><tr>
+  <td><code class="">className</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">color</code></td>
+  <td><code>&quot;disabled&quot; | &quot;primary&quot; | &quot;secondary&quot; | &quot;accent&quot;</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">data-testid</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">icon</code><span class="req" title="Required">*</span></td>
+  <td><code>&quot;search&quot; | &quot;info&quot; | &quot;alert&quot; | &quot;check&quot; | &quot;chevronDown&quot; | &quot;close&quot;</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">id</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">label</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">size</code></td>
+  <td><code>IconSizeToken | number</code></td>
+  <td></td>
+  <td></td>
+</tr></tbody>
+</table></div>
+  <p class="lead">Also accepts: <code>AriaAttributes</code> (53 props from @types/react)</p>
+</section>
+<section class="group" id="c-IconButton">
+  <h3>IconButton <span class="count">12</span></h3>
+  
+  
+  <p class="source"><a href="https://github.com/recontentapp/recontent/blob/f543a3ef8e4b179f82a29e38b21bfa91a01d7706/apps/vanilla-extract-playground/src/generated/components/icon-button/IconButton.gen.tsx#L29"><code>src/generated/components/icon-button/IconButton.gen.tsx:29</code></a> · Updated 2026-09-17</p>
+  <div class="list"><table class="props">
+  <thead><tr><th>Prop</th><th>Type</th><th>Default</th><th></th></tr></thead>
+  <tbody><tr>
+  <td><code class="">className</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">data-testid</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">disabled</code></td>
+  <td><code>boolean</code></td>
+  <td><code>false</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">icon</code><span class="req" title="Required">*</span></td>
+  <td><code>&quot;search&quot; | &quot;info&quot; | &quot;alert&quot; | &quot;check&quot; | &quot;chevronDown&quot; | &quot;close&quot;</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">id</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">label</code><span class="req" title="Required">*</span></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td><p class="desc">Accessible name — mandatory, since there is no visible text.</p></td>
+</tr>
+<tr>
+  <td><code class="">loading</code></td>
+  <td><code>boolean</code></td>
+  <td><code>false</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">onClick</code></td>
+  <td><code>MouseEventHandler&lt;HTMLButtonElement&gt;</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">render</code></td>
+  <td><code>RenderProp&lt;&quot;button&quot;&gt;</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">size</code></td>
+  <td><code>&quot;sm&quot; | &quot;md&quot;</code></td>
+  <td><code>&quot;sm&quot;</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">type</code></td>
+  <td><code>&quot;button&quot; | &quot;submit&quot; | &quot;reset&quot;</code></td>
+  <td><code>&quot;button&quot;</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">variant</code></td>
+  <td><code>&quot;primary&quot; | &quot;secondary&quot;</code></td>
+  <td><code>&quot;primary&quot;</code></td>
+  <td></td>
+</tr></tbody>
+</table></div>
+  <p class="lead">Also accepts: <code>AriaAttributes</code> (53 props from @types/react)</p>
+</section>
+<section class="group" id="c-KeyboardShortcut">
+  <h3>KeyboardShortcut <span class="count">6</span></h3>
+  
+  
+  <p class="source"><a href="https://github.com/recontentapp/recontent/blob/f543a3ef8e4b179f82a29e38b21bfa91a01d7706/apps/vanilla-extract-playground/src/generated/components/keyboard-shortcut/KeyboardShortcut.gen.tsx#L12"><code>src/generated/components/keyboard-shortcut/KeyboardShortcut.gen.tsx:12</code></a> · Updated 2026-09-17</p>
+  <div class="list"><table class="props">
+  <thead><tr><th>Prop</th><th>Type</th><th>Default</th><th></th></tr></thead>
+  <tbody><tr>
+  <td><code class="">className</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">data-testid</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">id</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">keys</code><span class="req" title="Required">*</span></td>
+  <td><code>string[]</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">render</code></td>
+  <td><code>RenderProp&lt;&quot;span&quot;&gt;</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">separator</code></td>
+  <td><code>ReactNode</code></td>
+  <td></td>
+  <td><p class="desc">Rendered between keys. Defaults to nothing (keys are separate elements).</p></td>
+</tr></tbody>
+</table></div>
+  <p class="lead">Also accepts: <code>AriaAttributes</code> (53 props from @types/react)</p>
+</section>
+<section class="group" id="c-Link">
+  <h3>Link <span class="count">10</span></h3>
+  
+  
+  <p class="source"><a href="https://github.com/recontentapp/recontent/blob/f543a3ef8e4b179f82a29e38b21bfa91a01d7706/apps/vanilla-extract-playground/src/generated/components/link/Link.gen.tsx#L15"><code>src/generated/components/link/Link.gen.tsx:15</code></a> · Updated 2026-09-17</p>
+  <div class="list"><table class="props">
+  <thead><tr><th>Prop</th><th>Type</th><th>Default</th><th></th></tr></thead>
+  <tbody><tr>
+  <td><code class="">children</code></td>
+  <td><code>ReactNode</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">className</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">data-testid</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">href</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">id</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">onClick</code></td>
+  <td><code>MouseEventHandler&lt;HTMLAnchorElement&gt;</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">rel</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">render</code></td>
+  <td><code>RenderProp&lt;&quot;a&quot;&gt;</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">target</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">underline</code></td>
+  <td><code>&quot;always&quot; | &quot;hover&quot; | &quot;none&quot;</code></td>
+  <td><code>&quot;always&quot;</code></td>
+  <td></td>
+</tr></tbody>
+</table></div>
+  <p class="lead">Also accepts: <code>AriaAttributes</code> (53 props from @types/react)</p>
+</section>
+<section class="group" id="c-MetadataList">
+  <h3>MetadataList <span class="count">8</span></h3>
+  
+  
+  <p class="source"><a href="https://github.com/recontentapp/recontent/blob/f543a3ef8e4b179f82a29e38b21bfa91a01d7706/apps/vanilla-extract-playground/src/generated/components/metadata-list/MetadataList.gen.tsx#L31"><code>src/generated/components/metadata-list/MetadataList.gen.tsx:31</code></a> · Updated 2026-09-17</p>
+  <div class="list"><table class="props">
+  <thead><tr><th>Prop</th><th>Type</th><th>Default</th><th></th></tr></thead>
+  <tbody><tr>
+  <td><code class="">className</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">columns</code></td>
+  <td><code>number</code></td>
+  <td><code>1</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">data-testid</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">gap</code></td>
+  <td><code>0 | 2 | 4 | 8 | 12 | 16 | 20 | 24 | 32 | 40 | 48 | 56 | 64 | 72 | 80</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">id</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">items</code><span class="req" title="Required">*</span></td>
+  <td><code>MetadataListItem[]</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">orientation</code></td>
+  <td><code>&quot;horizontal&quot; | &quot;vertical&quot;</code></td>
+  <td><code>&quot;horizontal&quot;</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">render</code></td>
+  <td><code>RenderProp&lt;&quot;dl&quot;&gt;</code></td>
+  <td></td>
+  <td></td>
+</tr></tbody>
+</table></div>
+  <p class="lead">Also accepts: <code>AriaAttributes</code> (53 props from @types/react)</p>
+</section>
+<section class="group" id="c-NumberInput">
+  <h3>NumberInput <span class="count">24</span></h3>
+  
+  
+  <p class="source"><a href="https://github.com/recontentapp/recontent/blob/f543a3ef8e4b179f82a29e38b21bfa91a01d7706/apps/vanilla-extract-playground/src/generated/components/number-input/NumberInput.gen.tsx#L36"><code>src/generated/components/number-input/NumberInput.gen.tsx:36</code></a> · Updated 2026-09-17</p>
+  <div class="list"><table class="props">
+  <thead><tr><th>Prop</th><th>Type</th><th>Default</th><th></th></tr></thead>
+  <tbody><tr>
+  <td><code class="">className</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">data-testid</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">defaultValue</code></td>
+  <td><code>number | null</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">disabled</code></td>
+  <td><code>boolean</code></td>
+  <td><code>false</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">format</code></td>
+  <td><code>Intl.NumberFormatOptions</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">id</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">invalid</code></td>
+  <td><code>boolean</code></td>
+  <td><code>false</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">largeStep</code></td>
+  <td><code>number</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">locale</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">max</code></td>
+  <td><code>number</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">min</code></td>
+  <td><code>number</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">name</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">onBlur</code></td>
+  <td><code>FocusEventHandler</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">onFocus</code></td>
+  <td><code>FocusEventHandler</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">onValueChange</code></td>
+  <td><code>(value: number | null) =&gt; void</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">placeholder</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">prefix</code></td>
+  <td><code>ReactNode</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">readOnly</code></td>
+  <td><code>boolean</code></td>
+  <td><code>false</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">render</code></td>
+  <td><code>RenderProp&lt;&quot;input&quot;&gt;</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">required</code></td>
+  <td><code>boolean</code></td>
+  <td><code>false</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">showStepper</code></td>
+  <td><code>boolean</code></td>
+  <td><code>true</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">step</code></td>
+  <td><code>number</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">suffix</code></td>
+  <td><code>ReactNode</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">value</code></td>
+  <td><code>number | null</code></td>
+  <td></td>
+  <td></td>
+</tr></tbody>
+</table></div>
+  <p class="lead">Also accepts: <code>AriaAttributes</code> (53 props from @types/react)</p>
+</section>
+<section class="group" id="c-Outline">
+  <h3>Outline <span class="count">8</span></h3>
+  
+  
+  <p class="source"><a href="https://github.com/recontentapp/recontent/blob/f543a3ef8e4b179f82a29e38b21bfa91a01d7706/apps/vanilla-extract-playground/src/generated/components/outline/Outline.gen.tsx#L61"><code>src/generated/components/outline/Outline.gen.tsx:61</code></a> · Updated 2026-09-17</p>
+  <div class="list"><table class="props">
+  <thead><tr><th>Prop</th><th>Type</th><th>Default</th><th></th></tr></thead>
+  <tbody><tr>
+  <td><code class="">activeId</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">className</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">data-testid</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">id</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">items</code><span class="req" title="Required">*</span></td>
+  <td><code>OutlineItem[]</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">observeScroll</code></td>
+  <td><code>boolean</code></td>
+  <td><code>false</code></td>
+  <td><p class="desc">Tracks the section in view with an IntersectionObserver.</p></td>
+</tr>
+<tr>
+  <td><code class="">onItemClick</code></td>
+  <td><code>(id: string) =&gt; void</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">render</code></td>
+  <td><code>RenderProp&lt;&quot;nav&quot;&gt;</code></td>
+  <td></td>
+  <td></td>
+</tr></tbody>
+</table></div>
+  <p class="lead">Also accepts: <code>AriaAttributes</code> (53 props from @types/react)</p>
+</section>
+<section class="group" id="c-Pagination">
+  <h3>Pagination <span class="count">13</span></h3>
+  
+  
+  <p class="source"><a href="https://github.com/recontentapp/recontent/blob/f543a3ef8e4b179f82a29e38b21bfa91a01d7706/apps/vanilla-extract-playground/src/generated/components/pagination/Pagination.gen.tsx#L74"><code>src/generated/components/pagination/Pagination.gen.tsx:74</code></a> · Updated 2026-09-17</p>
+  <div class="list"><table class="props">
+  <thead><tr><th>Prop</th><th>Type</th><th>Default</th><th></th></tr></thead>
+  <tbody><tr>
+  <td><code class="">boundaryCount</code></td>
+  <td><code>number</code></td>
+  <td><code>1</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">className</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">data-testid</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">disabled</code></td>
+  <td><code>boolean</code></td>
+  <td><code>false</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">id</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">label</code></td>
+  <td><code>string</code></td>
+  <td><code>&quot;Pagination&quot;</code></td>
+  <td><p class="desc">Accessible name for the navigation landmark.</p></td>
+</tr>
+<tr>
+  <td><code class="">onPageChange</code><span class="req" title="Required">*</span></td>
+  <td><code>(page: number) =&gt; void</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">page</code><span class="req" title="Required">*</span></td>
+  <td><code>number</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">pageCount</code><span class="req" title="Required">*</span></td>
+  <td><code>number</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">render</code></td>
+  <td><code>RenderProp&lt;&quot;nav&quot;&gt;</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">showFirstLast</code></td>
+  <td><code>boolean</code></td>
+  <td><code>false</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">siblingCount</code></td>
+  <td><code>number</code></td>
+  <td><code>1</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">size</code></td>
+  <td><code>&quot;sm&quot; | &quot;md&quot;</code></td>
+  <td><code>&quot;sm&quot;</code></td>
+  <td></td>
+</tr></tbody>
+</table></div>
+  <p class="lead">Also accepts: <code>AriaAttributes</code> (53 props from @types/react)</p>
+</section>
+<section class="group" id="c-Popover">
+  <h3>Popover <span class="count">12</span></h3>
+  
+  
+  <p class="source"><a href="https://github.com/recontentapp/recontent/blob/f543a3ef8e4b179f82a29e38b21bfa91a01d7706/apps/vanilla-extract-playground/src/generated/components/popover/Popover.gen.tsx#L24"><code>src/generated/components/popover/Popover.gen.tsx:24</code></a> · Updated 2026-09-17</p>
+  <div class="list"><table class="props">
+  <thead><tr><th>Prop</th><th>Type</th><th>Default</th><th></th></tr></thead>
+  <tbody><tr>
+  <td><code class="">align</code></td>
+  <td><code>&quot;start&quot; | &quot;center&quot; | &quot;end&quot;</code></td>
+  <td><code>&quot;center&quot;</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">className</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">content</code><span class="req" title="Required">*</span></td>
+  <td><code>ReactNode</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">data-testid</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">defaultOpen</code></td>
+  <td><code>boolean</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">id</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">modal</code></td>
+  <td><code>boolean</code></td>
+  <td><code>false</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">onOpenChange</code></td>
+  <td><code>(open: boolean) =&gt; void</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">open</code></td>
+  <td><code>boolean</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">render</code></td>
+  <td><code>RenderProp&lt;&quot;div&quot;&gt;</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">side</code></td>
+  <td><code>&quot;top&quot; | &quot;right&quot; | &quot;bottom&quot; | &quot;left&quot;</code></td>
+  <td><code>&quot;bottom&quot;</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">trigger</code><span class="req" title="Required">*</span></td>
+  <td><code>ReactElement</code></td>
+  <td></td>
+  <td></td>
+</tr></tbody>
+</table></div>
+  <p class="lead">Also accepts: <code>AriaAttributes</code> (53 props from @types/react)</p>
+</section>
+<section class="group" id="c-ProgressBar">
+  <h3>ProgressBar <span class="count">12</span></h3>
+  
+  
+  <p class="source"><a href="https://github.com/recontentapp/recontent/blob/f543a3ef8e4b179f82a29e38b21bfa91a01d7706/apps/vanilla-extract-playground/src/generated/components/progress-bar/ProgressBar.gen.tsx#L30"><code>src/generated/components/progress-bar/ProgressBar.gen.tsx:30</code></a> · Updated 2026-09-17</p>
+  <div class="list"><table class="props">
+  <thead><tr><th>Prop</th><th>Type</th><th>Default</th><th></th></tr></thead>
+  <tbody><tr>
+  <td><code class="">className</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">data-testid</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">formatValueLabel</code></td>
+  <td><code>(value: number, max: number) =&gt; ReactNode</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">id</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">label</code></td>
+  <td><code>ReactNode</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">max</code></td>
+  <td><code>number</code></td>
+  <td><code>100</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">min</code></td>
+  <td><code>number</code></td>
+  <td><code>0</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">render</code></td>
+  <td><code>RenderProp&lt;&quot;div&quot;&gt;</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">showValueLabel</code></td>
+  <td><code>boolean</code></td>
+  <td><code>false</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">size</code></td>
+  <td><code>&quot;sm&quot; | &quot;md&quot;</code></td>
+  <td><code>&quot;sm&quot;</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">status</code></td>
+  <td><code>&quot;success&quot; | &quot;danger&quot; | &quot;default&quot;</code></td>
+  <td><code>&quot;default&quot;</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">value</code><span class="req" title="Required">*</span></td>
+  <td><code>number | null</code></td>
+  <td></td>
+  <td><p class="desc">`null` renders the indeterminate state.</p></td>
+</tr></tbody>
+</table></div>
+  <p class="lead">Also accepts: <code>AriaAttributes</code> (53 props from @types/react)</p>
+</section>
+<section class="group" id="c-QuoteBlock">
+  <h3>QuoteBlock <span class="count">7</span></h3>
+  
+  
+  <p class="source"><a href="https://github.com/recontentapp/recontent/blob/f543a3ef8e4b179f82a29e38b21bfa91a01d7706/apps/vanilla-extract-playground/src/generated/components/quote-block/QuoteBlock.gen.tsx#L12"><code>src/generated/components/quote-block/QuoteBlock.gen.tsx:12</code></a> · Updated 2026-09-17</p>
+  <div class="list"><table class="props">
+  <thead><tr><th>Prop</th><th>Type</th><th>Default</th><th></th></tr></thead>
+  <tbody><tr>
+  <td><code class="">children</code></td>
+  <td><code>ReactNode</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">citation</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">citationHref</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">className</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">data-testid</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">id</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">render</code></td>
+  <td><code>RenderProp&lt;&quot;figure&quot;&gt;</code></td>
+  <td></td>
+  <td></td>
+</tr></tbody>
+</table></div>
+  <p class="lead">Also accepts: <code>AriaAttributes</code> (53 props from @types/react)</p>
+</section>
+<section class="group" id="c-RadioList">
+  <h3>RadioList <span class="count">16</span></h3>
+  
+  
+  <p class="source"><a href="https://github.com/recontentapp/recontent/blob/f543a3ef8e4b179f82a29e38b21bfa91a01d7706/apps/vanilla-extract-playground/src/generated/components/radio-list/RadioList.gen.tsx#L36"><code>src/generated/components/radio-list/RadioList.gen.tsx:36</code></a> · Updated 2026-09-17</p>
+  <div class="list"><table class="props">
+  <thead><tr><th>Prop</th><th>Type</th><th>Default</th><th></th></tr></thead>
+  <tbody><tr>
+  <td><code class="">className</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">data-testid</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">defaultValue</code></td>
+  <td><code>Value</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">disabled</code></td>
+  <td><code>boolean</code></td>
+  <td><code>false</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">id</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">invalid</code></td>
+  <td><code>boolean</code></td>
+  <td><code>false</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">name</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">onBlur</code></td>
+  <td><code>FocusEventHandler</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">onFocus</code></td>
+  <td><code>FocusEventHandler</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">onValueChange</code></td>
+  <td><code>(value: Value) =&gt; void</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">options</code><span class="req" title="Required">*</span></td>
+  <td><code>RadioListOption&lt;Value&gt;[]</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">orientation</code></td>
+  <td><code>&quot;horizontal&quot; | &quot;vertical&quot;</code></td>
+  <td><code>&quot;vertical&quot;</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">render</code></td>
+  <td><code>RenderProp&lt;&quot;div&quot;&gt;</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">required</code></td>
+  <td><code>boolean</code></td>
+  <td><code>false</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">size</code></td>
+  <td><code>&quot;base&quot; | &quot;xs&quot; | &quot;sm&quot; | &quot;lg&quot; | &quot;xl&quot; | &quot;2xl&quot; | &quot;3xl&quot; | &quot;4xl&quot;</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">value</code></td>
+  <td><code>Value</code></td>
+  <td></td>
+  <td></td>
+</tr></tbody>
+</table></div>
+  <p class="lead">Also accepts: <code>AriaAttributes</code> (53 props from @types/react)</p>
+</section>
+<section class="group" id="c-SegmentedControls">
+  <h3>SegmentedControls <span class="count">10</span></h3>
+  
+  
+  <p class="source"><a href="https://github.com/recontentapp/recontent/blob/f543a3ef8e4b179f82a29e38b21bfa91a01d7706/apps/vanilla-extract-playground/src/generated/components/segmented-controls/SegmentedControls.gen.tsx#L32"><code>src/generated/components/segmented-controls/SegmentedControls.gen.tsx:32</code></a> · Updated 2026-09-17</p>
+  <div class="list"><table class="props">
+  <thead><tr><th>Prop</th><th>Type</th><th>Default</th><th></th></tr></thead>
+  <tbody><tr>
+  <td><code class="">className</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">data-testid</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">defaultValue</code></td>
+  <td><code>Value</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">disabled</code></td>
+  <td><code>boolean</code></td>
+  <td><code>false</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">id</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">onValueChange</code></td>
+  <td><code>(value: Value) =&gt; void</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">options</code><span class="req" title="Required">*</span></td>
+  <td><code>SegmentedControlsOption&lt;Value&gt;[]</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">render</code></td>
+  <td><code>RenderProp&lt;&quot;div&quot;&gt;</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">value</code></td>
+  <td><code>Value</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">width</code></td>
+  <td><code>Width</code></td>
+  <td></td>
+  <td></td>
+</tr></tbody>
+</table></div>
+  <p class="lead">Also accepts: <code>AriaAttributes</code> (53 props from @types/react)</p>
+</section>
+<section class="group" id="c-Select">
+  <h3>Select <span class="count">19</span></h3>
+  
+  
+  <p class="source"><a href="https://github.com/recontentapp/recontent/blob/f543a3ef8e4b179f82a29e38b21bfa91a01d7706/apps/vanilla-extract-playground/src/generated/components/select/Select.gen.tsx#L43"><code>src/generated/components/select/Select.gen.tsx:43</code></a> · Updated 2026-09-17</p>
+  <div class="list"><table class="props">
+  <thead><tr><th>Prop</th><th>Type</th><th>Default</th><th></th></tr></thead>
+  <tbody><tr>
+  <td><code class="">className</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">clearable</code></td>
+  <td><code>boolean</code></td>
+  <td><code>false</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">data-testid</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">defaultOpen</code></td>
+  <td><code>boolean</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">defaultValue</code></td>
+  <td><code>Value</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">disabled</code></td>
+  <td><code>boolean</code></td>
+  <td><code>false</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">id</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">invalid</code></td>
+  <td><code>boolean</code></td>
+  <td><code>false</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">name</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">onBlur</code></td>
+  <td><code>FocusEventHandler</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">onFocus</code></td>
+  <td><code>FocusEventHandler</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">onOpenChange</code></td>
+  <td><code>(open: boolean) =&gt; void</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">onValueChange</code></td>
+  <td><code>(value: Value) =&gt; void</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">open</code></td>
+  <td><code>boolean</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">options</code><span class="req" title="Required">*</span></td>
+  <td><code>SelectOption&lt;Value&gt;[]</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">placeholder</code></td>
+  <td><code>ReactNode</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">render</code></td>
+  <td><code>RenderProp&lt;&quot;button&quot;&gt;</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">required</code></td>
+  <td><code>boolean</code></td>
+  <td><code>false</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">value</code></td>
+  <td><code>Value</code></td>
+  <td></td>
+  <td></td>
+</tr></tbody>
+</table></div>
+  <p class="lead">Also accepts: <code>AriaAttributes</code> (53 props from @types/react)</p>
+</section>
+<section class="group" id="c-SelectableCard">
+  <h3>SelectableCard <span class="count">12</span></h3>
+  
+  
+  <p class="source"><a href="https://github.com/recontentapp/recontent/blob/f543a3ef8e4b179f82a29e38b21bfa91a01d7706/apps/vanilla-extract-playground/src/generated/components/selectable-card/SelectableCard.gen.tsx#L18"><code>src/generated/components/selectable-card/SelectableCard.gen.tsx:18</code></a> · Updated 2026-09-17</p>
+  <div class="list"><table class="props">
+  <thead><tr><th>Prop</th><th>Type</th><th>Default</th><th></th></tr></thead>
+  <tbody><tr>
+  <td><code class="">children</code></td>
+  <td><code>ReactNode</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">className</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">control</code></td>
+  <td><code>&quot;radio&quot; | &quot;checkbox&quot;</code></td>
+  <td><code>&quot;radio&quot;</code></td>
+  <td><p class="desc">`&quot;radio&quot;` renders a single-select option, `&quot;checkbox&quot;` a multi-select one.</p></td>
+</tr>
+<tr>
+  <td><code class="">data-testid</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">defaultSelected</code></td>
+  <td><code>boolean</code></td>
+  <td><code>false</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">disabled</code></td>
+  <td><code>boolean</code></td>
+  <td><code>false</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">id</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">name</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">onSelectedChange</code></td>
+  <td><code>(selected: boolean) =&gt; void</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">render</code></td>
+  <td><code>RenderProp&lt;&quot;button&quot;&gt;</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">selected</code></td>
+  <td><code>boolean</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">value</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr></tbody>
+</table></div>
+  <p class="lead">Also accepts: <code>AriaAttributes</code> (53 props from @types/react)</p>
+</section>
+<section class="group" id="c-Skeleton">
+  <h3>Skeleton <span class="count">10</span></h3>
+  
+  
+  <p class="source"><a href="https://github.com/recontentapp/recontent/blob/f543a3ef8e4b179f82a29e38b21bfa91a01d7706/apps/vanilla-extract-playground/src/generated/components/skeleton/Skeleton.gen.tsx#L23"><code>src/generated/components/skeleton/Skeleton.gen.tsx:23</code></a> · Updated 2026-09-17</p>
+  <div class="list"><table class="props">
+  <thead><tr><th>Prop</th><th>Type</th><th>Default</th><th></th></tr></thead>
+  <tbody><tr>
+  <td><code class="">animate</code></td>
+  <td><code>boolean</code></td>
+  <td><code>true</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">className</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">data-testid</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">height</code></td>
+  <td><code>CSSProperties[&quot;height&quot;]</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">id</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">lines</code></td>
+  <td><code>number</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">radius</code></td>
+  <td><code>&quot;none&quot; | &quot;page&quot; | &quot;inner&quot; | &quot;element&quot; | &quot;container&quot; | &quot;full&quot;</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">render</code></td>
+  <td><code>RenderProp&lt;&quot;div&quot;&gt;</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">variant</code></td>
+  <td><code>&quot;text&quot; | &quot;circular&quot; | &quot;rectangular&quot;</code></td>
+  <td><code>&quot;text&quot;</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">width</code></td>
+  <td><code>CSSProperties[&quot;width&quot;]</code></td>
+  <td></td>
+  <td></td>
+</tr></tbody>
+</table></div>
+  <p class="lead">Also accepts: <code>AriaAttributes</code> (53 props from @types/react)</p>
+</section>
+<section class="group" id="c-Slider">
+  <h3>Slider <span class="count">21</span></h3>
+  
+  
+  <p class="source"><a href="https://github.com/recontentapp/recontent/blob/f543a3ef8e4b179f82a29e38b21bfa91a01d7706/apps/vanilla-extract-playground/src/generated/components/slider/Slider.gen.tsx#L36"><code>src/generated/components/slider/Slider.gen.tsx:36</code></a> · Updated 2026-09-17</p>
+  <div class="list"><table class="props">
+  <thead><tr><th>Prop</th><th>Type</th><th>Default</th><th></th></tr></thead>
+  <tbody><tr>
+  <td><code class="">className</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">data-testid</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">defaultValue</code></td>
+  <td><code>number | number[]</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">disabled</code></td>
+  <td><code>boolean</code></td>
+  <td><code>false</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">formatValueLabel</code></td>
+  <td><code>(value: number) =&gt; ReactNode</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">id</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">invalid</code></td>
+  <td><code>boolean</code></td>
+  <td><code>false</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">marks</code></td>
+  <td><code>SliderMark[]</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">max</code></td>
+  <td><code>number</code></td>
+  <td><code>100</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">min</code></td>
+  <td><code>number</code></td>
+  <td><code>0</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">name</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">onBlur</code></td>
+  <td><code>FocusEventHandler</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">onFocus</code></td>
+  <td><code>FocusEventHandler</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">onValueChange</code></td>
+  <td><code>(value: number | number[]) =&gt; void</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">onValueCommit</code></td>
+  <td><code>(value: number | number[]) =&gt; void</code></td>
+  <td></td>
+  <td><p class="desc">Fires once on pointer release — use for expensive commits.</p></td>
+</tr>
+<tr>
+  <td><code class="">orientation</code></td>
+  <td><code>&quot;horizontal&quot; | &quot;vertical&quot;</code></td>
+  <td><code>&quot;horizontal&quot;</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">render</code></td>
+  <td><code>RenderProp&lt;&quot;div&quot;&gt;</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">required</code></td>
+  <td><code>boolean</code></td>
+  <td><code>false</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">showValueLabel</code></td>
+  <td><code>boolean</code></td>
+  <td><code>false</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">step</code></td>
+  <td><code>number</code></td>
+  <td><code>1</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">value</code></td>
+  <td><code>number | number[]</code></td>
+  <td></td>
+  <td></td>
+</tr></tbody>
+</table></div>
+  <p class="lead">Also accepts: <code>AriaAttributes</code> (53 props from @types/react)</p>
+</section>
+<section class="group" id="c-Spinner">
+  <h3>Spinner <span class="count">7</span></h3>
+  
+  
+  <p class="source"><a href="https://github.com/recontentapp/recontent/blob/f543a3ef8e4b179f82a29e38b21bfa91a01d7706/apps/vanilla-extract-playground/src/generated/components/spinner/Spinner.gen.tsx#L14"><code>src/generated/components/spinner/Spinner.gen.tsx:14</code></a> · Updated 2026-09-17</p>
+  <div class="list"><table class="props">
+  <thead><tr><th>Prop</th><th>Type</th><th>Default</th><th></th></tr></thead>
+  <tbody><tr>
+  <td><code class="">className</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">color</code></td>
+  <td><code>&quot;disabled&quot; | &quot;primary&quot; | &quot;secondary&quot; | &quot;accent&quot;</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">data-testid</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">id</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">label</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td><p class="desc">Accessible label; omit only when an adjacent element already labels it.</p></td>
+</tr>
+<tr>
+  <td><code class="">render</code></td>
+  <td><code>RenderProp&lt;&quot;span&quot;&gt;</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">size</code></td>
+  <td><code>SpinnerSizeToken | number</code></td>
+  <td></td>
+  <td></td>
+</tr></tbody>
+</table></div>
+  <p class="lead">Also accepts: <code>AriaAttributes</code> (53 props from @types/react)</p>
+</section>
+<section class="group" id="c-Stack">
+  <h3>Stack <span class="count">10</span></h3>
+  
+  
+  <p class="source"><a href="https://github.com/recontentapp/recontent/blob/f543a3ef8e4b179f82a29e38b21bfa91a01d7706/apps/vanilla-extract-playground/src/generated/components/stack/Stack.gen.tsx#L41"><code>src/generated/components/stack/Stack.gen.tsx:41</code></a> · Updated 2026-09-17</p>
+  <div class="list"><table class="props">
+  <thead><tr><th>Prop</th><th>Type</th><th>Default</th><th></th></tr></thead>
+  <tbody><tr>
+  <td><code class="">align</code></td>
+  <td><code>Responsive&lt;&quot;start&quot; | &quot;center&quot; | &quot;end&quot; | &quot;stretch&quot; | &quot;baseline&quot;&gt;</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">children</code></td>
+  <td><code>ReactNode</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">className</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">data-testid</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">direction</code></td>
+  <td><code>Responsive&lt;&quot;row&quot; | &quot;column&quot;&gt;</code></td>
+  <td><code>&quot;column&quot;</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">gap</code></td>
+  <td><code>Responsive&lt;StackSpacingToken&gt;</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">id</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">justify</code></td>
+  <td><code>Responsive&lt;&quot;start&quot; | &quot;center&quot; | &quot;end&quot; | &quot;space-between&quot; | &quot;space-around&quot; | &quot;space-evenly&quot;&gt;</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">render</code></td>
+  <td><code>RenderProp</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">wrap</code></td>
+  <td><code>Responsive&lt;boolean&gt;</code></td>
+  <td></td>
+  <td></td>
+</tr></tbody>
+</table></div>
+  <p class="lead">Also accepts: <code>AriaAttributes</code> (53 props from @types/react)</p>
+</section>
+<section class="group" id="c-StackItem">
+  <h3>StackItem <span class="count">10</span></h3>
+  
+  
+  <p class="source"><a href="https://github.com/recontentapp/recontent/blob/f543a3ef8e4b179f82a29e38b21bfa91a01d7706/apps/vanilla-extract-playground/src/generated/components/stack-item/StackItem.gen.tsx#L34"><code>src/generated/components/stack-item/StackItem.gen.tsx:34</code></a> · Updated 2026-09-17</p>
+  <div class="list"><table class="props">
+  <thead><tr><th>Prop</th><th>Type</th><th>Default</th><th></th></tr></thead>
+  <tbody><tr>
+  <td><code class="">alignSelf</code></td>
+  <td><code>&quot;auto&quot; | &quot;start&quot; | &quot;center&quot; | &quot;end&quot; | &quot;stretch&quot; | &quot;baseline&quot;</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">basis</code></td>
+  <td><code>Responsive&lt;StackItemSpacingToken | &quot;auto&quot; | &quot;full&quot;&gt;</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">children</code></td>
+  <td><code>ReactNode</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">className</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">data-testid</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">grow</code></td>
+  <td><code>Responsive&lt;boolean | number&gt;</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">id</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">order</code></td>
+  <td><code>Responsive&lt;number&gt;</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">render</code></td>
+  <td><code>RenderProp</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">shrink</code></td>
+  <td><code>Responsive&lt;boolean | number&gt;</code></td>
+  <td></td>
+  <td></td>
+</tr></tbody>
+</table></div>
+  <p class="lead">Also accepts: <code>AriaAttributes</code> (53 props from @types/react)</p>
+</section>
+<section class="group" id="c-Steps">
+  <h3>Steps <span class="count">8</span></h3>
+  
+  
+  <p class="source"><a href="https://github.com/recontentapp/recontent/blob/f543a3ef8e4b179f82a29e38b21bfa91a01d7706/apps/vanilla-extract-playground/src/generated/components/steps/Steps.gen.tsx#L47"><code>src/generated/components/steps/Steps.gen.tsx:47</code></a> · Updated 2026-09-17</p>
+  <div class="list"><table class="props">
+  <thead><tr><th>Prop</th><th>Type</th><th>Default</th><th></th></tr></thead>
+  <tbody><tr>
+  <td><code class="">activeStep</code></td>
+  <td><code>number</code></td>
+  <td><code>0</code></td>
+  <td><p class="desc">Derives each step's status when `Step.status` is omitted.</p></td>
+</tr>
+<tr>
+  <td><code class="">className</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">data-testid</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">id</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">orientation</code></td>
+  <td><code>&quot;horizontal&quot; | &quot;vertical&quot;</code></td>
+  <td><code>&quot;horizontal&quot;</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">render</code></td>
+  <td><code>RenderProp&lt;&quot;ol&quot;&gt;</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">size</code></td>
+  <td><code>&quot;sm&quot; | &quot;md&quot;</code></td>
+  <td><code>&quot;sm&quot;</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">steps</code><span class="req" title="Required">*</span></td>
+  <td><code>Step[]</code></td>
+  <td></td>
+  <td></td>
+</tr></tbody>
+</table></div>
+  <p class="lead">Also accepts: <code>AriaAttributes</code> (53 props from @types/react)</p>
+</section>
+<section class="group" id="c-Switch">
+  <h3>Switch <span class="count">15</span></h3>
+  
+  
+  <p class="source"><a href="https://github.com/recontentapp/recontent/blob/f543a3ef8e4b179f82a29e38b21bfa91a01d7706/apps/vanilla-extract-playground/src/generated/components/switch/Switch.gen.tsx#L21"><code>src/generated/components/switch/Switch.gen.tsx:21</code></a> · Updated 2026-10-04</p>
+  <div class="list"><table class="props">
+  <thead><tr><th>Prop</th><th>Type</th><th>Default</th><th></th></tr></thead>
+  <tbody><tr>
+  <td><code class="">checked</code></td>
+  <td><code>boolean</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">className</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">data-testid</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">defaultChecked</code></td>
+  <td><code>boolean</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">disabled</code></td>
+  <td><code>boolean</code></td>
+  <td><code>false</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">id</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">invalid</code></td>
+  <td><code>boolean</code></td>
+  <td><code>false</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">label</code></td>
+  <td><code>ReactNode</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">labelPosition</code></td>
+  <td><code>&quot;start&quot; | &quot;end&quot;</code></td>
+  <td><code>&quot;end&quot;</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">name</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">onBlur</code></td>
+  <td><code>FocusEventHandler</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">onCheckedChange</code></td>
+  <td><code>(checked: boolean) =&gt; void</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">onFocus</code></td>
+  <td><code>FocusEventHandler</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">render</code></td>
+  <td><code>RenderProp&lt;&quot;button&quot;&gt;</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">required</code></td>
+  <td><code>boolean</code></td>
+  <td><code>false</code></td>
+  <td></td>
+</tr></tbody>
+</table></div>
+  <p class="lead">Also accepts: <code>AriaAttributes</code> (53 props from @types/react)</p>
+</section>
+<section class="group" id="c-Tabs">
+  <h3>Tabs <span class="count">11</span></h3>
+  
+  
+  <p class="source"><a href="https://github.com/recontentapp/recontent/blob/f543a3ef8e4b179f82a29e38b21bfa91a01d7706/apps/vanilla-extract-playground/src/generated/components/tabs/Tabs.gen.tsx#L40"><code>src/generated/components/tabs/Tabs.gen.tsx:40</code></a> · Updated 2026-09-17</p>
+  <div class="list"><table class="props">
+  <thead><tr><th>Prop</th><th>Type</th><th>Default</th><th></th></tr></thead>
+  <tbody><tr>
+  <td><code class="">className</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">data-testid</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">defaultValue</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">fitted</code></td>
+  <td><code>boolean</code></td>
+  <td><code>false</code></td>
+  <td><p class="desc">Distributes tabs evenly across the full width.</p></td>
+</tr>
+<tr>
+  <td><code class="">id</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">items</code><span class="req" title="Required">*</span></td>
+  <td><code>TabItem[]</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">onValueChange</code></td>
+  <td><code>(value: string) =&gt; void</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">orientation</code></td>
+  <td><code>&quot;horizontal&quot; | &quot;vertical&quot;</code></td>
+  <td><code>&quot;horizontal&quot;</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">render</code></td>
+  <td><code>RenderProp&lt;&quot;div&quot;&gt;</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">value</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">variant</code></td>
+  <td><code>&quot;line&quot; | &quot;pill&quot;</code></td>
+  <td><code>&quot;line&quot;</code></td>
+  <td></td>
+</tr></tbody>
+</table></div>
+  <p class="lead">Also accepts: <code>AriaAttributes</code> (53 props from @types/react)</p>
+</section>
+<section class="group" id="c-Text">
+  <h3>Text <span class="count">10</span></h3>
+  
+  
+  <p class="source"><a href="https://github.com/recontentapp/recontent/blob/f543a3ef8e4b179f82a29e38b21bfa91a01d7706/apps/vanilla-extract-playground/src/generated/components/text/Text.gen.tsx#L29"><code>src/generated/components/text/Text.gen.tsx:29</code></a> · Updated 2026-09-17</p>
+  <div class="list"><table class="props">
+  <thead><tr><th>Prop</th><th>Type</th><th>Default</th><th></th></tr></thead>
+  <tbody><tr>
+  <td><code class="">align</code></td>
+  <td><code>Responsive&lt;&quot;left&quot; | &quot;center&quot; | &quot;right&quot; | &quot;justify&quot;&gt;</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">children</code></td>
+  <td><code>ReactNode</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">className</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">color</code></td>
+  <td><code>&quot;disabled&quot; | &quot;primary&quot; | &quot;secondary&quot; | &quot;accent&quot;</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">data-testid</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">id</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">render</code></td>
+  <td><code>RenderProp&lt;&quot;p&quot;&gt;</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">textTransform</code></td>
+  <td><code>&quot;none&quot; | &quot;capitalize&quot; | &quot;uppercase&quot; | &quot;lowercase&quot; | &quot;full-width&quot;</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">truncate</code></td>
+  <td><code>boolean | number</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">variant</code></td>
+  <td><code>Responsive&lt;TextVariantToken&gt;</code></td>
+  <td></td>
+  <td></td>
+</tr></tbody>
+</table></div>
+  <p class="lead">Also accepts: <code>AriaAttributes</code> (53 props from @types/react)</p>
+</section>
+<section class="group" id="c-Textarea">
+  <h3>Textarea <span class="count">21</span></h3>
+  
+  
+  <p class="source"><a href="https://github.com/recontentapp/recontent/blob/f543a3ef8e4b179f82a29e38b21bfa91a01d7706/apps/vanilla-extract-playground/src/generated/components/textarea/Textarea.gen.tsx#L20"><code>src/generated/components/textarea/Textarea.gen.tsx:20</code></a> · Updated 2026-09-17</p>
+  <div class="list"><table class="props">
+  <thead><tr><th>Prop</th><th>Type</th><th>Default</th><th></th></tr></thead>
+  <tbody><tr>
+  <td><code class="">autoFocus</code></td>
+  <td><code>boolean</code></td>
+  <td><code>false</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">autoResize</code></td>
+  <td><code>boolean</code></td>
+  <td><code>false</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">className</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">data-testid</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">defaultValue</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">disabled</code></td>
+  <td><code>boolean</code></td>
+  <td><code>false</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">id</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">invalid</code></td>
+  <td><code>boolean</code></td>
+  <td><code>false</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">maxLength</code></td>
+  <td><code>number</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">maxRows</code></td>
+  <td><code>number</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">minRows</code></td>
+  <td><code>number</code></td>
+  <td><code>3</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">name</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">onBlur</code></td>
+  <td><code>FocusEventHandler</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">onChange</code></td>
+  <td><code>ChangeEventHandler&lt;HTMLTextAreaElement&gt;</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">onFocus</code></td>
+  <td><code>FocusEventHandler</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">placeholder</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">readOnly</code></td>
+  <td><code>boolean</code></td>
+  <td><code>false</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">render</code></td>
+  <td><code>RenderProp&lt;&quot;textarea&quot;&gt;</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">required</code></td>
+  <td><code>boolean</code></td>
+  <td><code>false</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">showCharacterCount</code></td>
+  <td><code>boolean</code></td>
+  <td><code>false</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">value</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr></tbody>
+</table></div>
+  <p class="lead">Also accepts: <code>AriaAttributes</code> (53 props from @types/react)</p>
+</section>
+<section class="group" id="c-TextInput">
+  <h3>TextInput <span class="count">25</span></h3>
+  
+  
+  <p class="source"><a href="https://github.com/recontentapp/recontent/blob/f543a3ef8e4b179f82a29e38b21bfa91a01d7706/apps/vanilla-extract-playground/src/generated/components/text-input/TextInput.gen.tsx#L33"><code>src/generated/components/text-input/TextInput.gen.tsx:33</code></a> · Updated 2026-09-17</p>
+  <div class="list"><table class="props">
+  <thead><tr><th>Prop</th><th>Type</th><th>Default</th><th></th></tr></thead>
+  <tbody><tr>
+  <td><code class="">autoComplete</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">autoFocus</code></td>
+  <td><code>boolean</code></td>
+  <td><code>false</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">className</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">clearable</code></td>
+  <td><code>boolean</code></td>
+  <td><code>false</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">data-testid</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">defaultValue</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">disabled</code></td>
+  <td><code>boolean</code></td>
+  <td><code>false</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">iconLeft</code></td>
+  <td><code>&quot;search&quot; | &quot;info&quot; | &quot;alert&quot; | &quot;check&quot; | &quot;chevronDown&quot; | &quot;close&quot;</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">iconRight</code></td>
+  <td><code>&quot;search&quot; | &quot;info&quot; | &quot;alert&quot; | &quot;check&quot; | &quot;chevronDown&quot; | &quot;close&quot;</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">id</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">invalid</code></td>
+  <td><code>boolean</code></td>
+  <td><code>false</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">maxLength</code></td>
+  <td><code>number</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">name</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">onBlur</code></td>
+  <td><code>FocusEventHandler</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">onChange</code></td>
+  <td><code>ChangeEventHandler&lt;HTMLInputElement&gt;</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">onClear</code></td>
+  <td><code>() =&gt; void</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">onFocus</code></td>
+  <td><code>FocusEventHandler</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">placeholder</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">prefix</code></td>
+  <td><code>ReactNode</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">readOnly</code></td>
+  <td><code>boolean</code></td>
+  <td><code>false</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">render</code></td>
+  <td><code>RenderProp&lt;&quot;input&quot;&gt;</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">required</code></td>
+  <td><code>boolean</code></td>
+  <td><code>false</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">suffix</code></td>
+  <td><code>ReactNode</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">type</code></td>
+  <td><code>&quot;text&quot; | &quot;email&quot; | &quot;password&quot; | &quot;search&quot; | &quot;tel&quot; | &quot;url&quot;</code></td>
+  <td><code>&quot;text&quot;</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">value</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr></tbody>
+</table></div>
+  <p class="lead">Also accepts: <code>AriaAttributes</code> (53 props from @types/react)</p>
+</section>
+<section class="group" id="c-Timeline">
+  <h3>Timeline <span class="count">8</span></h3>
+  
+  
+  <p class="source"><a href="https://github.com/recontentapp/recontent/blob/f543a3ef8e4b179f82a29e38b21bfa91a01d7706/apps/vanilla-extract-playground/src/generated/components/timeline/Timeline.gen.tsx#L44"><code>src/generated/components/timeline/Timeline.gen.tsx:44</code></a> · Updated 2026-09-17</p>
+  <div class="list"><table class="props">
+  <thead><tr><th>Prop</th><th>Type</th><th>Default</th><th></th></tr></thead>
+  <tbody><tr>
+  <td><code class="">className</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">data-testid</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">formatTimestamp</code></td>
+  <td><code>(timestamp: Date | string) =&gt; ReactNode</code></td>
+  <td><code>defaultFormatTimestamp</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">id</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">items</code><span class="req" title="Required">*</span></td>
+  <td><code>TimelineItem[]</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">orientation</code></td>
+  <td><code>&quot;vertical&quot; | &quot;horizontal&quot;</code></td>
+  <td><code>&quot;vertical&quot;</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">render</code></td>
+  <td><code>RenderProp&lt;&quot;ol&quot;&gt;</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">size</code></td>
+  <td><code>&quot;sm&quot; | &quot;md&quot;</code></td>
+  <td><code>&quot;sm&quot;</code></td>
+  <td></td>
+</tr></tbody>
+</table></div>
+  <p class="lead">Also accepts: <code>AriaAttributes</code> (53 props from @types/react)</p>
+</section>
+<section class="group" id="c-ToastProvider">
+  <h3>ToastProvider <span class="count">6</span></h3>
+  
+  
+  <p class="source"><a href="https://github.com/recontentapp/recontent/blob/f543a3ef8e4b179f82a29e38b21bfa91a01d7706/apps/vanilla-extract-playground/src/generated/components/toast/Toast.gen.tsx#L92"><code>src/generated/components/toast/Toast.gen.tsx:92</code></a> · Updated 2026-09-17</p>
+  <div class="list"><table class="props">
+  <thead><tr><th>Prop</th><th>Type</th><th>Default</th><th></th></tr></thead>
+  <tbody><tr>
+  <td><code class="">children</code></td>
+  <td><code>ReactNode</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">className</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">data-testid</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">id</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">limit</code></td>
+  <td><code>number</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">placement</code></td>
+  <td><code>&quot;top-left&quot; | &quot;top-right&quot; | &quot;bottom-left&quot; | &quot;bottom-right&quot;</code></td>
+  <td><code>&quot;bottom-right&quot;</code></td>
+  <td></td>
+</tr></tbody>
+</table></div>
+  <p class="lead">Also accepts: <code>AriaAttributes</code> (53 props from @types/react)</p>
+</section>
+<section class="group" id="c-Toggle">
+  <h3>Toggle <span class="count">10</span></h3>
+  
+  
+  <p class="source"><a href="https://github.com/recontentapp/recontent/blob/f543a3ef8e4b179f82a29e38b21bfa91a01d7706/apps/vanilla-extract-playground/src/generated/components/toggle/Toggle.gen.tsx#L24"><code>src/generated/components/toggle/Toggle.gen.tsx:24</code></a> · Updated 2026-10-04</p>
+  <div class="list"><table class="props">
+  <thead><tr><th>Prop</th><th>Type</th><th>Default</th><th></th></tr></thead>
+  <tbody><tr>
+  <td><code class="">className</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">data-testid</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">defaultValue</code></td>
+  <td><code>Value</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">disabled</code></td>
+  <td><code>boolean</code></td>
+  <td><code>false</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">id</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">onValueChange</code></td>
+  <td><code>(value: Value) =&gt; void</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">options</code><span class="req" title="Required">*</span></td>
+  <td><code>readonly [ ToggleOption&lt;Value&gt;, ToggleOption&lt;Value&gt; ]</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">render</code></td>
+  <td><code>RenderProp&lt;&quot;div&quot;&gt;</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">size</code></td>
+  <td><code>&quot;md&quot;</code></td>
+  <td><code>&quot;md&quot;</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">value</code></td>
+  <td><code>Value</code></td>
+  <td></td>
+  <td></td>
+</tr></tbody>
+</table></div>
+  <p class="lead">Also accepts: <code>AriaAttributes</code> (53 props from @types/react)</p>
+</section>
+<section class="group" id="c-Tooltip">
+  <h3>Tooltip <span class="count">13</span></h3>
+  
+  
+  <p class="source"><a href="https://github.com/recontentapp/recontent/blob/f543a3ef8e4b179f82a29e38b21bfa91a01d7706/apps/vanilla-extract-playground/src/generated/components/tooltip/Tooltip.gen.tsx#L20"><code>src/generated/components/tooltip/Tooltip.gen.tsx:20</code></a> · Updated 2026-09-17</p>
+  <div class="list"><table class="props">
+  <thead><tr><th>Prop</th><th>Type</th><th>Default</th><th></th></tr></thead>
+  <tbody><tr>
+  <td><code class="">align</code></td>
+  <td><code>&quot;start&quot; | &quot;center&quot; | &quot;end&quot;</code></td>
+  <td><code>&quot;center&quot;</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">children</code><span class="req" title="Required">*</span></td>
+  <td><code>ReactElement</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">className</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">closeDelay</code></td>
+  <td><code>number</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">content</code><span class="req" title="Required">*</span></td>
+  <td><code>ReactNode</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">data-testid</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">defaultOpen</code></td>
+  <td><code>boolean</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">delay</code></td>
+  <td><code>number</code></td>
+  <td></td>
+  <td><p class="desc">Hover delay in ms before showing.</p></td>
+</tr>
+<tr>
+  <td><code class="">disabled</code></td>
+  <td><code>boolean</code></td>
+  <td><code>false</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">id</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">onOpenChange</code></td>
+  <td><code>(open: boolean) =&gt; void</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">open</code></td>
+  <td><code>boolean</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">side</code></td>
+  <td><code>&quot;top&quot; | &quot;right&quot; | &quot;bottom&quot; | &quot;left&quot;</code></td>
+  <td><code>&quot;top&quot;</code></td>
+  <td></td>
+</tr></tbody>
+</table></div>
+  <p class="lead">Also accepts: <code>AriaAttributes</code> (53 props from @types/react)</p>
+</section>
+<section class="group" id="c-TreeList">
+  <h3>TreeList <span class="count">12</span></h3>
+  
+  
+  <p class="source"><a href="https://github.com/recontentapp/recontent/blob/f543a3ef8e4b179f82a29e38b21bfa91a01d7706/apps/vanilla-extract-playground/src/generated/components/tree-list/TreeList.gen.tsx#L120"><code>src/generated/components/tree-list/TreeList.gen.tsx:120</code></a> · Updated 2026-09-17</p>
+  <div class="list"><table class="props">
+  <thead><tr><th>Prop</th><th>Type</th><th>Default</th><th></th></tr></thead>
+  <tbody><tr>
+  <td><code class="">className</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">data-testid</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">defaultExpandedIds</code></td>
+  <td><code>string[]</code></td>
+  <td><code>[]</code></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">expandedIds</code></td>
+  <td><code>string[]</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">id</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">label</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td><p class="desc">Accessible name for the tree.</p></td>
+</tr>
+<tr>
+  <td><code class="">nodes</code><span class="req" title="Required">*</span></td>
+  <td><code>TreeNode&lt;Value&gt;[]</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">onExpandedIdsChange</code></td>
+  <td><code>(ids: string[]) =&gt; void</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">onNodeActivate</code></td>
+  <td><code>(node: TreeNode&lt;Value&gt;) =&gt; void</code></td>
+  <td></td>
+  <td><p class="desc">Fired on Enter or double-click — distinct from selection.</p></td>
+</tr>
+<tr>
+  <td><code class="">onSelectedIdChange</code></td>
+  <td><code>(id: string) =&gt; void</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">render</code></td>
+  <td><code>RenderProp&lt;&quot;div&quot;&gt;</code></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code class="">selectedId</code></td>
+  <td><code>string</code></td>
+  <td></td>
+  <td></td>
+</tr></tbody>
+</table></div>
+  <p class="lead">Also accepts: <code>AriaAttributes</code> (53 props from @types/react)</p>
+</section>
+</div>
   </main>
 </div>
+<p class="foot">Generated from f543a3e on components-introspection</p>
 <script>
 (function () {
-  var layers = ["ref", "system", "components"];
+  var layers = ["ref", "system", "components", "api"];
   var tabs = document.querySelectorAll("[data-tab]");
   var panels = document.querySelectorAll("[data-panel]");
   var sides = document.querySelectorAll("[data-side]");

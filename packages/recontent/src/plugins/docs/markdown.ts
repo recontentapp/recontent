@@ -68,10 +68,9 @@ export function renderMarkdown(model: DocsModel): string {
   if (model.components.length > 0) {
     sections.push("## Component APIs");
     for (const component of model.components) {
-      sections.push(renderComponentMarkdown(component, model.git, 3));
+      sections.push(renderComponentMarkdown(component, 3));
     }
   }
-  if (model.footer) sections.push(`_${escapeText(model.footer)}_`);
 
   return `${sections.join("\n\n")}\n`;
 }

@@ -5,7 +5,7 @@ description: "Write your own Recontent plugin to validate tokens or generate any
 
 # Plugin API
 
-A plugin is an object with a `name` and up to four lifecycle hooks. It receives the resolved tokens
+A plugin is an object with a `name`, what it `dependsOn` and up to four lifecycle hooks. It receives the resolved tokens
 and returns the files to write. Everything the built-in plugins do goes through this interface, so
 you can add outputs the same way: a Swift or Kotlin file, a Style Dictionary JSON, a linter, an
 icon sheet.
@@ -26,6 +26,7 @@ import type {
 ```ts
 interface RecontentPlugin {
   name: string;
+  dependsOn: ("tokens" | "components")[];
   enforce?: "pre" | "post";
   buildStart?(ctx: PluginContext): void | Promise<void>;
   validate?(ctx: PluginContext): PluginDiagnostic[] | Promise<PluginDiagnostic[]>;
@@ -34,14 +35,15 @@ interface RecontentPlugin {
 }
 ```
 
-| Member       | Description                                                                                                                                    |
-| ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| `name`       | Required. Namespaced, for example `"acme:a11y-contrast"` (built-ins use `recontent:css`). Used in logs, diagnostics and file-collision errors. |
-| `enforce`    | `"pre"` runs the plugin before plugins without `enforce`, `"post"` after them. Within each group, the order of the `plugins` array is kept.    |
-| `buildStart` | Called first, once per build, for every plugin.                                                                                                |
-| `validate`   | Return diagnostics for problems you find. Any `"error"` aborts the build before anything is written.                                           |
-| `generate`   | Return the files to write.                                                                                                                     |
-| `buildEnd`   | Called after generation with the files of **all** plugins in `ctx.files`. Nothing has been written yet.                                        |
+| Member       | Description                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| ------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `name`       | Required. Namespaced, for example `"acme:a11y-contrast"` (built-ins use `recontent:css`). Used in logs, diagnostics and file-collision errors.                                                                                                                                                                                                                                                                                                |
+| `dependsOn`  | Required, with no default: what the plugin consumes. `"tokens"` for the registry and themes, `"components"` for `ctx.components`. A plugin that depends on components in a config without [`introspection`](/tokens/configuration#introspection) is a config error naming the plugin. If introspection fails, only the plugins that depend on components fail, with the error attributed to them; the others still run and write their files. |
+| `enforce`    | `"pre"` runs the plugin before plugins without `enforce`, `"post"` after them. Within each group, the order of the `plugins` array is kept.                                                                                                                                                                                                                                                                                                   |
+| `buildStart` | Called first, once per build, for every plugin.                                                                                                                                                                                                                                                                                                                                                                                               |
+| `validate`   | Return diagnostics for problems you find. Any `"error"` aborts the build before anything is written.                                                                                                                                                                                                                                                                                                                                          |
+| `generate`   | Return the files to write.                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| `buildEnd`   | Called after generation with the files of **all** plugins in `ctx.files`. Nothing has been written yet.                                                                                                                                                                                                                                                                                                                                       |
 
 All hooks may be `async`. Each hook runs for every plugin before the next hook starts: all
 `buildStart`s, then all `validate`s, then all `generate`s, then all `buildEnd`s. If a hook throws,
@@ -49,15 +51,14 @@ the build fails with the error's message and exit code `1`.
 
 ## PluginContext
 
-| Field        | Type                             | Description                                                                                                                   |
-| ------------ | -------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| `registry`   | `Map<string, TokenEntry>`        | Every token, keyed by its dotted path (`"system.color.accent"`).                                                              |
-| `themes`     | `Record<string, ThemeOverride>`  | Each theme's overrides: a `Map` from token key to the overriding value.                                                       |
-| `root`       | `string`                         | Absolute path of the directory containing the config.                                                                         |
-| `logger`     | `Logger`                         | `info`, `warn`, `error` and `debug` methods. All write to stderr.                                                             |
-| `mode`       | `"build" \| "watch"`             | `"watch"` under `build --watch`, otherwise `"build"`.                                                                         |
-| `components` | `ComponentManifest \| undefined` | The [component manifest](#componentmanifest). Set when the config has [`introspection`](/tokens/configuration#introspection). |
-| `git`        | `GitInfo \| undefined`           | The [git state](#gitinfo) of the project. Unset outside a git work tree.                                                      |
+| Field        | Type                            | Description                                                                                                |
+| ------------ | ------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| `registry`   | `Map<string, TokenEntry>`       | Every token, keyed by its dotted path (`"system.color.accent"`).                                           |
+| `themes`     | `Record<string, ThemeOverride>` | Each theme's overrides: a `Map` from token key to the overriding value.                                    |
+| `root`       | `string`                        | Absolute path of the directory containing the config.                                                      |
+| `logger`     | `Logger`                        | `info`, `warn`, `error` and `debug` methods. All write to stderr.                                          |
+| `mode`       | `"build" \| "watch"`            | `"watch"` under `build --watch`, otherwise `"build"`.                                                      |
+| `components` | `ComponentInfo[] \| undefined`  | The project's [components](#componentinfo). Only set when the plugin declares `dependsOn: ["components"]`. |
 
 A `TokenEntry` describes one token:
 
@@ -86,33 +87,31 @@ Values are structured, never strings:
 To apply a theme to a token, check `ctx.themes[name].get(key)` first, then fall back to the entry's
 own `$value`.
 
-## ComponentManifest
+## ComponentInfo
 
 `ctx.components` lets a plugin generate Storybook argTypes, Figma Code Connect stubs, MCP resources,
-lint rules or a changelog without building a TypeScript program of its own. It is only computed when
-the config sets `introspection`, so token-only projects pay nothing.
+lint rules or a changelog without building a TypeScript program of its own. It is a `ComponentInfo[]`
+sorted by name, set only for plugins that declare `dependsOn: ["components"]` and computed only when
+at least one configured plugin does. Warnings about
+introspection are printed by the CLI and are not part of what plugins receive.
 
 ```ts
-type ComponentManifest = {
-  schemaVersion: "1";
-  components: ComponentInfo[]; // sorted by name
-  warnings: { message: string; component?: string }[];
-};
-
 type ComponentInfo = {
   name: string; // export name, "Tabs.Item" for subcomponents
+  typeParameters?: { name: string; constraint?: string; default?: string }[]; // generic components
   sourceFilePath: string; // posix, relative to the config root
-  line: number; // 1-based, for source links
-  history?: FileHistory; // when git is available
+  line: number; // 1-based
+  lastUpdatedAt?: string; // ISO 8601, with introspection.history
   description?: string;
   deprecated?: true | string;
   props: PropInfo[]; // declared in your project, sorted by name
-  inherits: { name: string; package?: string; count: number }[];
+  inherits: { name: string; package?: string; props: string[] }[]; // sorted prop names
 };
 
 type PropInfo = {
   name: string;
   type: string;
+  resolved?: string; // type with your own alias expanded: "Width" → 'number | "auto"'
   values?: (string | number | boolean)[]; // when the type is a union of literals
   required: boolean;
   defaultValue?: string;
@@ -122,41 +121,10 @@ type PropInfo = {
 ```
 
 All of these types are exported from `recontent/plugins`. See [`introspection`](/tokens/configuration#introspection)
-for how components and props are found.
+for how components and props are found, and `lastUpdatedAt`.
 
-## GitInfo
-
-```ts
-type GitInfo = {
-  commit: string; // HEAD
-  branch?: string; // unset on a detached HEAD
-  dirty: boolean; // uncommitted changes under the config root
-  shallow: boolean; // dates from history may be wrong
-  root: string; // the config root relative to the git root, "" at the top level
-  remote?: { url: string; webUrl?: string }; // origin; webUrl for GitHub, GitLab and Bitbucket
-};
-
-type FileHistory = {
-  created: { commit: string; date: string }; // first commit touching the file, ISO 8601
-  updated: { commit: string; date: string }; // last commit touching the file
-};
-```
-
-`git` and `history` are plain data. Author names and emails are never read. They are left out when
-the config is not in a git work tree, `git` is not installed, or there are no commits yet; nothing
-fails. The values are read again on every build, so `build --watch` stays current after a commit.
-
-`recontent` exports a helper to link to the source:
-
-```ts
-import { sourceUrl } from "recontent";
-
-sourceUrl(ctx.git, component.sourceFilePath, component.line);
-// https://github.com/acme/ds/blob/<commit>/src/button.tsx#L12
-```
-
-It returns `undefined` without a known web remote, and for files outside the repository or in
-`node_modules`.
+`ctx` carries no repository state (no commit, branch or remote), so a plugin's output depends only on
+your sources and config.
 
 ## EmittedFile
 

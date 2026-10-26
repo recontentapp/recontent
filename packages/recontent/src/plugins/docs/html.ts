@@ -1,5 +1,5 @@
-import type { ComponentInfo, GitInfo, PropInfo } from "@recontentapp/core";
-import { sourceUrl } from "../../git.js";
+import type { ComponentInfo, PropInfo } from "@recontentapp/core";
+import { displayName, propCount, updatedText } from "../../introspection/markdown.js";
 import { generateCss } from "../css.js";
 import type { GeneratorContext } from "../shared/context.js";
 import type { DocToken } from "../shared/doc-token.js";
@@ -132,6 +132,8 @@ function propRowHtml(prop: PropInfo): string {
   const type = prop.values
     ? prop.values.map((value) => JSON.stringify(value)).join(" | ")
     : prop.type;
+  const resolved =
+    prop.resolved && !prop.values ? `<br><code>${escapeHtml(prop.resolved)}</code>` : "";
   const notes = [
     prop.description ? `<p class="desc">${escapeHtml(prop.description)}</p>` : "",
     prop.deprecated
@@ -140,28 +142,27 @@ function propRowHtml(prop: PropInfo): string {
   ].join("");
   return `<tr>
   <td><code class="${prop.deprecated ? "is-deprecated" : ""}">${escapeHtml(prop.name)}</code>${prop.required ? '<span class="req" title="Required">*</span>' : ""}</td>
-  <td><code>${escapeHtml(type)}</code></td>
+  <td><code>${escapeHtml(type)}</code>${resolved}</td>
   <td>${prop.defaultValue ? `<code>${escapeHtml(prop.defaultValue)}</code>` : ""}</td>
   <td>${notes}</td>
 </tr>`;
 }
 
-function componentHtml(component: ComponentInfo, git: GitInfo | undefined): string {
+function componentHtml(component: ComponentInfo): string {
   const location = `${component.sourceFilePath}:${component.line}`;
-  const url = git && sourceUrl(git, component.sourceFilePath, component.line);
-  const updated = component.history?.updated.date.slice(0, 10);
+  const updated = updatedText(component);
   const inherits = component.inherits
     .map(
-      ({ name, package: pkg, count }) =>
-        `<code>${escapeHtml(name)}</code> (${count} ${count === 1 ? "prop" : "props"}${pkg ? ` from ${escapeHtml(pkg)}` : ""})`,
+      (group) =>
+        `<code>${escapeHtml(group.name)}</code> (${propCount(group)}${group.package ? ` from ${escapeHtml(group.package)}` : ""})`,
     )
     .join(", ");
   const deprecated = component.deprecated;
   return `<section class="group" id="${escapeHtml(componentId(component.name))}">
-  <h3>${escapeHtml(component.name)} <span class="count">${component.props.length}</span></h3>
+  <h3>${escapeHtml(displayName(component))} <span class="count">${component.props.length}</span></h3>
   ${component.description ? `<p class="lead">${escapeHtml(component.description)}</p>` : ""}
   ${deprecated ? `<p class="callout"><span class="capsule">Deprecated</span>${deprecated === true ? "" : ` ${escapeHtml(deprecated)}`}</p>` : ""}
-  <p class="source">${url ? `<a href="${escapeHtml(url)}"><code>${escapeHtml(location)}</code></a>` : `<code>${escapeHtml(location)}</code>`}${updated ? ` · Updated ${escapeHtml(updated)}` : ""}</p>
+  <p class="source"><code>${escapeHtml(location)}</code>${updated ? ` · ${escapeHtml(updated)}` : ""}</p>
   ${
     component.props.length === 0
       ? '<p class="lead">No own props.</p>'
@@ -289,7 +290,6 @@ code { font-family: var(--hig-mono); font-size: 0.82em; }
 .props td { vertical-align: top; padding: 10px 18px; border-top: 1px solid var(--hig-bg-2); word-break: break-word; }
 .props td:first-child { white-space: nowrap; }
 .req { color: var(--hig-orange-text); margin-left: 2px; }
-.foot { margin: 0; padding: 24px; text-align: center; font-size: 13px; color: var(--hig-text-2); }
 [hidden] { display: none !important; }
 @media (max-width: 800px) {
   .bar { padding: 0 16px; }
@@ -455,7 +455,7 @@ export function renderHtml(model: DocsModel, ctx: GeneratorContext): string {
         ? `\n<div data-panel="${API_TAB}" data-count="${model.components.length}" role="tabpanel">
   <h2 class="title">Component APIs</h2>
   <p class="sub">${model.components.length} component${model.components.length === 1 ? "" : "s"}</p>
-  ${model.components.map((c) => componentHtml(c, model.git)).join("\n")}
+  ${model.components.map(componentHtml).join("\n")}
 </div>`
         : "",
     );
@@ -485,7 +485,6 @@ ${sides}
 ${panels}
   </main>
 </div>
-${model.footer ? `<p class="foot">${escapeHtml(model.footer)}</p>` : ""}
 <script>${SCRIPT}</script>
 </body>
 </html>

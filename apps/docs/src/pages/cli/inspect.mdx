@@ -5,14 +5,13 @@ description: "Browse the tokens and components a project defines, for people, ag
 
 # inspect
 
-Prints what `recontent.config.ts` defines: its tokens, its components when
-[`introspection`](/tokens/configuration#introspection) is configured, and the git state they were read
-from.
+Prints what `recontent.config.ts` defines: its tokens, and its components when
+[`introspection`](/tokens/configuration#introspection) is configured.
 
 ```bash
-recontent inspect [--format <format>]
+recontent inspect [--format <format>] [--no-cache]
 recontent inspect tokens [path...] [--type <type>] [--theme <theme>] [--deprecated] [--format <format>]
-recontent inspect components [name...] [--deprecated] [--format <format>]
+recontent inspect components [name...] [--deprecated] [--format <format>] [--no-cache]
 ```
 
 Uses the [global options](/cli#global-options) `-c`, `--cwd` and `--log-level`.
@@ -23,7 +22,7 @@ Start with the overview, then drill down. Each step prints more about less, so y
 a whole design system to find one token.
 
 ```bash
-recontent inspect                      # counts per layer and type, themes, component names, git
+recontent inspect                      # counts per layer and type, themes, component names
 recontent inspect tokens               # one row per group, with counts
 recontent inspect tokens system.color  # the tokens at or under system.color, with values and CSS variables
 recontent inspect components           # one line per component
@@ -49,11 +48,15 @@ Options for `tokens`:
 `components` takes `--deprecated` too. A filter that matches nothing prints an empty result and exits
 `0`.
 
+`--no-cache` (for `inspect` and `inspect components`) neither reads nor writes the
+[introspection cache](/tokens/configuration#cache).
+
 A token is printed with its path, type, value, CSS variable and notes (alias, description,
 deprecation), and its value in each theme that overrides it. A component is printed with its source
-location, which links to the repository when `origin` is a GitHub, GitLab or Bitbucket remote, and a
-table of its **own** props. Props inherited from outside the project, such as the 260 attributes of
-`ButtonHTMLAttributes`, are summarized on an `Also accepts:` line instead of listed.
+location (and the date of its last commit with [`history`](/tokens/configuration#history)) and a
+table of its **own** props, with the expansion of your own type aliases under the type. Props
+inherited from outside the project, such as the 260 attributes of `ButtonHTMLAttributes`, are
+summarized on an `Also accepts:` line instead of listed; `--format json` lists their names.
 
 ## For agents
 
@@ -78,9 +81,9 @@ summary, so `recontent inspect tokens --format json` is every token.
 
 | Command              | Document                                                                                                                                                                                             |
 | -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `inspect`            | `{ schemaVersion, kind: "overview", config, tokens: { total, layers }, themes, components?, git? }`                                                                                                  |
+| `inspect`            | `{ schemaVersion, kind: "overview", config, tokens: { total, layers }, themes, components? }`                                                                                                        |
 | `inspect tokens`     | `{ schemaVersion, kind: "tokens", tokens }`, each token with `layer`, `path`, `name`, `type`, `alias?`, `description?`, `deprecated?`, `cssVar` and `values` (`default` plus the themes that differ) |
-| `inspect components` | `{ schemaVersion, kind: "components", components, git? }`, each component as described in the [plugin API](/plugin-api#componentmanifest)                                                            |
+| `inspect components` | `{ schemaVersion, kind: "components", components }`, each component as described in the [plugin API](/plugin-api#componentinfo)                                                                      |
 
 `schemaVersion` is `"1"` and only changes with a breaking change to these documents.
 
@@ -99,6 +102,8 @@ test "$(recontent inspect components --deprecated --format json | jq '.component
 ## Cost
 
 `inspect tokens` only loads the config, so it is instant, and keeps working when `introspection` is
-misconfigured. `inspect` and `inspect components` build a TypeScript program from the configured
-entry, which takes about two seconds for 50 components. Run with `--log-level debug` to see
-the timings.
+misconfigured. `inspect` and `inspect components` need the components: building a TypeScript
+program from the configured entry takes about two seconds for 50 components, so the result is
+[cached](/tokens/configuration#cache) in `.recontent/cache.json` and later calls skip the program
+until a source file changes. Run with `--log-level debug` to see the timings and whether the cache
+was used.

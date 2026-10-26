@@ -1,8 +1,7 @@
-import { spawnSync } from "node:child_process";
+import { spawn, spawnSync } from "node:child_process";
 import { mkdtempSync, realpathSync, rmSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import type { FileHistory, GitInfo } from "@recontentapp/core";
 
 function run(
   args: string[],
@@ -109,128 +108,87 @@ export function archiveRevision(gitRoot: string, rev: string, destDir: string): 
   }
 }
 
-const WEB_HOSTS = new Set(["github.com", "gitlab.com", "bitbucket.org"]);
+/** HEAD's sha, or `undefined` outside a work tree or before the first commit. */
+export function readHead(cwd: string): string | undefined {
+  const head = run(["rev-parse", "HEAD"], cwd);
+  return head.status === 0 ? head.stdout.trim() : undefined;
+}
 
 /**
- * Parses a remote URL (`git@host:o/r.git`, `ssh://git@host/o/r`, `https://host/o/r.git`).
- * `url` has any credentials stripped; `webUrl` is only set for known hosts.
+ * ISO 8601 date of the last commit touching each of `files` (absolute paths).
+ * Files outside the work tree, uncommitted ones and — in a shallow clone, where
+ * every file would read as touched by the grafted commit — all of them are
+ * absent, with the reason in `warning`.
+ *
+ * One `git log`, newest commit first, killed as soon as every file has been
+ * seen, so the cost follows the age of the oldest last change, not the size of
+ * the history.
  */
-export function parseRemote(remote: string): { url: string; webUrl?: string } {
-  const trimmed = remote.trim();
-  const scp = /^[^@/\s]+@([^:/\s]+):(.+)$/.exec(trimmed);
-  let host: string | undefined;
-  let repoPath: string | undefined;
-  let url = trimmed;
-
-  if (scp) {
-    host = scp[1];
-    repoPath = scp[2];
-  } else {
-    try {
-      const parsed = new URL(trimmed);
-      host = parsed.hostname;
-      repoPath = parsed.pathname;
-      if (parsed.protocol === "http:" || parsed.protocol === "https:") {
-        parsed.username = "";
-        parsed.password = "";
-        url = parsed.toString();
-      }
-    } catch {
-      return { url };
-    }
+export async function readLastUpdated(
+  root: string,
+  files: string[],
+): Promise<{ dates: Map<string, string>; warning?: string }> {
+  const dates = new Map<string, string>();
+  const top = run(["rev-parse", "--show-toplevel"], root);
+  if (top.status !== 0) {
+    return {
+      dates,
+      warning: "history: not a git repository (or git is missing), lastUpdatedAt omitted.",
+    };
+  }
+  if (run(["rev-parse", "--is-shallow-repository"], root).stdout.trim() === "true") {
+    return {
+      dates,
+      warning: "history: shallow clone, lastUpdatedAt omitted; fetch more depth.",
+    };
   }
 
-  repoPath = repoPath?.replace(/^\/+|\/+$/g, "").replace(/\.git$/, "");
-  if (!host || !repoPath || !WEB_HOSTS.has(host.toLowerCase())) return { url };
-  return { url, webUrl: `https://${host.toLowerCase()}/${repoPath}` };
-}
-
-/**
- * Repo-level facts about the work tree containing `root`, or `undefined` when
- * `root` isn't in one (or `git` isn't installed, or there are no commits yet).
- */
-export function readGitInfo(root: string): GitInfo | undefined {
-  const top = run(["rev-parse", "--show-toplevel"], root);
-  if (top.status !== 0) return undefined;
-  const gitRoot = top.stdout.trim();
-  const head = run(["rev-parse", "HEAD"], root);
-  if (head.status !== 0) return undefined;
-
-  const branch = run(["branch", "--show-current"], root).stdout.trim();
-  const dirty = run(["status", "--porcelain", "--", root], root).stdout.trim() !== "";
-  const shallow = run(["rev-parse", "--is-shallow-repository"], root).stdout.trim() === "true";
-  const origin = run(["remote", "get-url", "origin"], root);
-  const relativeRoot = path.relative(realpathSync(gitRoot), realpathSync(root));
-
-  return {
-    commit: head.stdout.trim(),
-    ...(branch ? { branch } : {}),
-    dirty,
-    shallow,
-    root: relativeRoot.split(path.sep).join("/"),
-    ...(origin.status === 0 && origin.stdout.trim() ? { remote: parseRemote(origin.stdout) } : {}),
-  };
-}
-
-/**
- * First and last commit touching each of `files` (absolute paths), from a
- * single `git log`. Files without commits are absent from the result.
- */
-export function readFileHistory(root: string, files: string[]): Map<string, FileHistory> {
-  const history = new Map<string, FileHistory>();
-  if (files.length === 0) return history;
-
-  const top = run(["rev-parse", "--show-toplevel"], root);
-  if (top.status !== 0) return history;
   const gitRoot = realpathSync(top.stdout.trim());
-  const byRelative = new Map(
-    files.map((file) => [
-      path.relative(gitRoot, realpathSync(file)).split(path.sep).join("/"),
-      file,
-    ]),
-  );
+  const pending = new Map<string, string>();
+  for (const file of files) {
+    const relative = path.relative(gitRoot, realpathSync(file));
+    if (relative.startsWith("..") || path.isAbsolute(relative)) continue;
+    pending.set(relative.split(path.sep).join("/"), file);
+  }
+  if (pending.size === 0) return { dates };
 
-  // Newest commit first: the first sighting of a file is its last update, the last one its creation.
-  const log = run(
+  const git = spawn(
+    "git",
     [
       "-c",
       "core.quotePath=false",
       "log",
-      "--format=%x00%H%x09%cI",
+      "--format=%x00%cI",
       "--name-only",
       "--",
-      ...byRelative.keys(),
+      ...pending.keys(),
     ],
-    gitRoot,
+    { cwd: gitRoot, stdio: ["ignore", "pipe", "ignore"] },
   );
-  if (log.status !== 0) return history;
-
-  for (const record of log.stdout.split("\0").slice(1)) {
-    const [header = "", ...names] = record.split("\n");
-    const [commit = "", date = ""] = header.split("\t");
-    const entry = { commit, date };
+  let buffer = "";
+  const consume = (record: string) => {
+    const [date = "", ...names] = record.split("\n");
     for (const name of names) {
-      const file = byRelative.get(name);
-      if (!file) continue;
-      const existing = history.get(file);
-      history.set(file, { updated: existing?.updated ?? entry, created: entry });
+      const file = pending.get(name);
+      if (file === undefined) continue;
+      dates.set(file, date);
+      pending.delete(name);
     }
-  }
-  return history;
-}
+  };
 
-/**
- * Permalink to `filePath` (relative to the config root) at the current commit,
- * or `undefined` without a known web remote or for files outside the repository.
- */
-export function sourceUrl(git: GitInfo, filePath: string, line?: number): string | undefined {
-  const webUrl = git.remote?.webUrl;
-  if (!webUrl) return undefined;
-  const repoPath = path.posix.join(git.root, filePath);
-  if (repoPath.startsWith("..") || repoPath.split("/").includes("node_modules")) return undefined;
-
-  if (new URL(webUrl).hostname === "bitbucket.org") {
-    return `${webUrl}/src/${git.commit}/${repoPath}${line ? `#lines-${line}` : ""}`;
-  }
-  return `${webUrl}/blob/${git.commit}/${repoPath}${line ? `#L${line}` : ""}`;
+  await new Promise<void>((resolve) => {
+    git.on("error", () => resolve());
+    git.on("close", () => resolve());
+    git.stdout.setEncoding("utf-8");
+    git.stdout.on("data", (chunk: string) => {
+      buffer += chunk;
+      // A record runs up to the next NUL, so the last piece may still be growing.
+      const records = buffer.split("\0");
+      buffer = records.pop() ?? "";
+      for (const record of records) if (record) consume(record);
+      if (pending.size === 0) git.kill();
+    });
+  });
+  if (buffer && pending.size > 0) consume(buffer);
+  return { dates };
 }

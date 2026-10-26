@@ -1,15 +1,16 @@
 import path from "node:path";
 import {
   loadConfig,
-  type ComponentManifest,
+  type ComponentInfo,
   type Config,
-  type GitInfo,
   type Logger,
   type LogLevel,
 } from "@recontentapp/core";
-import type ts from "typescript";
-import { readFileHistory, readGitInfo } from "./git.js";
-import { introspect } from "./introspection/index.js";
+import ts from "typescript";
+import { readHead, readLastUpdated } from "./git.js";
+import { introspect, watchableFiles } from "./introspection/index.js";
+import { readCache, writeCache } from "./introspection/cache.js";
+import { resolveInputs } from "./introspection/program.js";
 import { createLogger } from "./logger.js";
 
 export type Project = {
@@ -17,53 +18,96 @@ export type Project = {
   logger: Logger;
   /** Directory containing the config file. */
   root: string;
-  /** Present when `components` was requested and the config sets `introspection`. */
-  components?: ComponentManifest;
-  git?: GitInfo;
-  /** Present with `components`: reuse as `oldProgram` and watch `files`. */
-  program?: ts.Program;
-  files?: string[];
 };
 
-/**
- * What plugins and `inspect` see: the config's tokens, plus components when
- * introspection is configured and asked for (it builds a TS program, so
- * token-only commands leave it off), plus git metadata when available.
- */
 export async function loadProject(options: {
   configPath: string;
   logLevel?: LogLevel;
-  components: boolean;
-  oldProgram?: ts.Program;
 }): Promise<Project> {
   const config = await loadConfig(options.configPath);
   const logger = createLogger(options.logLevel ?? config.logLevel);
-  const root = path.dirname(options.configPath);
+  return { config, logger, root: path.dirname(options.configPath) };
+}
 
-  const git = readGitInfo(root);
-  if (!git) logger.debug("git: not available, skipping git metadata.");
+export type Components = {
+  /** Sorted by name. */
+  components: ComponentInfo[];
+  /** Already logged; kept to count them. */
+  warnings: string[];
+  /** Files whose change should trigger a rebuild. */
+  watch: string[];
+  /** Pass back as `oldProgram`. Absent when the cache answered. */
+  program?: ts.Program;
+};
 
-  const project: Project = { config, logger, root, ...(git ? { git } : {}) };
-  if (!options.components || !config.introspection) return project;
+/**
+ * Introspects the components of a project whose config sets `introspection`:
+ * from the cache when nothing it was computed from has changed, else by
+ * building a TypeScript program (and writing the cache). Throws when the
+ * introspection setup is broken.
+ */
+export async function loadComponents(
+  project: Project,
+  options: {
+    oldProgram?: ts.Program;
+    /** Absent for `--no-cache`: neither read nor written. `version` is recontent's, since a new one may analyze differently. */
+    cache?: { version: string };
+  },
+): Promise<Components> {
+  const { config, logger, root } = project;
+  const introspection = config.introspection!;
+  const { entry, tsconfigPath } = resolveInputs(introspection, root);
 
-  const { manifest, program, files } = introspect({
-    config: config.introspection,
+  const key =
+    options.cache &&
+    JSON.stringify({
+      recontent: options.cache.version,
+      typescript: ts.version,
+      config: introspection,
+      entry,
+      tsconfigPath,
+      // The last-updated dates move with every commit.
+      head: introspection.history ? readHead(root) : undefined,
+    });
+
+  const cached = key === undefined ? undefined : readCache(root, key);
+  if (cached) {
+    logger.debug("introspection: reused the cache.");
+    for (const warning of cached.warnings) logger.warn(warning);
+    return {
+      components: cached.components,
+      warnings: cached.warnings,
+      watch: watchableFiles(entry, cached.files),
+    };
+  }
+
+  const result = introspect({
+    config: introspection,
     root,
     logger,
     oldProgram: options.oldProgram,
   });
-  for (const warning of manifest.warnings) logger.warn(warning.message);
-
-  if (git) {
-    const history = readFileHistory(
+  const warnings = [...result.warnings];
+  if (introspection.history) {
+    const { dates, warning } = await readLastUpdated(
       root,
-      manifest.components.map((component) => path.resolve(root, component.sourceFilePath)),
+      result.components.map((component) => path.resolve(root, component.sourceFilePath)),
     );
-    for (const component of manifest.components) {
-      const fileHistory = history.get(path.resolve(root, component.sourceFilePath));
-      if (fileHistory) component.history = fileHistory;
+    for (const component of result.components) {
+      const date = dates.get(path.resolve(root, component.sourceFilePath));
+      if (date) component.lastUpdatedAt = date;
     }
+    if (warning) warnings.push(warning);
   }
 
-  return { ...project, components: manifest, program, files };
+  if (key !== undefined) {
+    writeCache(root, key, { components: result.components, warnings, files: result.files });
+  }
+  for (const warning of warnings) logger.warn(warning);
+  return {
+    components: result.components,
+    warnings,
+    watch: watchableFiles(entry, result.files),
+    program: result.program,
+  };
 }

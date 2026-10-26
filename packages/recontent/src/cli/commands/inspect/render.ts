@@ -1,4 +1,4 @@
-import type { ComponentInfo, GitInfo, TokenLayer } from "@recontentapp/core";
+import type { ComponentInfo, TokenLayer } from "@recontentapp/core";
 import { plural } from "../../utils/format.js";
 import { renderComponentMarkdown } from "../../../introspection/markdown.js";
 import { code, escapeText } from "../../../markdown.js";
@@ -15,7 +15,6 @@ export type Overview = {
   tokens: DocToken[];
   themes: string[];
   components?: ComponentInfo[];
-  git?: GitInfo;
 };
 
 function countBy<T>(items: T[], key: (item: T) => string): Record<string, number> {
@@ -37,7 +36,7 @@ const next = (...commands: string[]) =>
   `Next: ${commands.map((command) => code(`recontent inspect ${command}`)).join(" · ")}`;
 
 export function renderOverview(overview: Overview, format: Format): string {
-  const { tokens, themes, components, git } = overview;
+  const { tokens, themes, components } = overview;
   const layers = LAYERS.map((layer) => {
     const inLayer = tokens.filter((token) => token.layer === layer);
     return { layer, count: inLayer.length, types: countBy(inLayer, (token) => token.type) };
@@ -52,7 +51,6 @@ export function renderOverview(overview: Overview, format: Format): string {
         tokens: { total: tokens.length, layers },
         themes,
         ...(components ? { components: components.map((component) => component.name) } : {}),
-        ...(git ? { git } : {}),
       },
       null,
       2,
@@ -65,11 +63,6 @@ export function renderOverview(overview: Overview, format: Format): string {
     `Config: ${code(overview.config)}`,
     `Themes: ${themes.length > 0 ? themes.map(code).join(", ") : "none"}`,
   ];
-  if (git) {
-    lines.push(
-      `Git: ${code(git.commit.slice(0, 7))}${git.branch ? ` on ${code(git.branch)}` : ""}${git.dirty ? " (uncommitted changes)" : ""}`,
-    );
-  }
   lines.push("", `## Tokens (${tokens.length})`, "");
   if (tokens.length === 0) {
     lines.push("_No tokens defined._");
@@ -179,12 +172,12 @@ export function renderTokens(
 
 export function renderComponents(
   components: ComponentInfo[],
-  options: { format: Format; git?: GitInfo; summary: boolean },
+  options: { format: Format; summary: boolean },
 ): string {
-  const { format, git, summary } = options;
+  const { format, summary } = options;
   if (format === "json") {
     return JSON.stringify(
-      { schemaVersion: SCHEMA_VERSION, kind: "components", components, ...(git ? { git } : {}) },
+      { schemaVersion: SCHEMA_VERSION, kind: "components", components },
       null,
       2,
     );
@@ -198,7 +191,7 @@ export function renderComponents(
         ...(component.deprecated ? ["deprecated"] : []),
       ].join(", ");
       const description = component.description
-        ? ` — ${escapeText(component.description).slice(0, 100)}`
+        ? ` — ${escapeText(component.description.slice(0, 100))}`
         : "";
       lines.push(`- ${code(component.name)} (${tags})${description}`);
     }
@@ -207,5 +200,5 @@ export function renderComponents(
   }
 
   if (components.length === 0) return "No components.";
-  return components.map((component) => renderComponentMarkdown(component, git, 2)).join("\n\n");
+  return components.map((component) => renderComponentMarkdown(component, 2)).join("\n\n");
 }

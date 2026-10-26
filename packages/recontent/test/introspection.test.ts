@@ -1,22 +1,23 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { beforeAll, describe, expect, test } from "@jest/globals";
-import type { ComponentInfo, ComponentManifest, PropInfo } from "@recontentapp/core";
+import type { ComponentInfo, PropInfo } from "@recontentapp/core";
 import { introspect } from "../src/introspection/index.js";
 
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), "fixtures/introspection");
 const logger = { info() {}, warn() {}, error() {}, debug() {} };
 
-let manifest: ComponentManifest;
+let components: ComponentInfo[];
+let warnings: string[];
 let byName: Map<string, ComponentInfo>;
 
 beforeAll(() => {
-  ({ manifest } = introspect({
+  ({ components, warnings } = introspect({
     config: { entry: "src/index.ts", exclude: ["Excluded"] },
     root,
     logger,
   }));
-  byName = new Map(manifest.components.map((component) => [component.name, component]));
+  byName = new Map(components.map((component) => [component.name, component]));
 }, 60_000);
 
 function component(name: string): ComponentInfo {
@@ -33,11 +34,10 @@ function prop(componentName: string, name: string): PropInfo {
 
 const names = (componentName: string) => component(componentName).props.map((p) => p.name);
 
-describe("manifest", () => {
-  test("is versioned and sorted by component name", () => {
-    expect(manifest.schemaVersion).toBe("1");
-    const sorted = manifest.components.map((c) => c.name).sort((a, b) => a.localeCompare(b));
-    expect(manifest.components.map((c) => c.name)).toEqual(sorted);
+describe("components", () => {
+  test("are sorted by name", () => {
+    const sorted = components.map((c) => c.name).sort((a, b) => a.localeCompare(b));
+    expect(components.map((c) => c.name)).toEqual(sorted);
   });
 
   test("props are sorted by name and source paths are relative to the root", () => {
@@ -104,7 +104,7 @@ describe("B. wrappers and HOCs", () => {
 
   test.each(["B3", "B4", "B5", "B10"])("%s: ref comes from @types/react", (name) => {
     expect(component(name).inherits).toEqual([
-      expect.objectContaining({ name: "RefAttributes", package: "@types/react" }),
+      { name: "RefAttributes", package: "@types/react", props: expect.arrayContaining(["ref"]) },
     ]);
   });
 
@@ -155,9 +155,13 @@ describe("D. props type shapes", () => {
   test("D1 interface extending HTML attributes", () => {
     expect(names("D1")).toEqual(["variant"]);
     expect(component("D1").inherits).toEqual([
-      { name: "ButtonHTMLAttributes", package: "@types/react", count: expect.any(Number) },
+      { name: "ButtonHTMLAttributes", package: "@types/react", props: expect.any(Array) },
     ]);
-    expect(component("D1").inherits[0]!.count).toBeGreaterThan(200);
+    const { props } = component("D1").inherits[0]!;
+    expect(props.length).toBeGreaterThan(200);
+    // Names from the group itself and from the bases folded into it, sorted.
+    expect(props).toEqual(expect.arrayContaining(["type", "onClick", "aria-label"]));
+    expect(props).toEqual([...props].sort((a, b) => a.localeCompare(b)));
   });
 
   test("D2 ComponentProps<'button'> & own", () => {
@@ -171,14 +175,13 @@ describe("D. props type shapes", () => {
     expect(prop("D3", "size")).toMatchObject({ type: "Size", values: ["sm", "md", "lg"] });
     const inherited = component("D3").inherits;
     expect(inherited).toEqual([expect.objectContaining({ name: "InputHTMLAttributes" })]);
-    const html = component("D1").inherits[0]!.count;
-    expect(inherited[0]!.count).toBeGreaterThan(html);
+    expect(inherited[0]!.props.length).toBeGreaterThan(component("D1").inherits[0]!.props.length);
   });
 
   test("D4 PropsWithChildren: children is inherited", () => {
     expect(names("D4")).toEqual(["label"]);
     expect(component("D4").inherits).toEqual([
-      { name: "PropsWithChildren", package: "@types/react", count: 1 },
+      { name: "PropsWithChildren", package: "@types/react", props: ["children"] },
     ]);
   });
 
@@ -208,6 +211,29 @@ describe("D. props type shapes", () => {
   test("D8 generic component keeps its type parameter", () => {
     expect(prop("D8", "options").type).toBe("T[]");
     expect(prop("D8", "value").type).toBe("T");
+    expect(component("D8").typeParameters).toEqual([{ name: "T" }]);
+  });
+
+  test("D14 a local alias is resolved, a library alias and a plain type are not", () => {
+    const width = prop("D14", "width");
+    expect(width.type).toBe("Width");
+    // The checker orders union members by type id, not as written.
+    expect(width.resolved?.split(" | ").sort()).toEqual(
+      ['"100%"', '"auto"', "(string & {})", "number"].sort(),
+    );
+    expect(prop("D14", "onClick").type).toBe("MouseEventHandler<HTMLButtonElement>");
+    expect(prop("D14", "onClick").resolved).toBeUndefined();
+    expect(prop("D8", "options").resolved).toBeUndefined();
+    // A literal union is already in `values`.
+    expect(prop("D6", "density").resolved).toBeUndefined();
+  });
+
+  test("D15 type parameters keep their constraint and default", () => {
+    expect(component("D15").typeParameters).toEqual([
+      { name: "Value", constraint: "string" },
+      { name: "Fallback", default: "Value" },
+    ]);
+    expect(component("D13").typeParameters).toBeUndefined();
   });
 
   test("D9 polymorphic as prop", () => {
@@ -232,7 +258,7 @@ describe("D. props type shapes", () => {
 
   test("D13 no props", () => {
     expect(component("D13")).toMatchObject({ props: [], inherits: [] });
-    expect(manifest.warnings.some((w) => w.component === "D13")).toBe(false);
+    expect(warnings.some((warning) => warning.startsWith("D13 "))).toBe(false);
   });
 });
 
@@ -257,12 +283,7 @@ describe("E. wrapping external libraries", () => {
     const popup = component("Dialog.Popup");
     expect(popup.props).toEqual([]);
     expect(popup.inherits.some((group) => group.package === "@base-ui/react")).toBe(true);
-    expect(manifest.warnings).toContainEqual(
-      expect.objectContaining({
-        component: "Dialog.Popup",
-        message: expect.stringContaining("no own props"),
-      }),
-    );
+    expect(warnings).toContainEqual(expect.stringMatching(/^Dialog\.Popup has no own props/));
   });
 });
 
@@ -305,6 +326,23 @@ describe("G. things that are not components", () => {
     expect(byName.has("Excluded")).toBe(false);
   });
 
+  test("G7 an untyped JS function and a class that only has render are accepted, with a warning", () => {
+    expect(byName.has("Untyped")).toBe(true);
+    expect(byName.has("Printer")).toBe(true);
+    expect(warnings).toContainEqual(
+      expect.stringMatching(/^Untyped is treated as a component only because it returns `any`/),
+    );
+    expect(warnings).toContainEqual(
+      expect.stringMatching(
+        /^Printer is treated as a component only because it is a class with a `render` member/,
+      ),
+    );
+    // Real components are not second-guessed, nor are class components.
+    expect(warnings.filter((warning) => warning.includes("treated as a component"))).toHaveLength(
+      2,
+    );
+  });
+
   test("no component name is lowercase or contains a stray separator", () => {
     for (const name of byName.keys())
       expect(name).toMatch(/^[A-Z][A-Za-z0-9]*(\.[A-Z][A-Za-z0-9]*)?$/);
@@ -337,4 +375,38 @@ describe("H. failure modes", () => {
       introspect({ config: { entry: "src/index.ts", tsconfig: "nope.json" }, root, logger }),
     ).toThrow(path.join(root, "nope.json"));
   });
+});
+
+describe("performance and setup", () => {
+  test("a rebuild with oldProgram reuses the parsed source files", () => {
+    const first = introspect({ config: { entry: "src/index.ts" }, root, logger });
+    const second = introspect({
+      config: { entry: "src/index.ts" },
+      root,
+      logger,
+      oldProgram: first.program,
+    });
+
+    const reused = second.program
+      .getSourceFiles()
+      .filter((file) => first.program.getSourceFile(file.fileName) === file);
+    expect(reused.length).toBe(second.program.getSourceFiles().length);
+  }, 60_000);
+
+  test("zero components behind PascalCase exports is a warning, not silence", () => {
+    const empty = path.join(root, "../introspection-empty");
+    const result = introspect({ config: { entry: "src/index.ts" }, root: empty, logger });
+
+    expect(result.components).toEqual([]);
+    expect(result.warnings).toEqual([
+      expect.stringMatching(/No React components found.*1 PascalCase/),
+    ]);
+  });
+
+  test("the files it depends on include declarations from node_modules and the tsconfig", () => {
+    const { files } = introspect({ config: { entry: "src/index.ts" }, root, logger });
+
+    expect(files).toContain(path.join(root, "tsconfig.json"));
+    expect(files.some((file) => /@types[\\/]react[\\/]index\.d\.ts$/.test(file))).toBe(true);
+  }, 60_000);
 });

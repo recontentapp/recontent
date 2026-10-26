@@ -192,5 +192,5 @@ export function generateCssFiles(
 }
 
 export function css(options: CssPluginOptions): RecontentPlugin {
-  return outputPlugin("recontent:css", options, generateCssFiles);
+  return outputPlugin("recontent:css", ["tokens"], options, generateCssFiles);
 }
