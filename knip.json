@@ -5,7 +5,7 @@
       "project": ["src/**/*.ts"]
     },
     "packages/recontent": {
-      "project": ["src/**/*.{ts,tsx}"],
+      "project": ["src/**/*.{ts,tsx,css}"],
       "ignoreDependencies": [
         "@base-ui/react",
         "@stylexjs/stylex",
@@ -30,8 +30,7 @@
     },
     "apps/tailwind-playground": {
       "entry": ["recontent.config.ts"],
-      "project": ["src/**/*.{ts,tsx}", "*.ts"],
-      "ignoreDependencies": ["tailwindcss"]
+      "project": ["src/**/*.{ts,tsx,css}", "*.ts"]
     },
     "apps/docs": {
       "entry": [

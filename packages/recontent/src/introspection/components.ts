@@ -11,7 +11,7 @@ export type Analysis = {
 };
 
 /** A signature through which a type renders, and why it is only a guess when it is one. */
-export type Match = { signature: ts.Signature; loose?: string };
+type Match = { signature: ts.Signature; loose?: string };
 
 export type Candidate = {
   /** Export name, dotted for subcomponents. */
@@ -79,7 +79,7 @@ function isReactClass(checker: ts.TypeChecker, type: ts.Type): boolean {
  * Works the same for plain functions, `FC`, `memo`, `forwardRef`, `lazy` and
  * classes, because the checker has already resolved all of them.
  */
-export function componentSignatures(analysis: Analysis, type: ts.Type): Match[] {
+function componentSignatures(analysis: Analysis, type: ts.Type): Match[] {
   const { checker, reactNode } = analysis;
   const matches: Match[] = [];
 

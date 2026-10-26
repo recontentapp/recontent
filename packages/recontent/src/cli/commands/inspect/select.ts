@@ -47,7 +47,7 @@ export function closestMatches(input: string, candidates: Iterable<string>): str
 }
 
 /** What was asked for that does not exist, with the closest things that do. */
-export type SelectionError = { message: string; input: string; suggestions: string[] };
+type SelectionError = { message: string; input: string; suggestions: string[] };
 
 export type Selection<T> = { selected: T[]; errors: SelectionError[] };
 
