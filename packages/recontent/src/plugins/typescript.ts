@@ -149,5 +149,5 @@ export function generateTypeScriptFiles(
 }
 
 export function typescript(options: TypeScriptPluginOptions): RecontentPlugin {
-  return outputPlugin("recontent:typescript", options, generateTypeScriptFiles);
+  return outputPlugin("recontent:typescript", ["tokens"], options, generateTypeScriptFiles);
 }

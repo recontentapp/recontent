@@ -41,8 +41,11 @@
     "@swc/jest": "0.2.39",
     "@tailwindcss/node": "4.3.3",
     "@types/node": "24.1.0",
+    "@types/react": "19.3.0",
     "@typescript/native": "npm:typescript@7.0.2",
+    "class-variance-authority": "0.7.1",
     "jest": "30.2.0",
+    "react": "19.3.0",
     "tailwindcss": "4.3.3",
     "tsdown": "0.22.9"
   }

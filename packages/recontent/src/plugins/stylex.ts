@@ -573,5 +573,5 @@ export function generateStylexFiles(
 }
 
 export function stylex(options: StylexPluginOptions): RecontentPlugin {
-  return outputPlugin("recontent:stylex", options, generateStylexFiles);
+  return outputPlugin("recontent:stylex", ["tokens"], options, generateStylexFiles);
 }

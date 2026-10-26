@@ -8,14 +8,15 @@ description: "Run the configured plugins and write their output."
 Loads the config, runs every plugin and writes the files they produce.
 
 ```bash
-recontent build [--watch]
+recontent build [--watch] [--no-cache]
 ```
 
 ## Options
 
-| Option        | Description                                                              |
-| ------------- | ------------------------------------------------------------------------ |
-| `-w, --watch` | Rerun the build whenever the config file, or a file it imports, changes. |
+| Option        | Description                                                                    |
+| ------------- | ------------------------------------------------------------------------------ |
+| `-w, --watch` | Rerun the build whenever the config file, or a file it imports, changes.       |
+| `--no-cache`  | Neither read nor write the [introspection cache](/tokens/configuration#cache). |
 
 Uses the [global options](/cli#global-options) `-c`, `--cwd` and `--log-level`.
 
@@ -25,6 +26,11 @@ Uses the [global options](/cli#global-options) `-c`, `--cwd` and `--log-level`.
 2. Checks the aliases. A broken alias (the target does not exist) or a circular one is an error.
 3. Runs each plugin's `validate`. If any plugin reports an error, nothing is written.
 4. Runs each plugin's `generate` and writes the files, creating directories as needed.
+
+Components are [introspected](/tokens/configuration#introspection) only when a configured plugin
+declares `"components"` or `"components?"` in `dependsOn`, as `docs()` does, and the config has an `introspection` block. If that fails, the plugins that depend on
+components fail with the error attributed to them, and the others still run and write their files.
+A plugin that requires components (`"components"`) in a config without `introspection` is a config error; `docs()` only uses them when they are there.
 
 A file whose content is unchanged is not rewritten (`Skipped … (unchanged)`), and a file a plugin
 marks as write-once is never overwritten (`Skipped … (already exists)`). No file outside the

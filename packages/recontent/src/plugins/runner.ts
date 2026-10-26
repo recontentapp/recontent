@@ -1,5 +1,6 @@
 import path from "node:path";
 import type {
+  ComponentInfo,
   Config,
   EmittedFile,
   Logger,
@@ -27,39 +28,71 @@ export function sortPlugins(plugins: RecontentPlugin[]): RecontentPlugin[] {
   return [...pre, ...normal, ...post];
 }
 
+function consumesComponents(plugin: RecontentPlugin): boolean {
+  return plugin.dependsOn.includes("components") || plugin.dependsOn.includes("components?");
+}
+
+/**
+ * Whether the project needs introspecting: it has an `introspection` block and
+ * a plugin consumes components. A plugin that requires them (`"components"`,
+ * not `"components?"`) while the config has no block is a config error.
+ */
+export function needsComponents(config: Config): boolean {
+  const required = config.plugins.find((plugin) => plugin.dependsOn.includes("components"));
+  if (required && !config.introspection) {
+    throw new Error(
+      `\`${required.name}\` depends on components; add \`introspection\` to defineConfig().`,
+    );
+  }
+  return config.introspection !== undefined && config.plugins.some(consumesComponents);
+}
+
 export type RunPluginsOptions = {
   root: string;
   mode: PluginContext["mode"];
   logger: Logger;
+  /** Handed to the plugins that depend on components. */
+  components?: ComponentInfo[];
+  /** Why `components` is missing: the plugins that depend on it fail with this message, the others still run. */
+  componentsError?: string;
 };
 
 export type RunPluginsResult = {
   files: EmittedFile[];
   diagnostics: PluginDiagnostic[];
+  /** Plugins that could not run, as `[plugin] message`. Their absence does not stop the other plugins' files. */
+  failures: string[];
 };
 
 export async function runPlugins(
   config: Config,
   options: RunPluginsOptions,
 ): Promise<RunPluginsResult> {
-  const plugins = sortPlugins(config.plugins);
-  const ctx: PluginContext = {
+  const failures: string[] = [];
+  const plugins = sortPlugins(config.plugins).filter((plugin) => {
+    const blocked = options.componentsError !== undefined && consumesComponents(plugin);
+    if (blocked) failures.push(`[${plugin.name}] ${options.componentsError}`);
+    return !blocked;
+  });
+  const base: PluginContext = {
     registry: config.registry,
     themes: config.themes,
     root: options.root,
     logger: options.logger,
     mode: options.mode,
   };
+  const contextFor = (plugin: RecontentPlugin): PluginContext =>
+    consumesComponents(plugin) ? { ...base, components: options.components } : base;
 
   for (const plugin of plugins) {
-    await plugin.buildStart?.(ctx);
+    await plugin.buildStart?.(contextFor(plugin));
   }
 
   const diagnostics: PluginDiagnostic[] = [];
   for (const plugin of plugins) {
     if (!plugin.validate) continue;
     try {
-      const pluginDiagnostics = await plugin.validate(ctx);
+      const pluginDiagnostics = await plugin.validate(contextFor(plugin));
       diagnostics.push(...pluginDiagnostics);
     } catch (error) {
       if (error instanceof MissingDesignTokensError) {
@@ -71,7 +104,7 @@ export async function runPlugins(
   }
 
   if (diagnostics.some((diagnostic) => diagnostic.severity === "error")) {
-    return { files: [], diagnostics };
+    return { files: [], diagnostics, failures };
   }
 
   const files: EmittedFile[] = [];
@@ -80,7 +113,7 @@ export async function runPlugins(
     if (!plugin.generate) continue;
     let pluginFiles: EmittedFile[];
     try {
-      pluginFiles = await plugin.generate(ctx);
+      pluginFiles = await plugin.generate(contextFor(plugin));
     } catch (error) {
       if (error instanceof MissingDesignTokensError) {
         const prefixedErrors = error.errors.map((message) => `[${plugin.name}] ${message}`);
@@ -109,8 +142,8 @@ export async function runPlugins(
   }
 
   for (const plugin of plugins) {
-    await plugin.buildEnd?.({ ...ctx, files });
+    await plugin.buildEnd?.({ ...contextFor(plugin), files });
   }
 
-  return { files, diagnostics };
+  return { files, diagnostics, failures };
 }

@@ -32,5 +32,5 @@ export function docs(options: DocsPluginOptions): RecontentPlugin {
   if (!(options.html ?? true) && !(options.markdown ?? false)) {
     throw new Error("docs() needs at least one of `html` or `markdown` enabled.");
   }
-  return outputPlugin("recontent:docs", options, generateDocsFiles);
+  return outputPlugin("recontent:docs", ["tokens", "components?"], options, generateDocsFiles);
 }

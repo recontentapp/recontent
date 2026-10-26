@@ -516,7 +516,7 @@ export function generateTailwindFiles(
 
 export function tailwind(options: TailwindPluginOptions): RecontentPlugin {
   return {
-    ...outputPlugin("recontent:tailwind", options, generateTailwindFiles),
+    ...outputPlugin("recontent:tailwind", ["tokens"], options, generateTailwindFiles),
     validate: (ctx: PluginContext) =>
       buildTailwindMapping(ctx.registry, ctx.themes, options).diagnostics,
   };

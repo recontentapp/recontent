@@ -1,63 +1,56 @@
-export const INTROSPECTION_SCHEMA_VERSION = "1";
-
 export type IntrospectionConfigInput = {
-  tsConfigPath: string;
-  componentsConfigPath: string;
+  /** Barrel file, relative to the config. Every export that resolves to a React component is introspected. */
+  entry: string;
+  /** Defaults to the nearest tsconfig.json upward from `entry`. */
+  tsconfig?: string;
+  /** Export names to skip. */
+  exclude?: string[];
+  /** Read each component file's last commit date into `lastUpdatedAt`. Defaults to `false`. */
+  history?: boolean;
 };
-export type NamedProps = {
-  type: "named";
+
+export type PropInfo = {
   name: string;
+  /** Declared type text when there is a type node, else the checker's rendering. */
+  type: string;
+  /** `type` with a project-local alias expanded, e.g. `Width` → `number | "auto"`. Only set when it differs. */
+  resolved?: string;
+  /** Set when the non-nullable type is a union of literals. */
+  values?: (string | number | boolean)[];
+  required: boolean;
+  /** `@default` tag, else the destructuring default in the implementation, as written in source (`"\"solid\""`), not evaluated: unlike `values`, which holds JSON values. */
+  defaultValue?: string;
+  description?: string;
+  deprecated?: true | string;
+};
+
+export type InheritedProps = {
+  /** The most derived type the props come from, e.g. `ButtonHTMLAttributes`. */
+  name: string;
+  package?: string;
+  /** Sorted prop names. */
+  props: string[];
+};
+
+export type TypeParameterInfo = {
+  name: string;
+  constraint?: string;
+  default?: string;
+};
+
+export type ComponentInfo = {
+  /** Export name, dotted for subcomponents (`Tabs.Item`). */
+  name: string;
+  typeParameters?: TypeParameterInfo[];
+  /** Posix path relative to the config root. */
   sourceFilePath: string;
-  checksum: string;
-};
-export type InlinePropsDependency = {
-  name: string;
-  sourceFilePath: string;
-  checksum: string;
-};
-export type InlineProps = {
-  type: "inline";
-  content: string;
-  dependencies: InlinePropsDependency[];
-};
-export type UnverifiedComponentDeclaration = {
-  name: string;
-  sourceFilePath: string | null;
-  props: NamedProps | InlineProps | null;
-};
-export type ComponentDeclaration = {
-  name: string;
-  sourceFilePath: string;
-  props: NamedProps | InlineProps;
-};
-export type InterfaceMember = {
-  name: string;
-  value: string;
-  isOptional: boolean;
-  isDeprecated: boolean;
-  defaultValue: string | null;
-  description: string | null;
-};
-export type Dependency = { sourceFilePath: string; name: string; checksum: string };
-export type DictItem = {
-  name: string;
-  generics: string | null;
-  sourceFilePath: string;
-  description: string | null;
-  isDeprecated: boolean;
-  type: "interface" | "enum" | "type";
-  value: string | null;
-  members: InterfaceMember[];
-  dependencies: Dependency[];
-  external?: boolean;
-  packageName?: string;
-};
-export type Checksum = string;
-export type Dict = Record<Checksum, DictItem>;
-export type IntrospectionLog = { message: string; context: Record<string, unknown> };
-export type IntrospectionResult = {
-  schemaVersion: string;
-  componentDeclarations: ComponentDeclaration[];
-  dict: Dict;
-  warnings: IntrospectionLog[];
+  /** 1-based line of the declaration. */
+  line: number;
+  /** ISO 8601 date of the last commit touching `sourceFilePath`. Only with `introspection.history`. */
+  lastUpdatedAt?: string;
+  description?: string;
+  deprecated?: true | string;
+  /** Props declared outside node_modules, sorted by name. */
+  props: PropInfo[];
+  inherits: InheritedProps[];
 };

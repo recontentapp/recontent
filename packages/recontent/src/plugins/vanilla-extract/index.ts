@@ -6,5 +6,10 @@ export type { VanillaExtractPluginOptions };
 export type { BuiltInComponentOptions, RegistryComponentName } from "./registry/manifest.js";
 
 export function vanillaExtract(options: VanillaExtractPluginOptions): RecontentPlugin {
-  return outputPlugin("recontent:vanilla-extract", options, generateVanillaExtractFiles);
+  return outputPlugin(
+    "recontent:vanilla-extract",
+    ["tokens"],
+    options,
+    generateVanillaExtractFiles,
+  );
 }

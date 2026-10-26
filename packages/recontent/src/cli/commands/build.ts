@@ -1,9 +1,11 @@
 import fs from "node:fs";
 import path from "node:path";
+import type { ComponentInfo, LogLevel } from "@recontentapp/core";
+import type ts from "typescript";
 import { createLogger } from "../../logger.js";
 import { MissingDesignTokensError } from "../../plugins/errors.js";
-import { runPlugins } from "../../plugins/runner.js";
-import { loadConfig, type LogLevel } from "@recontentapp/core";
+import { needsComponents, runPlugins } from "../../plugins/runner.js";
+import { loadComponents, loadProject } from "../../project.js";
 import { collectLocalImports } from "../config-graph.js";
 import { diagnoseRegistry } from "../registry-diagnostics.js";
 import { exitWithError, reportError, summarizeDiagnostics } from "../utils/exit.js";
@@ -15,6 +17,8 @@ export type BuildOptions = {
   configPath: string;
   logLevel?: LogLevel;
   watch?: boolean;
+  /** Where the introspection cache is read and written; absent for `--no-cache`. */
+  cache?: { version: string };
 };
 
 export async function runBuild(options: BuildOptions): Promise<void> {
@@ -26,12 +30,17 @@ export async function runBuild(options: BuildOptions): Promise<void> {
   await buildOnce(options, { exitOnError: true });
 }
 
+/** What a build leaves behind for the next one in watch mode. */
+type BuildState = { program?: ts.Program; watch?: string[] };
+
 async function watchBuild(options: BuildOptions): Promise<void> {
   const logger = createLogger(options.logLevel);
 
+  let state: BuildState = {};
+
   const safeBuild = async () => {
     try {
-      await buildOnce(options, { exitOnError: false });
+      state = await buildOnce(options, { exitOnError: false, previous: state });
     } catch (error) {
       reportError(error, options.logLevel === "debug");
     }
@@ -57,6 +66,8 @@ async function watchBuild(options: BuildOptions): Promise<void> {
       files = new Set([options.configPath]);
     }
     files.add(options.configPath);
+    // Editing a component changes the docs generated from its props.
+    for (const file of state.watch ?? []) files.add(file);
 
     const sameSet =
       files.size === trackedFiles.size && [...files].every((file) => trackedFiles.has(file));
@@ -127,15 +138,16 @@ async function watchBuild(options: BuildOptions): Promise<void> {
 
 async function buildOnce(
   options: BuildOptions,
-  { exitOnError }: { exitOnError: boolean },
-): Promise<void> {
-  const config = await loadConfig(options.configPath);
-  const effectiveLogLevel = options.logLevel ?? config.logLevel;
-  const logger = createLogger(effectiveLogLevel);
+  { exitOnError, previous = {} }: { exitOnError: boolean; previous?: BuildState },
+): Promise<BuildState> {
+  const project = await loadProject({ configPath: options.configPath, logLevel: options.logLevel });
+  const { config, logger, root } = project;
+  let state = previous;
   for (const diagnostic of config.diagnostics) {
     logger.warn(diagnostic.message);
   }
   let warnings = config.diagnostics.length;
+  const wantsComponents = needsComponents(config);
 
   // Each diagnostic is logged where it is found; aborting only adds the
   // closing "N errors, M warnings" line, so no error is reported twice.
@@ -154,33 +166,56 @@ async function buildOnce(
       logger.error(diagnostic.message);
     }
     abort(registryDiagnostics.length);
-    return;
+    return state;
   }
 
   logger.debug(
     `Loaded build config with ${config.plugins.length} plugin(s), ${config.registry.size} token(s), and ${Object.keys(config.themes).length} theme(s).`,
   );
 
-  const configDir = path.dirname(options.configPath);
+  const configDir = root;
 
   if (config.plugins.length === 0) {
     logger.warn(
       `No plugins configured in ${displayPath(options.cwd, options.configPath)}; add some from "recontent/plugins" to generate output.`,
     );
-    return;
+    return state;
+  }
+
+  // Only when a plugin consumes them, and a failure only fails those plugins.
+  let components: ComponentInfo[] | undefined;
+  let componentsError: string | undefined;
+  if (wantsComponents) {
+    try {
+      const loaded = await loadComponents(project, {
+        oldProgram: state.program,
+        cache: options.cache,
+      });
+      components = loaded.components;
+      warnings += loaded.warnings.length;
+      state = { program: loaded.program ?? state.program, watch: loaded.watch };
+    } catch (error) {
+      componentsError = error instanceof Error ? error.message : String(error);
+    }
   }
 
   const mode = options.watch ? "watch" : "build";
   let result;
   try {
-    result = await runPlugins(config, { root: configDir, mode, logger });
+    result = await runPlugins(config, {
+      root: configDir,
+      mode,
+      logger,
+      components,
+      componentsError,
+    });
   } catch (error) {
     if (error instanceof MissingDesignTokensError) {
       for (const message of error.errors) {
         logger.error(message);
       }
       abort(error.errors.length);
-      return;
+      return state;
     }
     throw error;
   }
@@ -196,9 +231,12 @@ async function buildOnce(
     }
   }
 
+  const failed = result.failures.length;
+  for (const failure of result.failures) logger.error(failure);
+
   if (errors > 0) {
-    abort(errors);
-    return;
+    abort(errors + failed);
+    return state;
   }
 
   let written = 0;
@@ -222,4 +260,6 @@ async function buildOnce(
     }
   }
   logger.info(`Wrote ${plural(written, "file")}${skipped > 0 ? ` (${skipped} skipped)` : ""}`);
+  if (failed > 0) abort(failed);
+  return state;
 }

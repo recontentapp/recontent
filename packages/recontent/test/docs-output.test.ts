@@ -7,7 +7,7 @@ import {
   tokens,
 } from "../src/index.js";
 import { generateDocsFiles } from "../src/plugins/docs/index.js";
-import type { PluginContext } from "@recontentapp/core";
+import type { ComponentInfo, PluginContext } from "@recontentapp/core";
 import { goldenConfig } from "./helpers/fixtures.js";
 
 function ctxFor(config: ReturnType<typeof goldenConfig>["config"]): PluginContext {
@@ -156,5 +156,136 @@ describe("design.md", () => {
       tokens: { ref, system: defineSystemTokens({}), components: {} },
     });
     expect(render(config).md).toContain("one \\| two<br>three");
+  });
+});
+
+describe("components", () => {
+  const components: ComponentInfo[] = [
+    {
+      name: "Button",
+      sourceFilePath: "src/button.tsx",
+      line: 12,
+      lastUpdatedAt: "2024-03-01T10:00:00Z",
+      description: "Triggers an action.",
+      props: [
+        {
+          name: "variant",
+          type: "Variant",
+          values: ["solid", "outline"],
+          required: false,
+          defaultValue: '"solid"',
+          description: "Visual weight.",
+        },
+        { name: "label", type: "string", required: true, deprecated: "Use children." },
+        {
+          name: "width",
+          type: "Width",
+          resolved: 'number | "auto"',
+          required: false,
+        },
+      ],
+      inherits: [
+        {
+          name: "ButtonHTMLAttributes",
+          package: "@types/react",
+          props: ["aria-label", "onClick", "type"],
+        },
+      ],
+    },
+    {
+      name: "Accordion",
+      typeParameters: [{ name: "Value", constraint: "string" }],
+      sourceFilePath: "src/accordion.tsx",
+      line: 3,
+      props: [],
+      inherits: [],
+    },
+    {
+      name: "Spacer",
+      sourceFilePath: "src/spacer.tsx",
+      line: 1,
+      deprecated: true,
+      props: [],
+      inherits: [],
+    },
+  ];
+  const withComponents = { ...ctxFor(goldenConfig().config), components };
+
+  function renderWith(ctx: PluginContext) {
+    const files = generateDocsFiles(ctx, { outDir: "docs", markdown: true });
+    const byName = Object.fromEntries(files.map((f) => [f.filename, f.content]));
+    return { html: byName["design.html"]!, md: byName["design.md"]! };
+  }
+
+  test("markdown gets a props table, an inherited-props line and a plain source line", () => {
+    const { md } = renderWith(withComponents);
+
+    expect(md).toContain("## Component APIs");
+    expect(md).toContain("### Button");
+    expect(md).toContain("Triggers an action.");
+    expect(md).toContain("Source: `src/button.tsx:12` · Updated 2024-03-01");
+    expect(md).toContain(
+      '| `variant` | `"solid" \\| "outline"` | `"solid"` | no | Visual weight. |',
+    );
+    expect(md).toContain("| `label` | `string` | — | yes | **Deprecated**: Use children. |");
+    expect(md).toContain("Also accepts: `ButtonHTMLAttributes` (3 props from @types/react)");
+    expect(md).toContain("> ⚠️ Deprecated");
+  });
+
+  test("a resolved alias is shown under the type, and type parameters next to the name", () => {
+    const { md, html } = renderWith(withComponents);
+
+    expect(md).toContain('| `width` | `Width`<br>`number \\| "auto"` | — | no |  |');
+    expect(md).toContain("### Accordion\\<Value extends string\\>");
+    expect(html).toContain("Accordion&lt;Value extends string&gt;");
+    expect(html).toContain("<code>Width</code><br><code>number | &quot;auto&quot;</code>");
+  });
+
+  test("html gets a Component APIs tab with a plain source location", () => {
+    const { html } = renderWith(withComponents);
+
+    expect(html).toContain('data-tab="api"');
+    expect(html).toContain('data-panel="api"');
+    expect(html).toContain('id="c-Button"');
+    expect(html).toContain(
+      '<p class="source"><code>src/button.tsx:12</code> · Updated 2024-03-01</p>',
+    );
+    expect(html).not.toContain('<a href="http');
+  });
+
+  test("without lastUpdatedAt there is no date", () => {
+    const { md } = renderWith({
+      ...withComponents,
+      components: [{ ...components[0]!, lastUpdatedAt: undefined }],
+    });
+
+    expect(md).toContain("Source: `src/button.tsx:12`\n");
+    expect(md).not.toContain("Updated");
+  });
+
+  test("output depends on sources and config only: no footer, no repository state", () => {
+    const { md, html } = renderWith(withComponents);
+
+    for (const output of [md, html]) {
+      expect(output).not.toContain("Generated from");
+      expect(output).not.toContain('class="foot"');
+    }
+  });
+
+  test("nothing is added when the context has no components", () => {
+    const plain = renderWith(ctxFor(goldenConfig().config));
+
+    expect(plain.md).not.toContain("Component APIs");
+    expect(plain.html).not.toContain('data-tab="api"');
+  });
+
+  test("component text is escaped in html", () => {
+    const { html } = renderWith({
+      ...withComponents,
+      components: [{ ...components[0]!, description: "<script>alert(1)</script>" }],
+    });
+
+    expect(html).not.toContain("<script>alert(1)</script>");
+    expect(html).toContain("&lt;script&gt;alert(1)&lt;/script&gt;");
   });
 });

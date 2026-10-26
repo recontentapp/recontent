@@ -31,5 +31,6 @@ const dark = defineTheme(system, {
 export default defineConfig({
   tokens: { ref, system, components: {} },
   themes: { dark },
+  introspection: { entry: "src/components/index.ts" },
   plugins: [docs({ outDir: "docs", markdown: true, title: "Acme tokens" })],
 });

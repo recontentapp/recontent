@@ -155,5 +155,5 @@ function generateDtcgFiles(ctx: GeneratorContext, _options: DtcgPluginOptions): 
 }
 
 export function dtcg(options: DtcgPluginOptions): RecontentPlugin {
-  return outputPlugin("recontent:dtcg", options, generateDtcgFiles);
+  return outputPlugin("recontent:dtcg", ["tokens"], options, generateDtcgFiles);
 }

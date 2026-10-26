@@ -12,7 +12,7 @@ import {
   assertHasCommits,
   assertRevision,
   resolveGitRoot,
-} from "../utils/git.js";
+} from "../../git.js";
 
 export type DiffOptions = {
   cwd: string;

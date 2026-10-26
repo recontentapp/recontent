@@ -131,3 +131,52 @@ test("describe on a stamped scale returns a stamped scale with the new metadata"
   expect(described._path).toEqual(["ref", "spacing"]);
   expect(Object.keys(described)).toEqual(["0"]);
 });
+
+test("defineConfig requires tokens or an introspection block", () => {
+  expect(() => defineConfig({})).toThrow(/either tokens or an introspection block/);
+  expect(() => defineConfig({ introspection: { entry: "src/index.ts" } })).not.toThrow();
+});
+
+test("introspection is validated and passed through", () => {
+  const config = defineConfig({
+    introspection: {
+      entry: "src/index.ts",
+      tsconfig: "tsconfig.app.json",
+      exclude: ["Internal"],
+      history: true,
+    },
+  });
+  expect(config.introspection).toEqual({
+    entry: "src/index.ts",
+    tsconfig: "tsconfig.app.json",
+    exclude: ["Internal"],
+    history: true,
+  });
+  expect(config.registry.size).toBe(0);
+
+  expect(() => defineConfig({ introspection: { entry: "" } })).toThrow(/introspection\.entry/);
+  expect(() => defineConfig({ introspection: { entry: "a.ts", tsconfig: "" } })).toThrow(
+    /introspection\.tsconfig/,
+  );
+  expect(() =>
+    defineConfig({ introspection: { entry: "a.ts", exclude: "Button" as never } }),
+  ).toThrow(/introspection\.exclude/);
+  expect(() => defineConfig({ introspection: { entry: "a.ts", exclude: [1 as never] } })).toThrow(
+    /introspection\.exclude/,
+  );
+  expect(() => defineConfig({ introspection: { entry: "a.ts", history: "yes" as never } })).toThrow(
+    /introspection\.history/,
+  );
+});
+
+test("every plugin must declare what it depends on", () => {
+  const tokensOnly = { name: "acme:a", dependsOn: ["tokens"] as ("tokens" | "components")[] };
+  const config = (plugin: unknown) =>
+    defineConfig({ introspection: { entry: "a.ts" }, plugins: plugin as never });
+
+  expect(() => config(tokensOnly)).not.toThrow();
+  expect(() => config({ name: "acme:a" })).toThrow(/"acme:a" must declare `dependsOn`/);
+  expect(() => config({ name: "acme:a", dependsOn: ["tokenz"] })).toThrow(
+    /must declare `dependsOn`/,
+  );
+});

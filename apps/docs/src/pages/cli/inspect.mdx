@@ -1,0 +1,115 @@
+---
+title: "inspect"
+description: "Browse the tokens and components a project defines, for people, agents and scripts."
+---
+
+# inspect
+
+Prints what `recontent.config.ts` defines: its tokens, and its components when
+[`introspection`](/tokens/configuration#introspection) is configured.
+
+```bash
+recontent inspect [--format <format>] [--no-cache]
+recontent inspect tokens [path...] [--type <type>] [--theme <theme>] [--deprecated] [--format <format>]
+recontent inspect components [name...] [--deprecated] [--format <format>] [--no-cache]
+```
+
+Uses the [global options](/cli#global-options) `-c`, `--cwd` and `--log-level`.
+
+## Browsing
+
+Start with the overview, then drill down. Each step prints more about less, so you never have to read
+a whole design system to find one token.
+
+```bash
+recontent inspect                      # counts per layer and type, themes, component names
+recontent inspect tokens               # one row per group, with counts
+recontent inspect tokens system.color  # the tokens at or under system.color, with values and CSS variables
+recontent inspect components           # one line per component
+recontent inspect components Button    # its props: type or allowed values, default, required, notes
+```
+
+Every overview, even an empty one, ends with a `Next:` line that names a command to try.
+
+| Command                        | Without arguments         | With arguments                                                                       |
+| ------------------------------ | ------------------------- | ------------------------------------------------------------------------------------ |
+| `inspect`                      | The overview.             | None.                                                                                |
+| `inspect tokens [path...]`     | Token groups with counts. | Each path is an exact token or a group: `system.color` includes everything under it. |
+| `inspect components [name...]` | One line per component.   | Each name is a component or a family: `Tabs` includes `Tabs.Item`.                   |
+
+Options for `tokens`:
+
+| Option            | Description                                                                            |
+| ----------------- | -------------------------------------------------------------------------------------- |
+| `--type <type>`   | Only tokens of this type, such as `color` or `dimension`. An unknown type is an error. |
+| `--theme <theme>` | Show only this theme's column next to the default value. An unknown theme is an error. |
+| `--deprecated`    | Only deprecated tokens.                                                                |
+
+`components` takes `--deprecated` too. A filter that matches nothing (a valid type no token has,
+`--deprecated` with nothing deprecated) prints an empty result and exits `0`.
+
+`--no-cache` (for `inspect` and `inspect components`) neither reads nor writes the
+[introspection cache](/tokens/configuration#cache).
+
+A token is printed with its path, type, value, CSS variable and notes (alias, description,
+deprecation), and its value in each theme that overrides it. A component is printed with its source
+location (and the date of its last commit with [`history`](/tokens/configuration#history)) and a
+table of its **own** props, with the expansion of your own type aliases under the type. Props
+inherited from outside the project, such as the 260 attributes of `ButtonHTMLAttributes`, are
+summarized on an `Also accepts:` line instead of listed; `--format json` lists their names.
+
+## For agents
+
+The output is plain markdown, which coding agents read well, and it is designed to be used without
+reading source:
+
+- identifiers are printed exactly as they are used: token paths, CSS variables, component and prop names;
+- the drill-down keeps each answer small, so an agent can ask for `system.color` or `Select` and nothing else;
+- an unknown path, name, type or theme exits `2` and suggests the closest matches on stderr, so a typo is
+  recoverable:
+
+  ```text
+  error: No token or group matches "system.colr". Did you mean `system.color`?
+  ```
+
+`recontent --help` lists the command, and `recontent inspect --help` explains the drill-down.
+
+## For scripts
+
+`--format json` prints one JSON document with the **full detail of the whole selection**, never a
+summary, so `recontent inspect tokens --format json` is every token.
+
+| Command              | Document                                                                                                                                                                                             |
+| -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `inspect`            | `{ schemaVersion, kind: "overview", config, tokens: { total, layers }, themes, components? }`                                                                                                        |
+| `inspect tokens`     | `{ schemaVersion, kind: "tokens", tokens }`, each token with `layer`, `path`, `name`, `type`, `alias?`, `description?`, `deprecated?`, `cssVar` and `values` (`default` plus the themes that differ) |
+| `inspect components` | `{ schemaVersion, kind: "components", components }`, each component as described in the [plugin API](/plugin-api#componentinfo)                                                                      |
+
+`schemaVersion` is `"1"` and only changes with a breaking change to these documents.
+
+- **stdout** carries the result and nothing else. Logs and warnings, such as an introspection warning,
+  go to stderr.
+- With `--theme`, every token has that theme in `values`: a theme that does not override a token
+  reads as its default, so the value is the default's.
+- Exit code `0` is success, including an empty result from `--deprecated` or an empty project.
+  Exit code `2` means the request matched nothing: an unknown path, name, type or `--theme`. Exit code
+  `1` means the project is broken: token aliases, an introspection failure, or `inspect components` in
+  a config without an `introspection` block.
+- With `--format json`, an error is also printed on stdout, so that a script never parses prose:
+  `{ schemaVersion, kind: "error", errors: [{ message, input?, suggestions? }] }`. The same text is on stderr.
+- The overview is the exception to `1`: with a broken `introspection` block it still prints the
+  tokens and exits `0`, with `components: { error }` in JSON and an `_Unavailable: …_` line in markdown.
+
+```bash
+# Fail CI when a deprecated component is still exported
+test "$(recontent inspect components --deprecated --format json | jq '.components | length')" = 0
+```
+
+## Cost
+
+`inspect tokens` only loads the config, so it is instant, and keeps working when `introspection` is
+misconfigured. `inspect` and `inspect components` need the components: building a TypeScript
+program from the configured entry takes about two seconds for 50 components, so the result is
+[cached](/tokens/configuration#cache) in `.recontent/` and later calls skip the program
+until a source file changes. Run with `--log-level debug` to see the timings and whether the cache
+was used.

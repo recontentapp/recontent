@@ -1,5 +1,5 @@
-import { spawnSync } from "node:child_process";
-import { mkdtempSync, rmSync } from "node:fs";
+import { spawn, spawnSync } from "node:child_process";
+import { mkdtempSync, realpathSync, rmSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 
@@ -106,4 +106,103 @@ export function archiveRevision(gitRoot: string, rev: string, destDir: string): 
   } finally {
     rmSync(tmpTarDir, { recursive: true, force: true });
   }
+}
+
+/** HEAD's sha, or `undefined` outside a work tree or before the first commit. */
+export function readHead(cwd: string): string | undefined {
+  const head = run(["rev-parse", "HEAD"], cwd);
+  return head.status === 0 ? head.stdout.trim() : undefined;
+}
+
+/**
+ * ISO 8601 date of the last commit touching each of `files` (absolute paths).
+ * Files outside the work tree, uncommitted ones and — in a shallow clone, where
+ * every file would read as touched by the grafted commit — all of them are
+ * absent, with the reason in `warning`.
+ *
+ * Only tracked files are looked up (one cheap `git ls-files`), then one
+ * `git log`, newest commit first, killed as soon as every file has been seen,
+ * so the cost follows the age of the oldest last change, not the size of the
+ * history. Pathspecs are literal: a `*` or a leading `:` in a file name
+ * matches nothing else.
+ */
+export async function readLastUpdated(
+  root: string,
+  files: string[],
+): Promise<{ dates: Map<string, string>; warning?: string }> {
+  const dates = new Map<string, string>();
+  const top = run(["rev-parse", "--show-toplevel"], root);
+  if (top.status !== 0) {
+    return {
+      dates,
+      warning: "history: not a git repository (or git is missing), lastUpdatedAt omitted.",
+    };
+  }
+  if (run(["rev-parse", "--is-shallow-repository"], root).stdout.trim() === "true") {
+    return {
+      dates,
+      warning: "history: shallow clone, lastUpdatedAt omitted; fetch more depth.",
+    };
+  }
+
+  const gitRoot = realpathSync(top.stdout.trim());
+  const pending = new Map<string, string>();
+  for (const file of files) {
+    const relative = path.relative(gitRoot, realpathSync(file));
+    if (relative.startsWith("..") || path.isAbsolute(relative)) continue;
+    pending.set(relative.split(path.sep).join("/"), file);
+  }
+  if (pending.size === 0) return { dates };
+
+  // An untracked file never shows up in the log, which would then be read to the root commit.
+  const tracked = spawnSync(
+    "git",
+    ["--literal-pathspecs", "ls-files", "-z", "--", ...pending.keys()],
+    { cwd: gitRoot, encoding: "utf-8", maxBuffer: 64 * 1024 * 1024 },
+  );
+  if (tracked.status !== 0) return { dates };
+  const trackedNames = new Set(tracked.stdout.split("\0").filter(Boolean));
+  for (const name of pending.keys()) if (!trackedNames.has(name)) pending.delete(name);
+  if (pending.size === 0) return { dates };
+
+  const git = spawn(
+    "git",
+    [
+      "--literal-pathspecs",
+      "-c",
+      "core.quotePath=false",
+      "log",
+      "--format=%x00%cI",
+      "--name-only",
+      "--",
+      ...pending.keys(),
+    ],
+    { cwd: gitRoot, stdio: ["ignore", "pipe", "ignore"] },
+  );
+  let buffer = "";
+  const consume = (record: string) => {
+    const [date = "", ...names] = record.split("\n");
+    for (const name of names) {
+      const file = pending.get(name);
+      if (file === undefined) continue;
+      dates.set(file, date);
+      pending.delete(name);
+    }
+  };
+
+  await new Promise<void>((resolve) => {
+    git.on("error", () => resolve());
+    git.on("close", () => resolve());
+    git.stdout.setEncoding("utf-8");
+    git.stdout.on("data", (chunk: string) => {
+      buffer += chunk;
+      // A record runs up to the next NUL, so the last piece may still be growing.
+      const records = buffer.split("\0");
+      buffer = records.pop() ?? "";
+      for (const record of records) if (record) consume(record);
+      if (pending.size === 0) git.kill();
+    });
+  });
+  if (buffer && pending.size > 0) consume(buffer);
+  return { dates };
 }

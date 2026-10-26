@@ -51,6 +51,7 @@ export const sidebar: NonNullable<Config["sidebar"]> = [
       { text: "init", link: "/cli/init" },
       { text: "build", link: "/cli/build" },
       { text: "diff", link: "/cli/diff" },
+      { text: "inspect", link: "/cli/inspect" },
     ],
   },
 ];

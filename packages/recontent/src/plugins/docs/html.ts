@@ -1,6 +1,9 @@
+import type { ComponentInfo, PropInfo } from "@recontentapp/core";
+import { displayName, propCount, updatedText } from "../../introspection/markdown.js";
 import { generateCss } from "../css.js";
 import type { GeneratorContext } from "../shared/context.js";
-import type { DocGroup, DocToken, DocsModel } from "./model.js";
+import type { DocToken } from "../shared/doc-token.js";
+import type { DocGroup, DocsModel } from "./model.js";
 
 const LAYER_TITLES = { ref: "Reference", system: "System", components: "Components" } as const;
 
@@ -122,6 +125,55 @@ function groupHtml(layer: string, group: DocGroup): string {
 </section>`;
 }
 
+const API_TAB = "api";
+const componentId = (name: string) => `c-${slug(name)}`;
+
+function propRowHtml(prop: PropInfo): string {
+  const type = prop.values
+    ? prop.values.map((value) => JSON.stringify(value)).join(" | ")
+    : prop.type;
+  const resolved = prop.resolved ? `<br><code>${escapeHtml(prop.resolved)}</code>` : "";
+  const notes = [
+    prop.description ? `<p class="desc">${escapeHtml(prop.description)}</p>` : "",
+    prop.deprecated
+      ? `<p class="reason"><span class="capsule">Deprecated</span>${prop.deprecated === true ? "" : ` ${escapeHtml(prop.deprecated)}`}</p>`
+      : "",
+  ].join("");
+  return `<tr>
+  <td><code class="${prop.deprecated ? "is-deprecated" : ""}">${escapeHtml(prop.name)}</code>${prop.required ? '<span class="req" title="Required">*</span>' : ""}</td>
+  <td><code>${escapeHtml(type)}</code>${resolved}</td>
+  <td>${prop.defaultValue ? `<code>${escapeHtml(prop.defaultValue)}</code>` : ""}</td>
+  <td>${notes}</td>
+</tr>`;
+}
+
+function componentHtml(component: ComponentInfo): string {
+  const location = `${component.sourceFilePath}:${component.line}`;
+  const updated = updatedText(component);
+  const inherits = component.inherits
+    .map(
+      (group) =>
+        `<code>${escapeHtml(group.name)}</code> (${propCount(group)}${group.package ? ` from ${escapeHtml(group.package)}` : ""})`,
+    )
+    .join(", ");
+  const deprecated = component.deprecated;
+  return `<section class="group" id="${escapeHtml(componentId(component.name))}">
+  <h3>${escapeHtml(displayName(component))} <span class="count">${component.props.length}</span></h3>
+  ${component.description ? `<p class="lead">${escapeHtml(component.description)}</p>` : ""}
+  ${deprecated ? `<p class="callout"><span class="capsule">Deprecated</span>${deprecated === true ? "" : ` ${escapeHtml(deprecated)}`}</p>` : ""}
+  <p class="source"><code>${escapeHtml(location)}</code>${updated ? ` · ${escapeHtml(updated)}` : ""}</p>
+  ${
+    component.props.length === 0
+      ? '<p class="lead">No own props.</p>'
+      : `<div class="list"><table class="props">
+  <thead><tr><th>Prop</th><th>Type</th><th>Default</th><th></th></tr></thead>
+  <tbody>${component.props.map(propRowHtml).join("\n")}</tbody>
+</table></div>`
+  }
+  ${inherits ? `<p class="lead">Also accepts: ${inherits}</p>` : ""}
+</section>`;
+}
+
 function tokenCss(ctx: GeneratorContext): string {
   return generateCss(ctx).replace(/<\/(style)/gi, "<\\/$1");
 }
@@ -229,6 +281,14 @@ code { font-family: var(--hig-mono); font-size: 0.82em; }
 .track { display: block; width: 120px; height: 8px; border-radius: 4px; background: var(--hig-bg-2); position: relative; }
 .demo { position: absolute; top: -4px; left: 0; width: 16px; height: 16px; border-radius: 50%; background: var(--hig-blue); }
 .row:hover .demo { transform: translateX(104px); }
+.source { margin: 0 0 16px; font-size: 14px; color: var(--hig-text-2); }
+.source a { color: var(--hig-blue); text-decoration: none; }
+.source a:hover { text-decoration: underline; }
+.props { width: 100%; border-collapse: collapse; font-size: 14px; }
+.props th { text-align: left; font-weight: 500; color: var(--hig-text-2); padding: 10px 18px; background: var(--hig-bg-2); }
+.props td { vertical-align: top; padding: 10px 18px; border-top: 1px solid var(--hig-bg-2); word-break: break-word; }
+.props td:first-child { white-space: nowrap; }
+.req { color: var(--hig-orange-text); margin-left: 2px; }
 [hidden] { display: none !important; }
 @media (max-width: 800px) {
   .bar { padding: 0 16px; }
@@ -244,7 +304,7 @@ code { font-family: var(--hig-mono); font-size: 0.82em; }
 
 const SCRIPT = `
 (function () {
-  var layers = ["ref", "system", "components"];
+  var layers = ["ref", "system", "components", "api"];
   var tabs = document.querySelectorAll("[data-tab]");
   var panels = document.querySelectorAll("[data-panel]");
   var sides = document.querySelectorAll("[data-side]");
@@ -354,6 +414,11 @@ export function renderHtml(model: DocsModel, ctx: GeneratorContext): string {
     )
     .join("");
 
+  const apiTab =
+    model.components.length > 0
+      ? `<button type="button" role="tab" data-tab="${API_TAB}" aria-selected="false">Component APIs<span class="n">${model.components.length}</span></button>`
+      : "";
+
   const sides = model.layers
     .map(
       ({ layer, groups }) =>
@@ -361,7 +426,14 @@ export function renderHtml(model: DocsModel, ctx: GeneratorContext): string {
           .map((g) => `<a href="#${escapeHtml(groupId(layer, g.path))}">${escapeHtml(g.label)}</a>`)
           .join("")}</nav>`,
     )
-    .join("\n");
+    .join("\n")
+    .concat(
+      model.components.length > 0
+        ? `\n<nav data-side="${API_TAB}" aria-label="Component APIs">${model.components
+            .map((c) => `<a href="#${escapeHtml(componentId(c.name))}">${escapeHtml(c.name)}</a>`)
+            .join("")}</nav>`
+        : "",
+    );
 
   const panels = model.layers
     .map(({ layer, groups }) => {
@@ -376,7 +448,16 @@ export function renderHtml(model: DocsModel, ctx: GeneratorContext): string {
   ${content}
 </div>`;
     })
-    .join("\n");
+    .join("\n")
+    .concat(
+      model.components.length > 0
+        ? `\n<div data-panel="${API_TAB}" data-count="${model.components.length}" role="tabpanel">
+  <h2 class="title">Component APIs</h2>
+  <p class="sub">${model.components.length} component${model.components.length === 1 ? "" : "s"}</p>
+  ${model.components.map(componentHtml).join("\n")}
+</div>`
+        : "",
+    );
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -394,7 +475,7 @@ ${tokenCss(ctx)}
   <h1>${title}</h1>
   ${themePicker}
 </header>
-<div class="tabs"><div class="seg" role="tablist" aria-label="Token layers">${tabs}</div></div>
+<div class="tabs"><div class="seg" role="tablist" aria-label="Token layers">${tabs}${apiTab}</div></div>
 <div class="layout">
   <aside class="side">
 ${sides}
