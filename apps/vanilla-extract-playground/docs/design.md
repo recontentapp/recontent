@@ -347,9 +347,9 @@
 
 ## Component APIs
 
-### Accordion
+### Accordion\<Value extends string = string\>
 
-Source: [`src/generated/components/accordion/Accordion.gen.tsx:34`](https://github.com/recontentapp/recontent/blob/f543a3ef8e4b179f82a29e38b21bfa91a01d7706/apps/vanilla-extract-playground/src/generated/components/accordion/Accordion.gen.tsx#L34) · Updated 2026-09-17
+Source: `src/generated/components/accordion/Accordion.gen.tsx:34`
 
 | Prop | Type | Default | Required | Notes |
 | --- | --- | --- | --- | --- |
@@ -361,14 +361,14 @@ Source: [`src/generated/components/accordion/Accordion.gen.tsx:34`](https://gith
 | `items` | `AccordionItemData<Value>[]` | — | yes |  |
 | `multiple` | `boolean` | `false` | no |  |
 | `onValueChange` | `(value: Value[]) => void` | — | no |  |
-| `render` | `RenderProp<"div">` | — | no |  |
+| `render` | `RenderProp<"div">`<br>`import("react").ReactElement<unknown, string \| import("react").JSXElementConstructor<any>> \| ((props: Omit<import("react").DetailedHTMLProps<import("react").HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref">) => import("react").ReactElement)` | — | no |  |
 | `value` | `Value[]` | — | no |  |
 
 Also accepts: `AriaAttributes` (53 props from @types/react)
 
 ### ActionBar
 
-Source: [`src/generated/components/action-bar/ActionBar.gen.tsx:14`](https://github.com/recontentapp/recontent/blob/f543a3ef8e4b179f82a29e38b21bfa91a01d7706/apps/vanilla-extract-playground/src/generated/components/action-bar/ActionBar.gen.tsx#L14) · Updated 2026-09-17
+Source: `src/generated/components/action-bar/ActionBar.gen.tsx:14`
 
 | Prop | Type | Default | Required | Notes |
 | --- | --- | --- | --- | --- |
@@ -378,13 +378,13 @@ Source: [`src/generated/components/action-bar/ActionBar.gen.tsx:14`](https://git
 | `id` | `string` | — | no |  |
 | `open` | `boolean` | `true` | no | Hides the bar without unmounting its children's state when false. |
 | `placement` | `"bottom-start" \| "bottom" \| "bottom-end"` | `"bottom"` | no |  |
-| `render` | `RenderProp<"div">` | — | no |  |
+| `render` | `RenderProp<"div">`<br>`import("react").ReactElement<unknown, string \| import("react").JSXElementConstructor<any>> \| ((props: Omit<import("react").DetailedHTMLProps<import("react").HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref">) => import("react").ReactElement)` | — | no |  |
 
 Also accepts: `AriaAttributes` (53 props from @types/react)
 
-### Autocomplete
+### Autocomplete\<Value extends string\>
 
-Source: [`src/generated/components/autocomplete/Autocomplete.gen.tsx:57`](https://github.com/recontentapp/recontent/blob/f543a3ef8e4b179f82a29e38b21bfa91a01d7706/apps/vanilla-extract-playground/src/generated/components/autocomplete/Autocomplete.gen.tsx#L57) · Updated 2026-09-17
+Source: `src/generated/components/autocomplete/Autocomplete.gen.tsx:57`
 
 | Prop | Type | Default | Required | Notes |
 | --- | --- | --- | --- | --- |
@@ -405,7 +405,7 @@ Source: [`src/generated/components/autocomplete/Autocomplete.gen.tsx:57`](https:
 | `open` | `boolean` | — | no |  |
 | `options` | `AutocompleteOption<Value>[]` | — | yes |  |
 | `placeholder` | `ReactNode` | — | no |  |
-| `render` | `RenderProp<"input">` | — | no |  |
+| `render` | `RenderProp<"input">`<br>`import("react").ReactElement<unknown, string \| import("react").JSXElementConstructor<any>> \| ((props: Omit<import("react").DetailedHTMLProps<import("react").InputHTMLAttributes<HTMLInputElement>, HTMLInputElement>, "ref">) => import("react").ReactElement)` | — | no |  |
 | `required` | `boolean` | `false` | no |  |
 | `value` | `string` | — | no |  |
 
@@ -413,7 +413,7 @@ Also accepts: `AriaAttributes` (53 props from @types/react)
 
 ### Avatar
 
-Source: [`src/generated/components/avatar/Avatar.gen.tsx:21`](https://github.com/recontentapp/recontent/blob/f543a3ef8e4b179f82a29e38b21bfa91a01d7706/apps/vanilla-extract-playground/src/generated/components/avatar/Avatar.gen.tsx#L21) · Updated 2026-09-17
+Source: `src/generated/components/avatar/Avatar.gen.tsx:21`
 
 | Prop | Type | Default | Required | Notes |
 | --- | --- | --- | --- | --- |
@@ -421,7 +421,7 @@ Source: [`src/generated/components/avatar/Avatar.gen.tsx:21`](https://github.com
 | `className` | `string` | — | no |  |
 | `data-testid` | `string` | — | no |  |
 | `id` | `string` | — | no |  |
-| `render` | `RenderProp<"span">` | — | no |  |
+| `render` | `RenderProp<"span">`<br>`import("react").ReactElement<unknown, string \| import("react").JSXElementConstructor<any>> \| ((props: Omit<import("react").DetailedHTMLProps<import("react").HTMLAttributes<HTMLSpanElement>, HTMLSpanElement>, "ref">) => import("react").ReactElement)` | — | no |  |
 | `shape` | `"circle" \| "square"` | `"circle"` | no |  |
 | `size` | `"base" \| "xs" \| "sm" \| "lg" \| "xl" \| "2xl" \| "3xl" \| "4xl"` | — | no |  |
 | `src` | `string` | — | no |  |
@@ -431,7 +431,7 @@ Also accepts: `AriaAttributes` (53 props from @types/react)
 
 ### Badge
 
-Source: [`src/generated/components/badge/Badge.gen.tsx:17`](https://github.com/recontentapp/recontent/blob/f543a3ef8e4b179f82a29e38b21bfa91a01d7706/apps/vanilla-extract-playground/src/generated/components/badge/Badge.gen.tsx#L17) · Updated 2026-09-17
+Source: `src/generated/components/badge/Badge.gen.tsx:17`
 
 | Prop | Type | Default | Required | Notes |
 | --- | --- | --- | --- | --- |
@@ -440,7 +440,7 @@ Source: [`src/generated/components/badge/Badge.gen.tsx:17`](https://github.com/r
 | `data-testid` | `string` | — | no |  |
 | `icon` | `"search" \| "info" \| "alert" \| "check" \| "chevronDown" \| "close"` | — | no |  |
 | `id` | `string` | — | no |  |
-| `render` | `RenderProp<"span">` | — | no |  |
+| `render` | `RenderProp<"span">`<br>`import("react").ReactElement<unknown, string \| import("react").JSXElementConstructor<any>> \| ((props: Omit<import("react").DetailedHTMLProps<import("react").HTMLAttributes<HTMLSpanElement>, HTMLSpanElement>, "ref">) => import("react").ReactElement)` | — | no |  |
 | `size` | `"sm" \| "md"` | `"sm"` | no |  |
 | `variant` | `"info" \| "success" \| "warning" \| "danger"` | `"info"` | no |  |
 
@@ -448,7 +448,7 @@ Also accepts: `AriaAttributes` (53 props from @types/react)
 
 ### Banner
 
-Source: [`src/generated/components/banner/Banner.gen.tsx:37`](https://github.com/recontentapp/recontent/blob/f543a3ef8e4b179f82a29e38b21bfa91a01d7706/apps/vanilla-extract-playground/src/generated/components/banner/Banner.gen.tsx#L37) · Updated 2026-09-17
+Source: `src/generated/components/banner/Banner.gen.tsx:37`
 
 | Prop | Type | Default | Required | Notes |
 | --- | --- | --- | --- | --- |
@@ -459,7 +459,7 @@ Source: [`src/generated/components/banner/Banner.gen.tsx:37`](https://github.com
 | `icon` | `false \| "search" \| "info" \| "alert" \| "check" \| "chevronDown" \| "close"` | — | no | \`false\` opts out of the status' default icon. |
 | `id` | `string` | — | no |  |
 | `onDismiss` | `() => void` | — | no |  |
-| `render` | `RenderProp<"div">` | — | no |  |
+| `render` | `RenderProp<"div">`<br>`import("react").ReactElement<unknown, string \| import("react").JSXElementConstructor<any>> \| ((props: Omit<import("react").DetailedHTMLProps<import("react").HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref">) => import("react").ReactElement)` | — | no |  |
 | `status` | `"info" \| "success" \| "warning" \| "danger"` | `"info"` | no |  |
 | `title` | `ReactNode` | — | no |  |
 
@@ -467,7 +467,7 @@ Also accepts: `AriaAttributes` (53 props from @types/react)
 
 ### Box
 
-Source: [`src/generated/components/box/Box.gen.tsx:69`](https://github.com/recontentapp/recontent/blob/f543a3ef8e4b179f82a29e38b21bfa91a01d7706/apps/vanilla-extract-playground/src/generated/components/box/Box.gen.tsx#L69) · Updated 2026-09-17
+Source: `src/generated/components/box/Box.gen.tsx:69`
 
 | Prop | Type | Default | Required | Notes |
 | --- | --- | --- | --- | --- |
@@ -478,38 +478,38 @@ Source: [`src/generated/components/box/Box.gen.tsx:69`](https://github.com/recon
 | `children` | `ReactNode` | — | no |  |
 | `className` | `string` | — | no |  |
 | `data-testid` | `string` | — | no |  |
-| `display` | `Responsive<"block" \| "inline-block" \| "inline" \| "flex" \| "inline-flex" \| "grid" \| "none">` | — | no |  |
-| `gap` | `Responsive<BoxSpacingToken>` | — | no |  |
+| `display` | `Responsive<"block" \| "inline-block" \| "inline" \| "flex" \| "inline-flex" \| "grid" \| "none">`<br>`"none" \| "inline" \| "grid" \| "block" \| "inline-block" \| "flex" \| "inline-flex" \| { xs?: "none" \| "inline" \| "grid" \| "block" \| "inline-block" \| "flex" \| "inline-flex" \| undefined; sm?: "none" \| "inline" \| "grid" \| "block" \| "inline-block" \| "flex" \| "inline-flex" \| undefined; lg?: "none" \| "inline" \| "grid" \| "block" \| "inline-block" \| "flex" \| "inline-flex" \| undefined; xl?: "none" \| "inline" \| "grid" \| "block" \| "inline-block" \| "flex" \| "inline-flex" \| undefined; md?: "none" \| "inline" \| "grid" \| "block" \| "inline-block" \| "flex" \| "inline-flex" \| undefined; xxl?: "none" \| "inline" \| "grid" \| "block" \| "inline-block" \| "flex" \| "inline-flex" \| undefined; }` | — | no |  |
+| `gap` | `Responsive<BoxSpacingToken>`<br>`BoxSpacingToken \| { xs?: BoxSpacingToken \| undefined; sm?: BoxSpacingToken \| undefined; lg?: BoxSpacingToken \| undefined; xl?: BoxSpacingToken \| undefined; md?: BoxSpacingToken \| undefined; xxl?: BoxSpacingToken \| undefined; }` | — | no |  |
 | `height` | `Responsive<CSSProperties["height"]>` | — | no |  |
 | `id` | `string` | — | no |  |
-| `margin` | `Responsive<BoxSpacingToken>` | — | no |  |
-| `marginBottom` | `Responsive<BoxSpacingToken>` | — | no |  |
-| `marginLeft` | `Responsive<BoxSpacingToken>` | — | no |  |
-| `marginRight` | `Responsive<BoxSpacingToken>` | — | no |  |
-| `marginTop` | `Responsive<BoxSpacingToken>` | — | no |  |
-| `marginX` | `Responsive<BoxSpacingToken>` | — | no |  |
-| `marginY` | `Responsive<BoxSpacingToken>` | — | no |  |
+| `margin` | `Responsive<BoxSpacingToken>`<br>`BoxSpacingToken \| { xs?: BoxSpacingToken \| undefined; sm?: BoxSpacingToken \| undefined; lg?: BoxSpacingToken \| undefined; xl?: BoxSpacingToken \| undefined; md?: BoxSpacingToken \| undefined; xxl?: BoxSpacingToken \| undefined; }` | — | no |  |
+| `marginBottom` | `Responsive<BoxSpacingToken>`<br>`BoxSpacingToken \| { xs?: BoxSpacingToken \| undefined; sm?: BoxSpacingToken \| undefined; lg?: BoxSpacingToken \| undefined; xl?: BoxSpacingToken \| undefined; md?: BoxSpacingToken \| undefined; xxl?: BoxSpacingToken \| undefined; }` | — | no |  |
+| `marginLeft` | `Responsive<BoxSpacingToken>`<br>`BoxSpacingToken \| { xs?: BoxSpacingToken \| undefined; sm?: BoxSpacingToken \| undefined; lg?: BoxSpacingToken \| undefined; xl?: BoxSpacingToken \| undefined; md?: BoxSpacingToken \| undefined; xxl?: BoxSpacingToken \| undefined; }` | — | no |  |
+| `marginRight` | `Responsive<BoxSpacingToken>`<br>`BoxSpacingToken \| { xs?: BoxSpacingToken \| undefined; sm?: BoxSpacingToken \| undefined; lg?: BoxSpacingToken \| undefined; xl?: BoxSpacingToken \| undefined; md?: BoxSpacingToken \| undefined; xxl?: BoxSpacingToken \| undefined; }` | — | no |  |
+| `marginTop` | `Responsive<BoxSpacingToken>`<br>`BoxSpacingToken \| { xs?: BoxSpacingToken \| undefined; sm?: BoxSpacingToken \| undefined; lg?: BoxSpacingToken \| undefined; xl?: BoxSpacingToken \| undefined; md?: BoxSpacingToken \| undefined; xxl?: BoxSpacingToken \| undefined; }` | — | no |  |
+| `marginX` | `Responsive<BoxSpacingToken>`<br>`BoxSpacingToken \| { xs?: BoxSpacingToken \| undefined; sm?: BoxSpacingToken \| undefined; lg?: BoxSpacingToken \| undefined; xl?: BoxSpacingToken \| undefined; md?: BoxSpacingToken \| undefined; xxl?: BoxSpacingToken \| undefined; }` | — | no |  |
+| `marginY` | `Responsive<BoxSpacingToken>`<br>`BoxSpacingToken \| { xs?: BoxSpacingToken \| undefined; sm?: BoxSpacingToken \| undefined; lg?: BoxSpacingToken \| undefined; xl?: BoxSpacingToken \| undefined; md?: BoxSpacingToken \| undefined; xxl?: BoxSpacingToken \| undefined; }` | — | no |  |
 | `maxHeight` | `Responsive<CSSProperties["maxHeight"]>` | — | no |  |
 | `maxWidth` | `Responsive<CSSProperties["maxWidth"]>` | — | no |  |
 | `minHeight` | `Responsive<CSSProperties["minHeight"]>` | — | no |  |
 | `minWidth` | `Responsive<CSSProperties["minWidth"]>` | — | no |  |
 | `overflow` | `CSSProperties["overflow"]` | — | no |  |
-| `padding` | `Responsive<BoxSpacingToken>` | — | no |  |
-| `paddingBottom` | `Responsive<BoxSpacingToken>` | — | no |  |
-| `paddingLeft` | `Responsive<BoxSpacingToken>` | — | no |  |
-| `paddingRight` | `Responsive<BoxSpacingToken>` | — | no |  |
-| `paddingTop` | `Responsive<BoxSpacingToken>` | — | no |  |
-| `paddingX` | `Responsive<BoxSpacingToken>` | — | no |  |
-| `paddingY` | `Responsive<BoxSpacingToken>` | — | no |  |
+| `padding` | `Responsive<BoxSpacingToken>`<br>`BoxSpacingToken \| { xs?: BoxSpacingToken \| undefined; sm?: BoxSpacingToken \| undefined; lg?: BoxSpacingToken \| undefined; xl?: BoxSpacingToken \| undefined; md?: BoxSpacingToken \| undefined; xxl?: BoxSpacingToken \| undefined; }` | — | no |  |
+| `paddingBottom` | `Responsive<BoxSpacingToken>`<br>`BoxSpacingToken \| { xs?: BoxSpacingToken \| undefined; sm?: BoxSpacingToken \| undefined; lg?: BoxSpacingToken \| undefined; xl?: BoxSpacingToken \| undefined; md?: BoxSpacingToken \| undefined; xxl?: BoxSpacingToken \| undefined; }` | — | no |  |
+| `paddingLeft` | `Responsive<BoxSpacingToken>`<br>`BoxSpacingToken \| { xs?: BoxSpacingToken \| undefined; sm?: BoxSpacingToken \| undefined; lg?: BoxSpacingToken \| undefined; xl?: BoxSpacingToken \| undefined; md?: BoxSpacingToken \| undefined; xxl?: BoxSpacingToken \| undefined; }` | — | no |  |
+| `paddingRight` | `Responsive<BoxSpacingToken>`<br>`BoxSpacingToken \| { xs?: BoxSpacingToken \| undefined; sm?: BoxSpacingToken \| undefined; lg?: BoxSpacingToken \| undefined; xl?: BoxSpacingToken \| undefined; md?: BoxSpacingToken \| undefined; xxl?: BoxSpacingToken \| undefined; }` | — | no |  |
+| `paddingTop` | `Responsive<BoxSpacingToken>`<br>`BoxSpacingToken \| { xs?: BoxSpacingToken \| undefined; sm?: BoxSpacingToken \| undefined; lg?: BoxSpacingToken \| undefined; xl?: BoxSpacingToken \| undefined; md?: BoxSpacingToken \| undefined; xxl?: BoxSpacingToken \| undefined; }` | — | no |  |
+| `paddingX` | `Responsive<BoxSpacingToken>`<br>`BoxSpacingToken \| { xs?: BoxSpacingToken \| undefined; sm?: BoxSpacingToken \| undefined; lg?: BoxSpacingToken \| undefined; xl?: BoxSpacingToken \| undefined; md?: BoxSpacingToken \| undefined; xxl?: BoxSpacingToken \| undefined; }` | — | no |  |
+| `paddingY` | `Responsive<BoxSpacingToken>`<br>`BoxSpacingToken \| { xs?: BoxSpacingToken \| undefined; sm?: BoxSpacingToken \| undefined; lg?: BoxSpacingToken \| undefined; xl?: BoxSpacingToken \| undefined; md?: BoxSpacingToken \| undefined; xxl?: BoxSpacingToken \| undefined; }` | — | no |  |
 | `position` | `"static" \| "relative" \| "absolute" \| "fixed" \| "sticky"` | — | no |  |
-| `render` | `RenderProp` | — | no |  |
+| `render` | `RenderProp`<br>`import("react").ReactElement<unknown, string \| import("react").JSXElementConstructor<any>> \| ((props: Omit<import("react").DetailedHTMLProps<import("react").HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref">) => import("react").ReactElement)` | — | no |  |
 | `width` | `Responsive<CSSProperties["width"]>` | — | no |  |
 
 Also accepts: `AriaAttributes` (53 props from @types/react)
 
 ### Breadcrumb
 
-Source: [`src/generated/components/breadcrumb/Breadcrumb.gen.tsx:31`](https://github.com/recontentapp/recontent/blob/f543a3ef8e4b179f82a29e38b21bfa91a01d7706/apps/vanilla-extract-playground/src/generated/components/breadcrumb/Breadcrumb.gen.tsx#L31) · Updated 2026-09-17
+Source: `src/generated/components/breadcrumb/Breadcrumb.gen.tsx:31`
 
 | Prop | Type | Default | Required | Notes |
 | --- | --- | --- | --- | --- |
@@ -518,14 +518,14 @@ Source: [`src/generated/components/breadcrumb/Breadcrumb.gen.tsx:31`](https://gi
 | `id` | `string` | — | no |  |
 | `items` | `BreadcrumbItem[]` | — | yes |  |
 | `maxVisibleItems` | `number` | — | no |  |
-| `render` | `RenderProp<"nav">` | — | no |  |
+| `render` | `RenderProp<"nav">`<br>`import("react").ReactElement<unknown, string \| import("react").JSXElementConstructor<any>> \| ((props: Omit<import("react").DetailedHTMLProps<import("react").HTMLAttributes<HTMLElement>, HTMLElement>, "ref">) => import("react").ReactElement)` | — | no |  |
 | `separator` | `ReactNode` | — | no |  |
 
 Also accepts: `AriaAttributes` (53 props from @types/react)
 
 ### Button
 
-Source: [`src/generated/components/button/Button.gen.tsx:28`](https://github.com/recontentapp/recontent/blob/f543a3ef8e4b179f82a29e38b21bfa91a01d7706/apps/vanilla-extract-playground/src/generated/components/button/Button.gen.tsx#L28) · Updated 2026-09-17
+Source: `src/generated/components/button/Button.gen.tsx:28`
 
 | Prop | Type | Default | Required | Notes |
 | --- | --- | --- | --- | --- |
@@ -538,19 +538,19 @@ Source: [`src/generated/components/button/Button.gen.tsx:28`](https://github.com
 | `loading` | `boolean` | `false` | no |  |
 | `name` | `string` | — | no |  |
 | `onClick` | `MouseEventHandler<HTMLButtonElement>` | — | no |  |
-| `render` | `RenderProp<"button">` | — | no |  |
+| `render` | `RenderProp<"button">`<br>`ReactElement<unknown, string \| import("react").JSXElementConstructor<any>> \| ((props: Omit<import("react").DetailedHTMLProps<import("react").ButtonHTMLAttributes<HTMLButtonElement>, HTMLButtonElement>, "ref">) => ReactElement)` | — | no |  |
 | `size` | `"sm" \| "md"` | `"sm"` | no |  |
 | `startContent` | `ReactElement` | — | no |  |
 | `type` | `"button" \| "submit" \| "reset"` | `"button"` | no |  |
 | `value` | `string` | — | no |  |
 | `variant` | `"primary" \| "secondary"` | `"primary"` | no |  |
-| `width` | `Width` | — | no |  |
+| `width` | `Width`<br>`number \| (string & {}) \| "auto" \| "100%"` | — | no |  |
 
 Also accepts: `AriaAttributes` (53 props from @types/react)
 
 ### Checkbox
 
-Source: [`src/generated/components/checkbox/Checkbox.gen.tsx:26`](https://github.com/recontentapp/recontent/blob/f543a3ef8e4b179f82a29e38b21bfa91a01d7706/apps/vanilla-extract-playground/src/generated/components/checkbox/Checkbox.gen.tsx#L26) · Updated 2026-10-04
+Source: `src/generated/components/checkbox/Checkbox.gen.tsx:26`
 
 | Prop | Type | Default | Required | Notes |
 | --- | --- | --- | --- | --- |
@@ -567,7 +567,7 @@ Source: [`src/generated/components/checkbox/Checkbox.gen.tsx:26`](https://github
 | `onBlur` | `FocusEventHandler` | — | no |  |
 | `onCheckedChange` | `(checked: boolean) => void` | — | no |  |
 | `onFocus` | `FocusEventHandler` | — | no |  |
-| `render` | `RenderProp<"button">` | — | no |  |
+| `render` | `RenderProp<"button">`<br>`import("react").ReactElement<unknown, string \| import("react").JSXElementConstructor<any>> \| ((props: Omit<import("react").DetailedHTMLProps<import("react").ButtonHTMLAttributes<HTMLButtonElement>, HTMLButtonElement>, "ref">) => import("react").ReactElement)` | — | no |  |
 | `required` | `boolean` | `false` | no |  |
 | `value` | `string` | — | no |  |
 
@@ -575,7 +575,7 @@ Also accepts: `AriaAttributes` (53 props from @types/react)
 
 ### Code
 
-Source: [`src/generated/components/code/Code.gen.tsx:10`](https://github.com/recontentapp/recontent/blob/f543a3ef8e4b179f82a29e38b21bfa91a01d7706/apps/vanilla-extract-playground/src/generated/components/code/Code.gen.tsx#L10) · Updated 2026-09-17
+Source: `src/generated/components/code/Code.gen.tsx:10`
 
 | Prop | Type | Default | Required | Notes |
 | --- | --- | --- | --- | --- |
@@ -583,13 +583,13 @@ Source: [`src/generated/components/code/Code.gen.tsx:10`](https://github.com/rec
 | `className` | `string` | — | no |  |
 | `data-testid` | `string` | — | no |  |
 | `id` | `string` | — | no |  |
-| `render` | `RenderProp<"code">` | — | no |  |
+| `render` | `RenderProp<"code">`<br>`import("react").ReactElement<unknown, string \| import("react").JSXElementConstructor<any>> \| ((props: Omit<import("react").DetailedHTMLProps<import("react").HTMLAttributes<HTMLElement>, HTMLElement>, "ref">) => import("react").ReactElement)` | — | no |  |
 
 Also accepts: `AriaAttributes` (53 props from @types/react)
 
 ### Collapsible
 
-Source: [`src/generated/components/collapsible/Collapsible.gen.tsx:25`](https://github.com/recontentapp/recontent/blob/f543a3ef8e4b179f82a29e38b21bfa91a01d7706/apps/vanilla-extract-playground/src/generated/components/collapsible/Collapsible.gen.tsx#L25) · Updated 2026-09-17
+Source: `src/generated/components/collapsible/Collapsible.gen.tsx:25`
 
 | Prop | Type | Default | Required | Notes |
 | --- | --- | --- | --- | --- |
@@ -601,14 +601,14 @@ Source: [`src/generated/components/collapsible/Collapsible.gen.tsx:25`](https://
 | `id` | `string` | — | no |  |
 | `onOpenChange` | `(open: boolean) => void` | — | no |  |
 | `open` | `boolean` | — | no |  |
-| `render` | `RenderProp<"div">` | — | no |  |
+| `render` | `RenderProp<"div">`<br>`import("react").ReactElement<unknown, string \| import("react").JSXElementConstructor<any>> \| ((props: Omit<import("react").DetailedHTMLProps<import("react").HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref">) => import("react").ReactElement)` | — | no |  |
 | `trigger` | `ReactNode` | — | yes |  |
 
 Also accepts: `AriaAttributes` (53 props from @types/react)
 
 ### DateInput
 
-Source: [`src/generated/components/date-input/DateInput.gen.tsx:49`](https://github.com/recontentapp/recontent/blob/f543a3ef8e4b179f82a29e38b21bfa91a01d7706/apps/vanilla-extract-playground/src/generated/components/date-input/DateInput.gen.tsx#L49) · Updated 2026-10-04
+Source: `src/generated/components/date-input/DateInput.gen.tsx:49`
 
 | Prop | Type | Default | Required | Notes |
 | --- | --- | --- | --- | --- |
@@ -629,7 +629,7 @@ Source: [`src/generated/components/date-input/DateInput.gen.tsx:49`](https://git
 | `onFocus` | `FocusEventHandler` | — | no |  |
 | `onValueChange` | `(date: Date \| null) => void` | — | no |  |
 | `readOnly` | `boolean` | `false` | no |  |
-| `render` | `RenderProp<"input">` | — | no |  |
+| `render` | `RenderProp<"input">`<br>`import("react").ReactElement<unknown, string \| import("react").JSXElementConstructor<any>> \| ((props: Omit<import("react").DetailedHTMLProps<import("react").InputHTMLAttributes<HTMLInputElement>, HTMLInputElement>, "ref">) => import("react").ReactElement)` | — | no |  |
 | `required` | `boolean` | `false` | no |  |
 | `value` | `Date \| null` | — | no |  |
 
@@ -637,7 +637,7 @@ Also accepts: `AriaAttributes` (53 props from @types/react)
 
 ### Dialog
 
-Source: [`src/generated/components/dialog/Dialog.gen.tsx:38`](https://github.com/recontentapp/recontent/blob/f543a3ef8e4b179f82a29e38b21bfa91a01d7706/apps/vanilla-extract-playground/src/generated/components/dialog/Dialog.gen.tsx#L38) · Updated 2026-09-17
+Source: `src/generated/components/dialog/Dialog.gen.tsx:38`
 
 | Prop | Type | Default | Required | Notes |
 | --- | --- | --- | --- | --- |
@@ -651,7 +651,7 @@ Source: [`src/generated/components/dialog/Dialog.gen.tsx:38`](https://github.com
 | `id` | `string` | — | no |  |
 | `onOpenChange` | `(open: boolean) => void` | — | no |  |
 | `open` | `boolean` | — | no |  |
-| `render` | `RenderProp<"div">` | — | no |  |
+| `render` | `RenderProp<"div">`<br>`import("react").ReactElement<unknown, string \| import("react").JSXElementConstructor<any>> \| ((props: Omit<import("react").DetailedHTMLProps<import("react").HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref">) => import("react").ReactElement)` | — | no |  |
 | `size` | `"sm" \| "lg" \| "md" \| "fullscreen"` | `"md"` | no |  |
 | `title` | `ReactNode` | — | yes |  |
 | `trigger` | `ReactNode` | — | no |  |
@@ -660,7 +660,7 @@ Also accepts: `AriaAttributes` (53 props from @types/react)
 
 ### Divider
 
-Source: [`src/generated/components/divider/Divider.gen.tsx:10`](https://github.com/recontentapp/recontent/blob/f543a3ef8e4b179f82a29e38b21bfa91a01d7706/apps/vanilla-extract-playground/src/generated/components/divider/Divider.gen.tsx#L10) · Updated 2026-09-17
+Source: `src/generated/components/divider/Divider.gen.tsx:10`
 
 | Prop | Type | Default | Required | Notes |
 | --- | --- | --- | --- | --- |
@@ -668,13 +668,13 @@ Source: [`src/generated/components/divider/Divider.gen.tsx:10`](https://github.c
 | `data-testid` | `string` | — | no |  |
 | `id` | `string` | — | no |  |
 | `orientation` | `"horizontal" \| "vertical"` | `"horizontal"` | no |  |
-| `render` | `RenderProp<"div">` | — | no |  |
+| `render` | `RenderProp<"div">`<br>`import("react").ReactElement<unknown, string \| import("react").JSXElementConstructor<any>> \| ((props: Omit<import("react").DetailedHTMLProps<import("react").HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref">) => import("react").ReactElement)` | — | no |  |
 
 Also accepts: `AriaAttributes` (53 props from @types/react)
 
 ### Drawer
 
-Source: [`src/generated/components/drawer/Drawer.gen.tsx:37`](https://github.com/recontentapp/recontent/blob/f543a3ef8e4b179f82a29e38b21bfa91a01d7706/apps/vanilla-extract-playground/src/generated/components/drawer/Drawer.gen.tsx#L37) · Updated 2026-09-17
+Source: `src/generated/components/drawer/Drawer.gen.tsx:37`
 
 | Prop | Type | Default | Required | Notes |
 | --- | --- | --- | --- | --- |
@@ -688,7 +688,7 @@ Source: [`src/generated/components/drawer/Drawer.gen.tsx:37`](https://github.com
 | `onOpenChange` | `(open: boolean) => void` | — | no |  |
 | `open` | `boolean` | — | no |  |
 | `placement` | `"left" \| "right" \| "top" \| "bottom"` | `"right"` | no |  |
-| `render` | `RenderProp<"div">` | — | no |  |
+| `render` | `RenderProp<"div">`<br>`import("react").ReactElement<unknown, string \| import("react").JSXElementConstructor<any>> \| ((props: Omit<import("react").DetailedHTMLProps<import("react").HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref">) => import("react").ReactElement)` | — | no |  |
 | `size` | `"sm" \| "lg" \| "md" \| "full"` | `"md"` | no |  |
 | `title` | `ReactNode` | — | no |  |
 | `trigger` | `ReactNode` | — | no |  |
@@ -697,7 +697,7 @@ Also accepts: `AriaAttributes` (53 props from @types/react)
 
 ### DropdownButton
 
-Source: [`src/generated/components/dropdown-button/DropdownButton.gen.tsx:43`](https://github.com/recontentapp/recontent/blob/f543a3ef8e4b179f82a29e38b21bfa91a01d7706/apps/vanilla-extract-playground/src/generated/components/dropdown-button/DropdownButton.gen.tsx#L43) · Updated 2026-09-17
+Source: `src/generated/components/dropdown-button/DropdownButton.gen.tsx:43`
 
 | Prop | Type | Default | Required | Notes |
 | --- | --- | --- | --- | --- |
@@ -711,7 +711,7 @@ Source: [`src/generated/components/dropdown-button/DropdownButton.gen.tsx:43`](h
 | `label` | `ReactNode` | — | yes |  |
 | `onOpenChange` | `(open: boolean) => void` | — | no |  |
 | `open` | `boolean` | — | no |  |
-| `render` | `RenderProp<"button">` | — | no |  |
+| `render` | `RenderProp<"button">`<br>`import("react").ReactElement<unknown, string \| import("react").JSXElementConstructor<any>> \| ((props: Omit<import("react").DetailedHTMLProps<import("react").ButtonHTMLAttributes<HTMLButtonElement>, HTMLButtonElement>, "ref">) => import("react").ReactElement)` | — | no |  |
 | `side` | `"top" \| "right" \| "bottom" \| "left"` | `"bottom"` | no |  |
 | `size` | `"sm" \| "md"` | `"sm"` | no |  |
 | `variant` | `"primary" \| "secondary"` | `"primary"` | no |  |
@@ -720,7 +720,7 @@ Also accepts: `AriaAttributes` (53 props from @types/react)
 
 ### Field
 
-Source: [`src/generated/components/field/Field.gen.tsx:29`](https://github.com/recontentapp/recontent/blob/f543a3ef8e4b179f82a29e38b21bfa91a01d7706/apps/vanilla-extract-playground/src/generated/components/field/Field.gen.tsx#L29) · Updated 2026-09-17
+Source: `src/generated/components/field/Field.gen.tsx:29`
 
 | Prop | Type | Default | Required | Notes |
 | --- | --- | --- | --- | --- |
@@ -732,14 +732,14 @@ Source: [`src/generated/components/field/Field.gen.tsx:29`](https://github.com/r
 | `id` | `string` | — | no |  |
 | `label` | `ReactNode` | — | no |  |
 | `optionalText` | `ReactNode` | — | no | Shown next to the label when the field is not required. |
-| `render` | `RenderProp<"div">` | — | no |  |
+| `render` | `RenderProp<"div">`<br>`import("react").ReactElement<unknown, string \| import("react").JSXElementConstructor<any>> \| ((props: Omit<import("react").DetailedHTMLProps<import("react").HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref">) => import("react").ReactElement)` | — | no |  |
 | `required` | `boolean` | `false` | no |  |
 
 Also accepts: `AriaAttributes` (53 props from @types/react)
 
 ### FileInput
 
-Source: [`src/generated/components/file-input/FileInput.gen.tsx:43`](https://github.com/recontentapp/recontent/blob/f543a3ef8e4b179f82a29e38b21bfa91a01d7706/apps/vanilla-extract-playground/src/generated/components/file-input/FileInput.gen.tsx#L43) · Updated 2026-09-17
+Source: `src/generated/components/file-input/FileInput.gen.tsx:43`
 
 | Prop | Type | Default | Required | Notes |
 | --- | --- | --- | --- | --- |
@@ -760,14 +760,14 @@ Source: [`src/generated/components/file-input/FileInput.gen.tsx:43`](https://git
 | `onFilesChange` | `(files: File[]) => void` | — | no |  |
 | `onFocus` | `FocusEventHandler` | — | no |  |
 | `onRejected` | `(reason: "type" \| "size", files: File[]) => void` | — | no |  |
-| `render` | `RenderProp<"input">` | — | no |  |
+| `render` | `RenderProp<"input">`<br>`import("react").ReactElement<unknown, string \| import("react").JSXElementConstructor<any>> \| ((props: Omit<import("react").DetailedHTMLProps<import("react").InputHTMLAttributes<HTMLInputElement>, HTMLInputElement>, "ref">) => import("react").ReactElement)` | — | no |  |
 | `required` | `boolean` | `false` | no |  |
 
 Also accepts: `AriaAttributes` (53 props from @types/react)
 
 ### Grid
 
-Source: [`src/generated/components/grid/Grid.gen.tsx:34`](https://github.com/recontentapp/recontent/blob/f543a3ef8e4b179f82a29e38b21bfa91a01d7706/apps/vanilla-extract-playground/src/generated/components/grid/Grid.gen.tsx#L34) · Updated 2026-09-17
+Source: `src/generated/components/grid/Grid.gen.tsx:34`
 
 | Prop | Type | Default | Required | Notes |
 | --- | --- | --- | --- | --- |
@@ -775,21 +775,21 @@ Source: [`src/generated/components/grid/Grid.gen.tsx:34`](https://github.com/rec
 | `autoFlow` | `"row" \| "column" \| "dense" \| "row dense" \| "column dense"` | — | no |  |
 | `children` | `ReactNode` | — | no |  |
 | `className` | `string` | — | no |  |
-| `columnGap` | `Responsive<GridSpacingToken>` | — | no |  |
-| `columns` | `Responsive<number \| string>` | — | no |  |
+| `columnGap` | `Responsive<GridSpacingToken>`<br>`GridSpacingToken \| { xs?: GridSpacingToken \| undefined; sm?: GridSpacingToken \| undefined; lg?: GridSpacingToken \| undefined; xl?: GridSpacingToken \| undefined; md?: GridSpacingToken \| undefined; xxl?: GridSpacingToken \| undefined; }` | — | no |  |
+| `columns` | `Responsive<number \| string>`<br>`string \| number \| { xs?: string \| number \| undefined; sm?: string \| number \| undefined; lg?: string \| number \| undefined; xl?: string \| number \| undefined; md?: string \| number \| undefined; xxl?: string \| number \| undefined; }` | — | no |  |
 | `data-testid` | `string` | — | no |  |
-| `gap` | `Responsive<GridSpacingToken>` | — | no |  |
+| `gap` | `Responsive<GridSpacingToken>`<br>`GridSpacingToken \| { xs?: GridSpacingToken \| undefined; sm?: GridSpacingToken \| undefined; lg?: GridSpacingToken \| undefined; xl?: GridSpacingToken \| undefined; md?: GridSpacingToken \| undefined; xxl?: GridSpacingToken \| undefined; }` | — | no |  |
 | `id` | `string` | — | no |  |
 | `justify` | `"start" \| "center" \| "end" \| "stretch" \| "space-between"` | — | no |  |
-| `render` | `RenderProp` | — | no |  |
-| `rowGap` | `Responsive<GridSpacingToken>` | — | no |  |
-| `rows` | `Responsive<number \| string>` | — | no |  |
+| `render` | `RenderProp`<br>`import("react").ReactElement<unknown, string \| import("react").JSXElementConstructor<any>> \| ((props: Omit<import("react").DetailedHTMLProps<import("react").HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref">) => import("react").ReactElement)` | — | no |  |
+| `rowGap` | `Responsive<GridSpacingToken>`<br>`GridSpacingToken \| { xs?: GridSpacingToken \| undefined; sm?: GridSpacingToken \| undefined; lg?: GridSpacingToken \| undefined; xl?: GridSpacingToken \| undefined; md?: GridSpacingToken \| undefined; xxl?: GridSpacingToken \| undefined; }` | — | no |  |
+| `rows` | `Responsive<number \| string>`<br>`string \| number \| { xs?: string \| number \| undefined; sm?: string \| number \| undefined; lg?: string \| number \| undefined; xl?: string \| number \| undefined; md?: string \| number \| undefined; xxl?: string \| number \| undefined; }` | — | no |  |
 
 Also accepts: `AriaAttributes` (53 props from @types/react)
 
 ### Icon
 
-Source: [`src/generated/components/icon/Icon.gen.tsx:14`](https://github.com/recontentapp/recontent/blob/f543a3ef8e4b179f82a29e38b21bfa91a01d7706/apps/vanilla-extract-playground/src/generated/components/icon/Icon.gen.tsx#L14) · Updated 2026-09-17
+Source: `src/generated/components/icon/Icon.gen.tsx:14`
 
 | Prop | Type | Default | Required | Notes |
 | --- | --- | --- | --- | --- |
@@ -805,7 +805,7 @@ Also accepts: `AriaAttributes` (53 props from @types/react)
 
 ### IconButton
 
-Source: [`src/generated/components/icon-button/IconButton.gen.tsx:29`](https://github.com/recontentapp/recontent/blob/f543a3ef8e4b179f82a29e38b21bfa91a01d7706/apps/vanilla-extract-playground/src/generated/components/icon-button/IconButton.gen.tsx#L29) · Updated 2026-09-17
+Source: `src/generated/components/icon-button/IconButton.gen.tsx:29`
 
 | Prop | Type | Default | Required | Notes |
 | --- | --- | --- | --- | --- |
@@ -817,7 +817,7 @@ Source: [`src/generated/components/icon-button/IconButton.gen.tsx:29`](https://g
 | `label` | `string` | — | yes | Accessible name — mandatory, since there is no visible text. |
 | `loading` | `boolean` | `false` | no |  |
 | `onClick` | `MouseEventHandler<HTMLButtonElement>` | — | no |  |
-| `render` | `RenderProp<"button">` | — | no |  |
+| `render` | `RenderProp<"button">`<br>`import("react").ReactElement<unknown, string \| import("react").JSXElementConstructor<any>> \| ((props: Omit<import("react").DetailedHTMLProps<import("react").ButtonHTMLAttributes<HTMLButtonElement>, HTMLButtonElement>, "ref">) => import("react").ReactElement)` | — | no |  |
 | `size` | `"sm" \| "md"` | `"sm"` | no |  |
 | `type` | `"button" \| "submit" \| "reset"` | `"button"` | no |  |
 | `variant` | `"primary" \| "secondary"` | `"primary"` | no |  |
@@ -826,7 +826,7 @@ Also accepts: `AriaAttributes` (53 props from @types/react)
 
 ### KeyboardShortcut
 
-Source: [`src/generated/components/keyboard-shortcut/KeyboardShortcut.gen.tsx:12`](https://github.com/recontentapp/recontent/blob/f543a3ef8e4b179f82a29e38b21bfa91a01d7706/apps/vanilla-extract-playground/src/generated/components/keyboard-shortcut/KeyboardShortcut.gen.tsx#L12) · Updated 2026-09-17
+Source: `src/generated/components/keyboard-shortcut/KeyboardShortcut.gen.tsx:12`
 
 | Prop | Type | Default | Required | Notes |
 | --- | --- | --- | --- | --- |
@@ -834,14 +834,14 @@ Source: [`src/generated/components/keyboard-shortcut/KeyboardShortcut.gen.tsx:12
 | `data-testid` | `string` | — | no |  |
 | `id` | `string` | — | no |  |
 | `keys` | `string[]` | — | yes |  |
-| `render` | `RenderProp<"span">` | — | no |  |
+| `render` | `RenderProp<"span">`<br>`import("react").ReactElement<unknown, string \| import("react").JSXElementConstructor<any>> \| ((props: Omit<import("react").DetailedHTMLProps<import("react").HTMLAttributes<HTMLSpanElement>, HTMLSpanElement>, "ref">) => import("react").ReactElement)` | — | no |  |
 | `separator` | `ReactNode` | — | no | Rendered between keys. Defaults to nothing (keys are separate elements). |
 
 Also accepts: `AriaAttributes` (53 props from @types/react)
 
 ### Link
 
-Source: [`src/generated/components/link/Link.gen.tsx:15`](https://github.com/recontentapp/recontent/blob/f543a3ef8e4b179f82a29e38b21bfa91a01d7706/apps/vanilla-extract-playground/src/generated/components/link/Link.gen.tsx#L15) · Updated 2026-09-17
+Source: `src/generated/components/link/Link.gen.tsx:15`
 
 | Prop | Type | Default | Required | Notes |
 | --- | --- | --- | --- | --- |
@@ -852,7 +852,7 @@ Source: [`src/generated/components/link/Link.gen.tsx:15`](https://github.com/rec
 | `id` | `string` | — | no |  |
 | `onClick` | `MouseEventHandler<HTMLAnchorElement>` | — | no |  |
 | `rel` | `string` | — | no |  |
-| `render` | `RenderProp<"a">` | — | no |  |
+| `render` | `RenderProp<"a">`<br>`import("react").ReactElement<unknown, string \| import("react").JSXElementConstructor<any>> \| ((props: Omit<import("react").DetailedHTMLProps<import("react").AnchorHTMLAttributes<HTMLAnchorElement>, HTMLAnchorElement>, "ref">) => import("react").ReactElement)` | — | no |  |
 | `target` | `string` | — | no |  |
 | `underline` | `"always" \| "hover" \| "none"` | `"always"` | no |  |
 
@@ -860,7 +860,7 @@ Also accepts: `AriaAttributes` (53 props from @types/react)
 
 ### MetadataList
 
-Source: [`src/generated/components/metadata-list/MetadataList.gen.tsx:31`](https://github.com/recontentapp/recontent/blob/f543a3ef8e4b179f82a29e38b21bfa91a01d7706/apps/vanilla-extract-playground/src/generated/components/metadata-list/MetadataList.gen.tsx#L31) · Updated 2026-09-17
+Source: `src/generated/components/metadata-list/MetadataList.gen.tsx:31`
 
 | Prop | Type | Default | Required | Notes |
 | --- | --- | --- | --- | --- |
@@ -871,13 +871,13 @@ Source: [`src/generated/components/metadata-list/MetadataList.gen.tsx:31`](https
 | `id` | `string` | — | no |  |
 | `items` | `MetadataListItem[]` | — | yes |  |
 | `orientation` | `"horizontal" \| "vertical"` | `"horizontal"` | no |  |
-| `render` | `RenderProp<"dl">` | — | no |  |
+| `render` | `RenderProp<"dl">`<br>`import("react").ReactElement<unknown, string \| import("react").JSXElementConstructor<any>> \| ((props: Omit<import("react").DetailedHTMLProps<import("react").HTMLAttributes<HTMLDListElement>, HTMLDListElement>, "ref">) => import("react").ReactElement)` | — | no |  |
 
 Also accepts: `AriaAttributes` (53 props from @types/react)
 
 ### NumberInput
 
-Source: [`src/generated/components/number-input/NumberInput.gen.tsx:36`](https://github.com/recontentapp/recontent/blob/f543a3ef8e4b179f82a29e38b21bfa91a01d7706/apps/vanilla-extract-playground/src/generated/components/number-input/NumberInput.gen.tsx#L36) · Updated 2026-09-17
+Source: `src/generated/components/number-input/NumberInput.gen.tsx:36`
 
 | Prop | Type | Default | Required | Notes |
 | --- | --- | --- | --- | --- |
@@ -899,7 +899,7 @@ Source: [`src/generated/components/number-input/NumberInput.gen.tsx:36`](https:/
 | `placeholder` | `string` | — | no |  |
 | `prefix` | `ReactNode` | — | no |  |
 | `readOnly` | `boolean` | `false` | no |  |
-| `render` | `RenderProp<"input">` | — | no |  |
+| `render` | `RenderProp<"input">`<br>`import("react").ReactElement<unknown, string \| import("react").JSXElementConstructor<any>> \| ((props: Omit<import("react").DetailedHTMLProps<import("react").InputHTMLAttributes<HTMLInputElement>, HTMLInputElement>, "ref">) => import("react").ReactElement)` | — | no |  |
 | `required` | `boolean` | `false` | no |  |
 | `showStepper` | `boolean` | `true` | no |  |
 | `step` | `number` | — | no |  |
@@ -910,7 +910,7 @@ Also accepts: `AriaAttributes` (53 props from @types/react)
 
 ### Outline
 
-Source: [`src/generated/components/outline/Outline.gen.tsx:61`](https://github.com/recontentapp/recontent/blob/f543a3ef8e4b179f82a29e38b21bfa91a01d7706/apps/vanilla-extract-playground/src/generated/components/outline/Outline.gen.tsx#L61) · Updated 2026-09-17
+Source: `src/generated/components/outline/Outline.gen.tsx:61`
 
 | Prop | Type | Default | Required | Notes |
 | --- | --- | --- | --- | --- |
@@ -921,13 +921,13 @@ Source: [`src/generated/components/outline/Outline.gen.tsx:61`](https://github.c
 | `items` | `OutlineItem[]` | — | yes |  |
 | `observeScroll` | `boolean` | `false` | no | Tracks the section in view with an IntersectionObserver. |
 | `onItemClick` | `(id: string) => void` | — | no |  |
-| `render` | `RenderProp<"nav">` | — | no |  |
+| `render` | `RenderProp<"nav">`<br>`import("react").ReactElement<unknown, string \| import("react").JSXElementConstructor<any>> \| ((props: Omit<import("react").DetailedHTMLProps<import("react").HTMLAttributes<HTMLElement>, HTMLElement>, "ref">) => import("react").ReactElement)` | — | no |  |
 
 Also accepts: `AriaAttributes` (53 props from @types/react)
 
 ### Pagination
 
-Source: [`src/generated/components/pagination/Pagination.gen.tsx:74`](https://github.com/recontentapp/recontent/blob/f543a3ef8e4b179f82a29e38b21bfa91a01d7706/apps/vanilla-extract-playground/src/generated/components/pagination/Pagination.gen.tsx#L74) · Updated 2026-09-17
+Source: `src/generated/components/pagination/Pagination.gen.tsx:74`
 
 | Prop | Type | Default | Required | Notes |
 | --- | --- | --- | --- | --- |
@@ -940,7 +940,7 @@ Source: [`src/generated/components/pagination/Pagination.gen.tsx:74`](https://gi
 | `onPageChange` | `(page: number) => void` | — | yes |  |
 | `page` | `number` | — | yes |  |
 | `pageCount` | `number` | — | yes |  |
-| `render` | `RenderProp<"nav">` | — | no |  |
+| `render` | `RenderProp<"nav">`<br>`import("react").ReactElement<unknown, string \| import("react").JSXElementConstructor<any>> \| ((props: Omit<import("react").DetailedHTMLProps<import("react").HTMLAttributes<HTMLElement>, HTMLElement>, "ref">) => import("react").ReactElement)` | — | no |  |
 | `showFirstLast` | `boolean` | `false` | no |  |
 | `siblingCount` | `number` | `1` | no |  |
 | `size` | `"sm" \| "md"` | `"sm"` | no |  |
@@ -949,7 +949,7 @@ Also accepts: `AriaAttributes` (53 props from @types/react)
 
 ### Popover
 
-Source: [`src/generated/components/popover/Popover.gen.tsx:24`](https://github.com/recontentapp/recontent/blob/f543a3ef8e4b179f82a29e38b21bfa91a01d7706/apps/vanilla-extract-playground/src/generated/components/popover/Popover.gen.tsx#L24) · Updated 2026-09-17
+Source: `src/generated/components/popover/Popover.gen.tsx:24`
 
 | Prop | Type | Default | Required | Notes |
 | --- | --- | --- | --- | --- |
@@ -962,7 +962,7 @@ Source: [`src/generated/components/popover/Popover.gen.tsx:24`](https://github.c
 | `modal` | `boolean` | `false` | no |  |
 | `onOpenChange` | `(open: boolean) => void` | — | no |  |
 | `open` | `boolean` | — | no |  |
-| `render` | `RenderProp<"div">` | — | no |  |
+| `render` | `RenderProp<"div">`<br>`ReactElement<unknown, string \| import("react").JSXElementConstructor<any>> \| ((props: Omit<import("react").DetailedHTMLProps<import("react").HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref">) => ReactElement)` | — | no |  |
 | `side` | `"top" \| "right" \| "bottom" \| "left"` | `"bottom"` | no |  |
 | `trigger` | `ReactElement` | — | yes |  |
 
@@ -970,7 +970,7 @@ Also accepts: `AriaAttributes` (53 props from @types/react)
 
 ### ProgressBar
 
-Source: [`src/generated/components/progress-bar/ProgressBar.gen.tsx:30`](https://github.com/recontentapp/recontent/blob/f543a3ef8e4b179f82a29e38b21bfa91a01d7706/apps/vanilla-extract-playground/src/generated/components/progress-bar/ProgressBar.gen.tsx#L30) · Updated 2026-09-17
+Source: `src/generated/components/progress-bar/ProgressBar.gen.tsx:30`
 
 | Prop | Type | Default | Required | Notes |
 | --- | --- | --- | --- | --- |
@@ -981,7 +981,7 @@ Source: [`src/generated/components/progress-bar/ProgressBar.gen.tsx:30`](https:/
 | `label` | `ReactNode` | — | no |  |
 | `max` | `number` | `100` | no |  |
 | `min` | `number` | `0` | no |  |
-| `render` | `RenderProp<"div">` | — | no |  |
+| `render` | `RenderProp<"div">`<br>`import("react").ReactElement<unknown, string \| import("react").JSXElementConstructor<any>> \| ((props: Omit<import("react").DetailedHTMLProps<import("react").HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref">) => import("react").ReactElement)` | — | no |  |
 | `showValueLabel` | `boolean` | `false` | no |  |
 | `size` | `"sm" \| "md"` | `"sm"` | no |  |
 | `status` | `"success" \| "danger" \| "default"` | `"default"` | no |  |
@@ -991,7 +991,7 @@ Also accepts: `AriaAttributes` (53 props from @types/react)
 
 ### QuoteBlock
 
-Source: [`src/generated/components/quote-block/QuoteBlock.gen.tsx:12`](https://github.com/recontentapp/recontent/blob/f543a3ef8e4b179f82a29e38b21bfa91a01d7706/apps/vanilla-extract-playground/src/generated/components/quote-block/QuoteBlock.gen.tsx#L12) · Updated 2026-09-17
+Source: `src/generated/components/quote-block/QuoteBlock.gen.tsx:12`
 
 | Prop | Type | Default | Required | Notes |
 | --- | --- | --- | --- | --- |
@@ -1001,13 +1001,13 @@ Source: [`src/generated/components/quote-block/QuoteBlock.gen.tsx:12`](https://g
 | `className` | `string` | — | no |  |
 | `data-testid` | `string` | — | no |  |
 | `id` | `string` | — | no |  |
-| `render` | `RenderProp<"figure">` | — | no |  |
+| `render` | `RenderProp<"figure">`<br>`import("react").ReactElement<unknown, string \| import("react").JSXElementConstructor<any>> \| ((props: Omit<import("react").DetailedHTMLProps<import("react").HTMLAttributes<HTMLElement>, HTMLElement>, "ref">) => import("react").ReactElement)` | — | no |  |
 
 Also accepts: `AriaAttributes` (53 props from @types/react)
 
-### RadioList
+### RadioList\<Value extends string\>
 
-Source: [`src/generated/components/radio-list/RadioList.gen.tsx:36`](https://github.com/recontentapp/recontent/blob/f543a3ef8e4b179f82a29e38b21bfa91a01d7706/apps/vanilla-extract-playground/src/generated/components/radio-list/RadioList.gen.tsx#L36) · Updated 2026-09-17
+Source: `src/generated/components/radio-list/RadioList.gen.tsx:36`
 
 | Prop | Type | Default | Required | Notes |
 | --- | --- | --- | --- | --- |
@@ -1023,16 +1023,16 @@ Source: [`src/generated/components/radio-list/RadioList.gen.tsx:36`](https://git
 | `onValueChange` | `(value: Value) => void` | — | no |  |
 | `options` | `RadioListOption<Value>[]` | — | yes |  |
 | `orientation` | `"horizontal" \| "vertical"` | `"vertical"` | no |  |
-| `render` | `RenderProp<"div">` | — | no |  |
+| `render` | `RenderProp<"div">`<br>`import("react").ReactElement<unknown, string \| import("react").JSXElementConstructor<any>> \| ((props: Omit<import("react").DetailedHTMLProps<import("react").HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref">) => import("react").ReactElement)` | — | no |  |
 | `required` | `boolean` | `false` | no |  |
 | `size` | `"base" \| "xs" \| "sm" \| "lg" \| "xl" \| "2xl" \| "3xl" \| "4xl"` | — | no |  |
 | `value` | `Value` | — | no |  |
 
 Also accepts: `AriaAttributes` (53 props from @types/react)
 
-### SegmentedControls
+### SegmentedControls\<Value extends string\>
 
-Source: [`src/generated/components/segmented-controls/SegmentedControls.gen.tsx:32`](https://github.com/recontentapp/recontent/blob/f543a3ef8e4b179f82a29e38b21bfa91a01d7706/apps/vanilla-extract-playground/src/generated/components/segmented-controls/SegmentedControls.gen.tsx#L32) · Updated 2026-09-17
+Source: `src/generated/components/segmented-controls/SegmentedControls.gen.tsx:32`
 
 | Prop | Type | Default | Required | Notes |
 | --- | --- | --- | --- | --- |
@@ -1043,15 +1043,15 @@ Source: [`src/generated/components/segmented-controls/SegmentedControls.gen.tsx:
 | `id` | `string` | — | no |  |
 | `onValueChange` | `(value: Value) => void` | — | no |  |
 | `options` | `SegmentedControlsOption<Value>[]` | — | yes |  |
-| `render` | `RenderProp<"div">` | — | no |  |
+| `render` | `RenderProp<"div">`<br>`import("react").ReactElement<unknown, string \| import("react").JSXElementConstructor<any>> \| ((props: Omit<import("react").DetailedHTMLProps<import("react").HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref">) => import("react").ReactElement)` | — | no |  |
 | `value` | `Value` | — | no |  |
-| `width` | `Width` | — | no |  |
+| `width` | `Width`<br>`number \| (string & {}) \| "auto" \| "100%"` | — | no |  |
 
 Also accepts: `AriaAttributes` (53 props from @types/react)
 
-### Select
+### Select\<Value extends string\>
 
-Source: [`src/generated/components/select/Select.gen.tsx:43`](https://github.com/recontentapp/recontent/blob/f543a3ef8e4b179f82a29e38b21bfa91a01d7706/apps/vanilla-extract-playground/src/generated/components/select/Select.gen.tsx#L43) · Updated 2026-09-17
+Source: `src/generated/components/select/Select.gen.tsx:43`
 
 | Prop | Type | Default | Required | Notes |
 | --- | --- | --- | --- | --- |
@@ -1071,7 +1071,7 @@ Source: [`src/generated/components/select/Select.gen.tsx:43`](https://github.com
 | `open` | `boolean` | — | no |  |
 | `options` | `SelectOption<Value>[]` | — | yes |  |
 | `placeholder` | `ReactNode` | — | no |  |
-| `render` | `RenderProp<"button">` | — | no |  |
+| `render` | `RenderProp<"button">`<br>`import("react").ReactElement<unknown, string \| import("react").JSXElementConstructor<any>> \| ((props: Omit<import("react").DetailedHTMLProps<import("react").ButtonHTMLAttributes<HTMLButtonElement>, HTMLButtonElement>, "ref">) => import("react").ReactElement)` | — | no |  |
 | `required` | `boolean` | `false` | no |  |
 | `value` | `Value` | — | no |  |
 
@@ -1079,7 +1079,7 @@ Also accepts: `AriaAttributes` (53 props from @types/react)
 
 ### SelectableCard
 
-Source: [`src/generated/components/selectable-card/SelectableCard.gen.tsx:18`](https://github.com/recontentapp/recontent/blob/f543a3ef8e4b179f82a29e38b21bfa91a01d7706/apps/vanilla-extract-playground/src/generated/components/selectable-card/SelectableCard.gen.tsx#L18) · Updated 2026-09-17
+Source: `src/generated/components/selectable-card/SelectableCard.gen.tsx:18`
 
 | Prop | Type | Default | Required | Notes |
 | --- | --- | --- | --- | --- |
@@ -1092,7 +1092,7 @@ Source: [`src/generated/components/selectable-card/SelectableCard.gen.tsx:18`](h
 | `id` | `string` | — | no |  |
 | `name` | `string` | — | no |  |
 | `onSelectedChange` | `(selected: boolean) => void` | — | no |  |
-| `render` | `RenderProp<"button">` | — | no |  |
+| `render` | `RenderProp<"button">`<br>`import("react").ReactElement<unknown, string \| import("react").JSXElementConstructor<any>> \| ((props: Omit<import("react").DetailedHTMLProps<import("react").ButtonHTMLAttributes<HTMLButtonElement>, HTMLButtonElement>, "ref">) => import("react").ReactElement)` | — | no |  |
 | `selected` | `boolean` | — | no |  |
 | `value` | `string` | — | no |  |
 
@@ -1100,7 +1100,7 @@ Also accepts: `AriaAttributes` (53 props from @types/react)
 
 ### Skeleton
 
-Source: [`src/generated/components/skeleton/Skeleton.gen.tsx:23`](https://github.com/recontentapp/recontent/blob/f543a3ef8e4b179f82a29e38b21bfa91a01d7706/apps/vanilla-extract-playground/src/generated/components/skeleton/Skeleton.gen.tsx#L23) · Updated 2026-09-17
+Source: `src/generated/components/skeleton/Skeleton.gen.tsx:23`
 
 | Prop | Type | Default | Required | Notes |
 | --- | --- | --- | --- | --- |
@@ -1111,7 +1111,7 @@ Source: [`src/generated/components/skeleton/Skeleton.gen.tsx:23`](https://github
 | `id` | `string` | — | no |  |
 | `lines` | `number` | — | no |  |
 | `radius` | `"none" \| "page" \| "inner" \| "element" \| "container" \| "full"` | — | no |  |
-| `render` | `RenderProp<"div">` | — | no |  |
+| `render` | `RenderProp<"div">`<br>`import("react").ReactElement<unknown, string \| import("react").JSXElementConstructor<any>> \| ((props: Omit<import("react").DetailedHTMLProps<import("react").HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref">) => import("react").ReactElement)` | — | no |  |
 | `variant` | `"text" \| "circular" \| "rectangular"` | `"text"` | no |  |
 | `width` | `CSSProperties["width"]` | — | no |  |
 
@@ -1119,7 +1119,7 @@ Also accepts: `AriaAttributes` (53 props from @types/react)
 
 ### Slider
 
-Source: [`src/generated/components/slider/Slider.gen.tsx:36`](https://github.com/recontentapp/recontent/blob/f543a3ef8e4b179f82a29e38b21bfa91a01d7706/apps/vanilla-extract-playground/src/generated/components/slider/Slider.gen.tsx#L36) · Updated 2026-09-17
+Source: `src/generated/components/slider/Slider.gen.tsx:36`
 
 | Prop | Type | Default | Required | Notes |
 | --- | --- | --- | --- | --- |
@@ -1139,7 +1139,7 @@ Source: [`src/generated/components/slider/Slider.gen.tsx:36`](https://github.com
 | `onValueChange` | `(value: number \| number[]) => void` | — | no |  |
 | `onValueCommit` | `(value: number \| number[]) => void` | — | no | Fires once on pointer release — use for expensive commits. |
 | `orientation` | `"horizontal" \| "vertical"` | `"horizontal"` | no |  |
-| `render` | `RenderProp<"div">` | — | no |  |
+| `render` | `RenderProp<"div">`<br>`import("react").ReactElement<unknown, string \| import("react").JSXElementConstructor<any>> \| ((props: Omit<import("react").DetailedHTMLProps<import("react").HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref">) => import("react").ReactElement)` | — | no |  |
 | `required` | `boolean` | `false` | no |  |
 | `showValueLabel` | `boolean` | `false` | no |  |
 | `step` | `number` | `1` | no |  |
@@ -1149,7 +1149,7 @@ Also accepts: `AriaAttributes` (53 props from @types/react)
 
 ### Spinner
 
-Source: [`src/generated/components/spinner/Spinner.gen.tsx:14`](https://github.com/recontentapp/recontent/blob/f543a3ef8e4b179f82a29e38b21bfa91a01d7706/apps/vanilla-extract-playground/src/generated/components/spinner/Spinner.gen.tsx#L14) · Updated 2026-09-17
+Source: `src/generated/components/spinner/Spinner.gen.tsx:14`
 
 | Prop | Type | Default | Required | Notes |
 | --- | --- | --- | --- | --- |
@@ -1158,52 +1158,52 @@ Source: [`src/generated/components/spinner/Spinner.gen.tsx:14`](https://github.c
 | `data-testid` | `string` | — | no |  |
 | `id` | `string` | — | no |  |
 | `label` | `string` | — | no | Accessible label; omit only when an adjacent element already labels it. |
-| `render` | `RenderProp<"span">` | — | no |  |
+| `render` | `RenderProp<"span">`<br>`import("react").ReactElement<unknown, string \| import("react").JSXElementConstructor<any>> \| ((props: Omit<import("react").DetailedHTMLProps<import("react").HTMLAttributes<HTMLSpanElement>, HTMLSpanElement>, "ref">) => import("react").ReactElement)` | — | no |  |
 | `size` | `SpinnerSizeToken \| number` | — | no |  |
 
 Also accepts: `AriaAttributes` (53 props from @types/react)
 
 ### Stack
 
-Source: [`src/generated/components/stack/Stack.gen.tsx:41`](https://github.com/recontentapp/recontent/blob/f543a3ef8e4b179f82a29e38b21bfa91a01d7706/apps/vanilla-extract-playground/src/generated/components/stack/Stack.gen.tsx#L41) · Updated 2026-09-17
+Source: `src/generated/components/stack/Stack.gen.tsx:41`
 
 | Prop | Type | Default | Required | Notes |
 | --- | --- | --- | --- | --- |
-| `align` | `Responsive<"start" \| "center" \| "end" \| "stretch" \| "baseline">` | — | no |  |
+| `align` | `Responsive<"start" \| "center" \| "end" \| "stretch" \| "baseline">`<br>`"center" \| "start" \| "end" \| "baseline" \| "stretch" \| { xs?: "center" \| "start" \| "end" \| "baseline" \| "stretch" \| undefined; sm?: "center" \| "start" \| "end" \| "baseline" \| "stretch" \| undefined; lg?: "center" \| "start" \| "end" \| "baseline" \| "stretch" \| undefined; xl?: "center" \| "start" \| "end" \| "baseline" \| "stretch" \| undefined; md?: "center" \| "start" \| "end" \| "baseline" \| "stretch" \| undefined; xxl?: "center" \| "start" \| "end" \| "baseline" \| "stretch" \| undefined; }` | — | no |  |
 | `children` | `ReactNode` | — | no |  |
 | `className` | `string` | — | no |  |
 | `data-testid` | `string` | — | no |  |
-| `direction` | `Responsive<"row" \| "column">` | `"column"` | no |  |
-| `gap` | `Responsive<StackSpacingToken>` | — | no |  |
+| `direction` | `Responsive<"row" \| "column">`<br>`"row" \| "column" \| { xs?: "row" \| "column" \| undefined; sm?: "row" \| "column" \| undefined; lg?: "row" \| "column" \| undefined; xl?: "row" \| "column" \| undefined; md?: "row" \| "column" \| undefined; xxl?: "row" \| "column" \| undefined; }` | `"column"` | no |  |
+| `gap` | `Responsive<StackSpacingToken>`<br>`StackSpacingToken \| { xs?: StackSpacingToken \| undefined; sm?: StackSpacingToken \| undefined; lg?: StackSpacingToken \| undefined; xl?: StackSpacingToken \| undefined; md?: StackSpacingToken \| undefined; xxl?: StackSpacingToken \| undefined; }` | — | no |  |
 | `id` | `string` | — | no |  |
-| `justify` | `Responsive<"start" \| "center" \| "end" \| "space-between" \| "space-around" \| "space-evenly">` | — | no |  |
-| `render` | `RenderProp` | — | no |  |
-| `wrap` | `Responsive<boolean>` | — | no |  |
+| `justify` | `Responsive<"start" \| "center" \| "end" \| "space-between" \| "space-around" \| "space-evenly">`<br>`"center" \| "start" \| "end" \| "space-between" \| "space-around" \| "space-evenly" \| { xs?: "center" \| "start" \| "end" \| "space-between" \| "space-around" \| "space-evenly" \| undefined; sm?: "center" \| "start" \| "end" \| "space-between" \| "space-around" \| "space-evenly" \| undefined; lg?: "center" \| "start" \| "end" \| "space-between" \| "space-around" \| "space-evenly" \| undefined; xl?: "center" \| "start" \| "end" \| "space-between" \| "space-around" \| "space-evenly" \| undefined; md?: "center" \| "start" \| "end" \| "space-between" \| "space-around" \| "space-evenly" \| undefined; xxl?: "center" \| "start" \| "end" \| "space-between" \| "space-around" \| "space-evenly" \| undefined; }` | — | no |  |
+| `render` | `RenderProp`<br>`import("react").ReactElement<unknown, string \| import("react").JSXElementConstructor<any>> \| ((props: Omit<import("react").DetailedHTMLProps<import("react").HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref">) => import("react").ReactElement)` | — | no |  |
+| `wrap` | `Responsive<boolean>`<br>`boolean \| { xs?: boolean \| undefined; sm?: boolean \| undefined; lg?: boolean \| undefined; xl?: boolean \| undefined; md?: boolean \| undefined; xxl?: boolean \| undefined; }` | — | no |  |
 
 Also accepts: `AriaAttributes` (53 props from @types/react)
 
 ### StackItem
 
-Source: [`src/generated/components/stack-item/StackItem.gen.tsx:34`](https://github.com/recontentapp/recontent/blob/f543a3ef8e4b179f82a29e38b21bfa91a01d7706/apps/vanilla-extract-playground/src/generated/components/stack-item/StackItem.gen.tsx#L34) · Updated 2026-09-17
+Source: `src/generated/components/stack-item/StackItem.gen.tsx:34`
 
 | Prop | Type | Default | Required | Notes |
 | --- | --- | --- | --- | --- |
 | `alignSelf` | `"auto" \| "start" \| "center" \| "end" \| "stretch" \| "baseline"` | — | no |  |
-| `basis` | `Responsive<StackItemSpacingToken \| "auto" \| "full">` | — | no |  |
+| `basis` | `Responsive<StackItemSpacingToken \| "auto" \| "full">`<br>`"auto" \| StackItemSpacingToken \| "full" \| { xs?: "auto" \| StackItemSpacingToken \| "full" \| undefined; sm?: "auto" \| StackItemSpacingToken \| "full" \| undefined; lg?: "auto" \| StackItemSpacingToken \| "full" \| undefined; xl?: "auto" \| StackItemSpacingToken \| "full" \| undefined; md?: "auto" \| StackItemSpacingToken \| "full" \| undefined; xxl?: "auto" \| StackItemSpacingToken \| "full" \| undefined; }` | — | no |  |
 | `children` | `ReactNode` | — | no |  |
 | `className` | `string` | — | no |  |
 | `data-testid` | `string` | — | no |  |
-| `grow` | `Responsive<boolean \| number>` | — | no |  |
+| `grow` | `Responsive<boolean \| number>`<br>`number \| boolean \| { xs?: number \| boolean \| undefined; sm?: number \| boolean \| undefined; lg?: number \| boolean \| undefined; xl?: number \| boolean \| undefined; md?: number \| boolean \| undefined; xxl?: number \| boolean \| undefined; }` | — | no |  |
 | `id` | `string` | — | no |  |
-| `order` | `Responsive<number>` | — | no |  |
-| `render` | `RenderProp` | — | no |  |
-| `shrink` | `Responsive<boolean \| number>` | — | no |  |
+| `order` | `Responsive<number>`<br>`number \| { xs?: number \| undefined; sm?: number \| undefined; lg?: number \| undefined; xl?: number \| undefined; md?: number \| undefined; xxl?: number \| undefined; }` | — | no |  |
+| `render` | `RenderProp`<br>`import("react").ReactElement<unknown, string \| import("react").JSXElementConstructor<any>> \| ((props: Omit<import("react").DetailedHTMLProps<import("react").HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref">) => import("react").ReactElement)` | — | no |  |
+| `shrink` | `Responsive<boolean \| number>`<br>`number \| boolean \| { xs?: number \| boolean \| undefined; sm?: number \| boolean \| undefined; lg?: number \| boolean \| undefined; xl?: number \| boolean \| undefined; md?: number \| boolean \| undefined; xxl?: number \| boolean \| undefined; }` | — | no |  |
 
 Also accepts: `AriaAttributes` (53 props from @types/react)
 
 ### Steps
 
-Source: [`src/generated/components/steps/Steps.gen.tsx:47`](https://github.com/recontentapp/recontent/blob/f543a3ef8e4b179f82a29e38b21bfa91a01d7706/apps/vanilla-extract-playground/src/generated/components/steps/Steps.gen.tsx#L47) · Updated 2026-09-17
+Source: `src/generated/components/steps/Steps.gen.tsx:47`
 
 | Prop | Type | Default | Required | Notes |
 | --- | --- | --- | --- | --- |
@@ -1212,7 +1212,7 @@ Source: [`src/generated/components/steps/Steps.gen.tsx:47`](https://github.com/r
 | `data-testid` | `string` | — | no |  |
 | `id` | `string` | — | no |  |
 | `orientation` | `"horizontal" \| "vertical"` | `"horizontal"` | no |  |
-| `render` | `RenderProp<"ol">` | — | no |  |
+| `render` | `RenderProp<"ol">`<br>`import("react").ReactElement<unknown, string \| import("react").JSXElementConstructor<any>> \| ((props: Omit<import("react").DetailedHTMLProps<import("react").OlHTMLAttributes<HTMLOListElement>, HTMLOListElement>, "ref">) => import("react").ReactElement)` | — | no |  |
 | `size` | `"sm" \| "md"` | `"sm"` | no |  |
 | `steps` | `Step[]` | — | yes |  |
 
@@ -1220,7 +1220,7 @@ Also accepts: `AriaAttributes` (53 props from @types/react)
 
 ### Switch
 
-Source: [`src/generated/components/switch/Switch.gen.tsx:21`](https://github.com/recontentapp/recontent/blob/f543a3ef8e4b179f82a29e38b21bfa91a01d7706/apps/vanilla-extract-playground/src/generated/components/switch/Switch.gen.tsx#L21) · Updated 2026-10-04
+Source: `src/generated/components/switch/Switch.gen.tsx:21`
 
 | Prop | Type | Default | Required | Notes |
 | --- | --- | --- | --- | --- |
@@ -1237,14 +1237,14 @@ Source: [`src/generated/components/switch/Switch.gen.tsx:21`](https://github.com
 | `onBlur` | `FocusEventHandler` | — | no |  |
 | `onCheckedChange` | `(checked: boolean) => void` | — | no |  |
 | `onFocus` | `FocusEventHandler` | — | no |  |
-| `render` | `RenderProp<"button">` | — | no |  |
+| `render` | `RenderProp<"button">`<br>`import("react").ReactElement<unknown, string \| import("react").JSXElementConstructor<any>> \| ((props: Omit<import("react").DetailedHTMLProps<import("react").ButtonHTMLAttributes<HTMLButtonElement>, HTMLButtonElement>, "ref">) => import("react").ReactElement)` | — | no |  |
 | `required` | `boolean` | `false` | no |  |
 
 Also accepts: `AriaAttributes` (53 props from @types/react)
 
 ### Tabs
 
-Source: [`src/generated/components/tabs/Tabs.gen.tsx:40`](https://github.com/recontentapp/recontent/blob/f543a3ef8e4b179f82a29e38b21bfa91a01d7706/apps/vanilla-extract-playground/src/generated/components/tabs/Tabs.gen.tsx#L40) · Updated 2026-09-17
+Source: `src/generated/components/tabs/Tabs.gen.tsx:40`
 
 | Prop | Type | Default | Required | Notes |
 | --- | --- | --- | --- | --- |
@@ -1256,7 +1256,7 @@ Source: [`src/generated/components/tabs/Tabs.gen.tsx:40`](https://github.com/rec
 | `items` | `TabItem[]` | — | yes |  |
 | `onValueChange` | `(value: string) => void` | — | no |  |
 | `orientation` | `"horizontal" \| "vertical"` | `"horizontal"` | no |  |
-| `render` | `RenderProp<"div">` | — | no |  |
+| `render` | `RenderProp<"div">`<br>`import("react").ReactElement<unknown, string \| import("react").JSXElementConstructor<any>> \| ((props: Omit<import("react").DetailedHTMLProps<import("react").HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref">) => import("react").ReactElement)` | — | no |  |
 | `value` | `string` | — | no |  |
 | `variant` | `"line" \| "pill"` | `"line"` | no |  |
 
@@ -1264,26 +1264,26 @@ Also accepts: `AriaAttributes` (53 props from @types/react)
 
 ### Text
 
-Source: [`src/generated/components/text/Text.gen.tsx:29`](https://github.com/recontentapp/recontent/blob/f543a3ef8e4b179f82a29e38b21bfa91a01d7706/apps/vanilla-extract-playground/src/generated/components/text/Text.gen.tsx#L29) · Updated 2026-09-17
+Source: `src/generated/components/text/Text.gen.tsx:29`
 
 | Prop | Type | Default | Required | Notes |
 | --- | --- | --- | --- | --- |
-| `align` | `Responsive<"left" \| "center" \| "right" \| "justify">` | — | no |  |
+| `align` | `Responsive<"left" \| "center" \| "right" \| "justify">`<br>`"center" \| "left" \| "right" \| "justify" \| { xs?: "center" \| "left" \| "right" \| "justify" \| undefined; sm?: "center" \| "left" \| "right" \| "justify" \| undefined; lg?: "center" \| "left" \| "right" \| "justify" \| undefined; xl?: "center" \| "left" \| "right" \| "justify" \| undefined; md?: "center" \| "left" \| "right" \| "justify" \| undefined; xxl?: "center" \| "left" \| "right" \| "justify" \| undefined; }` | — | no |  |
 | `children` | `ReactNode` | — | no |  |
 | `className` | `string` | — | no |  |
 | `color` | `"disabled" \| "primary" \| "secondary" \| "accent"` | — | no |  |
 | `data-testid` | `string` | — | no |  |
 | `id` | `string` | — | no |  |
-| `render` | `RenderProp<"p">` | — | no |  |
+| `render` | `RenderProp<"p">`<br>`import("react").ReactElement<unknown, string \| import("react").JSXElementConstructor<any>> \| ((props: Omit<import("react").DetailedHTMLProps<import("react").HTMLAttributes<HTMLParagraphElement>, HTMLParagraphElement>, "ref">) => import("react").ReactElement)` | — | no |  |
 | `textTransform` | `"none" \| "capitalize" \| "uppercase" \| "lowercase" \| "full-width"` | — | no |  |
 | `truncate` | `boolean \| number` | — | no |  |
-| `variant` | `Responsive<TextVariantToken>` | — | no |  |
+| `variant` | `Responsive<TextVariantToken>`<br>`TextVariantToken \| { xs?: TextVariantToken \| undefined; sm?: TextVariantToken \| undefined; lg?: TextVariantToken \| undefined; xl?: TextVariantToken \| undefined; md?: TextVariantToken \| undefined; xxl?: TextVariantToken \| undefined; }` | — | no |  |
 
 Also accepts: `AriaAttributes` (53 props from @types/react)
 
 ### Textarea
 
-Source: [`src/generated/components/textarea/Textarea.gen.tsx:20`](https://github.com/recontentapp/recontent/blob/f543a3ef8e4b179f82a29e38b21bfa91a01d7706/apps/vanilla-extract-playground/src/generated/components/textarea/Textarea.gen.tsx#L20) · Updated 2026-09-17
+Source: `src/generated/components/textarea/Textarea.gen.tsx:20`
 
 | Prop | Type | Default | Required | Notes |
 | --- | --- | --- | --- | --- |
@@ -1304,7 +1304,7 @@ Source: [`src/generated/components/textarea/Textarea.gen.tsx:20`](https://github
 | `onFocus` | `FocusEventHandler` | — | no |  |
 | `placeholder` | `string` | — | no |  |
 | `readOnly` | `boolean` | `false` | no |  |
-| `render` | `RenderProp<"textarea">` | — | no |  |
+| `render` | `RenderProp<"textarea">`<br>`import("react").ReactElement<unknown, string \| import("react").JSXElementConstructor<any>> \| ((props: Omit<import("react").DetailedHTMLProps<import("react").TextareaHTMLAttributes<HTMLTextAreaElement>, HTMLTextAreaElement>, "ref">) => import("react").ReactElement)` | — | no |  |
 | `required` | `boolean` | `false` | no |  |
 | `showCharacterCount` | `boolean` | `false` | no |  |
 | `value` | `string` | — | no |  |
@@ -1313,7 +1313,7 @@ Also accepts: `AriaAttributes` (53 props from @types/react)
 
 ### TextInput
 
-Source: [`src/generated/components/text-input/TextInput.gen.tsx:33`](https://github.com/recontentapp/recontent/blob/f543a3ef8e4b179f82a29e38b21bfa91a01d7706/apps/vanilla-extract-playground/src/generated/components/text-input/TextInput.gen.tsx#L33) · Updated 2026-09-17
+Source: `src/generated/components/text-input/TextInput.gen.tsx:33`
 
 | Prop | Type | Default | Required | Notes |
 | --- | --- | --- | --- | --- |
@@ -1337,7 +1337,7 @@ Source: [`src/generated/components/text-input/TextInput.gen.tsx:33`](https://git
 | `placeholder` | `string` | — | no |  |
 | `prefix` | `ReactNode` | — | no |  |
 | `readOnly` | `boolean` | `false` | no |  |
-| `render` | `RenderProp<"input">` | — | no |  |
+| `render` | `RenderProp<"input">`<br>`import("react").ReactElement<unknown, string \| import("react").JSXElementConstructor<any>> \| ((props: Omit<import("react").DetailedHTMLProps<import("react").InputHTMLAttributes<HTMLInputElement>, HTMLInputElement>, "ref">) => import("react").ReactElement)` | — | no |  |
 | `required` | `boolean` | `false` | no |  |
 | `suffix` | `ReactNode` | — | no |  |
 | `type` | `"text" \| "email" \| "password" \| "search" \| "tel" \| "url"` | `"text"` | no |  |
@@ -1347,7 +1347,7 @@ Also accepts: `AriaAttributes` (53 props from @types/react)
 
 ### Timeline
 
-Source: [`src/generated/components/timeline/Timeline.gen.tsx:44`](https://github.com/recontentapp/recontent/blob/f543a3ef8e4b179f82a29e38b21bfa91a01d7706/apps/vanilla-extract-playground/src/generated/components/timeline/Timeline.gen.tsx#L44) · Updated 2026-09-17
+Source: `src/generated/components/timeline/Timeline.gen.tsx:44`
 
 | Prop | Type | Default | Required | Notes |
 | --- | --- | --- | --- | --- |
@@ -1357,14 +1357,14 @@ Source: [`src/generated/components/timeline/Timeline.gen.tsx:44`](https://github
 | `id` | `string` | — | no |  |
 | `items` | `TimelineItem[]` | — | yes |  |
 | `orientation` | `"vertical" \| "horizontal"` | `"vertical"` | no |  |
-| `render` | `RenderProp<"ol">` | — | no |  |
+| `render` | `RenderProp<"ol">`<br>`import("react").ReactElement<unknown, string \| import("react").JSXElementConstructor<any>> \| ((props: Omit<import("react").DetailedHTMLProps<import("react").OlHTMLAttributes<HTMLOListElement>, HTMLOListElement>, "ref">) => import("react").ReactElement)` | — | no |  |
 | `size` | `"sm" \| "md"` | `"sm"` | no |  |
 
 Also accepts: `AriaAttributes` (53 props from @types/react)
 
 ### ToastProvider
 
-Source: [`src/generated/components/toast/Toast.gen.tsx:92`](https://github.com/recontentapp/recontent/blob/f543a3ef8e4b179f82a29e38b21bfa91a01d7706/apps/vanilla-extract-playground/src/generated/components/toast/Toast.gen.tsx#L92) · Updated 2026-09-17
+Source: `src/generated/components/toast/Toast.gen.tsx:92`
 
 | Prop | Type | Default | Required | Notes |
 | --- | --- | --- | --- | --- |
@@ -1377,9 +1377,9 @@ Source: [`src/generated/components/toast/Toast.gen.tsx:92`](https://github.com/r
 
 Also accepts: `AriaAttributes` (53 props from @types/react)
 
-### Toggle
+### Toggle\<Value extends string\>
 
-Source: [`src/generated/components/toggle/Toggle.gen.tsx:24`](https://github.com/recontentapp/recontent/blob/f543a3ef8e4b179f82a29e38b21bfa91a01d7706/apps/vanilla-extract-playground/src/generated/components/toggle/Toggle.gen.tsx#L24) · Updated 2026-10-04
+Source: `src/generated/components/toggle/Toggle.gen.tsx:24`
 
 | Prop | Type | Default | Required | Notes |
 | --- | --- | --- | --- | --- |
@@ -1390,7 +1390,7 @@ Source: [`src/generated/components/toggle/Toggle.gen.tsx:24`](https://github.com
 | `id` | `string` | — | no |  |
 | `onValueChange` | `(value: Value) => void` | — | no |  |
 | `options` | `readonly [ ToggleOption<Value>, ToggleOption<Value> ]` | — | yes |  |
-| `render` | `RenderProp<"div">` | — | no |  |
+| `render` | `RenderProp<"div">`<br>`import("react").ReactElement<unknown, string \| import("react").JSXElementConstructor<any>> \| ((props: Omit<import("react").DetailedHTMLProps<import("react").HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref">) => import("react").ReactElement)` | — | no |  |
 | `size` | `"md"` | `"md"` | no |  |
 | `value` | `Value` | — | no |  |
 
@@ -1398,7 +1398,7 @@ Also accepts: `AriaAttributes` (53 props from @types/react)
 
 ### Tooltip
 
-Source: [`src/generated/components/tooltip/Tooltip.gen.tsx:20`](https://github.com/recontentapp/recontent/blob/f543a3ef8e4b179f82a29e38b21bfa91a01d7706/apps/vanilla-extract-playground/src/generated/components/tooltip/Tooltip.gen.tsx#L20) · Updated 2026-09-17
+Source: `src/generated/components/tooltip/Tooltip.gen.tsx:20`
 
 | Prop | Type | Default | Required | Notes |
 | --- | --- | --- | --- | --- |
@@ -1418,9 +1418,9 @@ Source: [`src/generated/components/tooltip/Tooltip.gen.tsx:20`](https://github.c
 
 Also accepts: `AriaAttributes` (53 props from @types/react)
 
-### TreeList
+### TreeList\<Value\>
 
-Source: [`src/generated/components/tree-list/TreeList.gen.tsx:120`](https://github.com/recontentapp/recontent/blob/f543a3ef8e4b179f82a29e38b21bfa91a01d7706/apps/vanilla-extract-playground/src/generated/components/tree-list/TreeList.gen.tsx#L120) · Updated 2026-09-17
+Source: `src/generated/components/tree-list/TreeList.gen.tsx:120`
 
 | Prop | Type | Default | Required | Notes |
 | --- | --- | --- | --- | --- |
@@ -1434,9 +1434,7 @@ Source: [`src/generated/components/tree-list/TreeList.gen.tsx:120`](https://gith
 | `onExpandedIdsChange` | `(ids: string[]) => void` | — | no |  |
 | `onNodeActivate` | `(node: TreeNode<Value>) => void` | — | no | Fired on Enter or double-click — distinct from selection. |
 | `onSelectedIdChange` | `(id: string) => void` | — | no |  |
-| `render` | `RenderProp<"div">` | — | no |  |
+| `render` | `RenderProp<"div">`<br>`import("react").ReactElement<unknown, string \| import("react").JSXElementConstructor<any>> \| ((props: Omit<import("react").DetailedHTMLProps<import("react").HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref">) => import("react").ReactElement)` | — | no |  |
 | `selectedId` | `string` | — | no |  |
 
 Also accepts: `AriaAttributes` (53 props from @types/react)
-
-_Generated from f543a3e on components-introspection_

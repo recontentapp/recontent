@@ -61,7 +61,9 @@ The trees are walked once:
 | Required | Yes, unless [`tokens`](#tokens) is set                                        |
 
 Tells Recontent where your React components are, so that [`recontent inspect`](/cli/inspect) and
-plugins can read their props. `defineConfig` throws when neither `tokens` nor `introspection` is set.
+plugins can read their props, and the types declared in your project that those props reference
+(interfaces, type aliases and enums, followed transitively; types from `node_modules` are not).
+`defineConfig` throws when neither `tokens` nor `introspection` is set.
 
 ```ts
 export default defineConfig({

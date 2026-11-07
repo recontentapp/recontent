@@ -19,3 +19,4 @@ export { Dialog } from "@base-ui/react/dialog";
 export * from "./f-jsdoc/f";
 export * from "./g-not-components/g";
 export * from "./h-failures/h";
+export * from "./i-types/i";

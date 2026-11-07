@@ -1,5 +1,6 @@
-import type { ComponentInfo, LogLevel } from "@recontentapp/core";
+import type { ComponentInfo, LogLevel, TypeInfo } from "@recontentapp/core";
 import { loadComponents, loadProject } from "../../../project.js";
+import { typeClosure } from "../../../introspection/types.js";
 import { buildToken, type DocToken } from "../../../plugins/shared/doc-token.js";
 import { diagnoseRegistry } from "../../registry-diagnostics.js";
 import { exitWithError } from "../../utils/exit.js";
@@ -10,15 +11,17 @@ import {
   renderErrors,
   renderOverview,
   renderTokens,
+  renderTypes,
   type Format,
   type InspectError,
 } from "./render.js";
-import { selectComponents, selectTokens } from "./select.js";
+import { selectComponents, selectTokens, selectTypes } from "./select.js";
 
 export type InspectTarget =
   | { kind: "overview" }
   | { kind: "tokens"; paths: string[]; type?: string; theme?: string; deprecated?: boolean }
-  | { kind: "components"; names: string[]; deprecated?: boolean };
+  | { kind: "components"; names: string[]; deprecated?: boolean }
+  | { kind: "types"; names: string[]; deprecated?: boolean };
 
 export type InspectOptions = {
   cwd: string;
@@ -54,7 +57,7 @@ export async function runInspect(options: InspectOptions): Promise<void> {
   const { config, logger } = project;
   const configName = displayPath(options.cwd, options.configPath);
 
-  if (target.kind === "components" && !config.introspection) {
+  if ((target.kind === "components" || target.kind === "types") && !config.introspection) {
     fail(format, [
       {
         message: `${configName} has no \`introspection\` block. Add \`introspection: { entry: "src/components/index.ts" }\` to defineConfig() to inspect components.`,
@@ -74,16 +77,17 @@ export async function runInspect(options: InspectOptions): Promise<void> {
 
   // Tokens never need a TS program; only look at components when asked.
   let components: ComponentInfo[] | undefined;
+  let types: TypeInfo[] | undefined;
   let componentsError: string | undefined;
   if (target.kind !== "tokens" && config.introspection) {
     try {
-      components = (await loadComponents(project, { cache: options.cache })).components;
+      ({ components, types } = await loadComponents(project, { cache: options.cache }));
     } catch (error) {
       componentsError = error instanceof Error ? error.message : String(error);
     }
   }
   // The overview is where to start, so it still shows the tokens and says what is wrong with the components.
-  if (componentsError !== undefined && target.kind === "components") {
+  if (componentsError !== undefined && (target.kind === "components" || target.kind === "types")) {
     fail(format, [{ message: componentsError }]);
     return;
   }
@@ -98,7 +102,10 @@ export async function runInspect(options: InspectOptions): Promise<void> {
   switch (target.kind) {
     case "overview":
       print(
-        renderOverview({ config: configName, tokens, themes, components, componentsError }, format),
+        renderOverview(
+          { config: configName, tokens, themes, components, types, componentsError },
+          format,
+        ),
       );
       return;
     case "tokens": {
@@ -119,7 +126,25 @@ export async function runInspect(options: InspectOptions): Promise<void> {
         return;
       }
       const summary = target.names.length === 0;
-      print(renderComponents(selected, { format, summary }));
+      const referenced = typeClosure(
+        selected.flatMap((component) => component.references),
+        types ?? [],
+      );
+      print(renderComponents(selected, { format, summary, types: referenced }));
+      return;
+    }
+    case "types": {
+      const { selected, errors } = selectTypes(types ?? [], target);
+      if (errors.length > 0) {
+        fail(format, errors, NO_MATCH);
+        return;
+      }
+      const summary = target.names.length === 0;
+      const closure = typeClosure(
+        selected.map((type) => type.id),
+        types ?? [],
+      );
+      print(renderTypes(selected, { format, summary, types: closure }));
       return;
     }
   }

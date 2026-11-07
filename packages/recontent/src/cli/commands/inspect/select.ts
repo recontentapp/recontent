@@ -1,4 +1,4 @@
-import type { ComponentInfo, TokenType } from "@recontentapp/core";
+import type { ComponentInfo, TokenType, TypeInfo } from "@recontentapp/core";
 import type { DocToken } from "../../../plugins/shared/doc-token.js";
 
 /** Every token type; the keys are checked against `TokenType` in both directions. */
@@ -125,5 +125,25 @@ export function selectComponents(
     );
   }
   if (query.deprecated) selected = selected.filter((component) => component.deprecated);
+  return { selected, errors };
+}
+
+/** A type is asked for by its id or, when it has a twin elsewhere in the project, by its bare name. */
+export function selectTypes(
+  types: TypeInfo[],
+  query: { names: string[]; deprecated?: boolean },
+): Selection<TypeInfo> {
+  const errors: SelectionError[] = [];
+  let selected = types;
+  if (query.names.length > 0) {
+    const selectors = new Set(types.flatMap((type) => [type.id, type.name]));
+    for (const name of query.names) {
+      if (!selectors.has(name)) errors.push(unknown("type", name, selectors));
+    }
+    selected = types.filter((type) =>
+      query.names.some((name) => name === type.id || name === type.name),
+    );
+  }
+  if (query.deprecated) selected = selected.filter((type) => type.deprecated);
   return { selected, errors };
 }

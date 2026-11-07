@@ -191,6 +191,7 @@ describe("components", () => {
           props: ["aria-label", "onClick", "type"],
         },
       ],
+      references: [],
     },
     {
       name: "Accordion",
@@ -199,6 +200,7 @@ describe("components", () => {
       line: 3,
       props: [],
       inherits: [],
+      references: [],
     },
     {
       name: "Spacer",
@@ -207,6 +209,7 @@ describe("components", () => {
       deprecated: true,
       props: [],
       inherits: [],
+      references: [],
     },
   ];
   const withComponents = { ...ctxFor(goldenConfig().config), components };

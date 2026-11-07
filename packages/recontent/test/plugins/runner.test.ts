@@ -137,7 +137,7 @@ test("buildEnd receives the full file list from every plugin", async () => {
 
 describe("dependsOn", () => {
   const components = [
-    { name: "Button", sourceFilePath: "b.tsx", line: 1, props: [], inherits: [] },
+    { name: "Button", sourceFilePath: "b.tsx", line: 1, props: [], inherits: [], references: [] },
   ];
   const seen: Record<string, PluginContext["components"]> = {};
   const record = (name: string, dependsOn: RecontentPlugin["dependsOn"]): RecontentPlugin => ({

@@ -7,6 +7,7 @@ import type {
   PluginContext,
   PluginDiagnostic,
   RecontentPlugin,
+  TypeInfo,
 } from "@recontentapp/core";
 import { MissingDesignTokensError } from "./errors.js";
 
@@ -53,6 +54,8 @@ export type RunPluginsOptions = {
   logger: Logger;
   /** Handed to the plugins that depend on components. */
   components?: ComponentInfo[];
+  /** The types `components` reference; handed over with them. */
+  types?: TypeInfo[];
   /** Why `components` is missing: the plugins that depend on it fail with this message, the others still run. */
   componentsError?: string;
 };
@@ -82,7 +85,9 @@ export async function runPlugins(
     mode: options.mode,
   };
   const contextFor = (plugin: RecontentPlugin): PluginContext =>
-    consumesComponents(plugin) ? { ...base, components: options.components } : base;
+    consumesComponents(plugin)
+      ? { ...base, components: options.components, types: options.types }
+      : base;
 
   for (const plugin of plugins) {
     await plugin.buildStart?.(contextFor(plugin));

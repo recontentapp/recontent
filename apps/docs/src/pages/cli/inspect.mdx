@@ -5,13 +5,14 @@ description: "Browse the tokens and components a project defines, for people, ag
 
 # inspect
 
-Prints what `recontent.config.ts` defines: its tokens, and its components when
+Prints what `recontent.config.ts` defines: its tokens, and its components and the types they use when
 [`introspection`](/tokens/configuration#introspection) is configured.
 
 ```bash
 recontent inspect [--format <format>] [--no-cache]
 recontent inspect tokens [path...] [--type <type>] [--theme <theme>] [--deprecated] [--format <format>]
 recontent inspect components [name...] [--deprecated] [--format <format>] [--no-cache]
+recontent inspect types [name...] [--deprecated] [--format <format>] [--no-cache]
 ```
 
 Uses the [global options](/cli#global-options) `-c`, `--cwd` and `--log-level`.
@@ -26,7 +27,9 @@ recontent inspect                      # counts per layer and type, themes, comp
 recontent inspect tokens               # one row per group, with counts
 recontent inspect tokens system.color  # the tokens at or under system.color, with values and CSS variables
 recontent inspect components           # one line per component
-recontent inspect components Button    # its props: type or allowed values, default, required, notes
+recontent inspect components Button    # its props: type or allowed values, default, required, notes, then the types they use
+recontent inspect types                # one line per type that components' props reference
+recontent inspect types TabItem        # its members or values, and the types it references in turn
 ```
 
 Every overview, even an empty one, ends with a `Next:` line that names a command to try.
@@ -36,6 +39,7 @@ Every overview, even an empty one, ends with a `Next:` line that names a command
 | `inspect`                      | The overview.             | None.                                                                                |
 | `inspect tokens [path...]`     | Token groups with counts. | Each path is an exact token or a group: `system.color` includes everything under it. |
 | `inspect components [name...]` | One line per component.   | Each name is a component or a family: `Tabs` includes `Tabs.Item`.                   |
+| `inspect types [name...]`      | One line per type.        | Each name is a type, by its id or its bare name. Types it references are included.   |
 
 Options for `tokens`:
 
@@ -45,10 +49,10 @@ Options for `tokens`:
 | `--theme <theme>` | Show only this theme's column next to the default value. An unknown theme is an error. |
 | `--deprecated`    | Only deprecated tokens.                                                                |
 
-`components` takes `--deprecated` too. A filter that matches nothing (a valid type no token has,
+`components` and `types` take `--deprecated` too. A filter that matches nothing (a valid type no token has,
 `--deprecated` with nothing deprecated) prints an empty result and exits `0`.
 
-`--no-cache` (for `inspect` and `inspect components`) neither reads nor writes the
+`--no-cache` (for `inspect`, `inspect components` and `inspect types`) neither reads nor writes the
 [introspection cache](/tokens/configuration#cache).
 
 A token is printed with its path, type, value, CSS variable and notes (alias, description,
@@ -79,11 +83,12 @@ reading source:
 `--format json` prints one JSON document with the **full detail of the whole selection**, never a
 summary, so `recontent inspect tokens --format json` is every token.
 
-| Command              | Document                                                                                                                                                                                             |
-| -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `inspect`            | `{ schemaVersion, kind: "overview", config, tokens: { total, layers }, themes, components? }`                                                                                                        |
-| `inspect tokens`     | `{ schemaVersion, kind: "tokens", tokens }`, each token with `layer`, `path`, `name`, `type`, `alias?`, `description?`, `deprecated?`, `cssVar` and `values` (`default` plus the themes that differ) |
-| `inspect components` | `{ schemaVersion, kind: "components", components }`, each component as described in the [plugin API](/plugin-api#componentinfo)                                                                      |
+| Command              | Document                                                                                                                                                                                                           |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `inspect`            | `{ schemaVersion, kind: "overview", config, tokens: { total, layers }, themes, components?, types? }`                                                                                                              |
+| `inspect tokens`     | `{ schemaVersion, kind: "tokens", tokens }`, each token with `layer`, `path`, `name`, `type`, `alias?`, `description?`, `deprecated?`, `cssVar` and `values` (`default` plus the themes that differ)               |
+| `inspect components` | `{ schemaVersion, kind: "components", components, types }`, each component as described in the [plugin API](/plugin-api#componentinfo), and `types` the [types](/plugin-api#typeinfo) they reference, transitively |
+| `inspect types`      | `{ schemaVersion, kind: "types", types }`, the selected types and, transitively, the types they reference                                                                                                          |
 
 `schemaVersion` is `"1"` and only changes with a breaking change to these documents.
 
@@ -108,7 +113,7 @@ test "$(recontent inspect components --deprecated --format json | jq '.component
 ## Cost
 
 `inspect tokens` only loads the config, so it is instant, and keeps working when `introspection` is
-misconfigured. `inspect` and `inspect components` need the components: building a TypeScript
+misconfigured. `inspect`, `inspect components` and `inspect types` need the components: building a TypeScript
 program from the configured entry takes about two seconds for 50 components, so the result is
 [cached](/tokens/configuration#cache) in `.recontent/` and later calls skip the program
 until a source file changes. Run with `--log-level debug` to see the timings and whether the cache

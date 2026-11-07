@@ -701,7 +701,7 @@ describe("recontent inspect", () => {
 
       const list = runCli(["--cwd", dir, "inspect", "components"]);
       expect(list.status).toBe(0);
-      expect(list.stdout).toContain("- `Button` (2 props) — Triggers an action.");
+      expect(list.stdout).toContain("- `Button` (4 props) — Triggers an action.");
       expect(list.stdout).toContain("- `Legacy` (1 prop, deprecated)");
 
       const detail = runCli(["--cwd", dir, "inspect", "components", "Button"]);
@@ -712,6 +712,41 @@ describe("recontent inspect", () => {
       expect(detail.stdout).toContain("| `label` | `string` | — | yes |");
       expect(detail.stdout).toContain("Also accepts: `ButtonHTMLAttributes`");
       expect(detail.stdout).not.toContain("## Legacy");
+    });
+
+    test("components shows the types its props reference, once, after the props", () => {
+      const detail = runCli(["--cwd", inspectProject(), "inspect", "components", "Button"]);
+
+      expect(detail.status).toBe(0);
+      const output = detail.stdout;
+      expect(output.indexOf("## Types")).toBeGreaterThan(output.indexOf("## Button"));
+      expect(output).toContain("### IconName");
+      expect(output).toContain("Names an icon of the set.");
+      expect(output).toContain('Values: `"home"`, `"search"`');
+      // Reached through ButtonSize, not through a prop.
+      expect(output).toContain("### IconSize");
+      expect(output.match(/### IconName/g)).toHaveLength(1);
+      expect(output).toContain("References: `IconSize`");
+    });
+
+    test("types lists one line each; a name shows it with what it references", () => {
+      const dir = inspectProject();
+      const list = runCli(["--cwd", dir, "inspect", "types"]);
+      expect(list.status).toBe(0);
+      expect(list.stdout).toContain("- `IconName` (type, 2 values) — Names an icon of the set.");
+      expect(list.stdout).toContain("Next: `recontent inspect types ButtonSize`");
+
+      const detail = runCli(["--cwd", dir, "inspect", "types", "ButtonSize"]);
+      expect(detail.status).toBe(0);
+      expect(detail.stdout).toContain("### ButtonSize");
+      expect(detail.stdout).toContain("### IconSize");
+      expect(detail.stdout).not.toContain("### IconName");
+    });
+
+    test("the overview names the types", () => {
+      const result = runCli(["--cwd", inspectProject(), "inspect"]);
+      expect(result.stdout).toContain("## Types (3)");
+      expect(result.stdout).toContain("`ButtonSize`, `IconName`, `IconSize`");
     });
   });
 
@@ -749,9 +784,32 @@ describe("recontent inspect", () => {
       expect(components.data).toMatchObject({ schemaVersion: "1", kind: "components" });
       expect(components.data.components.map((c: any) => c.name)).toEqual(["Button", "Legacy"]);
       expect(components.data.components[0].props.map((p: any) => p.name)).toEqual([
+        "icon",
         "label",
+        "size",
         "variant",
       ]);
+      expect(components.data.components[0].references).toEqual(["ButtonSize", "IconName"]);
+      expect(components.data.types.map((t: any) => t.id)).toEqual([
+        "ButtonSize",
+        "IconName",
+        "IconSize",
+      ]);
+
+      const types = json(["types"], dir);
+      expect(types.status).toBe(0);
+      expect(types.data).toMatchObject({ schemaVersion: "1", kind: "types" });
+      expect(types.data.types.map((t: any) => t.id)).toEqual([
+        "ButtonSize",
+        "IconName",
+        "IconSize",
+      ]);
+      expect(overview.data.types).toEqual(["ButtonSize", "IconName", "IconSize"]);
+    });
+
+    test("types adds what the selection references", () => {
+      const result = json(["types", "ButtonSize"], inspectProject());
+      expect(result.data.types.map((t: any) => t.id)).toEqual(["ButtonSize", "IconSize"]);
     });
 
     test("a selection narrows the output", () => {
@@ -803,6 +861,7 @@ describe("recontent inspect", () => {
       [["tokens", "system.colr"], "Did you mean `system.color`?"],
       [["tokens", "system.color.acent"], "Did you mean `system.color.accent`?"],
       [["components", "Buton"], "Did you mean `Button`?"],
+      [["types", "IconNam"], "Did you mean `IconName`?"],
     ])("inspect %s exits 2 with a suggestion on stderr", (args, hint) => {
       const result = runCli(["--cwd", inspectProject(), "inspect", ...args]);
 
@@ -837,14 +896,17 @@ describe("recontent inspect", () => {
       });
     });
 
-    test("inspect components without an introspection block exits 1 with a hint", () => {
-      const dir = makeScratchDir("inspect-no-block");
-      copyFixture("valid", dir);
-      const result = runCli(["--cwd", dir, "inspect", "components"]);
+    test.each(["components", "types"])(
+      "inspect %s without an introspection block exits 1 with a hint",
+      (subcommand) => {
+        const dir = makeScratchDir("inspect-no-block");
+        copyFixture("valid", dir);
+        const result = runCli(["--cwd", dir, "inspect", subcommand]);
 
-      expect(result.status).toBe(1);
-      expect(result.stderr).toContain("no `introspection` block");
-    });
+        expect(result.status).toBe(1);
+        expect(result.stderr).toContain("no `introspection` block");
+      },
+    );
 
     test("the overview without an introspection block succeeds and omits components", () => {
       const dir = makeScratchDir("inspect-overview-no-block");

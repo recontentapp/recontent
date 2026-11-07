@@ -7,12 +7,13 @@ import type {
 } from "@recontentapp/core";
 import ts from "typescript";
 import { resolveAlias, type Analysis, type Candidate } from "./components.js";
+import { referencesOfProperty } from "./types.js";
 
 type Origin = InheritedProps & { symbol?: ts.Symbol };
 
-const printer = ts.createPrinter({ removeComments: true });
+export const printer = ts.createPrinter({ removeComments: true });
 
-function oneLine(text: string): string {
+export function oneLine(text: string): string {
   return text.replace(/\s+/g, " ").trim();
 }
 
@@ -24,7 +25,7 @@ function packageOf(fileName: string): string | undefined {
   return first?.startsWith("@") && second ? `${first}/${second}` : first;
 }
 
-function isExternal(analysis: Analysis, file: ts.SourceFile): boolean {
+export function isExternal(analysis: Analysis, file: ts.SourceFile): boolean {
   const { program } = analysis;
   return (
     program.isSourceFileFromExternalLibrary(file) ||
@@ -33,7 +34,7 @@ function isExternal(analysis: Analysis, file: ts.SourceFile): boolean {
   );
 }
 
-function jsDoc(
+export function jsDoc(
   checker: ts.TypeChecker,
   symbol: ts.Symbol,
 ): Pick<PropInfo, "description" | "deprecated" | "defaultValue"> {
@@ -52,7 +53,7 @@ function jsDoc(
   };
 }
 
-function declarationOf(symbol: ts.Symbol): ts.Declaration | undefined {
+export function declarationOf(symbol: ts.Symbol): ts.Declaration | undefined {
   return symbol.valueDeclaration ?? symbol.declarations?.[0];
 }
 
@@ -144,7 +145,7 @@ function typeParametersOf(
   });
 }
 
-function literalValues(
+export function literalValues(
   checker: ts.TypeChecker,
   type: ts.Type,
 ): (string | number | boolean)[] | undefined {
@@ -165,7 +166,7 @@ function literalValues(
 }
 
 /** Union members come back in type-id order; prefer the order they were written in. */
-function inSourceOrder(values: (string | number | boolean)[], text: string) {
+export function inSourceOrder(values: (string | number | boolean)[], text: string) {
   const position = (value: string | number | boolean) => {
     const forms = typeof value === "string" ? [`"${value}"`, `'${value}'`] : [String(value)];
     const found = forms.map((form) => text.indexOf(form)).filter((index) => index !== -1);
@@ -338,45 +339,26 @@ function groupInherited(analysis: Analysis, symbols: ts.Symbol[]): InheritedProp
 
 type Occurrence = { symbol: ts.Symbol; type: ts.Type };
 
-export function describeComponent(
+/**
+ * Describes the properties of `propsTypes` (a union is merged member by member,
+ * because the checker only reports the properties every member shares): the
+ * ones declared in the project in full, the others grouped by where they come from.
+ */
+export function describeMembers(
   analysis: Analysis,
-  candidate: Candidate,
-  root: string,
-): ComponentInfo {
+  propsTypes: Set<ts.Type>,
+  location: ts.Node,
+  defaults: Map<string, string>,
+): { props: PropInfo[]; inherits: InheritedProps[] } {
   const { checker } = analysis;
-  const { symbol, type, matches } = candidate;
-  const declaration = locate(checker, symbol);
-  const located = declaration ?? declarationOf(symbol);
-  if (!located) throw new Error(`Cannot find the declaration of ${candidate.name}.`);
-
-  // Props are the first parameter of whatever signature renders the component. A
-  // union of props (`{ href } | { onClick }`) is merged member by member, because
-  // the checker only reports the properties every member shares.
-  const propsTypes = new Set<ts.Type>();
-  for (const { signature } of matches) {
-    const parameter = signature.parameters[0];
-    if (!parameter) continue;
-    const propsType = checker.getNonNullableType(
-      checker.getTypeOfSymbolAtLocation(parameter, located),
-    );
-    for (const member of propsType.isUnion() ? propsType.types : [propsType]) {
-      propsTypes.add(member);
-    }
-  }
-
   const byName = new Map<string, Occurrence[]>();
   for (const member of propsTypes) {
     for (const property of checker.getPropertiesOfType(member)) {
       const list = byName.get(property.name) ?? [];
-      list.push({ symbol: property, type: checker.getTypeOfSymbolAtLocation(property, located) });
+      list.push({ symbol: property, type: checker.getTypeOfSymbolAtLocation(property, location) });
       byName.set(property.name, list);
     }
   }
-
-  const defaults = new Map([
-    ...defaultPropsDefaults(checker, type),
-    ...implementationDefaults(checker, located),
-  ]);
 
   const props: PropInfo[] = [];
   const inherited: ts.Symbol[] = [];
@@ -406,6 +388,13 @@ export function describeComponent(
           `${text} ${own.map(({ type: propType }) => aliasText(propType)).join(" ")}`,
         )
       : undefined;
+    const references = [
+      ...new Set(
+        own.flatMap(({ symbol: property, type: propType }) =>
+          referencesOfProperty(analysis, property, propType),
+        ),
+      ),
+    ].sort((a, b) => a.localeCompare(b));
 
     const doc = jsDoc(checker, own[0]!.symbol);
     const defaultValue = doc.defaultValue ?? defaults.get(name);
@@ -415,6 +404,7 @@ export function describeComponent(
       // Literal unions already say it all in `values`.
       ...(resolved && !values ? { resolved } : {}),
       ...(values ? { values } : {}),
+      ...(references.length > 0 ? { references } : {}),
       // Required only when every member of a props union has it, and requires it.
       required:
         occurrences.length === propsTypes.size &&
@@ -424,8 +414,39 @@ export function describeComponent(
     });
   }
   props.sort((a, b) => a.name.localeCompare(b.name));
+  return { props, inherits: groupInherited(analysis, inherited) };
+}
 
-  const inherits = groupInherited(analysis, inherited);
+export function describeComponent(
+  analysis: Analysis,
+  candidate: Candidate,
+  root: string,
+): ComponentInfo {
+  const { checker } = analysis;
+  const { symbol, type, matches } = candidate;
+  const declaration = locate(checker, symbol);
+  const located = declaration ?? declarationOf(symbol);
+  if (!located) throw new Error(`Cannot find the declaration of ${candidate.name}.`);
+
+  // Props are the first parameter of whatever signature renders the component.
+  const propsTypes = new Set<ts.Type>();
+  for (const { signature } of matches) {
+    const parameter = signature.parameters[0];
+    if (!parameter) continue;
+    const propsType = checker.getNonNullableType(
+      checker.getTypeOfSymbolAtLocation(parameter, located),
+    );
+    for (const member of propsType.isUnion() ? propsType.types : [propsType]) {
+      propsTypes.add(member);
+    }
+  }
+
+  const defaults = new Map([
+    ...defaultPropsDefaults(checker, type),
+    ...implementationDefaults(checker, located),
+  ]);
+  const { props, inherits } = describeMembers(analysis, propsTypes, located, defaults);
+
   const { description, deprecated } = jsDoc(checker, symbol);
   const file = located.getSourceFile();
   const typeParameters = matches
@@ -440,6 +461,9 @@ export function describeComponent(
     ...(deprecated !== undefined ? { deprecated } : {}),
     props,
     inherits,
+    references: [...new Set(props.flatMap((prop) => prop.references ?? []))].sort((a, b) =>
+      a.localeCompare(b),
+    ),
   };
   const inheritedCount = inherits.reduce((total, group) => total + group.props.length, 0);
   if (props.length === 0 && inheritedCount > 0) {

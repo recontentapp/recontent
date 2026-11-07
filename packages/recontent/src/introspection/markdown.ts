@@ -1,8 +1,8 @@
-import type { ComponentInfo, InheritedProps, PropInfo } from "@recontentapp/core";
+import type { ComponentInfo, InheritedProps, PropInfo, TypeInfo } from "@recontentapp/core";
 import { code, escapeText } from "../markdown.js";
 
 /** `Accordion<Value extends string>` for a generic component, else its name. */
-export function displayName({ name, typeParameters }: ComponentInfo): string {
+export function displayName({ name, typeParameters }: ComponentInfo | TypeInfo): string {
   if (!typeParameters?.length) return name;
   const parameters = typeParameters.map(
     (parameter) =>
@@ -14,7 +14,7 @@ export function displayName({ name, typeParameters }: ComponentInfo): string {
 }
 
 /** "Updated 2025-03-01" when the component has a last commit date. */
-export function updatedText(component: ComponentInfo): string | undefined {
+export function updatedText(component: { lastUpdatedAt?: string }): string | undefined {
   return component.lastUpdatedAt ? `Updated ${component.lastUpdatedAt.slice(0, 10)}` : undefined;
 }
 
@@ -42,56 +42,85 @@ function notes(prop: PropInfo): string {
 }
 
 /** `src/button.tsx:12` */
-function sourceLine(component: ComponentInfo): string {
+function sourceLine(component: ComponentInfo | TypeInfo): string {
   return [
     `Source: ${code(`${component.sourceFilePath}:${component.line}`)}`,
-    updatedText(component),
+    "lastUpdatedAt" in component ? updatedText(component) : undefined,
   ]
     .filter(Boolean)
     .join(" · ");
 }
 
-function inheritsLine(component: ComponentInfo): string | undefined {
-  if (component.inherits.length === 0) return undefined;
-  const groups = component.inherits.map(
+function inheritsLine(inherits: InheritedProps[]): string | undefined {
+  if (inherits.length === 0) return undefined;
+  const groups = inherits.map(
     (group) =>
       `${code(group.name)} (${propCount(group)}${group.package ? ` from ${group.package}` : ""})`,
   );
   return `Also accepts: ${groups.join(", ")}`;
 }
 
-export function renderComponentMarkdown(component: ComponentInfo, headingLevel: number): string {
-  const lines = [`${"#".repeat(headingLevel)} ${escapeText(displayName(component))}`, ""];
-  if (component.description) lines.push(escapeText(component.description), "");
-  if (component.deprecated) {
+function renderPropsTable(props: PropInfo[]): string[] {
+  const header = ["Prop", "Type", "Default", "Required", "Notes"];
+  const lines = [`| ${header.join(" | ")} |`, `| ${header.map(() => "---").join(" | ")} |`];
+  for (const prop of props) {
+    const row = [
+      code(prop.name),
+      typeCell(prop),
+      prop.defaultValue ? code(prop.defaultValue) : "—",
+      prop.required ? "yes" : "no",
+      notes(prop),
+    ];
+    lines.push(`| ${row.join(" | ")} |`);
+  }
+  return lines;
+}
+
+/** Heading, description and deprecation, source: what both components and types start with. */
+function headerLines(item: ComponentInfo | TypeInfo, headingLevel: number): string[] {
+  const lines = [`${"#".repeat(headingLevel)} ${escapeText(displayName(item))}`, ""];
+  if (item.description) lines.push(escapeText(item.description), "");
+  if (item.deprecated) {
     lines.push(
-      component.deprecated === true
+      item.deprecated === true
         ? "> ⚠️ Deprecated"
-        : `> ⚠️ Deprecated: ${escapeText(component.deprecated)}`,
+        : `> ⚠️ Deprecated: ${escapeText(item.deprecated)}`,
       "",
     );
   }
-  lines.push(sourceLine(component), "");
+  lines.push(sourceLine(item), "");
+  return lines;
+}
 
+export function renderComponentMarkdown(component: ComponentInfo, headingLevel: number): string {
+  const lines = headerLines(component, headingLevel);
   if (component.props.length === 0) {
     lines.push("_No own props._", "");
   } else {
-    const header = ["Prop", "Type", "Default", "Required", "Notes"];
-    lines.push(`| ${header.join(" | ")} |`, `| ${header.map(() => "---").join(" | ")} |`);
-    for (const prop of component.props) {
-      const row = [
-        code(prop.name),
-        typeCell(prop),
-        prop.defaultValue ? code(prop.defaultValue) : "—",
-        prop.required ? "yes" : "no",
-        notes(prop),
-      ];
-      lines.push(`| ${row.join(" | ")} |`);
-    }
-    lines.push("");
+    lines.push(...renderPropsTable(component.props), "");
   }
 
-  const inherits = inheritsLine(component);
+  const inherits = inheritsLine(component.inherits);
   if (inherits) lines.push(inherits, "");
+  return lines.join("\n").trimEnd();
+}
+
+/** Members as a table, literal unions as their values, anything else as its declaration. */
+export function renderTypeMarkdown(type: TypeInfo, headingLevel: number): string {
+  const lines = headerLines(type, headingLevel);
+  if (type.members?.length) {
+    lines.push(...renderPropsTable(type.members), "");
+  } else if (type.values && type.kind !== "enum") {
+    lines.push(`Values: ${type.values.map((value) => code(JSON.stringify(value))).join(", ")}`, "");
+  } else {
+    // An enum's member names are not in its values.
+    lines.push("```ts", type.definition, "```", "");
+  }
+
+  const inherits = inheritsLine(type.inherits ?? []);
+  if (inherits) lines.push(inherits, "");
+  if (type.references.length > 0) {
+    lines.push(`References: ${type.references.map(code).join(", ")}`, "");
+  }
   return lines.join("\n").trimEnd();
 }

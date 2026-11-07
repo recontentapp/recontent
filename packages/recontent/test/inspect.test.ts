@@ -1,11 +1,13 @@
 import { describe, expect, test } from "@jest/globals";
-import type { ComponentInfo } from "@recontentapp/core";
+import type { ComponentInfo, TypeInfo } from "@recontentapp/core";
 import {
   closestMatches,
   selectComponents,
   selectTokens,
+  selectTypes,
 } from "../src/cli/commands/inspect/select.js";
 import { renderComponents, renderTokens } from "../src/cli/commands/inspect/render.js";
+import { typeClosure } from "../src/introspection/types.js";
 import type { DocToken } from "../src/plugins/shared/doc-token.js";
 
 function token(path: string, type: DocToken["type"], extra: Partial<DocToken> = {}): DocToken {
@@ -111,6 +113,7 @@ const component = (name: string, extra: Partial<ComponentInfo> = {}): ComponentI
   line: 1,
   props: [],
   inherits: [],
+  references: [],
   ...extra,
 });
 
@@ -154,6 +157,76 @@ describe("selectComponents", () => {
   });
 });
 
+const typeInfo = (
+  id: string,
+  references: string[] = [],
+  extra: Partial<TypeInfo> = {},
+): TypeInfo => ({
+  id,
+  name: id.replace(/ \(.*/, ""),
+  kind: "interface",
+  sourceFilePath: "src/x.ts",
+  line: 1,
+  definition: `interface ${id} {}`,
+  references,
+  ...extra,
+});
+
+describe("selectTypes", () => {
+  const types = [
+    typeInfo("Entry (src/a.ts)"),
+    typeInfo("Entry (src/b.ts)"),
+    typeInfo("IconName", [], { deprecated: true }),
+    typeInfo("TabItem", ["IconName"]),
+  ];
+  const select = (query: Parameters<typeof selectTypes>[1]) => selectTypes(types, query);
+  const ids = (selected: TypeInfo[]) => selected.map((t) => t.id);
+
+  test("an id selects one type, a shared name selects every type with it", () => {
+    expect(ids(select({ names: ["TabItem"] }).selected)).toEqual(["TabItem"]);
+    expect(ids(select({ names: ["Entry"] }).selected)).toEqual([
+      "Entry (src/a.ts)",
+      "Entry (src/b.ts)",
+    ]);
+    expect(ids(select({ names: ["Entry (src/b.ts)"] }).selected)).toEqual(["Entry (src/b.ts)"]);
+  });
+
+  test("--deprecated narrows", () => {
+    expect(ids(select({ names: [], deprecated: true }).selected)).toEqual(["IconName"]);
+  });
+
+  test("an unknown name suggests the closest type", () => {
+    expect(select({ names: ["TabItm"] }).errors).toEqual([
+      {
+        message: 'No type matches "TabItm". Did you mean `TabItem`?',
+        input: "TabItm",
+        suggestions: ["TabItem"],
+      },
+    ]);
+  });
+});
+
+describe("typeClosure", () => {
+  const types = [
+    typeInfo("A", ["B", "C"]),
+    typeInfo("B", ["D"]),
+    typeInfo("C", ["D", "A"]),
+    typeInfo("D"),
+    typeInfo("Unrelated"),
+  ];
+  const ids = (selected: TypeInfo[]) => selected.map((t) => t.id);
+
+  test("follows references transitively, each type once, the given ones first", () => {
+    expect(ids(typeClosure(["B"], types))).toEqual(["B", "D"]);
+    expect(ids(typeClosure(["C", "B"], types))).toEqual(["C", "B", "D", "A"]);
+  });
+
+  test("terminates on cycles and ignores unknown ids", () => {
+    expect(ids(typeClosure(["A", "Missing"], types))).toEqual(["A", "B", "C", "D"]);
+    expect(typeClosure([], types)).toEqual([]);
+  });
+});
+
 describe("closestMatches", () => {
   test("ignores case, ranks by distance and gives up on distant input", () => {
     expect(closestMatches("button", ["Button", "Buttons", "Banner"])).toEqual([
@@ -170,16 +243,20 @@ describe("renderComponents", () => {
     const long = component("B", {
       description: `${"word ".repeat(30)}end`,
     });
-    const lines = renderComponents([sentence, long], { format: "markdown", summary: true });
+    const lines = renderComponents([sentence, long], {
+      format: "markdown",
+      summary: true,
+      types: [],
+    });
 
     expect(lines).toContain("- `A` (0 props) — Triggers an action.\n");
     expect(lines).toMatch(/- `B` \(0 props\) — (word ){10,}word…\n/);
   });
 
   test("an empty list still ends with a Next hint", () => {
-    expect(renderComponents([], { format: "markdown", summary: true }).trimEnd()).toMatch(
-      /Next: `recontent inspect --help`$/,
-    );
+    expect(
+      renderComponents([], { format: "markdown", summary: true, types: [] }).trimEnd(),
+    ).toMatch(/Next: `recontent inspect --help`$/);
   });
 });
 

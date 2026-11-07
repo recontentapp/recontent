@@ -59,6 +59,7 @@ the build fails with the error's message and exit code `1`.
 | `logger`     | `Logger`                        | `info`, `warn`, `error` and `debug` methods. All write to stderr.                                                                                  |
 | `mode`       | `"build" \| "watch"`            | `"watch"` under `build --watch`, otherwise `"build"`.                                                                                              |
 | `components` | `ComponentInfo[] \| undefined`  | The project's [components](#componentinfo). Only set when the plugin declares `"components"` or `"components?"` and `introspection` is configured. |
+| `types`      | `TypeInfo[] \| undefined`       | The project [types](#typeinfo) that components' props reference. Set together with `components`.                                                   |
 
 A `TokenEntry` describes one token:
 
@@ -106,6 +107,7 @@ type ComponentInfo = {
   deprecated?: true | string;
   props: PropInfo[]; // declared in your project, sorted by name
   inherits: { name: string; package?: string; props: string[] }[]; // sorted prop names
+  references: string[]; // ids of the project types its props mention, see TypeInfo
 };
 
 type PropInfo = {
@@ -113,12 +115,42 @@ type PropInfo = {
   type: string;
   resolved?: string; // type with your own alias expanded: "Width" → 'number | "auto"'
   values?: (string | number | boolean)[]; // when the type is a union of literals
+  references?: string[]; // ids of the project types `type` mentions
   required: boolean;
   defaultValue?: string;
   description?: string;
   deprecated?: true | string;
 };
 ```
+
+### TypeInfo
+
+A prop typed `items: TabItem[]` or `icon: IconName` names a type that is declared in your project.
+`ctx.types` holds each such type once, sorted by `id`, so a plugin can describe `TabItem`'s members or
+`IconName`'s values. It holds the types that props mention and, transitively, the types those mention;
+follow `references` to walk from a component to everything it depends on. Types from `node_modules`
+or the TypeScript library stay as written in `type`: they are not collected.
+
+```ts
+type TypeInfo = {
+  id: string; // the declared name, "Entry (src/a.ts)" when two project types share a name
+  name: string;
+  kind: "interface" | "type" | "enum";
+  typeParameters?: { name: string; constraint?: string; default?: string }[];
+  sourceFilePath: string; // posix, relative to the config root
+  line: number; // 1-based
+  description?: string;
+  deprecated?: true | string;
+  definition: string; // the declaration without comments or `export`
+  members?: PropInfo[]; // interfaces and object types, described like props
+  inherits?: { name: string; package?: string; props: string[] }[]; // members from outside the project
+  values?: (string | number | boolean)[]; // enums and unions of literals
+  references: string[]; // ids of the project types it mentions, sorted
+};
+```
+
+The props type of a component itself (`ButtonProps`) is not a referenced type: its members are the
+component's `props`.
 
 All of these types are exported from `recontent/plugins`. See [`introspection`](/tokens/configuration#introspection)
 for how components and props are found, and `lastUpdatedAt`.

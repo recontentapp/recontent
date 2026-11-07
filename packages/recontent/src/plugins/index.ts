@@ -5,6 +5,7 @@ export type {
   EmittedFile,
   ComponentInfo,
   PropInfo,
+  TypeInfo,
   InheritedProps,
   TypeParameterInfo,
 } from "@recontentapp/core";

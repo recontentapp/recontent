@@ -1,6 +1,6 @@
-import type { ComponentInfo, TokenLayer } from "@recontentapp/core";
+import type { ComponentInfo, TokenLayer, TypeInfo } from "@recontentapp/core";
 import { plural } from "../../utils/format.js";
-import { renderComponentMarkdown } from "../../../introspection/markdown.js";
+import { renderComponentMarkdown, renderTypeMarkdown } from "../../../introspection/markdown.js";
 import { code, escapeText } from "../../../markdown.js";
 import type { DocToken } from "../../../plugins/shared/doc-token.js";
 
@@ -15,6 +15,7 @@ export type Overview = {
   tokens: DocToken[];
   themes: string[];
   components?: ComponentInfo[];
+  types?: TypeInfo[];
   /** Why `components` is missing although the config asks for them. */
   componentsError?: string;
 };
@@ -44,8 +45,10 @@ function groupOf(token: DocToken): string {
 const next = (...commands: string[]) =>
   `Next: ${commands.map((command) => code(`recontent inspect ${command}`)).join(" · ")}`;
 
+const typeIds = (types: TypeInfo[]) => types.map((type) => code(type.id)).join(", ") || "_None._";
+
 export function renderOverview(overview: Overview, format: Format): string {
-  const { tokens, themes, components, componentsError } = overview;
+  const { tokens, themes, components, types, componentsError } = overview;
   const layers = LAYERS.map((layer) => {
     const inLayer = tokens.filter((token) => token.layer === layer);
     return { layer, count: inLayer.length, types: countBy(inLayer, (token) => token.type) };
@@ -60,7 +63,10 @@ export function renderOverview(overview: Overview, format: Format): string {
         tokens: { total: tokens.length, layers },
         themes,
         ...(components
-          ? { components: components.map((component) => component.name) }
+          ? {
+              components: components.map((component) => component.name),
+              types: (types ?? []).map((type) => type.id),
+            }
           : componentsError !== undefined
             ? { components: { error: componentsError } }
             : {}),
@@ -88,6 +94,7 @@ export function renderOverview(overview: Overview, format: Format): string {
   if (components) {
     lines.push("", `## Components (${components.length})`, "");
     lines.push(components.map((component) => code(component.name)).join(", ") || "_None found._");
+    if (types) lines.push("", `## Types (${types.length})`, "", typeIds(types));
   } else if (componentsError !== undefined) {
     lines.push("", "## Components", "", `_Unavailable: ${escapeText(componentsError)}_`);
   }
@@ -96,6 +103,7 @@ export function renderOverview(overview: Overview, format: Format): string {
   const firstGroup = tokens.find((token) => token.layer === "system") ?? tokens[0];
   if (firstGroup) hints.push(`tokens ${groupOf(firstGroup)}`);
   if (components?.[0]) hints.push(`components ${components[0].name}`);
+  if (types?.[0]) hints.push("types");
   lines.push("", hints.length > 0 ? next(...hints) : next("--help"));
   return lines.join("\n");
 }
@@ -206,14 +214,24 @@ function shorten(text: string, max = 100): string {
   return `${head.replace(/[,;:\s]+$/, "")}…`;
 }
 
+/** `## Types`, then each type under its own heading. */
+function renderTypesSection(types: TypeInfo[]): string {
+  return ["## Types", ...types.map((type) => renderTypeMarkdown(type, 3))].join("\n\n");
+}
+
 export function renderComponents(
   components: ComponentInfo[],
-  options: { format: Format; summary: boolean },
+  options: {
+    format: Format;
+    summary: boolean;
+    /** What the components reference, transitively. */
+    types: TypeInfo[];
+  },
 ): string {
-  const { format, summary } = options;
+  const { format, summary, types } = options;
   if (format === "json") {
     return JSON.stringify(
-      { schemaVersion: SCHEMA_VERSION, kind: "components", components },
+      { schemaVersion: SCHEMA_VERSION, kind: "components", components, types },
       null,
       2,
     );
@@ -236,5 +254,42 @@ export function renderComponents(
   }
 
   if (components.length === 0) return "No components.";
-  return components.map((component) => renderComponentMarkdown(component, 2)).join("\n\n");
+  const sections = components.map((component) => renderComponentMarkdown(component, 2));
+  if (types.length > 0) sections.push(renderTypesSection(types));
+  return sections.join("\n\n");
+}
+
+function typeTags(type: TypeInfo): string {
+  const size = type.members
+    ? plural(type.members.length, "member")
+    : type.values
+      ? plural(type.values.length, "value")
+      : undefined;
+  return [type.kind, ...(size ? [size] : []), ...(type.deprecated ? ["deprecated"] : [])].join(
+    ", ",
+  );
+}
+
+/** `selected` is what was asked for; `types` adds what it references, so that the detail stands on its own. */
+export function renderTypes(
+  selected: TypeInfo[],
+  options: { format: Format; summary: boolean; types: TypeInfo[] },
+): string {
+  const { format, summary, types } = options;
+  if (format === "json") {
+    return JSON.stringify({ schemaVersion: SCHEMA_VERSION, kind: "types", types }, null, 2);
+  }
+
+  if (summary) {
+    const lines = ["# Types", "", `${plural(selected.length, "type")}.`, ""];
+    for (const type of selected) {
+      const description = type.description ? ` — ${escapeText(shorten(type.description))}` : "";
+      lines.push(`- ${code(type.id)} (${typeTags(type)})${description}`);
+    }
+    lines.push("", next(selected[0] ? `types ${selected[0].name}` : "--help"));
+    return lines.join("\n");
+  }
+
+  if (types.length === 0) return "No types.";
+  return renderTypesSection(types);
 }

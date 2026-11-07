@@ -2,6 +2,7 @@ import path from "node:path";
 import {
   loadConfig,
   type ComponentInfo,
+  type TypeInfo,
   type Config,
   type Logger,
   type LogLevel,
@@ -33,6 +34,8 @@ export async function loadProject(options: {
 export type Components = {
   /** Sorted by name. */
   components: ComponentInfo[];
+  /** What the components reference, sorted by id. */
+  types: TypeInfo[];
   /** Already logged; kept to count them. */
   warnings: string[];
   /** Files whose change should trigger a rebuild. */
@@ -77,6 +80,7 @@ export async function loadComponents(
     for (const warning of cached.warnings) logger.warn(warning);
     return {
       components: cached.components,
+      types: cached.types,
       warnings: cached.warnings,
       watch: watchableFiles(entry, cached.files),
     };
@@ -105,6 +109,7 @@ export async function loadComponents(
   if (key !== undefined) {
     writeCache(root, configPath, key, {
       components: result.components,
+      types: result.types,
       warnings,
       files: result.files,
       // Not the config's own: `.recontent` and the plugins' output are created there after this is stamped.
@@ -116,6 +121,7 @@ export async function loadComponents(
   for (const warning of warnings) logger.warn(warning);
   return {
     components: result.components,
+    types: result.types,
     warnings,
     watch,
     program: result.program,

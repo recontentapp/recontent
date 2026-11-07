@@ -1,6 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
-import type { ComponentInfo, LogLevel } from "@recontentapp/core";
+import type { ComponentInfo, LogLevel, TypeInfo } from "@recontentapp/core";
 import type ts from "typescript";
 import { createLogger } from "../../logger.js";
 import { MissingDesignTokensError } from "../../plugins/errors.js";
@@ -184,6 +184,7 @@ async function buildOnce(
 
   // Only when a plugin consumes them, and a failure only fails those plugins.
   let components: ComponentInfo[] | undefined;
+  let types: TypeInfo[] | undefined;
   let componentsError: string | undefined;
   if (wantsComponents) {
     try {
@@ -192,6 +193,7 @@ async function buildOnce(
         cache: options.cache,
       });
       components = loaded.components;
+      types = loaded.types;
       warnings += loaded.warnings.length;
       state = { program: loaded.program ?? state.program, watch: loaded.watch };
     } catch (error) {
@@ -207,6 +209,7 @@ async function buildOnce(
       mode,
       logger,
       components,
+      types,
       componentsError,
     });
   } catch (error) {

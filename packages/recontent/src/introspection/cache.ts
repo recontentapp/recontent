@@ -1,10 +1,10 @@
 import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
-import type { ComponentInfo } from "@recontentapp/core";
+import type { ComponentInfo, TypeInfo } from "@recontentapp/core";
 
 /** Bumped when the shape below changes. */
-const FORMAT = 2;
+const FORMAT = 3;
 
 type FileStamp = [path: string, mtimeMs: number, size: number];
 
@@ -16,10 +16,11 @@ type CacheFile = {
   /** Directories of the project's own files: adding a file bumps its directory's mtime. */
   directories: FileStamp[];
   components: ComponentInfo[];
+  types: TypeInfo[];
   warnings: string[];
 };
 
-export type Cached = Pick<CacheFile, "components" | "warnings"> & { files: string[] };
+export type Cached = Pick<CacheFile, "components" | "types" | "warnings"> & { files: string[] };
 
 /** One file per config, so that two configs in the same directory don't evict each other. */
 function cachePath(root: string, configPath: string): string {
@@ -50,6 +51,7 @@ export function readCache(root: string, configPath: string, key: string): Cached
     return unchanged
       ? {
           components: cache.components,
+          types: cache.types,
           warnings: cache.warnings,
           files: cache.files.map(([file]) => file),
         }
@@ -64,7 +66,10 @@ export function writeCache(
   root: string,
   configPath: string,
   key: string,
-  result: Pick<CacheFile, "components" | "warnings"> & { files: string[]; directories: string[] },
+  result: Pick<CacheFile, "components" | "types" | "warnings"> & {
+    files: string[];
+    directories: string[];
+  },
 ): void {
   try {
     const files = result.files.map(stamp);
@@ -76,6 +81,7 @@ export function writeCache(
       files: files as FileStamp[],
       directories: directories as FileStamp[],
       components: result.components,
+      types: result.types,
       warnings: result.warnings,
     };
 

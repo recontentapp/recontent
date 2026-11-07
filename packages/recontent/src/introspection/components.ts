@@ -1,11 +1,14 @@
 import type { Logger } from "@recontentapp/core";
 import ts from "typescript";
+import type { TypeStore } from "./types.js";
 
 export type Analysis = {
   program: ts.Program;
   checker: ts.TypeChecker;
   reactNode: ts.Type;
   logger: Logger;
+  /** The project types the props mention, filled in while they are described. */
+  types: TypeStore;
   /** Reported by the CLI, not part of what plugins see. */
   warnings: string[];
 };

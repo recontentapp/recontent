@@ -1,14 +1,17 @@
 import { performance } from "node:perf_hooks";
 import path from "node:path";
-import type { ComponentInfo, IntrospectionConfigInput, Logger } from "@recontentapp/core";
+import type { ComponentInfo, IntrospectionConfigInput, Logger, TypeInfo } from "@recontentapp/core";
 import ts from "typescript";
 import { findComponents, findReactNode, type Analysis } from "./components.js";
 import { createIntrospectionProgram, resolveInputs } from "./program.js";
 import { describeComponent } from "./props.js";
+import { createTypeStore, finishTypes } from "./types.js";
 
 export type IntrospectionResult = {
   /** Sorted by name. */
   components: ComponentInfo[];
+  /** The project types the components' props reference, sorted by id. */
+  types: TypeInfo[];
   warnings: string[];
   /** Pass back as `oldProgram` on the next run to reuse unchanged source files. */
   program: ts.Program;
@@ -42,13 +45,21 @@ export function introspect(options: {
   }
 
   const analyzeStart = performance.now();
-  const analysis: Analysis = { program, checker, reactNode, logger, warnings: [] };
+  const analysis: Analysis = {
+    program,
+    checker,
+    reactNode,
+    logger,
+    types: createTypeStore(root),
+    warnings: [],
+  };
   const components = findComponents(analysis, entry, config.exclude).map((candidate) =>
     describeComponent(analysis, candidate, root),
   );
   components.sort((a, b) => a.name.localeCompare(b.name));
+  const types = finishTypes(analysis, components);
   logger.debug(
-    `introspection: ${components.length} component(s), program ${Math.round(programMs)}ms, analysis ${Math.round(performance.now() - analyzeStart)}ms.`,
+    `introspection: ${components.length} component(s), ${types.length} type(s), program ${Math.round(programMs)}ms, analysis ${Math.round(performance.now() - analyzeStart)}ms.`,
   );
 
   const files = program
@@ -58,6 +69,7 @@ export function introspect(options: {
 
   return {
     components,
+    types,
     warnings: analysis.warnings,
     program,
     files: [...files, ...configFiles.map((file) => path.resolve(file))],

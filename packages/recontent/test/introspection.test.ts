@@ -1,18 +1,19 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { beforeAll, describe, expect, test } from "@jest/globals";
-import type { ComponentInfo, PropInfo } from "@recontentapp/core";
+import type { ComponentInfo, PropInfo, TypeInfo } from "@recontentapp/core";
 import { introspect } from "../src/introspection/index.js";
 
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), "fixtures/introspection");
 const logger = { info() {}, warn() {}, error() {}, debug() {} };
 
 let components: ComponentInfo[];
+let types: TypeInfo[];
 let warnings: string[];
 let byName: Map<string, ComponentInfo>;
 
 beforeAll(() => {
-  ({ components, warnings } = introspect({
+  ({ components, types, warnings } = introspect({
     config: { entry: "src/index.ts", exclude: ["Excluded"] },
     root,
     logger,
@@ -346,6 +347,130 @@ describe("G. things that are not components", () => {
   test("no component name is lowercase or contains a stray separator", () => {
     for (const name of byName.keys())
       expect(name).toMatch(/^[A-Z][A-Za-z0-9]*(\.[A-Z][A-Za-z0-9]*)?$/);
+  });
+});
+
+function type(id: string): TypeInfo {
+  const found = types.find((candidate) => candidate.id === id);
+  if (!found) throw new Error(`${id} was not found in: ${types.map((t) => t.id).join(", ")}`);
+  return found;
+}
+
+const referencesOf = (componentName: string) => component(componentName).references;
+
+describe("I. referenced types", () => {
+  test("types are sorted by id", () => {
+    const ids = types.map((candidate) => candidate.id);
+    expect(ids).toEqual([...ids].sort((a, b) => a.localeCompare(b)));
+  });
+
+  test("I1 an interface behind an array, with its own members and references", () => {
+    expect(referencesOf("I1")).toEqual(["TabItem"]);
+    expect(prop("I1", "items").references).toEqual(["TabItem"]);
+    expect(type("TabItem")).toMatchObject({
+      kind: "interface",
+      sourceFilePath: "src/i-types/models.ts",
+      description: "One entry of a tab list.",
+      references: ["IconName"],
+      members: [
+        { name: "icon", description: "Shown before the label.", references: ["IconName"] },
+        { name: "id", type: "string", required: true },
+        { name: "label", type: "string", required: true },
+      ],
+    });
+    expect(type("TabItem").definition).toMatch(/^interface TabItem \{\n\s+id: string;/);
+    expect(type("TabItem").definition).not.toContain("Shown before");
+  });
+
+  test("I2 an alias chain is followed to its end", () => {
+    expect(referencesOf("I2")).toEqual(["TabSize"]);
+    expect(type("TabSize")).toMatchObject({ kind: "type", references: ["BaseSize"] });
+    expect(type("TabSize").values).toEqual(["sm", "md"]);
+    expect(type("BaseSize")).toMatchObject({ values: ["sm", "md"], references: [] });
+    expect(type("IconName").members).toBeUndefined();
+  });
+
+  test("I3 an enum lists its values", () => {
+    expect(type("Direction")).toMatchObject({ kind: "enum", values: ["up", "down"] });
+    expect(type("Direction").definition).toContain("Up = ");
+  });
+
+  test("I4 generic arguments of a library type are walked", () => {
+    expect(referencesOf("I4")).toEqual(["Key", "TabItem"]);
+    expect(type("Key").values).toBeUndefined();
+  });
+
+  test("I5 a recursive type refers to itself and is collected once", () => {
+    expect(referencesOf("I5")).toEqual(["TreeNode"]);
+    expect(type("TreeNode").references).toEqual(["TreeNode"]);
+    expect(types.filter((candidate) => candidate.name === "TreeNode")).toHaveLength(1);
+  });
+
+  test("I6 a local interface extending a library one keeps the rest in inherits", () => {
+    expect(type("TabAttributes").members?.map((member) => member.name)).toEqual(["tone"]);
+    expect(type("TabAttributes").inherits).toEqual([
+      expect.objectContaining({ name: "HTMLAttributes", package: "@types/react" }),
+    ]);
+    expect(type("TabAttributes").references).toEqual(["Tone"]);
+  });
+
+  test("I7 type parameters are not types, and the generic type keeps its own", () => {
+    expect(referencesOf("I7")).toEqual(["Box"]);
+    expect(prop("I7", "value").references).toBeUndefined();
+    expect(type("Box").typeParameters).toEqual([{ name: "T" }]);
+    expect(type("Box").references).toEqual([]);
+  });
+
+  test("I8 library types are not collected", () => {
+    expect(referencesOf("I8")).toEqual([]);
+    expect(types.map((candidate) => candidate.name)).not.toContain("CSSProperties");
+    expect(types.map((candidate) => candidate.name)).not.toContain("HTMLAttributes");
+  });
+
+  test("I9 a type imported through a tsconfig path alias", () => {
+    expect(referencesOf("I9")).toEqual(["D11Props"]);
+    expect(type("D11Props").sourceFilePath).toBe("src/types.ts");
+    expect(type("D11Props").members?.map((member) => member.name)).toEqual(["level", "title"]);
+  });
+
+  test("I10 two types with the same name get their path in the id", () => {
+    const first = "Entry (src/i-types/entry-a.ts)";
+    const second = "Entry (src/i-types/entry-b.ts)";
+    expect(referencesOf("I10")).toEqual([first, second]);
+    expect(prop("I10", "second").references).toEqual([second]);
+    expect(type(first)).toMatchObject({ name: "Entry", members: [{ name: "a" }] });
+    expect(type(second)).toMatchObject({ name: "Entry", members: [{ name: "b" }] });
+  });
+
+  test("I11 a prop type nobody wrote down is read from the checker", () => {
+    expect(prop("I11", "items").references).toEqual(["TabItem"]);
+  });
+
+  test("I12 a method's parameters count", () => {
+    expect(prop("I12", "onPick").references).toEqual(["Tone"]);
+  });
+
+  test("the component's own props type is not a referenced type", () => {
+    const names = types.map((candidate) => candidate.name);
+    expect(names).not.toContain("D1Props");
+    expect(names).not.toContain("TextFieldProps");
+    expect(names).not.toContain("BaseFieldProps");
+  });
+
+  test("every reference resolves to a collected type", () => {
+    const ids = new Set(types.map((candidate) => candidate.id));
+    const references = [
+      ...components.flatMap((c) => [
+        ...c.references,
+        ...c.props.flatMap((p) => p.references ?? []),
+      ]),
+      ...types.flatMap((t) => [
+        ...t.references,
+        ...(t.members ?? []).flatMap((m) => m.references ?? []),
+      ]),
+    ];
+    expect(references.length).toBeGreaterThan(0);
+    for (const reference of references) expect(ids.has(reference)).toBe(true);
   });
 });
 
