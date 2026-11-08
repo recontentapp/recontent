@@ -146,7 +146,9 @@ program
 
 program
   .command("diff [rev]")
-  .description("Compare the config's tokens against a previous git revision (default HEAD)")
+  .description(
+    "Compare the config's tokens and, when introspection is configured, components and types against a previous git revision (default HEAD)",
+  )
   .addHelpText(
     "after",
     "\nThe revision must be an ancestor of HEAD: diffing loads and executes its config, so an " +
@@ -154,13 +156,17 @@ program
   )
   .option(
     "--fail-on-breaking",
-    "Exit with code 1 when tokens, themes or theme overrides are removed, or tokens are renamed or retyped",
+    "Exit with code 1 on a breaking change: tokens, themes or theme overrides removed, tokens renamed or retyped, components or types removed, props removed, made required or narrowed",
   )
   .addOption(
     new Option("--format <format>", "Output format").choices(DIFF_FORMATS).default("markdown"),
   )
+  .option("--no-cache", NO_CACHE_HELP)
   .action(
-    async (rev: string | undefined, options: { failOnBreaking?: boolean; format: DiffFormat }) => {
+    async (
+      rev: string | undefined,
+      options: { failOnBreaking?: boolean; format: DiffFormat; cache: boolean },
+    ) => {
       const { cwd, configPath, logLevel } = resolveGlobalOptions();
       await runDiff({
         cwd,
@@ -169,6 +175,7 @@ program
         rev,
         failOnBreaking: options.failOnBreaking,
         format: options.format,
+        cache: cacheOption(options),
       });
     },
   );

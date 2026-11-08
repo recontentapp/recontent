@@ -17,6 +17,13 @@ import type {
 } from "@recontentapp/core";
 import { compositeMembers, isCompositeType, pathKey } from "@recontentapp/core";
 import { code } from "../../markdown.js";
+import {
+  countComponentBreakingChanges,
+  countEntityBreakingChanges,
+  type Change,
+  type ComponentsDiff,
+  type EntitiesDiff,
+} from "./components.js";
 
 type ThemeOverrideDiff = {
   added: { key: string; value: unknown }[];
@@ -212,7 +219,7 @@ function removedOverrides(diff: TokenDiff): { theme: string; key: string }[] {
 }
 
 /** Removing a token, a theme, or a theme's override breaks consumers that reference it. */
-export function countBreakingChanges(diff: TokenDiff): number {
+function countTokenBreakingChanges(diff: TokenDiff): number {
   return (
     diff.removed.length +
     diff.renamed.length +
@@ -223,19 +230,21 @@ export function countBreakingChanges(diff: TokenDiff): number {
 }
 
 export function hasBreakingChanges(diff: TokenDiff): boolean {
-  return countBreakingChanges(diff) > 0;
+  return countTokenBreakingChanges(diff) > 0;
 }
 
-function isDiffEmpty(diff: TokenDiff): boolean {
+type Diff = {
+  tokens: TokenDiff;
+  /** Absent when components were not compared. */
+  components?: ComponentsDiff;
+  /** Why they were not, when that is worth telling. */
+  componentsNote?: string;
+};
+
+export function countBreakingChanges(diff: Diff): number {
   return (
-    diff.added.length === 0 &&
-    diff.removed.length === 0 &&
-    diff.renamed.length === 0 &&
-    diff.retyped.length === 0 &&
-    diff.changed.length === 0 &&
-    diff.themes.addedThemes.length === 0 &&
-    diff.themes.removedThemes.length === 0 &&
-    Object.keys(diff.themes.changedThemes).length === 0
+    countTokenBreakingChanges(diff.tokens) +
+    (diff.components ? countComponentBreakingChanges(diff.components) : 0)
   );
 }
 
@@ -339,13 +348,9 @@ export type DiffFormat = "markdown" | "json";
 
 export const DIFF_FORMATS: readonly DiffFormat[] = ["markdown", "json"];
 
-function formatDiffMarkdown(diff: TokenDiff, rev: string): string {
-  if (isDiffEmpty(diff)) {
-    return `No token changes between the working tree and ${rev}.`;
-  }
-
+function formatTokensMarkdown(diff: TokenDiff): string {
   const sections: string[] = [];
-  const breakingCount = countBreakingChanges(diff);
+  const breakingCount = countTokenBreakingChanges(diff);
 
   if (breakingCount > 0) {
     const lines = [`## Breaking (${breakingCount})`, ""];
@@ -416,6 +421,139 @@ function formatDiffMarkdown(diff: TokenDiff, rev: string): string {
   return sections.join("\n\n");
 }
 
+type Literal = string | number | boolean;
+
+function literals(values: Literal[]): string {
+  return values.map((value) => code(JSON.stringify(value))).join(", ");
+}
+
+function describeValues(from: Literal[], to: Literal[]): string {
+  const removed = from.filter((value) => !to.includes(value));
+  const added = to.filter((value) => !from.includes(value));
+  const parts: string[] = [];
+  if (removed.length > 0)
+    parts.push(`removed ${removed.length === 1 ? "value" : "values"} ${literals(removed)}`);
+  if (added.length > 0)
+    parts.push(`added ${added.length === 1 ? "value" : "values"} ${literals(added)}`);
+  return parts.join(", ");
+}
+
+function formatTypeParameters(
+  params: { name: string; constraint?: string; default?: string }[] = [],
+) {
+  if (params.length === 0) return "(none)";
+  const rendered = params.map(
+    ({ name, constraint, default: fallback }) =>
+      name + (constraint ? ` extends ${constraint}` : "") + (fallback ? ` = ${fallback}` : ""),
+  );
+  return code(`<${rendered.join(", ")}>`);
+}
+
+// `noun` is what a component's props are called on a type: its members.
+function describeChange(change: Change, noun: string): string {
+  switch (change.kind) {
+    case "prop": {
+      const subject = `**${noun}** ${code(change.name)}:`;
+      switch (change.change) {
+        case "added":
+          return `**added ${noun}** ${code(change.name)} (${change.breaking ? "required" : "optional"})`;
+        case "removed":
+          return `**removed ${noun}** ${code(change.name)}`;
+        case "required":
+          return `${subject} now required`;
+        case "optional":
+          return `${subject} now optional`;
+        case "type":
+          return `${subject} type ${code(String(change.from))} -> ${code(String(change.to))}`;
+        case "values":
+          return `${subject} ${describeValues(change.from as Literal[], change.to as Literal[])}`;
+        case "default":
+          return `${subject} default ${change.from === undefined ? "none" : code(String(change.from))} -> ${change.to === undefined ? "none" : code(String(change.to))}`;
+        case "deprecated":
+          return `${subject} ${change.to ? "now deprecated" : "no longer deprecated"}`;
+      }
+    }
+    case "inherits":
+      return `**dropped inherited ${noun}s** from ${code(change.name)}: ${change.props.map(code).join(", ")}`;
+    case "typeParameters":
+      return `**type parameters** ${formatTypeParameters(change.from)} -> ${formatTypeParameters(change.to)}`;
+    case "deprecated":
+      return change.to ? "**deprecated**" : "**no longer deprecated**";
+    case "kind":
+      return `**kind** ${change.from} -> ${change.to}`;
+    case "values":
+      return `**values** ${describeValues(change.from, change.to)}`;
+    case "definition":
+      return `**definition** ${code(change.from)} -> ${code(change.to)}`;
+  }
+}
+
+function formatEntitiesMarkdown<T>(
+  diff: EntitiesDiff<T>,
+  options: { label: (entity: T) => string; noun: string; describe?: (entity: T) => string },
+): string {
+  const { label, noun, describe } = options;
+  const sections: string[] = [];
+  // One bullet per component, its changes nested under it. The section's count is of the changes.
+  const changeGroups = (breaking: boolean) => {
+    const lines: string[] = [];
+    let count = 0;
+    for (const { name, changes } of diff.changed) {
+      const matching = changes.filter((change) => change.breaking === breaking);
+      if (matching.length === 0) continue;
+      count += matching.length;
+      lines.push(`- ${code(name)}`, ...matching.map((c) => `  - ${describeChange(c, noun)}`));
+    }
+    return { lines, count };
+  };
+
+  const breaking = changeGroups(true);
+  const removed = diff.removed.map((entity) => `- ${code(label(entity))}: **removed**`);
+  if (removed.length + breaking.count > 0) {
+    const count = removed.length + breaking.count;
+    sections.push([`## Breaking (${count})`, "", ...removed, ...breaking.lines].join("\n"));
+  }
+
+  if (diff.added.length > 0) {
+    const lines = diff.added.map(
+      (entity) => `- ${code(label(entity))}${describe ? ` (${describe(entity)})` : ""}`,
+    );
+    sections.push([`## Added (${lines.length})`, "", ...lines].join("\n"));
+  }
+
+  const changed = changeGroups(false);
+  if (changed.count > 0) {
+    sections.push([`## Changed (${changed.count})`, "", ...changed.lines].join("\n"));
+  }
+  return sections.join("\n\n");
+}
+
+function formatDiffMarkdown(diff: Diff, rev: string): string {
+  const sections: string[] = [];
+  const tokens = formatTokensMarkdown(diff.tokens);
+  if (tokens) sections.push(`# Tokens\n\n${tokens}`);
+
+  if (diff.components) {
+    const components = formatEntitiesMarkdown(diff.components.components, {
+      label: (component) => component.name,
+      noun: "prop",
+    });
+    if (components) sections.push(`# Components\n\n${components}`);
+    const types = formatEntitiesMarkdown(diff.components.types, {
+      label: (type) => type.id,
+      noun: "member",
+      describe: (type) => type.kind,
+    });
+    if (types) sections.push(`# Types\n\n${types}`);
+  }
+
+  if (sections.length === 0) {
+    sections.push(`No changes between the working tree and ${rev}.`);
+  }
+  if (diff.componentsNote) sections.push(diff.componentsNote);
+  return sections.join("\n\n");
+}
+
 export type DiffContext = {
   /** Config path, relative to the git root. */
   config: string;
@@ -423,23 +561,42 @@ export type DiffContext = {
   rev: string;
 };
 
+function entityCounts(diff: EntitiesDiff<unknown>) {
+  return {
+    added: diff.added.length,
+    removed: diff.removed.length,
+    changed: diff.changed.length,
+    breaking: countEntityBreakingChanges(diff),
+  };
+}
+
 // The comparison context lives inside the object (rather than in a separate
 // line) so stdout is a single self-contained JSON document.
-function formatDiffJson(diff: TokenDiff, context: DiffContext): string {
+function formatDiffJson(diff: Diff, context: DiffContext): string {
   const breaking = countBreakingChanges(diff);
+  const { tokens, components } = diff;
   return JSON.stringify(
     {
       ...context,
       breaking: breaking > 0,
       counts: {
-        added: diff.added.length,
-        removed: diff.removed.length,
-        renamed: diff.renamed.length,
-        retyped: diff.retyped.length,
-        changed: diff.changed.length,
+        tokens: {
+          added: tokens.added.length,
+          removed: tokens.removed.length,
+          renamed: tokens.renamed.length,
+          retyped: tokens.retyped.length,
+          changed: tokens.changed.length,
+          breaking: countTokenBreakingChanges(tokens),
+        },
+        ...(components && {
+          components: entityCounts(components.components),
+          types: entityCounts(components.types),
+        }),
         breaking,
       },
-      ...diff,
+      tokens,
+      ...components,
+      componentsNote: diff.componentsNote,
     },
     null,
     2,
@@ -447,7 +604,7 @@ function formatDiffJson(diff: TokenDiff, context: DiffContext): string {
 }
 
 export function formatDiff(
-  diff: TokenDiff,
+  diff: Diff,
   format: DiffFormat = "markdown",
   context: DiffContext = { config: "", rev: "HEAD" },
 ): string {

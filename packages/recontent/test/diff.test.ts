@@ -165,7 +165,7 @@ test("formatDiff reports no changes for an identical config", () => {
     ["ref.color.black", entry(["ref", "color", "black"], { $value: color("#000000") })],
   ]);
   const diff = diffConfigs(config(registry), config(registry));
-  expect(formatDiff(diff)).toMatch(/No token changes/);
+  expect(formatDiff({ tokens: diff })).toMatch(/No changes between the working tree and HEAD/);
 });
 
 test("formatDiff shows human-readable values, not raw JSON, for a scalar change", () => {
@@ -191,7 +191,7 @@ test("formatDiff shows human-readable values, not raw JSON, for a scalar change"
       ],
     ]),
   );
-  const output = formatDiff(diffConfigs(base, head));
+  const output = formatDiff({ tokens: diffConfigs(base, head) });
   expect(output).toContain("ref.fontSize.base");
   expect(output).toContain("- 14px");
   expect(output).toContain("+ 16px");
@@ -225,7 +225,7 @@ test("formatDiff reports only the nested member that changed inside a composite 
   const diff = diffConfigs(config(registry(14)), config(registry(16)));
   expect(diff.changed).toHaveLength(1);
 
-  const output = formatDiff(diff);
+  const output = formatDiff({ tokens: diff });
   expect(output).toContain("system.textStyles.body.fontSize");
   expect(output).toContain("- 14px");
   expect(output).toContain("+ 16px");
@@ -246,8 +246,8 @@ test("formatDiff renders markdown sections with a fenced diff block by default",
       ["ref.color.green", entry(["ref", "color", "green"], { $value: color("#00ff00") })],
     ]),
   );
-  const output = formatDiff(diffConfigs(base, head));
-  expect(output).toBe(formatDiff(diffConfigs(base, head), "markdown"));
+  const output = formatDiff({ tokens: diffConfigs(base, head) });
+  expect(output).toBe(formatDiff({ tokens: diffConfigs(base, head) }, "markdown"));
   expect(output).toContain("## Breaking (1)");
   expect(output).toContain("- **removed** `ref.color.red`");
   expect(output).toContain("## Added (1)");
@@ -263,12 +263,15 @@ test("formatDiff json is the raw diff plus its comparison context, empty or not"
   ]);
   const empty = diffConfigs(config(registry), config(registry));
   const context = { config: "recontent.config.ts", rev: "HEAD" };
-  expect(JSON.parse(formatDiff(empty, "json", context))).toMatchObject({ ...context, ...empty });
+  expect(JSON.parse(formatDiff({ tokens: empty }, "json", context))).toMatchObject({
+    ...context,
+    tokens: empty,
+  });
 
   const added = diffConfigs(config(new Map()), config(registry));
-  const parsed = JSON.parse(formatDiff(added, "json", context));
-  expect(parsed.added).toHaveLength(1);
-  expect(parsed.added[0].path).toEqual(["ref", "color", "black"]);
+  const parsed = JSON.parse(formatDiff({ tokens: added }, "json", context));
+  expect(parsed.tokens.added).toHaveLength(1);
+  expect(parsed.tokens.added[0].path).toEqual(["ref", "color", "black"]);
 });
 
 test("formatDiff json carries a breaking verdict and counts", () => {
@@ -278,29 +281,25 @@ test("formatDiff json carries a breaking verdict and counts", () => {
   const context = { config: "recontent.config.ts", rev: "HEAD" };
 
   const removed = JSON.parse(
-    formatDiff(diffConfigs(config(registry), config(new Map())), "json", context),
+    formatDiff({ tokens: diffConfigs(config(registry), config(new Map())) }, "json", context),
   );
   expect(removed.breaking).toBe(true);
   expect(removed.counts).toEqual({
-    added: 0,
-    removed: 1,
-    renamed: 0,
-    retyped: 0,
-    changed: 0,
+    tokens: { added: 0, removed: 1, renamed: 0, retyped: 0, changed: 0, breaking: 1 },
     breaking: 1,
   });
 
   const unchanged = JSON.parse(
-    formatDiff(diffConfigs(config(registry), config(registry)), "json", context),
+    formatDiff({ tokens: diffConfigs(config(registry), config(registry)) }, "json", context),
   );
   expect(unchanged.breaking).toBe(false);
 });
 
 test("formatDiff names the compared revision when nothing changed", () => {
   const diff = diffConfigs(config(new Map()), config(new Map()));
-  expect(formatDiff(diff, "markdown", { config: "recontent.config.ts", rev: "origin/main" })).toBe(
-    "No token changes between the working tree and origin/main.",
-  );
+  expect(
+    formatDiff({ tokens: diff }, "markdown", { config: "recontent.config.ts", rev: "origin/main" }),
+  ).toBe("No changes between the working tree and origin/main.");
 });
 
 test("diffConfigs counts removed themes and removed theme overrides as breaking", () => {
@@ -311,14 +310,16 @@ test("diffConfigs counts removed themes and removed theme overrides as breaking"
   const removedTheme = diffConfigs(config(registry, { dark: override(["a"]) }), config(registry));
   expect(removedTheme.themes.removedThemes).toEqual(["dark"]);
   expect(hasBreakingChanges(removedTheme)).toBe(true);
-  expect(formatDiff(removedTheme)).toContain("**removed theme** `dark`");
+  expect(formatDiff({ tokens: removedTheme })).toContain("**removed theme** `dark`");
 
   const removedOverride = diffConfigs(
     config(registry, { dark: override(["a", "b"]) }),
     config(registry, { dark: override(["a"]) }),
   );
   expect(hasBreakingChanges(removedOverride)).toBe(true);
-  expect(formatDiff(removedOverride)).toContain("**removed override** `b` in theme `dark`");
+  expect(formatDiff({ tokens: removedOverride })).toContain(
+    "**removed override** `b` in theme `dark`",
+  );
 
   const addedOverride = diffConfigs(
     config(registry, { dark: override(["a"]) }),
@@ -502,8 +503,10 @@ describe("runDiff against a config that imports a sibling file", () => {
 
     expect(stdoutSpy).toHaveBeenCalledTimes(1);
     const parsed = JSON.parse(String(stdoutSpy.mock.calls[0]![0]));
-    expect(parsed.removed.map((e: TokenEntry) => e.path.join("."))).toEqual(["ref.color.red"]);
-    expect(parsed.changed).toHaveLength(1);
+    expect(parsed.tokens.removed.map((e: TokenEntry) => e.path.join("."))).toEqual([
+      "ref.color.red",
+    ]);
+    expect(parsed.tokens.changed).toHaveLength(1);
   });
 
   test("--fail-on-breaking exits 1 on the removed token", async () => {

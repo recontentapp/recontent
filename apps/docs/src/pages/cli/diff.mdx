@@ -1,14 +1,16 @@
 ---
 title: "diff"
-description: "Compare the config's tokens against a previous git revision."
+description: "Compare the config's tokens, components and types against a previous git revision."
 ---
 
 # diff
 
-Compares the tokens and themes in your working tree with those at an earlier git revision.
+Compares the tokens and themes in your working tree with those at an earlier git revision. When the
+config sets [`introspection`](/tokens/configuration#introspection), it also compares the API of your components
+and of the types their props use.
 
 ```bash
-recontent diff [rev] [--fail-on-breaking] [--format <format>]
+recontent diff [rev] [--fail-on-breaking] [--format <format>] [--no-cache]
 ```
 
 For a walkthrough with a GitHub Actions workflow, see the [Catching breaking changes](/guides/diffs) guide.
@@ -20,6 +22,7 @@ For a walkthrough with a GitHub Actions workflow, see the [Catching breaking cha
 | `[rev]`              | The git revision to compare against. Default: `HEAD`. Must be an ancestor of `HEAD`.             |
 | `--fail-on-breaking` | Exit with code `1` when the diff has a [breaking change](/guides/diffs#what-counts-as-breaking). |
 | `--format <format>`  | `markdown` (default) or `json`.                                                                  |
+| `--no-cache`         | Do not read or write the introspection cache of the working tree. `rev` is never cached.         |
 
 Uses the [global options](/cli#global-options) `-c`, `--cwd` and `--log-level`.
 
@@ -33,16 +36,47 @@ Uses the [global options](/cli#global-options) `-c`, `--cwd` and `--log-level`.
 The whole tree at `rev` is extracted to a temporary directory, so a config that imports other files
 loads correctly there. Nothing in your working tree or git state is changed.
 
+### Components
+
+Components are compared automatically when the config in your working tree sets `introspection`. If
+the config at `rev` does not, they are skipped, with a note in the output.
+
+To introspect `rev`, its sources must be able to resolve their dependencies (`react`, `@types/react`
+and so on). The archive has no `node_modules`, so every `node_modules` directory ignored by git in
+your working tree is symlinked into it, at the same relative path. Install dependencies before
+running `diff`. If introspecting `rev` fails, the command fails with the error: a diff that
+silently dropped components would be misleading.
+
+Limitations:
+
+- Files ignored by git other than `node_modules` (generated code that is not committed, say) are
+  missing at `rev`.
+- Workspace packages linked through `node_modules` resolve to their working-tree version, not the
+  one at `rev`.
+- There is no rename detection: a renamed component or prop is a removal plus an addition, which is
+  still breaking.
+
 ## Output
 
 The diff is written to **stdout**. In `markdown` format, a line `Comparing <config> against <rev>` is
 written to stderr, so redirecting stdout leaves just the markdown.
 
-- `markdown`: sections for **Breaking**, **Added**, **Changed** (a `diff` code block) and **Themes**,
-  or `No token changes between the working tree and <rev>.` when nothing differs.
-- `json`: one document with `config`, `rev`, `breaking` (boolean), `counts`
-  (`added`, `removed`, `renamed`, `retyped`, `changed`, `breaking`) and the lists `added`, `removed`,
-  `renamed`, `retyped`, `changed` and `themes`.
+- `markdown`: `# Tokens`, `# Components` and `# Types` sections, each with **Breaking**, **Added** and
+  **Changed** subsections (tokens also get a `diff` code block and **Themes**). A section with
+  nothing in it is left out. When nothing differs, the output is
+  `No changes between the working tree and <rev>.`
+- `json`: one document with `config`, `rev`, `breaking` (boolean), `counts` and the diffs
+  themselves, nested by kind:
+
+  | Field        | Contents                                                                                                                                                                    |
+  | ------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+  | `counts`     | `tokens` (`added`, `removed`, `renamed`, `retyped`, `changed`, `breaking`), `components` and `types` (`added`, `removed`, `changed`, `breaking`), and the total `breaking`. |
+  | `tokens`     | `added`, `removed`, `renamed`, `retyped`, `changed` and `themes`.                                                                                                           |
+  | `components` | `added` and `removed` (the introspected components), and `changed`: `{ name, changes }` per component.                                                                      |
+  | `types`      | The same, for project types.                                                                                                                                                |
+
+  `components`, `types` and their counts are absent when components were not compared;
+  `componentsNote` then says why.
 
 ## Exit codes
 

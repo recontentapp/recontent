@@ -535,7 +535,7 @@ describe("recontent diff", () => {
     const result = runCli(["--cwd", dir, "diff"]);
 
     expect(result.status).toBe(0);
-    expect(result.stdout).toContain("No token changes between the working tree and HEAD");
+    expect(result.stdout).toContain("No changes between the working tree and HEAD");
   });
 
   test("names the compared revision when nothing changed", () => {
@@ -591,9 +591,10 @@ describe("recontent diff", () => {
     expect(parsed.config).toBe("recontent.config.ts");
     expect(parsed.rev).toBe("HEAD");
     expect(parsed.breaking).toBe(false);
-    expect(parsed.counts.changed).toBe(1);
-    expect(parsed.changed).toHaveLength(1);
-    expect(parsed.changed[0].to.path.join(".")).toBe("ref.color.brand.primary");
+    expect(parsed.counts.tokens.changed).toBe(1);
+    expect(parsed.tokens.changed).toHaveLength(1);
+    expect(parsed.tokens.changed[0].to.path.join(".")).toBe("ref.color.brand.primary");
+    expect(parsed.components).toBeUndefined();
   });
 
   test("rejects an unknown --format with a usage error", () => {
@@ -630,6 +631,109 @@ describe("recontent diff", () => {
     const withBreaking = runCli(["--cwd", dir, "diff", "--fail-on-breaking"]);
     expect(withBreaking.status).toBe(1);
     expect(withBreaking.stderr).toContain("error: 2 breaking changes found");
+  });
+
+  describe("components", () => {
+    // `react`'s types are installed in the package, not in the scratch repo: link them the way
+    // a project's ignored `node_modules` is, so that `linkNodeModules` has something to find.
+    function introspectedRepo(prefix: string): string {
+      const dir = makeScratchDir(prefix);
+      copyFixture("inspect", dir);
+      mkdirSync(path.join(dir, "node_modules/@types"), { recursive: true });
+      symlinkSync(
+        path.join(packageRoot, "node_modules/@types/react"),
+        path.join(dir, "node_modules/@types/react"),
+      );
+      writeFileSync(path.join(dir, ".gitignore"), "node_modules/\n.recontent/\ndocs/\n");
+      return dir;
+    }
+
+    function editButton(dir: string): void {
+      const file = path.join(dir, "src/button.tsx");
+      writeFileSync(
+        file,
+        readFileSync(file, "utf-8")
+          .replace('"solid" | "outline"', '"solid"')
+          .replace("  icon?: IconName;\n", ""),
+      );
+    }
+
+    test("reports API changes to components and the types they use", () => {
+      const dir = introspectedRepo("diff-components");
+      initRepoWithCommit(dir);
+      editButton(dir);
+
+      const result = runCli(["--cwd", dir, "diff"]);
+
+      expect(result.status).toBe(0);
+      expect(result.stdout).toContain("# Components\n\n## Breaking (2)");
+      expect(result.stdout).toContain(
+        '- `Button`\n  - **prop** `variant`: removed value `"outline"`\n  - **removed prop** `icon`',
+      );
+      expect(result.stdout).not.toContain("# Tokens");
+    });
+
+    test("--format json nests tokens, components and types with their counts", () => {
+      const dir = introspectedRepo("diff-components-json");
+      initRepoWithCommit(dir);
+      editButton(dir);
+      const file = path.join(dir, "src/button.tsx");
+      writeFileSync(file, readFileSync(file, "utf-8").replace('"sm" | "md"', '"sm"'));
+
+      const result = runCli(["--cwd", dir, "diff", "--format", "json"]);
+
+      expect(result.status).toBe(0);
+      const parsed = JSON.parse(result.stdout);
+      expect(parsed.breaking).toBe(true);
+      // Dropping `icon` leaves `IconName` unused, so it leaves the introspected types too.
+      expect(parsed.counts.components).toEqual({ added: 0, removed: 0, changed: 1, breaking: 3 });
+      // `ButtonSize` is an alias of `IconSize`, so both lose the value.
+      expect(parsed.counts.types).toEqual({ added: 0, removed: 1, changed: 2, breaking: 3 });
+      expect(parsed.counts.breaking).toBe(6);
+      expect(parsed.components.changed[0].name).toBe("Button");
+      expect(parsed.types.changed.map((type: { name: string }) => type.name)).toEqual([
+        "ButtonSize",
+        "IconSize",
+      ]);
+    });
+
+    test("--fail-on-breaking exits 1 on a breaking component change only", () => {
+      const dir = introspectedRepo("diff-components-fail");
+      initRepoWithCommit(dir);
+      const file = path.join(dir, "src/button.tsx");
+      writeFileSync(
+        file,
+        readFileSync(file, "utf-8").replace(
+          "  size?: ButtonSize;",
+          "  size?: ButtonSize;\n  tone?: string;",
+        ),
+      );
+
+      expect(runCli(["--cwd", dir, "diff", "--fail-on-breaking"]).status).toBe(0);
+
+      editButton(dir);
+      const result = runCli(["--cwd", dir, "diff", "--fail-on-breaking"]);
+      expect(result.status).toBe(1);
+      expect(result.stderr).toContain("error: 3 breaking changes found");
+    });
+
+    test("skips components, with a note, when the revision has no introspection", () => {
+      const dir = introspectedRepo("diff-components-base-without");
+      const configPath = path.join(dir, "recontent.config.ts");
+      const config = readFileSync(configPath, "utf-8");
+      writeFileSync(
+        configPath,
+        config.replace('  introspection: { entry: "src/index.ts" },\n', ""),
+      );
+      initRepoWithCommit(dir);
+      writeFileSync(configPath, config);
+
+      const result = runCli(["--cwd", dir, "diff"]);
+
+      expect(result.status).toBe(0);
+      expect(result.stdout).toContain("No changes between the working tree and HEAD.");
+      expect(result.stdout).toContain("Components were not compared: HEAD has no introspection");
+    });
   });
 });
 
