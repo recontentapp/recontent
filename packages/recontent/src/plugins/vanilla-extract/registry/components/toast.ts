@@ -276,6 +276,23 @@ function ToastList() {
   );
 }
 
+/**
+ * Provides toasts to the app and renders them. Trigger them with the \`useToast\` hook.
+ *
+ * @usage Mount once, near the root of the app. Use toasts for transient confirmations, and
+ * {@link Banner} for messages that stay until they are resolved.
+ *
+ * @example
+ * <ToastProvider placement="bottom-right">
+ *   <App />
+ * </ToastProvider>
+ *
+ * // Anywhere below
+ * const { toast } = useToast();
+ * toast({ title: "Saved", status: "success" });
+ *
+ * @category Feedback
+ */
 export function ToastProvider({
   children,
   placement = "bottom-right",

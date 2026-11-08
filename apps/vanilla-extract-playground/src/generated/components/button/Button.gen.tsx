@@ -25,6 +25,17 @@ export interface ButtonProps extends CommonComponentProps {
   render?: RenderProp<"button">;
 }
 
+/**
+ * Triggers an action.
+ *
+ * @usage Use for actions that change something. Prefer {@link Link} when the click only navigates,
+ * and {@link IconButton} when there is no visible text.
+ *
+ * @example
+ * <Button onClick={save}>Save</Button>
+ *
+ * @category Actions
+ */
 export function Button({
   type = "button",
   onClick,

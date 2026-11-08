@@ -234,6 +234,23 @@ function matchesAccept(file: File, accept: string): boolean {
   });
 }
 
+/**
+ * Input to choose files, by browsing or by dropping them.
+ *
+ * @usage Use to upload files. Restrict them with \`accept\` and \`maxSizeBytes\`, and handle refusals
+ * with \`onRejected\`.
+ *
+ * @example
+ * <FileInput
+ *   accept="image/*"
+ *   maxSizeBytes={5_000_000}
+ *   onFilesChange={setFiles}
+ *   onRejected={(reason) => setError(reason)}
+ *   dropzone
+ * />
+ *
+ * @category Forms
+ */
 export function FileInput({
   accept,
   multiple = false,

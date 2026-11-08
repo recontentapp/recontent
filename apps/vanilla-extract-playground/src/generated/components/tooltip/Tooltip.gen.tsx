@@ -17,6 +17,19 @@ export interface TooltipProps extends CommonComponentProps {
   disabled?: boolean;
 }
 
+/**
+ * Short hint shown on hover and focus.
+ *
+ * @usage Use to name or explain a control, like an {@link IconButton}. It cannot contain
+ * interactive content, use {@link Popover} for that.
+ *
+ * @example
+ * <Tooltip content="Search the docs">
+ *   <IconButton icon="search" label="Search" />
+ * </Tooltip>
+ *
+ * @category Overlays
+ */
 export function Tooltip({
   content,
   children,

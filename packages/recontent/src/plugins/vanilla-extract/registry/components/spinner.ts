@@ -57,6 +57,17 @@ export interface SpinnerProps extends CommonComponentProps {
   render?: RenderProp<"span">;
 }
 
+/**
+ * Indicates that something is loading.
+ *
+ * @usage Use when the wait is short or its length is unknown. Use {@link ProgressBar} when the
+ * progress can be measured.
+ *
+ * @example
+ * <Spinner label="Loading" />
+ *
+ * @category Feedback
+ */
 export function Spinner({ size, color, label, className, render, ...props }: SpinnerProps) {
   const classes = [
     spinnerRoot,

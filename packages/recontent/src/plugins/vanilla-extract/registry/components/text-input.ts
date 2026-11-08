@@ -171,6 +171,17 @@ export interface TextInputProps extends CommonComponentProps, FieldableInputProp
   render?: RenderProp<"input">;
 }
 
+/**
+ * Single-line text field.
+ *
+ * @usage Use for short free text, like names and emails. Use {@link Textarea} for longer text. Wrap
+ * in {@link Field} to add a label and an error.
+ *
+ * @example
+ * <TextInput name="email" type="email" placeholder="you@example.com" clearable />
+ *
+ * @category Forms
+ */
 export function TextInput({
   value,
   defaultValue,

@@ -11,6 +11,17 @@ export interface IconProps extends CommonComponentProps {
   label?: string;
 }
 
+/**
+ * Renders one of the icons of the design system.
+ *
+ * @usage Use for decoration or to support text. Pass `label` when the icon carries meaning on its
+ * own, otherwise it is hidden from assistive technology.
+ *
+ * @example
+ * <Icon icon="check" label="Done" />
+ *
+ * @category Content
+ */
 export function Icon({ icon, size, color, label, className, ...props }: IconProps) {
   const Component = icons[icon];
 

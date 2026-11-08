@@ -438,7 +438,7 @@ Source: `src/generated/components/badge/Badge.gen.tsx:17`
 | `children` | `ReactNode` | — | no |  |
 | `className` | `string` | — | no |  |
 | `data-testid` | `string` | — | no |  |
-| `icon` | `"search" \| "info" \| "alert" \| "check" \| "chevronDown" \| "close"` | — | no |  |
+| `icon` | `"search" \| "alert" \| "check" \| "chevronDown" \| "close" \| "info"` | — | no |  |
 | `id` | `string` | — | no |  |
 | `render` | `RenderProp<"span">`<br>`import("react").ReactElement<unknown, string \| import("react").JSXElementConstructor<any>> \| ((props: Omit<import("react").DetailedHTMLProps<import("react").HTMLAttributes<HTMLSpanElement>, HTMLSpanElement>, "ref">) => import("react").ReactElement)` | — | no |  |
 | `size` | `"sm" \| "md"` | `"sm"` | no |  |
@@ -456,7 +456,7 @@ Source: `src/generated/components/banner/Banner.gen.tsx:37`
 | `children` | `ReactNode` | — | no |  |
 | `className` | `string` | — | no |  |
 | `data-testid` | `string` | — | no |  |
-| `icon` | `false \| "search" \| "info" \| "alert" \| "check" \| "chevronDown" \| "close"` | — | no | \`false\` opts out of the status' default icon. |
+| `icon` | `false \| "search" \| "alert" \| "check" \| "chevronDown" \| "close" \| "info"` | — | no | \`false\` opts out of the status' default icon. |
 | `id` | `string` | — | no |  |
 | `onDismiss` | `() => void` | — | no |  |
 | `render` | `RenderProp<"div">`<br>`import("react").ReactElement<unknown, string \| import("react").JSXElementConstructor<any>> \| ((props: Omit<import("react").DetailedHTMLProps<import("react").HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref">) => import("react").ReactElement)` | — | no |  |
@@ -796,7 +796,7 @@ Source: `src/generated/components/icon/Icon.gen.tsx:14`
 | `className` | `string` | — | no |  |
 | `color` | `"disabled" \| "primary" \| "secondary" \| "accent"` | — | no |  |
 | `data-testid` | `string` | — | no |  |
-| `icon` | `"search" \| "info" \| "alert" \| "check" \| "chevronDown" \| "close"` | — | yes |  |
+| `icon` | `"search" \| "alert" \| "check" \| "chevronDown" \| "close" \| "info"` | — | yes |  |
 | `id` | `string` | — | no |  |
 | `label` | `string` | — | no |  |
 | `size` | `IconSizeToken \| number` | — | no |  |
@@ -812,7 +812,7 @@ Source: `src/generated/components/icon-button/IconButton.gen.tsx:29`
 | `className` | `string` | — | no |  |
 | `data-testid` | `string` | — | no |  |
 | `disabled` | `boolean` | `false` | no |  |
-| `icon` | `"search" \| "info" \| "alert" \| "check" \| "chevronDown" \| "close"` | — | yes |  |
+| `icon` | `"search" \| "alert" \| "check" \| "chevronDown" \| "close" \| "info"` | — | yes |  |
 | `id` | `string` | — | no |  |
 | `label` | `string` | — | yes | Accessible name — mandatory, since there is no visible text. |
 | `loading` | `boolean` | `false` | no |  |
@@ -1324,8 +1324,8 @@ Source: `src/generated/components/text-input/TextInput.gen.tsx:33`
 | `data-testid` | `string` | — | no |  |
 | `defaultValue` | `string` | — | no |  |
 | `disabled` | `boolean` | `false` | no |  |
-| `iconLeft` | `"search" \| "info" \| "alert" \| "check" \| "chevronDown" \| "close"` | — | no |  |
-| `iconRight` | `"search" \| "info" \| "alert" \| "check" \| "chevronDown" \| "close"` | — | no |  |
+| `iconLeft` | `"search" \| "alert" \| "check" \| "chevronDown" \| "close" \| "info"` | — | no |  |
+| `iconRight` | `"search" \| "alert" \| "check" \| "chevronDown" \| "close" \| "info"` | — | no |  |
 | `id` | `string` | — | no |  |
 | `invalid` | `boolean` | `false` | no |  |
 | `maxLength` | `number` | — | no |  |

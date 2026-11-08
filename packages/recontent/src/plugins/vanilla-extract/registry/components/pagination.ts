@@ -195,6 +195,17 @@ function getPaginationRange(
   ];
 }
 
+/**
+ * Controls to move between the pages of a long list.
+ *
+ * @usage Use when the content is split in pages. Pages start at 1. The page is controlled: keep it
+ * in state and update it in \`onPageChange\`.
+ *
+ * @example
+ * <Pagination page={page} pageCount={12} onPageChange={setPage} />
+ *
+ * @category Navigation
+ */
 export function Pagination({
   page,
   pageCount,

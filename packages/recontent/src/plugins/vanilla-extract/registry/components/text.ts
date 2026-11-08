@@ -71,6 +71,19 @@ export interface TextProps extends CommonComponentProps {
   render?: RenderProp<"p">;
 }
 
+/**
+ * Renders text with the typography and the color of the design system.
+ *
+ * @usage Use for all text, rather than styling raw elements. Choose the style with \`variant\` and
+ * \`color\`, and the element with \`render\`.
+ *
+ * @example
+ * <Text render={<h2 />} truncate>
+ *   A title that is cut when it does not fit.
+ * </Text>
+ *
+ * @category Content
+ */
 export function Text({
   variant,
   color,
@@ -189,6 +202,19 @@ export interface TextProps extends CommonComponentProps {
   render?: RenderProp<"p">;
 }
 
+/**
+ * Renders text with the typography and the color of the design system.
+ *
+ * @usage Use for all text, rather than styling raw elements. Choose the style with \`variant\` and
+ * \`color\`, and the element with \`render\`.
+ *
+ * @example
+ * <Text render={<h2 />} truncate>
+ *   A title that is cut when it does not fit.
+ * </Text>
+ *
+ * @category Content
+ */
 export function Text({
   variant,
   color,

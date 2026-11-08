@@ -217,6 +217,24 @@ function deriveStatus(index: number, activeStep: number): StepStatus {
   return "upcoming";
 }
 
+/**
+ * Shows progress through a sequence of steps.
+ *
+ * @usage Use for multi-step flows, like checkout or onboarding. It displays the progress, it does
+ * not change step by itself.
+ *
+ * @example
+ * <Steps
+ *   activeStep={1}
+ *   steps={[
+ *     { label: "Account" },
+ *     { label: "Billing" },
+ *     { label: "Confirm" },
+ *   ]}
+ * />
+ *
+ * @category Navigation
+ */
 export function Steps({
   steps,
   activeStep = 0,

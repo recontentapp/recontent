@@ -69,6 +69,17 @@ export interface AvatarProps extends CommonComponentProps {
   render?: RenderProp<"span">;
 }
 
+/**
+ * Image or initials identifying a person or an entity.
+ *
+ * @usage Use next to names, in lists and in comments. Falls back to \`text\` when the image is
+ * missing, so always pass \`alt\` or \`text\`.
+ *
+ * @example
+ * <Avatar src="/people/ada.png" alt="Ada Lovelace" text="AL" shape="circle" />
+ *
+ * @category Data display
+ */
 export function Avatar({
   src,
   alt,

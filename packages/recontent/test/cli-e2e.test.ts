@@ -1277,6 +1277,30 @@ export default defineConfig({
       );
     });
 
+    test("it is invalidated when a file an @example points to changes", () => {
+      const dir = buildProject("cache-example-file");
+      const source = path.join(dir, "src/button.tsx");
+      writeFileSync(
+        source,
+        readFileSync(source, "utf-8").replace(
+          ' * <Button label="Save" />',
+          " * ./button.example.tsx",
+        ),
+      );
+      const example = path.join(dir, "src/button.example.tsx");
+      writeFileSync(example, '<Button label="Save" />\n');
+      runCli(["--cwd", dir, "build"]);
+      expect(cached(debug(dir, "inspect", "components"))).toBe(true);
+
+      writeFileSync(example, '<Button label="Saved" />\n');
+
+      const result = debug(dir, "inspect", "components", "Button", "--format", "json");
+      expect(cached(result)).toBe(false);
+      expect(JSON.parse(result.stdout).components[0].examples).toEqual([
+        { title: "Basic", code: '<Button label="Saved" />' },
+      ]);
+    });
+
     test("--no-cache neither reads nor writes it", () => {
       const dir = buildProject("cache-off");
 

@@ -7,6 +7,17 @@ export interface DividerProps extends CommonComponentProps {
   render?: RenderProp<"div">;
 }
 
+/**
+ * Thin line separating groups of content.
+ *
+ * @usage Use between related sections. Prefer spacing with {@link Stack} when a visual separation
+ * is enough.
+ *
+ * @example
+ * <Divider orientation="horizontal" />
+ *
+ * @category Layout
+ */
 export function Divider({
   orientation = "horizontal",
   className,

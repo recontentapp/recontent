@@ -31,6 +31,22 @@ function flexValue(value: boolean | number): number {
   return value === true ? 1 : value === false ? 0 : value;
 }
 
+/**
+ * Child of a Stack with control over how it grows, shrinks and aligns.
+ *
+ * @usage Use only inside a {@link Stack}, when one child needs to behave differently from its
+ * siblings.
+ *
+ * @example
+ * <Stack direction="row">
+ *   <StackItem grow>
+ *     <TextInput name="query" />
+ *   </StackItem>
+ *   <Button>Search</Button>
+ * </Stack>
+ *
+ * @category Layout
+ */
 export function StackItem({
   grow,
   shrink,

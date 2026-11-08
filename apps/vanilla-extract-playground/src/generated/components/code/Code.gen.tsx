@@ -7,6 +7,18 @@ export interface CodeProps extends CommonComponentProps {
   render?: RenderProp<"code">;
 }
 
+/**
+ * Inline snippet of code, in a monospace font.
+ *
+ * @usage Use for short identifiers, commands and values inside text.
+ *
+ * @example
+ * <Text>
+ *   Run <Code>npm install</Code> first.
+ * </Text>
+ *
+ * @category Content
+ */
 export function Code({ className, render, children, ...props }: CodeProps) {
   const classes = [codeRoot, className].filter(Boolean).join(" ");
 

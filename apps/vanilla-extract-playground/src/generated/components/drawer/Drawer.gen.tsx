@@ -34,6 +34,25 @@ export interface DrawerProps extends CommonComponentProps {
   render?: RenderProp<"div">;
 }
 
+/**
+ * Panel sliding in from an edge of the screen.
+ *
+ * @usage Use for secondary tasks and longer content that should keep the page in context, like
+ * details or filters. Use {@link Dialog} for short, blocking decisions.
+ *
+ * @example
+ * <Drawer
+ *   title="Filters"
+ *   placement="right"
+ *   trigger={<Button>Filters</Button>}
+ * >
+ *   <Field label="Status">
+ *     <TextInput name="status" />
+ *   </Field>
+ * </Drawer>
+ *
+ * @category Overlays
+ */
 export function Drawer({
   open,
   defaultOpen,

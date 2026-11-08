@@ -118,6 +118,22 @@ export interface MetadataListProps extends CommonComponentProps {
   render?: RenderProp<"dl">;
 }
 
+/**
+ * List of labelled values, like the properties of an item.
+ *
+ * @usage Use to show read-only details, like the sidebar of a record. Use {@link Field} with a
+ * control when the values are editable.
+ *
+ * @example
+ * <MetadataList
+ *   items={[
+ *     { label: "Owner", value: "Ada" },
+ *     { label: "Created", value: "Nov 8, 2026" },
+ *   ]}
+ * />
+ *
+ * @category Data display
+ */
 export function MetadataList({
   items,
   orientation = "horizontal",

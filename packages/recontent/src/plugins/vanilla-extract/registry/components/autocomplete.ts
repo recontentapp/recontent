@@ -275,6 +275,24 @@ function highlightMatch(label: ReactNode, query: string) {
   );
 }
 
+/**
+ * Text input that suggests matching options as people type.
+ *
+ * @usage Use when the list of options is long enough that scanning it is slow, and free text is
+ * acceptable. Use {@link Select} when the value must be one of the options.
+ *
+ * @example
+ * <Autocomplete
+ *   placeholder="Search countries"
+ *   options={[
+ *     { value: "fr", label: "France" },
+ *     { value: "de", label: "Germany" },
+ *   ]}
+ *   onItemClick={(value) => setCountry(value)}
+ * />
+ *
+ * @category Forms
+ */
 export function Autocomplete<Value extends string>({
   options,
   value,

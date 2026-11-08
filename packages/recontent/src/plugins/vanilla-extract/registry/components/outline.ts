@@ -148,6 +148,23 @@ function OutlineList({
   );
 }
 
+/**
+ * Table of contents linking to the sections of a page.
+ *
+ * @usage Use on long pages, next to the content. With \`observeScroll\`, the section in view is
+ * highlighted.
+ *
+ * @example
+ * <Outline
+ *   items={[
+ *     { id: "intro", label: "Introduction" },
+ *     { id: "usage", label: "Usage", children: [{ id: "props", label: "Props" }] },
+ *   ]}
+ *   observeScroll
+ * />
+ *
+ * @category Navigation
+ */
 export function Outline({
   items,
   activeId,

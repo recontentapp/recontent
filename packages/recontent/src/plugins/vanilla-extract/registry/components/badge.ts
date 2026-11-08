@@ -76,6 +76,17 @@ export interface BadgeProps extends CommonComponentProps {
   render?: RenderProp<"span">;
 }
 
+/**
+ * Small label conveying a status or a count.
+ *
+ * @usage Use to flag the state of an item next to its name. For an inline message with actions, use
+ * {@link Banner}.
+ *
+ * @example
+ * <Badge variant="success">Active</Badge>
+ *
+ * @category Data display
+ */
 export function Badge({
   variant = ${JSON.stringify(statusNames[0] ?? "info")},
   size = ${JSON.stringify(sizeNames[0] ?? "sm")},

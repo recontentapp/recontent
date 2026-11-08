@@ -173,6 +173,19 @@ export interface BannerProps extends CommonComponentProps {
   render?: RenderProp<"div">;
 }
 
+/**
+ * Inline message that communicates a status, with optional actions.
+ *
+ * @usage Use for messages that stay on the page until they are resolved or dismissed. Use
+ * {@link ToastProvider} for transient confirmations.
+ *
+ * @example
+ * <Banner status="warning" title="Payment failed" onDismiss={() => setVisible(false)}>
+ *   Update your card to keep your subscription.
+ * </Banner>
+ *
+ * @category Feedback
+ */
 export function Banner({
   status = ${JSON.stringify(statusNames[0] ?? "info")},
   title,

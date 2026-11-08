@@ -23,6 +23,17 @@ export interface CheckboxProps extends CommonComponentProps, FieldableInputProps
   render?: RenderProp<"button">;
 }
 
+/**
+ * Toggles a single option on or off.
+ *
+ * @usage Use for independent options, or to opt in to something. Use {@link Switch} for settings
+ * that apply immediately, and {@link RadioList} when only one option can be chosen.
+ *
+ * @example
+ * <Checkbox label="Accept the terms" checked={accepted} onCheckedChange={setAccepted} />
+ *
+ * @category Forms
+ */
 export function Checkbox({
   checked,
   defaultChecked,

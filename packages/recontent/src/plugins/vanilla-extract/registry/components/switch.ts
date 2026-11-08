@@ -136,6 +136,17 @@ export interface SwitchProps extends CommonComponentProps, FieldableInputProps {
   render?: RenderProp<"button">;
 }
 
+/**
+ * Turns a setting on or off, with immediate effect.
+ *
+ * @usage Use for settings that apply as soon as they are changed. Use {@link Checkbox} in forms
+ * that are submitted.
+ *
+ * @example
+ * <Switch label="Notifications" checked={enabled} onCheckedChange={setEnabled} />
+ *
+ * @category Forms
+ */
 export function Switch({
   checked,
   defaultChecked,

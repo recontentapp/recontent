@@ -33,6 +33,24 @@ export interface RadioListProps<Value extends string>
   render?: RenderProp<"div">;
 }
 
+/**
+ * Group of options of which exactly one can be chosen.
+ *
+ * @usage Use for a few options that should all be visible. Use {@link Select} for longer lists and
+ * {@link Checkbox} when several options can be chosen.
+ *
+ * @example
+ * <RadioList
+ *   options={[
+ *     { value: "monthly", label: "Monthly" },
+ *     { value: "yearly", label: "Yearly", description: "Two months free" },
+ *   ]}
+ *   value={plan}
+ *   onValueChange={setPlan}
+ * />
+ *
+ * @category Forms
+ */
 export function RadioList<Value extends string>({
   options,
   value,

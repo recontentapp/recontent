@@ -52,6 +52,19 @@ export interface LinkProps extends CommonComponentProps {
   render?: RenderProp<"a">;
 }
 
+/**
+ * Navigates to another page or location.
+ *
+ * @usage Use for navigation, inside text or on its own. Use {@link Button} for actions that change
+ * something.
+ *
+ * @example
+ * <Link href="/docs" underline="hover">
+ *   Read the docs
+ * </Link>
+ *
+ * @category Actions
+ */
 export function Link({
   href,
   target,

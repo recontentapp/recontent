@@ -1,5 +1,8 @@
 import type { Documentation, ExampleInfo } from "@recontentapp/core";
+import fs from "node:fs";
+import path from "node:path";
 import ts from "typescript";
+import type { Analysis } from "./components.js";
 
 /** Link names found in the comment, resolved against the known components and types once all are described. */
 export type PendingLinks = {
@@ -54,18 +57,39 @@ function dedent(text: string): string {
   return lines.map((line) => line.slice(indent)).join("\n");
 }
 
-/** `<caption>Title</caption>` then the code, optionally fenced. */
-function parseExample(text: string): ExampleInfo | undefined {
+/** `<caption>Title</caption>` then the code, optionally fenced, or a `./relative` path to a file holding it. */
+function parseExample(text: string): { title?: string; code?: string; file?: string } | undefined {
   let body = text;
   const caption = /^\s*<caption>([\s\S]*?)<\/caption>\s*/.exec(body);
   if (caption) body = body.slice(caption[0].length);
+  const title = caption?.[1]?.trim();
+  const named = title ? { title } : {};
+  const file = /^\s*(\.\.?\/\S*)\s*$/.exec(body)?.[1];
+  if (file) return { ...named, file };
   const fenced = /^\s*```[^\n]*\n([\s\S]*?)\n?\s*```\s*$/.exec(body);
   const code = dedent(fenced ? fenced[1]! : body);
-  const title = caption?.[1]?.trim();
-  return code ? { ...(title ? { title } : {}), code } : undefined;
+  return code ? { ...named, code } : undefined;
 }
 
-export function jsDoc(checker: ts.TypeChecker, symbol: ts.Symbol): JsDoc {
+/** The example's file read verbatim, or a warning and nothing when it can't be. */
+function readExample(analysis: Analysis, symbol: ts.Symbol, file: string): string | undefined {
+  const declaration = symbol.declarations?.[0];
+  const absolute = path.resolve(
+    declaration ? path.dirname(declaration.getSourceFile().fileName) : ".",
+    file,
+  );
+  try {
+    const code = fs.readFileSync(absolute, "utf8").trimEnd();
+    analysis.exampleFiles.add(absolute);
+    return code || undefined;
+  } catch {
+    analysis.warnings.push(`${symbol.getName()}: @example file ${file} not found.`);
+    return undefined;
+  }
+}
+
+export function jsDoc(analysis: Analysis, symbol: ts.Symbol): JsDoc {
+  const { checker } = analysis;
   const tags = symbol.getJsDocTags(checker);
   const tag = (name: string) => tags.find((candidate) => candidate.name === name);
   const plain = (name: string) => {
@@ -83,7 +107,12 @@ export function jsDoc(checker: ts.TypeChecker, symbol: ts.Symbol): JsDoc {
   const examples = tags
     .filter((candidate) => candidate.name === "example")
     .map((candidate) => parseExample(ts.displayPartsToString(candidate.text)))
-    .filter((example) => example !== undefined);
+    .flatMap((example): ExampleInfo[] => {
+      if (!example) return [];
+      const { file, title } = example;
+      const code = file ? readExample(analysis, symbol, file) : example.code;
+      return code ? [{ ...(title ? { title } : {}), code }] : [];
+    });
   const targets = [description, usage, deprecated, experimental].flatMap(
     (part) => part?.targets ?? [],
   );

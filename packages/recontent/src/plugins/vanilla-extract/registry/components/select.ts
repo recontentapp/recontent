@@ -249,6 +249,25 @@ export interface SelectProps<Value extends string>
   render?: RenderProp<"button">;
 }
 
+/**
+ * Dropdown to choose one option from a list.
+ *
+ * @usage Use for a list of options that does not fit on the screen. Use {@link RadioList} for a few
+ * options, and {@link Autocomplete} to search among many.
+ *
+ * @example
+ * <Select
+ *   placeholder="Choose a country"
+ *   options={[
+ *     { value: "fr", label: "France" },
+ *     { value: "de", label: "Germany" },
+ *   ]}
+ *   value={country}
+ *   onValueChange={setCountry}
+ * />
+ *
+ * @category Forms
+ */
 export function Select<Value extends string>({
   options,
   value,

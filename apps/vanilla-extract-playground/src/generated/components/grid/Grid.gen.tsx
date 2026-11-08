@@ -31,6 +31,21 @@ function trackValue(value: number | string): string {
   return typeof value === "number" ? `repeat(${value}, minmax(0, 1fr))` : value;
 }
 
+/**
+ * Two-dimensional layout of its children, in columns and rows.
+ *
+ * @usage Use when children should align on both axes, like cards. Space them with `gap`. Use
+ * {@link Stack} for a single row or column.
+ *
+ * @example
+ * <Grid columns={3}>
+ *   <Box>One</Box>
+ *   <Box>Two</Box>
+ *   <Box>Three</Box>
+ * </Grid>
+ *
+ * @category Layout
+ */
 export function Grid({
   columns,
   rows,

@@ -93,6 +93,20 @@ export interface ActionBarProps extends CommonComponentProps {
   render?: RenderProp<"div">;
 }
 
+/**
+ * Floating bar of contextual actions, anchored to the bottom of the viewport.
+ *
+ * @usage Use for actions that apply to a selection, like bulk edits on selected rows. Toggle \`open\`
+ * rather than unmounting it to keep the state of its children. Not for global navigation.
+ *
+ * @example
+ * <ActionBar open={selected.length > 0}>
+ *   <Button>Archive</Button>
+ *   <Button>Delete</Button>
+ * </ActionBar>
+ *
+ * @category Overlays
+ */
 export function ActionBar({
   placement = "bottom",
   open = true,

@@ -178,7 +178,7 @@ function collect(analysis: Analysis, symbol: ts.Symbol, declaration: TypeDeclara
     ...(typeParameters ? { typeParameters } : {}),
     sourceFilePath,
     line: file.getLineAndCharacterOfPosition(declaration.getStart(file)).line + 1,
-    ...jsDoc(checker, symbol),
+    ...jsDoc(analysis, symbol),
     definition,
     ...(described ? { members: described.props } : {}),
     ...(described?.inherits.length ? { inherits: described.inherits } : {}),

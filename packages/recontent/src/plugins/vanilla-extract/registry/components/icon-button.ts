@@ -108,6 +108,17 @@ export interface IconButtonProps extends CommonComponentProps {
   render?: RenderProp<"button">;
 }
 
+/**
+ * Button that shows an icon only.
+ *
+ * @usage Use for compact, well-known actions, like closing or searching. \`label\` is required and
+ * names the button for assistive technology. Use {@link Button} when text helps.
+ *
+ * @example
+ * <IconButton icon="search" label="Search" onClick={openSearch} />
+ *
+ * @category Actions
+ */
 export function IconButton({
   icon,
   label,

@@ -9,6 +9,17 @@ export interface KeyboardShortcutProps extends CommonComponentProps {
   render?: RenderProp<"span">;
 }
 
+/**
+ * Displays a key combination.
+ *
+ * @usage Use to document shortcuts in menus, tooltips and help. It displays a shortcut, it does not
+ * register one.
+ *
+ * @example
+ * <KeyboardShortcut keys={["Ctrl", "K"]} />
+ *
+ * @category Content
+ */
 export function KeyboardShortcut({
   keys,
   separator,

@@ -27,6 +27,17 @@ export interface ProgressBarProps extends CommonComponentProps {
   render?: RenderProp<"div">;
 }
 
+/**
+ * Shows how far a task has progressed.
+ *
+ * @usage Use when the progress is known. Pass `null` as the value when it is not. Use
+ * {@link Spinner} when there is nothing to measure.
+ *
+ * @example
+ * <ProgressBar value={60} label="Uploading" showValueLabel />
+ *
+ * @category Feedback
+ */
 export function ProgressBar({
   value,
   min = 0,

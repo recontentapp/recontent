@@ -33,6 +33,17 @@ export interface NumberInputProps extends CommonComponentProps, FieldableInputPr
   render?: RenderProp<"input">;
 }
 
+/**
+ * Input for numbers, with optional steppers and formatting.
+ *
+ * @usage Use for quantities and amounts. Use `min`, `max` and `step` to bound the value, and
+ * `format` for currencies and units. Use {@link Slider} for approximate values.
+ *
+ * @example
+ * <NumberInput value={quantity} onValueChange={setQuantity} min={1} max={10} showStepper />
+ *
+ * @category Forms
+ */
 export function NumberInput({
   value,
   defaultValue,

@@ -378,7 +378,7 @@ export function describeMembers(
       ),
     ].sort((a, b) => a.localeCompare(b));
 
-    const doc = jsDoc(checker, own[0]!.symbol);
+    const doc = jsDoc(analysis, own[0]!.symbol);
     const defaultValue = doc.defaultValue ?? defaults.get(name);
     props.push({
       name,
@@ -440,7 +440,7 @@ export function describeComponent(
     sourceFilePath: path.relative(root, file.fileName).split(path.sep).join("/"),
     line: file.getLineAndCharacterOfPosition(located.getStart(file)).line + 1,
     ...(category ? { category } : {}),
-    ...jsDoc(checker, symbol),
+    ...jsDoc(analysis, symbol),
     props,
     inherits,
     references: [...new Set(props.flatMap((prop) => prop.references ?? []))].sort((a, b) =>

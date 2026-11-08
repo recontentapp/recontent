@@ -113,6 +113,18 @@ export interface FieldProps extends CommonComponentProps {
   render?: RenderProp<"div">;
 }
 
+/**
+ * Adds a label, a description and an error message to a form control.
+ *
+ * @usage Wrap every form control that needs a label. Passing \`error\` marks the control as invalid.
+ *
+ * @example
+ * <Field label="Email" description="We never share it." error={error}>
+ *   <TextInput name="email" type="email" />
+ * </Field>
+ *
+ * @category Forms
+ */
 export function Field({
   label,
   description,

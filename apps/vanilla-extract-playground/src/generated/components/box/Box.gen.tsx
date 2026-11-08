@@ -66,6 +66,19 @@ export interface BoxProps extends CommonComponentProps {
   render?: RenderProp;
 }
 
+/**
+ * Generic container exposing spacing, surface, border and sizing tokens as props.
+ *
+ * @usage Use for one-off padding, margin, background, border or sizing around content, with the
+ * tokens of the design system. Use {@link Stack} or {@link Grid} to lay out children.
+ *
+ * @example
+ * <Box display="flex" maxWidth={480} overflow="hidden">
+ *   Content
+ * </Box>
+ *
+ * @category Layout
+ */
 export function Box({
   padding,
   paddingX,

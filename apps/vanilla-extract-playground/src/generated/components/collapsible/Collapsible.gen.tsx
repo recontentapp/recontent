@@ -22,6 +22,19 @@ export interface CollapsibleProps extends CommonComponentProps {
   render?: RenderProp<"div">;
 }
 
+/**
+ * Section that can be expanded and collapsed by its trigger.
+ *
+ * @usage Use to hide secondary content, like advanced options. Use {@link Accordion} for several
+ * related sections.
+ *
+ * @example
+ * <Collapsible trigger="Advanced options">
+ *   <TextInput name="proxy" placeholder="Proxy URL" />
+ * </Collapsible>
+ *
+ * @category Data display
+ */
 export function Collapsible({
   trigger,
   children,

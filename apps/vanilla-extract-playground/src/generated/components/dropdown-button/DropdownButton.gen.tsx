@@ -40,6 +40,23 @@ export interface DropdownButtonProps extends CommonComponentProps {
   render?: RenderProp<"button">;
 }
 
+/**
+ * Button that opens a menu of actions.
+ *
+ * @usage Use to group related secondary actions behind one button. Use {@link Select} to choose a
+ * value instead.
+ *
+ * @example
+ * <DropdownButton
+ *   label="Actions"
+ *   items={[
+ *     { value: "rename", label: "Rename", onSelect: rename },
+ *     { value: "delete", label: "Delete", onSelect: remove },
+ *   ]}
+ * />
+ *
+ * @category Actions
+ */
 export function DropdownButton({
   label,
   items,

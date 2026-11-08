@@ -21,6 +21,24 @@ export interface ToggleProps<Value extends string> extends CommonComponentProps 
   render?: RenderProp<"div">;
 }
 
+/**
+ * Switches between exactly two options.
+ *
+ * @usage Use to flip between two states that both deserve a label, like Monthly and Yearly. Use
+ * {@link Switch} for on and off.
+ *
+ * @example
+ * <Toggle
+ *   options={[
+ *     { value: "monthly", label: "Monthly" },
+ *     { value: "yearly", label: "Yearly" },
+ *   ]}
+ *   value={billing}
+ *   onValueChange={setBilling}
+ * />
+ *
+ * @category Forms
+ */
 export function Toggle<Value extends string>({
   options,
   value,

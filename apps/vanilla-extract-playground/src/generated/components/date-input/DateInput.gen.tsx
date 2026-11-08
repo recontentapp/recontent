@@ -46,6 +46,22 @@ export interface DateInputProps extends CommonComponentProps, FieldableInputProp
   render?: RenderProp<"input">;
 }
 
+/**
+ * Input to pick a date, with a calendar.
+ *
+ * @usage Use to ask for a single date. Bound the choice with `min`, `max` and `isDateUnavailable`.
+ * Wrap in {@link Field} to add a label and an error.
+ *
+ * @example
+ * <DateInput
+ *   value={date}
+ *   onValueChange={setDate}
+ *   min={new Date()}
+ *   clearable
+ * />
+ *
+ * @category Forms
+ */
 export function DateInput({
   value,
   defaultValue = null,

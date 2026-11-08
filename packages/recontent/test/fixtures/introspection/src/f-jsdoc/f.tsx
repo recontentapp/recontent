@@ -84,3 +84,11 @@ export function F7(props: {
 }) {
   return <ul>{props.rows}</ul>;
 }
+
+/**
+ * @example <caption>From file</caption> ./F8.example.tsx
+ * @example ./missing.tsx
+ */
+export function F8(props: { rows?: number }) {
+  return <ul>{props.rows}</ul>;
+}

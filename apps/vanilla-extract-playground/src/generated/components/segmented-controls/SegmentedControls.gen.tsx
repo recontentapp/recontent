@@ -29,6 +29,24 @@ export interface SegmentedControlsProps<Value extends string> extends CommonComp
   render?: RenderProp<"div">;
 }
 
+/**
+ * Row of connected buttons to choose one option.
+ *
+ * @usage Use to switch between a few related views or modes, with immediate effect. Use
+ * {@link Tabs} when each option shows its own content.
+ *
+ * @example
+ * <SegmentedControls
+ *   options={[
+ *     { value: "list", label: "List" },
+ *     { value: "grid", label: "Grid" },
+ *   ]}
+ *   value={view}
+ *   onValueChange={setView}
+ * />
+ *
+ * @category Forms
+ */
 export function SegmentedControls<Value extends string>({
   options,
   value,

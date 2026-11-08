@@ -82,6 +82,19 @@ export interface SelectableCardProps extends CommonComponentProps {
   render?: RenderProp<"button">;
 }
 
+/**
+ * Card that behaves as a radio or a checkbox.
+ *
+ * @usage Use to choose among richer options, like plans. Set \`control\` to "checkbox" when several
+ * cards can be selected. Use {@link RadioList} for plain labels.
+ *
+ * @example
+ * <SelectableCard selected={plan === "pro"} onSelectedChange={() => setPlan("pro")}>
+ *   <Text>Pro</Text>
+ * </SelectableCard>
+ *
+ * @category Forms
+ */
 export function SelectableCard({
   selected,
   defaultSelected = false,

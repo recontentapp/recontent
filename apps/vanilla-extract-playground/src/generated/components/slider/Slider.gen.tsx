@@ -33,6 +33,17 @@ export interface SliderProps extends CommonComponentProps, FieldableInputProps {
   render?: RenderProp<"div">;
 }
 
+/**
+ * Control to pick a value, or a range, by dragging a handle.
+ *
+ * @usage Use for approximate values within a range. Pass an array as the value to select a range.
+ * Use {@link NumberInput} when the exact value matters.
+ *
+ * @example
+ * <Slider min={0} max={100} step={5} value={volume} onValueChange={setVolume} showValueLabel />
+ *
+ * @category Forms
+ */
 export function Slider({
   value,
   defaultValue,

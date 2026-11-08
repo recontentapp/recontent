@@ -63,6 +63,18 @@ export interface QuoteBlockProps extends CommonComponentProps {
   render?: RenderProp<"figure">;
 }
 
+/**
+ * Block quotation, with an optional citation.
+ *
+ * @usage Use for quotes from another source or person. Not for callouts, see {@link Banner}.
+ *
+ * @example
+ * <QuoteBlock citation="Ada Lovelace" citationHref="https://example.com">
+ *   The Analytical Engine weaves algebraic patterns.
+ * </QuoteBlock>
+ *
+ * @category Content
+ */
 export function QuoteBlock({
   citation,
   citationHref,

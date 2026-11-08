@@ -130,6 +130,20 @@ export interface PopoverProps extends CommonComponentProps {
   render?: RenderProp<"div">;
 }
 
+/**
+ * Floating panel anchored to a trigger, with interactive content.
+ *
+ * @usage Use for contextual content or controls that people can interact with. Use {@link Tooltip}
+ * for a short hint, and {@link Dialog} for blocking content.
+ *
+ * @example
+ * <Popover
+ *   trigger={<Button>Share</Button>}
+ *   content={<TextInput name="email" placeholder="Email" />}
+ * />
+ *
+ * @category Overlays
+ */
 export function Popover({
   trigger,
   content,

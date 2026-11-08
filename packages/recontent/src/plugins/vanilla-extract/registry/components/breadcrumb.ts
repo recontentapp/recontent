@@ -140,6 +140,23 @@ export interface BreadcrumbProps extends CommonComponentProps {
   render?: RenderProp<"nav">;
 }
 
+/**
+ * Trail of links showing where the current page sits in a hierarchy.
+ *
+ * @usage Use on deeply nested pages. The last item is the current page. \`maxVisibleItems\` collapses
+ * the middle of long trails.
+ *
+ * @example
+ * <Breadcrumb
+ *   items={[
+ *     { label: "Projects", href: "/projects" },
+ *     { label: "Website", href: "/projects/website" },
+ *     { label: "Settings" },
+ *   ]}
+ * />
+ *
+ * @category Navigation
+ */
 export function Breadcrumb({ items, separator, maxVisibleItems, className, render, ...props }: BreadcrumbProps) {
   const [expanded, setExpanded] = useState(false);
   const collapsible =

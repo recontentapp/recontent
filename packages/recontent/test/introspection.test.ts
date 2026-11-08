@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { beforeAll, describe, expect, test } from "@jest/globals";
@@ -10,10 +11,11 @@ const logger = { info() {}, warn() {}, error() {}, debug() {} };
 let components: ComponentInfo[];
 let types: TypeInfo[];
 let warnings: string[];
+let files: string[];
 let byName: Map<string, ComponentInfo>;
 
 beforeAll(() => {
-  ({ components, types, warnings } = introspect({
+  ({ components, types, warnings, files } = introspect({
     config: { entry: "src/index.ts", exclude: ["Excluded"] },
     root,
     logger,
@@ -334,6 +336,16 @@ describe("F. JSDoc", () => {
     expect(component("F7").experimental).toBe("Subject to change.");
     expect(prop("F7", "rows").experimental).toBe(true);
     expect(f6.experimental).toBeUndefined();
+  });
+
+  test("F8 @example from a file, verbatim, and a missing file is skipped with a warning", () => {
+    const file = path.join(root, "src/f-jsdoc/F8.example.tsx");
+    expect(component("F8").examples).toEqual([
+      { title: "From file", code: readFileSync(file, "utf8").trimEnd() },
+    ]);
+    expect(warnings).toContainEqual("F8: @example file ./missing.tsx not found.");
+    expect(files).toContain(file);
+    expect(files).not.toContain(path.join(root, "src/f-jsdoc/missing.tsx"));
   });
 });
 

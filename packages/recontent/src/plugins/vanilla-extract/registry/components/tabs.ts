@@ -221,6 +221,23 @@ export interface TabsProps extends CommonComponentProps {
   render?: RenderProp<"div">;
 }
 
+/**
+ * Organizes content in panels, of which one is visible at a time.
+ *
+ * @usage Use for peer sections of a page that people switch between. Use {@link SegmentedControls}
+ * when the choice does not change the content below.
+ *
+ * @example
+ * <Tabs
+ *   items={[
+ *     { value: "overview", label: "Overview", content: "Overview" },
+ *     { value: "activity", label: "Activity", content: "Activity" },
+ *   ]}
+ *   defaultValue="overview"
+ * />
+ *
+ * @category Navigation
+ */
 export function Tabs({
   items,
   value,

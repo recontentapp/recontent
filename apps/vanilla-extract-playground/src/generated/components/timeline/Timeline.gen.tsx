@@ -41,6 +41,21 @@ function defaultFormatTimestamp(timestamp: Date | string): ReactNode {
   return Number.isNaN(date.getTime()) ? String(timestamp) : date.toLocaleDateString();
 }
 
+/**
+ * Chronological list of events.
+ *
+ * @usage Use for activity feeds and histories. Use {@link Steps} for the progress through a flow.
+ *
+ * @example
+ * <Timeline
+ *   items={[
+ *     { label: "Order placed", timestamp: "2026-11-01" },
+ *     { label: "Shipped", timestamp: "2026-11-03", status: "success" },
+ *   ]}
+ * />
+ *
+ * @category Data display
+ */
 export function Timeline({
   items,
   orientation = "vertical",

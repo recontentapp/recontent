@@ -35,6 +35,22 @@ export interface DialogProps extends CommonComponentProps {
   render?: RenderProp<"div">;
 }
 
+/**
+ * Modal window that requires a decision or an input before going back to the page.
+ *
+ * @usage Use for confirmations and short forms. Use {@link Drawer} for longer content, and
+ * {@link Popover} for non-blocking content.
+ *
+ * @example
+ * <Dialog
+ *   title="Delete project"
+ *   description="This cannot be undone."
+ *   trigger={<Button>Delete</Button>}
+ *   footer={<Button onClick={remove}>Delete</Button>}
+ * />
+ *
+ * @category Overlays
+ */
 export function Dialog({
   open,
   defaultOpen,

@@ -158,6 +158,23 @@ export interface AccordionProps<Value extends string = string> extends CommonCom
   render?: RenderProp<"div">;
 }
 
+/**
+ * Vertically stacked headings, each revealing a panel of content.
+ *
+ * @usage Use to let people scan several related sections and open only the ones they need. Use
+ * {@link Tabs} when the sections are peers to switch between, and {@link Collapsible} for a single
+ * section.
+ *
+ * @example
+ * <Accordion
+ *   items={[
+ *     { value: "shipping", trigger: "Shipping", content: "Ships within 2 days." },
+ *     { value: "returns", trigger: "Returns", content: "Free within 30 days." },
+ *   ]}
+ * />
+ *
+ * @category Data display
+ */
 export function Accordion<Value extends string = string>({
   items,
   value,

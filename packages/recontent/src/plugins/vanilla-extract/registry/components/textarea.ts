@@ -134,6 +134,17 @@ export interface TextareaProps extends CommonComponentProps, FieldableInputProps
   render?: RenderProp<"textarea">;
 }
 
+/**
+ * Multi-line text field.
+ *
+ * @usage Use for longer free text, like comments. \`autoResize\` grows it with its content. Use
+ * {@link TextInput} for a single line.
+ *
+ * @example
+ * <Textarea name="comment" minRows={3} maxLength={500} showCharacterCount autoResize />
+ *
+ * @category Forms
+ */
 export function Textarea({
   value,
   defaultValue,

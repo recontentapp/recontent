@@ -20,6 +20,17 @@ export interface SkeletonProps extends CommonComponentProps {
   render?: RenderProp<"div">;
 }
 
+/**
+ * Placeholder shown while content is loading.
+ *
+ * @usage Use to reserve the space and shape of content that is on its way. Use {@link Spinner} when
+ * the shape is unknown.
+ *
+ * @example
+ * <Skeleton variant="text" lines={3} />
+ *
+ * @category Feedback
+ */
 export function Skeleton({
   variant = "text",
   width,

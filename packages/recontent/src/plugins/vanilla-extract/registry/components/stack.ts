@@ -58,6 +58,20 @@ export interface StackProps extends CommonComponentProps {
   render?: RenderProp;
 }
 
+/**
+ * Lays out its children in a row or a column, with consistent spacing.
+ *
+ * @usage Use as the default way to space elements, with \`gap\`. Use {@link Grid} when children
+ * should align on both axes.
+ *
+ * @example
+ * <Stack direction="row" align="center">
+ *   <Avatar text="AL" />
+ *   <Text>Ada Lovelace</Text>
+ * </Stack>
+ *
+ * @category Layout
+ */
 export function Stack({
   direction = "column",
   gap,
@@ -154,6 +168,20 @@ const JUSTIFY_VALUES = {
   "space-evenly": "space-evenly",
 } as const;
 
+/**
+ * Lays out its children in a row or a column, with consistent spacing.
+ *
+ * @usage Use as the default way to space elements, with \`gap\`. Use {@link Grid} when children
+ * should align on both axes.
+ *
+ * @example
+ * <Stack direction="row" align="center">
+ *   <Avatar text="AL" />
+ *   <Text>Ada Lovelace</Text>
+ * </Stack>
+ *
+ * @category Layout
+ */
 export function Stack({
   direction = "column",
   gap,

@@ -117,6 +117,24 @@ function TreeListGroup<Value>({
   );
 }
 
+/**
+ * Hierarchy of expandable nodes, like folders.
+ *
+ * @usage Use to browse nested data, like files or categories. Select with `selectedId`, and react
+ * to activation with `onNodeActivate`.
+ *
+ * @example
+ * <TreeList
+ *   label="Files"
+ *   nodes={[
+ *     { id: "src", label: "src", children: [{ id: "index", label: "index.ts" }] },
+ *     { id: "readme", label: "README.md" },
+ *   ]}
+ *   onSelectedIdChange={setSelected}
+ * />
+ *
+ * @category Navigation
+ */
 export function TreeList<Value>({
   nodes,
   expandedIds,
