@@ -1,4 +1,10 @@
-import type { ComponentInfo, InheritedProps, PropInfo, TypeInfo } from "@recontentapp/core";
+import type {
+  ComponentInfo,
+  Documentation,
+  InheritedProps,
+  PropInfo,
+  TypeInfo,
+} from "@recontentapp/core";
 import { code, escapeText } from "../markdown.js";
 
 /** `Accordion<Value extends string>` for a generic component, else its name. */
@@ -16,6 +22,24 @@ export function displayName({ name, typeParameters }: ComponentInfo | TypeInfo):
 /** "Updated 2025-03-01" when the component has a last commit date. */
 export function updatedText(component: { lastUpdatedAt?: string }): string | undefined {
   return component.lastUpdatedAt ? `Updated ${component.lastUpdatedAt.slice(0, 10)}` : undefined;
+}
+
+/**
+ * Components by `category`, alphabetically, the uncategorised last. A single
+ * group without a category when none of them has one.
+ */
+export function groupByCategory(
+  components: ComponentInfo[],
+): { category?: string; components: ComponentInfo[] }[] {
+  const groups = new Map<string | undefined, ComponentInfo[]>();
+  for (const component of components) {
+    const group = groups.get(component.category);
+    if (group) group.push(component);
+    else groups.set(component.category, [component]);
+  }
+  return [...groups]
+    .sort(([a], [b]) => (a === undefined ? 1 : b === undefined ? -1 : a.localeCompare(b)))
+    .map(([category, inGroup]) => ({ ...(category ? { category } : {}), components: inGroup }));
 }
 
 /** "53 props" */
@@ -38,7 +62,39 @@ function notes(prop: PropInfo): string {
         : `**Deprecated**: ${escapeText(prop.deprecated, "<br>")}`,
     );
   }
+  if (prop.experimental) {
+    parts.push(
+      prop.experimental === true
+        ? "**Experimental**"
+        : `**Experimental**: ${escapeText(prop.experimental, "<br>")}`,
+    );
+  }
+  // Multi-line examples are left to the JSON output: a table cell is no place for them.
+  const example = prop.examples?.find(({ code: text }) => !text.includes("\n"));
+  if (example) parts.push(`Example: ${code(example.code)}`);
   return parts.join("<br>");
+}
+
+/** A fence longer than any run of backticks in the code. */
+function fenced(text: string): string[] {
+  const fence = "`".repeat(Math.max(3, ...(text.match(/`+/g) ?? []).map((run) => run.length + 1)));
+  return [`${fence}tsx`, text, fence];
+}
+
+/** `Usage` and `Examples`, one level below the item's heading. */
+function documentationLines(item: Documentation, headingLevel: number): string[] {
+  const heading = "#".repeat(headingLevel + 1);
+  const lines: string[] = [];
+  // Usage is markdown by design: written as is.
+  if (item.usage) lines.push(`${heading} Usage`, "", item.usage, "");
+  if (item.examples?.length) {
+    lines.push(`${heading} Examples`, "");
+    for (const example of item.examples) {
+      if (example.title) lines.push(`**${escapeText(example.title)}**`, "");
+      lines.push(...fenced(example.code), "");
+    }
+  }
+  return lines;
 }
 
 /** `src/button.tsx:12` */
@@ -76,7 +132,7 @@ function renderPropsTable(props: PropInfo[]): string[] {
   return lines;
 }
 
-/** Heading, description and deprecation, source: what both components and types start with. */
+/** Heading, description and deprecation, source, usage and examples: what both components and types start with. */
 function headerLines(item: ComponentInfo | TypeInfo, headingLevel: number): string[] {
   const lines = [`${"#".repeat(headingLevel)} ${escapeText(displayName(item))}`, ""];
   if (item.description) lines.push(escapeText(item.description), "");
@@ -87,8 +143,17 @@ function headerLines(item: ComponentInfo | TypeInfo, headingLevel: number): stri
         : `> ⚠️ Deprecated: ${escapeText(item.deprecated)}`,
       "",
     );
+    if (item.replacement) lines.push(`Replaced by: ${code(item.replacement)}`, "");
   }
-  lines.push(sourceLine(item), "");
+  if (item.experimental) {
+    lines.push(
+      item.experimental === true
+        ? "> 🧪 Experimental"
+        : `> 🧪 Experimental: ${escapeText(item.experimental)}`,
+      "",
+    );
+  }
+  lines.push(sourceLine(item), "", ...documentationLines(item, headingLevel));
   return lines;
 }
 

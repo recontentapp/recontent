@@ -9,7 +9,30 @@ export type IntrospectionConfigInput = {
   history?: boolean;
 };
 
-export type PropInfo = {
+export type ExampleInfo = {
+  /** From `<caption>…</caption>` in the `@example` tag. */
+  title?: string;
+  /** Without surrounding code fences, dedented. */
+  code: string;
+};
+
+/** What a JSDoc comment says, shared by components, props and types. */
+export type Documentation = {
+  description?: string;
+  deprecated?: true | string;
+  /** `@experimental`, with its text if any: the API may change without notice. */
+  experimental?: true | string;
+  /** The first resolved `{@link}` in the `@deprecated` text: a component name or type id. */
+  replacement?: string;
+  /** One per `@example` tag. */
+  examples?: ExampleInfo[];
+  /** `@usage` (markdown): when to use it, when not to. Components and types only. */
+  usage?: string;
+  /** Component names and type ids that `{@link}`s in the documentation resolve to, sorted. Unresolved links stay plain text. */
+  links?: string[];
+};
+
+export type PropInfo = Documentation & {
   name: string;
   /** Declared type text when there is a type node, else the checker's rendering. */
   type: string;
@@ -22,8 +45,6 @@ export type PropInfo = {
   required: boolean;
   /** `@default` tag, else the destructuring default in the implementation, as written in source (`"\"solid\""`), not evaluated: unlike `values`, which holds JSON values. */
   defaultValue?: string;
-  description?: string;
-  deprecated?: true | string;
 };
 
 export type InheritedProps = {
@@ -40,7 +61,7 @@ export type TypeParameterInfo = {
   default?: string;
 };
 
-export type ComponentInfo = {
+export type ComponentInfo = Documentation & {
   /** Export name, dotted for subcomponents (`Tabs.Item`). */
   name: string;
   typeParameters?: TypeParameterInfo[];
@@ -50,8 +71,8 @@ export type ComponentInfo = {
   line: number;
   /** ISO 8601 date of the last commit touching `sourceFilePath`. Only with `introspection.history`. */
   lastUpdatedAt?: string;
-  description?: string;
-  deprecated?: true | string;
+  /** `@category`: groups components in the docs and in `recontent inspect --summary`. */
+  category?: string;
   /** Props declared outside node_modules, sorted by name. */
   props: PropInfo[];
   inherits: InheritedProps[];
@@ -60,7 +81,7 @@ export type ComponentInfo = {
 };
 
 /** A named type declared in the project that components' props depend on, transitively. External types stay as written. */
-export type TypeInfo = {
+export type TypeInfo = Documentation & {
   /** The declared name; `name (src/path.ts)` only when two project types share a name. Unique. */
   id: string;
   name: string;
@@ -70,8 +91,6 @@ export type TypeInfo = {
   sourceFilePath: string;
   /** 1-based line of the declaration. */
   line: number;
-  description?: string;
-  deprecated?: true | string;
   /** The declaration as written, comments removed, without `export`. */
   definition: string;
   /** Interfaces and object-literal aliases: members sorted by name, described like component props. */

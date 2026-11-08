@@ -40,3 +40,47 @@ interface F5Base {
 export function F5(props: Omit<F5Base, "other"> & { extra?: boolean }) {
   return <span>{props.title}</span>;
 }
+
+export interface F6Options {
+  dense?: boolean;
+}
+
+/**
+ * Lists things.
+ *
+ * @usage Use for short lists, configured with {@link F6Options}.
+ * Not for tables, see {@link Nope}.
+ *
+ * @example <caption>Basic</caption>
+ * <F6 />
+ *
+ * @example
+ * ```tsx
+ * <F6
+ *   options={{ dense: true }}
+ * />
+ * ```
+ *
+ * @category Data display
+ * @deprecated Use {@link F7} instead
+ */
+export function F6(props: {
+  /**
+   * Layout options
+   * @example { dense: true }
+   */
+  options?: F6Options;
+}) {
+  return <ul>{String(props.options?.dense)}</ul>;
+}
+
+/**
+ * @category Data display
+ * @experimental Subject to change.
+ */
+export function F7(props: {
+  /** @experimental */
+  rows?: number;
+}) {
+  return <ul>{props.rows}</ul>;
+}

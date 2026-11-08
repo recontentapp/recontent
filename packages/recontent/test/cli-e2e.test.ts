@@ -806,7 +806,11 @@ describe("recontent inspect", () => {
       const list = runCli(["--cwd", dir, "inspect", "components"]);
       expect(list.status).toBe(0);
       expect(list.stdout).toContain("- `Button` (4 props) — Triggers an action.");
-      expect(list.stdout).toContain("- `Legacy` (1 prop, deprecated)");
+      expect(list.stdout).toContain("- `Legacy` (1 prop, deprecated → Button, experimental)");
+      // Categorised components first, under their category; the others last.
+      expect(list.stdout.indexOf("## Actions")).toBeLessThan(list.stdout.indexOf("- `Button`"));
+      expect(list.stdout.indexOf("- `Button`")).toBeLessThan(list.stdout.indexOf("- `Legacy`"));
+      expect(list.stdout).toContain("Next: `recontent inspect components Button`");
 
       const detail = runCli(["--cwd", dir, "inspect", "components", "Button"]);
       expect(detail.status).toBe(0);
@@ -816,6 +820,20 @@ describe("recontent inspect", () => {
       expect(detail.stdout).toContain("| `label` | `string` | — | yes |");
       expect(detail.stdout).toContain("Also accepts: `ButtonHTMLAttributes`");
       expect(detail.stdout).not.toContain("## Legacy");
+      expect(detail.stdout).toContain("### Usage");
+      expect(detail.stdout).toContain("Prefer it over a link when the click changes something.");
+      expect(detail.stdout).toContain(
+        '### Examples\n\n**Basic**\n\n```tsx\n<Button label="Save" />\n```',
+      );
+    });
+
+    test("a deprecated component says what replaces it, and links to it", () => {
+      const dir = inspectProject();
+
+      const detail = runCli(["--cwd", dir, "inspect", "components", "Legacy"]);
+      expect(detail.stdout).toContain("> ⚠️ Deprecated: Use \\`Button\\` instead.");
+      expect(detail.stdout).toContain("Replaced by: `Button`");
+      expect(detail.stdout).toContain("> 🧪 Experimental");
     });
 
     test("components shows the types its props reference, once, after the props", () => {
@@ -859,6 +877,22 @@ describe("recontent inspect", () => {
       const result = runCli(["--cwd", dir, "inspect", ...args, "--format", "json"]);
       return { ...result, data: JSON.parse(result.stdout) as Record<string, any> };
     }
+
+    test("documentation tags come with the components", () => {
+      const dir = inspectProject();
+      const [legacy] = json(["components", "Legacy"], dir).data.components;
+      expect(legacy).toMatchObject({
+        replacement: "Button",
+        links: ["Button"],
+        experimental: true,
+      });
+      const [button] = json(["components", "Button"], dir).data.components;
+      expect(button).toMatchObject({
+        category: "Actions",
+        usage: "Prefer it over a link when the click changes something.",
+        examples: [{ title: "Basic", code: '<Button label="Save" />' }],
+      });
+    });
 
     test("every form parses, is versioned and kind-tagged, and returns full detail", () => {
       const dir = inspectProject();

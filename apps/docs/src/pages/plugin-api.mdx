@@ -97,20 +97,30 @@ sorted by name, set only for plugins that declare `"components"` or `"components
 introspection are printed by the CLI and are not part of what plugins receive.
 
 ```ts
-type ComponentInfo = {
+// What the JSDoc comment says, shared by components, props and types.
+type Documentation = {
+  description?: string;
+  deprecated?: true | string;
+  experimental?: true | string; // @experimental: the API may change without notice
+  replacement?: string; // the first {@link} of the @deprecated text that names a component or type
+  examples?: { title?: string; code: string }[]; // @example, title from <caption>, without code fences
+  usage?: string; // @usage, markdown
+  links?: string[]; // components and types that {@link}s resolve to, sorted
+};
+
+type ComponentInfo = Documentation & {
   name: string; // export name, "Tabs.Item" for subcomponents
   typeParameters?: { name: string; constraint?: string; default?: string }[]; // generic components
   sourceFilePath: string; // posix, relative to the config root
   line: number; // 1-based
   lastUpdatedAt?: string; // ISO 8601, with introspection.history
-  description?: string;
-  deprecated?: true | string;
+  category?: string; // @category
   props: PropInfo[]; // declared in your project, sorted by name
   inherits: { name: string; package?: string; props: string[] }[]; // sorted prop names
   references: string[]; // ids of the project types its props mention, see TypeInfo
 };
 
-type PropInfo = {
+type PropInfo = Documentation & {
   name: string;
   type: string;
   resolved?: string; // type with your own alias expanded: "Width" → 'number | "auto"'
@@ -118,10 +128,11 @@ type PropInfo = {
   references?: string[]; // ids of the project types `type` mentions
   required: boolean;
   defaultValue?: string;
-  description?: string;
-  deprecated?: true | string;
 };
 ```
+
+The tags are described in [Documenting components](/cli/inspect#documenting-components). A
+`{@link}` that names neither a component nor a type stays plain text and has no entry in `links`.
 
 ### TypeInfo
 
@@ -132,15 +143,13 @@ follow `references` to walk from a component to everything it depends on. Types 
 or the TypeScript library stay as written in `type`: they are not collected.
 
 ```ts
-type TypeInfo = {
+type TypeInfo = Documentation & {
   id: string; // the declared name, "Entry (src/a.ts)" when two project types share a name
   name: string;
   kind: "interface" | "type" | "enum";
   typeParameters?: { name: string; constraint?: string; default?: string }[];
   sourceFilePath: string; // posix, relative to the config root
   line: number; // 1-based
-  description?: string;
-  deprecated?: true | string;
   definition: string; // the declaration without comments or `export`
   members?: PropInfo[]; // interfaces and object types, described like props
   inherits?: { name: string; package?: string; props: string[] }[]; // members from outside the project

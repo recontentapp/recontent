@@ -1,8 +1,15 @@
 import { performance } from "node:perf_hooks";
 import path from "node:path";
-import type { ComponentInfo, IntrospectionConfigInput, Logger, TypeInfo } from "@recontentapp/core";
+import type {
+  ComponentInfo,
+  Documentation,
+  IntrospectionConfigInput,
+  Logger,
+  TypeInfo,
+} from "@recontentapp/core";
 import ts from "typescript";
 import { findComponents, findReactNode, type Analysis } from "./components.js";
+import type { PendingLinks } from "./jsdoc.js";
 import { createIntrospectionProgram, resolveInputs } from "./program.js";
 import { describeComponent } from "./props.js";
 import { createTypeStore, finishTypes } from "./types.js";
@@ -18,6 +25,39 @@ export type IntrospectionResult = {
   /** Absolute paths of everything the result was computed from: every source file of the program, dependencies' declarations included, and the tsconfig files. */
   files: string[];
 };
+
+/**
+ * Turns the link names collected while describing into `links` and
+ * `replacement`: the ones that name a component or a type. The others stay
+ * plain text in the documentation.
+ */
+function resolveLinks(components: ComponentInfo[], types: TypeInfo[], logger: Logger): void {
+  const known = new Set([
+    ...components.map((component) => component.name),
+    ...types.map((type) => type.id),
+  ]);
+  const items: (Documentation & PendingLinks)[] = [
+    ...components,
+    ...components.flatMap((component) => component.props),
+    ...types,
+    ...types.flatMap((type) => type.members ?? []),
+  ];
+  for (const item of items) {
+    const { linkTargets = [], replacementTargets = [] } = item;
+    delete item.linkTargets;
+    delete item.replacementTargets;
+    for (const target of linkTargets) {
+      if (!known.has(target))
+        logger.debug(`introspection: {@link ${target}} matches no component or type.`);
+    }
+    const links = [...new Set(linkTargets.filter((target) => known.has(target)))].sort((a, b) =>
+      a.localeCompare(b),
+    );
+    if (links.length > 0) item.links = links;
+    const replacement = replacementTargets.find((target) => known.has(target));
+    if (replacement) item.replacement = replacement;
+  }
+}
 
 export function introspect(options: {
   config: IntrospectionConfigInput;
@@ -58,6 +98,7 @@ export function introspect(options: {
   );
   components.sort((a, b) => a.name.localeCompare(b.name));
   const types = finishTypes(analysis, components);
+  resolveLinks(components, types, logger);
   logger.debug(
     `introspection: ${components.length} component(s), ${types.length} type(s), program ${Math.round(programMs)}ms, analysis ${Math.round(performance.now() - analyzeStart)}ms.`,
   );

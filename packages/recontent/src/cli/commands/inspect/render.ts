@@ -1,6 +1,10 @@
 import type { ComponentInfo, TokenLayer, TypeInfo } from "@recontentapp/core";
 import { plural } from "../../utils/format.js";
-import { renderComponentMarkdown, renderTypeMarkdown } from "../../../introspection/markdown.js";
+import {
+  groupByCategory,
+  renderComponentMarkdown,
+  renderTypeMarkdown,
+} from "../../../introspection/markdown.js";
 import { code, escapeText } from "../../../markdown.js";
 import type { DocToken } from "../../../plugins/shared/doc-token.js";
 
@@ -238,18 +242,34 @@ export function renderComponents(
   }
 
   if (summary) {
-    const lines = ["# Components", "", `${plural(components.length, "component")}.`, ""];
-    for (const component of components) {
-      const tags = [
-        plural(component.props.length, "prop"),
-        ...(component.deprecated ? ["deprecated"] : []),
-      ].join(", ");
-      const description = component.description
-        ? ` — ${escapeText(shorten(component.description))}`
-        : "";
-      lines.push(`- ${code(component.name)} (${tags})${description}`);
+    const lines = ["# Components", "", `${plural(components.length, "component")}.`];
+    const groups = groupByCategory(components);
+    for (const { category, components: inGroup } of groups) {
+      lines.push("", ...(category ? [`## ${escapeText(category)}`, ""] : []));
+      for (const component of inGroup) {
+        const tags = [
+          plural(component.props.length, "prop"),
+          ...(component.deprecated
+            ? [`deprecated${component.replacement ? ` → ${component.replacement}` : ""}`]
+            : []),
+          ...(component.experimental ? ["experimental"] : []),
+        ].join(", ");
+        const description = component.description
+          ? ` — ${escapeText(shorten(component.description))}`
+          : "";
+        lines.push(`- ${code(component.name)} (${tags})${description}`);
+      }
     }
-    lines.push("", next(components[0] ? `components ${components[0].name}` : "--help"));
+    const first = groups[0]?.components[0];
+    // A link may name a type instead.
+    const link = first?.links?.find((name) => components.some((other) => other.name === name));
+    lines.push(
+      "",
+      next(
+        ...(first ? [`components ${first.name}`] : ["--help"]),
+        ...(link ? [`components ${link}`] : []),
+      ),
+    );
     return lines.join("\n");
   }
 
@@ -265,9 +285,12 @@ function typeTags(type: TypeInfo): string {
     : type.values
       ? plural(type.values.length, "value")
       : undefined;
-  return [type.kind, ...(size ? [size] : []), ...(type.deprecated ? ["deprecated"] : [])].join(
-    ", ",
-  );
+  return [
+    type.kind,
+    ...(size ? [size] : []),
+    ...(type.deprecated ? ["deprecated"] : []),
+    ...(type.experimental ? ["experimental"] : []),
+  ].join(", ");
 }
 
 /** `selected` is what was asked for; `types` adds what it references, so that the detail stands on its own. */

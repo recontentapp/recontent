@@ -56,7 +56,9 @@ Components are optional for `docs()`. Without an [`introspection`](/tokens/confi
 block, the docs cover the tokens only, as for any token-only design system. With one, `design.html` gets a
 **Component APIs** tab and `design.md` a `## Component APIs` section. Each component lists its
 description, a deprecation notice, a props table (name, type or allowed values, default, required,
-notes), an `Also accepts:` line for props inherited from libraries, and its source location.
+notes), an `Also accepts:` line for props inherited from libraries, and its source location, followed by
+its `Usage` and `Examples` when it has [documented them](/cli/inspect#documenting-components). Components
+with a `@category` are grouped under it in the navigation and the panel, the others last.
 
 ```md
 ## Component APIs

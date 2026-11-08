@@ -6,6 +6,7 @@ import type {
   TypeParameterInfo,
 } from "@recontentapp/core";
 import ts from "typescript";
+import { categoryOf, jsDoc } from "./jsdoc.js";
 import { resolveAlias, type Analysis, type Candidate } from "./components.js";
 import { referencesOfProperty } from "./types.js";
 
@@ -32,25 +33,6 @@ export function isExternal(analysis: Analysis, file: ts.SourceFile): boolean {
     program.isSourceFileDefaultLibrary(file) ||
     packageOf(file.fileName) !== undefined
   );
-}
-
-export function jsDoc(
-  checker: ts.TypeChecker,
-  symbol: ts.Symbol,
-): Pick<PropInfo, "description" | "deprecated" | "defaultValue"> {
-  const description = ts.displayPartsToString(symbol.getDocumentationComment(checker)).trim();
-  const tags = symbol.getJsDocTags(checker);
-  const text = (name: string) => {
-    const tag = tags.find((candidate) => candidate.name === name);
-    return tag && ts.displayPartsToString(tag.text).trim();
-  };
-  const deprecated = text("deprecated");
-  const defaultValue = text("default") || text("defaultValue");
-  return {
-    ...(description ? { description } : {}),
-    ...(deprecated !== undefined ? { deprecated: deprecated || true } : {}),
-    ...(defaultValue ? { defaultValue } : {}),
-  };
 }
 
 export function declarationOf(symbol: ts.Symbol): ts.Declaration | undefined {
@@ -447,7 +429,7 @@ export function describeComponent(
   ]);
   const { props, inherits } = describeMembers(analysis, propsTypes, located, defaults);
 
-  const { description, deprecated } = jsDoc(checker, symbol);
+  const category = categoryOf(checker, symbol);
   const file = located.getSourceFile();
   const typeParameters = matches
     .map(({ signature }) => typeParametersOf(checker, signature, located))
@@ -457,8 +439,8 @@ export function describeComponent(
     ...(typeParameters ? { typeParameters } : {}),
     sourceFilePath: path.relative(root, file.fileName).split(path.sep).join("/"),
     line: file.getLineAndCharacterOfPosition(located.getStart(file)).line + 1,
-    ...(description ? { description } : {}),
-    ...(deprecated !== undefined ? { deprecated } : {}),
+    ...(category ? { category } : {}),
+    ...jsDoc(checker, symbol),
     props,
     inherits,
     references: [...new Set(props.flatMap((prop) => prop.references ?? []))].sort((a, b) =>

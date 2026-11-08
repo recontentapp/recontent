@@ -2,12 +2,12 @@ import path from "node:path";
 import type { ComponentInfo, TypeInfo, TypeParameterInfo } from "@recontentapp/core";
 import ts from "typescript";
 import { resolveAlias, type Analysis } from "./components.js";
+import { jsDoc } from "./jsdoc.js";
 import {
   declarationOf,
   describeMembers,
   inSourceOrder,
   isExternal,
-  jsDoc,
   literalValues,
   oneLine,
   printer,
@@ -167,7 +167,6 @@ function collect(analysis: Analysis, symbol: ts.Symbol, declaration: TypeDeclara
   referencesIn(analysis, declaration, references);
 
   const typeParameters = typeParametersOf(declaration);
-  const { description, deprecated } = jsDoc(checker, symbol);
   store.types.push({
     id,
     name,
@@ -179,8 +178,7 @@ function collect(analysis: Analysis, symbol: ts.Symbol, declaration: TypeDeclara
     ...(typeParameters ? { typeParameters } : {}),
     sourceFilePath,
     line: file.getLineAndCharacterOfPosition(declaration.getStart(file)).line + 1,
-    ...(description ? { description } : {}),
-    ...(deprecated !== undefined ? { deprecated } : {}),
+    ...jsDoc(checker, symbol),
     definition,
     ...(described ? { members: described.props } : {}),
     ...(described?.inherits.length ? { inherits: described.inherits } : {}),

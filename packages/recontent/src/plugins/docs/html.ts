@@ -1,5 +1,10 @@
 import type { ComponentInfo, PropInfo } from "@recontentapp/core";
-import { displayName, propCount, updatedText } from "../../introspection/markdown.js";
+import {
+  displayName,
+  groupByCategory,
+  propCount,
+  updatedText,
+} from "../../introspection/markdown.js";
 import { generateCss } from "../css.js";
 import type { GeneratorContext } from "../shared/context.js";
 import type { DocToken } from "../shared/doc-token.js";
@@ -138,6 +143,9 @@ function propRowHtml(prop: PropInfo): string {
     prop.deprecated
       ? `<p class="reason"><span class="capsule">Deprecated</span>${prop.deprecated === true ? "" : ` ${escapeHtml(prop.deprecated)}`}</p>`
       : "",
+    prop.experimental
+      ? `<p class="reason"><span class="capsule">Experimental</span>${prop.experimental === true ? "" : ` ${escapeHtml(prop.experimental)}`}</p>`
+      : "",
   ].join("");
   return `<tr>
   <td><code class="${prop.deprecated ? "is-deprecated" : ""}">${escapeHtml(prop.name)}</code>${prop.required ? '<span class="req" title="Required">*</span>' : ""}</td>
@@ -145,6 +153,24 @@ function propRowHtml(prop: PropInfo): string {
   <td>${prop.defaultValue ? `<code>${escapeHtml(prop.defaultValue)}</code>` : ""}</td>
   <td>${notes}</td>
 </tr>`;
+}
+
+/** Usage is markdown: shown as paragraphs, verbatim. */
+function usageHtml(usage: string | undefined): string {
+  if (!usage) return "";
+  const paragraphs = usage
+    .split(/\n\s*\n/)
+    .map((paragraph) => `<p class="lead">${escapeHtml(paragraph.trim())}</p>`);
+  return `<h4>Usage</h4>\n  ${paragraphs.join("\n  ")}`;
+}
+
+function examplesHtml(examples: ComponentInfo["examples"]): string {
+  if (!examples?.length) return "";
+  const blocks = examples.map(
+    ({ title, code }) =>
+      `${title ? `<p class="lead">${escapeHtml(title)}</p>` : ""}<pre><code>${escapeHtml(code)}</code></pre>`,
+  );
+  return `<h4>Examples</h4>\n  ${blocks.join("\n  ")}`;
 }
 
 function componentHtml(component: ComponentInfo): string {
@@ -160,8 +186,11 @@ function componentHtml(component: ComponentInfo): string {
   return `<section class="group" id="${escapeHtml(componentId(component.name))}">
   <h3>${escapeHtml(displayName(component))} <span class="count">${component.props.length}</span></h3>
   ${component.description ? `<p class="lead">${escapeHtml(component.description)}</p>` : ""}
-  ${deprecated ? `<p class="callout"><span class="capsule">Deprecated</span>${deprecated === true ? "" : ` ${escapeHtml(deprecated)}`}</p>` : ""}
+  ${deprecated ? `<p class="callout"><span class="capsule">Deprecated</span>${deprecated === true ? "" : ` ${escapeHtml(deprecated)}`}${component.replacement ? ` Replaced by <code>${escapeHtml(component.replacement)}</code>` : ""}</p>` : ""}
+  ${component.experimental ? `<p class="callout"><span class="capsule">Experimental</span>${component.experimental === true ? "" : ` ${escapeHtml(component.experimental)}`}</p>` : ""}
   <p class="source"><code>${escapeHtml(location)}</code>${updated ? ` · ${escapeHtml(updated)}` : ""}</p>
+  ${usageHtml(component.usage)}
+  ${examplesHtml(component.examples)}
   ${
     component.props.length === 0
       ? '<p class="lead">No own props.</p>'
@@ -241,6 +270,10 @@ code { font-family: var(--hig-mono); font-size: 0.82em; }
 .sub { margin: 0 0 40px; color: var(--hig-text-2); }
 .group { margin-bottom: 56px; scroll-margin-top: 80px; }
 .group h3 { margin: 0 0 8px; font-size: 28px; line-height: 1.2; font-weight: 600; letter-spacing: -0.01em; }
+.cat { margin: 12px 0 4px; font-size: 12px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--hig-text-2); }
+h3.cat { margin: 24px 0 8px; }
+.side .cat { display: block; padding: 0 10px; }
+pre { margin: 0 0 16px; padding: 12px 14px; overflow-x: auto; border-radius: 12px; background: var(--hig-bg-2); font-size: 13px; }
 .count { font-size: 15px; font-weight: 400; color: var(--hig-text-2); margin-left: 6px; }
 .lead { margin: 0 0 16px; color: var(--hig-text-2); }
 .callout { margin: 0 0 16px; padding: 10px 14px; border-radius: 12px; background: var(--hig-orange-bg); color: var(--hig-orange-text); font-size: 15px; }
@@ -429,8 +462,19 @@ export function renderHtml(model: DocsModel, ctx: GeneratorContext): string {
     .join("\n")
     .concat(
       model.components.length > 0
-        ? `\n<nav data-side="${API_TAB}" aria-label="Component APIs">${model.components
-            .map((c) => `<a href="#${escapeHtml(componentId(c.name))}">${escapeHtml(c.name)}</a>`)
+        ? `\n<nav data-side="${API_TAB}" aria-label="Component APIs">${groupByCategory(
+            model.components,
+          )
+            .map(
+              ({ category, components }) =>
+                (category ? `<span class="cat">${escapeHtml(category)}</span>` : "") +
+                components
+                  .map(
+                    (c) =>
+                      `<a href="#${escapeHtml(componentId(c.name))}">${escapeHtml(c.name)}</a>`,
+                  )
+                  .join(""),
+            )
             .join("")}</nav>`
         : "",
     );
@@ -454,7 +498,13 @@ export function renderHtml(model: DocsModel, ctx: GeneratorContext): string {
         ? `\n<div data-panel="${API_TAB}" data-count="${model.components.length}" role="tabpanel">
   <h2 class="title">Component APIs</h2>
   <p class="sub">${model.components.length} component${model.components.length === 1 ? "" : "s"}</p>
-  ${model.components.map(componentHtml).join("\n")}
+  ${groupByCategory(model.components)
+    .map(
+      ({ category, components }) =>
+        (category ? `<h3 class="cat">${escapeHtml(category)}</h3>\n  ` : "") +
+        components.map(componentHtml).join("\n"),
+    )
+    .join("\n")}
 </div>`
         : "",
     );

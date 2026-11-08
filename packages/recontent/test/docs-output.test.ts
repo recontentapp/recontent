@@ -256,6 +256,51 @@ describe("components", () => {
     expect(html).not.toContain('<a href="http');
   });
 
+  test("usage, examples, replacement and categories show in both outputs", () => {
+    const documented = [
+      {
+        ...components[0]!,
+        category: "Actions",
+        usage: "Use for <b>primary</b> actions.",
+        examples: [{ title: "Basic", code: "<Button />" }, { code: "<Button>\n  Save\n</Button>" }],
+      },
+      {
+        ...components[2]!,
+        experimental: "Subject to change.",
+        deprecated: "Use `Button`.",
+        replacement: "Button",
+      },
+      { ...components[1]!, category: "Layout" },
+    ];
+    const { md, html } = renderWith({ ...withComponents, components: documented });
+
+    expect(md).toContain("#### Usage\n\nUse for <b>primary</b> actions.");
+    expect(md).toContain("#### Examples\n\n**Basic**\n\n```tsx\n<Button />\n```");
+    expect(md).toContain("```tsx\n<Button>\n  Save\n</Button>\n```");
+    expect(md).toContain("Replaced by: `Button`");
+    expect(md).toContain("> 🧪 Experimental: Subject to change.");
+    expect(html).toContain('<span class="capsule">Experimental</span> Subject to change.');
+
+    expect(html).toContain("<h4>Usage</h4>");
+    expect(html).toContain("Use for &lt;b&gt;primary&lt;/b&gt; actions.");
+    expect(html).toContain("<pre><code>&lt;Button&gt;\n  Save\n&lt;/Button&gt;</code></pre>");
+    expect(html).toContain("Replaced by <code>Button</code>");
+    // Nav and panel follow the categories, uncategorised components last.
+    for (const heading of ['<span class="cat">', '<h3 class="cat">']) {
+      const at = (text: string) => html.indexOf(`${heading}${text}</`);
+      expect(at("Actions")).toBeGreaterThan(-1);
+      expect(at("Actions")).toBeLessThan(at("Layout"));
+    }
+    expect(html.indexOf('id="c-Spacer"')).toBeGreaterThan(html.indexOf('<h3 class="cat">Layout'));
+  });
+
+  test("without categories there are no category headings", () => {
+    const { html } = renderWith(withComponents);
+
+    expect(html).not.toContain('<span class="cat">');
+    expect(html).not.toContain('<h3 class="cat">');
+  });
+
   test("without lastUpdatedAt there is no date", () => {
     const { md } = renderWith({
       ...withComponents,

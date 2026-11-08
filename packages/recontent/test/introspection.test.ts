@@ -311,6 +311,30 @@ describe("F. JSDoc", () => {
   test("F5 docs survive Omit", () => {
     expect(prop("F5", "title").description).toBe("Kept through Omit");
   });
+
+  test("F6 @example, @usage, @category and links", () => {
+    const f6 = component("F6");
+    expect(f6.examples).toEqual([
+      { title: "Basic", code: "<F6 />" },
+      { code: "<F6\n  options={{ dense: true }}\n/>" },
+    ]);
+    expect(f6.usage).toBe(
+      "Use for short lists, configured with `F6Options`.\nNot for tables, see `Nope`.",
+    );
+    expect(f6.category).toBe("Data display");
+    expect(f6.deprecated).toBe("Use `F7` instead");
+    expect(f6.replacement).toBe("F7");
+    // `Nope` matches nothing: plain text, no entry.
+    expect(f6.links).toEqual(["F6Options", "F7"]);
+    expect(prop("F6", "options").examples).toEqual([{ code: "{ dense: true }" }]);
+    expect(prop("F6", "options")).not.toHaveProperty("linkTargets");
+    expect(f6).not.toHaveProperty("replacementTargets");
+    expect(component("F7").category).toBe("Data display");
+    expect(component("F7").links).toBeUndefined();
+    expect(component("F7").experimental).toBe("Subject to change.");
+    expect(prop("F7", "rows").experimental).toBe(true);
+    expect(f6.experimental).toBeUndefined();
+  });
 });
 
 describe("G. things that are not components", () => {

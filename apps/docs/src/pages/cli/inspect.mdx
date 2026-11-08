@@ -62,6 +62,38 @@ table of its **own** props, with the expansion of your own type aliases under th
 inherited from outside the project, such as the 260 attributes of `ButtonHTMLAttributes`, are
 summarized on an `Also accepts:` line instead of listed; `--format json` lists their names.
 
+## Documenting components
+
+`inspect`, the [docs plugin](/plugins/docs) and plugins read the JSDoc comments of your components, props and
+types. Besides the description, `@deprecated` and `@default`, six tags help someone (or an agent) who has
+to use a component without opening its source:
+
+| Tag                         | On                    | Effect                                                                                                                                                                         |
+| --------------------------- | --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `@example`                  | component, prop, type | One example per tag. `<caption>Title</caption>` titles it, and surrounding code fences are removed. Props show one-line examples in `inspect`; the rest is in `--format json`. |
+| `@usage`                    | component, type       | When to use it and when not to, in markdown. Kept out of the description, so that summaries stay one line.                                                                     |
+| `{@link Name}`              | anywhere in the text  | Names a component or a type. It is listed in `links`, and `inspect --summary` suggests the first linked component. Anything else stays plain text.                             |
+| `@deprecated Use {@link X}` | component, prop, type | The first link is the `replacement`, shown as `deprecated → X` in summaries.                                                                                                   |
+| `@experimental`             | component, prop, type | Marks it as experimental, with an optional note. Shown as a callout, and as `experimental` in summaries.                                                                       |
+| `@category`                 | component             | Groups components in `inspect components` and in the docs navigation. Components without one come last.                                                                        |
+
+```tsx
+/**
+ * Triggers an action.
+ *
+ * @usage Prefer a link when the click only navigates.
+ * @example <caption>Basic</caption>
+ * <Button label="Save" />
+ * @category Actions
+ */
+export function Button(props: ButtonProps) {}
+
+/** @deprecated Use {@link Button} instead. */
+export function PrimaryButton(props: ButtonProps) {}
+```
+
+Examples, usage, links and category are documentation, not API: [`recontent diff`](/cli/diff) does not report them.
+
 ## For agents
 
 The output is plain markdown, which coding agents read well, and it is designed to be used without
