@@ -28,9 +28,9 @@ Uses the [global options](/cli#global-options) `-c`, `--cwd` and `--log-level`.
 4. Runs each plugin's `generate` and writes the files, creating directories as needed.
 
 Components are [introspected](/tokens/configuration#introspection) only when a configured plugin
-declares `"components"` or `"components?"` in `dependsOn`, as `docs()` and `designMD()` do, and the config has an `introspection` block. If that fails, the plugins that depend on
+declares `"introspection"` or `"introspection?"` in `dependsOn`, as `docs()` and `designMD()` do, and the config has an `introspection` block. If that fails, the plugins that depend on
 components fail with the error attributed to them, and the others still run and write their files.
-A plugin that requires components (`"components"`) in a config without `introspection` is a config error; `docs()` and `designMD()` only use them when they are there.
+A plugin that requires introspection (`"introspection"`) in a config without `introspection` is a config error; `docs()` and `designMD()` only use them when they are there.
 
 A file whose content is unchanged is not rewritten (`Skipped … (unchanged)`), and a file a plugin
 marks as write-once is never overwritten (`Skipped … (already exists)`). No file outside the

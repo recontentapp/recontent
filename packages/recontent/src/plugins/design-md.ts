@@ -310,7 +310,7 @@ export function generateDesignMdFiles(
 export function designMD(options: DesignMdPluginOptions): RecontentPlugin {
   return outputPlugin(
     "recontent:design-md",
-    ["tokens", "components?"],
+    ["tokens", "introspection?"],
     options,
     generateDesignMdFiles,
   );

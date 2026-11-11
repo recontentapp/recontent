@@ -1,5 +1,7 @@
 import { expect, test } from "@jest/globals";
 import { defineConfig, defineReferenceTokens, defineSystemTokens, tokens } from "../src/index.js";
+import { css } from "../src/plugins/index.js";
+import { runPlugins } from "../src/plugins/runner.js";
 
 function configWithRef(ref: Record<string, unknown>) {
   return () =>
@@ -178,5 +180,38 @@ test("every plugin must declare what it depends on", () => {
   expect(() => config({ name: "acme:a" })).toThrow(/"acme:a" must declare `dependsOn`/);
   expect(() => config({ name: "acme:a", dependsOn: ["tokenz"] })).toThrow(
     /must declare `dependsOn`/,
+  );
+});
+
+test("a config with only the system layer registers just those entries, without diagnostics", () => {
+  const system = defineSystemTokens({ color: { background: tokens.color("#ffffff") } });
+  const config = defineConfig({ tokens: { system } });
+  expect([...config.registry.keys()]).toEqual(["system.color.background"]);
+  expect(config.diagnostics).toEqual([]);
+});
+
+test("a config with only the ref layer builds through a plugin", async () => {
+  const ref = defineReferenceTokens({ color: { black: tokens.color("#000000") } });
+  const config = defineConfig({
+    tokens: { ref },
+    plugins: css({ outDir: "out" }),
+  });
+  const result = await runPlugins(config, {
+    root: "/project",
+    mode: "build",
+    logger: { info: () => {}, warn: () => {}, error: () => {}, debug: () => {} },
+  });
+  expect(result.failures).toEqual([]);
+  expect(result.files.length).toBeGreaterThan(0);
+  expect(result.files.some((file) => file.content.includes("#000000"))).toBe(true);
+});
+
+test.each([
+  ["components", "introspection"],
+  ["components?", "introspection?"],
+])('dependsOn "%s" throws a rename error pointing at "%s"', (old, renamed) => {
+  const plugin = { name: "acme:old", dependsOn: ["tokens", old] } as never;
+  expect(() => defineConfig({ tokens: { ref: {} }, plugins: plugin })).toThrow(
+    `Plugin "acme:old": dependsOn "${old}" was renamed to "${renamed}".`,
   );
 });

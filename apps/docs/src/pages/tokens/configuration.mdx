@@ -16,7 +16,7 @@ const ref = defineReferenceTokens({ color: { white: tokens.color("#ffffff") } })
 const system = defineSystemTokens({ color: { background: ref.color.white } });
 
 export default defineConfig({
-  tokens: { ref, system, components: {} },
+  tokens: { ref, system },
   themes: {},
   plugins: [css({ outDir: "src/generated" })],
   logLevel: "info",
@@ -34,14 +34,13 @@ build step. `recontent` and `recontent/plugins` are resolved from the config's d
 
 ### `tokens`
 
-|          |                                                                |
-| -------- | -------------------------------------------------------------- |
-| Type     | `{ ref: TokenTree; system: TokenTree; components: TokenTree }` |
-| Required | Yes, unless [`introspection`](#introspection) is set           |
+|          |                                                                   |
+| -------- | ----------------------------------------------------------------- |
+| Type     | `{ ref?: TokenTree; system?: TokenTree; components?: TokenTree }` |
+| Required | Yes, unless [`introspection`](#introspection) is set              |
 
 The three layers, as returned by [`defineReferenceTokens`, `defineSystemTokens` and
-`defineComponentTokens`](/guides/defining-tokens). All three keys are required; pass `{}` for a
-layer you do not use.
+`defineComponentTokens`](/guides/defining-tokens). Each layer is optional.
 
 The trees are walked once:
 

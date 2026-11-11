@@ -56,7 +56,6 @@ export function emitConfig({ files, ref, system, themes }: EmitInput): string {
   const imports = [
     "defineReferenceTokens",
     "defineSystemTokens",
-    "defineComponentTokens",
     "defineConfig",
     ...(themes.length > 0 ? ["defineTheme"] : []),
     ...(/\btokens\./.test(body) ? ["tokens"] : []),
@@ -74,13 +73,10 @@ const ref = defineReferenceTokens(${refSource});
 
 const system = defineSystemTokens(${systemSource});
 
-const components = defineComponentTokens({});
-
 export default defineConfig({
   tokens: {
     ref,
     system,
-    components,
   },
 ${themesSource}});
 `;

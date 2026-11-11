@@ -4,7 +4,7 @@ import { CodePanel, lines } from "./CodePanel.tsx";
 
 // Built-in plugins next to a custom one: same interface, called the same way.
 const pluginsConfig = lines(`export default defineConfig({
-  tokens: { ref, system, components },
+  tokens: { ref, system },
   plugins: [
     css({ outDir: "src/styles" }),
     tailwind({ outDir: "src/styles", theme: { color: system.color } }),
@@ -20,6 +20,7 @@ const pluginsConfig = lines(`export default defineConfig({
 // A plugin reads the resolved tokens and returns files.
 const swift = (options: { outDir: string }): RecontentPlugin => ({
   name: "acme:swift",
+  dependsOn: ["tokens"],
   generate: ({ registry }) => [
     { path: \`\${options.outDir}/Tokens.swift\`, content: toSwift(registry) },
   ],

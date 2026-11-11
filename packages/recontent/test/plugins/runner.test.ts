@@ -151,7 +151,7 @@ describe("dependsOn", () => {
 
   test("only plugins that depend on components see them", async () => {
     await runPlugins(
-      baseConfig([record("tokens-only", ["tokens"]), record("both", ["tokens", "components"])]),
+      baseConfig([record("tokens-only", ["tokens"]), record("both", ["tokens", "introspection"])]),
       {
         ...runOptions,
         components,
@@ -164,7 +164,7 @@ describe("dependsOn", () => {
 
   test("a components failure fails the plugins that depend on it; the others still generate", async () => {
     const result = await runPlugins(
-      baseConfig([record("tokens-only", ["tokens"]), record("docs", ["tokens", "components"])]),
+      baseConfig([record("tokens-only", ["tokens"]), record("docs", ["tokens", "introspection"])]),
       { ...runOptions, componentsError: "Could not find React's types" },
     );
 
@@ -175,7 +175,7 @@ describe("dependsOn", () => {
 
   test("needsComponents is true when any plugin depends on components", () => {
     const config = (introspection?: Config["introspection"]): Config => ({
-      ...baseConfig([record("tokens-only", ["tokens"]), record("api", ["components"])]),
+      ...baseConfig([record("tokens-only", ["tokens"]), record("api", ["introspection"])]),
       introspection,
     });
 
@@ -184,7 +184,7 @@ describe("dependsOn", () => {
   });
 
   test("a plugin whose components are optional runs without introspection, and gets them with it", async () => {
-    const optional = record("docs", ["tokens", "components?"]);
+    const optional = record("docs", ["tokens", "introspection?"]);
 
     expect(needsComponents(baseConfig([optional]))).toBe(false);
     expect(
@@ -199,7 +199,7 @@ describe("dependsOn", () => {
 
   test("a plugin depending on components without an introspection block is a config error", () => {
     expect(() =>
-      needsComponents(baseConfig([record("recontent:docs", ["tokens", "components"])])),
-    ).toThrow("`recontent:docs` depends on components; add `introspection` to defineConfig().");
+      needsComponents(baseConfig([record("recontent:docs", ["tokens", "introspection"])])),
+    ).toThrow("`recontent:docs` depends on introspection; add `introspection` to defineConfig().");
   });
 });

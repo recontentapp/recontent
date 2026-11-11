@@ -153,13 +153,12 @@ function diagnoseTokenTree(tree: unknown, layer: TokenLayer): TokenDiagnostic[] 
 }
 
 export function diagnoseTokenTrees(tokens: {
-  ref: unknown;
-  system: unknown;
-  components: unknown;
+  ref?: unknown;
+  system?: unknown;
+  components?: unknown;
 }): TokenDiagnostic[] {
-  return [
-    ...diagnoseTokenTree(tokens.ref, "ref"),
-    ...diagnoseTokenTree(tokens.system, "system"),
-    ...diagnoseTokenTree(tokens.components, "components"),
-  ];
+  const layers = ["ref", "system", "components"] as const;
+  return layers.flatMap((layer) =>
+    tokens[layer] === undefined ? [] : diagnoseTokenTree(tokens[layer], layer),
+  );
 }

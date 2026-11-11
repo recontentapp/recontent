@@ -1,7 +1,6 @@
 import type { InitPreset } from "./index.js";
 
 const source = `import {
-  defineComponentTokens,
   defineConfig,
   defineReferenceTokens,
   defineSystemTokens,
@@ -147,8 +146,6 @@ const system = defineSystemTokens({
   },
 });
 
-const components = defineComponentTokens({});
-
 const dark = defineTheme(system, {
   color: {
     background: oklch(0.145),
@@ -173,7 +170,7 @@ const dark = defineTheme(system, {
 });
 
 export default defineConfig({
-  tokens: { ref, system, components },
+  tokens: { ref, system },
   themes: { dark },
 });
 `;

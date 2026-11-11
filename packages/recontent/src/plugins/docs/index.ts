@@ -21,5 +21,5 @@ export function generateDocsFiles(ctx: PluginContext, options: DocsPluginOptions
 }
 
 export function docs(options: DocsPluginOptions): RecontentPlugin {
-  return outputPlugin("recontent:docs", ["tokens", "components?"], options, generateDocsFiles);
+  return outputPlugin("recontent:docs", ["tokens", "introspection?"], options, generateDocsFiles);
 }

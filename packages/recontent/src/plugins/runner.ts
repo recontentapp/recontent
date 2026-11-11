@@ -30,19 +30,19 @@ export function sortPlugins(plugins: RecontentPlugin[]): RecontentPlugin[] {
 }
 
 function consumesComponents(plugin: RecontentPlugin): boolean {
-  return plugin.dependsOn.includes("components") || plugin.dependsOn.includes("components?");
+  return plugin.dependsOn.includes("introspection") || plugin.dependsOn.includes("introspection?");
 }
 
 /**
  * Whether the project needs introspecting: it has an `introspection` block and
- * a plugin consumes components. A plugin that requires them (`"components"`,
- * not `"components?"`) while the config has no block is a config error.
+ * a plugin consumes components. A plugin that requires them (`"introspection"`,
+ * not `"introspection?"`) while the config has no block is a config error.
  */
 export function needsComponents(config: Config): boolean {
-  const required = config.plugins.find((plugin) => plugin.dependsOn.includes("components"));
+  const required = config.plugins.find((plugin) => plugin.dependsOn.includes("introspection"));
   if (required && !config.introspection) {
     throw new Error(
-      `\`${required.name}\` depends on components; add \`introspection\` to defineConfig().`,
+      `\`${required.name}\` depends on introspection; add \`introspection\` to defineConfig().`,
     );
   }
   return config.introspection !== undefined && config.plugins.some(consumesComponents);

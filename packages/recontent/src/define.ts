@@ -202,9 +202,9 @@ export function defineComponentTokens<T extends TokenTree>(input: T): StampTree<
 
 export type DefineConfigInput = {
   tokens?: {
-    ref: TokenTree;
-    system: TokenTree;
-    components: TokenTree;
+    ref?: TokenTree;
+    system?: TokenTree;
+    components?: TokenTree;
   };
   themes?: Record<string, ThemeOverride>;
   plugins?: RecontentPlugin | RecontentPlugin[];
@@ -225,15 +225,19 @@ function normalizePlugins(
         "defineConfig's `plugins` must be RecontentPlugin instances (objects with at least a `name` string).",
       );
     }
-    if (
-      !Array.isArray(plugin.dependsOn) ||
-      plugin.dependsOn.some(
-        (input) => input !== "tokens" && input !== "components" && input !== "components?",
-      )
-    ) {
-      throw new Error(
-        `Plugin "${plugin.name}" must declare \`dependsOn\`, an array of "tokens", "components" and/or "components?".`,
-      );
+    const expected = `Plugin "${plugin.name}" must declare \`dependsOn\`, an array of "tokens", "introspection" and/or "introspection?".`;
+    if (!Array.isArray(plugin.dependsOn)) {
+      throw new Error(expected);
+    }
+    for (const input of plugin.dependsOn as string[]) {
+      if (input === "components" || input === "components?") {
+        throw new Error(
+          `Plugin "${plugin.name}": dependsOn "${input}" was renamed to "${input.replace("components", "introspection")}".`,
+        );
+      }
+      if (input !== "tokens" && input !== "introspection" && input !== "introspection?") {
+        throw new Error(expected);
+      }
     }
   }
   return list;
@@ -284,9 +288,10 @@ export function defineConfig(input: DefineConfigInput): Config {
   const diagnostics = input.tokens ? diagnoseTokenTrees(input.tokens) : [];
 
   if (input.tokens) {
-    collectEntries(input.tokens.ref, ["ref"], "ref", registry);
-    collectEntries(input.tokens.system, ["system"], "system", registry);
-    collectEntries(input.tokens.components, [], "components", registry);
+    const { ref, system, components } = input.tokens;
+    if (ref) collectEntries(ref, ["ref"], "ref", registry);
+    if (system) collectEntries(system, ["system"], "system", registry);
+    if (components) collectEntries(components, [], "components", registry);
   } else if (!input.introspection) {
     throw new Error("defineConfig requires either tokens or an introspection block.");
   }

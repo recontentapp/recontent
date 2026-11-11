@@ -41,6 +41,6 @@ const system = defineSystemTokens({
 });
 
 export default defineConfig({
-  tokens: { ref, system, components: {} },
+  tokens: { ref, system },
   plugins: [colorList({ outDir: "src/generated" })],
 });
