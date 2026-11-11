@@ -1,14 +1,15 @@
 ---
 title: "designMD"
-description: "Generate DESIGN.md, your tokens and components as Markdown for repositories and agents."
+description: "Generate DESIGN.md, a short file for agents following Google's DESIGN.md format."
 ---
 
 # designMD
 
-`designMD()` writes `DESIGN.md`: every token with its type, value, alias, description and deprecation,
-grouped by layer and scale, with a column for each theme, followed by the API of each component. It is
-plain Markdown, so it reads well in a repository and is easy for agents to consume. For a browsable page,
-see [`docs()`](/plugins/docs).
+`designMD()` writes `DESIGN.md` in the format of Google's
+[DESIGN.md specification](https://github.com/google-labs-code/design.md) (version `alpha`): a short file
+agents load up front, with your tokens as YAML front matter and a few lines of prose on how to use them.
+It stays small on purpose. The complete reference, with every component prop, is one command away:
+`recontent inspect`. For a browsable page, see [`docs()`](/plugins/docs).
 
 ```ts twoslash
 // [!include ~/snippets/design-md.config.ts]
@@ -20,66 +21,98 @@ see [`docs()`](/plugins/docs).
 designMD(options: DesignMdPluginOptions): RecontentPlugin
 ```
 
-| Option   | Type     | Default           | Description                                    |
-| -------- | -------- | ----------------- | ---------------------------------------------- |
-| `outDir` | `string` | required          | Output directory, relative to the config file. |
-| `title`  | `string` | `"Design system"` | Document title.                                |
+| Option        | Type       | Default           | Description                                                                                                  |
+| ------------- | ---------- | ----------------- | ------------------------------------------------------------------------------------------------------------ |
+| `outDir`      | `string`   | required          | Output directory, relative to the config file.                                                               |
+| `title`       | `string`   | `"Design system"` | Document `name` and heading.                                                                                 |
+| `description` | `string`   | none              | What the design system is for. Written to the front matter and the Overview.                                 |
+| `dos`         | `string[]` | none              | Guidance written as `Do <item>` under "Do's and Don'ts". Write the end of the sentence: `use system tokens`. |
+| `donts`       | `string[]` | none              | Written as `Don't <item>`, before the deprecations. Write the end of the sentence.                           |
 
 Plugin name: `recontent:design-md`.
 
 ## Emitted files
 
-| File        | Content                                                 |
-| ----------- | ------------------------------------------------------- |
-| `DESIGN.md` | The tokens as Markdown tables, then the component APIs. |
-
-Per layer and group, it lists the token's path, type, resolved value, the value in each theme, the
-alias it points to and its description or deprecation notice:
+| File        | Content                                                     |
+| ----------- | ----------------------------------------------------------- |
+| `DESIGN.md` | YAML front matter with the tokens, then the prose sections. |
 
 ```md
-## System
+---
+version: alpha
+name: "Acme design system"
+description: "Calm, dense UI for back-office tools."
+colors:
+  ref-color-white: "#ffffff"
+  system-color-background: "{colors.ref-color-white}"
+spacing:
+  ref-spacing-4: "16px"
+components:
+  switch:
+    trackWidth: "32px"
+---
 
-### system.color
+# Acme design system
 
-| Token                     | Type  | Value     | dark      | Notes                                  |
-| ------------------------- | ----- | --------- | --------- | -------------------------------------- |
-| `system.color.background` | color | `#ffffff` | `#18181b` | → `ref.color.white`<br>Page background |
-```
+## Overview
+
+Calm, dense UI for back-office tools.
+
+Keys mirror token paths and CSS variables: `system-color-background` is `system.color.background` (`--system-color-background`).
+
+## Colors
+
+- `system-color-background`: Page background
 
 ## Components
 
-Components are optional for `designMD()`. Without an [`introspection`](/tokens/configuration#introspection)
-block, the document covers the tokens only. With one, it gets a `## Component APIs` section. Each
-component lists its description, a deprecation notice, a props table (name, type or allowed values,
-default, required, notes), an `Also accepts:` line for props inherited from libraries, and its source
-location, followed by its `Usage` and `Examples` when it has
-[documented them](/cli/inspect#documenting-components). Components with a `@category` are grouped under it,
-the others last.
+- **Button**: Triggers an action.
 
-```md
-## Component APIs
-
-### Button
-
-Triggers an action.
-
-Source: `src/button.tsx:12` · Updated 2025-03-01
-
-| Prop      | Type                   | Default   | Required | Notes          |
-| --------- | ---------------------- | --------- | -------- | -------------- |
-| `label`   | `string`               | —         | yes      |                |
-| `variant` | `"solid" \| "outline"` | `"solid"` | no       | Visual weight. |
-
-Also accepts: `ButtonHTMLAttributes` (263 props from @types/react)
+Run `recontent inspect components <Name>` for props, usage and examples.
 ```
 
-The output depends only on your sources and config, never on repository state, so a "generated files
-are up to date" check in CI can pass. The one exception is opt-in: with
-[`introspection.history`](/tokens/configuration#history), `Updated <date>` is the last commit that
-touched the component's file, and committing that file changes the document.
+## Front matter
 
-A prop typed with one of your own aliases shows its expansion under the type, and a generic component
-shows its type parameters next to its name, as `Accordion<Value extends string>`.
+Reference and system tokens are written to the front matter, and component tokens too. A key is the
+token's full path joined with `-`, which is its CSS variable without the leading `--`: the key
+`system-color-background` is the token `system.color.background` and the variable
+`--system-color-background`.
+
+A token goes to the group of its type:
+
+| Group        | Tokens                                                                                                         |
+| ------------ | -------------------------------------------------------------------------------------------------------------- |
+| `colors`     | `color`                                                                                                        |
+| `typography` | `typography`, with `fontFamily`, `fontSize`, `fontWeight`, `lineHeight` and `letterSpacing` resolved to values |
+| `rounded`    | `dimension` with `radius`, `radii`, `rounded` or `corner` in its path                                          |
+| `spacing`    | `dimension` with `spac`, `gap`, `padding`, `margin` or `inset` in its path                                     |
+| `components` | every token of the components layer, as `components.<component>.<token>`                                       |
+
+A token that is an alias of another token of the front matter is written as a reference, such as
+`"{colors.ref-color-white}"`. Anything else is written as its CSS value. Themes aren't part of the
+specification: a theme's values are in the Colors section of the document instead.
+
+## Prose
+
+A section is written only when it has something to say. In the order of the specification:
+
+- **Overview**: your `description`, and how keys map to paths and variables.
+- **Colors**: the descriptions of color tokens and scales, gradients, and a table with the value of each
+  token a [theme](/guides/working-with-themes) overrides.
+- **Typography**: descriptions, font families and font weights.
+- **Layout**: descriptions of spacing, and dimensions that are neither spacing nor radii, such as font sizes.
+- **Elevation & Depth**: shadows.
+- **Shapes**: descriptions of radii, and borders.
+- **Components**: one line per component, with its description.
+- **Do's and Don'ts**: your `dos` and `donts`, then each deprecated token, scale and component with its
+  deprecation notice.
+
+Tokens of a type with no section of the specification (durations, easing curves, transitions, numbers)
+aren't in the document. Components come from [`introspection`](/tokens/configuration#introspection) and
+are optional: without it, the document has no Components section.
+
+The output depends only on your sources and config, never on repository state, so a "generated files
+are up to date" check in CI can pass.
 
 If `introspection` is configured but fails, `designMD()` fails with the error attributed to it while the
 other plugins still write their files.

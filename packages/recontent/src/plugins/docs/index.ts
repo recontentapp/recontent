@@ -1,6 +1,6 @@
 import type { OutputFile, PluginContext, RecontentPlugin } from "@recontentapp/core";
 import { outputPlugin } from "../factory.js";
-import { buildDocsModel } from "../shared/docs-model.js";
+import { buildDocsModel } from "./model.js";
 import { renderHtml } from "./html.js";
 
 export type DocsPluginOptions = {

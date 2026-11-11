@@ -8,7 +8,7 @@ import {
 import { generateCss } from "../css.js";
 import type { GeneratorContext } from "../shared/context.js";
 import type { DocToken } from "../shared/doc-token.js";
-import type { DocGroup, DocsModel } from "../shared/docs-model.js";
+import type { DocGroup, DocsModel } from "./model.js";
 import { highlight } from "./highlight.js";
 import { renderUsage } from "./usage.js";
 

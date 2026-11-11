@@ -32,5 +32,13 @@ export default defineConfig({
   tokens: { ref, system, components: {} },
   themes: { dark },
   introspection: { entry: "src/components/index.ts" },
-  plugins: [designMD({ outDir: "docs", title: "Acme design system" })],
+  plugins: [
+    designMD({
+      outDir: "docs",
+      title: "Acme design system",
+      description: "Calm, dense UI for back-office tools.",
+      dos: ["use system tokens in components"],
+      donts: ["use ref tokens in components"],
+    }),
+  ],
 });

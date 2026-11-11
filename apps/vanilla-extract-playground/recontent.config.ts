@@ -412,7 +412,10 @@ export default defineConfig({
       gitBaseUrl:
         "https://github.com/recontentapp/recontent/blob/master/apps/vanilla-extract-playground",
     }),
-    designMD({ outDir: "docs" }),
+    designMD({
+      outDir: "docs",
+      description: "Calm, dense UI components and tokens for the vanilla-extract playground.",
+    }),
     vanillaExtract({
       outDir: "src/generated",
       focusRingColor: system.colors.accent,

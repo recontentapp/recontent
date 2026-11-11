@@ -1,11 +1,5 @@
 import { describe, expect, test } from "@jest/globals";
-import {
-  defineConfig,
-  defineReferenceTokens,
-  defineSystemTokens,
-  defineTheme,
-  tokens,
-} from "../src/index.js";
+import { defineConfig, defineReferenceTokens, defineSystemTokens, tokens } from "../src/index.js";
 import { generateDesignMdFiles } from "../src/plugins/design-md.js";
 import type { ComponentInfo, PluginContext } from "@recontentapp/core";
 import { goldenConfig } from "./helpers/fixtures.js";
@@ -20,7 +14,10 @@ function ctxFor(config: ReturnType<typeof goldenConfig>["config"]): PluginContex
   };
 }
 
-function render(ctx: PluginContext, options: { title?: string } = {}): string {
+function render(
+  ctx: PluginContext,
+  options: { title?: string; description?: string; dos?: string[]; donts?: string[] } = {},
+): string {
   const files = generateDesignMdFiles(ctx, { outDir: "docs", ...options });
   expect(files.map((file) => file.filename)).toEqual(["DESIGN.md"]);
   return files[0]!.content;
@@ -28,69 +25,175 @@ function render(ctx: PluginContext, options: { title?: string } = {}): string {
 
 const renderConfig = (config: ReturnType<typeof goldenConfig>["config"]) => render(ctxFor(config));
 
-describe("DESIGN.md", () => {
-  test("has layer headings, group headings and theme columns", () => {
-    const md = renderConfig(goldenConfig().config);
-    expect(md).toContain("# Design system");
-    expect(md).toContain("## Reference");
-    expect(md).toContain("## System");
-    expect(md).toContain("## Components");
-    expect(md).toContain("### system.colors");
-    expect(md).toContain("| Token | Type | Value | dark | highContrast | Notes |");
-    expect(md).toContain("| `system.colors.accent` | color | `#000000` | `#eeeeee` | `#ff0000` |");
-    expect(md).toContain("→ `ref.color.black`");
-    expect(md).toContain("Primary accent color.");
-    expect(md).toContain("**Deprecated**: Use system.colors.surface instead.");
+const frontMatterOf = (md: string) => md.slice(0, md.indexOf("\n---\n", 4) + 5);
+
+describe("DESIGN.md front matter", () => {
+  const md = renderConfig(goldenConfig().config);
+  const frontMatter = frontMatterOf(md);
+
+  test("starts with the version and the name", () => {
+    expect(frontMatter).toMatch(/^---\nversion: alpha\nname: "Design system"\n/);
+    expect(md).toContain("\n# Design system\n");
   });
 
-  test("uses the title option", () => {
-    expect(render(ctxFor(goldenConfig().config), { title: "Acme" })).toContain("# Acme\n");
+  test("groups tokens by type and keys them with the CSS variable name", () => {
+    expect(frontMatter).toContain('colors:\n  ref-color-black: "#000000"');
+    expect(frontMatter).toContain('  ref-palette-100: "#111111"');
+    expect(frontMatter).toContain("typography:\n  system-typography-body: {");
+    expect(frontMatter).toContain('fontFamily: "Arial", fontSize: "16px", fontWeight: 400');
+    expect(frontMatter).toContain('spacing:\n  ref-spacing-0: "0px"');
   });
 
-  test("omits theme columns when there are no themes", () => {
-    const ref = defineReferenceTokens({ color: { black: tokens.color("#000000") } });
-    const config = defineConfig({
-      tokens: { ref, system: defineSystemTokens({}), components: {} },
-    });
-    expect(renderConfig(config)).toContain("| Token | Type | Value | Notes |");
+  test("an alias to a token of the front matter is a reference", () => {
+    expect(frontMatter).toContain('  system-colors-accent: "{colors.ref-color-black}"');
+    expect(frontMatter).toContain('  system-colors-surface: "{colors.ref-color-white}"');
   });
 
-  test("escapes pipes and newlines in cells", () => {
+  test("tokens with no group of their own stay out, and so do theme values", () => {
+    expect(frontMatter).not.toContain("system-shadow-elevated");
+    expect(frontMatter).not.toContain("ref-motion");
+    expect(frontMatter).not.toContain("#eeeeee");
+    expect(frontMatter).not.toContain("rounded:");
+  });
+
+  test("component tokens are grouped by component, and resolve what the front matter lacks", () => {
+    expect(frontMatter).toContain(
+      'components:\n  button:\n    background: "{colors.system-colors-accent}"\n    border: "1px solid var(--ref-color-black)"\n',
+    );
+  });
+
+  test("dimensions are split between rounded and spacing by their path", () => {
     const ref = defineReferenceTokens({
-      color: { a: tokens.color("#000000").describe("one | two\nthree") },
-    });
-    const config = defineConfig({
-      tokens: { ref, system: defineSystemTokens({}), components: {} },
-    });
-    expect(renderConfig(config)).toContain("one \\| two<br>three");
-  });
-
-  test("renders scale metadata", () => {
-    const ref = defineReferenceTokens({
-      palette: tokens
-        .colorScale({ 100: "#111111" })
-        .describe("Scale <b>desc</b>")
-        .deprecate("Use <i>other</i>"),
+      radius: { md: tokens.dimension("6px") },
+      gap: { sm: tokens.dimension("4px") },
+      size: { icon: tokens.dimension("16px") },
     });
     const md = renderConfig(
       defineConfig({ tokens: { ref, system: defineSystemTokens({}), components: {} } }),
     );
-    expect(md).toContain("Scale \\<b\\>desc\\</b\\>");
-    expect(md).toContain("> ⚠️ Deprecated: Use \\<i\\>other\\</i\\>");
+    expect(frontMatterOf(md)).toContain('rounded:\n  ref-radius-md: "6px"');
+    expect(frontMatterOf(md)).toContain('spacing:\n  ref-gap-sm: "4px"');
+    expect(frontMatterOf(md)).not.toContain("ref-size-icon");
+    expect(md).toContain("## Layout\n\n- `ref-size-icon`: `16px`");
   });
 
-  test("escapes the title, group labels and theme names", () => {
+  test("keys that aren't plain identifiers are quoted", () => {
+    const ref = defineReferenceTokens({ "a b": { c: tokens.color("#000000") } });
+    const md = renderConfig(
+      defineConfig({ tokens: { ref, system: defineSystemTokens({}), components: {} } }),
+    );
+    expect(frontMatterOf(md)).toContain('  "ref-a b-c": "#000000"');
+  });
+});
+
+describe("DESIGN.md prose", () => {
+  const md = renderConfig(goldenConfig().config);
+
+  test("sections come in the order of the spec, and only when they have content", () => {
+    const headings = [...md.matchAll(/^## (.+)$/gm)].map((match) => match[1]);
+    expect(headings).toEqual([
+      "Overview",
+      "Colors",
+      "Typography",
+      "Elevation & Depth",
+      "Shapes",
+      "Do's and Don'ts",
+    ]);
+  });
+
+  test("the overview explains how keys map to paths and CSS variables", () => {
+    expect(md).toContain(
+      "`system-border-default` is `system.border.default` (`--system-border-default`)",
+    );
+  });
+
+  test("descriptions are written, tokens missing from the front matter come with their value", () => {
+    expect(md).toContain("- `system-colors-accent`: Primary accent color.");
+    expect(md).toContain("- `system-gradient-accent`: `linear-gradient(90deg, ");
+    expect(md).toContain("- `ref-fontFamily-body`: `Arial`");
+    expect(md).toContain("- `ref-weight-brand`: `500`");
+    expect(md).toContain("inset 0px 2px 4px 0px var(--ref-color-black), 0px 1px 2px 0px #111111");
+    expect(md).toContain("- `system-border-default`: `1px solid var(--ref-color-black)`");
+  });
+
+  test("motion tokens have no section", () => {
+    expect(md).not.toContain("ref-motion");
+    expect(md).not.toContain("system-transition");
+  });
+
+  test("themes list the tokens they override", () => {
+    expect(md).toContain("| Token | default | dark | highContrast |");
+    expect(md).toContain("| `system-colors-accent` | `#000000` | `#eeeeee` | `#ff0000` |");
+  });
+
+  test("themes are left out when none overrides a token", () => {
+    const ref = defineReferenceTokens({ color: { black: tokens.color("#000000") } });
+    const md = renderConfig(
+      defineConfig({ tokens: { ref, system: defineSystemTokens({}), components: {} } }),
+    );
+    expect(md).not.toContain("| Token |");
+  });
+
+  test("deprecations are listed as things not to use", () => {
+    expect(md).toContain(
+      "- Don't use `{components.button.background}`: Use system.colors.surface instead.",
+    );
+  });
+
+  test("scale descriptions and deprecations are written once", () => {
     const ref = defineReferenceTokens({
-      "a*b": { c: tokens.color("#000000") },
+      palette: tokens
+        .colorScale({ 100: "#111111", 200: "#222222" })
+        .describe("Brand <b>palette</b>")
+        .deprecate("Use other"),
     });
-    const dark = defineTheme({ ref }, { ref: { "a*b": { c: tokens.color("#ffffff") } } });
-    const config = defineConfig({
-      tokens: { ref, system: defineSystemTokens({}), components: {} },
-      themes: { dark_mode: dark },
+    const md = renderConfig(
+      defineConfig({ tokens: { ref, system: defineSystemTokens({}), components: {} } }),
+    );
+    expect(md.match(/^- `ref-palette`: /gm)).toHaveLength(1);
+    expect(md).toContain("- `ref-palette`: Brand \\<b\\>palette\\</b\\>");
+    expect(md).toContain("- Don't use `ref-palette`: Use other");
+  });
+
+  test("token descriptions are escaped", () => {
+    const ref = defineReferenceTokens({
+      color: { a: tokens.color("#000000").describe("one | two\nthree *x*") },
     });
-    const markdown = renderConfig(config);
-    expect(markdown).toContain("### ref.a\\*b");
-    expect(markdown).toContain("| Token | Type | Value | dark\\_mode | Notes |");
+    const md = renderConfig(
+      defineConfig({ tokens: { ref, system: defineSystemTokens({}), components: {} } }),
+    );
+    expect(md).toContain("- `ref-color-a`: one \\| two three \\*x\\*");
+  });
+});
+
+describe("options", () => {
+  const ctx = ctxFor(goldenConfig().config);
+
+  test("title and description go to the front matter and the document", () => {
+    const md = render(ctx, { title: 'Acme "UI"', description: "Calm, dense UI." });
+    expect(md).toContain('name: "Acme \\"UI\\""\ndescription: "Calm, dense UI."\n');
+    expect(md).toContain('# Acme "UI"\n');
+    expect(md).toContain("## Overview\n\nCalm, dense UI.\n\nKeys mirror");
+  });
+
+  test("the title is escaped in the heading", () => {
+    expect(render(ctx, { title: "a*b" })).toContain("# a\\*b\n");
+  });
+
+  test("dos and donts come before the deprecations", () => {
+    const md = render(ctx, { dos: ["use system tokens"], donts: ["hardcode colors"] });
+    expect(md).toContain(
+      "## Do's and Don'ts\n\n- Do use system tokens\n- Don't hardcode colors\n- Don't use `{components.button.background}`",
+    );
+  });
+
+  test("a config without themes or descriptions has no table and no description", () => {
+    const ref = defineReferenceTokens({ color: { black: tokens.color("#000000") } });
+    const md = renderConfig(
+      defineConfig({ tokens: { ref, system: defineSystemTokens({}), components: {} } }),
+    );
+    expect(md).not.toContain("description:");
+    expect(md).not.toContain("Do's and Don'ts");
   });
 });
 
@@ -100,32 +203,9 @@ describe("components", () => {
       name: "Button",
       sourceFilePath: "src/button.tsx",
       line: 12,
-      lastUpdatedAt: "2024-03-01T10:00:00Z",
-      description: "Triggers an action.",
-      props: [
-        {
-          name: "variant",
-          type: "Variant",
-          values: ["solid", "outline"],
-          required: false,
-          defaultValue: '"solid"',
-          description: "Visual weight.",
-        },
-        { name: "label", type: "string", required: true, deprecated: "Use children." },
-        {
-          name: "width",
-          type: "Width",
-          resolved: 'number | "auto"',
-          required: false,
-        },
-      ],
-      inherits: [
-        {
-          name: "ButtonHTMLAttributes",
-          package: "@types/react",
-          props: ["aria-label", "onClick", "type"],
-        },
-      ],
+      description: "Triggers an action.\n\nSecond paragraph.",
+      props: [],
+      inherits: [],
       references: [],
     },
     {
@@ -142,6 +222,16 @@ describe("components", () => {
       sourceFilePath: "src/spacer.tsx",
       line: 1,
       deprecated: true,
+      replacement: "Button",
+      props: [],
+      inherits: [],
+      references: [],
+    },
+    {
+      name: "Row",
+      sourceFilePath: "src/row.tsx",
+      line: 1,
+      deprecated: "Use `Stack`.",
       props: [],
       inherits: [],
       references: [],
@@ -149,72 +239,23 @@ describe("components", () => {
   ];
   const withComponents = { ...ctxFor(goldenConfig().config), components };
 
-  test("gets a props table, an inherited-props line and a plain source line", () => {
+  test("each component has one line, and the full API is one command away", () => {
     const md = render(withComponents);
-
-    expect(md).toContain("## Component APIs");
-    expect(md).toContain("### Button");
-    expect(md).toContain("Triggers an action.");
-    expect(md).toContain("Source: `src/button.tsx:12` · Updated 2024-03-01");
     expect(md).toContain(
-      '| `variant` | `"solid" \\| "outline"` | `"solid"` | no | Visual weight. |',
+      "## Components\n\n- **Button**: Triggers an action.\n- **Accordion**\n\nRun `recontent inspect components <Name>` for props, usage and examples.",
     );
-    expect(md).toContain("| `label` | `string` | — | yes | **Deprecated**: Use children. |");
-    expect(md).toContain("Also accepts: `ButtonHTMLAttributes` (3 props from @types/react)");
-    expect(md).toContain("> ⚠️ Deprecated");
+    expect(md).not.toContain("Second paragraph");
+    expect(md).not.toContain("Source:");
   });
 
-  test("a resolved alias is shown under the type, and type parameters next to the name", () => {
+  test("deprecated components are things not to use", () => {
     const md = render(withComponents);
-
-    expect(md).toContain('| `width` | `Width`<br>`number \\| "auto"` | — | no |  |');
-    expect(md).toContain("### Accordion\\<Value extends string\\>");
-  });
-
-  test("usage, examples, replacement and experimental notes are written", () => {
-    const md = render({
-      ...withComponents,
-      components: [
-        {
-          ...components[0]!,
-          category: "Actions",
-          usage: "Use for <b>primary</b> actions.",
-          examples: [
-            { title: "Basic", code: "<Button />" },
-            { code: "<Button>\n  Save\n</Button>" },
-          ],
-        },
-        {
-          ...components[2]!,
-          experimental: "Subject to change.",
-          deprecated: "Use `Button`.",
-          replacement: "Button",
-        },
-      ],
-    });
-
-    expect(md).toContain("#### Usage\n\nUse for <b>primary</b> actions.");
-    expect(md).toContain("#### Examples\n\n**Basic**\n\n```tsx\n<Button />\n```");
-    expect(md).toContain("```tsx\n<Button>\n  Save\n</Button>\n```");
-    expect(md).toContain("Replaced by: `Button`");
-    expect(md).toContain("> 🧪 Experimental: Subject to change.");
-  });
-
-  test("without lastUpdatedAt there is no date", () => {
-    const md = render({
-      ...withComponents,
-      components: [{ ...components[0]!, lastUpdatedAt: undefined }],
-    });
-
-    expect(md).toContain("Source: `src/button.tsx:12`\n");
-    expect(md).not.toContain("Updated");
-  });
-
-  test("output depends on sources and config only: no footer, no repository state", () => {
-    expect(render(withComponents)).not.toContain("Generated from");
+    expect(md).not.toContain("- **Spacer**");
+    expect(md).toContain("- Don't use `Spacer`: Use `Button`.");
+    expect(md).toContain("- Don't use `Row`: Use \\`Stack\\`.");
   });
 
   test("nothing is added when the context has no components", () => {
-    expect(render(ctxFor(goldenConfig().config))).not.toContain("Component APIs");
+    expect(render(ctxFor(goldenConfig().config))).not.toContain("## Components\n");
   });
 });
