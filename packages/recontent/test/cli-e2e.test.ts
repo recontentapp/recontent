@@ -479,6 +479,67 @@ describe("recontent build", () => {
     expect(json.system.color.accent.$value).toBe("{ref.color.brand.primary}");
   });
 
+  describe("--check", () => {
+    test("passes right after a build", () => {
+      const dir = makeScratchDir("build-check-fresh");
+      copyFixture("valid", dir);
+      expect(runCli(["--cwd", dir, "build"]).status).toBe(0);
+
+      const result = runCli(["--cwd", dir, "build", "--check"]);
+
+      expect(result.status).toBe(0);
+      expect(result.stderr).toMatch(/\d+ files up to date\n$/);
+    });
+
+    test("fails on a file that differs, and writes nothing", () => {
+      const dir = makeScratchDir("build-check-stale");
+      copyFixture("valid", dir);
+      runCli(["--cwd", dir, "build"]);
+      const cssPath = path.join(dir, "dist/tokens.css");
+      writeFileSync(cssPath, "/* edited */\n");
+
+      const result = runCli(["--cwd", dir, "build", "--check"]);
+
+      expect(result.status).toBe(1);
+      expect(result.stderr).toContain("Stale dist/tokens.css");
+      expect(result.stderr).toMatch(
+        /error: check failed: 1 of \d+ files out of date; run `recontent build`\n$/,
+      );
+      expect(readFileSync(cssPath, "utf-8")).toBe("/* edited */\n");
+    });
+
+    test("fails on a missing file without creating the output directory", () => {
+      const dir = makeScratchDir("build-check-missing");
+      copyFixture("valid", dir);
+
+      const result = runCli(["--cwd", dir, "build", "--check"]);
+
+      expect(result.status).toBe(1);
+      expect(result.stderr).toContain("Missing dist/tokens.css");
+      expect(existsSync(path.join(dir, "dist"))).toBe(false);
+    });
+
+    test("still fails with the build summary when the build itself is broken", () => {
+      const dir = makeScratchDir("build-check-broken");
+      copyFixture("broken-alias", dir);
+
+      const result = runCli(["--cwd", dir, "build", "--check"]);
+
+      expect(result.status).toBe(1);
+      expect(result.stderr).toContain("error: build failed: 1 error, 0 warnings");
+    });
+
+    test("cannot be combined with --watch", () => {
+      const dir = makeScratchDir("build-check-watch");
+      copyFixture("valid", dir);
+
+      const result = runCli(["--cwd", dir, "build", "--check", "--watch"]);
+
+      expect(result.status).toBe(1);
+      expect(result.stderr).toContain("cannot be used with");
+    });
+  });
+
   test("a missing -c file is reported as such, without a stale default-name hint", () => {
     const dir = makeScratchDir("build-missing-explicit");
     const result = runCli(["--cwd", dir, "build", "-c", "other.config.ts"]);

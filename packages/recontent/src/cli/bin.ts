@@ -132,14 +132,21 @@ program
   .command("build")
   .description("Run the plugins configured in the config file to generate their output")
   .option("-w, --watch", "Rerun the build whenever the config file (or a file it imports) changes")
+  .addOption(
+    new Option(
+      "--check",
+      "Write nothing; exit 1 if any generated file is missing or differs from what the build would write",
+    ).conflicts("watch"),
+  )
   .option("--no-cache", NO_CACHE_HELP)
-  .action(async (options: { watch?: boolean; cache: boolean }) => {
+  .action(async (options: { watch?: boolean; check?: boolean; cache: boolean }) => {
     const { cwd, configPath, logLevel } = resolveGlobalOptions();
     await runBuild({
       cwd,
       configPath,
       logLevel,
       watch: options.watch,
+      check: options.check,
       cache: cacheOption(options),
     });
   });

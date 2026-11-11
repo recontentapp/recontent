@@ -1,6 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
-import type { ComponentInfo, LogLevel, TypeInfo } from "@recontentapp/core";
+import type { ComponentInfo, EmittedFile, LogLevel, Logger, TypeInfo } from "@recontentapp/core";
 import type ts from "typescript";
 import { createLogger } from "../../logger.js";
 import { MissingDesignTokensError } from "../../plugins/errors.js";
@@ -9,7 +9,7 @@ import { loadComponents, loadProject } from "../../project.js";
 import { collectLocalImports } from "../config-graph.js";
 import { diagnoseRegistry } from "../registry-diagnostics.js";
 import { exitWithError, reportError, summarizeDiagnostics } from "../utils/exit.js";
-import { displayPath, writeOutputFile } from "../utils/fs.js";
+import { checkOutputFile, displayPath, writeOutputFile } from "../utils/fs.js";
 import { plural } from "../utils/format.js";
 
 export type BuildOptions = {
@@ -17,6 +17,8 @@ export type BuildOptions = {
   configPath: string;
   logLevel?: LogLevel;
   watch?: boolean;
+  /** Write nothing; fail if any generated file is missing or differs from what the build would write. */
+  check?: boolean;
   /** Where the introspection cache is read and written; absent for `--no-cache`. */
   cache?: { version: string };
 };
@@ -242,15 +244,32 @@ async function buildOnce(
     return state;
   }
 
+  if (options.check) {
+    const outOfDate = await checkFiles(result.files, configDir, options.cwd, logger);
+    if (outOfDate > 0) {
+      const message = `check failed: ${outOfDate} of ${result.files.length} files out of date; run \`recontent build\``;
+      if (exitOnError) exitWithError(message);
+      else logger.error(message);
+    } else {
+      logger.info(`${plural(result.files.length, "file")} up to date`);
+    }
+  } else {
+    await writeFiles(result.files, configDir, options.cwd, logger);
+  }
+  if (failed > 0) abort(failed);
+  return state;
+}
+
+async function writeFiles(files: EmittedFile[], root: string, cwd: string, logger: Logger) {
   let written = 0;
   let skipped = 0;
-  for (const file of result.files) {
+  for (const file of files) {
     const {
       path: outputPath,
       written: wasWritten,
       skipReason,
-    } = await writeOutputFile(file.path, file.content, configDir, { writeMode: file.writeMode });
-    const shownPath = displayPath(options.cwd, outputPath);
+    } = await writeOutputFile(file.path, file.content, root, { writeMode: file.writeMode });
+    const shownPath = displayPath(cwd, outputPath);
     if (wasWritten) {
       written += 1;
       logger.info(`Wrote ${shownPath}`);
@@ -263,6 +282,22 @@ async function buildOnce(
     }
   }
   logger.info(`Wrote ${plural(written, "file")}${skipped > 0 ? ` (${skipped} skipped)` : ""}`);
-  if (failed > 0) abort(failed);
-  return state;
+}
+
+/** Logs each stale or missing file and returns how many there were. */
+async function checkFiles(files: EmittedFile[], root: string, cwd: string, logger: Logger) {
+  let outOfDate = 0;
+  for (const file of files) {
+    const { path: outputPath, status } = await checkOutputFile(file.path, file.content, root, {
+      writeMode: file.writeMode,
+    });
+    const shownPath = displayPath(cwd, outputPath);
+    if (status === "fresh") {
+      logger.debug(`Up to date ${shownPath}`);
+      continue;
+    }
+    outOfDate += 1;
+    logger.error(`${status === "stale" ? "Stale" : "Missing"} ${shownPath}`);
+  }
+  return outOfDate;
 }

@@ -2,7 +2,7 @@ import { mkdtemp, readFile, rm, stat, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { afterEach, beforeEach, describe, expect, test } from "@jest/globals";
-import { writeOutputFile } from "../src/cli/utils/fs.js";
+import { checkOutputFile, writeOutputFile } from "../src/cli/utils/fs.js";
 
 describe("writeOutputFile", () => {
   let dir: string;
@@ -82,5 +82,46 @@ describe("writeOutputFile", () => {
     } finally {
       await rm(outsideCwd, { recursive: true, force: true });
     }
+  });
+});
+
+describe("checkOutputFile", () => {
+  let dir: string;
+
+  beforeEach(async () => {
+    dir = await mkdtemp(path.join(tmpdir(), "recontent-fs-check-test-"));
+  });
+
+  afterEach(async () => {
+    await rm(dir, { recursive: true, force: true });
+  });
+
+  test("reports missing, stale and fresh files without writing", async () => {
+    const filePath = path.join(dir, "out.txt");
+    expect(await checkOutputFile(filePath, "content", dir)).toEqual({
+      path: filePath,
+      status: "missing",
+    });
+    await expect(stat(filePath)).rejects.toThrow();
+
+    await writeFile(filePath, "content", "utf8");
+    expect((await checkOutputFile(filePath, "content", dir)).status).toBe("fresh");
+
+    expect((await checkOutputFile(filePath, "other", dir)).status).toBe("stale");
+    expect(await readFile(filePath, "utf8")).toBe("content");
+  });
+
+  test('writeMode "once" only cares about existence', async () => {
+    const filePath = path.join(dir, "once.txt");
+    expect((await checkOutputFile(filePath, "x", dir, { writeMode: "once" })).status).toBe(
+      "missing",
+    );
+
+    await writeFile(filePath, "user-edited", "utf8");
+    expect((await checkOutputFile(filePath, "x", dir, { writeMode: "once" })).status).toBe("fresh");
+  });
+
+  test("a path that resolves outside the base directory is rejected", async () => {
+    await expect(checkOutputFile("../escape.txt", "x", dir)).rejects.toThrow(/outside of/);
   });
 });

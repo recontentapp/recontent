@@ -8,7 +8,7 @@ description: "Run the configured plugins and write their output."
 Loads the config, runs every plugin and writes the files they produce.
 
 ```bash
-recontent build [--watch] [--no-cache]
+recontent build [--watch | --check] [--no-cache]
 ```
 
 ## Options
@@ -16,6 +16,7 @@ recontent build [--watch] [--no-cache]
 | Option        | Description                                                                    |
 | ------------- | ------------------------------------------------------------------------------ |
 | `-w, --watch` | Rerun the build whenever the config file, or a file it imports, changes.       |
+| `--check`     | Write nothing; exit `1` if any generated file is missing or out of date.       |
 | `--no-cache`  | Neither read nor write the [introspection cache](/tokens/configuration#cache). |
 
 Uses the [global options](/cli#global-options) `-c`, `--cwd` and `--log-level`.
@@ -63,3 +64,33 @@ queues another one). The set of watched files is refreshed after each build.
 
 A failing rebuild prints its error and keeps watching, so you can fix the config and save again.
 Stop with `Ctrl+C`.
+
+## Checking generated files in CI
+
+`--check` runs the same build but writes nothing. It compares each file the plugins would write with
+the one on disk and exits `1` if any is out of date, so CI catches a config or component edit that was
+committed without rerunning `recontent build`. It cannot be combined with `--watch`.
+
+- A file whose content differs is `Stale`; a file that does not exist is `Missing`.
+- A file a plugin marks as write-once is only checked for existence, since edits to it are expected.
+- Files a previous config generated and the current one no longer does are not detected.
+- Every error a regular build reports (broken alias, plugin failure, introspection failure) fails the
+  check the same way.
+
+```text
+Stale src/generated/tokens.css
+Missing DESIGN.md
+error: check failed: 2 of 7 files out of date; run `recontent build`
+```
+
+On success it prints `7 files up to date`. In GitHub Actions:
+
+```yaml
+- uses: actions/checkout@v4
+  with:
+    fetch-depth: 0
+- run: npx recontent build --check
+```
+
+With [`introspection.history`](/tokens/configuration#introspection), a shallow clone omits the
+last-updated dates, so outputs that include them look stale; `fetch-depth: 0` fetches the full history.
