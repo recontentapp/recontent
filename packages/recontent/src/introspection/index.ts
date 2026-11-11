@@ -91,7 +91,7 @@ export function introspect(options: {
     reactNode,
     logger,
     types: createTypeStore(root),
-    exampleFiles: new Set(),
+    docFiles: new Set(),
     warnings: [],
   };
   const components = findComponents(analysis, entry, config.exclude).map((candidate) =>
@@ -114,7 +114,7 @@ export function introspect(options: {
     types,
     warnings: analysis.warnings,
     program,
-    files: [...files, ...configFiles.map((file) => path.resolve(file)), ...analysis.exampleFiles],
+    files: [...files, ...configFiles.map((file) => path.resolve(file)), ...analysis.docFiles],
   };
 }
 

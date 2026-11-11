@@ -9,8 +9,8 @@ export type Analysis = {
   logger: Logger;
   /** The project types the props mention, filled in while they are described. */
   types: TypeStore;
-  /** Absolute paths of the files `@example` tags pointed to and that could be read. */
-  exampleFiles: Set<string>;
+  /** Absolute paths of the files `@example`/`@usage` tags pointed to and that could be read. */
+  docFiles: Set<string>;
   /** Reported by the CLI, not part of what plugins see. */
   warnings: string[];
 };

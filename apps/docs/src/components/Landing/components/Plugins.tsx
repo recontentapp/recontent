@@ -12,6 +12,7 @@ const pluginsConfig = lines(`export default defineConfig({
     typescriptNative({ outDir: "mobile/theme" }),
     dtcg({ outDir: "design" }),
     docs({ outDir: "public/tokens" }),
+    designMD({ outDir: "." }),
     swift({ outDir: "ios/Tokens" }), // your own
   ],
 });
@@ -53,7 +54,7 @@ const builtInPlugins = [
     label: "Docs",
     fn: "docs()",
     to: "/plugins/docs",
-    text: "An HTML and Markdown catalogue for your team and agents.",
+    text: "A searchable HTML page for your team, or DESIGN.md for agents.",
   },
   {
     label: "& more",

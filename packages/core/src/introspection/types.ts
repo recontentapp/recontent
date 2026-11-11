@@ -16,6 +16,13 @@ export type ExampleInfo = {
   code: string;
 };
 
+export type ExternalLink = {
+  /** From `<caption>…</caption>` in the `@link` tag. */
+  title?: string;
+  /** Absolute `http(s)` URL. */
+  url: string;
+};
+
 /** What a JSDoc comment says, shared by components, props and types. */
 export type Documentation = {
   description?: string;
@@ -28,6 +35,8 @@ export type Documentation = {
   examples?: ExampleInfo[];
   /** `@usage` (markdown): when to use it, when not to. Components and types only. */
   usage?: string;
+  /** One per `@link <caption>Figma</caption> https://…` tag: design files, guidelines, anything outside the code. */
+  externalLinks?: ExternalLink[];
   /** Component names and type ids that `{@link}`s in the documentation resolve to, sorted. Unresolved links stay plain text. */
   links?: string[];
 };

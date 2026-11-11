@@ -1104,7 +1104,7 @@ describe("recontent build with introspection", () => {
     introspection: string,
     plugins: string,
   ) => `import { defineConfig, defineReferenceTokens, defineSystemTokens, defineComponentTokens, tokens } from "recontent";
-import { css, docs } from "recontent/plugins";
+import { css, designMD, docs } from "recontent/plugins";
 
 const ref = defineReferenceTokens({ color: { white: tokens.color("#ffffff") } });
 const system = defineSystemTokens({ color: { surface: ref.color.white } });
@@ -1128,7 +1128,7 @@ export default defineConfig({
     if (result.status !== 0) throw new Error(result.stderr);
   };
 
-  test("the docs plugin gets component APIs, and the output holds no repository state", () => {
+  test("the docs plugins get component APIs, and the output holds no repository state", () => {
     const dir = buildProject("build-introspection");
     const result = runCli(["--cwd", dir, "build"]);
 
@@ -1137,7 +1137,7 @@ export default defineConfig({
     expect(html).toContain("<!DOCTYPE html>");
     expect(html).toContain("system.color.accent");
 
-    const markdown = readFileSync(path.join(dir, "docs/design.md"), "utf-8");
+    const markdown = readFileSync(path.join(dir, "docs/DESIGN.md"), "utf-8");
     expect(markdown).toContain("system.color.accent");
     expect(markdown).toContain("Primary accent color.");
     expect(markdown).toContain("## Component APIs");
@@ -1151,18 +1151,18 @@ export default defineConfig({
     const dir = buildProject(
       "build-introspection-only",
       `import { defineConfig } from "recontent";
-import { docs } from "recontent/plugins";
+import { designMD } from "recontent/plugins";
 
 export default defineConfig({
   introspection: { entry: "src/index.ts" },
-  plugins: [docs({ outDir: "docs", markdown: true })],
+  plugins: [designMD({ outDir: "docs" })],
 });
 `,
     );
 
     const result = runCli(["--cwd", dir, "build"]);
     expect(result.status).toBe(0);
-    expect(readFileSync(path.join(dir, "docs/design.md"), "utf-8")).toContain("### Button");
+    expect(readFileSync(path.join(dir, "docs/DESIGN.md"), "utf-8")).toContain("### Button");
   });
 
   describe("introspection happens only for plugins that consume components", () => {
@@ -1191,15 +1191,12 @@ export default defineConfig({
       expect(existsSync(path.join(dir, "docs/design.html"))).toBe(false);
     });
 
-    test("docs() works without introspection, just without component APIs", () => {
-      const dir = buildProject(
-        "build-no-block",
-        configWith("", 'docs({ outDir: "docs", markdown: true })'),
-      );
+    test("designMD() works without introspection, just without component APIs", () => {
+      const dir = buildProject("build-no-block", configWith("", 'designMD({ outDir: "docs" })'));
       const result = runCli(["--cwd", dir, "build"]);
 
       expect(result.status).toBe(0);
-      const markdown = readFileSync(path.join(dir, "docs/design.md"), "utf-8");
+      const markdown = readFileSync(path.join(dir, "docs/DESIGN.md"), "utf-8");
       expect(markdown).toContain("system.color.surface");
       expect(markdown).not.toContain("Component APIs");
     });
@@ -1208,7 +1205,7 @@ export default defineConfig({
   describe("history is opt-in", () => {
     const withHistory = configWith(
       'introspection: { entry: "src/index.ts", history: true },',
-      'docs({ outDir: "docs", markdown: true })',
+      'designMD({ outDir: "docs" })',
     );
 
     test("lastUpdatedAt comes from git when asked for", () => {
@@ -1227,7 +1224,7 @@ export default defineConfig({
       ]);
 
       expect(runCli(["--cwd", dir, "build"]).status).toBe(0);
-      expect(readFileSync(path.join(dir, "docs/design.md"), "utf-8")).toMatch(
+      expect(readFileSync(path.join(dir, "docs/DESIGN.md"), "utf-8")).toMatch(
         /Source: `src\/button\.tsx:\d+` · Updated \d{4}-\d{2}-\d{2}/,
       );
     });
@@ -1240,7 +1237,7 @@ export default defineConfig({
 
       expect(result.status).toBe(0);
       expect(result.stderr.match(/not a git repository/g)).toHaveLength(1);
-      expect(readFileSync(path.join(dir, "docs/design.md"), "utf-8")).not.toContain("Updated");
+      expect(readFileSync(path.join(dir, "docs/DESIGN.md"), "utf-8")).not.toContain("Updated");
     });
   });
 

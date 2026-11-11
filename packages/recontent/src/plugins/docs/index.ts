@@ -1,36 +1,25 @@
 import type { OutputFile, PluginContext, RecontentPlugin } from "@recontentapp/core";
 import { outputPlugin } from "../factory.js";
+import { buildDocsModel } from "../shared/docs-model.js";
 import { renderHtml } from "./html.js";
-import { renderMarkdown } from "./markdown.js";
-import { buildDocsModel } from "./model.js";
 
 export type DocsPluginOptions = {
   outDir: string;
-  /** Write `design.html`. Defaults to `true`. */
-  html?: boolean;
-  /** Write `design.md`. Defaults to `false`. */
-  markdown?: boolean;
-  /** Page / document title. Defaults to "Design tokens". */
+  /** Page title. Defaults to "Design system". */
   title?: string;
+  /**
+   * Where the repository's files are browsable, e.g. `https://github.com/acme/ui/blob/main`.
+   * A component's source location then links to `<gitBaseUrl>/<path>#L<line>`, the path being
+   * relative to the config file: include the config's own folder if it isn't the repository root.
+   */
+  gitBaseUrl?: string;
 };
 
 export function generateDocsFiles(ctx: PluginContext, options: DocsPluginOptions): OutputFile[] {
-  const html = options.html ?? true;
-  const markdown = options.markdown ?? false;
-  if (!html && !markdown) {
-    throw new Error("docs() needs at least one of `html` or `markdown` enabled.");
-  }
-
-  const model = buildDocsModel(ctx, options.title ?? "Design tokens");
-  return [
-    ...(html ? [{ filename: "design.html", content: renderHtml(model, ctx) }] : []),
-    ...(markdown ? [{ filename: "design.md", content: renderMarkdown(model) }] : []),
-  ];
+  const model = buildDocsModel(ctx, options.title ?? "Design system");
+  return [{ filename: "design.html", content: renderHtml(model, ctx, options.gitBaseUrl) }];
 }
 
 export function docs(options: DocsPluginOptions): RecontentPlugin {
-  if (!(options.html ?? true) && !(options.markdown ?? false)) {
-    throw new Error("docs() needs at least one of `html` or `markdown` enabled.");
-  }
   return outputPlugin("recontent:docs", ["tokens", "components?"], options, generateDocsFiles);
 }

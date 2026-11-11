@@ -29,6 +29,7 @@
   "dependencies": {
     "@recontentapp/core": "workspace:*",
     "commander": "^15.0.0",
+    "marked": "^18.1.2",
     "typescript": "npm:@typescript/typescript6@^6.0.2"
   },
   "devDependencies": {

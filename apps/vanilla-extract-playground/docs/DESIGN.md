@@ -1,4 +1,4 @@
-# Design tokens
+# Design system
 
 202 tokens · no themes
 
@@ -349,7 +349,26 @@
 
 ### Accordion\<Value extends string = string\>
 
-Source: `src/generated/components/accordion/Accordion.gen.tsx:34`
+Vertically stacked headings, each revealing a panel of content.
+
+Source: `src/generated/components/accordion/Accordion.gen.tsx:51`
+
+#### Usage
+
+Use to let people scan several related sections and open only the ones they need. Use
+`Tabs` when the sections are peers to switch between, and `Collapsible` for a single
+section.
+
+#### Examples
+
+```tsx
+<Accordion
+  items={[
+    { value: "shipping", trigger: "Shipping", content: "Ships within 2 days." },
+    { value: "returns", trigger: "Returns", content: "Free within 30 days." },
+  ]}
+/>
+```
 
 | Prop | Type | Default | Required | Notes |
 | --- | --- | --- | --- | --- |
@@ -368,7 +387,23 @@ Also accepts: `AriaAttributes` (53 props from @types/react)
 
 ### ActionBar
 
-Source: `src/generated/components/action-bar/ActionBar.gen.tsx:14`
+Floating bar of contextual actions, anchored to the bottom of the viewport.
+
+Source: `src/generated/components/action-bar/ActionBar.gen.tsx:28`
+
+#### Usage
+
+Use for actions that apply to a selection, like bulk edits on selected rows. Toggle `open`
+rather than unmounting it to keep the state of its children. Not for global navigation.
+
+#### Examples
+
+```tsx
+<ActionBar open={selected.length > 0}>
+  <Button>Archive</Button>
+  <Button>Delete</Button>
+</ActionBar>
+```
 
 | Prop | Type | Default | Required | Notes |
 | --- | --- | --- | --- | --- |
@@ -384,7 +419,27 @@ Also accepts: `AriaAttributes` (53 props from @types/react)
 
 ### Autocomplete\<Value extends string\>
 
-Source: `src/generated/components/autocomplete/Autocomplete.gen.tsx:57`
+Text input that suggests matching options as people type.
+
+Source: `src/generated/components/autocomplete/Autocomplete.gen.tsx:75`
+
+#### Usage
+
+Use when the list of options is long enough that scanning it is slow, and free text is
+acceptable. Use `Select` when the value must be one of the options.
+
+#### Examples
+
+```tsx
+<Autocomplete
+  placeholder="Search countries"
+  options={[
+    { value: "fr", label: "France" },
+    { value: "de", label: "Germany" },
+  ]}
+  onItemClick={(value) => setCountry(value)}
+/>
+```
 
 | Prop | Type | Default | Required | Notes |
 | --- | --- | --- | --- | --- |
@@ -413,7 +468,20 @@ Also accepts: `AriaAttributes` (53 props from @types/react)
 
 ### Avatar
 
-Source: `src/generated/components/avatar/Avatar.gen.tsx:21`
+Image or initials identifying a person or an entity.
+
+Source: `src/generated/components/avatar/Avatar.gen.tsx:32`
+
+#### Usage
+
+Use next to names, in lists and in comments. Falls back to `text` when the image is
+missing, so always pass `alt` or `text`.
+
+#### Examples
+
+```tsx
+<Avatar src="/people/ada.png" alt="Ada Lovelace" text="AL" shape="circle" />
+```
 
 | Prop | Type | Default | Required | Notes |
 | --- | --- | --- | --- | --- |
@@ -431,7 +499,20 @@ Also accepts: `AriaAttributes` (53 props from @types/react)
 
 ### Badge
 
-Source: `src/generated/components/badge/Badge.gen.tsx:17`
+Small label conveying a status or a count.
+
+Source: `src/generated/components/badge/Badge.gen.tsx:28`
+
+#### Usage
+
+Use to flag the state of an item next to its name. For an inline message with actions, use
+`Banner`.
+
+#### Examples
+
+```tsx
+<Badge variant="success">Active</Badge>
+```
 
 | Prop | Type | Default | Required | Notes |
 | --- | --- | --- | --- | --- |
@@ -448,7 +529,22 @@ Also accepts: `AriaAttributes` (53 props from @types/react)
 
 ### Banner
 
-Source: `src/generated/components/banner/Banner.gen.tsx:37`
+Inline message that communicates a status, with optional actions.
+
+Source: `src/generated/components/banner/Banner.gen.tsx:50`
+
+#### Usage
+
+Use for messages that stay on the page until they are resolved or dismissed. Use
+`ToastProvider` for transient confirmations.
+
+#### Examples
+
+```tsx
+<Banner status="warning" title="Payment failed" onDismiss={() => setVisible(false)}>
+  Update your card to keep your subscription.
+</Banner>
+```
 
 | Prop | Type | Default | Required | Notes |
 | --- | --- | --- | --- | --- |
@@ -467,7 +563,22 @@ Also accepts: `AriaAttributes` (53 props from @types/react)
 
 ### Box
 
-Source: `src/generated/components/box/Box.gen.tsx:69`
+Generic container exposing spacing, surface, border and sizing tokens as props.
+
+Source: `src/generated/components/box/Box.gen.tsx:82`
+
+#### Usage
+
+Use for one-off padding, margin, background, border or sizing around content, with the
+tokens of the design system. Use `Stack` or `Grid` to lay out children.
+
+#### Examples
+
+```tsx
+<Box display="flex" maxWidth={480} overflow="hidden">
+  Content
+</Box>
+```
 
 | Prop | Type | Default | Required | Notes |
 | --- | --- | --- | --- | --- |
@@ -509,7 +620,26 @@ Also accepts: `AriaAttributes` (53 props from @types/react)
 
 ### Breadcrumb
 
-Source: `src/generated/components/breadcrumb/Breadcrumb.gen.tsx:31`
+Trail of links showing where the current page sits in a hierarchy.
+
+Source: `src/generated/components/breadcrumb/Breadcrumb.gen.tsx:48`
+
+#### Usage
+
+Use on deeply nested pages. The last item is the current page. `maxVisibleItems` collapses
+the middle of long trails.
+
+#### Examples
+
+```tsx
+<Breadcrumb
+  items={[
+    { label: "Projects", href: "/projects" },
+    { label: "Website", href: "/projects/website" },
+    { label: "Settings" },
+  ]}
+/>
+```
 
 | Prop | Type | Default | Required | Notes |
 | --- | --- | --- | --- | --- |
@@ -525,7 +655,20 @@ Also accepts: `AriaAttributes` (53 props from @types/react)
 
 ### Button
 
-Source: `src/generated/components/button/Button.gen.tsx:28`
+Triggers an action.
+
+Source: `src/generated/components/button/Button.gen.tsx:39`
+
+#### Usage
+
+Use for actions that change something. Prefer `Link` when the click only navigates,
+and `IconButton` when there is no visible text.
+
+#### Examples
+
+```tsx
+<Button onClick={save}>Save</Button>
+```
 
 | Prop | Type | Default | Required | Notes |
 | --- | --- | --- | --- | --- |
@@ -550,7 +693,20 @@ Also accepts: `AriaAttributes` (53 props from @types/react)
 
 ### Checkbox
 
-Source: `src/generated/components/checkbox/Checkbox.gen.tsx:26`
+Toggles a single option on or off.
+
+Source: `src/generated/components/checkbox/Checkbox.gen.tsx:37`
+
+#### Usage
+
+Use for independent options, or to opt in to something. Use `Switch` for settings
+that apply immediately, and `RadioList` when only one option can be chosen.
+
+#### Examples
+
+```tsx
+<Checkbox label="Accept the terms" checked={accepted} onCheckedChange={setAccepted} />
+```
 
 | Prop | Type | Default | Required | Notes |
 | --- | --- | --- | --- | --- |
@@ -575,7 +731,21 @@ Also accepts: `AriaAttributes` (53 props from @types/react)
 
 ### Code
 
-Source: `src/generated/components/code/Code.gen.tsx:10`
+Inline snippet of code, in a monospace font.
+
+Source: `src/generated/components/code/Code.gen.tsx:22`
+
+#### Usage
+
+Use for short identifiers, commands and values inside text.
+
+#### Examples
+
+```tsx
+<Text>
+  Run <Code>npm install</Code> first.
+</Text>
+```
 
 | Prop | Type | Default | Required | Notes |
 | --- | --- | --- | --- | --- |
@@ -589,7 +759,22 @@ Also accepts: `AriaAttributes` (53 props from @types/react)
 
 ### Collapsible
 
-Source: `src/generated/components/collapsible/Collapsible.gen.tsx:25`
+Section that can be expanded and collapsed by its trigger.
+
+Source: `src/generated/components/collapsible/Collapsible.gen.tsx:38`
+
+#### Usage
+
+Use to hide secondary content, like advanced options. Use `Accordion` for several
+related sections.
+
+#### Examples
+
+```tsx
+<Collapsible trigger="Advanced options">
+  <TextInput name="proxy" placeholder="Proxy URL" />
+</Collapsible>
+```
 
 | Prop | Type | Default | Required | Notes |
 | --- | --- | --- | --- | --- |
@@ -608,7 +793,25 @@ Also accepts: `AriaAttributes` (53 props from @types/react)
 
 ### DateInput
 
-Source: `src/generated/components/date-input/DateInput.gen.tsx:49`
+Input to pick a date, with a calendar.
+
+Source: `src/generated/components/date-input/DateInput.gen.tsx:65`
+
+#### Usage
+
+Use to ask for a single date. Bound the choice with `min`, `max` and `isDateUnavailable`.
+Wrap in `Field` to add a label and an error.
+
+#### Examples
+
+```tsx
+<DateInput
+  value={date}
+  onValueChange={setDate}
+  min={new Date()}
+  clearable
+/>
+```
 
 | Prop | Type | Default | Required | Notes |
 | --- | --- | --- | --- | --- |
@@ -637,7 +840,25 @@ Also accepts: `AriaAttributes` (53 props from @types/react)
 
 ### Dialog
 
-Source: `src/generated/components/dialog/Dialog.gen.tsx:38`
+Modal window that requires a decision or an input before going back to the page.
+
+Source: `src/generated/components/dialog/Dialog.gen.tsx:54`
+
+#### Usage
+
+Use for confirmations and short forms. Use `Drawer` for longer content, and
+`Popover` for non-blocking content.
+
+#### Examples
+
+```tsx
+<Dialog
+  title="Delete project"
+  description="This cannot be undone."
+  trigger={<Button>Delete</Button>}
+  footer={<Button onClick={remove}>Delete</Button>}
+/>
+```
 
 | Prop | Type | Default | Required | Notes |
 | --- | --- | --- | --- | --- |
@@ -660,7 +881,20 @@ Also accepts: `AriaAttributes` (53 props from @types/react)
 
 ### Divider
 
-Source: `src/generated/components/divider/Divider.gen.tsx:10`
+Thin line separating groups of content.
+
+Source: `src/generated/components/divider/Divider.gen.tsx:21`
+
+#### Usage
+
+Use between related sections. Prefer spacing with `Stack` when a visual separation
+is enough.
+
+#### Examples
+
+```tsx
+<Divider orientation="horizontal" />
+```
 
 | Prop | Type | Default | Required | Notes |
 | --- | --- | --- | --- | --- |
@@ -674,7 +908,28 @@ Also accepts: `AriaAttributes` (53 props from @types/react)
 
 ### Drawer
 
-Source: `src/generated/components/drawer/Drawer.gen.tsx:37`
+Panel sliding in from an edge of the screen.
+
+Source: `src/generated/components/drawer/Drawer.gen.tsx:56`
+
+#### Usage
+
+Use for secondary tasks and longer content that should keep the page in context, like
+details or filters. Use `Dialog` for short, blocking decisions.
+
+#### Examples
+
+```tsx
+<Drawer
+  title="Filters"
+  placement="right"
+  trigger={<Button>Filters</Button>}
+>
+  <Field label="Status">
+    <TextInput name="status" />
+  </Field>
+</Drawer>
+```
 
 | Prop | Type | Default | Required | Notes |
 | --- | --- | --- | --- | --- |
@@ -697,7 +952,26 @@ Also accepts: `AriaAttributes` (53 props from @types/react)
 
 ### DropdownButton
 
-Source: `src/generated/components/dropdown-button/DropdownButton.gen.tsx:43`
+Button that opens a menu of actions.
+
+Source: `src/generated/components/dropdown-button/DropdownButton.gen.tsx:60`
+
+#### Usage
+
+Use to group related secondary actions behind one button. Use `Select` to choose a
+value instead.
+
+#### Examples
+
+```tsx
+<DropdownButton
+  label="Actions"
+  items={[
+    { value: "rename", label: "Rename", onSelect: rename },
+    { value: "delete", label: "Delete", onSelect: remove },
+  ]}
+/>
+```
 
 | Prop | Type | Default | Required | Notes |
 | --- | --- | --- | --- | --- |
@@ -720,7 +994,21 @@ Also accepts: `AriaAttributes` (53 props from @types/react)
 
 ### Field
 
-Source: `src/generated/components/field/Field.gen.tsx:29`
+Adds a label, a description and an error message to a form control.
+
+Source: `src/generated/components/field/Field.gen.tsx:41`
+
+#### Usage
+
+Wrap every form control that needs a label. Passing `error` marks the control as invalid.
+
+#### Examples
+
+```tsx
+<Field label="Email" description="We never share it." error={error}>
+  <TextInput name="email" type="email" />
+</Field>
+```
 
 | Prop | Type | Default | Required | Notes |
 | --- | --- | --- | --- | --- |
@@ -739,7 +1027,26 @@ Also accepts: `AriaAttributes` (53 props from @types/react)
 
 ### FileInput
 
-Source: `src/generated/components/file-input/FileInput.gen.tsx:43`
+Input to choose files, by browsing or by dropping them.
+
+Source: `src/generated/components/file-input/FileInput.gen.tsx:60`
+
+#### Usage
+
+Use to upload files. Restrict them with `accept` and `maxSizeBytes`, and handle refusals
+with `onRejected`.
+
+#### Examples
+
+```tsx
+<FileInput
+  accept="image/*"
+  maxSizeBytes={5_000_000}
+  onFilesChange={setFiles}
+  onRejected={(reason) => setError(reason)}
+  dropzone
+/>
+```
 
 | Prop | Type | Default | Required | Notes |
 | --- | --- | --- | --- | --- |
@@ -767,7 +1074,24 @@ Also accepts: `AriaAttributes` (53 props from @types/react)
 
 ### Grid
 
-Source: `src/generated/components/grid/Grid.gen.tsx:34`
+Two-dimensional layout of its children, in columns and rows.
+
+Source: `src/generated/components/grid/Grid.gen.tsx:49`
+
+#### Usage
+
+Use when children should align on both axes, like cards. Space them with `gap`. Use
+`Stack` for a single row or column.
+
+#### Examples
+
+```tsx
+<Grid columns={3}>
+  <Box>One</Box>
+  <Box>Two</Box>
+  <Box>Three</Box>
+</Grid>
+```
 
 | Prop | Type | Default | Required | Notes |
 | --- | --- | --- | --- | --- |
@@ -789,7 +1113,20 @@ Also accepts: `AriaAttributes` (53 props from @types/react)
 
 ### Icon
 
-Source: `src/generated/components/icon/Icon.gen.tsx:14`
+Renders one of the icons of the design system.
+
+Source: `src/generated/components/icon/Icon.gen.tsx:25`
+
+#### Usage
+
+Use for decoration or to support text. Pass `label` when the icon carries meaning on its
+own, otherwise it is hidden from assistive technology.
+
+#### Examples
+
+```tsx
+<Icon icon="check" label="Done" />
+```
 
 | Prop | Type | Default | Required | Notes |
 | --- | --- | --- | --- | --- |
@@ -805,7 +1142,20 @@ Also accepts: `AriaAttributes` (53 props from @types/react)
 
 ### IconButton
 
-Source: `src/generated/components/icon-button/IconButton.gen.tsx:29`
+Button that shows an icon only.
+
+Source: `src/generated/components/icon-button/IconButton.gen.tsx:40`
+
+#### Usage
+
+Use for compact, well-known actions, like closing or searching. `label` is required and
+names the button for assistive technology. Use `Button` when text helps.
+
+#### Examples
+
+```tsx
+<IconButton icon="search" label="Search" onClick={openSearch} />
+```
 
 | Prop | Type | Default | Required | Notes |
 | --- | --- | --- | --- | --- |
@@ -826,7 +1176,20 @@ Also accepts: `AriaAttributes` (53 props from @types/react)
 
 ### KeyboardShortcut
 
-Source: `src/generated/components/keyboard-shortcut/KeyboardShortcut.gen.tsx:12`
+Displays a key combination.
+
+Source: `src/generated/components/keyboard-shortcut/KeyboardShortcut.gen.tsx:23`
+
+#### Usage
+
+Use to document shortcuts in menus, tooltips and help. It displays a shortcut, it does not
+register one.
+
+#### Examples
+
+```tsx
+<KeyboardShortcut keys={["Ctrl", "K"]} />
+```
 
 | Prop | Type | Default | Required | Notes |
 | --- | --- | --- | --- | --- |
@@ -841,7 +1204,22 @@ Also accepts: `AriaAttributes` (53 props from @types/react)
 
 ### Link
 
-Source: `src/generated/components/link/Link.gen.tsx:15`
+Navigates to another page or location.
+
+Source: `src/generated/components/link/Link.gen.tsx:28`
+
+#### Usage
+
+Use for navigation, inside text or on its own. Use `Button` for actions that change
+something.
+
+#### Examples
+
+```tsx
+<Link href="/docs" underline="hover">
+  Read the docs
+</Link>
+```
 
 | Prop | Type | Default | Required | Notes |
 | --- | --- | --- | --- | --- |
@@ -860,7 +1238,25 @@ Also accepts: `AriaAttributes` (53 props from @types/react)
 
 ### MetadataList
 
-Source: `src/generated/components/metadata-list/MetadataList.gen.tsx:31`
+List of labelled values, like the properties of an item.
+
+Source: `src/generated/components/metadata-list/MetadataList.gen.tsx:47`
+
+#### Usage
+
+Use to show read-only details, like the sidebar of a record. Use `Field` with a
+control when the values are editable.
+
+#### Examples
+
+```tsx
+<MetadataList
+  items={[
+    { label: "Owner", value: "Ada" },
+    { label: "Created", value: "Nov 8, 2026" },
+  ]}
+/>
+```
 
 | Prop | Type | Default | Required | Notes |
 | --- | --- | --- | --- | --- |
@@ -877,7 +1273,20 @@ Also accepts: `AriaAttributes` (53 props from @types/react)
 
 ### NumberInput
 
-Source: `src/generated/components/number-input/NumberInput.gen.tsx:36`
+Input for numbers, with optional steppers and formatting.
+
+Source: `src/generated/components/number-input/NumberInput.gen.tsx:47`
+
+#### Usage
+
+Use for quantities and amounts. Use `min`, `max` and `step` to bound the value, and
+`format` for currencies and units. Use `Slider` for approximate values.
+
+#### Examples
+
+```tsx
+<NumberInput value={quantity} onValueChange={setQuantity} min={1} max={10} showStepper />
+```
 
 | Prop | Type | Default | Required | Notes |
 | --- | --- | --- | --- | --- |
@@ -910,7 +1319,26 @@ Also accepts: `AriaAttributes` (53 props from @types/react)
 
 ### Outline
 
-Source: `src/generated/components/outline/Outline.gen.tsx:61`
+Table of contents linking to the sections of a page.
+
+Source: `src/generated/components/outline/Outline.gen.tsx:78`
+
+#### Usage
+
+Use on long pages, next to the content. With `observeScroll`, the section in view is
+highlighted.
+
+#### Examples
+
+```tsx
+<Outline
+  items={[
+    { id: "intro", label: "Introduction" },
+    { id: "usage", label: "Usage", children: [{ id: "props", label: "Props" }] },
+  ]}
+  observeScroll
+/>
+```
 
 | Prop | Type | Default | Required | Notes |
 | --- | --- | --- | --- | --- |
@@ -927,7 +1355,20 @@ Also accepts: `AriaAttributes` (53 props from @types/react)
 
 ### Pagination
 
-Source: `src/generated/components/pagination/Pagination.gen.tsx:74`
+Controls to move between the pages of a long list.
+
+Source: `src/generated/components/pagination/Pagination.gen.tsx:85`
+
+#### Usage
+
+Use when the content is split in pages. Pages start at 1. The page is controlled: keep it
+in state and update it in `onPageChange`.
+
+#### Examples
+
+```tsx
+<Pagination page={page} pageCount={12} onPageChange={setPage} />
+```
 
 | Prop | Type | Default | Required | Notes |
 | --- | --- | --- | --- | --- |
@@ -949,7 +1390,23 @@ Also accepts: `AriaAttributes` (53 props from @types/react)
 
 ### Popover
 
-Source: `src/generated/components/popover/Popover.gen.tsx:24`
+Floating panel anchored to a trigger, with interactive content.
+
+Source: `src/generated/components/popover/Popover.gen.tsx:38`
+
+#### Usage
+
+Use for contextual content or controls that people can interact with. Use `Tooltip`
+for a short hint, and `Dialog` for blocking content.
+
+#### Examples
+
+```tsx
+<Popover
+  trigger={<Button>Share</Button>}
+  content={<TextInput name="email" placeholder="Email" />}
+/>
+```
 
 | Prop | Type | Default | Required | Notes |
 | --- | --- | --- | --- | --- |
@@ -970,7 +1427,20 @@ Also accepts: `AriaAttributes` (53 props from @types/react)
 
 ### ProgressBar
 
-Source: `src/generated/components/progress-bar/ProgressBar.gen.tsx:30`
+Shows how far a task has progressed.
+
+Source: `src/generated/components/progress-bar/ProgressBar.gen.tsx:41`
+
+#### Usage
+
+Use when the progress is known. Pass `null` as the value when it is not. Use
+`Spinner` when there is nothing to measure.
+
+#### Examples
+
+```tsx
+<ProgressBar value={60} label="Uploading" showValueLabel />
+```
 
 | Prop | Type | Default | Required | Notes |
 | --- | --- | --- | --- | --- |
@@ -991,7 +1461,21 @@ Also accepts: `AriaAttributes` (53 props from @types/react)
 
 ### QuoteBlock
 
-Source: `src/generated/components/quote-block/QuoteBlock.gen.tsx:12`
+Block quotation, with an optional citation.
+
+Source: `src/generated/components/quote-block/QuoteBlock.gen.tsx:24`
+
+#### Usage
+
+Use for quotes from another source or person. Not for callouts, see `Banner`.
+
+#### Examples
+
+```tsx
+<QuoteBlock citation="Ada Lovelace" citationHref="https://example.com">
+  The Analytical Engine weaves algebraic patterns.
+</QuoteBlock>
+```
 
 | Prop | Type | Default | Required | Notes |
 | --- | --- | --- | --- | --- |
@@ -1007,7 +1491,27 @@ Also accepts: `AriaAttributes` (53 props from @types/react)
 
 ### RadioList\<Value extends string\>
 
-Source: `src/generated/components/radio-list/RadioList.gen.tsx:36`
+Group of options of which exactly one can be chosen.
+
+Source: `src/generated/components/radio-list/RadioList.gen.tsx:54`
+
+#### Usage
+
+Use for a few options that should all be visible. Use `Select` for longer lists and
+`Checkbox` when several options can be chosen.
+
+#### Examples
+
+```tsx
+<RadioList
+  options={[
+    { value: "monthly", label: "Monthly" },
+    { value: "yearly", label: "Yearly", description: "Two months free" },
+  ]}
+  value={plan}
+  onValueChange={setPlan}
+/>
+```
 
 | Prop | Type | Default | Required | Notes |
 | --- | --- | --- | --- | --- |
@@ -1032,7 +1536,27 @@ Also accepts: `AriaAttributes` (53 props from @types/react)
 
 ### SegmentedControls\<Value extends string\>
 
-Source: `src/generated/components/segmented-controls/SegmentedControls.gen.tsx:32`
+Row of connected buttons to choose one option.
+
+Source: `src/generated/components/segmented-controls/SegmentedControls.gen.tsx:50`
+
+#### Usage
+
+Use to switch between a few related views or modes, with immediate effect. Use
+`Tabs` when each option shows its own content.
+
+#### Examples
+
+```tsx
+<SegmentedControls
+  options={[
+    { value: "list", label: "List" },
+    { value: "grid", label: "Grid" },
+  ]}
+  value={view}
+  onValueChange={setView}
+/>
+```
 
 | Prop | Type | Default | Required | Notes |
 | --- | --- | --- | --- | --- |
@@ -1051,7 +1575,28 @@ Also accepts: `AriaAttributes` (53 props from @types/react)
 
 ### Select\<Value extends string\>
 
-Source: `src/generated/components/select/Select.gen.tsx:43`
+Dropdown to choose one option from a list.
+
+Source: `src/generated/components/select/Select.gen.tsx:62`
+
+#### Usage
+
+Use for a list of options that does not fit on the screen. Use `RadioList` for a few
+options, and `Autocomplete` to search among many.
+
+#### Examples
+
+```tsx
+<Select
+  placeholder="Choose a country"
+  options={[
+    { value: "fr", label: "France" },
+    { value: "de", label: "Germany" },
+  ]}
+  value={country}
+  onValueChange={setCountry}
+/>
+```
 
 | Prop | Type | Default | Required | Notes |
 | --- | --- | --- | --- | --- |
@@ -1079,7 +1624,22 @@ Also accepts: `AriaAttributes` (53 props from @types/react)
 
 ### SelectableCard
 
-Source: `src/generated/components/selectable-card/SelectableCard.gen.tsx:18`
+Card that behaves as a radio or a checkbox.
+
+Source: `src/generated/components/selectable-card/SelectableCard.gen.tsx:31`
+
+#### Usage
+
+Use to choose among richer options, like plans. Set `control` to "checkbox" when several
+cards can be selected. Use `RadioList` for plain labels.
+
+#### Examples
+
+```tsx
+<SelectableCard selected={plan === "pro"} onSelectedChange={() => setPlan("pro")}>
+  <Text>Pro</Text>
+</SelectableCard>
+```
 
 | Prop | Type | Default | Required | Notes |
 | --- | --- | --- | --- | --- |
@@ -1100,7 +1660,20 @@ Also accepts: `AriaAttributes` (53 props from @types/react)
 
 ### Skeleton
 
-Source: `src/generated/components/skeleton/Skeleton.gen.tsx:23`
+Placeholder shown while content is loading.
+
+Source: `src/generated/components/skeleton/Skeleton.gen.tsx:34`
+
+#### Usage
+
+Use to reserve the space and shape of content that is on its way. Use `Spinner` when
+the shape is unknown.
+
+#### Examples
+
+```tsx
+<Skeleton variant="text" lines={3} />
+```
 
 | Prop | Type | Default | Required | Notes |
 | --- | --- | --- | --- | --- |
@@ -1119,7 +1692,20 @@ Also accepts: `AriaAttributes` (53 props from @types/react)
 
 ### Slider
 
-Source: `src/generated/components/slider/Slider.gen.tsx:36`
+Control to pick a value, or a range, by dragging a handle.
+
+Source: `src/generated/components/slider/Slider.gen.tsx:47`
+
+#### Usage
+
+Use for approximate values within a range. Pass an array as the value to select a range.
+Use `NumberInput` when the exact value matters.
+
+#### Examples
+
+```tsx
+<Slider min={0} max={100} step={5} value={volume} onValueChange={setVolume} showValueLabel />
+```
 
 | Prop | Type | Default | Required | Notes |
 | --- | --- | --- | --- | --- |
@@ -1149,7 +1735,20 @@ Also accepts: `AriaAttributes` (53 props from @types/react)
 
 ### Spinner
 
-Source: `src/generated/components/spinner/Spinner.gen.tsx:14`
+Indicates that something is loading.
+
+Source: `src/generated/components/spinner/Spinner.gen.tsx:25`
+
+#### Usage
+
+Use when the wait is short or its length is unknown. Use `ProgressBar` when the
+progress can be measured.
+
+#### Examples
+
+```tsx
+<Spinner label="Loading" />
+```
 
 | Prop | Type | Default | Required | Notes |
 | --- | --- | --- | --- | --- |
@@ -1165,7 +1764,23 @@ Also accepts: `AriaAttributes` (53 props from @types/react)
 
 ### Stack
 
-Source: `src/generated/components/stack/Stack.gen.tsx:41`
+Lays out its children in a row or a column, with consistent spacing.
+
+Source: `src/generated/components/stack/Stack.gen.tsx:55`
+
+#### Usage
+
+Use as the default way to space elements, with `gap`. Use `Grid` when children
+should align on both axes.
+
+#### Examples
+
+```tsx
+<Stack direction="row" align="center">
+  <Avatar text="AL" />
+  <Text>Ada Lovelace</Text>
+</Stack>
+```
 
 | Prop | Type | Default | Required | Notes |
 | --- | --- | --- | --- | --- |
@@ -1184,7 +1799,25 @@ Also accepts: `AriaAttributes` (53 props from @types/react)
 
 ### StackItem
 
-Source: `src/generated/components/stack-item/StackItem.gen.tsx:34`
+Child of a Stack with control over how it grows, shrinks and aligns.
+
+Source: `src/generated/components/stack-item/StackItem.gen.tsx:50`
+
+#### Usage
+
+Use only inside a `Stack`, when one child needs to behave differently from its
+siblings.
+
+#### Examples
+
+```tsx
+<Stack direction="row">
+  <StackItem grow>
+    <TextInput name="query" />
+  </StackItem>
+  <Button>Search</Button>
+</Stack>
+```
 
 | Prop | Type | Default | Required | Notes |
 | --- | --- | --- | --- | --- |
@@ -1203,7 +1836,27 @@ Also accepts: `AriaAttributes` (53 props from @types/react)
 
 ### Steps
 
-Source: `src/generated/components/steps/Steps.gen.tsx:47`
+Shows progress through a sequence of steps.
+
+Source: `src/generated/components/steps/Steps.gen.tsx:65`
+
+#### Usage
+
+Use for multi-step flows, like checkout or onboarding. It displays the progress, it does
+not change step by itself.
+
+#### Examples
+
+```tsx
+<Steps
+  activeStep={1}
+  steps={[
+    { label: "Account" },
+    { label: "Billing" },
+    { label: "Confirm" },
+  ]}
+/>
+```
 
 | Prop | Type | Default | Required | Notes |
 | --- | --- | --- | --- | --- |
@@ -1218,9 +1871,99 @@ Source: `src/generated/components/steps/Steps.gen.tsx:47`
 
 Also accepts: `AriaAttributes` (53 props from @types/react)
 
+### Sticker
+
+Playful label stuck on the corner of a card or an image.
+
+> 🧪 Experimental: The API may change while we collect feedback.
+
+Source: `src/Sticker.tsx:27`
+
+#### Usage
+
+Use to draw attention to a card or an image with a short, playful callout such as
+"New", "Sale" or "Hot". Place it on a corner of the element it labels. Use `tilt`
+sparingly: one tilted sticker per surface keeps it feeling spontaneous.
+
+**Do**
+
+- Keep the content to one or two words.
+- Use `tilt` to add personality to promotional or seasonal labels.
+- Label only one thing per card or image.
+
+**Don't**
+
+- Don't use it for status or state, it carries no semantic meaning for assistive technologies.
+- Don't put interactive content (links, buttons) inside a sticker.
+- Don't stack several stickers on the same corner.
+
+# Title 1
+
+## Title 2
+
+### Title 3
+
+#### Links
+
+- [Figma](https://figma.com/docs/sticker)
+
+#### Examples
+
+**Basic**
+
+```tsx
+import { Sticker } from "../components";
+
+export const Basic = () => <Sticker>New</Sticker>;
+```
+
+**Tilted**
+
+```tsx
+import { Sticker } from "../components";
+
+export const Tilted = () => <Sticker tilt="left">Sale</Sticker>;
+```
+
+**In a card**
+
+```tsx
+import { Box, Sticker, Text } from "../components";
+
+export const InACard = () => (
+  <Box>
+    <Sticker tilt="right">Hot</Sticker>
+    <Text>Summer collection</Text>
+  </Box>
+);
+```
+
+| Prop | Type | Default | Required | Notes |
+| --- | --- | --- | --- | --- |
+| `children` | `ReactNode` | — | no |  |
+| `className` | `string` | — | no |  |
+| `data-testid` | `string` | — | no |  |
+| `id` | `string` | — | no |  |
+| `tilt` | `"none" \| "left" \| "right"` | `"none"` | no | Rotation applied to the sticker. |
+
+Also accepts: `AriaAttributes` (53 props from @types/react)
+
 ### Switch
 
-Source: `src/generated/components/switch/Switch.gen.tsx:21`
+Turns a setting on or off, with immediate effect.
+
+Source: `src/generated/components/switch/Switch.gen.tsx:32`
+
+#### Usage
+
+Use for settings that apply as soon as they are changed. Use `Checkbox` in forms
+that are submitted.
+
+#### Examples
+
+```tsx
+<Switch label="Notifications" checked={enabled} onCheckedChange={setEnabled} />
+```
 
 | Prop | Type | Default | Required | Notes |
 | --- | --- | --- | --- | --- |
@@ -1244,7 +1987,25 @@ Also accepts: `AriaAttributes` (53 props from @types/react)
 
 ### Tabs
 
-Source: `src/generated/components/tabs/Tabs.gen.tsx:40`
+Organizes content in panels, of which one is visible at a time.
+
+Source: `src/generated/components/tabs/Tabs.gen.tsx:57`
+
+#### Usage
+
+Use for peer sections of a page that people switch between. Use `SegmentedControls`when the choice does not change the content below.
+
+#### Examples
+
+```tsx
+<Tabs
+  items={[
+    { value: "overview", label: "Overview", content: "Overview" },
+    { value: "activity", label: "Activity", content: "Activity" },
+  ]}
+  defaultValue="overview"
+/>
+```
 
 | Prop | Type | Default | Required | Notes |
 | --- | --- | --- | --- | --- |
@@ -1264,7 +2025,22 @@ Also accepts: `AriaAttributes` (53 props from @types/react)
 
 ### Text
 
-Source: `src/generated/components/text/Text.gen.tsx:29`
+Renders text with the typography and the color of the design system.
+
+Source: `src/generated/components/text/Text.gen.tsx:42`
+
+#### Usage
+
+Use for all text, rather than styling raw elements. Choose the style with `variant` and
+`color`, and the element with `render`.
+
+#### Examples
+
+```tsx
+<Text render={<h2 />} truncate>
+  A title that is cut when it does not fit.
+</Text>
+```
 
 | Prop | Type | Default | Required | Notes |
 | --- | --- | --- | --- | --- |
@@ -1283,7 +2059,20 @@ Also accepts: `AriaAttributes` (53 props from @types/react)
 
 ### Textarea
 
-Source: `src/generated/components/textarea/Textarea.gen.tsx:20`
+Multi-line text field.
+
+Source: `src/generated/components/textarea/Textarea.gen.tsx:31`
+
+#### Usage
+
+Use for longer free text, like comments. `autoResize` grows it with its content. Use
+`TextInput` for a single line.
+
+#### Examples
+
+```tsx
+<Textarea name="comment" minRows={3} maxLength={500} showCharacterCount autoResize />
+```
 
 | Prop | Type | Default | Required | Notes |
 | --- | --- | --- | --- | --- |
@@ -1313,7 +2102,20 @@ Also accepts: `AriaAttributes` (53 props from @types/react)
 
 ### TextInput
 
-Source: `src/generated/components/text-input/TextInput.gen.tsx:33`
+Single-line text field.
+
+Source: `src/generated/components/text-input/TextInput.gen.tsx:44`
+
+#### Usage
+
+Use for short free text, like names and emails. Use `Textarea` for longer text. Wrap
+in `Field` to add a label and an error.
+
+#### Examples
+
+```tsx
+<TextInput name="email" type="email" placeholder="you@example.com" clearable />
+```
 
 | Prop | Type | Default | Required | Notes |
 | --- | --- | --- | --- | --- |
@@ -1347,7 +2149,24 @@ Also accepts: `AriaAttributes` (53 props from @types/react)
 
 ### Timeline
 
-Source: `src/generated/components/timeline/Timeline.gen.tsx:44`
+Chronological list of events.
+
+Source: `src/generated/components/timeline/Timeline.gen.tsx:59`
+
+#### Usage
+
+Use for activity feeds and histories. Use `Steps` for the progress through a flow.
+
+#### Examples
+
+```tsx
+<Timeline
+  items={[
+    { label: "Order placed", timestamp: "2026-11-01" },
+    { label: "Shipped", timestamp: "2026-11-03", status: "success" },
+  ]}
+/>
+```
 
 | Prop | Type | Default | Required | Notes |
 | --- | --- | --- | --- | --- |
@@ -1364,7 +2183,26 @@ Also accepts: `AriaAttributes` (53 props from @types/react)
 
 ### ToastProvider
 
-Source: `src/generated/components/toast/Toast.gen.tsx:92`
+Provides toasts to the app and renders them. Trigger them with the \`useToast\` hook.
+
+Source: `src/generated/components/toast/Toast.gen.tsx:109`
+
+#### Usage
+
+Mount once, near the root of the app. Use toasts for transient confirmations, and
+`Banner` for messages that stay until they are resolved.
+
+#### Examples
+
+```tsx
+<ToastProvider placement="bottom-right">
+  <App />
+</ToastProvider>
+
+// Anywhere below
+const { toast } = useToast();
+toast({ title: "Saved", status: "success" });
+```
 
 | Prop | Type | Default | Required | Notes |
 | --- | --- | --- | --- | --- |
@@ -1379,7 +2217,27 @@ Also accepts: `AriaAttributes` (53 props from @types/react)
 
 ### Toggle\<Value extends string\>
 
-Source: `src/generated/components/toggle/Toggle.gen.tsx:24`
+Switches between exactly two options.
+
+Source: `src/generated/components/toggle/Toggle.gen.tsx:42`
+
+#### Usage
+
+Use to flip between two states that both deserve a label, like Monthly and Yearly. Use
+`Switch` for on and off.
+
+#### Examples
+
+```tsx
+<Toggle
+  options={[
+    { value: "monthly", label: "Monthly" },
+    { value: "yearly", label: "Yearly" },
+  ]}
+  value={billing}
+  onValueChange={setBilling}
+/>
+```
 
 | Prop | Type | Default | Required | Notes |
 | --- | --- | --- | --- | --- |
@@ -1398,7 +2256,22 @@ Also accepts: `AriaAttributes` (53 props from @types/react)
 
 ### Tooltip
 
-Source: `src/generated/components/tooltip/Tooltip.gen.tsx:20`
+Short hint shown on hover and focus.
+
+Source: `src/generated/components/tooltip/Tooltip.gen.tsx:33`
+
+#### Usage
+
+Use to name or explain a control, like an `IconButton`. It cannot contain
+interactive content, use `Popover` for that.
+
+#### Examples
+
+```tsx
+<Tooltip content="Search the docs">
+  <IconButton icon="search" label="Search" />
+</Tooltip>
+```
 
 | Prop | Type | Default | Required | Notes |
 | --- | --- | --- | --- | --- |
@@ -1420,7 +2293,27 @@ Also accepts: `AriaAttributes` (53 props from @types/react)
 
 ### TreeList\<Value\>
 
-Source: `src/generated/components/tree-list/TreeList.gen.tsx:120`
+Hierarchy of expandable nodes, like folders.
+
+Source: `src/generated/components/tree-list/TreeList.gen.tsx:138`
+
+#### Usage
+
+Use to browse nested data, like files or categories. Select with `selectedId`, and react
+to activation with `onNodeActivate`.
+
+#### Examples
+
+```tsx
+<TreeList
+  label="Files"
+  nodes={[
+    { id: "src", label: "src", children: [{ id: "index", label: "index.ts" }] },
+    { id: "readme", label: "README.md" },
+  ]}
+  onSelectedIdChange={setSelected}
+/>
+```
 
 | Prop | Type | Default | Required | Notes |
 | --- | --- | --- | --- | --- |

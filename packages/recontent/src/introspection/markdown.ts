@@ -81,12 +81,18 @@ function fenced(text: string): string[] {
   return [`${fence}tsx`, text, fence];
 }
 
-/** `Usage` and `Examples`, one level below the item's heading. */
+/** `Usage`, `Links` and `Examples`, one level below the item's heading. */
 function documentationLines(item: Documentation, headingLevel: number): string[] {
   const heading = "#".repeat(headingLevel + 1);
   const lines: string[] = [];
   // Usage is markdown by design: written as is.
   if (item.usage) lines.push(`${heading} Usage`, "", item.usage, "");
+  if (item.externalLinks?.length) {
+    lines.push(`${heading} Links`, "");
+    for (const { title, url } of item.externalLinks)
+      lines.push(`- [${escapeText(title ?? url)}](${url})`);
+    lines.push("");
+  }
   if (item.examples?.length) {
     lines.push(`${heading} Examples`, "");
     for (const example of item.examples) {

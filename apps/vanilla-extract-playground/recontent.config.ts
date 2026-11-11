@@ -5,7 +5,7 @@ import {
   defineSystemTokens,
   tokens,
 } from "recontent";
-import { docs, vanillaExtract } from "recontent/plugins";
+import { designMD, docs, vanillaExtract } from "recontent/plugins";
 
 const ref = defineReferenceTokens({
   color: {
@@ -407,7 +407,12 @@ export default defineConfig({
   tokens: { ref, system, components },
   themes: {},
   plugins: [
-    docs({ outDir: "docs", markdown: true }),
+    docs({
+      outDir: "docs",
+      gitBaseUrl:
+        "https://github.com/recontentapp/recontent/blob/master/apps/vanilla-extract-playground",
+    }),
+    designMD({ outDir: "docs" }),
     vanillaExtract({
       outDir: "src/generated",
       focusRingColor: system.colors.accent,

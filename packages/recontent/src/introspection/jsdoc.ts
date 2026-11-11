@@ -1,4 +1,4 @@
-import type { Documentation, ExampleInfo } from "@recontentapp/core";
+import type { Documentation, ExampleInfo, ExternalLink } from "@recontentapp/core";
 import fs from "node:fs";
 import path from "node:path";
 import ts from "typescript";
@@ -57,6 +57,11 @@ function dedent(text: string): string {
   return lines.map((line) => line.slice(indent)).join("\n");
 }
 
+/** A `./relative` path, and only that. */
+function relativePath(text: string): string | undefined {
+  return /^\s*(\.\.?\/\S*)\s*$/.exec(text)?.[1];
+}
+
 /** `<caption>Title</caption>` then the code, optionally fenced, or a `./relative` path to a file holding it. */
 function parseExample(text: string): { title?: string; code?: string; file?: string } | undefined {
   let body = text;
@@ -64,15 +69,29 @@ function parseExample(text: string): { title?: string; code?: string; file?: str
   if (caption) body = body.slice(caption[0].length);
   const title = caption?.[1]?.trim();
   const named = title ? { title } : {};
-  const file = /^\s*(\.\.?\/\S*)\s*$/.exec(body)?.[1];
+  const file = relativePath(body);
   if (file) return { ...named, file };
   const fenced = /^\s*```[^\n]*\n([\s\S]*?)\n?\s*```\s*$/.exec(body);
   const code = dedent(fenced ? fenced[1]! : body);
   return code ? { ...named, code } : undefined;
 }
 
-/** The example's file read verbatim, or a warning and nothing when it can't be. */
-function readExample(analysis: Analysis, symbol: ts.Symbol, file: string): string | undefined {
+/** `<caption>Title</caption> https://…`, the caption being optional. Only absolute http(s) URLs: they end up in `href`s. */
+function parseLink(text: string): ExternalLink | undefined {
+  const caption = /^\s*<caption>([\s\S]*?)<\/caption>\s*/.exec(text);
+  const title = caption?.[1]?.trim();
+  const url = text.slice(caption?.[0].length ?? 0).trim();
+  if (!URL.canParse(url) || !/^https?:$/.test(new URL(url).protocol)) return undefined;
+  return { ...(title ? { title } : {}), url };
+}
+
+/** The file an `@example` or `@usage` tag points to, read verbatim, or a warning and nothing when it can't be. */
+function readFile(
+  analysis: Analysis,
+  symbol: ts.Symbol,
+  tag: string,
+  file: string,
+): string | undefined {
   const declaration = symbol.declarations?.[0];
   const absolute = path.resolve(
     declaration ? path.dirname(declaration.getSourceFile().fileName) : ".",
@@ -80,10 +99,10 @@ function readExample(analysis: Analysis, symbol: ts.Symbol, file: string): strin
   );
   try {
     const code = fs.readFileSync(absolute, "utf8").trimEnd();
-    analysis.exampleFiles.add(absolute);
+    analysis.docFiles.add(absolute);
     return code || undefined;
   } catch {
-    analysis.warnings.push(`${symbol.getName()}: @example file ${file} not found.`);
+    analysis.warnings.push(`${symbol.getName()}: @${tag} file ${file} not found.`);
     return undefined;
   }
 }
@@ -98,7 +117,12 @@ export function jsDoc(analysis: Analysis, symbol: ts.Symbol): JsDoc {
   };
 
   const description = render(symbol.getDocumentationComment(checker));
-  const usage = render(tag("usage")?.text);
+  const renderedUsage = render(tag("usage")?.text);
+  const usageFile = relativePath(renderedUsage.text);
+  // The file is markdown, where `{@link}` is plain text: no link targets to resolve.
+  const usage: Rendered = usageFile
+    ? { text: readFile(analysis, symbol, "usage", usageFile) ?? "", targets: [] }
+    : renderedUsage;
   const deprecatedTag = tag("deprecated");
   const deprecated = deprecatedTag && render(deprecatedTag.text);
   const experimentalTag = tag("experimental");
@@ -110,8 +134,17 @@ export function jsDoc(analysis: Analysis, symbol: ts.Symbol): JsDoc {
     .flatMap((example): ExampleInfo[] => {
       if (!example) return [];
       const { file, title } = example;
-      const code = file ? readExample(analysis, symbol, file) : example.code;
+      const code = file ? readFile(analysis, symbol, "example", file) : example.code;
       return code ? [{ ...(title ? { title } : {}), code }] : [];
+    });
+  const externalLinks = tags
+    .filter((candidate) => candidate.name === "link")
+    .flatMap((candidate): ExternalLink[] => {
+      const text = ts.displayPartsToString(candidate.text);
+      const link = parseLink(text);
+      if (!link)
+        analysis.warnings.push(`${symbol.getName()}: @link ${text} is not an http(s) URL.`);
+      return link ? [link] : [];
     });
   const targets = [description, usage, deprecated, experimental].flatMap(
     (part) => part?.targets ?? [],
@@ -122,6 +155,7 @@ export function jsDoc(analysis: Analysis, symbol: ts.Symbol): JsDoc {
     ...(deprecated ? { deprecated: deprecated.text || true } : {}),
     ...(experimental ? { experimental: experimental.text || true } : {}),
     ...(examples.length > 0 ? { examples } : {}),
+    ...(externalLinks.length > 0 ? { externalLinks } : {}),
     ...(usage.text ? { usage: usage.text } : {}),
     ...(defaultValue ? { defaultValue } : {}),
     ...(targets.length > 0 ? { linkTargets: targets } : {}),

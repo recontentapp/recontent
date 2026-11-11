@@ -64,14 +64,15 @@ summarized on an `Also accepts:` line instead of listed; `--format json` lists t
 
 ## Documenting components
 
-`inspect`, the [docs plugin](/plugins/docs) and plugins read the JSDoc comments of your components, props and
+`inspect`, the [docs](/plugins/docs) and [designMD](/plugins/design-md) plugins and other plugins read the JSDoc comments of your components, props and
 types. Besides the description, `@deprecated` and `@default`, six tags help someone (or an agent) who has
 to use a component without opening its source:
 
 | Tag                         | On                    | Effect                                                                                                                                                                                                                                                                                                |
 | --------------------------- | --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `@example`                  | component, prop, type | One example per tag. `<caption>Title</caption>` titles it, and surrounding code fences are removed. A relative path (`./Button.basic.tsx`) uses the file's content verbatim, so the example is typechecked with your code. Props show one-line examples in `inspect`; the rest is in `--format json`. |
-| `@usage`                    | component, type       | When to use it and when not to, in markdown. Kept out of the description, so that summaries stay one line.                                                                                                                                                                                            |
+| `@usage`                    | component, type       | When to use it and when not to, in markdown. Kept out of the description, so that summaries stay one line. A relative path (`./Button.usage.md`) uses the file's content verbatim.                                                                                                                    |
+| `@link`                     | component, prop, type | An external page: `@link <caption>Figma</caption> https://figma.com/docs/button`. The caption is optional; only `http(s)` URLs are kept, the others are reported as warnings. Listed in `externalLinks`, and shown on the component's page in the [docs plugin](/plugins/docs).                       |
 | `{@link Name}`              | anywhere in the text  | Names a component or a type. It is listed in `links`, and `inspect --summary` suggests the first linked component. Anything else stays plain text.                                                                                                                                                    |
 | `@deprecated Use {@link X}` | component, prop, type | The first link is the `replacement`, shown as `deprecated → X` in summaries.                                                                                                                                                                                                                          |
 | `@experimental`             | component, prop, type | Marks it as experimental, with an optional note. Shown as a callout, and as `experimental` in summaries.                                                                                                                                                                                              |
@@ -82,6 +83,7 @@ to use a component without opening its source:
  * Triggers an action.
  *
  * @usage Prefer a link when the click only navigates.
+ * @link <caption>Figma</caption> https://figma.com/docs/button
  * @example <caption>Basic</caption>
  * <Button label="Save" />
  * @example <caption>With an icon</caption> ./Button.icon.tsx

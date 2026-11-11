@@ -1,7 +1,15 @@
-import { renderComponentMarkdown } from "../../introspection/markdown.js";
-import { code, escapeText } from "../../markdown.js";
-import type { DocToken } from "../shared/doc-token.js";
-import type { DocGroup, DocsModel } from "./model.js";
+import type { OutputFile, PluginContext, RecontentPlugin } from "@recontentapp/core";
+import { renderComponentMarkdown } from "../introspection/markdown.js";
+import { code, escapeText } from "../markdown.js";
+import { outputPlugin } from "./factory.js";
+import type { DocToken } from "./shared/doc-token.js";
+import { buildDocsModel, type DocGroup, type DocsModel } from "./shared/docs-model.js";
+
+export type DesignMdPluginOptions = {
+  outDir: string;
+  /** Document title. Defaults to "Design system". */
+  title?: string;
+};
 
 const LAYER_TITLES = { ref: "Reference", system: "System", components: "Components" } as const;
 
@@ -46,7 +54,7 @@ function renderGroup(group: DocGroup, themes: string[]): string {
   return lines.join("\n");
 }
 
-export function renderMarkdown(model: DocsModel): string {
+function renderMarkdown(model: DocsModel): string {
   const themeSummary =
     model.themes.length > 0
       ? `${model.themes.length} theme${model.themes.length === 1 ? "" : "s"} (${model.themes.map((theme) => escapeText(theme)).join(", ")})`
@@ -73,4 +81,21 @@ export function renderMarkdown(model: DocsModel): string {
   }
 
   return `${sections.join("\n\n")}\n`;
+}
+
+export function generateDesignMdFiles(
+  ctx: PluginContext,
+  options: DesignMdPluginOptions,
+): OutputFile[] {
+  const model = buildDocsModel(ctx, options.title ?? "Design system");
+  return [{ filename: "DESIGN.md", content: renderMarkdown(model) }];
+}
+
+export function designMD(options: DesignMdPluginOptions): RecontentPlugin {
+  return outputPlugin(
+    "recontent:design-md",
+    ["tokens", "components?"],
+    options,
+    generateDesignMdFiles,
+  );
 }

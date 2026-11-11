@@ -4,7 +4,7 @@ import type { OutputFile, PluginContext, RecontentPlugin } from "@recontentapp/c
 /**
  * Builds a `RecontentPlugin` around a generator that produces `OutputFile[]`
  * relative to `options.outDir` — the shape shared by every output target's
- * plugin (css, stylex, typescript, typescript-native, vanilla-extract, docs).
+ * plugin (css, stylex, typescript, typescript-native, vanilla-extract, docs, design-md).
  */
 export function outputPlugin<Options extends { outDir: string }>(
   name: string,

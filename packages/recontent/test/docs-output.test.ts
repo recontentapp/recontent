@@ -1,16 +1,12 @@
 import { describe, expect, test } from "@jest/globals";
-import {
-  defineConfig,
-  defineReferenceTokens,
-  defineSystemTokens,
-  defineTheme,
-  tokens,
-} from "../src/index.js";
+import { defineConfig, defineReferenceTokens, defineSystemTokens, tokens } from "../src/index.js";
 import { generateDocsFiles } from "../src/plugins/docs/index.js";
 import type { ComponentInfo, PluginContext } from "@recontentapp/core";
 import { goldenConfig } from "./helpers/fixtures.js";
 
-function ctxFor(config: ReturnType<typeof goldenConfig>["config"]): PluginContext {
+type Config = ReturnType<typeof goldenConfig>["config"];
+
+function ctxFor(config: Config): PluginContext {
   return {
     registry: config.registry,
     themes: config.themes,
@@ -20,20 +16,49 @@ function ctxFor(config: ReturnType<typeof goldenConfig>["config"]): PluginContex
   };
 }
 
-function render(config: ReturnType<typeof goldenConfig>["config"]) {
-  const files = generateDocsFiles(ctxFor(config), { outDir: "docs", markdown: true });
-  const byName = Object.fromEntries(files.map((f) => [f.filename, f.content]));
-  return { html: byName["design.html"]!, md: byName["design.md"]! };
+function renderCtx(
+  ctx: PluginContext,
+  options: { title?: string; gitBaseUrl?: string } = {},
+): string {
+  const files = generateDocsFiles(ctx, { outDir: "docs", ...options });
+  expect(files.map((file) => file.filename)).toEqual(["design.html"]);
+  return files[0]!.content;
 }
 
-describe("design.html", () => {
-  const { html } = render(goldenConfig().config);
+const render = (config: Config) => renderCtx(ctxFor(config));
 
-  test("has one tab per layer", () => {
-    for (const layer of ["ref", "system", "components"]) {
-      expect(html).toContain(`data-tab="${layer}"`);
-      expect(html).toContain(`data-panel="${layer}"`);
+describe("design.html", () => {
+  const html = render(goldenConfig().config);
+
+  test("is titled 'Design system' by default, or by option", () => {
+    expect(html).toContain("<title>Design system</title>");
+    expect(html).toContain("<h1>Design system</h1>");
+    const titled = renderCtx(ctxFor(goldenConfig().config), { title: "Acme <Design>" });
+    expect(titled).toContain("<title>Acme &lt;Design&gt;</title>");
+    expect(titled).toContain("<h1>Acme &lt;Design&gt;</h1>");
+  });
+
+  test("has a Design tokens view with one sidebar section per token layer, without an API entry", () => {
+    expect(html).toContain('data-view-tab="tokens"');
+    expect(html).toContain('data-view="tokens"');
+    const side = html.slice(html.indexOf('aria-label="Design tokens"'));
+    for (const [layer, title] of [
+      ["ref", "Reference"],
+      ["system", "System"],
+      ["layer-components", "Components"],
+    ]) {
+      expect(html).toContain(`<div id="${layer}" class="layer">`);
+      expect(side).toContain(`<span class="cat">${title}</span>`);
     }
+    expect(html).not.toContain('role="tablist" aria-label="Token layers"');
+    expect(html).not.toContain("data-tab=");
+    expect(html).not.toContain('data-tab="api"');
+    expect(html).not.toContain("Component APIs");
+  });
+
+  test("has no Components tab without components", () => {
+    expect(html).not.toContain('data-view-tab="components"');
+    expect(html).not.toContain('<div data-view="components"');
   });
 
   test("lists the default option and each theme in the picker", () => {
@@ -70,14 +95,47 @@ describe("design.html", () => {
     expect(html).toContain('id="t-ref.color.black"');
   });
 
+  test("every token is searchable, colours with a swatch", () => {
+    const ids = [...html.matchAll(/ id="(t-[^"]+)"/g)].map((match) => match[1]!);
+    expect(ids.length).toBeGreaterThan(0);
+    for (const id of ids) {
+      const tag = new RegExp(
+        `<div class="(?:card|row)" id="${id.replace(/\./g, "\\.")}"[^>]*>`,
+      ).exec(html)![0];
+      expect(tag).toContain("data-search=");
+      expect(tag).toContain('data-kind="token"');
+    }
+    expect(html).toContain(
+      'data-search="ref.color.black color Reference" data-kind="token" data-name="ref.color.black" data-meta="color · Reference" data-swatch="--ref-color-black"',
+    );
+  });
+
+  test("has the search palette", () => {
+    expect(html).toContain('id="palette-open"');
+    expect(html).toContain("⌘K");
+    expect(html).toContain('id="palette"');
+    expect(html).toContain('id="palette-input"');
+    expect(html).toContain("<kbd>esc</kbd> close");
+    expect(html).toContain('role="dialog"');
+  });
+
+  test("has a light/dark switch that does not touch token themes", () => {
+    const head = html.slice(0, html.indexOf("</head>"));
+    expect(html).toContain('id="mode"');
+    expect(head.indexOf('"data-mode"')).toBeGreaterThan(-1);
+    expect(head.indexOf('"data-mode"')).toBeLessThan(head.indexOf("<style>"));
+    expect(html).toContain(':root[data-mode="dark"] {');
+    expect(html).not.toMatch(/setAttribute\("data-theme", "(light|dark)"/);
+  });
+
   test("omits the theme picker when there are no themes", () => {
     const ref = defineReferenceTokens({ color: { black: tokens.color("#000000") } });
     const config = defineConfig({
       tokens: { ref, system: defineSystemTokens({}), components: {} },
     });
-    const files = generateDocsFiles(ctxFor(config), { outDir: "docs" });
-    expect(files[0]!.content).not.toContain('id="theme"');
-    expect(files[0]!.content).toContain("No system tokens defined.");
+    const output = render(config);
+    expect(output).not.toContain('id="theme"');
+    expect(output).toContain("No system tokens defined.");
   });
 });
 
@@ -92,9 +150,9 @@ describe("escaping", () => {
       .deprecate("Use <i>other</i>"),
   });
   const config = defineConfig({ tokens: { ref, system: defineSystemTokens({}), components: {} } });
-  const { html, md } = render(config);
+  const html = render(config);
 
-  test("escapes descriptions in HTML", () => {
+  test("escapes descriptions", () => {
     expect(html).toContain("&lt;script&gt;alert(&quot;x&quot;)&lt;/script&gt;");
     expect(html).toContain("Scale &lt;b&gt;desc&lt;/b&gt;");
     expect(html).toContain("Use &lt;i&gt;other&lt;/i&gt;");
@@ -102,60 +160,6 @@ describe("escaping", () => {
 
   test("descriptions cannot break out of the embedded stylesheet", () => {
     expect(html.match(/<\/style>/g)).toHaveLength(2);
-  });
-
-  test("renders scale metadata in markdown", () => {
-    expect(md).toContain("Scale \\<b\\>desc\\</b\\>");
-    expect(md).toContain("> ⚠️ Deprecated: Use \\<i\\>other\\</i\\>");
-  });
-
-  test("escapes the title, group labels and theme names in markdown", () => {
-    const ref = defineReferenceTokens({
-      "a*b": { c: tokens.color("#000000") },
-    });
-    const dark = defineTheme({ ref }, { ref: { "a*b": { c: tokens.color("#ffffff") } } });
-    const config = defineConfig({
-      tokens: { ref, system: defineSystemTokens({}), components: {} },
-      themes: { dark_mode: dark },
-    });
-    const files = generateDocsFiles(ctxFor(config), { outDir: "docs", markdown: true });
-    const markdown = files.find((file) => file.filename.endsWith(".md"))!.content;
-    expect(markdown).toContain("### ref.a\\*b");
-    expect(markdown).toContain("| Token | Type | Value | dark\\_mode | Notes |");
-  });
-});
-
-describe("design.md", () => {
-  test("has layer headings, group headings and theme columns", () => {
-    const { md } = render(goldenConfig().config);
-    expect(md).toContain("## Reference");
-    expect(md).toContain("## System");
-    expect(md).toContain("## Components");
-    expect(md).toContain("### system.colors");
-    expect(md).toContain("| Token | Type | Value | dark | highContrast | Notes |");
-    expect(md).toContain("| `system.colors.accent` | color | `#000000` | `#eeeeee` | `#ff0000` |");
-    expect(md).toContain("→ `ref.color.black`");
-    expect(md).toContain("Primary accent color.");
-    expect(md).toContain("**Deprecated**: Use system.colors.surface instead.");
-  });
-
-  test("omits theme columns when there are no themes", () => {
-    const ref = defineReferenceTokens({ color: { black: tokens.color("#000000") } });
-    const config = defineConfig({
-      tokens: { ref, system: defineSystemTokens({}), components: {} },
-    });
-    const { md } = render(config);
-    expect(md).toContain("| Token | Type | Value | Notes |");
-  });
-
-  test("escapes pipes and newlines in cells", () => {
-    const ref = defineReferenceTokens({
-      color: { a: tokens.color("#000000").describe("one | two\nthree") },
-    });
-    const config = defineConfig({
-      tokens: { ref, system: defineSystemTokens({}), components: {} },
-    });
-    expect(render(config).md).toContain("one \\| two<br>three");
   });
 });
 
@@ -174,9 +178,7 @@ describe("components", () => {
           values: ["solid", "outline"],
           required: false,
           defaultValue: '"solid"',
-          description: "Visual weight.",
         },
-        { name: "label", type: "string", required: true, deprecated: "Use children." },
         {
           name: "width",
           type: "Width",
@@ -184,13 +186,7 @@ describe("components", () => {
           required: false,
         },
       ],
-      inherits: [
-        {
-          name: "ButtonHTMLAttributes",
-          package: "@types/react",
-          props: ["aria-label", "onClick", "type"],
-        },
-      ],
+      inherits: [],
       references: [],
     },
     {
@@ -213,54 +209,72 @@ describe("components", () => {
     },
   ];
   const withComponents = { ...ctxFor(goldenConfig().config), components };
+  const renderWith = (list: ComponentInfo[]) => renderCtx({ ...withComponents, components: list });
 
-  function renderWith(ctx: PluginContext) {
-    const files = generateDocsFiles(ctx, { outDir: "docs", markdown: true });
-    const byName = Object.fromEntries(files.map((f) => [f.filename, f.content]));
-    return { html: byName["design.html"]!, md: byName["design.md"]! };
-  }
+  test("get a Components tab and view, with a plain source location", () => {
+    const html = renderWith(components);
 
-  test("markdown gets a props table, an inherited-props line and a plain source line", () => {
-    const { md } = renderWith(withComponents);
-
-    expect(md).toContain("## Component APIs");
-    expect(md).toContain("### Button");
-    expect(md).toContain("Triggers an action.");
-    expect(md).toContain("Source: `src/button.tsx:12` · Updated 2024-03-01");
-    expect(md).toContain(
-      '| `variant` | `"solid" \\| "outline"` | `"solid"` | no | Visual weight. |',
-    );
-    expect(md).toContain("| `label` | `string` | — | yes | **Deprecated**: Use children. |");
-    expect(md).toContain("Also accepts: `ButtonHTMLAttributes` (3 props from @types/react)");
-    expect(md).toContain("> ⚠️ Deprecated");
-  });
-
-  test("a resolved alias is shown under the type, and type parameters next to the name", () => {
-    const { md, html } = renderWith(withComponents);
-
-    expect(md).toContain('| `width` | `Width`<br>`number \\| "auto"` | — | no |  |');
-    expect(md).toContain("### Accordion\\<Value extends string\\>");
-    expect(html).toContain("Accordion&lt;Value extends string&gt;");
-    expect(html).toContain("<code>Width</code><br><code>number | &quot;auto&quot;</code>");
-  });
-
-  test("html gets a Component APIs tab with a plain source location", () => {
-    const { html } = renderWith(withComponents);
-
-    expect(html).toContain('data-tab="api"');
-    expect(html).toContain('data-panel="api"');
+    expect(html).toContain('data-view-tab="components"');
+    expect(html).toContain('data-view="components"');
+    expect(html).toContain('<h2 class="title">Components</h2>');
     expect(html).toContain('id="c-Button"');
-    expect(html).toContain(
-      '<p class="source"><code>src/button.tsx:12</code> · Updated 2024-03-01</p>',
-    );
+    expect(html).not.toContain("Source code");
+    expect(html).toContain('<span class="note">Updated 2024-03-01</span>');
     expect(html).not.toContain('<a href="http');
   });
 
-  test("usage, examples, replacement and categories show in both outputs", () => {
-    const documented = [
+  test("a resolved alias is shown under the type, and type parameters next to the name", () => {
+    const html = renderWith(components);
+
+    expect(html).toContain("Accordion&lt;Value extends string&gt;");
+    expect(html).toContain("<code>Width</code><code>number |<wbr> &quot;auto&quot;</code>");
+  });
+
+  test("a very long type collapses to a preview that expands in place", () => {
+    const long = Array.from({ length: 20 }, (_, i) => `"variant-${i}"`).join(" | ");
+    const html = renderWith([
       {
         ...components[0]!,
-        category: "Actions",
+        props: [{ ...components[0]!.props[0]!, type: long, values: undefined }],
+      },
+    ]);
+
+    expect(html).toContain('<details class="type-long"><summary><code>&quot;variant-0&quot; |');
+    expect(html).toContain("…</code><code>&quot;variant-0&quot; |<wbr> ");
+  });
+
+  test("without categories there are no category headings", () => {
+    const html = renderWith(components);
+
+    expect(html.slice(html.indexOf('aria-label="Components"'))).not.toContain('<span class="cat">');
+    expect(html).not.toContain('class="category-title"');
+  });
+
+  test("categories are in order, the uncategorised last under 'Other'", () => {
+    const html = renderWith([
+      { ...components[0]!, category: "Actions" },
+      { ...components[1]!, category: "Layout" },
+      components[2]!,
+    ]);
+
+    const headings = [...html.matchAll(/<h2 class="category-title">([^<]+) <span/g)].map(
+      (match) => match[1],
+    );
+    expect(headings).toEqual(["Actions", "Layout", "Other"]);
+    const at = (id: string) => html.indexOf(`<a class="comp-card" href="#${id}"`);
+    expect(at("c-Button")).toBeLessThan(at("c-Accordion"));
+    expect(at("c-Accordion")).toBeLessThan(at("c-Spacer"));
+    // The sidebar follows the same order.
+    const side = html.slice(html.indexOf('aria-label="Components"'));
+    expect(side.indexOf('<span class="cat">Actions')).toBeLessThan(
+      side.indexOf('<span class="cat">Layout'),
+    );
+  });
+
+  test("usage, examples, replacement and reasons show up", () => {
+    const html = renderWith([
+      {
+        ...components[0]!,
         usage: "Use for <b>primary</b> actions.",
         examples: [{ title: "Basic", code: "<Button />" }, { code: "<Button>\n  Save\n</Button>" }],
       },
@@ -270,70 +284,248 @@ describe("components", () => {
         deprecated: "Use `Button`.",
         replacement: "Button",
       },
-      { ...components[1]!, category: "Layout" },
-    ];
-    const { md, html } = renderWith({ ...withComponents, components: documented });
-
-    expect(md).toContain("#### Usage\n\nUse for <b>primary</b> actions.");
-    expect(md).toContain("#### Examples\n\n**Basic**\n\n```tsx\n<Button />\n```");
-    expect(md).toContain("```tsx\n<Button>\n  Save\n</Button>\n```");
-    expect(md).toContain("Replaced by: `Button`");
-    expect(md).toContain("> 🧪 Experimental: Subject to change.");
-    expect(html).toContain('<span class="capsule">Experimental</span> Subject to change.');
+    ]);
 
     expect(html).toContain("<h4>Usage</h4>");
     expect(html).toContain("Use for &lt;b&gt;primary&lt;/b&gt; actions.");
-    expect(html).toContain("<pre><code>&lt;Button&gt;\n  Save\n&lt;/Button&gt;</code></pre>");
-    expect(html).toContain("Replaced by <code>Button</code>");
-    // Nav and panel follow the categories, uncategorised components last.
-    for (const heading of ['<span class="cat">', '<h3 class="cat">']) {
-      const at = (text: string) => html.indexOf(`${heading}${text}</`);
-      expect(at("Actions")).toBeGreaterThan(-1);
-      expect(at("Actions")).toBeLessThan(at("Layout"));
+    expect(html).toContain(
+      '<pre><code>&lt;<span class="tk-tag">Button</span>&gt;\n  Save\n&lt;/<span class="tk-tag">Button</span>&gt;</code></pre>',
+    );
+    expect(html).not.toContain('class="callout"><span class="capsule');
+  });
+
+  test("usage markdown is rendered, never injected as HTML", () => {
+    const html = renderWith([
+      {
+        ...components[0]!,
+        usage: [
+          "Use for **short** lists, see [docs](https://example.com).",
+          "",
+          "## Dos",
+          "",
+          "- Keep rows under ten",
+          "- Prefer `Table`",
+          "",
+          "| A | B |",
+          "| - | - |",
+          "| 1 | 2 |",
+          "",
+          "```tsx",
+          "<List />",
+          "```",
+          "",
+          "<script>alert(1)</script>",
+          "",
+          "[bad](javascript:alert(1))",
+        ].join("\n"),
+      },
+    ]);
+
+    expect(html).toContain("<strong>short</strong>");
+    expect(html).toContain(
+      '<a href="https://example.com" target="_blank" rel="noopener noreferrer">docs</a>',
+    );
+    expect(html).toContain("<h6>Dos</h6>");
+    expect(html).toContain("<li>Prefer <code>Table</code></li>");
+    expect(html).toContain("<table>");
+    expect(html).toContain('<span class="tk-tag">List</span>');
+    expect(html).not.toContain("<script>alert(1)");
+    expect(html).toContain("&lt;script&gt;alert(1)&lt;/script&gt;");
+    expect(html).not.toContain("javascript:");
+  });
+
+  test("status badges show their description and replacement in a tooltip", () => {
+    const html = renderWith([
+      {
+        ...components[2]!,
+        experimental: "Subject to change.",
+        deprecated: "Use <Button>.",
+        replacement: "Button",
+      },
+      { ...components[1]!, experimental: true },
+    ]);
+    const section = (name: string) => {
+      const start = html.indexOf(`<section class="group" id="c-${name}"`);
+      return html.slice(start, html.indexOf("</section>", start));
+    };
+
+    expect(section("Spacer")).toContain(
+      '<span class="capsule exp has-tip" tabindex="0" data-tip="Subject to change.">Experimental</span>',
+    );
+    expect(section("Spacer")).toContain(
+      'data-tip="Use &lt;Button&gt;. Replaced by Button.">Deprecated</span>',
+    );
+    // No description, no tooltip.
+    expect(section("Accordion")).toContain('<span class="capsule exp">Experimental</span>');
+    expect(section("Spacer")).not.toContain('class="callout"');
+  });
+
+  test("examples are highlighted without changing the copied text or leaking markup", () => {
+    const code = [
+      "// a <b>comment</b>",
+      'import { Button } from "ui";',
+      "const n: Array<string> = [1 < 2];",
+      '<Button variant="solid" onClick={() => go(`x`)}>Save</Button>',
+      '<img alt="</code><script>alert(1)</script>" />',
+    ].join("\n");
+    const html = renderWith([{ ...components[0]!, examples: [{ code }] }]);
+    const block = /<pre><code>([\s\S]*?)<\/code><\/pre>/.exec(html)![1]!;
+    const text = block
+      .replace(/<\/?span[^>]*>/g, "")
+      .replace(/&lt;/g, "<")
+      .replace(/&gt;/g, ">")
+      .replace(/&amp;/g, "&");
+
+    expect(text).toBe(code);
+    expect(block).toContain('<span class="tk-comment">// a &lt;b&gt;comment&lt;/b&gt;</span>');
+    expect(block).toContain('<span class="tk-keyword">import</span>');
+    expect(block).toContain('<span class="tk-string">"ui"</span>');
+    expect(block).toContain('<span class="tk-attr">variant</span>=');
+    expect(block).toContain('<span class="tk-fn">go</span>');
+    expect(block).toContain("Array&lt;string&gt;");
+    expect(block).not.toContain('class="tk-tag">string');
+    expect(block).not.toContain("<script>");
+  });
+
+  test("@link shows as an external tag", () => {
+    const html = renderWith([
+      {
+        ...components[0]!,
+        externalLinks: [
+          { title: "Figma <v2>", url: "https://figma.com/docs/button?a=1&b=2" },
+          { url: "https://example.com/button" },
+        ],
+      },
+    ]);
+
+    expect(html).toContain(
+      '<a class="tag" href="https://figma.com/docs/button?a=1&amp;b=2" target="_blank" rel="noopener noreferrer">Figma &lt;v2&gt; ↗</a>',
+    );
+    expect(html).toContain('href="https://example.com/button" target="_blank"');
+    expect(html).toContain(">https://example.com/button ↗</a>");
+  });
+
+  test("gitBaseUrl adds a Source code link", () => {
+    const render = (gitBaseUrl?: string) =>
+      renderCtx({ ...withComponents, components: [components[0]!] }, { gitBaseUrl });
+    const { sourceFilePath, line } = components[0]!;
+
+    expect(render()).not.toContain("Source code");
+    expect(render("https://github.com/acme/ui/blob/main/")).toContain(
+      `<a class="tag" href="https://github.com/acme/ui/blob/main/${sourceFilePath}#L${line}" target="_blank" rel="noopener noreferrer">Source code ↗</a>`,
+    );
+  });
+
+  test("a page reads description, badges, links, usage, examples, props; {@link}s are not links", () => {
+    const html = renderWith([
+      {
+        ...components[0]!,
+        description: "A button.",
+        experimental: true,
+        externalLinks: [{ title: "Figma", url: "https://figma.com/b" }],
+        links: ["Link", "Variant"],
+        usage: "Use for actions.",
+        examples: [{ code: "<Button />" }],
+      },
+      { ...components[1]!, experimental: true },
+      { ...components[2]!, links: ["Button"] },
+    ]);
+    const section = (name: string) => {
+      const start = html.indexOf(`<section class="group" id="c-${name}"`);
+      return html.slice(start, html.indexOf("</section>", start));
+    };
+
+    const button = section("Button");
+    const at = (needle: string) => button.indexOf(needle);
+    const order = [
+      'class="breadcrumb"',
+      'class="title"',
+      '<p class="lead">A button.</p>',
+      'class="capsule exp"',
+      "Figma ↗",
+      "<h4>Usage</h4>",
+      "<h4>Examples</h4>",
+      "<h4>Props</h4>",
+      'class="props"',
+    ].map(at);
+    expect(order.every((index) => index >= 0)).toBe(true);
+    expect(order).toEqual([...order].sort((x, y) => x - y));
+    // Badges and links share one row, grouped with the title and description.
+    expect(button.match(/class="tags"/g)).toHaveLength(1);
+    expect(button).toMatch(/<div class="comp-intro">[\s\S]*class="title"[\s\S]*class="tags"/);
+    expect(button).not.toContain("Variant");
+    expect(button).not.toContain('data-goto="c-Link"');
+    expect(button).not.toContain("examples</a>");
+    expect(section("Accordion")).toContain('<span class="capsule exp">Experimental</span>');
+    expect(section("Spacer")).toContain('<span class="capsule">Deprecated</span>');
+    // The sidebar flags them compactly.
+    expect(html).toContain('Accordion<span class="mini">experimental</span>');
+    expect(html).toContain('Spacer<span class="mini">deprecated</span>');
+  });
+
+  test("each component is a page of its own, listed on an overview", () => {
+    const html = renderWith(components);
+
+    expect(html).toContain('<div class="group" id="components-overview" data-page>');
+    for (const name of ["Button", "Accordion", "Spacer"]) {
+      expect(html).toContain(`<section class="group" id="c-${name}" data-page`);
+      expect(html).toContain(`<a class="comp-card" href="#c-${name}" data-goto="c-${name}">`);
     }
-    expect(html.indexOf('id="c-Spacer"')).toBeGreaterThan(html.indexOf('<h3 class="cat">Layout'));
+    // The pages link back to the overview.
+    expect(html).toContain('<a class="crumb" href="#components-overview"');
   });
 
-  test("without categories there are no category headings", () => {
-    const { html } = renderWith(withComponents);
+  test("examples are tabs with a copy button each", () => {
+    const html = renderWith([
+      {
+        ...components[0]!,
+        examples: [{ title: "Basic", code: "<Button />" }, { code: "<Button disabled />" }],
+      },
+    ]);
 
-    expect(html).not.toContain('<span class="cat">');
-    expect(html).not.toContain('<h3 class="cat">');
+    expect(html).toContain('data-ex-tab="0" aria-selected="true">Basic</button>');
+    expect(html).toContain('data-ex-tab="1" aria-selected="false">Example 2</button>');
+    expect(html).toContain('data-ex-panel="0">');
+    expect(html).toContain('data-ex-panel="1" hidden>');
+    expect(html.match(/class="copy" data-copy/g)).toHaveLength(2);
+    expect(html).toContain(
+      '<pre><code>&lt;<span class="tk-tag">Button</span> disabled /&gt;</code></pre>',
+    );
   });
 
-  test("without lastUpdatedAt there is no date", () => {
-    const { md } = renderWith({
-      ...withComponents,
-      components: [{ ...components[0]!, lastUpdatedAt: undefined }],
-    });
+  test("the sidebars have a toggle for the collapsible table of contents on mobile", () => {
+    const html = renderWith(components);
 
-    expect(md).toContain("Source: `src/button.tsx:12`\n");
-    expect(md).not.toContain("Updated");
+    expect(html.match(/<button type="button" class="side-toggle"/g)).toHaveLength(2);
+  });
+
+  test("every component is searchable, with its category and tags", () => {
+    const html = renderWith([
+      { ...components[0]!, category: "Actions" },
+      { ...components[2]!, experimental: true },
+    ]);
+
+    expect(html).toContain(
+      '<section class="group" id="c-Button" data-page data-search="Button Actions" data-kind="component" data-name="Button" data-meta="Actions" hidden>',
+    );
+    expect(html).toContain(
+      'data-search="Spacer Experimental Deprecated" data-kind="component" data-name="Spacer" data-meta="Experimental · Deprecated"',
+    );
   });
 
   test("output depends on sources and config only: no footer, no repository state", () => {
-    const { md, html } = renderWith(withComponents);
+    const html = renderWith(components);
 
-    for (const output of [md, html]) {
-      expect(output).not.toContain("Generated from");
-      expect(output).not.toContain('class="foot"');
-    }
+    expect(html).not.toContain("Generated from");
+    expect(html).not.toContain('class="foot"');
   });
 
-  test("nothing is added when the context has no components", () => {
-    const plain = renderWith(ctxFor(goldenConfig().config));
-
-    expect(plain.md).not.toContain("Component APIs");
-    expect(plain.html).not.toContain('data-tab="api"');
-  });
-
-  test("component text is escaped in html", () => {
-    const { html } = renderWith({
-      ...withComponents,
-      components: [{ ...components[0]!, description: "<script>alert(1)</script>" }],
-    });
+  test("component text is escaped", () => {
+    const html = renderWith([{ ...components[0]!, description: "<script>alert(1)</script>" }]);
 
     expect(html).not.toContain("<script>alert(1)</script>");
     expect(html).toContain("&lt;script&gt;alert(1)&lt;/script&gt;");
+    // Only ours: the pre-paint mode init and the page script.
+    expect(html.match(/<script>/g)).toHaveLength(2);
   });
 });

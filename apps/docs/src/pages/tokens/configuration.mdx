@@ -72,7 +72,7 @@ export default defineConfig({
     entry: "src/components/index.ts",
     exclude: ["ThemeProvider"],
   },
-  plugins: [docs({ outDir: "docs", markdown: true })],
+  plugins: [docs({ outDir: "docs" })],
 });
 ```
 
@@ -109,7 +109,7 @@ for an entry that exports PascalCase values but no components at all, which is a
 problem such as `@types/react` not resolving from the entry.
 
 The TypeScript program is built only when a plugin that depends on components is configured (such
-as [`docs()`](/plugins/docs)) or when you run `recontent inspect` or `recontent inspect components`; a
+as [`docs()`](/plugins/docs) or [`designMD()`](/plugins/design-md)) or when you run `recontent inspect` or `recontent inspect components`; a
 build with token-only plugins does not touch it, and a broken `introspection` block cannot stop them.
 `recontent build --watch` rebuilds when a component file changes, within the entry's package.
 

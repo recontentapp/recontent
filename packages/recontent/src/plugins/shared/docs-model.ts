@@ -4,7 +4,7 @@ import {
   type PluginContext,
   type TokenLayer,
 } from "@recontentapp/core";
-import { buildToken, deprecation, type DocToken } from "../shared/doc-token.js";
+import { buildToken, deprecation, type DocToken } from "./doc-token.js";
 
 const DOC_LAYERS: TokenLayer[] = ["ref", "system", "components"];
 

@@ -40,6 +40,7 @@ export { Spinner } from "./generated/components/spinner/Spinner.gen";
 export { StackItem } from "./generated/components/stack-item/StackItem.gen";
 export { Stack } from "./generated/components/stack/Stack.gen";
 export { Steps } from "./generated/components/steps/Steps.gen";
+export { Sticker } from "./Sticker";
 export { Switch } from "./generated/components/switch/Switch.gen";
 export { Tabs } from "./generated/components/tabs/Tabs.gen";
 export { TextInput } from "./generated/components/text-input/TextInput.gen";

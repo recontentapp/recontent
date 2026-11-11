@@ -4,7 +4,7 @@ import path from "node:path";
 import type { ComponentInfo, TypeInfo } from "@recontentapp/core";
 
 /** Bumped when the shape below changes. */
-const FORMAT = 4;
+const FORMAT = 5;
 
 type FileStamp = [path: string, mtimeMs: number, size: number];
 

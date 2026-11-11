@@ -1,0 +1,85 @@
+---
+title: "designMD"
+description: "Generate DESIGN.md, your tokens and components as Markdown for repositories and agents."
+---
+
+# designMD
+
+`designMD()` writes `DESIGN.md`: every token with its type, value, alias, description and deprecation,
+grouped by layer and scale, with a column for each theme, followed by the API of each component. It is
+plain Markdown, so it reads well in a repository and is easy for agents to consume. For a browsable page,
+see [`docs()`](/plugins/docs).
+
+```ts twoslash
+// [!include ~/snippets/design-md.config.ts]
+```
+
+## Options
+
+```ts
+designMD(options: DesignMdPluginOptions): RecontentPlugin
+```
+
+| Option   | Type     | Default           | Description                                    |
+| -------- | -------- | ----------------- | ---------------------------------------------- |
+| `outDir` | `string` | required          | Output directory, relative to the config file. |
+| `title`  | `string` | `"Design system"` | Document title.                                |
+
+Plugin name: `recontent:design-md`.
+
+## Emitted files
+
+| File        | Content                                                 |
+| ----------- | ------------------------------------------------------- |
+| `DESIGN.md` | The tokens as Markdown tables, then the component APIs. |
+
+Per layer and group, it lists the token's path, type, resolved value, the value in each theme, the
+alias it points to and its description or deprecation notice:
+
+```md
+## System
+
+### system.color
+
+| Token                     | Type  | Value     | dark      | Notes                                  |
+| ------------------------- | ----- | --------- | --------- | -------------------------------------- |
+| `system.color.background` | color | `#ffffff` | `#18181b` | → `ref.color.white`<br>Page background |
+```
+
+## Components
+
+Components are optional for `designMD()`. Without an [`introspection`](/tokens/configuration#introspection)
+block, the document covers the tokens only. With one, it gets a `## Component APIs` section. Each
+component lists its description, a deprecation notice, a props table (name, type or allowed values,
+default, required, notes), an `Also accepts:` line for props inherited from libraries, and its source
+location, followed by its `Usage` and `Examples` when it has
+[documented them](/cli/inspect#documenting-components). Components with a `@category` are grouped under it,
+the others last.
+
+```md
+## Component APIs
+
+### Button
+
+Triggers an action.
+
+Source: `src/button.tsx:12` · Updated 2025-03-01
+
+| Prop      | Type                   | Default   | Required | Notes          |
+| --------- | ---------------------- | --------- | -------- | -------------- |
+| `label`   | `string`               | —         | yes      |                |
+| `variant` | `"solid" \| "outline"` | `"solid"` | no       | Visual weight. |
+
+Also accepts: `ButtonHTMLAttributes` (263 props from @types/react)
+```
+
+The output depends only on your sources and config, never on repository state, so a "generated files
+are up to date" check in CI can pass. The one exception is opt-in: with
+[`introspection.history`](/tokens/configuration#history), `Updated <date>` is the last commit that
+touched the component's file, and committing that file changes the document.
+
+A prop typed with one of your own aliases shows its expansion under the type, and a generic component
+shows its type parameters next to its name, as `Accordion<Value extends string>`.
+
+If `introspection` is configured but fails, `designMD()` fails with the error attributed to it while the
+other plugins still write their files.

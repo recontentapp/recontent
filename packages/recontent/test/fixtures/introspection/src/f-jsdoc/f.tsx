@@ -88,7 +88,22 @@ export function F7(props: {
 /**
  * @example <caption>From file</caption> ./F8.example.tsx
  * @example ./missing.tsx
+ * @usage ./F8.usage.md
  */
 export function F8(props: { rows?: number }) {
+  return <ul>{props.rows}</ul>;
+}
+
+/** @usage ./missing.md */
+export function F10(props: { rows?: number }) {
+  return <ul>{props.rows}</ul>;
+}
+
+/**
+ * @link <caption>Figma</caption> https://figma.com/docs/f9
+ * @link https://example.com/f9
+ * @link javascript:alert(1)
+ */
+export function F9(props: { rows?: number }) {
   return <ul>{props.rows}</ul>;
 }

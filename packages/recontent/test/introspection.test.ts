@@ -338,7 +338,7 @@ describe("F. JSDoc", () => {
     expect(f6.experimental).toBeUndefined();
   });
 
-  test("F8 @example from a file, verbatim, and a missing file is skipped with a warning", () => {
+  test("F8 @example and @usage from files, verbatim, and a missing file is skipped with a warning", () => {
     const file = path.join(root, "src/f-jsdoc/F8.example.tsx");
     expect(component("F8").examples).toEqual([
       { title: "From file", code: readFileSync(file, "utf8").trimEnd() },
@@ -346,6 +346,13 @@ describe("F. JSDoc", () => {
     expect(warnings).toContainEqual("F8: @example file ./missing.tsx not found.");
     expect(files).toContain(file);
     expect(files).not.toContain(path.join(root, "src/f-jsdoc/missing.tsx"));
+
+    const usageFile = path.join(root, "src/f-jsdoc/F8.usage.md");
+    expect(component("F8").usage).toBe(readFileSync(usageFile, "utf8").trimEnd());
+    expect(component("F8").links).toBeUndefined();
+    expect(files).toContain(usageFile);
+    expect(component("F10").usage).toBeUndefined();
+    expect(warnings).toContainEqual("F10: @usage file ./missing.md not found.");
   });
 });
 
@@ -570,4 +577,13 @@ describe("performance and setup", () => {
     expect(files).toContain(path.join(root, "tsconfig.json"));
     expect(files.some((file) => /@types[\\/]react[\\/]index\.d\.ts$/.test(file))).toBe(true);
   }, 60_000);
+
+  test("F9 @link keeps http(s) URLs, with their caption, and warns about the rest", () => {
+    expect(component("F9").externalLinks).toEqual([
+      { title: "Figma", url: "https://figma.com/docs/f9" },
+      { url: "https://example.com/f9" },
+    ]);
+    expect(warnings).toContainEqual("F9: @link javascript:alert(1) is not an http(s) URL.");
+    expect(component("F8").externalLinks).toBeUndefined();
+  });
 });
