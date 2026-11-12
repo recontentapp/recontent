@@ -1,0 +1,50 @@
+---
+title: "inspect"
+description: "Publish a snapshot of your design system so that apps and their agents can browse it with recontent inspect --from."
+---
+
+# inspect
+
+`inspect()` writes `recontent.json`, a snapshot of your tokens, themes and, when
+[`introspection`](/tokens/configuration#introspection) is configured, your components and types. Publish it
+with your package, and the apps that install it can run
+[`recontent inspect --from`](/cli/inspect#headless-design-system-consumers) without your config or your source.
+
+```ts twoslash
+// [!include ~/snippets/inspect.config.ts]
+```
+
+Then point your `package.json` at the file, and make sure it is published:
+
+```json
+{
+  "recontent": "./dist/recontent.json",
+  "files": ["dist"]
+}
+```
+
+## Options
+
+```ts
+inspect(options: InspectPluginOptions): RecontentPlugin
+```
+
+| Option     | Type     | Default            | Description                                    |
+| ---------- | -------- | ------------------ | ---------------------------------------------- |
+| `outDir`   | `string` | required           | Output directory, relative to the config file. |
+| `fileName` | `string` | `"recontent.json"` | Name of the snapshot.                          |
+
+Plugin name: `recontent:inspect`. It uses the components when `introspection` is configured, and
+works without them otherwise.
+
+## Emitted files
+
+| File             | Content                                                                               |
+| ---------------- | ------------------------------------------------------------------------------------- |
+| `recontent.json` | `{ schemaVersion, kind: "snapshot", recontent, themes, tokens, components?, types? }` |
+
+The snapshot holds the same data as [`recontent inspect --format json`](/cli/inspect#for-scripts), and
+nothing that depends on your machine. `schemaVersion` follows that output's.
+
+Run [`recontent build --check`](/cli/build) in CI so that the published snapshot always matches the
+source.

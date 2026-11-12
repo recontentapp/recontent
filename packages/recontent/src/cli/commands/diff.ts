@@ -85,7 +85,7 @@ export async function runDiff(options: DiffOptions): Promise<void> {
         throw new Error(`Introspecting the components at ${rev} failed: ${message}`);
       });
       const head = await loadComponents(headProject, { cache: options.cache });
-      components = diffComponents(base, head);
+      components = diffComponents(base.introspection, head.introspection);
     }
   } finally {
     await fsp.rm(tmpDir, { recursive: true, force: true });

@@ -9,13 +9,14 @@ Prints what `recontent.config.ts` defines: its tokens, and its components and th
 [`introspection`](/tokens/configuration#introspection) is configured.
 
 ```bash
-recontent inspect [--format <format>] [--no-cache]
+recontent inspect [--format <format>] [--from <package|file>] [--no-cache]
 recontent inspect tokens [path...] [--type <type>] [--theme <theme>] [--deprecated] [--format <format>]
 recontent inspect components [name...] [--deprecated] [--format <format>] [--no-cache]
 recontent inspect types [name...] [--deprecated] [--format <format>] [--no-cache]
 ```
 
-Uses the [global options](/cli#global-options) `-c`, `--cwd` and `--log-level`.
+Uses the [global options](/cli#global-options) `-c`, `--cwd` and `--log-level`. Every subcommand also accepts
+`--from`, to [browse an installed design system](#headless-design-system-consumers) instead of a config.
 
 ## Browsing
 
@@ -144,6 +145,31 @@ summary, so `recontent inspect tokens --format json` is every token.
 # Fail CI when a deprecated component is still exported
 test "$(recontent inspect components --deprecated --format json | jq '.components | length')" = 0
 ```
+
+## Headless (design system consumers)
+
+An app that installs `@acme/design-system` from npm has neither its `recontent.config.ts` nor its
+source. If the design system publishes a snapshot with the [`inspect()` plugin](/plugins/inspect), the app
+(and its agents) can browse its tokens, components and types anyway:
+
+```bash
+recontent inspect --from @acme/design-system            # a package: reads the "recontent" field of its package.json
+recontent inspect --from ./vendor/acme/recontent.json   # a snapshot file
+recontent inspect components Button --from @acme/design-system --format json
+```
+
+The output is the same as when you inspect the design system's own config, except that the overview names
+the source (`@acme/design-system@1.4.0`) where it names the config file. Everything is read from the
+snapshot: nothing is executed and no TypeScript program is built.
+
+- **A package or a file**: a value that starts with `.` or `/`, or ends in `.json`, is a file. Anything
+  else is a package name, found by looking in `node_modules` from `--cwd` upward. The `recontent` field of
+  its `package.json` is resolved from the package's directory.
+- **Not with `-c/--config` or `--no-cache`**: neither means anything for a snapshot, so combining them is a
+  usage error.
+- **Components** are in the snapshot only if the design system configures `introspection`. Without them,
+  `inspect components` and `inspect types` exit `1`, and `inspect` and `inspect tokens` still work.
+- **A newer snapshot** than your `recontent` understands is an error that asks you to upgrade it.
 
 ## Cost
 

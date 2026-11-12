@@ -5,7 +5,7 @@ import { createRequire } from "node:module";
 import path from "node:path";
 import { Argument, Command, CommanderError, Option } from "commander";
 import type { LogLevel } from "@recontentapp/core";
-import { discoverConfigPath, resolveConfigPath } from "@recontentapp/core";
+import { ConfigLoadError, discoverConfigPath, resolveConfigPath } from "@recontentapp/core";
 import { runBuild } from "./commands/build.js";
 import { runDiff } from "./commands/diff.js";
 import { DIFF_FORMATS, type DiffFormat } from "./diff/diff.js";
@@ -59,6 +59,16 @@ function resolveLogLevel(explicit: string | undefined): LogLevel | undefined {
   return value;
 }
 
+/** Resolves the global `--cwd` and `--log-level` options. */
+function resolveCwdAndLogLevel(): { cwd: string; logLevel?: LogLevel } {
+  const opts = program.opts<GlobalOptions>();
+  const cwd = path.resolve(process.cwd(), opts.cwd ?? ".");
+  if (!fs.statSync(cwd, { throwIfNoEntry: false })?.isDirectory()) {
+    throw new Error(`--cwd: directory not found: "${cwd}".`);
+  }
+  return { cwd, logLevel: resolveLogLevel(opts.logLevel) };
+}
+
 /** Resolves the global `--cwd`, `-c/--config`, and `--log-level` options once,
  * before a command's action runs. With `discover: false` (only `init` needs
  * this — it creates the config rather than discovering an existing one),
@@ -72,16 +82,12 @@ function resolveGlobalOptions({
   logLevel?: LogLevel;
 } {
   const opts = program.opts<GlobalOptions>();
-  const cwd = path.resolve(process.cwd(), opts.cwd ?? ".");
-  if (!fs.statSync(cwd, { throwIfNoEntry: false })?.isDirectory()) {
-    throw new Error(`--cwd: directory not found: "${cwd}".`);
-  }
+  const { cwd, logLevel } = resolveCwdAndLogLevel();
   const configPath = opts.config
     ? resolveConfigPath(opts.config, { cwd })
     : discover
       ? discoverConfigPath(cwd)
       : resolveConfigPath(fallback!, { cwd });
-  const logLevel = resolveLogLevel(opts.logLevel);
   return { cwd, configPath, logLevel };
 }
 
@@ -201,20 +207,44 @@ Start with \`recontent inspect\` for an overview, then drill down:
 
 Output is markdown by default. --format json returns full detail for the whole selection
 (never a summary) under { schemaVersion, kind, ... }, with data on stdout and logs on stderr.
+Without a config, browse a design system installed as a dependency: --from <package|file> reads the
+snapshot its maintainers publish with the inspect() plugin (a package's package.json "recontent" field,
+or a path to a recontent.json). It replaces -c/--config and --no-cache, and works with every command above.
+
 An unknown path, name, type or theme exits 2 and suggests the closest matches; with --format json
 the errors are also printed on stdout as { schemaVersion, kind: "error", errors }. Exit 1 is for a
 broken project.`,
   );
 
-function inspectOptions(command: Command): { format: Format; cache: boolean } {
-  return command.optsWithGlobals<{ format: Format; cache: boolean }>();
+type InspectCliOptions = { format: Format; cache: boolean; from?: string };
+
+function inspectOptions(command: Command): InspectCliOptions {
+  return command.optsWithGlobals<InspectCliOptions>();
 }
 
-async function runInspectTarget(
-  target: InspectTarget,
-  options: { format: Format; cache: boolean },
-): Promise<void> {
-  const { cwd, configPath, logLevel } = resolveGlobalOptions();
+async function runInspectTarget(target: InspectTarget, options: InspectCliOptions): Promise<void> {
+  if (options.from !== undefined) {
+    if (program.opts<GlobalOptions>().config !== undefined) {
+      return program.error(
+        "error: option '--from <package|file>' cannot be used with option '-c, --config <path>'",
+      );
+    }
+    // No config to discover: the snapshot stands in for it.
+    const { cwd, logLevel } = resolveCwdAndLogLevel();
+    await runInspect({ cwd, logLevel, format: options.format, target, from: options.from });
+    return;
+  }
+  let globals: ReturnType<typeof resolveGlobalOptions>;
+  try {
+    globals = resolveGlobalOptions();
+  } catch (error) {
+    if (!(error instanceof ConfigLoadError)) throw error;
+    throw new Error(
+      `${error.message}\nTo browse an installed design system instead, pass --from <package|file>.`,
+      { cause: error },
+    );
+  }
+  const { cwd, configPath, logLevel } = globals;
   await runInspect({
     cwd,
     configPath,
@@ -229,8 +259,14 @@ async function runInspectTarget(
 // `inspect tokens --format json` works, and subcommands read it back from their parent.
 inspect
   .addOption(new Option("--format <format>", "Output format").choices(FORMATS).default("markdown"))
+  .addOption(
+    new Option(
+      "--from <package|file>",
+      "Inspect a design system's published snapshot (a package name, or a path to recontent.json) instead of a config",
+    ).conflicts("cache"),
+  )
   .option("--no-cache", NO_CACHE_HELP)
-  .action(async (options: { format: Format; cache: boolean }) => {
+  .action(async (options: InspectCliOptions) => {
     await runInspectTarget({ kind: "overview" }, options);
   });
 

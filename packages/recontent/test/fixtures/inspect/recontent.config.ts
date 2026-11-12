@@ -6,7 +6,7 @@ import {
   defineTheme,
   tokens,
 } from "recontent";
-import { designMD, docs } from "recontent/plugins";
+import { designMD, docs, inspect } from "recontent/plugins";
 
 const ref = defineReferenceTokens({
   color: {
@@ -31,5 +31,5 @@ export default defineConfig({
   tokens: { ref, system, components: defineComponentTokens({}) },
   themes: { dark },
   introspection: { entry: "src/index.ts" },
-  plugins: [docs({ outDir: "docs" }), designMD({ outDir: "docs" })],
+  plugins: [docs({ outDir: "docs" }), designMD({ outDir: "docs" }), inspect({ outDir: "dist" })],
 });

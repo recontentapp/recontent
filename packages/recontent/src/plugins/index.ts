@@ -11,6 +11,7 @@ export type {
 } from "@recontentapp/core";
 export { css, type CssPluginOptions } from "./css.js";
 export { dtcg, type DtcgPluginOptions } from "./dtcg.js";
+export { inspect, type InspectPluginOptions } from "./inspect.js";
 export { designMD, type DesignMdPluginOptions } from "./design-md.js";
 export { docs, type DocsPluginOptions } from "./docs/index.js";
 export {

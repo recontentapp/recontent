@@ -1,18 +1,12 @@
 import path from "node:path";
-import {
-  loadConfig,
-  type ComponentInfo,
-  type TypeInfo,
-  type Config,
-  type Logger,
-  type LogLevel,
-} from "@recontentapp/core";
+import { loadConfig, type Config, type Logger, type LogLevel } from "@recontentapp/core";
 import ts from "typescript";
 import { readHead, readLastUpdated } from "./git.js";
 import { introspect, watchableFiles } from "./introspection/index.js";
 import { readCache, writeCache } from "./introspection/cache.js";
 import { resolveInputs } from "./introspection/program.js";
 import { createLogger } from "./logger.js";
+import type { Introspected } from "./snapshot.js";
 
 export type Project = {
   config: Config;
@@ -32,10 +26,8 @@ export async function loadProject(options: {
 }
 
 export type Components = {
-  /** Sorted by name. */
-  components: ComponentInfo[];
-  /** What the components reference, sorted by id. */
-  types: TypeInfo[];
+  /** Components sorted by name, and what they reference sorted by id. */
+  introspection: Introspected;
   /** Already logged; kept to count them. */
   warnings: string[];
   /** Files whose change should trigger a rebuild. */
@@ -79,8 +71,7 @@ export async function loadComponents(
     logger.debug("introspection: reused the cache.");
     for (const warning of cached.warnings) logger.warn(warning);
     return {
-      components: cached.components,
-      types: cached.types,
+      introspection: cached.introspection,
       warnings: cached.warnings,
       watch: watchableFiles(entry, cached.files),
     };
@@ -108,8 +99,7 @@ export async function loadComponents(
   const watch = watchableFiles(entry, result.files);
   if (key !== undefined) {
     writeCache(root, configPath, key, {
-      components: result.components,
-      types: result.types,
+      introspection: { components: result.components, types: result.types },
       warnings,
       files: result.files,
       // Not the config's own: `.recontent` and the plugins' output are created there after this is stamped.
@@ -120,8 +110,7 @@ export async function loadComponents(
   }
   for (const warning of warnings) logger.warn(warning);
   return {
-    components: result.components,
-    types: result.types,
+    introspection: { components: result.components, types: result.types },
     warnings,
     watch,
     program: result.program,

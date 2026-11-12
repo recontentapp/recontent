@@ -1,11 +1,15 @@
-import type { ComponentInfo, LogLevel, TypeInfo } from "@recontentapp/core";
+import type { LogLevel } from "@recontentapp/core";
 import { loadComponents, loadProject } from "../../../project.js";
 import { typeClosure } from "../../../introspection/types.js";
-import { buildToken, type DocToken } from "../../../plugins/shared/doc-token.js";
+import {
+  createSnapshot,
+  readSnapshot,
+  type Introspected,
+  type Snapshot,
+} from "../../../snapshot.js";
 import { diagnoseRegistry } from "../../registry-diagnostics.js";
 import { exitWithError } from "../../utils/exit.js";
 import { displayPath } from "../../utils/fs.js";
-import { pathKey } from "@recontentapp/core";
 import {
   renderComponents,
   renderErrors,
@@ -25,18 +29,21 @@ export type InspectTarget =
 
 export type InspectOptions = {
   cwd: string;
-  configPath: string;
   logLevel?: LogLevel;
   format: Format;
   target: InspectTarget;
-  /** Where the introspection cache is read and written; absent for `--no-cache`. */
-  cache?: { version: string };
-};
+} & (
+  | {
+      configPath: string;
+      /** Where the introspection cache is read and written; absent for `--no-cache`. */
+      cache?: { version: string };
+    }
+  // A design system's published snapshot, instead of its config.
+  | { from: string }
+);
 
 /** Exit code for a request that matches nothing; `1` is for a project that is broken. */
 const NO_MATCH = 2;
-
-const numericCompare = (a: string, b: string) => a.localeCompare(b, undefined, { numeric: true });
 
 function print(text: string): void {
   process.stdout.write(`${text}\n`);
@@ -48,7 +55,12 @@ function fail(format: Format, errors: InspectError[], exitCode = 1): void {
   if (format === "json") print(renderErrors(errors));
 }
 
-export async function runInspect(options: InspectOptions): Promise<void> {
+/** What the selection and rendering below read: the data, where it came from, and why components are missing. */
+type Loaded = { snapshot: Snapshot; source: string; componentsError?: string };
+
+async function loadLocal(
+  options: Extract<InspectOptions, { configPath: string }>,
+): Promise<Loaded | undefined> {
   const { target, format } = options;
   const project = await loadProject({
     configPath: options.configPath,
@@ -63,7 +75,7 @@ export async function runInspect(options: InspectOptions): Promise<void> {
         message: `${configName} has no \`introspection\` block. Add \`introspection: { entry: "src/components/index.ts" }\` to defineConfig() to inspect components.`,
       },
     ]);
-    return;
+    return undefined;
   }
 
   for (const diagnostic of config.diagnostics) logger.warn(diagnostic.message);
@@ -72,16 +84,15 @@ export async function runInspect(options: InspectOptions): Promise<void> {
   if (brokenAliases.length > 0) {
     for (const diagnostic of brokenAliases) logger.error(diagnostic.message);
     fail(format, [{ message: `${brokenAliases.length} token error(s) in ${configName}` }]);
-    return;
+    return undefined;
   }
 
   // Tokens never need a TS program; only look at components when asked.
-  let components: ComponentInfo[] | undefined;
-  let types: TypeInfo[] | undefined;
+  let introspected: Introspected | undefined;
   let componentsError: string | undefined;
   if (target.kind !== "tokens" && config.introspection) {
     try {
-      ({ components, types } = await loadComponents(project, { cache: options.cache }));
+      ({ introspection: introspected } = await loadComponents(project, { cache: options.cache }));
     } catch (error) {
       componentsError = error instanceof Error ? error.message : String(error);
     }
@@ -89,21 +100,45 @@ export async function runInspect(options: InspectOptions): Promise<void> {
   // The overview is where to start, so it still shows the tokens and says what is wrong with the components.
   if (componentsError !== undefined && (target.kind === "components" || target.kind === "types")) {
     fail(format, [{ message: componentsError }]);
-    return;
+    return undefined;
   }
 
-  const themes = Object.keys(config.themes);
-  const tokens: DocToken[] = [...config.registry.values()]
-    .sort((a, b) => numericCompare(pathKey(a.path), pathKey(b.path)))
-    .map((entry) =>
-      buildToken({ registry: config.registry, themes: config.themes }, entry, themes),
-    );
+  return { snapshot: createSnapshot(config, introspected), source: configName, componentsError };
+}
+
+function loadHeadless(options: Extract<InspectOptions, { from: string }>): Loaded | undefined {
+  const { target, format } = options;
+  let loaded: ReturnType<typeof readSnapshot>;
+  try {
+    loaded = readSnapshot(options.from, options.cwd);
+  } catch (error) {
+    fail(format, [{ message: error instanceof Error ? error.message : String(error) }]);
+    return undefined;
+  }
+  const { snapshot, source } = loaded;
+  if ((target.kind === "components" || target.kind === "types") && !snapshot.components) {
+    fail(format, [
+      {
+        message: `${source} has no components in its snapshot. Its maintainers need \`introspection\` in their config for the \`inspect()\` plugin to include them.`,
+      },
+    ]);
+    return undefined;
+  }
+  return { snapshot, source };
+}
+
+export async function runInspect(options: InspectOptions): Promise<void> {
+  const { target, format } = options;
+  const loaded = "from" in options ? loadHeadless(options) : await loadLocal(options);
+  if (!loaded) return;
+  const { snapshot, source, componentsError } = loaded;
+  const { tokens, themes, components, types } = snapshot;
 
   switch (target.kind) {
     case "overview":
       print(
         renderOverview(
-          { config: configName, tokens, themes, components, types, componentsError },
+          { config: source, tokens, themes, components, types, componentsError },
           format,
         ),
       );

@@ -5,6 +5,7 @@ import type {
   TypeInfo,
   TypeParameterInfo,
 } from "@recontentapp/core";
+import type { Introspected } from "../../snapshot.js";
 
 type Literal = string | number | boolean;
 
@@ -50,8 +51,6 @@ export type ComponentsDiff = {
   components: EntitiesDiff<ComponentInfo>;
   types: EntitiesDiff<TypeInfo>;
 };
-
-type ComponentsSnapshot = { components: ComponentInfo[]; types: TypeInfo[] };
 
 // Types are written by hand, so layout is not a change.
 function normalize(type: string): string {
@@ -229,7 +228,7 @@ function diffEntities<T>(
 }
 
 /** Components are matched by name, types by id, props and members by name. A rename is a removal plus an addition. */
-export function diffComponents(base: ComponentsSnapshot, head: ComponentsSnapshot): ComponentsDiff {
+export function diffComponents(base: Introspected, head: Introspected): ComponentsDiff {
   return {
     components: diffEntities(base.components, head.components, (c) => c.name, diffComponent),
     types: diffEntities(base.types, head.types, (t) => t.id, diffType),

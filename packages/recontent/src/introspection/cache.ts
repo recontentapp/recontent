@@ -1,10 +1,10 @@
 import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
-import type { ComponentInfo, TypeInfo } from "@recontentapp/core";
+import type { Introspected } from "../snapshot.js";
 
 /** Bumped when the shape below changes. */
-const FORMAT = 5;
+const FORMAT = 6;
 
 type FileStamp = [path: string, mtimeMs: number, size: number];
 
@@ -15,12 +15,11 @@ type CacheFile = {
   files: FileStamp[];
   /** Directories of the project's own files: adding a file bumps its directory's mtime. */
   directories: FileStamp[];
-  components: ComponentInfo[];
-  types: TypeInfo[];
+  introspection: Introspected;
   warnings: string[];
 };
 
-export type Cached = Pick<CacheFile, "components" | "types" | "warnings"> & { files: string[] };
+export type Cached = Pick<CacheFile, "introspection" | "warnings"> & { files: string[] };
 
 /** One file per config, so that two configs in the same directory don't evict each other. */
 function cachePath(root: string, configPath: string): string {
@@ -50,8 +49,7 @@ export function readCache(root: string, configPath: string, key: string): Cached
     });
     return unchanged
       ? {
-          components: cache.components,
-          types: cache.types,
+          introspection: cache.introspection,
           warnings: cache.warnings,
           files: cache.files.map(([file]) => file),
         }
@@ -66,7 +64,7 @@ export function writeCache(
   root: string,
   configPath: string,
   key: string,
-  result: Pick<CacheFile, "components" | "types" | "warnings"> & {
+  result: Pick<CacheFile, "introspection" | "warnings"> & {
     files: string[];
     directories: string[];
   },
@@ -80,8 +78,7 @@ export function writeCache(
       key,
       files: files as FileStamp[],
       directories: directories as FileStamp[],
-      components: result.components,
-      types: result.types,
+      introspection: result.introspection,
       warnings: result.warnings,
     };
 
