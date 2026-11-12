@@ -1,9 +1,8 @@
-import type { ReactNode } from "react";
-import type { CommonComponentProps } from "./generated/renderElement.gen";
+import type { HTMLAttributes, ReactNode } from "react";
 
-export type StickerTilt = "none" | "left" | "right";
+type StickerTilt = "none" | "left" | "right";
 
-export interface StickerProps extends CommonComponentProps {
+export interface StickerProps extends HTMLAttributes<HTMLSpanElement> {
   /** Rotation applied to the sticker. */
   tilt?: StickerTilt;
   children?: ReactNode;

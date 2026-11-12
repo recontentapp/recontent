@@ -3,7 +3,6 @@ import path from "node:path";
 import type { ComponentInfo, EmittedFile, LogLevel, Logger, TypeInfo } from "@recontentapp/core";
 import type ts from "typescript";
 import { createLogger } from "../../logger.js";
-import { MissingDesignTokensError } from "../../plugins/errors.js";
 import { needsComponents, runPlugins } from "../../plugins/runner.js";
 import { loadComponents, loadProject } from "../../project.js";
 import { collectLocalImports } from "../config-graph.js";
@@ -203,26 +202,14 @@ async function buildOnce(
   }
 
   const mode = options.watch ? "watch" : "build";
-  let result;
-  try {
-    result = await runPlugins(config, {
-      root: configDir,
-      mode,
-      logger,
-      components,
-      types,
-      componentsError,
-    });
-  } catch (error) {
-    if (error instanceof MissingDesignTokensError) {
-      for (const message of error.errors) {
-        logger.error(message);
-      }
-      abort(error.errors.length);
-      return state;
-    }
-    throw error;
-  }
+  const result = await runPlugins(config, {
+    root: configDir,
+    mode,
+    logger,
+    components,
+    types,
+    componentsError,
+  });
 
   let errors = 0;
   for (const diagnostic of result.diagnostics) {

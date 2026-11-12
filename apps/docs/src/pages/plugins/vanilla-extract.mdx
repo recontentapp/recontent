@@ -52,40 +52,25 @@ export function App({ dark }: { dark: boolean }) {
 vanillaExtract(options: VanillaExtractPluginOptions): RecontentPlugin
 ```
 
-| Option             | Type                 | Default  | Description                                                                            |
-| ------------------ | -------------------- | -------- | -------------------------------------------------------------------------------------- |
-| `outDir`           | `string`             | required | Output directory, relative to the config file.                                         |
-| `fontFamily`       | a `fontFamily` token | required | Set on `body` by the generated reset.                                                  |
-| `placeholderColor` | a `color` token      | required | Color of input placeholders in the reset.                                              |
-| `breakpoints`      | a `dimension` scale  | none     | Breakpoints for responsive props and `useBreakpoint`. See [Breakpoints](#breakpoints). |
+| Option             | Type                 | Default  | Description                                    |
+| ------------------ | -------------------- | -------- | ---------------------------------------------- |
+| `outDir`           | `string`             | required | Output directory, relative to the config file. |
+| `fontFamily`       | a `fontFamily` token | required | Set on `body` by the generated reset.          |
+| `placeholderColor` | a `color` token      | required | Color of input placeholders in the reset.      |
 
 Plugin name: `recontent:vanilla-extract`.
 
 ## Emitted files
 
-| File                   | Written when       | Content                                                                                                                                                      |
-| ---------------------- | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `tokens.css.ts`        | always             | `vars` (the theme contract), `refVars`, `systemVars`, `componentVars`, a typed const and key union per scale, `themeClass` and `<name>ThemeClass` per theme. |
-| `reset.gen.css.ts`     | always             | A small CSS reset, as `globalStyle` calls.                                                                                                                   |
-| `useBreakpoint.gen.ts` | with `breakpoints` | A React hook for the current breakpoint.                                                                                                                     |
-
-## Breakpoints
-
-`breakpoints` must be a `dimension` scale whose first entry is `0` (the base condition, which emits
-no media query), in ascending order, with the same unit after the first. Breakpoints become literal
-`@media (min-width: …)` conditions, because media queries cannot read variables, so **a theme cannot
-override a breakpoint**.
-
-```ts
-breakpoints: tokens.dimensionScale({ xs: "0px", sm: "576px", md: "768px", lg: "992px" }),
-```
+| File               | Written when | Content                                                                                                                                                      |
+| ------------------ | ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `tokens.css.ts`    | always       | `vars` (the theme contract), `refVars`, `systemVars`, `componentVars`, a typed const and key union per scale, `themeClass` and `<name>ThemeClass` per theme. |
+| `reset.gen.css.ts` | always       | A small CSS reset, as `globalStyle` calls.                                                                                                                   |
 
 ## Diagnostics
 
-Each of these fails the build.
+Fails the build.
 
-| When                                                                                                                                       |
-| ------------------------------------------------------------------------------------------------------------------------------------------ |
-| `breakpoints` is not a `dimension` scale, is empty, does not start at `0`, mixes units after the first entry or is not in ascending order. |
-| A theme overrides a breakpoint token.                                                                                                      |
-| A theme name is not a valid TypeScript identifier.                                                                                         |
+| When                                               |
+| -------------------------------------------------- |
+| A theme name is not a valid TypeScript identifier. |

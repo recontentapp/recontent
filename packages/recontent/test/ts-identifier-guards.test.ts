@@ -97,7 +97,6 @@ describe("vanilla-extract target", () => {
   });
   const VE: VanillaExtractPluginOptions = {
     outDir: "dist-test",
-    focusRingColor: veRef.color.black,
     fontFamily: veRef.fontFamily.body,
     placeholderColor: veRef.color.black,
   };

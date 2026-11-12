@@ -1,6 +1,5 @@
 import { describe, expect, test } from "@jest/globals";
 import {
-  defineComponentTokens,
   defineConfig,
   defineReferenceTokens,
   defineSystemTokens,
@@ -281,24 +280,6 @@ describe("parses and typechecks", () => {
       assertParses(file!.content);
       assertTypechecks(file!.content);
     }
-  });
-
-  test("component built-in options are not accepted by the typescript output type", () => {
-    const options: TypeScriptPluginOptions = {
-      outDir: "dist-test",
-      // @ts-expect-error builtInComponents does not exist on TypeScriptPluginOptions
-      builtInComponents: {},
-    };
-    const ref = defineReferenceTokens({ color: { black: tokens.color("#000000") } });
-    const config = defineConfig({
-      tokens: {
-        ref,
-        system: defineSystemTokens({}),
-        components: defineComponentTokens({}),
-      },
-    });
-    const [file] = generate(config, options);
-    assertTypechecks(file!.content);
   });
 });
 

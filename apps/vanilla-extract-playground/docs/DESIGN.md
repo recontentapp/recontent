@@ -167,10 +167,10 @@ spacing:
   system-spacing-72: "{spacing.ref-spacing-72}"
   system-spacing-80: "{spacing.ref-spacing-80}"
 components:
-  switch:
-    thumbSize: "14px"
-    trackHeight: "18px"
-    trackWidth: "32px"
+  sticker:
+    borderRadius: "4px"
+    paddingX: "8px"
+    paddingY: "2px"
 ---
 
 # Design system
@@ -230,57 +230,6 @@ Keys mirror token paths and CSS variables: `system-border-default` is `system.bo
 
 ## Components
 
-- **Accordion**: Vertically stacked headings, each revealing a panel of content.
-- **ActionBar**: Floating bar of contextual actions, anchored to the bottom of the viewport.
-- **Autocomplete**: Text input that suggests matching options as people type.
-- **Avatar**: Image or initials identifying a person or an entity.
-- **Badge**: Small label conveying a status or a count.
-- **Banner**: Inline message that communicates a status, with optional actions.
-- **Box**: Generic container exposing spacing, surface, border and sizing tokens as props.
-- **Breadcrumb**: Trail of links showing where the current page sits in a hierarchy.
-- **Button**: Triggers an action.
-- **Checkbox**: Toggles a single option on or off.
-- **Code**: Inline snippet of code, in a monospace font.
-- **Collapsible**: Section that can be expanded and collapsed by its trigger.
-- **DateInput**: Input to pick a date, with a calendar.
-- **Dialog**: Modal window that requires a decision or an input before going back to the page.
-- **Divider**: Thin line separating groups of content.
-- **Drawer**: Panel sliding in from an edge of the screen.
-- **DropdownButton**: Button that opens a menu of actions.
-- **Field**: Adds a label, a description and an error message to a form control.
-- **FileInput**: Input to choose files, by browsing or by dropping them.
-- **Grid**: Two-dimensional layout of its children, in columns and rows.
-- **Icon**: Renders one of the icons of the design system.
-- **IconButton**: Button that shows an icon only.
-- **KeyboardShortcut**: Displays a key combination.
-- **Link**: Navigates to another page or location.
-- **MetadataList**: List of labelled values, like the properties of an item.
-- **NumberInput**: Input for numbers, with optional steppers and formatting.
-- **Outline**: Table of contents linking to the sections of a page.
-- **Pagination**: Controls to move between the pages of a long list.
-- **Popover**: Floating panel anchored to a trigger, with interactive content.
-- **ProgressBar**: Shows how far a task has progressed.
-- **QuoteBlock**: Block quotation, with an optional citation.
-- **RadioList**: Group of options of which exactly one can be chosen.
-- **SegmentedControls**: Row of connected buttons to choose one option.
-- **Select**: Dropdown to choose one option from a list.
-- **SelectableCard**: Card that behaves as a radio or a checkbox.
-- **Skeleton**: Placeholder shown while content is loading.
-- **Slider**: Control to pick a value, or a range, by dragging a handle.
-- **Spinner**: Indicates that something is loading.
-- **Stack**: Lays out its children in a row or a column, with consistent spacing.
-- **StackItem**: Child of a Stack with control over how it grows, shrinks and aligns.
-- **Steps**: Shows progress through a sequence of steps.
 - **Sticker**: Playful label stuck on the corner of a card or an image.
-- **Switch**: Turns a setting on or off, with immediate effect.
-- **Tabs**: Organizes content in panels, of which one is visible at a time.
-- **Text**: Renders text with the typography and the color of the design system.
-- **Textarea**: Multi-line text field.
-- **TextInput**: Single-line text field.
-- **Timeline**: Chronological list of events.
-- **ToastProvider**: Provides toasts to the app and renders them. Trigger them with the \`useToast\` hook.
-- **Toggle**: Switches between exactly two options.
-- **Tooltip**: Short hint shown on hover and focus.
-- **TreeList**: Hierarchy of expandable nodes, like folders.
 
 Run `recontent inspect components <Name>` for props, usage and examples.

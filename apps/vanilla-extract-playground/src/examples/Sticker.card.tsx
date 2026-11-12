@@ -1,8 +1,8 @@
-import { Box, Sticker, Text } from "../components";
+import { Sticker } from "../components";
 
 export const InACard = () => (
-  <Box>
+  <div>
     <Sticker tilt="right">Hot</Sticker>
-    <Text>Summer collection</Text>
-  </Box>
+    <p>Summer collection</p>
+  </div>
 );

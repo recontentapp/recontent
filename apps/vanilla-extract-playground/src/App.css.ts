@@ -12,8 +12,17 @@ export const panel = style({
   backgroundColor: "#ffffff",
   borderRadius: "12px",
   boxShadow: "0 4px 16px rgba(0, 0, 0, 0.08)",
+  display: "flex",
+  flexDirection: "column",
+  gap: "24px",
   maxWidth: "640px",
   padding: "32px",
+});
+
+export const header = style({
+  display: "flex",
+  flexDirection: "column",
+  gap: "8px",
 });
 
 export const eyebrow = style({

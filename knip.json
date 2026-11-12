@@ -17,11 +17,8 @@
     },
     "apps/vanilla-extract-playground": {
       "entry": ["recontent.config.ts", "src/components.ts", "src/examples/*.tsx"],
-      "project": ["src/**/*.{ts,tsx}", "stories/**/*.{ts,tsx}", "*.ts"],
-      "ignore": ["src/generated/**"],
-      "storybook": {
-        "config": [".storybook/main.ts"]
-      }
+      "project": ["src/**/*.{ts,tsx}", "*.ts"],
+      "ignore": ["src/generated/**"]
     },
     "apps/stylex-playground": {
       "entry": ["recontent.config.ts"],

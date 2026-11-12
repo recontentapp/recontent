@@ -9,7 +9,6 @@ import type {
   RecontentPlugin,
   TypeInfo,
 } from "@recontentapp/core";
-import { MissingDesignTokensError } from "./errors.js";
 
 export function sortPlugins(plugins: RecontentPlugin[]): RecontentPlugin[] {
   const pre: RecontentPlugin[] = [];
@@ -96,16 +95,7 @@ export async function runPlugins(
   const diagnostics: PluginDiagnostic[] = [];
   for (const plugin of plugins) {
     if (!plugin.validate) continue;
-    try {
-      const pluginDiagnostics = await plugin.validate(contextFor(plugin));
-      diagnostics.push(...pluginDiagnostics);
-    } catch (error) {
-      if (error instanceof MissingDesignTokensError) {
-        diagnostics.push({ severity: "error", message: `[${plugin.name}] ${error.message}` });
-        continue;
-      }
-      throw error;
-    }
+    diagnostics.push(...(await plugin.validate(contextFor(plugin))));
   }
 
   if (diagnostics.some((diagnostic) => diagnostic.severity === "error")) {
@@ -116,23 +106,7 @@ export async function runPlugins(
   const owners = new Map<string, string>();
   for (const plugin of plugins) {
     if (!plugin.generate) continue;
-    let pluginFiles: EmittedFile[];
-    try {
-      pluginFiles = await plugin.generate(contextFor(plugin));
-    } catch (error) {
-      if (error instanceof MissingDesignTokensError) {
-        const prefixedErrors = error.errors.map((message) => `[${plugin.name}] ${message}`);
-        throw new MissingDesignTokensError(
-          [
-            "Cannot generate output because required design tokens are missing:",
-            "",
-            ...prefixedErrors.map((message) => `  - ${message}`),
-          ].join("\n"),
-          prefixedErrors,
-        );
-      }
-      throw error;
-    }
+    const pluginFiles = await plugin.generate(contextFor(plugin));
     for (const file of pluginFiles) {
       const normalized = path.posix.normalize(file.path);
       const owner = owners.get(normalized);
