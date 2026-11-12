@@ -57,7 +57,6 @@ the build fails with the error's message and exit code `1`.
 | `themes`     | `Record<string, ThemeOverride>` | Each theme's overrides: a `Map` from token key to the overriding value.                                                                                  |
 | `root`       | `string`                        | Absolute path of the directory containing the config.                                                                                                    |
 | `logger`     | `Logger`                        | `info`, `warn`, `error` and `debug` methods. All write to stderr.                                                                                        |
-| `mode`       | `"build" \| "watch"`            | `"watch"` under `build --watch`, otherwise `"build"`.                                                                                                    |
 | `components` | `ComponentInfo[] \| undefined`  | The project's [components](#componentinfo). Only set when the plugin declares `"introspection"` or `"introspection?"` and `introspection` is configured. |
 | `types`      | `TypeInfo[] \| undefined`       | The project [types](#typeinfo) that components' props reference. Set together with `components`.                                                         |
 
@@ -85,8 +84,18 @@ Values are structured, never strings:
 | `strokeStyle`                                              | `{ style }` or `{ dashArray, lineCap }`                                                                                 |
 | `shadow`, `border`, `transition`, `gradient`, `typography` | Objects whose members are `{ $value, alias? }`                                                                          |
 
-To apply a theme to a token, check `ctx.themes[name].get(key)` first, then fall back to the entry's
-own `$value`.
+## resolveValue
+
+```ts
+import { resolveValue } from "recontent/plugins";
+
+resolveValue(ctx, entry, theme?): TokenEntry["$value"]
+```
+
+Returns the value of `entry` as a theme sees it. It follows the alias chain to the end, and a theme's
+override on any token along the way wins, so an alias to a token the theme overrides picks up the
+override. Without `theme` it returns the base value. An unknown theme name throws, listing the
+themes the config defines.
 
 ## ComponentInfo
 
@@ -182,7 +191,8 @@ type EmittedFile = {
   directory is refused.
 - `writeMode: "always"` (the default) rewrites the file when its content changed. `"once"` creates the
   file if it does not exist and never touches it again. Use it for files the user is meant to edit.
-- Two plugins emitting the same `path` is an error that names both plugins.
+- Two files with the same `path` are an error that names the plugins: this includes two instances of
+  the same plugin and a plugin emitting a path twice.
 
 ## PluginDiagnostic
 
@@ -194,8 +204,11 @@ type PluginDiagnostic = {
 };
 ```
 
-Errors and warnings are printed, in order, as `error: <message>` and `warning: <message>`. Prefix the
-message with your plugin's name so users know where it came from. Errors abort the build.
+Errors and warnings are printed, in order, as `error: [<plugin name>] <message> (<path>)` and
+`warning: [<plugin name>] <message> (<path>)`; the CLI adds the plugin name and the token path, so
+the message does not need to repeat them. Errors abort the build.
+
+An error thrown from a hook is reported as `[<plugin name>] <hook> failed: <message>`.
 
 ## Example
 

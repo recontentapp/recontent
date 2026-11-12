@@ -2,11 +2,8 @@ import {
   expandedMembers,
   isCompositeType,
   isExpandedComposite,
-  isStampedToken,
   type OutputFile,
-  type TokenBinding,
   type TokenEntry,
-  type TokenType,
   type TokenTypeMap,
   type ThemeOverride,
   pathKey,
@@ -16,9 +13,8 @@ import {
   serializeValueCss,
   type MemberResolver,
 } from "../../serialize/values.js";
-import { getEntry, terminalEntry } from "../shared/alias.js";
+import { getEntry, resolveEntryValue, terminalEntry } from "../shared/alias.js";
 import type { GeneratorContext } from "../shared/context.js";
-import { resetRules, type CssResetOptions } from "../shared/reset.js";
 import { validateThemeNames } from "../shared/theme-source.js";
 import {
   entryPath,
@@ -26,7 +22,6 @@ import {
   formatTree,
   generateScaleExports,
   propertyAccess,
-  resolveEntryValue,
   scaleExportsForConfig,
   setTreeValue,
   type ScaleExport,
@@ -174,46 +169,6 @@ function valuesTree(config: GeneratorContext, themeName?: string): SourceTree {
   return tree;
 }
 
-function resolveTokenBinding<T extends TokenType>(
-  registry: GeneratorContext["registry"],
-  token: TokenBinding<T>,
-  expectedType: T,
-  label: string,
-): { reference: string } {
-  if (!isStampedToken(token) || token.$type !== expectedType) {
-    throw new Error(`Option "${label}" must be a ${expectedType} token.`);
-  }
-  const entry = registry.get(pathKey(token._path));
-  if (!entry) {
-    throw new Error(`Option "${label}" references a token that is not registered.`);
-  }
-  // Keeps the path selected by the consumer instead of rewriting a semantic
-  // system/component binding to its reference alias.
-  return { reference: variableReference(entry) };
-}
-
-function generateCssResetSource(options: CssResetOptions): string {
-  const lines = [
-    'import { globalStyle } from "@vanilla-extract/css";',
-    'import { vars } from "./tokens.css";',
-    "",
-  ];
-
-  for (const rule of resetRules(options)) {
-    const indent = rule.media ? "      " : "  ";
-    const declarationLines = rule.declarations.map(
-      ({ property, value, raw }) => `${indent}${property}: ${raw ? value : `"${value}"`},`,
-    );
-    const body = rule.media
-      ? [`  "@media": {`, `    "${rule.media}": {`, ...declarationLines, `    },`, `  },`]
-      : declarationLines;
-
-    lines.push(`globalStyle("${rule.selector}", {`, ...body, "});", "");
-  }
-
-  return `${lines.join("\n")}`.replace(/\n+$/, "\n");
-}
-
 function generateVanillaExtractSource(
   config: GeneratorContext,
   scaleExports: readonly ScaleExport[],
@@ -257,38 +212,13 @@ function generateVanillaExtractSource(
 
 export type VanillaExtractPluginOptions = {
   outDir: string;
-  fontFamily: TokenBinding<"fontFamily">;
-  placeholderColor: TokenBinding<"color">;
 };
 
-export function generateVanillaExtractFiles(
-  config: GeneratorContext,
-  output: VanillaExtractPluginOptions,
-): OutputFile[] {
-  const fontFamilyBinding = resolveTokenBinding(
-    config.registry,
-    output.fontFamily,
-    "fontFamily",
-    "fontFamily",
-  );
-  const placeholderColorBinding = resolveTokenBinding(
-    config.registry,
-    output.placeholderColor,
-    "color",
-    "placeholderColor",
-  );
-
+export function generateVanillaExtractFiles(config: GeneratorContext): OutputFile[] {
   return [
     {
       filename: "tokens.css.ts",
       content: generateVanillaExtractSource(config, scaleExportsForConfig(config)),
-    },
-    {
-      filename: "reset.gen.css.ts",
-      content: generateCssResetSource({
-        fontFamily: fontFamilyBinding.reference,
-        placeholderColor: placeholderColorBinding.reference,
-      }),
     },
   ];
 }

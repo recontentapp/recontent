@@ -1,5 +1,5 @@
 import { defineConfig, defineReferenceTokens, defineSystemTokens, tokens } from "recontent";
-import type { RecontentPlugin } from "recontent/plugins";
+import { resolveValue, type RecontentPlugin } from "recontent/plugins";
 
 // Writes every color token as JSON, and warns about system tokens without a description.
 function colorList(options: { outDir: string }): RecontentPlugin {
@@ -17,10 +17,12 @@ function colorList(options: { outDir: string }): RecontentPlugin {
         }));
     },
 
-    generate({ registry }) {
+    generate(ctx) {
       const colors: Record<string, string> = {};
-      for (const [key, entry] of registry) {
-        if (entry.$type === "color" && "hex" in entry.$value) colors[key] = entry.$value.hex;
+      for (const [key, entry] of ctx.registry) {
+        if (entry.$type !== "color") continue;
+        const value = resolveValue(ctx, entry);
+        if ("hex" in value) colors[key] = value.hex;
       }
       return [
         {

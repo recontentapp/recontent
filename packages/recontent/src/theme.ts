@@ -83,7 +83,7 @@ function collectOverrides(
   validPaths: Map<string, { path: string[]; type: TokenType }>,
   overrides: ThemeOverride,
 ): void {
-  if (isRawToken(node)) {
+  if (isRawToken(node) || isStampedToken(node)) {
     const key = pathKey(relativePath);
     const target = validPaths.get(key);
     if (!target) {

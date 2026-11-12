@@ -33,7 +33,6 @@ export const card = style({
 ```
 
 ```tsx [App.tsx]
-import "./generated/reset.gen.css";
 import { darkThemeClass, themeClass } from "./generated/tokens.css";
 import { card } from "./card.css";
 
@@ -52,20 +51,17 @@ export function App({ dark }: { dark: boolean }) {
 vanillaExtract(options: VanillaExtractPluginOptions): RecontentPlugin
 ```
 
-| Option             | Type                 | Default  | Description                                    |
-| ------------------ | -------------------- | -------- | ---------------------------------------------- |
-| `outDir`           | `string`             | required | Output directory, relative to the config file. |
-| `fontFamily`       | a `fontFamily` token | required | Set on `body` by the generated reset.          |
-| `placeholderColor` | a `color` token      | required | Color of input placeholders in the reset.      |
+| Option   | Type     | Default  | Description                                    |
+| -------- | -------- | -------- | ---------------------------------------------- |
+| `outDir` | `string` | required | Output directory, relative to the config file. |
 
 Plugin name: `recontent:vanilla-extract`.
 
 ## Emitted files
 
-| File               | Written when | Content                                                                                                                                                      |
-| ------------------ | ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `tokens.css.ts`    | always       | `vars` (the theme contract), `refVars`, `systemVars`, `componentVars`, a typed const and key union per scale, `themeClass` and `<name>ThemeClass` per theme. |
-| `reset.gen.css.ts` | always       | A small CSS reset, as `globalStyle` calls.                                                                                                                   |
+| File            | Content                                                                                                                                                      |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `tokens.css.ts` | `vars` (the theme contract), `refVars`, `systemVars`, `componentVars`, a typed const and key union per scale, `themeClass` and `<name>ThemeClass` per theme. |
 
 ## Diagnostics
 

@@ -10,7 +10,6 @@ function ctxFor(config: ReturnType<typeof goldenConfig>["config"]): PluginContex
     themes: config.themes,
     root: "/project",
     logger: { info: () => {}, warn: () => {}, error: () => {}, debug: () => {} },
-    mode: "build",
   };
 }
 

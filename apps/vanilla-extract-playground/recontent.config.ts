@@ -418,8 +418,6 @@ export default defineConfig({
     }),
     vanillaExtract({
       outDir: "src/generated",
-      fontFamily: system.typography.bodyFontFamily,
-      placeholderColor: system.colors.textSecondary,
     }),
   ],
 });

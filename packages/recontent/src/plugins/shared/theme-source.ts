@@ -9,14 +9,13 @@ import {
   type TokenType,
   type TokenTypeMap,
 } from "@recontentapp/core";
-import { getEntry, walkAliasChain } from "./alias.js";
+import { getEntry, resolveEntryValue, walkAliasChain } from "./alias.js";
 import type { GeneratorContext } from "./context.js";
 import {
   capitalize,
   entryPath,
   formatTree,
   propertyAccess,
-  resolveEntryValue,
   scaleExportsForConfig,
   setTreeValue,
   type ScaleExport,
@@ -101,20 +100,13 @@ const JS_RESERVED_WORDS = new Set([
 ]);
 
 const IDENTIFIER_RE = /^[A-Za-z_$][\w$]*$/;
-export const CSS_IDENTIFIER_RE = /^[A-Za-z_][\w-]*$/;
 const THEME_ATTRIBUTE_RE = /^[A-Za-z][\w-]*$/;
 
-export function validateThemeNames(
-  themeNames: readonly string[],
-  target: string,
-  options?: { pattern?: RegExp; description?: string },
-): void {
-  const pattern = options?.pattern ?? IDENTIFIER_RE;
-  const description = options?.description ?? "theme names must be valid TypeScript identifiers";
+export function validateThemeNames(themeNames: readonly string[], target: string): void {
   for (const name of themeNames) {
-    if (!pattern.test(name)) {
+    if (!IDENTIFIER_RE.test(name)) {
       throw new Error(
-        `Theme name "${name}" cannot be used with the "${target}" output target: ${description}.`,
+        `Theme name "${name}" cannot be used with the "${target}" output target: theme names must be valid TypeScript identifiers.`,
       );
     }
   }

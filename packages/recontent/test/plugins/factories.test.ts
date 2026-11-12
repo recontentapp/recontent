@@ -32,7 +32,6 @@ function ctx(): PluginContext {
     themes: config.themes,
     root: "/project",
     logger: { info: () => {}, warn: () => {}, error: () => {}, debug: () => {} },
-    mode: "build",
   };
 }
 
@@ -57,8 +56,6 @@ test("typescriptNative() emits files under outDir", async () => {
 test("stylex() emits files under outDir", async () => {
   const plugin = stylex({
     outDir: "src/generated/stylex",
-    fontFamily: ref.fontFamily.body,
-    placeholderColor: ref.color.black,
   });
   const files = await plugin.generate!(ctx());
   expect(files.length).toBeGreaterThan(0);
@@ -68,8 +65,6 @@ test("stylex() emits files under outDir", async () => {
 test("vanillaExtract() emits files under outDir", async () => {
   const plugin = vanillaExtract({
     outDir: "src/generated/ve",
-    fontFamily: ref.fontFamily.body,
-    placeholderColor: ref.color.black,
   });
   const files = await plugin.generate!(ctx());
   expect(files.length).toBeGreaterThan(0);

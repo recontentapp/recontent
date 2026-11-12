@@ -7,7 +7,8 @@ import {
   defineTheme,
   tokens,
 } from "../src/index.js";
-import { generateDtcg, generateDtcgThemed } from "../src/plugins/dtcg.js";
+import { dtcg, generateDtcg, generateDtcgThemed } from "../src/plugins/dtcg.js";
+import { runPlugins } from "../src/plugins/runner.js";
 
 function fullTreeConfig() {
   const ref = defineReferenceTokens({
@@ -217,4 +218,18 @@ describe("em dimensions", () => {
     ]);
     expect(JSON.stringify(output)).not.toContain('"em"');
   });
+});
+
+test('a theme named "tokens" collides with the base file instead of overwriting it', async () => {
+  const ref = defineReferenceTokens({ color: { black: tokens.color("#000000") } });
+  const config = defineConfig({
+    tokens: { ref },
+    themes: { tokens: defineTheme(ref, { color: { black: tokens.color("#111111") } }) },
+    plugins: dtcg({ outDir: "out" }),
+  });
+  const logger = { info() {}, warn() {}, error() {}, debug() {} };
+
+  await expect(runPlugins(config, { root: "/project", logger })).rejects.toThrow(
+    /File path collision at "out\/tokens.tokens.json"/,
+  );
 });

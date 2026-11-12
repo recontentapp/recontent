@@ -198,7 +198,6 @@ test("a config with only the ref layer builds through a plugin", async () => {
   });
   const result = await runPlugins(config, {
     root: "/project",
-    mode: "build",
     logger: { info: () => {}, warn: () => {}, error: () => {}, debug: () => {} },
   });
   expect(result.failures).toEqual([]);
@@ -214,4 +213,22 @@ test.each([
   expect(() => defineConfig({ tokens: { ref: {} }, plugins: plugin })).toThrow(
     `Plugin "acme:old": dependsOn "${old}" was renamed to "${renamed}".`,
   );
+});
+
+test.each(['x" { } .evil {', "a/b", "../up", "1st", "-dark", "dark mode", ""])(
+  "defineConfig rejects the theme name %j",
+  (name) => {
+    expect(() =>
+      defineConfig({ introspection: { entry: "a.ts" }, themes: { [name]: new Map() } }),
+    ).toThrow(/Invalid theme name/);
+  },
+);
+
+test("defineConfig accepts hyphenated and underscored theme names", () => {
+  expect(() =>
+    defineConfig({
+      introspection: { entry: "a.ts" },
+      themes: { "dark-mode": new Map(), high_contrast: new Map() },
+    }),
+  ).not.toThrow();
 });

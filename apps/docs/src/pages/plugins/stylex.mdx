@@ -24,7 +24,6 @@ shows a working Vite setup.
 import * as stylex from "@stylexjs/stylex";
 import { vars } from "./generated/tokens.stylex";
 import { darkTheme } from "./generated/themes";
-import "./generated/reset.gen.css";
 
 const styles = stylex.create({
   page: { backgroundColor: vars.systemColorBackground, color: vars.systemColorText },
@@ -41,11 +40,9 @@ export function App({ dark }: { dark: boolean }) {
 stylex(options: StylexPluginOptions): RecontentPlugin
 ```
 
-| Option             | Type                 | Default  | Description                                    |
-| ------------------ | -------------------- | -------- | ---------------------------------------------- |
-| `outDir`           | `string`             | required | Output directory, relative to the config file. |
-| `fontFamily`       | a `fontFamily` token | required | Set on `body` by the generated reset.          |
-| `placeholderColor` | a `color` token      | required | Color of input placeholders in the reset.      |
+| Option   | Type     | Default  | Description                                    |
+| -------- | -------- | -------- | ---------------------------------------------- |
+| `outDir` | `string` | required | Output directory, relative to the config file. |
 
 Plugin name: `recontent:stylex`.
 
@@ -56,7 +53,6 @@ Plugin name: `recontent:stylex`.
 | `tokens.stylex.ts` | `export const vars = stylex.defineVars({ … })`: one flat key per token. |
 | `themes.ts`        | `<name>Theme = stylex.createTheme(vars, { … })` for each theme.         |
 | `scales.ts`        | A key union and a constant per scale (`RefColorGray`, `refColorGray`).  |
-| `reset.gen.css`    | A small CSS reset. Import it once.                                      |
 
 StyleX variables must be flat, so a token's path is turned into a camelCase key:
 `system.color.background` becomes `systemColorBackground`, and `ref.spacing.0-5` becomes

@@ -38,7 +38,6 @@ function baseConfig(plugins: RecontentPlugin[]): Config {
 
 const runOptions = {
   root: "/project",
-  mode: "build" as const,
   logger: {
     info: () => {},
     warn: () => {},
@@ -87,6 +86,31 @@ test("two plugins emitting the same file path throws, naming both plugins", asyn
   );
 });
 
+test("two instances of the same plugin emitting the same file path throw", async () => {
+  const instance = (): RecontentPlugin => ({
+    name: "recontent:css",
+    dependsOn: ["tokens"],
+    generate: () => [{ path: "out/tokens.css", content: "x" }],
+  });
+  await expect(runPlugins(baseConfig([instance(), instance()]), runOptions)).rejects.toThrow(
+    /File path collision at "out\/tokens.css": both plugin "recontent:css" and plugin "recontent:css"/,
+  );
+});
+
+test("a plugin emitting the same file path twice throws", async () => {
+  const a: RecontentPlugin = {
+    name: "a",
+    dependsOn: ["tokens"],
+    generate: () => [
+      { path: "out.txt", content: "1" },
+      { path: "./out.txt", content: "2" },
+    ],
+  };
+  await expect(runPlugins(baseConfig([a]), runOptions)).rejects.toThrow(
+    /File path collision at "out.txt": plugin "a" emitted this file twice/,
+  );
+});
+
 test("an error-severity validate diagnostic short-circuits before any generate runs", async () => {
   let generated = false;
   const a: RecontentPlugin = {
@@ -100,7 +124,7 @@ test("an error-severity validate diagnostic short-circuits before any generate r
   };
   const result = await runPlugins(baseConfig([a]), runOptions);
   expect(result.files).toEqual([]);
-  expect(result.diagnostics).toEqual([{ severity: "error", message: "bad" }]);
+  expect(result.diagnostics).toEqual([{ plugin: "a", severity: "error", message: "bad" }]);
   expect(generated).toBe(false);
 });
 
@@ -113,8 +137,28 @@ test("a warning-severity validate diagnostic does not short-circuit generate", a
   };
   const result = await runPlugins(baseConfig([a]), runOptions);
   expect(result.files).toEqual([{ path: "a.txt", content: "a" }]);
-  expect(result.diagnostics).toEqual([{ severity: "warning", message: "heads up" }]);
+  expect(result.diagnostics).toEqual([{ plugin: "a", severity: "warning", message: "heads up" }]);
 });
+
+test.each(["buildStart", "validate", "generate", "buildEnd"] as const)(
+  "an error thrown from %s names the plugin and keeps the original as the cause",
+  async (hook) => {
+    const original = new Error("boom");
+    const plugin: RecontentPlugin = {
+      name: "acme:broken",
+      dependsOn: ["tokens"],
+      [hook]: () => {
+        throw original;
+      },
+    };
+
+    const error = await runPlugins(baseConfig([plugin]), runOptions).catch((e: unknown) => e);
+
+    expect(error).toBeInstanceOf(Error);
+    expect((error as Error).message).toBe(`[acme:broken] ${hook} failed: boom`);
+    expect((error as Error).cause).toBe(original);
+  },
+);
 
 test("buildEnd receives the full file list from every plugin", async () => {
   let seen: string[] = [];

@@ -14,10 +14,7 @@ import {
   generateTypeScriptNativeFiles,
   type TypeScriptNativePluginOptions,
 } from "../src/plugins/typescript-native.js";
-import {
-  generateVanillaExtractFiles,
-  type VanillaExtractPluginOptions,
-} from "../src/plugins/vanilla-extract/generate.js";
+import { generateVanillaExtractFiles } from "../src/plugins/vanilla-extract/generate.js";
 import { generateCss } from "../src/plugins/css.js";
 import { generateStylexFiles } from "../src/plugins/stylex.js";
 import type { Config } from "@recontentapp/core";
@@ -91,37 +88,20 @@ describe("typescript-native target", () => {
 });
 
 describe("vanilla-extract target", () => {
-  const veRef = defineReferenceTokens({
-    color: { black: tokens.color("#000000") },
-    fontFamily: { body: tokens.fontFamily("Arial") },
-  });
-  const VE: VanillaExtractPluginOptions = {
-    outDir: "dist-test",
-    fontFamily: veRef.fontFamily.body,
-    placeholderColor: veRef.color.black,
-  };
-
   test('a theme named "dark-mode" throws (not a valid identifier)', () => {
     const config = configWithTheme("dark-mode");
-    expect(() => generateVanillaExtractFiles(config, VE)).toThrow(
+    expect(() => generateVanillaExtractFiles(config)).toThrow(
       /Theme name "dark-mode" cannot be used with the "vanilla-extract" output target/,
     );
   });
 
   test('a theme named "dark_mode" does not throw', () => {
     const config = configWithTheme("dark_mode");
-    expect(() => generateVanillaExtractFiles(config, VE)).not.toThrow();
+    expect(() => generateVanillaExtractFiles(config)).not.toThrow();
   });
 });
 
 describe("css target", () => {
-  test("a theme named 'x\" { }' throws (CSS selector injection)", () => {
-    const config = configWithTheme('x" { } .evil {');
-    expect(() => generateCss(config)).toThrow(
-      /Theme name .* cannot be used with the "css" output target/,
-    );
-  });
-
   test('a theme named "dark-mode" does not throw (hyphens are valid CSS identifiers)', () => {
     const config = configWithTheme("dark-mode");
     expect(() => generateCss(config)).not.toThrow();
@@ -136,12 +116,6 @@ describe("css target", () => {
 });
 
 describe("stylex target", () => {
-  const STYLEX = {
-    outDir: "dist-test",
-    fontFamily: undefined as never,
-    placeholderColor: undefined as never,
-  };
-
   test('a theme named "dark-mode" throws (not a valid identifier)', () => {
     const ref = defineReferenceTokens({
       color: { black: tokens.color("#000000") },
@@ -152,12 +126,8 @@ describe("stylex target", () => {
       tokens: { ref, system: defineSystemTokens({}), components: {} },
       themes: { "dark-mode": theme },
     });
-    expect(() =>
-      generateStylexFiles(config, {
-        ...STYLEX,
-        fontFamily: ref.fontFamily.body,
-        placeholderColor: ref.color.black,
-      }),
-    ).toThrow(/Theme name "dark-mode" cannot be used with the "stylex" output target/);
+    expect(() => generateStylexFiles(config)).toThrow(
+      /Theme name "dark-mode" cannot be used with the "stylex" output target/,
+    );
   });
 });

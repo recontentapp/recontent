@@ -23,7 +23,6 @@ export type PluginContext = {
   /** Absolute path to the directory containing recontent.config.ts. */
   root: string;
   logger: Logger;
-  mode: "build" | "watch";
   /** Sorted by name. Only set for plugins that declare `"introspection"` or `"introspection?"` in `dependsOn`, and only when `introspection` is configured. */
   components?: ComponentInfo[];
   /** Sorted by id. The project types that components reference, set together with `components`. */

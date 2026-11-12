@@ -201,10 +201,8 @@ async function buildOnce(
     }
   }
 
-  const mode = options.watch ? "watch" : "build";
   const result = await runPlugins(config, {
     root: configDir,
-    mode,
     logger,
     components,
     types,
@@ -213,12 +211,13 @@ async function buildOnce(
 
   let errors = 0;
   for (const diagnostic of result.diagnostics) {
+    const text = `[${diagnostic.plugin}] ${diagnostic.message}${diagnostic.path ? ` (${diagnostic.path.join(".")})` : ""}`;
     if (diagnostic.severity === "error") {
       errors += 1;
-      logger.error(diagnostic.message);
+      logger.error(text);
     } else {
       warnings += 1;
-      logger.warn(diagnostic.message);
+      logger.warn(text);
     }
   }
 

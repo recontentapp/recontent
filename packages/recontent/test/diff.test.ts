@@ -1,5 +1,5 @@
 import { spawnSync } from "node:child_process";
-import { mkdtemp, rm, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { afterEach, beforeEach, describe, expect, jest, test } from "@jest/globals";
 import type { Config, ThemeOverride, TokenEntry, TokenRegistry } from "@recontentapp/core";
@@ -520,6 +520,63 @@ describe("runDiff against a config that imports a sibling file", () => {
     });
 
     expect(process.exitCode).toBe(1);
+  });
+});
+
+describe("runDiff against a config that imports through a tsconfig paths alias", () => {
+  let repoDir: string;
+  let stdoutSpy: ReturnType<typeof jest.spyOn>;
+  let logSpy: ReturnType<typeof jest.spyOn>;
+
+  const commit = (message: string) => {
+    git(["add", "-A"], repoDir);
+    git(
+      ["-c", "user.email=test@example.com", "-c", "user.name=Test", "commit", "-q", "-m", message],
+      repoDir,
+    );
+  };
+
+  beforeEach(async () => {
+    repoDir = await mkdtemp(path.join(process.cwd(), "test", "diff-alias-fixture-"));
+    git(["init", "-q"], repoDir);
+    await writeFile(
+      path.join(repoDir, "tsconfig.json"),
+      JSON.stringify({ compilerOptions: { baseUrl: ".", paths: { "@tokens/*": ["tokens/*"] } } }),
+      "utf-8",
+    );
+    await mkdir(path.join(repoDir, "tokens"));
+    await writeFile(
+      path.join(repoDir, "recontent.config.ts"),
+      CONFIG_BASE.replace('"./colors"', '"@tokens/colors"'),
+      "utf-8",
+    );
+    await writeFile(path.join(repoDir, "tokens", "colors.ts"), COLORS_BASE, "utf-8");
+    commit("base");
+    await writeFile(path.join(repoDir, "tokens", "colors.ts"), COLORS_HEAD, "utf-8");
+
+    logSpy = jest.spyOn(console, "error").mockImplementation(() => {});
+    stdoutSpy = jest.spyOn(console, "log").mockImplementation(() => {});
+  });
+
+  afterEach(async () => {
+    logSpy.mockRestore();
+    stdoutSpy.mockRestore();
+    process.exitCode = undefined;
+    await rm(repoDir, { recursive: true, force: true });
+  });
+
+  test("loads the base revision's tokens, not the working tree's", async () => {
+    await runDiff({
+      cwd: repoDir,
+      configPath: path.join(repoDir, "recontent.config.ts"),
+      rev: "HEAD",
+      format: "json",
+    });
+
+    const parsed = JSON.parse(String(stdoutSpy.mock.calls[0]![0]));
+    expect(parsed.tokens.changed.map((e: { to: TokenEntry }) => e.to.path.join("."))).toEqual([
+      "ref.color.blue",
+    ]);
   });
 });
 

@@ -6,10 +6,7 @@ import {
   defineTheme,
   tokens,
 } from "../src/index.js";
-import {
-  generateVanillaExtractFiles,
-  type VanillaExtractPluginOptions,
-} from "../src/plugins/vanilla-extract/generate.js";
+import { generateVanillaExtractFiles } from "../src/plugins/vanilla-extract/generate.js";
 import {
   assertParses,
   aliasChainConfig,
@@ -20,17 +17,10 @@ import {
 } from "./helpers/fixtures.js";
 import type { Config, OutputFile } from "@recontentapp/core";
 
-type GenerateInput = Fixture | { config: Config; output: VanillaExtractPluginOptions };
+type GenerateInput = Fixture | { config: Config };
 
 function generate(input: GenerateInput): OutputFile[] {
-  if ("ref" in input) {
-    return generateVanillaExtractFiles(input.config, {
-      outDir: "dist-test",
-      fontFamily: input.ref.fontFamily.body,
-      placeholderColor: input.ref.color.black,
-    });
-  }
-  return generateVanillaExtractFiles(input.config, input.output);
+  return generateVanillaExtractFiles(input.config);
 }
 
 describe("contract", () => {
@@ -73,12 +63,7 @@ describe("contract", () => {
     const config = defineConfig({
       tokens: { ref, system, components: {} },
     });
-    const output: VanillaExtractPluginOptions = {
-      outDir: "dist-test",
-      fontFamily: ref.__veFontFamily,
-      placeholderColor: ref.__veColor,
-    };
-    const [file] = generate({ config, output });
+    const [file] = generate({ config });
     expect(file!.content).toMatch(/"gap": vars\.ref\.spacing\["0-5"\],/);
     expect(file!.content).not.toMatch(/vars\.ref\.spacing\.0-5/);
     expect(file!.content).toMatch(/"accent": vars\.ref\.colors\[200\],/);
@@ -117,12 +102,7 @@ describe("base themeClass", () => {
     const config = defineConfig({
       tokens: { ref, system, components: {} },
     });
-    const output: VanillaExtractPluginOptions = {
-      outDir: "dist-test",
-      fontFamily: ref.__veFontFamily,
-      placeholderColor: ref.__veColor,
-    };
-    const [file] = generate({ config, output });
+    const [file] = generate({ config });
     expect(file!.content).toMatch(/"name": 'Segoe UI',/);
   });
 
@@ -139,11 +119,6 @@ describe("base themeClass", () => {
     const config = defineConfig({
       tokens: { ref, system, components: {} },
     });
-    const output: VanillaExtractPluginOptions = {
-      outDir: "dist-test",
-      fontFamily: ref.__veFontFamily,
-      placeholderColor: ref.__veColor,
-    };
     // Bypass tokens.color(...) validation to exercise escapeTemplateLiteral directly:
     // a colorSpace value is otherwise never attacker/author-controlled free text.
     config.registry.set("system.border.weird", {
@@ -163,7 +138,7 @@ describe("base themeClass", () => {
       },
       layer: "system",
     });
-    const [file] = generate({ config, output });
+    const [file] = generate({ config });
     expect(file!.content).toMatch(/color\(custom\\`\\\$\{x\} 0 0 0\)/);
   });
 
@@ -179,12 +154,7 @@ describe("base themeClass", () => {
     const config = defineConfig({
       tokens: { ref, system, components: {} },
     });
-    const output: VanillaExtractPluginOptions = {
-      outDir: "dist-test",
-      fontFamily: ref.__veFontFamily,
-      placeholderColor: ref.__veColor,
-    };
-    const [file] = generate({ config, output });
+    const [file] = generate({ config });
     expect(file!.content).toMatch(/"fontSize": vars\.ref\.typography\.base\.fontSize,/);
     expect(file!.content).toMatch(/"fontFamily": vars\.ref\.typography\.base\.fontFamily,/);
   });
@@ -204,12 +174,7 @@ describe("theme classes (Fix B + C)", () => {
       tokens: { ref, system, components: {} },
       themes: { bravo, alpha },
     });
-    const output: VanillaExtractPluginOptions = {
-      outDir: "dist-test",
-      fontFamily: ref.__veFontFamily,
-      placeholderColor: ref.__veColor,
-    };
-    const [file] = generate({ config, output });
+    const [file] = generate({ config });
     expect(file!.content).toMatch(/export const alphaThemeClass = createTheme/);
     expect(file!.content).toMatch(/export const bravoThemeClass = createTheme/);
     expect(file!.content.indexOf("alphaThemeClass")).toBeLessThan(
@@ -263,12 +228,7 @@ describe("theme classes (Fix B + C)", () => {
       tokens: { ref, system, components: {} },
       themes: { dark },
     });
-    const output: VanillaExtractPluginOptions = {
-      outDir: "dist-test",
-      fontFamily: ref.__veFontFamily,
-      placeholderColor: ref.__veColor,
-    };
-    const [file] = generate({ config, output });
+    const [file] = generate({ config });
     const darkBlock = file!.content.slice(file!.content.indexOf("darkThemeClass"));
     expect(darkBlock).toMatch(/"card": `0px 2px 4px 0px \$\{vars\.ref\.color\.black\}`,/);
   });
@@ -284,12 +244,7 @@ describe("theme classes (Fix B + C)", () => {
       tokens: { ref, system: defineSystemTokens({}), components: {} },
       themes: { dark },
     });
-    const output: VanillaExtractPluginOptions = {
-      outDir: "dist-test",
-      fontFamily: ref.__veFontFamily,
-      placeholderColor: ref.__veColor,
-    };
-    const [file] = generate({ config, output });
+    const [file] = generate({ config });
     const darkBlock = file!.content.slice(file!.content.indexOf("darkThemeClass"));
     expect(darkBlock).toMatch(/"none": '0px',/);
   });
@@ -307,12 +262,7 @@ describe("theme classes (Fix B + C)", () => {
       tokens: { ref, system: defineSystemTokens({}), components: {} },
       themes: { dark },
     });
-    const output: VanillaExtractPluginOptions = {
-      outDir: "dist-test",
-      fontFamily: ref.__veFontFamily,
-      placeholderColor: ref.__veColor,
-    };
-    const [file] = generate({ config, output });
+    const [file] = generate({ config });
     const darkBlock = file!.content.slice(file!.content.indexOf("darkThemeClass"));
     expect(darkBlock).toMatch(/"1": '100px',/);
     expect(darkBlock).toMatch(/"0": '0px',/);
@@ -339,12 +289,7 @@ describe("scales, errors, files", () => {
     const config = defineConfig({
       tokens: { ref, system: defineSystemTokens({}), components: {} },
     });
-    const output: VanillaExtractPluginOptions = {
-      outDir: "dist-test",
-      fontFamily: ref.__veFontFamily,
-      placeholderColor: ref.__veColor,
-    };
-    const [file] = generate({ config, output });
+    const [file] = generate({ config });
     expect(file!.content).toMatch(/export type RefLabels = "a" \| "b";/);
     expect(file!.content).toMatch(/export const refLabels = vars\.ref\.labels;/);
   });
@@ -361,12 +306,7 @@ describe("scales, errors, files", () => {
     const config = defineConfig({
       tokens: { ref, system: defineSystemTokens({}), components: {} },
     });
-    const output: VanillaExtractPluginOptions = {
-      outDir: "dist-test",
-      fontFamily: ref.__veFontFamily,
-      placeholderColor: ref.__veColor,
-    };
-    const [file] = generate({ config, output });
+    const [file] = generate({ config });
     expect(file!.content).toMatch(/export type RefTransitions = "fast" \| "slow";/);
     expect(file!.content).toMatch(/export const refTransitions = vars\.ref\.transitions;/);
   });
@@ -387,11 +327,6 @@ describe("scales, errors, files", () => {
     const config = defineConfig({
       tokens: { ref: a, system: defineSystemTokens({}), components: {} },
     });
-    const output: VanillaExtractPluginOptions = {
-      outDir: "dist-test",
-      fontFamily: a.__veFontFamily,
-      placeholderColor: a.__veColor,
-    };
     config.registry.set("ref.color.a", {
       path: ["ref", "color", "a"],
       $type: "color",
@@ -406,7 +341,7 @@ describe("scales, errors, files", () => {
       alias: ["ref", "color", "a"],
       layer: "ref",
     });
-    expect(() => generate({ config, output })).toThrow(
+    expect(() => generate({ config })).toThrow(
       /Circular alias detected at token path: ref\.color\./,
     );
   });
@@ -420,11 +355,6 @@ describe("scales, errors, files", () => {
     const config = defineConfig({
       tokens: { ref: a, system: defineSystemTokens({}), components: {} },
     });
-    const output: VanillaExtractPluginOptions = {
-      outDir: "dist-test",
-      fontFamily: a.__veFontFamily,
-      placeholderColor: a.__veColor,
-    };
     config.registry.set("ref.color.a", {
       path: ["ref", "color", "a"],
       $type: "color",
@@ -432,30 +362,13 @@ describe("scales, errors, files", () => {
       alias: ["ref", "color", "missing"],
       layer: "ref",
     });
-    expect(() => generate({ config, output })).toThrow("Alias target not found: ref.color.missing");
+    expect(() => generate({ config })).toThrow("Alias target not found: ref.color.missing");
   });
 
-  test("generate returns exactly tokens.css.ts and reset.gen.css.ts", () => {
+  test("generate returns exactly tokens.css.ts", () => {
     const config = aliasChainConfig();
     const files = generate(config);
-    expect(files.map((file) => file.filename)).toEqual(["tokens.css.ts", "reset.gen.css.ts"]);
-  });
-
-  test("reset.gen.css.ts is always emitted using globalStyle()", () => {
-    const config = aliasChainConfig();
-    const files = generate(config);
-    const resetFile = files.find((file) => file.filename === "reset.gen.css.ts");
-    expect(resetFile).toBeDefined();
-    expect(resetFile!.content).toMatch(/import \{ globalStyle \} from "@vanilla-extract\/css";/);
-    expect(resetFile!.content).toMatch(/globalStyle\("\*, \*::before, \*::after", \{/);
-  });
-
-  test("reset.gen.css.ts never contains a :focus-visible rule", () => {
-    const config = aliasChainConfig();
-    const files = generate(config);
-    const resetFile = files.find((file) => file.filename === "reset.gen.css.ts");
-    expect(resetFile).toBeDefined();
-    expect(resetFile!.content).not.toContain(":focus-visible");
+    expect(files.map((file) => file.filename)).toEqual(["tokens.css.ts"]);
   });
 
   test("every generated tokens.css.ts in this suite passes assertParses", () => {

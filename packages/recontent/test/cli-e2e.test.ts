@@ -14,7 +14,7 @@
  * finds this workspace's `node_modules/recontent` symlink by walking up
  * parent directories.
  */
-import { spawnSync } from "node:child_process";
+import { spawn, spawnSync } from "node:child_process";
 import {
   copyFileSync,
   cpSync,
@@ -155,6 +155,27 @@ describe("recontent init", () => {
     const result = runCli(["--cwd", dir, "init", "neutral", "--force"]);
     expect(result.status).toBe(0);
     expect(readFileSync(configPath, "utf-8")).toContain("defineConfig(");
+  });
+
+  test("--force on an up-to-date config succeeds, run after run", () => {
+    const dir = makeScratchDir("init-force-twice");
+
+    expect(runCli(["--cwd", dir, "init", "neutral", "--force"]).status).toBe(0);
+    const again = runCli(["--cwd", dir, "init", "neutral", "--force"]);
+
+    expect(again.status).toBe(0);
+    expect(again.stderr).not.toContain("already exists");
+  });
+
+  test("-c may point outside --cwd", () => {
+    const dir = makeScratchDir("init-config-outside");
+    const cwd = path.join(dir, "app");
+    mkdirSync(cwd);
+
+    const result = runCli(["--cwd", cwd, "init", "neutral", "-c", "../shared.config.ts"]);
+
+    expect(result.status).toBe(0);
+    expect(existsSync(path.join(dir, "shared.config.ts"))).toBe(true);
   });
 
   test("honors -c for the file it writes, and says so in its messages", () => {
@@ -1288,6 +1309,70 @@ describe("recontent inspect --from", () => {
     expect(result.status).toBe(1);
     expect(result.stderr).toContain("recontent.json");
   });
+});
+
+describe("recontent build plugin diagnostics", () => {
+  test("names the plugin and the token a diagnostic is about", () => {
+    const dir = makeScratchDir("build-plugin-diagnostic");
+    writeFileSync(
+      path.join(dir, "recontent.config.ts"),
+      `import { defineConfig, defineReferenceTokens, tokens } from "recontent";
+export default defineConfig({
+  tokens: { ref: defineReferenceTokens({ color: { blue: tokens.color("#2563eb") } }) },
+  plugins: [
+    {
+      name: "acme:lint",
+      dependsOn: ["tokens"],
+      validate: () => [{ severity: "warning", message: "no description", path: ["ref", "color", "blue"] }],
+    },
+  ],
+});
+`,
+    );
+
+    const result = runCli(["--cwd", dir, "build"]);
+
+    expect(result.status).toBe(0);
+    expect(result.stderr).toContain("warning: [acme:lint] no description (ref.color.blue)");
+  });
+});
+
+describe("recontent build --watch", () => {
+  async function waitFor(condition: () => boolean, what: string, timeoutMs = 20_000) {
+    const deadline = Date.now() + timeoutMs;
+    while (!condition()) {
+      if (Date.now() > deadline) throw new Error(`Timed out waiting for ${what}`);
+      await new Promise((resolve) => setTimeout(resolve, 50));
+    }
+  }
+
+  test("rebuilds with the edited config, not a cached copy of it", async () => {
+    const dir = makeScratchDir("build-watch-edit");
+    copyFixture("valid", dir);
+    const configPath = path.join(dir, "recontent.config.ts");
+    const cssPath = path.join(dir, "dist/tokens.css");
+    const watcher = spawn("node", [binPath, "build", "--watch", "--cwd", dir], {
+      stdio: ["ignore", "ignore", "pipe"],
+    });
+    let stderr = "";
+    watcher.stderr.on("data", (chunk) => (stderr += String(chunk)));
+
+    try {
+      // Edits made before the watchers are installed are not seen.
+      await waitFor(() => stderr.includes("Watching "), `the watcher to start\n${stderr}`);
+      expect(readFileSync(cssPath, "utf-8")).toContain("#2563eb");
+
+      writeFileSync(configPath, readFileSync(configPath, "utf-8").replace("#2563eb", "#dc2626"));
+
+      await waitFor(
+        () => readFileSync(cssPath, "utf-8").includes("#dc2626"),
+        `the rebuild after the edit\n${stderr}`,
+      );
+      expect(readFileSync(cssPath, "utf-8")).not.toContain("#2563eb");
+    } finally {
+      watcher.kill("SIGINT");
+    }
+  }, 60_000);
 });
 
 describe("recontent build with introspection", () => {

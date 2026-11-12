@@ -11,7 +11,7 @@ import { code, escapeText } from "../markdown.js";
 import { serializeValueCss } from "../serialize/values.js";
 import { outputPlugin } from "./factory.js";
 import { buildToken, deprecation, type DocToken } from "./shared/doc-token.js";
-import { resolveEntryValue } from "./shared/ts-source.js";
+import { resolveEntryValue } from "./shared/alias.js";
 
 export type DesignMdPluginOptions = {
   outDir: string;

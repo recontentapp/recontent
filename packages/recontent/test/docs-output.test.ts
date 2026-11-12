@@ -12,7 +12,6 @@ function ctxFor(config: Config): PluginContext {
     themes: config.themes,
     root: "/project",
     logger: { info: () => {}, warn: () => {}, error: () => {}, debug: () => {} },
-    mode: "build",
   };
 }
 

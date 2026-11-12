@@ -1,3 +1,4 @@
+import path from "node:path";
 import { createLogger } from "../../logger.js";
 import { exitWithError } from "../utils/exit.js";
 import { generateConfigFromDtcg } from "../dtcg-import/index.js";
@@ -36,20 +37,28 @@ export async function runInit(options: InitOptions): Promise<void> {
   const shownPath = displayPath(cwd, configPath);
 
   // `writeMode: "once"` checks existsSync() before writing — not perfectly
-  // atomic, but avoids inverting control flow through a catch block.
-  const { written } = await writeOutputFile(configPath, text, cwd, {
-    writeMode: options.force ? "always" : "once",
-  });
+  // atomic, but avoids inverting control flow through a catch block. `-c` is the
+  // user's own choice of destination, so it is not confined to `cwd`.
+  const { skipReason } = await writeOutputFile(
+    path.basename(configPath),
+    text,
+    path.dirname(configPath),
+    { writeMode: options.force ? "always" : "once" },
+  );
 
-  if (!written) {
+  if (skipReason === "exists") {
     exitWithError(`${shownPath} already exists. Use --force to overwrite.`);
     return;
   }
 
   const logger = createLogger();
-  logger.info(
-    preset ? `Created ${shownPath} from the "${preset.name}" preset` : `Created ${shownPath}`,
-  );
+  if (skipReason === "unchanged") {
+    logger.info(`${shownPath} is already up to date`);
+  } else {
+    logger.info(
+      preset ? `Created ${shownPath} from the "${preset.name}" preset` : `Created ${shownPath}`,
+    );
+  }
   if (imported) {
     logger.info(describeImport(imported.stats));
     for (const warning of imported.warnings) logger.warn(warning);

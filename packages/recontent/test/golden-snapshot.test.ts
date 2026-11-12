@@ -38,29 +38,13 @@ describe("golden snapshots", () => {
   });
 
   test("stylex", () => {
-    const { config, ref } = goldenConfig();
-    expect(
-      joinFiles(
-        generateStylexFiles(config, {
-          outDir: "dist-test",
-          fontFamily: ref.fontFamily.body,
-          placeholderColor: ref.color.black,
-        }),
-      ),
-    ).toMatchSnapshot();
+    const { config } = goldenConfig();
+    expect(joinFiles(generateStylexFiles(config))).toMatchSnapshot();
   });
 
   test("vanilla-extract", () => {
-    const { config, ref } = goldenConfig();
-    expect(
-      joinFiles(
-        generateVanillaExtractFiles(config, {
-          outDir: "dist-test",
-          fontFamily: ref.fontFamily.body,
-          placeholderColor: ref.color.black,
-        }),
-      ),
-    ).toMatchSnapshot();
+    const { config } = goldenConfig();
+    expect(joinFiles(generateVanillaExtractFiles(config))).toMatchSnapshot();
   });
 
   test("dtcg (base)", () => {

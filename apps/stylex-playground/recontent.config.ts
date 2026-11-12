@@ -70,8 +70,6 @@ export default defineConfig({
   plugins: [
     stylex({
       outDir: "src/generated/stylex",
-      fontFamily: system.fontFamily,
-      placeholderColor: system.colors.textMuted,
     }),
   ],
 });

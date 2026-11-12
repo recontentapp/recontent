@@ -35,8 +35,6 @@ export default defineConfig({
   plugins: [
     vanillaExtract({
       outDir: "src/generated",
-      fontFamily: system.fontFamily.sans,
-      placeholderColor: system.color.muted,
     }),
   ],
 });

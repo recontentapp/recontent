@@ -5,7 +5,7 @@ import { outputPlugin } from "./factory.js";
 export type InspectPluginOptions = {
   outDir: string;
   /** Defaults to `recontent.json`. */
-  fileName?: string;
+  filename?: string;
 };
 
 /**
@@ -19,7 +19,7 @@ export function inspect(options: InspectPluginOptions): RecontentPlugin {
       ctx.components && ctx.types ? { components: ctx.components, types: ctx.types } : undefined;
     return [
       {
-        filename: options.fileName ?? "recontent.json",
+        filename: options.filename ?? "recontent.json",
         content: JSON.stringify(createSnapshot(ctx, introspected), null, 2),
       },
     ];

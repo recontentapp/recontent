@@ -132,14 +132,18 @@ export async function loadConfig(
   if (!fs.existsSync(resolved)) {
     throw new ConfigLoadError(`Config file not found: "${resolved}".`);
   }
-  const configDir = options?.resolveFrom ?? path.dirname(resolved);
+  const configDir = path.dirname(resolved);
 
   let module: Record<string, unknown>;
   try {
     const jiti = createJiti(import.meta.url, {
       interopDefault: true,
+      // `build --watch` reloads the same path in-process; a cached module would keep serving the old tokens.
+      moduleCache: false,
       alias: {
-        ...getRecontentAliases(configDir),
+        // `resolveFrom` only redirects where `recontent` is found; the config's own
+        // tsconfig `paths` always belong to the directory the config lives in.
+        ...getRecontentAliases(options?.resolveFrom ?? configDir),
         ...getTsconfigAliases(configDir),
       },
     });

@@ -283,7 +283,18 @@ function normalizeLogLevel(logLevel: LogLevel | undefined): LogLevel {
   return logLevel;
 }
 
+/** Safe as a file name, a CSS class or attribute value, and a path segment, for every output. */
+const THEME_NAME_RE = /^[A-Za-z_][\w-]*$/;
+
 export function defineConfig(input: DefineConfigInput): Config {
+  for (const name of Object.keys(input.themes ?? {})) {
+    if (!THEME_NAME_RE.test(name)) {
+      throw new Error(
+        `Invalid theme name "${name}": theme names must contain only letters, digits, underscores, and hyphens, and cannot start with a digit or hyphen.`,
+      );
+    }
+  }
+
   const registry: TokenRegistry = new Map();
   const diagnostics = input.tokens ? diagnoseTokenTrees(input.tokens) : [];
 

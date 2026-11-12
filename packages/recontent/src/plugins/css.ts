@@ -10,11 +10,7 @@ import {
 } from "@recontentapp/core";
 import { cssVarName, serializeValueCss } from "../serialize/values.js";
 import type { GeneratorContext } from "./shared/context.js";
-import {
-  CSS_IDENTIFIER_RE,
-  validateThemeAttribute,
-  validateThemeNames,
-} from "./shared/theme-source.js";
+import { validateThemeAttribute } from "./shared/theme-source.js";
 import { outputPlugin } from "./factory.js";
 
 export type CssGeneratorOptions = {
@@ -130,11 +126,6 @@ export function generateCss(config: GeneratorContext, options: CssGeneratorOptio
   const { registry, themes } = config;
   const blocks: string[] = [];
 
-  validateThemeNames(Object.keys(themes), "css", {
-    pattern: CSS_IDENTIFIER_RE,
-    description:
-      "theme names must contain only letters, digits, underscores, and hyphens, and cannot start with a digit or hyphen",
-  });
   if (options.themeAttribute !== undefined) {
     validateThemeAttribute(options.themeAttribute, "css");
   }

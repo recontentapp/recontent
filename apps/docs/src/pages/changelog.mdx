@@ -10,3 +10,32 @@ Release notes are published as
 [`recontent`](https://www.npmjs.com/package/recontent) and
 [`@recontentapp/core`](https://www.npmjs.com/package/@recontentapp/core) share a single version and
 are released together under the same tag (e.g. `1.0.0`).
+
+## Unreleased
+
+### Breaking changes
+
+- `PluginContext.mode` is removed. No built-in plugin read it.
+- `inspect({ fileName })` is now `inspect({ filename })`, like `tailwind({ filename })`.
+- `stylex()` and `vanillaExtract()` no longer emit a CSS reset: the `fontFamily` and
+  `placeholderColor` options are removed, as are `reset.gen.css` and `reset.gen.css.ts`. Delete the
+  generated files and the import of the reset.
+- Theme names must now be valid in every output: letters, digits, underscores and hyphens, not
+  starting with a digit or a hyphen. `defineConfig()` throws otherwise.
+- Two files emitted at the same path are an error even when they come from the same plugin, for
+  example two `css()` instances with the same `outDir`, or a `dtcg()` theme named `tokens`.
+
+### Added
+
+- `resolveValue(ctx, entry, theme?)` in `recontent/plugins` resolves a token's value through its
+  alias chain and a theme's overrides.
+- Diagnostics and errors from plugins name the plugin (and the token) they came from.
+
+### Fixed
+
+- `recontent diff` loaded the base revision's tokens through the working tree's tsconfig `paths`
+  aliases, which hid or misreported changes.
+- A theme that replaced a scale with tokens built from other tokens silently dropped the override.
+- `build --watch` kept serving the config it first loaded after edits.
+- `init --force` failed when the config already had the same content, and `init -c` refused a path
+  outside `--cwd`.

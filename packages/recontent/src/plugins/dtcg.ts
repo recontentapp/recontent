@@ -7,6 +7,7 @@ import {
   type TokenRegistry,
 } from "@recontentapp/core";
 import { entryToDtcgNode, setNested } from "../serialize/values.js";
+import { getThemeOverride } from "./shared/alias.js";
 import type { GeneratorContext } from "./shared/context.js";
 import { outputPlugin } from "./factory.js";
 
@@ -114,12 +115,7 @@ export function generateDtcg(input: TokenRegistry | GeneratorContext): DtcgOutpu
 }
 
 export function generateDtcgThemed(ctx: GeneratorContext, themeName: string): DtcgOutput {
-  const themeOverride = ctx.themes[themeName];
-  if (!themeOverride) {
-    throw new Error(
-      `Theme "${themeName}" is not defined in the config. Available themes: ${Object.keys(ctx.themes).join(", ") || "(none)"}`,
-    );
-  }
+  const themeOverride = getThemeOverride(ctx.themes, themeName);
 
   const output: DtcgOutput = {};
 

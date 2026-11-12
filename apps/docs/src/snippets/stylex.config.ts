@@ -44,8 +44,6 @@ export default defineConfig({
   plugins: [
     stylex({
       outDir: "src/generated",
-      fontFamily: system.fontFamily,
-      placeholderColor: system.color.muted,
     }),
   ],
 });

@@ -49,7 +49,6 @@ export function needsComponents(config: Config): boolean {
 
 export type RunPluginsOptions = {
   root: string;
-  mode: PluginContext["mode"];
   logger: Logger;
   /** Handed to the plugins that depend on components. */
   components?: ComponentInfo[];
@@ -59,12 +58,29 @@ export type RunPluginsOptions = {
   componentsError?: string;
 };
 
+/** A plugin's diagnostic, tagged with the plugin that reported it. */
+type RunDiagnostic = PluginDiagnostic & { plugin: string };
+
 export type RunPluginsResult = {
   files: EmittedFile[];
-  diagnostics: PluginDiagnostic[];
+  diagnostics: RunDiagnostic[];
   /** Plugins that could not run, as `[plugin] message`. Their absence does not stop the other plugins' files. */
   failures: string[];
 };
+
+/** Runs a plugin hook, so a failure says which plugin and hook it came from. */
+async function callHook<T>(
+  plugin: RecontentPlugin,
+  hook: string,
+  run: () => T | Promise<T>,
+): Promise<T> {
+  try {
+    return await run();
+  } catch (cause) {
+    const message = cause instanceof Error ? cause.message : String(cause);
+    throw new Error(`[${plugin.name}] ${hook} failed: ${message}`, { cause });
+  }
+}
 
 export async function runPlugins(
   config: Config,
@@ -81,7 +97,6 @@ export async function runPlugins(
     themes: config.themes,
     root: options.root,
     logger: options.logger,
-    mode: options.mode,
   };
   const contextFor = (plugin: RecontentPlugin): PluginContext =>
     consumesComponents(plugin)
@@ -89,13 +104,16 @@ export async function runPlugins(
       : base;
 
   for (const plugin of plugins) {
-    await plugin.buildStart?.(contextFor(plugin));
+    if (plugin.buildStart) {
+      await callHook(plugin, "buildStart", () => plugin.buildStart!(contextFor(plugin)));
+    }
   }
 
-  const diagnostics: PluginDiagnostic[] = [];
+  const diagnostics: RunDiagnostic[] = [];
   for (const plugin of plugins) {
     if (!plugin.validate) continue;
-    diagnostics.push(...(await plugin.validate(contextFor(plugin))));
+    const found = await callHook(plugin, "validate", () => plugin.validate!(contextFor(plugin)));
+    for (const diagnostic of found) diagnostics.push({ plugin: plugin.name, ...diagnostic });
   }
 
   if (diagnostics.some((diagnostic) => diagnostic.severity === "error")) {
@@ -103,25 +121,33 @@ export async function runPlugins(
   }
 
   const files: EmittedFile[] = [];
-  const owners = new Map<string, string>();
-  for (const plugin of plugins) {
+  // Keyed by position, not name: two instances of the same plugin must not share a path either.
+  const owners = new Map<string, number>();
+  for (const [index, plugin] of plugins.entries()) {
     if (!plugin.generate) continue;
-    const pluginFiles = await plugin.generate(contextFor(plugin));
+    const pluginFiles = await callHook(plugin, "generate", () =>
+      plugin.generate!(contextFor(plugin)),
+    );
     for (const file of pluginFiles) {
       const normalized = path.posix.normalize(file.path);
-      const owner = owners.get(normalized);
-      if (owner !== undefined && owner !== plugin.name) {
+      const ownerIndex = owners.get(normalized);
+      if (ownerIndex !== undefined) {
+        const owner = plugins[ownerIndex]!;
         throw new Error(
-          `File path collision at "${normalized}": both plugin "${owner}" and plugin "${plugin.name}" emitted this file.`,
+          ownerIndex === index
+            ? `File path collision at "${normalized}": plugin "${plugin.name}" emitted this file twice.`
+            : `File path collision at "${normalized}": both plugin "${owner.name}" and plugin "${plugin.name}" emitted this file.`,
         );
       }
-      owners.set(normalized, plugin.name);
+      owners.set(normalized, index);
       files.push(file);
     }
   }
 
   for (const plugin of plugins) {
-    await plugin.buildEnd?.({ ...contextFor(plugin), files });
+    if (plugin.buildEnd) {
+      await callHook(plugin, "buildEnd", () => plugin.buildEnd!({ ...contextFor(plugin), files }));
+    }
   }
 
   return { files, diagnostics, failures };

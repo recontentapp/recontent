@@ -17,7 +17,6 @@ import {
   expandedMembers,
   isCompositeType,
   isExpandedComposite,
-  isStampedToken,
   pathKey,
   type OutputFile,
   type RecontentPlugin,
@@ -25,7 +24,6 @@ import {
   type TokenEntry,
   type TokenRegistry,
   type TokenTypeMap,
-  type TokenType,
 } from "@recontentapp/core";
 import {
   serializeCompositeCss,
@@ -34,7 +32,6 @@ import {
 } from "../serialize/values.js";
 import { CircularAliasError, getEntry, terminalEntry } from "./shared/alias.js";
 import type { GeneratorContext } from "./shared/context.js";
-import { resetRules, type CssResetOptions } from "./shared/reset.js";
 import { validateThemeNames } from "./shared/theme-source.js";
 import {
   capitalize,
@@ -42,11 +39,9 @@ import {
   entryPath,
   escapeTemplateLiteral,
   quotedKey,
-  resolveEntryValue,
   scaleExportsForConfig,
   type ScaleExport,
 } from "./shared/ts-source.js";
-import type { TokenBinding } from "@recontentapp/core";
 import { outputPlugin } from "./factory.js";
 
 function sanitizeSegment(segment: string): string {
@@ -114,24 +109,6 @@ function buildKeyMap(config: GeneratorContext): Map<string, string> {
   }
 
   return keys;
-}
-
-function toKebabCase(property: string): string {
-  return property.replace(/([A-Z])/g, "-$1").toLowerCase();
-}
-
-function generateCssResetStylesheet(options: CssResetOptions): string {
-  const lines: string[] = [];
-
-  for (const rule of resetRules(options)) {
-    const body = rule.declarations
-      .map(({ property, value }) => `  ${toKebabCase(property)}: ${value};`)
-      .join("\n");
-    const block = `${rule.selector} {\n${body}\n}`;
-    lines.push(rule.media ? `@media ${rule.media} {\n${block}\n}` : block);
-  }
-
-  return `${lines.join("\n\n")}\n`;
 }
 
 type VarLine = { key: string; expression: string };
@@ -506,67 +483,15 @@ function generateScalesSource(config: GeneratorContext, keys: Map<string, string
   return lines.join("\n");
 }
 
-function resolveTokenBindingEntry<T extends TokenType>(
-  registry: GeneratorContext["registry"],
-  token: TokenBinding<T>,
-  expectedType: T,
-  label: string,
-): TokenEntry {
-  if (!isStampedToken(token) || token.$type !== expectedType) {
-    throw new Error(`Output "${label}" must be a ${expectedType} token.`);
-  }
-  const entry = registry.get(pathKey(token._path));
-  if (!entry) {
-    throw new Error(`Output "${label}" references a token that is not registered.`);
-  }
-  return entry;
-}
-
 export type StylexPluginOptions = {
   outDir: string;
-  fontFamily: TokenBinding<"fontFamily">;
-  placeholderColor: TokenBinding<"color">;
 };
 
-export function generateStylexFiles(
-  config: GeneratorContext,
-  options: StylexPluginOptions,
-): OutputFile[] {
+export function generateStylexFiles(config: GeneratorContext): OutputFile[] {
   const keys = buildKeyMap(config);
-
-  const fontFamilyEntry = resolveTokenBindingEntry(
-    config.registry,
-    options.fontFamily,
-    "fontFamily",
-    "fontFamily",
-  );
-  const placeholderColorEntry = resolveTokenBindingEntry(
-    config.registry,
-    options.placeholderColor,
-    "color",
-    "placeholderColor",
-  );
-
-  const fontFamilyValue = resolveEntryValue(
-    config.registry,
-    fontFamilyEntry,
-  ) as TokenTypeMap["fontFamily"];
-  const placeholderColorValue = resolveEntryValue(
-    config.registry,
-    placeholderColorEntry,
-  ) as TokenTypeMap["color"];
-  const fontFamilyCss = serializeValueCss("fontFamily", fontFamilyValue);
-  const placeholderColorCss = serializeValueCss("color", placeholderColorValue);
 
   return [
     { filename: "tokens.stylex.ts", content: generateVarsSource(config, keys) },
-    {
-      filename: "reset.gen.css",
-      content: generateCssResetStylesheet({
-        fontFamily: fontFamilyCss,
-        placeholderColor: placeholderColorCss,
-      }),
-    },
     { filename: "themes.ts", content: generateThemesSource(config, keys) },
     { filename: "scales.ts", content: generateScalesSource(config, keys) },
   ];

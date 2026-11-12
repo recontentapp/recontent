@@ -9,7 +9,7 @@ import {
 } from "@recontentapp/core";
 import { cssVarName, serializeCompositeCss, serializeValueCss } from "../../serialize/values.js";
 import type { GeneratorContext } from "./context.js";
-import { resolveEntryValue } from "./ts-source.js";
+import { resolveEntryValue } from "./alias.js";
 
 export type DocToken = {
   layer: TokenLayer;
