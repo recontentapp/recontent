@@ -14,11 +14,17 @@ export type DocsPluginOptions = {
    * relative to the config file: include the config's own folder if it isn't the repository root.
    */
   gitBaseUrl?: string;
+  /**
+   * Accent color of the page: links, the active sidebar entry, focus rings and selections.
+   * Any CSS color, e.g. `#e5484d`. Applies to both light and dark mode, so pick one that reads on both.
+   * Defaults to a blue.
+   */
+  color?: string;
 };
 
 export function generateDocsFiles(ctx: PluginContext, options: DocsPluginOptions): OutputFile[] {
   const model = buildDocsModel(ctx, options.title ?? "Design system");
-  return [{ filename: "design.html", content: renderHtml(model, ctx, options.gitBaseUrl) }];
+  return [{ filename: "design.html", content: renderHtml(model, ctx, options) }];
 }
 
 export function docs(options: DocsPluginOptions): RecontentPlugin {

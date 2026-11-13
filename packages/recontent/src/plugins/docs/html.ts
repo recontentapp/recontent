@@ -349,11 +349,11 @@ const STYLES = `
   --hig-text: #1d1d1f;
   --hig-text-2: #6e6e73;
   --hig-line: #d2d2d7;
-  --hig-blue: #0071e3;
+  --hig-accent: #0071e3;
   --hig-orange: #ff9f0a;
   --hig-orange-bg: rgba(255, 159, 10, 0.14);
   --hig-orange-text: #a35f00;
-  --hig-blue-bg: rgba(0, 113, 227, 0.1);
+  --hig-accent-bg: color-mix(in srgb, var(--hig-accent) 10%, transparent);
   --hig-mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, monospace;
   /* Type scale: every font size below comes from here. */
   --hig-fs-xs: 12px;
@@ -382,10 +382,10 @@ const STYLES = `
   --hig-text: #f5f5f7;
   --hig-text-2: #a1a1a6;
   --hig-line: #38383a;
-  --hig-blue: #0a84ff;
+  --hig-accent: #0a84ff;
   --hig-orange-bg: rgba(255, 159, 10, 0.18);
   --hig-orange-text: #ffb340;
-  --hig-blue-bg: rgba(10, 132, 255, 0.18);
+  --hig-accent-bg: color-mix(in srgb, var(--hig-accent) 18%, transparent);
   --tk-comment: #98a1ab;
   --tk-string: #a5d6ff;
   --tk-number: #79c0ff;
@@ -448,7 +448,7 @@ kbd { font: inherit; font-size: var(--hig-fs-xs); padding: 0 6px; border-radius:
 .mode-btn .moon, :root[data-mode="dark"] .mode-btn .sun { display: none; }
 :root[data-mode="dark"] .mode-btn .moon { display: block; }
 .mode-btn:focus-visible, .picker select:focus-visible, .views button:focus-visible, .search-btn:focus-visible, .side-toggle:focus-visible, .ex-tabs button:focus-visible, .copy:focus-visible, .comp-card:focus-visible, .crumb:focus-visible, .side a:focus-visible, .alias:focus-visible, .tag:focus-visible, .has-tip:focus-visible {
-  outline: 2px solid var(--hig-blue); outline-offset: 2px;
+  outline: 2px solid var(--hig-accent); outline-offset: 2px;
 }
 .layout { display: grid; grid-template-columns: 240px minmax(0, 980px); gap: 40px; justify-content: center; padding: 0 24px; }
 /* Bottom space lives on main: padding on .layout would stop the sticky sidebar short of the page end. */
@@ -457,11 +457,11 @@ kbd { font: inherit; font-size: var(--hig-fs-xs); padding: 0 6px; border-radius:
 .side nav { display: flex; flex-direction: column; gap: 2px; }
 .side a { display: block; padding: 5px 10px; border-radius: 8px; color: var(--hig-text); text-decoration: none; word-break: break-word; }
 .side a:hover { background: var(--hig-bg-2); }
-.side a.active { color: var(--hig-blue); background: var(--hig-blue-bg); font-weight: 500; }
+.side a.active { color: var(--hig-accent); background: var(--hig-accent-bg); font-weight: 500; }
 .title { margin: 0 0 4px; font-size: var(--hig-fs-3xl); line-height: 1.1; font-weight: 700; letter-spacing: -0.02em; }
 .sub { margin: 0 0 40px; color: var(--hig-text-2); }
 .breadcrumb { margin: 0 0 8px; font-size: var(--hig-fs-sm); color: var(--hig-text-2); }
-.crumb { color: var(--hig-blue); text-decoration: none; }
+.crumb { color: var(--hig-accent); text-decoration: none; }
 .crumb:hover { text-decoration: underline; }
 .comp-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 12px; }
 .comp-card { display: flex; flex-direction: column; gap: 4px; padding: 14px 16px; border: 1px solid var(--hig-line); border-radius: 14px; color: var(--hig-text); text-decoration: none; }
@@ -485,7 +485,7 @@ kbd { font: inherit; font-size: var(--hig-fs-xs); padding: 0 6px; border-radius:
 .md h6 { font-size: var(--hig-fs-sm); }
 .md :is(ul, ol) { padding-left: 24px; }
 .md li + li { margin-top: 4px; }
-.md a { color: var(--hig-blue); text-decoration: none; }
+.md a { color: var(--hig-accent); text-decoration: none; }
 .md a:hover { text-decoration: underline; }
 .md blockquote { padding-left: 14px; border-left: 3px solid var(--hig-line); color: var(--hig-text-2); }
 .md hr { border: 0; border-top: 1px solid var(--hig-line); }
@@ -513,7 +513,7 @@ kbd { font: inherit; font-size: var(--hig-fs-xs); padding: 0 6px; border-radius:
 .mini { margin-left: 6px; font-size: var(--hig-fs-xs); color: var(--hig-text-2); }
 .tags { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 0 0 16px; }
 .tag { font-size: var(--hig-fs-xs); color: var(--hig-text-2); background: var(--hig-bg-2); border-radius: 999px; padding: 1px 9px; text-decoration: none; }
-a.tag { color: var(--hig-blue); }
+a.tag { color: var(--hig-accent); }
 a.tag:hover { text-decoration: underline; }
 .note { font-size: var(--hig-fs-xs); color: var(--hig-text-2); }
 .group { margin-bottom: 56px; scroll-margin-top: 80px; }
@@ -542,31 +542,31 @@ pre { margin: 0 0 16px; padding: 12px 14px; overflow-x: auto; border-radius: 12p
 .row-value { min-width: 0; }
 .val-wrap { display: inline-flex; align-items: baseline; gap: 6px; color: var(--hig-text-2); }
 .val { word-break: break-word; }
-.dot { display: none; width: 7px; height: 7px; border-radius: 50%; background: var(--hig-blue); flex: none; transform: translateY(-1px); }
+.dot { display: none; width: 7px; height: 7px; border-radius: 50%; background: var(--hig-accent); flex: none; transform: translateY(-1px); }
 .overridden .dot { display: inline-block; }
 .pill { font-size: var(--hig-fs-xs); color: var(--hig-text-2); background: var(--hig-bg-2); border-radius: 999px; padding: 1px 9px; }
 .capsule { font-size: var(--hig-fs-xs); font-weight: 600; color: var(--hig-orange-text); background: var(--hig-orange-bg); border-radius: 999px; padding: 1px 9px; }
-.capsule.exp { color: var(--hig-blue); background: var(--hig-blue-bg); }
+.capsule.exp { color: var(--hig-accent); background: var(--hig-accent-bg); }
 .has-tip { position: relative; cursor: help; }
 .has-tip::after { content: attr(data-tip); position: absolute; z-index: 5; top: calc(100% + 6px); left: 0; width: max-content; max-width: min(320px, 80vw); padding: 8px 12px; border-radius: 10px; background: var(--hig-text); color: var(--hig-bg); font-size: var(--hig-fs-xs); font-weight: 400; line-height: 1.4; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2); opacity: 0; visibility: hidden; pointer-events: none; transition: opacity 0.12s; }
 .has-tip:hover::after, .has-tip:focus-visible::after { opacity: 1; visibility: visible; }
 .is-deprecated { text-decoration: line-through; text-decoration-color: var(--hig-orange); }
 .desc, .reason { margin: 4px 0 0; font-size: var(--hig-fs-sm); color: var(--hig-text-2); }
 .reason { color: var(--hig-orange-text); }
-.alias { display: inline-block; margin-top: 4px; font-family: var(--hig-mono); font-size: var(--hig-fs-xs); color: var(--hig-blue); text-decoration: none; word-break: break-all; }
+.alias { display: inline-block; margin-top: 4px; font-family: var(--hig-mono); font-size: var(--hig-fs-xs); color: var(--hig-accent); text-decoration: none; word-break: break-all; }
 .alias:hover { text-decoration: underline; }
 .flash { animation: flash 1.6s ease-out; }
-@keyframes flash { 0%, 40% { background: var(--hig-blue-bg); } 100% { background: transparent; } }
+@keyframes flash { 0%, 40% { background: var(--hig-accent-bg); } 100% { background: transparent; } }
 .sample { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.row-preview .dim { display: block; height: 8px; min-width: 2px; border-radius: 4px; background: var(--hig-blue); }
+.row-preview .dim { display: block; height: 8px; min-width: 2px; border-radius: 4px; background: var(--hig-accent); }
 .row-preview .sw { display: block; width: 44px; height: 44px; border-radius: 10px; }
 .tile { display: block; width: 56px; height: 56px; margin: 6px; border-radius: 12px; background: var(--hig-surface); }
 .tile.wide { width: 100%; max-width: 160px; height: 40px; margin: 0; }
 .track { display: block; width: 120px; height: 8px; border-radius: 4px; background: var(--hig-bg-2); position: relative; }
-.demo { position: absolute; top: -4px; left: 0; width: 16px; height: 16px; border-radius: 50%; background: var(--hig-blue); }
+.demo { position: absolute; top: -4px; left: 0; width: 16px; height: 16px; border-radius: 50%; background: var(--hig-accent); }
 .row:hover .demo { transform: translateX(104px); }
 .source { margin: 0 0 16px; font-size: var(--hig-fs-sm); color: var(--hig-text-2); }
-.source a { color: var(--hig-blue); text-decoration: none; }
+.source a { color: var(--hig-accent); text-decoration: none; }
 .source a:hover { text-decoration: underline; }
 .props { width: 100%; border-collapse: collapse; font-size: var(--hig-fs-sm); }
 .props th { text-align: left; font-weight: 500; color: var(--hig-text-2); padding: 10px 18px; background: var(--hig-bg-2); }
@@ -600,7 +600,7 @@ pre { margin: 0 0 16px; padding: 12px 14px; overflow-x: auto; border-radius: 12p
 .palette-item .pname { font-family: var(--hig-mono); font-size: var(--hig-fs-sm); word-break: break-all; }
 .palette-item .pmeta { margin-left: auto; padding-left: 12px; font-size: var(--hig-fs-xs); color: var(--hig-text-2); white-space: nowrap; }
 .palette-item .psw { flex: none; width: 18px; height: 18px; border-radius: 5px; box-shadow: inset 0 0 0 1px var(--hig-line); }
-.palette-item[aria-selected="true"] { background: var(--hig-blue); color: #fff; }
+.palette-item[aria-selected="true"] { background: var(--hig-accent); color: #fff; }
 .palette-item[aria-selected="true"] .pmeta { color: rgba(255, 255, 255, 0.8); }
 .palette-empty { padding: 24px; text-align: center; color: var(--hig-text-2); }
 .palette-foot { display: flex; align-items: center; gap: 16px; padding: 10px 18px; border-top: 1px solid var(--hig-line); font-size: var(--hig-fs-xs); color: var(--hig-text-2); }
@@ -1010,7 +1010,11 @@ const SCRIPT = `
 })();
 `;
 
-export function renderHtml(model: DocsModel, ctx: GeneratorContext, gitBaseUrl?: string): string {
+export function renderHtml(
+  model: DocsModel,
+  ctx: GeneratorContext,
+  { gitBaseUrl, color }: { gitBaseUrl?: string; color?: string } = {},
+): string {
   const hasThemes = model.themes.length > 0;
   const hasComponents = model.components.length > 0;
   // Without tokens the tab would be empty; keep it only when it is all there is to show.
@@ -1120,7 +1124,7 @@ ${model.components.map((c) => componentHtml(c, gitBaseUrl)).join("\n")}
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>${title}</title>
 <script>${MODE_INIT}</script>
-<style>${STYLES}</style>
+<style>${STYLES}</style>${color ? `\n<style>:root, :root[data-mode="dark"] { --hig-accent: ${color.replace(/<\/(style)/gi, "<\\/$1")}; }</style>` : ""}
 <style>
 ${tokenCss(ctx)}
 </style>

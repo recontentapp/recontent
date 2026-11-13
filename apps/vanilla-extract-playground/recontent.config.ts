@@ -409,6 +409,7 @@ export default defineConfig({
   plugins: [
     docs({
       outDir: "docs",
+      color: "#2563eb",
       gitBaseUrl:
         "https://github.com/recontentapp/recontent/blob/master/apps/vanilla-extract-playground",
     }),

@@ -17,7 +17,7 @@ function ctxFor(config: Config): PluginContext {
 
 function renderCtx(
   ctx: PluginContext,
-  options: { title?: string; gitBaseUrl?: string } = {},
+  options: { title?: string; gitBaseUrl?: string; color?: string } = {},
 ): string {
   const files = generateDocsFiles(ctx, { outDir: "docs", ...options });
   expect(files.map((file) => file.filename)).toEqual(["design.html"]);
@@ -35,6 +35,14 @@ describe("design.html", () => {
     const titled = renderCtx(ctxFor(goldenConfig().config), { title: "Acme <Design>" });
     expect(titled).toContain("<title>Acme &lt;Design&gt;</title>");
     expect(titled).toContain("<h1>Acme &lt;Design&gt;</h1>");
+  });
+
+  test("color overrides the accent in light and dark mode", () => {
+    const override = ':root, :root[data-mode="dark"] { --hig-accent: #e5484d; }';
+    expect(html).not.toContain(":root, :root[data-mode=");
+    const colored = renderCtx(ctxFor(goldenConfig().config), { color: "#e5484d" });
+    // After the built-in light and dark accents, so it wins in both modes.
+    expect(colored.indexOf(override)).toBeGreaterThan(colored.indexOf("--hig-accent: #0a84ff"));
   });
 
   test("has a Design tokens view with one sidebar section per token layer, without an API entry", () => {

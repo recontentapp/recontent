@@ -23,6 +23,7 @@ docs(options: DocsPluginOptions): RecontentPlugin
 | `outDir`     | `string` | required          | Output directory, relative to the config file.                                                                                                                                                                                                                              |
 | `title`      | `string` | `"Design system"` | Title of the page: the header and the browser tab (`<title>`).                                                                                                                                                                                                              |
 | `gitBaseUrl` | `string` | none              | Where the repository's files are browsable, e.g. `https://github.com/acme/ui/blob/main`. A component's source location links to `<gitBaseUrl>/<path>#L<line>`, the path being relative to the config file: include the config's own folder if it isn't the repository root. |
+| `color`      | `string` | blue              | Accent color of the page: links, the active sidebar entry, focus rings and selections. Any CSS color, e.g. `#e5484d`. It applies to light and dark mode alike, so pick one that reads on both.                                                                              |
 
 Plugin name: `recontent:docs`.
 
