@@ -76,17 +76,17 @@ function notes(prop: PropInfo): string {
 }
 
 /** A fence longer than any run of backticks in the code. */
-function fenced(text: string): string[] {
+function fenced(text: string, language: string): string[] {
   const fence = "`".repeat(Math.max(3, ...(text.match(/`+/g) ?? []).map((run) => run.length + 1)));
-  return [`${fence}tsx`, text, fence];
+  return [`${fence}${language}`, text, fence];
 }
 
 /** `Usage`, `Links` and `Examples`, one level below the item's heading. */
 function documentationLines(item: Documentation, headingLevel: number): string[] {
   const heading = "#".repeat(headingLevel + 1);
   const lines: string[] = [];
-  // Usage is markdown by design: written as is.
-  if (item.usage) lines.push(`${heading} Usage`, "", item.usage, "");
+  // Usage is markdown, fenced so that its own headings (an h1, say) don't break ours.
+  if (item.usage) lines.push(`${heading} Usage`, "", ...fenced(item.usage, "md"), "");
   if (item.externalLinks?.length) {
     lines.push(`${heading} Links`, "");
     for (const { title, url } of item.externalLinks)
@@ -97,7 +97,7 @@ function documentationLines(item: Documentation, headingLevel: number): string[]
     lines.push(`${heading} Examples`, "");
     for (const example of item.examples) {
       if (example.title) lines.push(`**${escapeText(example.title)}**`, "");
-      lines.push(...fenced(example.code), "");
+      lines.push(...fenced(example.code, "tsx"), "");
     }
   }
   return lines;

@@ -222,6 +222,17 @@ describe("components", () => {
     expect(html).not.toContain('<a href="http');
   });
 
+  test("without tokens there is no Design tokens tab or view", () => {
+    const empty = defineConfig({
+      tokens: { ref: defineReferenceTokens({}), system: defineSystemTokens({}), components: {} },
+    });
+    const html = renderCtx({ ...ctxFor(empty), components });
+
+    expect(html).not.toContain('data-view-tab="tokens"');
+    expect(html).not.toContain('data-view="tokens"');
+    expect(html).toContain('data-view-tab="components"');
+  });
+
   test("a resolved alias is shown under the type, and type parameters next to the name", () => {
     const html = renderWith(components);
 

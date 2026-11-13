@@ -313,40 +313,2073 @@ pre { margin: 0 0 16px; padding: 12px 14px; overflow-x: auto; border-radius: 12p
 }
 </style>
 <style>
+:root {
+  --ref-color-danger-50: #fef2f2;
+  --ref-color-danger-100: #fee2e2;
+  --ref-color-danger-200: #fecaca;
+  --ref-color-danger-300: #fca5a5;
+  --ref-color-danger-400: #f87171;
+  --ref-color-danger-500: #ef4444;
+  --ref-color-danger-600: #dc2626;
+  --ref-color-danger-700: #b91c1c;
+  --ref-color-danger-800: #991b1b;
+  --ref-color-danger-900: #7f1d1d;
+  --ref-color-danger-300-32: #fca5a552;
+  --ref-color-danger-500-32: #ef444452;
+  --ref-color-info-50: #eff6ff;
+  --ref-color-info-100: #dbeafe;
+  --ref-color-info-200: #bfdbfe;
+  --ref-color-info-300: #93c5fd;
+  --ref-color-info-400: #60a5fa;
+  --ref-color-info-500: #3b82f6;
+  --ref-color-info-600: #2563eb;
+  --ref-color-info-700: #1d4ed8;
+  --ref-color-info-800: #1e40af;
+  --ref-color-info-900: #1e3a8a;
+  --ref-color-primary-25: #fafafa;
+  --ref-color-primary-50: #fafafa;
+  --ref-color-primary-100: #f4f4f5;
+  --ref-color-primary-200: #e4e4e7;
+  --ref-color-primary-300: #d4d4d8;
+  --ref-color-primary-400: #a1a1aa;
+  --ref-color-primary-500: #71717a;
+  --ref-color-primary-600: #52525b;
+  --ref-color-primary-700: #18181b;
+  --ref-color-primary-800: #27272a;
+  --ref-color-primary-900: #09090b;
+  --ref-color-primary-200-32: #e4e4e752;
+  --ref-color-primary-700-32: #18181b52;
+  --ref-color-primary-900-32: #09090b52;
+  --ref-color-secondary-25: #ffffff;
+  --ref-color-secondary-50: #fafafa;
+  --ref-color-secondary-100: #f4f4f5;
+  --ref-color-secondary-200: #e4e4e7;
+  --ref-color-secondary-300: #d4d4d8;
+  --ref-color-secondary-400: #a1a1aa;
+  --ref-color-secondary-500: #71717a;
+  --ref-color-secondary-600: #52525b;
+  --ref-color-secondary-700: #3f3f46;
+  --ref-color-secondary-750: #27272a;
+  --ref-color-secondary-800: #18181b;
+  --ref-color-secondary-900: #09090b;
+  --ref-color-secondary-900-10: #09090b1a;
+  --ref-color-secondary-900-15: #09090b26;
+  --ref-color-secondary-900-20: #09090b33;
+  --ref-color-secondary-900-50: #09090b80;
+  --ref-color-success-50: #f0fdf4;
+  --ref-color-success-100: #dcfce7;
+  --ref-color-success-200: #bbf7d0;
+  --ref-color-success-300: #86efac;
+  --ref-color-success-400: #4ade80;
+  --ref-color-success-500: #22c55e;
+  --ref-color-success-600: #16a34a;
+  --ref-color-success-700: #15803d;
+  --ref-color-success-800: #166534;
+  --ref-color-success-900: #14532d;
+  --ref-color-warning-50: #fffbeb;
+  --ref-color-warning-100: #fef3c7;
+  --ref-color-warning-200: #fde68a;
+  --ref-color-warning-300: #fcd34d;
+  --ref-color-warning-400: #fbbf24;
+  --ref-color-warning-500: #f59e0b;
+  --ref-color-warning-600: #d97706;
+  --ref-color-warning-700: #b45309;
+  --ref-color-warning-800: #92400e;
+  --ref-color-warning-900: #78350f;
+  --ref-color-white-10: #ffffff1a;
+  --ref-color-white-32: #ffffff52;
+  --ref-color-white-60: #ffffff99;
+  --ref-color-white-90: #ffffffe5;
+  --ref-color-white-100: #ffffff;
+  --ref-spacing-0: 0px;
+  --ref-spacing-2: 2px;
+  --ref-spacing-4: 4px;
+  --ref-spacing-8: 8px;
+  --ref-spacing-12: 12px;
+  --ref-spacing-16: 16px;
+  --ref-spacing-20: 20px;
+  --ref-spacing-24: 24px;
+  --ref-spacing-32: 32px;
+  --ref-spacing-40: 40px;
+  --ref-spacing-48: 48px;
+  --ref-spacing-56: 56px;
+  --ref-spacing-64: 64px;
+  --ref-spacing-72: 72px;
+  --ref-spacing-80: 80px;
+  --ref-radius-none: 0px;
+  --ref-radius-inner: 4px;
+  --ref-radius-element: 6px;
+  --ref-radius-container: 8px;
+  --ref-radius-page: 12px;
+  --ref-radius-full: 9999px;
+  --ref-fontSize-xs: 10px;
+  --ref-fontSize-sm: 12px;
+  --ref-fontSize-base: 14px;
+  --ref-fontSize-lg: 17px;
+  --ref-fontSize-xl: 20px;
+  --ref-fontSize-2xl: 24px;
+  --ref-fontSize-3xl: 30px;
+  --ref-fontSize-4xl: 36px;
+  --ref-overlayWidth-sm: 24rem;
+  --ref-overlayWidth-md: 32rem;
+  --ref-overlayWidth-lg: 48rem;
+  --ref-overlayWidth-fullscreen: 96rem;
+  --ref-fontFamily-sans: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+  --ref-fontFamily-mono: SF Mono, Monaco, Consolas, monospace;
+  --ref-iconScale-xs: 10px;
+  --ref-iconScale-sm: 12px;
+  --ref-iconScale-base: 14px;
+  --ref-iconScale-lg: 17px;
+  --ref-iconScale-xl: 20px;
+  --ref-iconScale-2xl: 24px;
+  --ref-iconScale-3xl: 30px;
+  --ref-iconScale-4xl: 36px;
+}
 
+:root {
+  --system-colors-accent: var(--ref-color-primary-700);
+  --system-colors-onAccent: var(--ref-color-white-100);
+  --system-colors-backgroundSurface: var(--ref-color-white-100);
+  --system-colors-backgroundBody: var(--ref-color-secondary-50);
+  --system-colors-backgroundCard: var(--ref-color-white-100);
+  --system-colors-backgroundMuted: var(--ref-color-secondary-50);
+  --system-colors-textPrimary: var(--ref-color-secondary-900);
+  --system-colors-textSecondary: var(--ref-color-secondary-500);
+  --system-colors-textDisabled: var(--ref-color-secondary-400);
+  --system-colors-border: var(--ref-color-secondary-200);
+  --system-colors-borderEmphasized: var(--ref-color-secondary-400);
+  --system-colors-skeleton: var(--ref-color-secondary-200);
+  --system-colors-success: var(--ref-color-success-500);
+  --system-colors-warning: var(--ref-color-warning-500);
+  --system-colors-error: var(--ref-color-danger-500);
+  --system-colors-onSuccess: var(--ref-color-white-100);
+  --system-colors-onWarning: var(--ref-color-secondary-900);
+  --system-colors-onError: var(--ref-color-white-100);
+  --system-colors-secondary-200: var(--ref-color-primary-700);
+  --system-colors-textScale-primary: var(--ref-color-secondary-900);
+  --system-colors-textScale-secondary: var(--ref-color-secondary-500);
+  --system-colors-textScale-disabled: var(--ref-color-secondary-400);
+  --system-colors-textScale-accent: var(--ref-color-primary-700);
+  --system-spacing-0: var(--ref-spacing-0);
+  --system-spacing-2: var(--ref-spacing-2);
+  --system-spacing-4: var(--ref-spacing-4);
+  --system-spacing-8: var(--ref-spacing-8);
+  --system-spacing-12: var(--ref-spacing-12);
+  --system-spacing-16: var(--ref-spacing-16);
+  --system-spacing-20: var(--ref-spacing-20);
+  --system-spacing-24: var(--ref-spacing-24);
+  --system-spacing-32: var(--ref-spacing-32);
+  --system-spacing-40: var(--ref-spacing-40);
+  --system-spacing-48: var(--ref-spacing-48);
+  --system-spacing-56: var(--ref-spacing-56);
+  --system-spacing-64: var(--ref-spacing-64);
+  --system-spacing-72: var(--ref-spacing-72);
+  --system-spacing-80: var(--ref-spacing-80);
+  --system-radius-none: var(--ref-radius-none);
+  --system-radius-inner: var(--ref-radius-inner);
+  --system-radius-element: var(--ref-radius-element);
+  --system-radius-container: var(--ref-radius-container);
+  --system-radius-page: var(--ref-radius-page);
+  --system-radius-full: var(--ref-radius-full);
+  --system-typography-bodyFontFamily: var(--ref-fontFamily-sans);
+  --system-typography-codeFontFamily: var(--ref-fontFamily-mono);
+  --system-motion-fast: 175ms;
+  --system-motion-medium: 410ms;
+  --system-motion-mediumMax: 550ms;
+  --system-motion-slowMin: 730ms;
+  --system-motion-standard: cubic-bezier(0.24, 1, 0.4, 1);
+  --system-elevationScale-sm: 0px 0px 2px 0px var(--ref-color-secondary-900-20), 0px 2px 10px 0px var(--ref-color-secondary-900-10);
+  --system-elevationScale-md: 0px 0px 3px 0px var(--ref-color-secondary-900-10), 0px 4px 20px 0px var(--ref-color-secondary-900-15);
+  --system-elevationScale-lg: 0px 0px 4px 0px var(--ref-color-secondary-900-10), 0px 8px 40px 0px var(--ref-color-secondary-900-15);
+  --system-elevationScale-inset: inset 0px 1px 2px 0px var(--ref-color-secondary-900-10);
+  --system-border-default: 1px solid var(--ref-color-secondary-200);
+  --system-borderScale-thin: 1px solid var(--ref-color-secondary-200);
+  --system-borderScale-thick: 2px solid var(--ref-color-secondary-200);
+  --system-textScale-heading-branding-page-l-font-family: var(--ref-fontFamily-sans);
+  --system-textScale-heading-branding-page-l-font-size: 48px;
+  --system-textScale-heading-branding-page-l-font-weight: 600;
+  --system-textScale-heading-branding-page-l-letter-spacing: 0px;
+  --system-textScale-heading-branding-page-l-line-height: 1.2083;
+  --system-textScale-heading-branding-page-font-family: var(--ref-fontFamily-sans);
+  --system-textScale-heading-branding-page-font-size: 32px;
+  --system-textScale-heading-branding-page-font-weight: 600;
+  --system-textScale-heading-branding-page-letter-spacing: 0px;
+  --system-textScale-heading-branding-page-line-height: 1.25;
+  --system-textScale-heading-page-l-font-family: var(--ref-fontFamily-sans);
+  --system-textScale-heading-page-l-font-size: 24px;
+  --system-textScale-heading-page-l-font-weight: 700;
+  --system-textScale-heading-page-l-letter-spacing: 0px;
+  --system-textScale-heading-page-l-line-height: 1.25;
+  --system-textScale-heading-page-font-family: var(--ref-fontFamily-sans);
+  --system-textScale-heading-page-font-size: 22px;
+  --system-textScale-heading-page-font-weight: 600;
+  --system-textScale-heading-page-letter-spacing: 0px;
+  --system-textScale-heading-page-line-height: 1.3636;
+  --system-textScale-heading-section-1-font-family: var(--ref-fontFamily-sans);
+  --system-textScale-heading-section-1-font-size: 20px;
+  --system-textScale-heading-section-1-font-weight: 600;
+  --system-textScale-heading-section-1-letter-spacing: 0px;
+  --system-textScale-heading-section-1-line-height: 1.5;
+  --system-textScale-heading-section-2-font-family: var(--ref-fontFamily-sans);
+  --system-textScale-heading-section-2-font-size: 18px;
+  --system-textScale-heading-section-2-font-weight: 600;
+  --system-textScale-heading-section-2-letter-spacing: 0px;
+  --system-textScale-heading-section-2-line-height: 1.3333;
+  --system-textScale-heading-section-3-font-family: var(--ref-fontFamily-sans);
+  --system-textScale-heading-section-3-font-size: 16px;
+  --system-textScale-heading-section-3-font-weight: 600;
+  --system-textScale-heading-section-3-letter-spacing: 0px;
+  --system-textScale-heading-section-3-line-height: 1.5;
+  --system-textScale-heading-section-4-font-family: var(--ref-fontFamily-sans);
+  --system-textScale-heading-section-4-font-size: 14px;
+  --system-textScale-heading-section-4-font-weight: 600;
+  --system-textScale-heading-section-4-letter-spacing: 0px;
+  --system-textScale-heading-section-4-line-height: 1.4286;
+  --system-textScale-paragraph-body-xl-strong-font-family: var(--ref-fontFamily-sans);
+  --system-textScale-paragraph-body-xl-strong-font-size: 18px;
+  --system-textScale-paragraph-body-xl-strong-font-weight: 500;
+  --system-textScale-paragraph-body-xl-strong-letter-spacing: 0px;
+  --system-textScale-paragraph-body-xl-strong-line-height: 1.3333;
+  --system-textScale-paragraph-body-xl-font-family: var(--ref-fontFamily-sans);
+  --system-textScale-paragraph-body-xl-font-size: 18px;
+  --system-textScale-paragraph-body-xl-font-weight: 400;
+  --system-textScale-paragraph-body-xl-letter-spacing: 0px;
+  --system-textScale-paragraph-body-xl-line-height: 1.3333;
+  --system-textScale-paragraph-body-l-strong-font-family: var(--ref-fontFamily-sans);
+  --system-textScale-paragraph-body-l-strong-font-size: 16px;
+  --system-textScale-paragraph-body-l-strong-font-weight: 500;
+  --system-textScale-paragraph-body-l-strong-letter-spacing: 0px;
+  --system-textScale-paragraph-body-l-strong-line-height: 1.5;
+  --system-textScale-paragraph-body-l-font-family: var(--ref-fontFamily-sans);
+  --system-textScale-paragraph-body-l-font-size: 16px;
+  --system-textScale-paragraph-body-l-font-weight: 400;
+  --system-textScale-paragraph-body-l-letter-spacing: 0px;
+  --system-textScale-paragraph-body-l-line-height: 1.5;
+  --system-textScale-paragraph-body-m-strong-font-family: var(--ref-fontFamily-sans);
+  --system-textScale-paragraph-body-m-strong-font-size: 14px;
+  --system-textScale-paragraph-body-m-strong-font-weight: 600;
+  --system-textScale-paragraph-body-m-strong-letter-spacing: 0px;
+  --system-textScale-paragraph-body-m-strong-line-height: 1.4286;
+  --system-textScale-paragraph-body-m-font-family: var(--ref-fontFamily-sans);
+  --system-textScale-paragraph-body-m-font-size: 14px;
+  --system-textScale-paragraph-body-m-font-weight: 400;
+  --system-textScale-paragraph-body-m-letter-spacing: 0px;
+  --system-textScale-paragraph-body-m-line-height: 1.4286;
+  --system-textScale-clickable-font-family: var(--ref-fontFamily-sans);
+  --system-textScale-clickable-font-size: 14px;
+  --system-textScale-clickable-font-weight: 500;
+  --system-textScale-clickable-letter-spacing: 0px;
+  --system-textScale-clickable-line-height: 1.4286;
+  --system-textScale-tiny-caption-strong-font-family: var(--ref-fontFamily-sans);
+  --system-textScale-tiny-caption-strong-font-size: 12px;
+  --system-textScale-tiny-caption-strong-font-weight: 700;
+  --system-textScale-tiny-caption-strong-letter-spacing: 0px;
+  --system-textScale-tiny-caption-strong-line-height: 1.3333;
+  --system-textScale-tiny-caption-font-family: var(--ref-fontFamily-sans);
+  --system-textScale-tiny-caption-font-size: 12px;
+  --system-textScale-tiny-caption-font-weight: 500;
+  --system-textScale-tiny-caption-letter-spacing: 0px;
+  --system-textScale-tiny-caption-line-height: 1.3333;
+  --system-textScale-tiny-subcaption-font-family: var(--ref-fontFamily-sans);
+  --system-textScale-tiny-subcaption-font-size: 10px;
+  --system-textScale-tiny-subcaption-font-weight: 500;
+  --system-textScale-tiny-subcaption-letter-spacing: 0px;
+  --system-textScale-tiny-subcaption-line-height: 1;
+  --system-transitionScale-fast-transition-duration: 100ms;
+  --system-transitionScale-fast-transition-delay: 0ms;
+  --system-transitionScale-fast-transition-timing-function: cubic-bezier(0.24, 1, 0.4, 1);
+  --system-transitionScale-slow-transition-duration: 400ms;
+  --system-transitionScale-slow-transition-delay: 0ms;
+  --system-transitionScale-slow-transition-timing-function: cubic-bezier(0.24, 1, 0.4, 1);
+  --system-gradients-accent: linear-gradient(135deg, var(--ref-color-primary-700) 0%, var(--ref-color-primary-500) 100%);
+}
+
+:root {
+  --sticker-paddingX: 8px;
+  --sticker-paddingY: 2px;
+  --sticker-borderRadius: 4px;
+}
 </style>
 </head>
 <body>
 <header class="bar">
   <h1>Design system</h1>
-  <div class="views" role="tablist" aria-label="Sections"><button type="button" role="tab" data-view-tab="tokens" aria-selected="false">Design tokens<span class="n">0</span></button><button type="button" role="tab" data-view-tab="components" aria-selected="false">Components<span class="n">1</span></button></div>
+  <div class="views" role="tablist" aria-label="Sections"><button type="button" role="tab" data-view-tab="tokens" aria-selected="false">Design tokens<span class="n">202</span></button><button type="button" role="tab" data-view-tab="components" aria-selected="false">Components<span class="n">1</span></button></div>
   <div class="bar-end">
     <button type="button" class="search-btn" id="palette-open" aria-haspopup="dialog"><span>Search</span><kbd>⌘K</kbd></button>
     
     <button type="button" class="mode-btn" id="mode" aria-label="Switch to dark mode" title="Switch to dark mode"><svg class="sun" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="3"/><path d="M8 1.5v1.5M8 13v1.5M1.5 8H3M13 8h1.5M3.4 3.4l1 1M11.6 11.6l1 1M3.4 12.6l1-1M11.6 4.4l1-1"/></svg><svg class="moon" viewBox="0 0 16 16" aria-hidden="true"><path d="M13.5 9.5A5.5 5.5 0 0 1 6.5 2.5a5.5 5.5 0 1 0 7 7z"/></svg></button>
   </div>
 </header>
-<div data-view="tokens" data-count="0">
+<div data-view="tokens">
   <div class="layout">
     <aside class="side">
       <button type="button" class="side-toggle" aria-expanded="false">Contents</button>
-      <nav aria-label="Design tokens"><span class="cat">Reference</span><span class="cat">System</span><span class="cat">Components</span></nav>
+      <nav aria-label="Design tokens"><span class="cat">Reference</span><a href="#g-ref-ref-color-danger" data-goto="g-ref-ref-color-danger">ref.color.danger</a><a href="#g-ref-ref-color-info" data-goto="g-ref-ref-color-info">ref.color.info</a><a href="#g-ref-ref-color-primary" data-goto="g-ref-ref-color-primary">ref.color.primary</a><a href="#g-ref-ref-color-secondary" data-goto="g-ref-ref-color-secondary">ref.color.secondary</a><a href="#g-ref-ref-color-success" data-goto="g-ref-ref-color-success">ref.color.success</a><a href="#g-ref-ref-color-warning" data-goto="g-ref-ref-color-warning">ref.color.warning</a><a href="#g-ref-ref-color-white" data-goto="g-ref-ref-color-white">ref.color.white</a><a href="#g-ref-ref-fontFamily" data-goto="g-ref-ref-fontFamily">ref.fontFamily</a><a href="#g-ref-ref-fontSize" data-goto="g-ref-ref-fontSize">ref.fontSize</a><a href="#g-ref-ref-iconScale" data-goto="g-ref-ref-iconScale">ref.iconScale</a><a href="#g-ref-ref-overlayWidth" data-goto="g-ref-ref-overlayWidth">ref.overlayWidth</a><a href="#g-ref-ref-radius" data-goto="g-ref-ref-radius">ref.radius</a><a href="#g-ref-ref-spacing" data-goto="g-ref-ref-spacing">ref.spacing</a><span class="cat">System</span><a href="#g-system-system-border" data-goto="g-system-system-border">system.border</a><a href="#g-system-system-borderScale" data-goto="g-system-system-borderScale">system.borderScale</a><a href="#g-system-system-colors" data-goto="g-system-system-colors">system.colors</a><a href="#g-system-system-colors-secondary" data-goto="g-system-system-colors-secondary">system.colors.secondary</a><a href="#g-system-system-colors-textScale" data-goto="g-system-system-colors-textScale">system.colors.textScale</a><a href="#g-system-system-elevationScale" data-goto="g-system-system-elevationScale">system.elevationScale</a><a href="#g-system-system-gradients" data-goto="g-system-system-gradients">system.gradients</a><a href="#g-system-system-motion" data-goto="g-system-system-motion">system.motion</a><a href="#g-system-system-radius" data-goto="g-system-system-radius">system.radius</a><a href="#g-system-system-spacing" data-goto="g-system-system-spacing">system.spacing</a><a href="#g-system-system-textScale" data-goto="g-system-system-textScale">system.textScale</a><a href="#g-system-system-transitionScale" data-goto="g-system-system-transitionScale">system.transitionScale</a><a href="#g-system-system-typography" data-goto="g-system-system-typography">system.typography</a><span class="cat">Components</span><a href="#g-components-sticker" data-goto="g-components-sticker">sticker</a></nav>
     </aside>
     <main>
 <div id="ref" class="layer">
   <h2 class="title">Reference</h2>
-  <p class="sub">0 tokens</p>
-  <p class="empty">No reference tokens defined.</p>
+  <p class="sub">120 tokens</p>
+  <section class="group" id="g-ref-ref-color-danger">
+  <h3>ref.color.danger <span class="count">12</span></h3>
+  
+  
+  <div class="grid"><div class="card" id="t-ref.color.danger.50" data-search="ref.color.danger.50 color Reference" data-kind="token" data-name="ref.color.danger.50" data-meta="color · Reference" data-swatch="--ref-color-danger-50">
+  <div class="swatch"><span class="sw" style="background:var(--ref-color-danger-50)"></span></div>
+  <div class="card-body">
+    <div class="name"><code class="tname">ref.color.danger.50</code><span class="pill">color</span></div>
+    <span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">#fef2f2</code></span>
+    
+  </div>
+</div>
+<div class="card" id="t-ref.color.danger.100" data-search="ref.color.danger.100 color Reference" data-kind="token" data-name="ref.color.danger.100" data-meta="color · Reference" data-swatch="--ref-color-danger-100">
+  <div class="swatch"><span class="sw" style="background:var(--ref-color-danger-100)"></span></div>
+  <div class="card-body">
+    <div class="name"><code class="tname">ref.color.danger.100</code><span class="pill">color</span></div>
+    <span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">#fee2e2</code></span>
+    
+  </div>
+</div>
+<div class="card" id="t-ref.color.danger.200" data-search="ref.color.danger.200 color Reference" data-kind="token" data-name="ref.color.danger.200" data-meta="color · Reference" data-swatch="--ref-color-danger-200">
+  <div class="swatch"><span class="sw" style="background:var(--ref-color-danger-200)"></span></div>
+  <div class="card-body">
+    <div class="name"><code class="tname">ref.color.danger.200</code><span class="pill">color</span></div>
+    <span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">#fecaca</code></span>
+    
+  </div>
+</div>
+<div class="card" id="t-ref.color.danger.300" data-search="ref.color.danger.300 color Reference" data-kind="token" data-name="ref.color.danger.300" data-meta="color · Reference" data-swatch="--ref-color-danger-300">
+  <div class="swatch"><span class="sw" style="background:var(--ref-color-danger-300)"></span></div>
+  <div class="card-body">
+    <div class="name"><code class="tname">ref.color.danger.300</code><span class="pill">color</span></div>
+    <span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">#fca5a5</code></span>
+    
+  </div>
+</div>
+<div class="card" id="t-ref.color.danger.300-32" data-search="ref.color.danger.300-32 color Reference" data-kind="token" data-name="ref.color.danger.300-32" data-meta="color · Reference" data-swatch="--ref-color-danger-300-32">
+  <div class="swatch"><span class="sw" style="background:var(--ref-color-danger-300-32)"></span></div>
+  <div class="card-body">
+    <div class="name"><code class="tname">ref.color.danger.300-32</code><span class="pill">color</span></div>
+    <span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">#fca5a552</code></span>
+    
+  </div>
+</div>
+<div class="card" id="t-ref.color.danger.400" data-search="ref.color.danger.400 color Reference" data-kind="token" data-name="ref.color.danger.400" data-meta="color · Reference" data-swatch="--ref-color-danger-400">
+  <div class="swatch"><span class="sw" style="background:var(--ref-color-danger-400)"></span></div>
+  <div class="card-body">
+    <div class="name"><code class="tname">ref.color.danger.400</code><span class="pill">color</span></div>
+    <span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">#f87171</code></span>
+    
+  </div>
+</div>
+<div class="card" id="t-ref.color.danger.500" data-search="ref.color.danger.500 color Reference" data-kind="token" data-name="ref.color.danger.500" data-meta="color · Reference" data-swatch="--ref-color-danger-500">
+  <div class="swatch"><span class="sw" style="background:var(--ref-color-danger-500)"></span></div>
+  <div class="card-body">
+    <div class="name"><code class="tname">ref.color.danger.500</code><span class="pill">color</span></div>
+    <span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">#ef4444</code></span>
+    
+  </div>
+</div>
+<div class="card" id="t-ref.color.danger.500-32" data-search="ref.color.danger.500-32 color Reference" data-kind="token" data-name="ref.color.danger.500-32" data-meta="color · Reference" data-swatch="--ref-color-danger-500-32">
+  <div class="swatch"><span class="sw" style="background:var(--ref-color-danger-500-32)"></span></div>
+  <div class="card-body">
+    <div class="name"><code class="tname">ref.color.danger.500-32</code><span class="pill">color</span></div>
+    <span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">#ef444452</code></span>
+    
+  </div>
+</div>
+<div class="card" id="t-ref.color.danger.600" data-search="ref.color.danger.600 color Reference" data-kind="token" data-name="ref.color.danger.600" data-meta="color · Reference" data-swatch="--ref-color-danger-600">
+  <div class="swatch"><span class="sw" style="background:var(--ref-color-danger-600)"></span></div>
+  <div class="card-body">
+    <div class="name"><code class="tname">ref.color.danger.600</code><span class="pill">color</span></div>
+    <span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">#dc2626</code></span>
+    
+  </div>
+</div>
+<div class="card" id="t-ref.color.danger.700" data-search="ref.color.danger.700 color Reference" data-kind="token" data-name="ref.color.danger.700" data-meta="color · Reference" data-swatch="--ref-color-danger-700">
+  <div class="swatch"><span class="sw" style="background:var(--ref-color-danger-700)"></span></div>
+  <div class="card-body">
+    <div class="name"><code class="tname">ref.color.danger.700</code><span class="pill">color</span></div>
+    <span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">#b91c1c</code></span>
+    
+  </div>
+</div>
+<div class="card" id="t-ref.color.danger.800" data-search="ref.color.danger.800 color Reference" data-kind="token" data-name="ref.color.danger.800" data-meta="color · Reference" data-swatch="--ref-color-danger-800">
+  <div class="swatch"><span class="sw" style="background:var(--ref-color-danger-800)"></span></div>
+  <div class="card-body">
+    <div class="name"><code class="tname">ref.color.danger.800</code><span class="pill">color</span></div>
+    <span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">#991b1b</code></span>
+    
+  </div>
+</div>
+<div class="card" id="t-ref.color.danger.900" data-search="ref.color.danger.900 color Reference" data-kind="token" data-name="ref.color.danger.900" data-meta="color · Reference" data-swatch="--ref-color-danger-900">
+  <div class="swatch"><span class="sw" style="background:var(--ref-color-danger-900)"></span></div>
+  <div class="card-body">
+    <div class="name"><code class="tname">ref.color.danger.900</code><span class="pill">color</span></div>
+    <span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">#7f1d1d</code></span>
+    
+  </div>
+</div></div>
+</section>
+<section class="group" id="g-ref-ref-color-info">
+  <h3>ref.color.info <span class="count">10</span></h3>
+  
+  
+  <div class="grid"><div class="card" id="t-ref.color.info.50" data-search="ref.color.info.50 color Reference" data-kind="token" data-name="ref.color.info.50" data-meta="color · Reference" data-swatch="--ref-color-info-50">
+  <div class="swatch"><span class="sw" style="background:var(--ref-color-info-50)"></span></div>
+  <div class="card-body">
+    <div class="name"><code class="tname">ref.color.info.50</code><span class="pill">color</span></div>
+    <span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">#eff6ff</code></span>
+    
+  </div>
+</div>
+<div class="card" id="t-ref.color.info.100" data-search="ref.color.info.100 color Reference" data-kind="token" data-name="ref.color.info.100" data-meta="color · Reference" data-swatch="--ref-color-info-100">
+  <div class="swatch"><span class="sw" style="background:var(--ref-color-info-100)"></span></div>
+  <div class="card-body">
+    <div class="name"><code class="tname">ref.color.info.100</code><span class="pill">color</span></div>
+    <span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">#dbeafe</code></span>
+    
+  </div>
+</div>
+<div class="card" id="t-ref.color.info.200" data-search="ref.color.info.200 color Reference" data-kind="token" data-name="ref.color.info.200" data-meta="color · Reference" data-swatch="--ref-color-info-200">
+  <div class="swatch"><span class="sw" style="background:var(--ref-color-info-200)"></span></div>
+  <div class="card-body">
+    <div class="name"><code class="tname">ref.color.info.200</code><span class="pill">color</span></div>
+    <span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">#bfdbfe</code></span>
+    
+  </div>
+</div>
+<div class="card" id="t-ref.color.info.300" data-search="ref.color.info.300 color Reference" data-kind="token" data-name="ref.color.info.300" data-meta="color · Reference" data-swatch="--ref-color-info-300">
+  <div class="swatch"><span class="sw" style="background:var(--ref-color-info-300)"></span></div>
+  <div class="card-body">
+    <div class="name"><code class="tname">ref.color.info.300</code><span class="pill">color</span></div>
+    <span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">#93c5fd</code></span>
+    
+  </div>
+</div>
+<div class="card" id="t-ref.color.info.400" data-search="ref.color.info.400 color Reference" data-kind="token" data-name="ref.color.info.400" data-meta="color · Reference" data-swatch="--ref-color-info-400">
+  <div class="swatch"><span class="sw" style="background:var(--ref-color-info-400)"></span></div>
+  <div class="card-body">
+    <div class="name"><code class="tname">ref.color.info.400</code><span class="pill">color</span></div>
+    <span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">#60a5fa</code></span>
+    
+  </div>
+</div>
+<div class="card" id="t-ref.color.info.500" data-search="ref.color.info.500 color Reference" data-kind="token" data-name="ref.color.info.500" data-meta="color · Reference" data-swatch="--ref-color-info-500">
+  <div class="swatch"><span class="sw" style="background:var(--ref-color-info-500)"></span></div>
+  <div class="card-body">
+    <div class="name"><code class="tname">ref.color.info.500</code><span class="pill">color</span></div>
+    <span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">#3b82f6</code></span>
+    
+  </div>
+</div>
+<div class="card" id="t-ref.color.info.600" data-search="ref.color.info.600 color Reference" data-kind="token" data-name="ref.color.info.600" data-meta="color · Reference" data-swatch="--ref-color-info-600">
+  <div class="swatch"><span class="sw" style="background:var(--ref-color-info-600)"></span></div>
+  <div class="card-body">
+    <div class="name"><code class="tname">ref.color.info.600</code><span class="pill">color</span></div>
+    <span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">#2563eb</code></span>
+    
+  </div>
+</div>
+<div class="card" id="t-ref.color.info.700" data-search="ref.color.info.700 color Reference" data-kind="token" data-name="ref.color.info.700" data-meta="color · Reference" data-swatch="--ref-color-info-700">
+  <div class="swatch"><span class="sw" style="background:var(--ref-color-info-700)"></span></div>
+  <div class="card-body">
+    <div class="name"><code class="tname">ref.color.info.700</code><span class="pill">color</span></div>
+    <span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">#1d4ed8</code></span>
+    
+  </div>
+</div>
+<div class="card" id="t-ref.color.info.800" data-search="ref.color.info.800 color Reference" data-kind="token" data-name="ref.color.info.800" data-meta="color · Reference" data-swatch="--ref-color-info-800">
+  <div class="swatch"><span class="sw" style="background:var(--ref-color-info-800)"></span></div>
+  <div class="card-body">
+    <div class="name"><code class="tname">ref.color.info.800</code><span class="pill">color</span></div>
+    <span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">#1e40af</code></span>
+    
+  </div>
+</div>
+<div class="card" id="t-ref.color.info.900" data-search="ref.color.info.900 color Reference" data-kind="token" data-name="ref.color.info.900" data-meta="color · Reference" data-swatch="--ref-color-info-900">
+  <div class="swatch"><span class="sw" style="background:var(--ref-color-info-900)"></span></div>
+  <div class="card-body">
+    <div class="name"><code class="tname">ref.color.info.900</code><span class="pill">color</span></div>
+    <span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">#1e3a8a</code></span>
+    
+  </div>
+</div></div>
+</section>
+<section class="group" id="g-ref-ref-color-primary">
+  <h3>ref.color.primary <span class="count">14</span></h3>
+  
+  
+  <div class="grid"><div class="card" id="t-ref.color.primary.25" data-search="ref.color.primary.25 color Reference" data-kind="token" data-name="ref.color.primary.25" data-meta="color · Reference" data-swatch="--ref-color-primary-25">
+  <div class="swatch"><span class="sw" style="background:var(--ref-color-primary-25)"></span></div>
+  <div class="card-body">
+    <div class="name"><code class="tname">ref.color.primary.25</code><span class="pill">color</span></div>
+    <span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">#fafafa</code></span>
+    
+  </div>
+</div>
+<div class="card" id="t-ref.color.primary.50" data-search="ref.color.primary.50 color Reference" data-kind="token" data-name="ref.color.primary.50" data-meta="color · Reference" data-swatch="--ref-color-primary-50">
+  <div class="swatch"><span class="sw" style="background:var(--ref-color-primary-50)"></span></div>
+  <div class="card-body">
+    <div class="name"><code class="tname">ref.color.primary.50</code><span class="pill">color</span></div>
+    <span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">#fafafa</code></span>
+    
+  </div>
+</div>
+<div class="card" id="t-ref.color.primary.100" data-search="ref.color.primary.100 color Reference" data-kind="token" data-name="ref.color.primary.100" data-meta="color · Reference" data-swatch="--ref-color-primary-100">
+  <div class="swatch"><span class="sw" style="background:var(--ref-color-primary-100)"></span></div>
+  <div class="card-body">
+    <div class="name"><code class="tname">ref.color.primary.100</code><span class="pill">color</span></div>
+    <span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">#f4f4f5</code></span>
+    
+  </div>
+</div>
+<div class="card" id="t-ref.color.primary.200" data-search="ref.color.primary.200 color Reference" data-kind="token" data-name="ref.color.primary.200" data-meta="color · Reference" data-swatch="--ref-color-primary-200">
+  <div class="swatch"><span class="sw" style="background:var(--ref-color-primary-200)"></span></div>
+  <div class="card-body">
+    <div class="name"><code class="tname">ref.color.primary.200</code><span class="pill">color</span></div>
+    <span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">#e4e4e7</code></span>
+    
+  </div>
+</div>
+<div class="card" id="t-ref.color.primary.200-32" data-search="ref.color.primary.200-32 color Reference" data-kind="token" data-name="ref.color.primary.200-32" data-meta="color · Reference" data-swatch="--ref-color-primary-200-32">
+  <div class="swatch"><span class="sw" style="background:var(--ref-color-primary-200-32)"></span></div>
+  <div class="card-body">
+    <div class="name"><code class="tname">ref.color.primary.200-32</code><span class="pill">color</span></div>
+    <span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">#e4e4e752</code></span>
+    
+  </div>
+</div>
+<div class="card" id="t-ref.color.primary.300" data-search="ref.color.primary.300 color Reference" data-kind="token" data-name="ref.color.primary.300" data-meta="color · Reference" data-swatch="--ref-color-primary-300">
+  <div class="swatch"><span class="sw" style="background:var(--ref-color-primary-300)"></span></div>
+  <div class="card-body">
+    <div class="name"><code class="tname">ref.color.primary.300</code><span class="pill">color</span></div>
+    <span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">#d4d4d8</code></span>
+    
+  </div>
+</div>
+<div class="card" id="t-ref.color.primary.400" data-search="ref.color.primary.400 color Reference" data-kind="token" data-name="ref.color.primary.400" data-meta="color · Reference" data-swatch="--ref-color-primary-400">
+  <div class="swatch"><span class="sw" style="background:var(--ref-color-primary-400)"></span></div>
+  <div class="card-body">
+    <div class="name"><code class="tname">ref.color.primary.400</code><span class="pill">color</span></div>
+    <span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">#a1a1aa</code></span>
+    
+  </div>
+</div>
+<div class="card" id="t-ref.color.primary.500" data-search="ref.color.primary.500 color Reference" data-kind="token" data-name="ref.color.primary.500" data-meta="color · Reference" data-swatch="--ref-color-primary-500">
+  <div class="swatch"><span class="sw" style="background:var(--ref-color-primary-500)"></span></div>
+  <div class="card-body">
+    <div class="name"><code class="tname">ref.color.primary.500</code><span class="pill">color</span></div>
+    <span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">#71717a</code></span>
+    
+  </div>
+</div>
+<div class="card" id="t-ref.color.primary.600" data-search="ref.color.primary.600 color Reference" data-kind="token" data-name="ref.color.primary.600" data-meta="color · Reference" data-swatch="--ref-color-primary-600">
+  <div class="swatch"><span class="sw" style="background:var(--ref-color-primary-600)"></span></div>
+  <div class="card-body">
+    <div class="name"><code class="tname">ref.color.primary.600</code><span class="pill">color</span></div>
+    <span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">#52525b</code></span>
+    
+  </div>
+</div>
+<div class="card" id="t-ref.color.primary.700" data-search="ref.color.primary.700 color Reference" data-kind="token" data-name="ref.color.primary.700" data-meta="color · Reference" data-swatch="--ref-color-primary-700">
+  <div class="swatch"><span class="sw" style="background:var(--ref-color-primary-700)"></span></div>
+  <div class="card-body">
+    <div class="name"><code class="tname">ref.color.primary.700</code><span class="pill">color</span></div>
+    <span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">#18181b</code></span>
+    
+  </div>
+</div>
+<div class="card" id="t-ref.color.primary.700-32" data-search="ref.color.primary.700-32 color Reference" data-kind="token" data-name="ref.color.primary.700-32" data-meta="color · Reference" data-swatch="--ref-color-primary-700-32">
+  <div class="swatch"><span class="sw" style="background:var(--ref-color-primary-700-32)"></span></div>
+  <div class="card-body">
+    <div class="name"><code class="tname">ref.color.primary.700-32</code><span class="pill">color</span></div>
+    <span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">#18181b52</code></span>
+    
+  </div>
+</div>
+<div class="card" id="t-ref.color.primary.800" data-search="ref.color.primary.800 color Reference" data-kind="token" data-name="ref.color.primary.800" data-meta="color · Reference" data-swatch="--ref-color-primary-800">
+  <div class="swatch"><span class="sw" style="background:var(--ref-color-primary-800)"></span></div>
+  <div class="card-body">
+    <div class="name"><code class="tname">ref.color.primary.800</code><span class="pill">color</span></div>
+    <span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">#27272a</code></span>
+    
+  </div>
+</div>
+<div class="card" id="t-ref.color.primary.900" data-search="ref.color.primary.900 color Reference" data-kind="token" data-name="ref.color.primary.900" data-meta="color · Reference" data-swatch="--ref-color-primary-900">
+  <div class="swatch"><span class="sw" style="background:var(--ref-color-primary-900)"></span></div>
+  <div class="card-body">
+    <div class="name"><code class="tname">ref.color.primary.900</code><span class="pill">color</span></div>
+    <span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">#09090b</code></span>
+    
+  </div>
+</div>
+<div class="card" id="t-ref.color.primary.900-32" data-search="ref.color.primary.900-32 color Reference" data-kind="token" data-name="ref.color.primary.900-32" data-meta="color · Reference" data-swatch="--ref-color-primary-900-32">
+  <div class="swatch"><span class="sw" style="background:var(--ref-color-primary-900-32)"></span></div>
+  <div class="card-body">
+    <div class="name"><code class="tname">ref.color.primary.900-32</code><span class="pill">color</span></div>
+    <span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">#09090b52</code></span>
+    
+  </div>
+</div></div>
+</section>
+<section class="group" id="g-ref-ref-color-secondary">
+  <h3>ref.color.secondary <span class="count">16</span></h3>
+  
+  
+  <div class="grid"><div class="card" id="t-ref.color.secondary.25" data-search="ref.color.secondary.25 color Reference" data-kind="token" data-name="ref.color.secondary.25" data-meta="color · Reference" data-swatch="--ref-color-secondary-25">
+  <div class="swatch"><span class="sw" style="background:var(--ref-color-secondary-25)"></span></div>
+  <div class="card-body">
+    <div class="name"><code class="tname">ref.color.secondary.25</code><span class="pill">color</span></div>
+    <span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">#ffffff</code></span>
+    
+  </div>
+</div>
+<div class="card" id="t-ref.color.secondary.50" data-search="ref.color.secondary.50 color Reference" data-kind="token" data-name="ref.color.secondary.50" data-meta="color · Reference" data-swatch="--ref-color-secondary-50">
+  <div class="swatch"><span class="sw" style="background:var(--ref-color-secondary-50)"></span></div>
+  <div class="card-body">
+    <div class="name"><code class="tname">ref.color.secondary.50</code><span class="pill">color</span></div>
+    <span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">#fafafa</code></span>
+    
+  </div>
+</div>
+<div class="card" id="t-ref.color.secondary.100" data-search="ref.color.secondary.100 color Reference" data-kind="token" data-name="ref.color.secondary.100" data-meta="color · Reference" data-swatch="--ref-color-secondary-100">
+  <div class="swatch"><span class="sw" style="background:var(--ref-color-secondary-100)"></span></div>
+  <div class="card-body">
+    <div class="name"><code class="tname">ref.color.secondary.100</code><span class="pill">color</span></div>
+    <span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">#f4f4f5</code></span>
+    
+  </div>
+</div>
+<div class="card" id="t-ref.color.secondary.200" data-search="ref.color.secondary.200 color Reference" data-kind="token" data-name="ref.color.secondary.200" data-meta="color · Reference" data-swatch="--ref-color-secondary-200">
+  <div class="swatch"><span class="sw" style="background:var(--ref-color-secondary-200)"></span></div>
+  <div class="card-body">
+    <div class="name"><code class="tname">ref.color.secondary.200</code><span class="pill">color</span></div>
+    <span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">#e4e4e7</code></span>
+    
+  </div>
+</div>
+<div class="card" id="t-ref.color.secondary.300" data-search="ref.color.secondary.300 color Reference" data-kind="token" data-name="ref.color.secondary.300" data-meta="color · Reference" data-swatch="--ref-color-secondary-300">
+  <div class="swatch"><span class="sw" style="background:var(--ref-color-secondary-300)"></span></div>
+  <div class="card-body">
+    <div class="name"><code class="tname">ref.color.secondary.300</code><span class="pill">color</span></div>
+    <span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">#d4d4d8</code></span>
+    
+  </div>
+</div>
+<div class="card" id="t-ref.color.secondary.400" data-search="ref.color.secondary.400 color Reference" data-kind="token" data-name="ref.color.secondary.400" data-meta="color · Reference" data-swatch="--ref-color-secondary-400">
+  <div class="swatch"><span class="sw" style="background:var(--ref-color-secondary-400)"></span></div>
+  <div class="card-body">
+    <div class="name"><code class="tname">ref.color.secondary.400</code><span class="pill">color</span></div>
+    <span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">#a1a1aa</code></span>
+    
+  </div>
+</div>
+<div class="card" id="t-ref.color.secondary.500" data-search="ref.color.secondary.500 color Reference" data-kind="token" data-name="ref.color.secondary.500" data-meta="color · Reference" data-swatch="--ref-color-secondary-500">
+  <div class="swatch"><span class="sw" style="background:var(--ref-color-secondary-500)"></span></div>
+  <div class="card-body">
+    <div class="name"><code class="tname">ref.color.secondary.500</code><span class="pill">color</span></div>
+    <span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">#71717a</code></span>
+    
+  </div>
+</div>
+<div class="card" id="t-ref.color.secondary.600" data-search="ref.color.secondary.600 color Reference" data-kind="token" data-name="ref.color.secondary.600" data-meta="color · Reference" data-swatch="--ref-color-secondary-600">
+  <div class="swatch"><span class="sw" style="background:var(--ref-color-secondary-600)"></span></div>
+  <div class="card-body">
+    <div class="name"><code class="tname">ref.color.secondary.600</code><span class="pill">color</span></div>
+    <span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">#52525b</code></span>
+    
+  </div>
+</div>
+<div class="card" id="t-ref.color.secondary.700" data-search="ref.color.secondary.700 color Reference" data-kind="token" data-name="ref.color.secondary.700" data-meta="color · Reference" data-swatch="--ref-color-secondary-700">
+  <div class="swatch"><span class="sw" style="background:var(--ref-color-secondary-700)"></span></div>
+  <div class="card-body">
+    <div class="name"><code class="tname">ref.color.secondary.700</code><span class="pill">color</span></div>
+    <span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">#3f3f46</code></span>
+    
+  </div>
+</div>
+<div class="card" id="t-ref.color.secondary.750" data-search="ref.color.secondary.750 color Reference" data-kind="token" data-name="ref.color.secondary.750" data-meta="color · Reference" data-swatch="--ref-color-secondary-750">
+  <div class="swatch"><span class="sw" style="background:var(--ref-color-secondary-750)"></span></div>
+  <div class="card-body">
+    <div class="name"><code class="tname">ref.color.secondary.750</code><span class="pill">color</span></div>
+    <span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">#27272a</code></span>
+    
+  </div>
+</div>
+<div class="card" id="t-ref.color.secondary.800" data-search="ref.color.secondary.800 color Reference" data-kind="token" data-name="ref.color.secondary.800" data-meta="color · Reference" data-swatch="--ref-color-secondary-800">
+  <div class="swatch"><span class="sw" style="background:var(--ref-color-secondary-800)"></span></div>
+  <div class="card-body">
+    <div class="name"><code class="tname">ref.color.secondary.800</code><span class="pill">color</span></div>
+    <span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">#18181b</code></span>
+    
+  </div>
+</div>
+<div class="card" id="t-ref.color.secondary.900" data-search="ref.color.secondary.900 color Reference" data-kind="token" data-name="ref.color.secondary.900" data-meta="color · Reference" data-swatch="--ref-color-secondary-900">
+  <div class="swatch"><span class="sw" style="background:var(--ref-color-secondary-900)"></span></div>
+  <div class="card-body">
+    <div class="name"><code class="tname">ref.color.secondary.900</code><span class="pill">color</span></div>
+    <span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">#09090b</code></span>
+    
+  </div>
+</div>
+<div class="card" id="t-ref.color.secondary.900-10" data-search="ref.color.secondary.900-10 color Reference" data-kind="token" data-name="ref.color.secondary.900-10" data-meta="color · Reference" data-swatch="--ref-color-secondary-900-10">
+  <div class="swatch"><span class="sw" style="background:var(--ref-color-secondary-900-10)"></span></div>
+  <div class="card-body">
+    <div class="name"><code class="tname">ref.color.secondary.900-10</code><span class="pill">color</span></div>
+    <span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">#09090b1a</code></span>
+    
+  </div>
+</div>
+<div class="card" id="t-ref.color.secondary.900-15" data-search="ref.color.secondary.900-15 color Reference" data-kind="token" data-name="ref.color.secondary.900-15" data-meta="color · Reference" data-swatch="--ref-color-secondary-900-15">
+  <div class="swatch"><span class="sw" style="background:var(--ref-color-secondary-900-15)"></span></div>
+  <div class="card-body">
+    <div class="name"><code class="tname">ref.color.secondary.900-15</code><span class="pill">color</span></div>
+    <span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">#09090b26</code></span>
+    
+  </div>
+</div>
+<div class="card" id="t-ref.color.secondary.900-20" data-search="ref.color.secondary.900-20 color Reference" data-kind="token" data-name="ref.color.secondary.900-20" data-meta="color · Reference" data-swatch="--ref-color-secondary-900-20">
+  <div class="swatch"><span class="sw" style="background:var(--ref-color-secondary-900-20)"></span></div>
+  <div class="card-body">
+    <div class="name"><code class="tname">ref.color.secondary.900-20</code><span class="pill">color</span></div>
+    <span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">#09090b33</code></span>
+    
+  </div>
+</div>
+<div class="card" id="t-ref.color.secondary.900-50" data-search="ref.color.secondary.900-50 color Reference" data-kind="token" data-name="ref.color.secondary.900-50" data-meta="color · Reference" data-swatch="--ref-color-secondary-900-50">
+  <div class="swatch"><span class="sw" style="background:var(--ref-color-secondary-900-50)"></span></div>
+  <div class="card-body">
+    <div class="name"><code class="tname">ref.color.secondary.900-50</code><span class="pill">color</span></div>
+    <span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">#09090b80</code></span>
+    
+  </div>
+</div></div>
+</section>
+<section class="group" id="g-ref-ref-color-success">
+  <h3>ref.color.success <span class="count">10</span></h3>
+  
+  
+  <div class="grid"><div class="card" id="t-ref.color.success.50" data-search="ref.color.success.50 color Reference" data-kind="token" data-name="ref.color.success.50" data-meta="color · Reference" data-swatch="--ref-color-success-50">
+  <div class="swatch"><span class="sw" style="background:var(--ref-color-success-50)"></span></div>
+  <div class="card-body">
+    <div class="name"><code class="tname">ref.color.success.50</code><span class="pill">color</span></div>
+    <span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">#f0fdf4</code></span>
+    
+  </div>
+</div>
+<div class="card" id="t-ref.color.success.100" data-search="ref.color.success.100 color Reference" data-kind="token" data-name="ref.color.success.100" data-meta="color · Reference" data-swatch="--ref-color-success-100">
+  <div class="swatch"><span class="sw" style="background:var(--ref-color-success-100)"></span></div>
+  <div class="card-body">
+    <div class="name"><code class="tname">ref.color.success.100</code><span class="pill">color</span></div>
+    <span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">#dcfce7</code></span>
+    
+  </div>
+</div>
+<div class="card" id="t-ref.color.success.200" data-search="ref.color.success.200 color Reference" data-kind="token" data-name="ref.color.success.200" data-meta="color · Reference" data-swatch="--ref-color-success-200">
+  <div class="swatch"><span class="sw" style="background:var(--ref-color-success-200)"></span></div>
+  <div class="card-body">
+    <div class="name"><code class="tname">ref.color.success.200</code><span class="pill">color</span></div>
+    <span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">#bbf7d0</code></span>
+    
+  </div>
+</div>
+<div class="card" id="t-ref.color.success.300" data-search="ref.color.success.300 color Reference" data-kind="token" data-name="ref.color.success.300" data-meta="color · Reference" data-swatch="--ref-color-success-300">
+  <div class="swatch"><span class="sw" style="background:var(--ref-color-success-300)"></span></div>
+  <div class="card-body">
+    <div class="name"><code class="tname">ref.color.success.300</code><span class="pill">color</span></div>
+    <span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">#86efac</code></span>
+    
+  </div>
+</div>
+<div class="card" id="t-ref.color.success.400" data-search="ref.color.success.400 color Reference" data-kind="token" data-name="ref.color.success.400" data-meta="color · Reference" data-swatch="--ref-color-success-400">
+  <div class="swatch"><span class="sw" style="background:var(--ref-color-success-400)"></span></div>
+  <div class="card-body">
+    <div class="name"><code class="tname">ref.color.success.400</code><span class="pill">color</span></div>
+    <span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">#4ade80</code></span>
+    
+  </div>
+</div>
+<div class="card" id="t-ref.color.success.500" data-search="ref.color.success.500 color Reference" data-kind="token" data-name="ref.color.success.500" data-meta="color · Reference" data-swatch="--ref-color-success-500">
+  <div class="swatch"><span class="sw" style="background:var(--ref-color-success-500)"></span></div>
+  <div class="card-body">
+    <div class="name"><code class="tname">ref.color.success.500</code><span class="pill">color</span></div>
+    <span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">#22c55e</code></span>
+    
+  </div>
+</div>
+<div class="card" id="t-ref.color.success.600" data-search="ref.color.success.600 color Reference" data-kind="token" data-name="ref.color.success.600" data-meta="color · Reference" data-swatch="--ref-color-success-600">
+  <div class="swatch"><span class="sw" style="background:var(--ref-color-success-600)"></span></div>
+  <div class="card-body">
+    <div class="name"><code class="tname">ref.color.success.600</code><span class="pill">color</span></div>
+    <span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">#16a34a</code></span>
+    
+  </div>
+</div>
+<div class="card" id="t-ref.color.success.700" data-search="ref.color.success.700 color Reference" data-kind="token" data-name="ref.color.success.700" data-meta="color · Reference" data-swatch="--ref-color-success-700">
+  <div class="swatch"><span class="sw" style="background:var(--ref-color-success-700)"></span></div>
+  <div class="card-body">
+    <div class="name"><code class="tname">ref.color.success.700</code><span class="pill">color</span></div>
+    <span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">#15803d</code></span>
+    
+  </div>
+</div>
+<div class="card" id="t-ref.color.success.800" data-search="ref.color.success.800 color Reference" data-kind="token" data-name="ref.color.success.800" data-meta="color · Reference" data-swatch="--ref-color-success-800">
+  <div class="swatch"><span class="sw" style="background:var(--ref-color-success-800)"></span></div>
+  <div class="card-body">
+    <div class="name"><code class="tname">ref.color.success.800</code><span class="pill">color</span></div>
+    <span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">#166534</code></span>
+    
+  </div>
+</div>
+<div class="card" id="t-ref.color.success.900" data-search="ref.color.success.900 color Reference" data-kind="token" data-name="ref.color.success.900" data-meta="color · Reference" data-swatch="--ref-color-success-900">
+  <div class="swatch"><span class="sw" style="background:var(--ref-color-success-900)"></span></div>
+  <div class="card-body">
+    <div class="name"><code class="tname">ref.color.success.900</code><span class="pill">color</span></div>
+    <span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">#14532d</code></span>
+    
+  </div>
+</div></div>
+</section>
+<section class="group" id="g-ref-ref-color-warning">
+  <h3>ref.color.warning <span class="count">10</span></h3>
+  
+  
+  <div class="grid"><div class="card" id="t-ref.color.warning.50" data-search="ref.color.warning.50 color Reference" data-kind="token" data-name="ref.color.warning.50" data-meta="color · Reference" data-swatch="--ref-color-warning-50">
+  <div class="swatch"><span class="sw" style="background:var(--ref-color-warning-50)"></span></div>
+  <div class="card-body">
+    <div class="name"><code class="tname">ref.color.warning.50</code><span class="pill">color</span></div>
+    <span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">#fffbeb</code></span>
+    
+  </div>
+</div>
+<div class="card" id="t-ref.color.warning.100" data-search="ref.color.warning.100 color Reference" data-kind="token" data-name="ref.color.warning.100" data-meta="color · Reference" data-swatch="--ref-color-warning-100">
+  <div class="swatch"><span class="sw" style="background:var(--ref-color-warning-100)"></span></div>
+  <div class="card-body">
+    <div class="name"><code class="tname">ref.color.warning.100</code><span class="pill">color</span></div>
+    <span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">#fef3c7</code></span>
+    
+  </div>
+</div>
+<div class="card" id="t-ref.color.warning.200" data-search="ref.color.warning.200 color Reference" data-kind="token" data-name="ref.color.warning.200" data-meta="color · Reference" data-swatch="--ref-color-warning-200">
+  <div class="swatch"><span class="sw" style="background:var(--ref-color-warning-200)"></span></div>
+  <div class="card-body">
+    <div class="name"><code class="tname">ref.color.warning.200</code><span class="pill">color</span></div>
+    <span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">#fde68a</code></span>
+    
+  </div>
+</div>
+<div class="card" id="t-ref.color.warning.300" data-search="ref.color.warning.300 color Reference" data-kind="token" data-name="ref.color.warning.300" data-meta="color · Reference" data-swatch="--ref-color-warning-300">
+  <div class="swatch"><span class="sw" style="background:var(--ref-color-warning-300)"></span></div>
+  <div class="card-body">
+    <div class="name"><code class="tname">ref.color.warning.300</code><span class="pill">color</span></div>
+    <span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">#fcd34d</code></span>
+    
+  </div>
+</div>
+<div class="card" id="t-ref.color.warning.400" data-search="ref.color.warning.400 color Reference" data-kind="token" data-name="ref.color.warning.400" data-meta="color · Reference" data-swatch="--ref-color-warning-400">
+  <div class="swatch"><span class="sw" style="background:var(--ref-color-warning-400)"></span></div>
+  <div class="card-body">
+    <div class="name"><code class="tname">ref.color.warning.400</code><span class="pill">color</span></div>
+    <span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">#fbbf24</code></span>
+    
+  </div>
+</div>
+<div class="card" id="t-ref.color.warning.500" data-search="ref.color.warning.500 color Reference" data-kind="token" data-name="ref.color.warning.500" data-meta="color · Reference" data-swatch="--ref-color-warning-500">
+  <div class="swatch"><span class="sw" style="background:var(--ref-color-warning-500)"></span></div>
+  <div class="card-body">
+    <div class="name"><code class="tname">ref.color.warning.500</code><span class="pill">color</span></div>
+    <span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">#f59e0b</code></span>
+    
+  </div>
+</div>
+<div class="card" id="t-ref.color.warning.600" data-search="ref.color.warning.600 color Reference" data-kind="token" data-name="ref.color.warning.600" data-meta="color · Reference" data-swatch="--ref-color-warning-600">
+  <div class="swatch"><span class="sw" style="background:var(--ref-color-warning-600)"></span></div>
+  <div class="card-body">
+    <div class="name"><code class="tname">ref.color.warning.600</code><span class="pill">color</span></div>
+    <span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">#d97706</code></span>
+    
+  </div>
+</div>
+<div class="card" id="t-ref.color.warning.700" data-search="ref.color.warning.700 color Reference" data-kind="token" data-name="ref.color.warning.700" data-meta="color · Reference" data-swatch="--ref-color-warning-700">
+  <div class="swatch"><span class="sw" style="background:var(--ref-color-warning-700)"></span></div>
+  <div class="card-body">
+    <div class="name"><code class="tname">ref.color.warning.700</code><span class="pill">color</span></div>
+    <span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">#b45309</code></span>
+    
+  </div>
+</div>
+<div class="card" id="t-ref.color.warning.800" data-search="ref.color.warning.800 color Reference" data-kind="token" data-name="ref.color.warning.800" data-meta="color · Reference" data-swatch="--ref-color-warning-800">
+  <div class="swatch"><span class="sw" style="background:var(--ref-color-warning-800)"></span></div>
+  <div class="card-body">
+    <div class="name"><code class="tname">ref.color.warning.800</code><span class="pill">color</span></div>
+    <span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">#92400e</code></span>
+    
+  </div>
+</div>
+<div class="card" id="t-ref.color.warning.900" data-search="ref.color.warning.900 color Reference" data-kind="token" data-name="ref.color.warning.900" data-meta="color · Reference" data-swatch="--ref-color-warning-900">
+  <div class="swatch"><span class="sw" style="background:var(--ref-color-warning-900)"></span></div>
+  <div class="card-body">
+    <div class="name"><code class="tname">ref.color.warning.900</code><span class="pill">color</span></div>
+    <span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">#78350f</code></span>
+    
+  </div>
+</div></div>
+</section>
+<section class="group" id="g-ref-ref-color-white">
+  <h3>ref.color.white <span class="count">5</span></h3>
+  
+  
+  <div class="grid"><div class="card" id="t-ref.color.white.10" data-search="ref.color.white.10 color Reference" data-kind="token" data-name="ref.color.white.10" data-meta="color · Reference" data-swatch="--ref-color-white-10">
+  <div class="swatch"><span class="sw" style="background:var(--ref-color-white-10)"></span></div>
+  <div class="card-body">
+    <div class="name"><code class="tname">ref.color.white.10</code><span class="pill">color</span></div>
+    <span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">#ffffff1a</code></span>
+    
+  </div>
+</div>
+<div class="card" id="t-ref.color.white.32" data-search="ref.color.white.32 color Reference" data-kind="token" data-name="ref.color.white.32" data-meta="color · Reference" data-swatch="--ref-color-white-32">
+  <div class="swatch"><span class="sw" style="background:var(--ref-color-white-32)"></span></div>
+  <div class="card-body">
+    <div class="name"><code class="tname">ref.color.white.32</code><span class="pill">color</span></div>
+    <span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">#ffffff52</code></span>
+    
+  </div>
+</div>
+<div class="card" id="t-ref.color.white.60" data-search="ref.color.white.60 color Reference" data-kind="token" data-name="ref.color.white.60" data-meta="color · Reference" data-swatch="--ref-color-white-60">
+  <div class="swatch"><span class="sw" style="background:var(--ref-color-white-60)"></span></div>
+  <div class="card-body">
+    <div class="name"><code class="tname">ref.color.white.60</code><span class="pill">color</span></div>
+    <span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">#ffffff99</code></span>
+    
+  </div>
+</div>
+<div class="card" id="t-ref.color.white.90" data-search="ref.color.white.90 color Reference" data-kind="token" data-name="ref.color.white.90" data-meta="color · Reference" data-swatch="--ref-color-white-90">
+  <div class="swatch"><span class="sw" style="background:var(--ref-color-white-90)"></span></div>
+  <div class="card-body">
+    <div class="name"><code class="tname">ref.color.white.90</code><span class="pill">color</span></div>
+    <span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">#ffffffe5</code></span>
+    
+  </div>
+</div>
+<div class="card" id="t-ref.color.white.100" data-search="ref.color.white.100 color Reference" data-kind="token" data-name="ref.color.white.100" data-meta="color · Reference" data-swatch="--ref-color-white-100">
+  <div class="swatch"><span class="sw" style="background:var(--ref-color-white-100)"></span></div>
+  <div class="card-body">
+    <div class="name"><code class="tname">ref.color.white.100</code><span class="pill">color</span></div>
+    <span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">#ffffff</code></span>
+    
+  </div>
+</div></div>
+</section>
+<section class="group" id="g-ref-ref-fontFamily">
+  <h3>ref.fontFamily <span class="count">2</span></h3>
+  
+  
+  <div class="list"><div class="row" id="t-ref.fontFamily.mono" data-search="ref.fontFamily.mono fontFamily Reference" data-kind="token" data-name="ref.fontFamily.mono" data-meta="fontFamily · Reference">
+  <div class="row-main">
+    <div class="name"><code class="tname">ref.fontFamily.mono</code><span class="pill">fontFamily</span></div>
+    
+  </div>
+  <div class="row-preview"><span class="sample" style="font-family:var(--ref-fontFamily-mono)">Aa Bb Cc 123</span></div>
+  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">SF Mono, Monaco, Consolas, monospace</code></span></div>
+</div>
+<div class="row" id="t-ref.fontFamily.sans" data-search="ref.fontFamily.sans fontFamily Reference" data-kind="token" data-name="ref.fontFamily.sans" data-meta="fontFamily · Reference">
+  <div class="row-main">
+    <div class="name"><code class="tname">ref.fontFamily.sans</code><span class="pill">fontFamily</span></div>
+    
+  </div>
+  <div class="row-preview"><span class="sample" style="font-family:var(--ref-fontFamily-sans)">Aa Bb Cc 123</span></div>
+  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif</code></span></div>
+</div></div>
+</section>
+<section class="group" id="g-ref-ref-fontSize">
+  <h3>ref.fontSize <span class="count">8</span></h3>
+  
+  
+  <div class="list"><div class="row" id="t-ref.fontSize.2xl" data-search="ref.fontSize.2xl dimension Reference" data-kind="token" data-name="ref.fontSize.2xl" data-meta="dimension · Reference">
+  <div class="row-main">
+    <div class="name"><code class="tname">ref.fontSize.2xl</code><span class="pill">dimension</span></div>
+    
+  </div>
+  <div class="row-preview"><span class="dim" style="width:min(var(--ref-fontSize-2xl),100%)"></span></div>
+  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">24px</code></span></div>
+</div>
+<div class="row" id="t-ref.fontSize.3xl" data-search="ref.fontSize.3xl dimension Reference" data-kind="token" data-name="ref.fontSize.3xl" data-meta="dimension · Reference">
+  <div class="row-main">
+    <div class="name"><code class="tname">ref.fontSize.3xl</code><span class="pill">dimension</span></div>
+    
+  </div>
+  <div class="row-preview"><span class="dim" style="width:min(var(--ref-fontSize-3xl),100%)"></span></div>
+  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">30px</code></span></div>
+</div>
+<div class="row" id="t-ref.fontSize.4xl" data-search="ref.fontSize.4xl dimension Reference" data-kind="token" data-name="ref.fontSize.4xl" data-meta="dimension · Reference">
+  <div class="row-main">
+    <div class="name"><code class="tname">ref.fontSize.4xl</code><span class="pill">dimension</span></div>
+    
+  </div>
+  <div class="row-preview"><span class="dim" style="width:min(var(--ref-fontSize-4xl),100%)"></span></div>
+  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">36px</code></span></div>
+</div>
+<div class="row" id="t-ref.fontSize.base" data-search="ref.fontSize.base dimension Reference" data-kind="token" data-name="ref.fontSize.base" data-meta="dimension · Reference">
+  <div class="row-main">
+    <div class="name"><code class="tname">ref.fontSize.base</code><span class="pill">dimension</span></div>
+    
+  </div>
+  <div class="row-preview"><span class="dim" style="width:min(var(--ref-fontSize-base),100%)"></span></div>
+  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">14px</code></span></div>
+</div>
+<div class="row" id="t-ref.fontSize.lg" data-search="ref.fontSize.lg dimension Reference" data-kind="token" data-name="ref.fontSize.lg" data-meta="dimension · Reference">
+  <div class="row-main">
+    <div class="name"><code class="tname">ref.fontSize.lg</code><span class="pill">dimension</span></div>
+    
+  </div>
+  <div class="row-preview"><span class="dim" style="width:min(var(--ref-fontSize-lg),100%)"></span></div>
+  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">17px</code></span></div>
+</div>
+<div class="row" id="t-ref.fontSize.sm" data-search="ref.fontSize.sm dimension Reference" data-kind="token" data-name="ref.fontSize.sm" data-meta="dimension · Reference">
+  <div class="row-main">
+    <div class="name"><code class="tname">ref.fontSize.sm</code><span class="pill">dimension</span></div>
+    
+  </div>
+  <div class="row-preview"><span class="dim" style="width:min(var(--ref-fontSize-sm),100%)"></span></div>
+  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">12px</code></span></div>
+</div>
+<div class="row" id="t-ref.fontSize.xl" data-search="ref.fontSize.xl dimension Reference" data-kind="token" data-name="ref.fontSize.xl" data-meta="dimension · Reference">
+  <div class="row-main">
+    <div class="name"><code class="tname">ref.fontSize.xl</code><span class="pill">dimension</span></div>
+    
+  </div>
+  <div class="row-preview"><span class="dim" style="width:min(var(--ref-fontSize-xl),100%)"></span></div>
+  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">20px</code></span></div>
+</div>
+<div class="row" id="t-ref.fontSize.xs" data-search="ref.fontSize.xs dimension Reference" data-kind="token" data-name="ref.fontSize.xs" data-meta="dimension · Reference">
+  <div class="row-main">
+    <div class="name"><code class="tname">ref.fontSize.xs</code><span class="pill">dimension</span></div>
+    
+  </div>
+  <div class="row-preview"><span class="dim" style="width:min(var(--ref-fontSize-xs),100%)"></span></div>
+  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">10px</code></span></div>
+</div></div>
+</section>
+<section class="group" id="g-ref-ref-iconScale">
+  <h3>ref.iconScale <span class="count">8</span></h3>
+  
+  
+  <div class="list"><div class="row" id="t-ref.iconScale.2xl" data-search="ref.iconScale.2xl dimension Reference" data-kind="token" data-name="ref.iconScale.2xl" data-meta="dimension · Reference">
+  <div class="row-main">
+    <div class="name"><code class="tname">ref.iconScale.2xl</code><span class="pill">dimension</span></div>
+    
+  </div>
+  <div class="row-preview"><span class="dim" style="width:min(var(--ref-iconScale-2xl),100%)"></span></div>
+  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">24px</code></span></div>
+</div>
+<div class="row" id="t-ref.iconScale.3xl" data-search="ref.iconScale.3xl dimension Reference" data-kind="token" data-name="ref.iconScale.3xl" data-meta="dimension · Reference">
+  <div class="row-main">
+    <div class="name"><code class="tname">ref.iconScale.3xl</code><span class="pill">dimension</span></div>
+    
+  </div>
+  <div class="row-preview"><span class="dim" style="width:min(var(--ref-iconScale-3xl),100%)"></span></div>
+  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">30px</code></span></div>
+</div>
+<div class="row" id="t-ref.iconScale.4xl" data-search="ref.iconScale.4xl dimension Reference" data-kind="token" data-name="ref.iconScale.4xl" data-meta="dimension · Reference">
+  <div class="row-main">
+    <div class="name"><code class="tname">ref.iconScale.4xl</code><span class="pill">dimension</span></div>
+    
+  </div>
+  <div class="row-preview"><span class="dim" style="width:min(var(--ref-iconScale-4xl),100%)"></span></div>
+  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">36px</code></span></div>
+</div>
+<div class="row" id="t-ref.iconScale.base" data-search="ref.iconScale.base dimension Reference" data-kind="token" data-name="ref.iconScale.base" data-meta="dimension · Reference">
+  <div class="row-main">
+    <div class="name"><code class="tname">ref.iconScale.base</code><span class="pill">dimension</span></div>
+    
+  </div>
+  <div class="row-preview"><span class="dim" style="width:min(var(--ref-iconScale-base),100%)"></span></div>
+  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">14px</code></span></div>
+</div>
+<div class="row" id="t-ref.iconScale.lg" data-search="ref.iconScale.lg dimension Reference" data-kind="token" data-name="ref.iconScale.lg" data-meta="dimension · Reference">
+  <div class="row-main">
+    <div class="name"><code class="tname">ref.iconScale.lg</code><span class="pill">dimension</span></div>
+    
+  </div>
+  <div class="row-preview"><span class="dim" style="width:min(var(--ref-iconScale-lg),100%)"></span></div>
+  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">17px</code></span></div>
+</div>
+<div class="row" id="t-ref.iconScale.sm" data-search="ref.iconScale.sm dimension Reference" data-kind="token" data-name="ref.iconScale.sm" data-meta="dimension · Reference">
+  <div class="row-main">
+    <div class="name"><code class="tname">ref.iconScale.sm</code><span class="pill">dimension</span></div>
+    
+  </div>
+  <div class="row-preview"><span class="dim" style="width:min(var(--ref-iconScale-sm),100%)"></span></div>
+  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">12px</code></span></div>
+</div>
+<div class="row" id="t-ref.iconScale.xl" data-search="ref.iconScale.xl dimension Reference" data-kind="token" data-name="ref.iconScale.xl" data-meta="dimension · Reference">
+  <div class="row-main">
+    <div class="name"><code class="tname">ref.iconScale.xl</code><span class="pill">dimension</span></div>
+    
+  </div>
+  <div class="row-preview"><span class="dim" style="width:min(var(--ref-iconScale-xl),100%)"></span></div>
+  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">20px</code></span></div>
+</div>
+<div class="row" id="t-ref.iconScale.xs" data-search="ref.iconScale.xs dimension Reference" data-kind="token" data-name="ref.iconScale.xs" data-meta="dimension · Reference">
+  <div class="row-main">
+    <div class="name"><code class="tname">ref.iconScale.xs</code><span class="pill">dimension</span></div>
+    
+  </div>
+  <div class="row-preview"><span class="dim" style="width:min(var(--ref-iconScale-xs),100%)"></span></div>
+  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">10px</code></span></div>
+</div></div>
+</section>
+<section class="group" id="g-ref-ref-overlayWidth">
+  <h3>ref.overlayWidth <span class="count">4</span></h3>
+  
+  
+  <div class="list"><div class="row" id="t-ref.overlayWidth.fullscreen" data-search="ref.overlayWidth.fullscreen dimension Reference" data-kind="token" data-name="ref.overlayWidth.fullscreen" data-meta="dimension · Reference">
+  <div class="row-main">
+    <div class="name"><code class="tname">ref.overlayWidth.fullscreen</code><span class="pill">dimension</span></div>
+    
+  </div>
+  <div class="row-preview"><span class="dim" style="width:min(var(--ref-overlayWidth-fullscreen),100%)"></span></div>
+  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">96rem</code></span></div>
+</div>
+<div class="row" id="t-ref.overlayWidth.lg" data-search="ref.overlayWidth.lg dimension Reference" data-kind="token" data-name="ref.overlayWidth.lg" data-meta="dimension · Reference">
+  <div class="row-main">
+    <div class="name"><code class="tname">ref.overlayWidth.lg</code><span class="pill">dimension</span></div>
+    
+  </div>
+  <div class="row-preview"><span class="dim" style="width:min(var(--ref-overlayWidth-lg),100%)"></span></div>
+  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">48rem</code></span></div>
+</div>
+<div class="row" id="t-ref.overlayWidth.md" data-search="ref.overlayWidth.md dimension Reference" data-kind="token" data-name="ref.overlayWidth.md" data-meta="dimension · Reference">
+  <div class="row-main">
+    <div class="name"><code class="tname">ref.overlayWidth.md</code><span class="pill">dimension</span></div>
+    
+  </div>
+  <div class="row-preview"><span class="dim" style="width:min(var(--ref-overlayWidth-md),100%)"></span></div>
+  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">32rem</code></span></div>
+</div>
+<div class="row" id="t-ref.overlayWidth.sm" data-search="ref.overlayWidth.sm dimension Reference" data-kind="token" data-name="ref.overlayWidth.sm" data-meta="dimension · Reference">
+  <div class="row-main">
+    <div class="name"><code class="tname">ref.overlayWidth.sm</code><span class="pill">dimension</span></div>
+    
+  </div>
+  <div class="row-preview"><span class="dim" style="width:min(var(--ref-overlayWidth-sm),100%)"></span></div>
+  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">24rem</code></span></div>
+</div></div>
+</section>
+<section class="group" id="g-ref-ref-radius">
+  <h3>ref.radius <span class="count">6</span></h3>
+  
+  
+  <div class="list"><div class="row" id="t-ref.radius.container" data-search="ref.radius.container dimension Reference" data-kind="token" data-name="ref.radius.container" data-meta="dimension · Reference">
+  <div class="row-main">
+    <div class="name"><code class="tname">ref.radius.container</code><span class="pill">dimension</span></div>
+    
+  </div>
+  <div class="row-preview"><span class="dim" style="width:min(var(--ref-radius-container),100%)"></span></div>
+  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">8px</code></span></div>
+</div>
+<div class="row" id="t-ref.radius.element" data-search="ref.radius.element dimension Reference" data-kind="token" data-name="ref.radius.element" data-meta="dimension · Reference">
+  <div class="row-main">
+    <div class="name"><code class="tname">ref.radius.element</code><span class="pill">dimension</span></div>
+    
+  </div>
+  <div class="row-preview"><span class="dim" style="width:min(var(--ref-radius-element),100%)"></span></div>
+  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">6px</code></span></div>
+</div>
+<div class="row" id="t-ref.radius.full" data-search="ref.radius.full dimension Reference" data-kind="token" data-name="ref.radius.full" data-meta="dimension · Reference">
+  <div class="row-main">
+    <div class="name"><code class="tname">ref.radius.full</code><span class="pill">dimension</span></div>
+    
+  </div>
+  <div class="row-preview"><span class="dim" style="width:min(var(--ref-radius-full),100%)"></span></div>
+  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">9999px</code></span></div>
+</div>
+<div class="row" id="t-ref.radius.inner" data-search="ref.radius.inner dimension Reference" data-kind="token" data-name="ref.radius.inner" data-meta="dimension · Reference">
+  <div class="row-main">
+    <div class="name"><code class="tname">ref.radius.inner</code><span class="pill">dimension</span></div>
+    
+  </div>
+  <div class="row-preview"><span class="dim" style="width:min(var(--ref-radius-inner),100%)"></span></div>
+  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">4px</code></span></div>
+</div>
+<div class="row" id="t-ref.radius.none" data-search="ref.radius.none dimension Reference" data-kind="token" data-name="ref.radius.none" data-meta="dimension · Reference">
+  <div class="row-main">
+    <div class="name"><code class="tname">ref.radius.none</code><span class="pill">dimension</span></div>
+    
+  </div>
+  <div class="row-preview"><span class="dim" style="width:min(var(--ref-radius-none),100%)"></span></div>
+  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">0px</code></span></div>
+</div>
+<div class="row" id="t-ref.radius.page" data-search="ref.radius.page dimension Reference" data-kind="token" data-name="ref.radius.page" data-meta="dimension · Reference">
+  <div class="row-main">
+    <div class="name"><code class="tname">ref.radius.page</code><span class="pill">dimension</span></div>
+    
+  </div>
+  <div class="row-preview"><span class="dim" style="width:min(var(--ref-radius-page),100%)"></span></div>
+  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">12px</code></span></div>
+</div></div>
+</section>
+<section class="group" id="g-ref-ref-spacing">
+  <h3>ref.spacing <span class="count">15</span></h3>
+  
+  
+  <div class="list"><div class="row" id="t-ref.spacing.0" data-search="ref.spacing.0 dimension Reference" data-kind="token" data-name="ref.spacing.0" data-meta="dimension · Reference">
+  <div class="row-main">
+    <div class="name"><code class="tname">ref.spacing.0</code><span class="pill">dimension</span></div>
+    
+  </div>
+  <div class="row-preview"><span class="dim" style="width:min(var(--ref-spacing-0),100%)"></span></div>
+  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">0px</code></span></div>
+</div>
+<div class="row" id="t-ref.spacing.2" data-search="ref.spacing.2 dimension Reference" data-kind="token" data-name="ref.spacing.2" data-meta="dimension · Reference">
+  <div class="row-main">
+    <div class="name"><code class="tname">ref.spacing.2</code><span class="pill">dimension</span></div>
+    
+  </div>
+  <div class="row-preview"><span class="dim" style="width:min(var(--ref-spacing-2),100%)"></span></div>
+  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">2px</code></span></div>
+</div>
+<div class="row" id="t-ref.spacing.4" data-search="ref.spacing.4 dimension Reference" data-kind="token" data-name="ref.spacing.4" data-meta="dimension · Reference">
+  <div class="row-main">
+    <div class="name"><code class="tname">ref.spacing.4</code><span class="pill">dimension</span></div>
+    
+  </div>
+  <div class="row-preview"><span class="dim" style="width:min(var(--ref-spacing-4),100%)"></span></div>
+  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">4px</code></span></div>
+</div>
+<div class="row" id="t-ref.spacing.8" data-search="ref.spacing.8 dimension Reference" data-kind="token" data-name="ref.spacing.8" data-meta="dimension · Reference">
+  <div class="row-main">
+    <div class="name"><code class="tname">ref.spacing.8</code><span class="pill">dimension</span></div>
+    
+  </div>
+  <div class="row-preview"><span class="dim" style="width:min(var(--ref-spacing-8),100%)"></span></div>
+  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">8px</code></span></div>
+</div>
+<div class="row" id="t-ref.spacing.12" data-search="ref.spacing.12 dimension Reference" data-kind="token" data-name="ref.spacing.12" data-meta="dimension · Reference">
+  <div class="row-main">
+    <div class="name"><code class="tname">ref.spacing.12</code><span class="pill">dimension</span></div>
+    
+  </div>
+  <div class="row-preview"><span class="dim" style="width:min(var(--ref-spacing-12),100%)"></span></div>
+  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">12px</code></span></div>
+</div>
+<div class="row" id="t-ref.spacing.16" data-search="ref.spacing.16 dimension Reference" data-kind="token" data-name="ref.spacing.16" data-meta="dimension · Reference">
+  <div class="row-main">
+    <div class="name"><code class="tname">ref.spacing.16</code><span class="pill">dimension</span></div>
+    
+  </div>
+  <div class="row-preview"><span class="dim" style="width:min(var(--ref-spacing-16),100%)"></span></div>
+  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">16px</code></span></div>
+</div>
+<div class="row" id="t-ref.spacing.20" data-search="ref.spacing.20 dimension Reference" data-kind="token" data-name="ref.spacing.20" data-meta="dimension · Reference">
+  <div class="row-main">
+    <div class="name"><code class="tname">ref.spacing.20</code><span class="pill">dimension</span></div>
+    
+  </div>
+  <div class="row-preview"><span class="dim" style="width:min(var(--ref-spacing-20),100%)"></span></div>
+  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">20px</code></span></div>
+</div>
+<div class="row" id="t-ref.spacing.24" data-search="ref.spacing.24 dimension Reference" data-kind="token" data-name="ref.spacing.24" data-meta="dimension · Reference">
+  <div class="row-main">
+    <div class="name"><code class="tname">ref.spacing.24</code><span class="pill">dimension</span></div>
+    
+  </div>
+  <div class="row-preview"><span class="dim" style="width:min(var(--ref-spacing-24),100%)"></span></div>
+  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">24px</code></span></div>
+</div>
+<div class="row" id="t-ref.spacing.32" data-search="ref.spacing.32 dimension Reference" data-kind="token" data-name="ref.spacing.32" data-meta="dimension · Reference">
+  <div class="row-main">
+    <div class="name"><code class="tname">ref.spacing.32</code><span class="pill">dimension</span></div>
+    
+  </div>
+  <div class="row-preview"><span class="dim" style="width:min(var(--ref-spacing-32),100%)"></span></div>
+  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">32px</code></span></div>
+</div>
+<div class="row" id="t-ref.spacing.40" data-search="ref.spacing.40 dimension Reference" data-kind="token" data-name="ref.spacing.40" data-meta="dimension · Reference">
+  <div class="row-main">
+    <div class="name"><code class="tname">ref.spacing.40</code><span class="pill">dimension</span></div>
+    
+  </div>
+  <div class="row-preview"><span class="dim" style="width:min(var(--ref-spacing-40),100%)"></span></div>
+  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">40px</code></span></div>
+</div>
+<div class="row" id="t-ref.spacing.48" data-search="ref.spacing.48 dimension Reference" data-kind="token" data-name="ref.spacing.48" data-meta="dimension · Reference">
+  <div class="row-main">
+    <div class="name"><code class="tname">ref.spacing.48</code><span class="pill">dimension</span></div>
+    
+  </div>
+  <div class="row-preview"><span class="dim" style="width:min(var(--ref-spacing-48),100%)"></span></div>
+  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">48px</code></span></div>
+</div>
+<div class="row" id="t-ref.spacing.56" data-search="ref.spacing.56 dimension Reference" data-kind="token" data-name="ref.spacing.56" data-meta="dimension · Reference">
+  <div class="row-main">
+    <div class="name"><code class="tname">ref.spacing.56</code><span class="pill">dimension</span></div>
+    
+  </div>
+  <div class="row-preview"><span class="dim" style="width:min(var(--ref-spacing-56),100%)"></span></div>
+  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">56px</code></span></div>
+</div>
+<div class="row" id="t-ref.spacing.64" data-search="ref.spacing.64 dimension Reference" data-kind="token" data-name="ref.spacing.64" data-meta="dimension · Reference">
+  <div class="row-main">
+    <div class="name"><code class="tname">ref.spacing.64</code><span class="pill">dimension</span></div>
+    
+  </div>
+  <div class="row-preview"><span class="dim" style="width:min(var(--ref-spacing-64),100%)"></span></div>
+  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">64px</code></span></div>
+</div>
+<div class="row" id="t-ref.spacing.72" data-search="ref.spacing.72 dimension Reference" data-kind="token" data-name="ref.spacing.72" data-meta="dimension · Reference">
+  <div class="row-main">
+    <div class="name"><code class="tname">ref.spacing.72</code><span class="pill">dimension</span></div>
+    
+  </div>
+  <div class="row-preview"><span class="dim" style="width:min(var(--ref-spacing-72),100%)"></span></div>
+  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">72px</code></span></div>
+</div>
+<div class="row" id="t-ref.spacing.80" data-search="ref.spacing.80 dimension Reference" data-kind="token" data-name="ref.spacing.80" data-meta="dimension · Reference">
+  <div class="row-main">
+    <div class="name"><code class="tname">ref.spacing.80</code><span class="pill">dimension</span></div>
+    
+  </div>
+  <div class="row-preview"><span class="dim" style="width:min(var(--ref-spacing-80),100%)"></span></div>
+  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">80px</code></span></div>
+</div></div>
+</section>
 </div>
 <div id="system" class="layer">
   <h2 class="title">System</h2>
-  <p class="sub">0 tokens</p>
-  <p class="empty">No system tokens defined.</p>
+  <p class="sub">79 tokens</p>
+  <section class="group" id="g-system-system-border">
+  <h3>system.border <span class="count">1</span></h3>
+  
+  
+  <div class="list"><div class="row" id="t-system.border.default" data-search="system.border.default border System" data-kind="token" data-name="system.border.default" data-meta="border · System">
+  <div class="row-main">
+    <div class="name"><code class="tname">system.border.default</code><span class="pill">border</span></div>
+    
+  </div>
+  <div class="row-preview"><span class="tile" style="border:var(--system-border-default)"></span></div>
+  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">1px solid ref.color.secondary.200</code></span></div>
+</div></div>
+</section>
+<section class="group" id="g-system-system-borderScale">
+  <h3>system.borderScale <span class="count">2</span></h3>
+  
+  
+  <div class="list"><div class="row" id="t-system.borderScale.thick" data-search="system.borderScale.thick border System" data-kind="token" data-name="system.borderScale.thick" data-meta="border · System">
+  <div class="row-main">
+    <div class="name"><code class="tname">system.borderScale.thick</code><span class="pill">border</span></div>
+    
+  </div>
+  <div class="row-preview"><span class="tile" style="border:var(--system-borderScale-thick)"></span></div>
+  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">2px solid ref.color.secondary.200</code></span></div>
+</div>
+<div class="row" id="t-system.borderScale.thin" data-search="system.borderScale.thin border System" data-kind="token" data-name="system.borderScale.thin" data-meta="border · System">
+  <div class="row-main">
+    <div class="name"><code class="tname">system.borderScale.thin</code><span class="pill">border</span></div>
+    
+  </div>
+  <div class="row-preview"><span class="tile" style="border:var(--system-borderScale-thin)"></span></div>
+  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">1px solid ref.color.secondary.200</code></span></div>
+</div></div>
+</section>
+<section class="group" id="g-system-system-colors">
+  <h3>system.colors <span class="count">18</span></h3>
+  
+  
+  <div class="grid"><div class="card" id="t-system.colors.accent" data-search="system.colors.accent color System" data-kind="token" data-name="system.colors.accent" data-meta="color · System" data-swatch="--system-colors-accent">
+  <div class="swatch"><span class="sw" style="background:var(--system-colors-accent)"></span></div>
+  <div class="card-body">
+    <div class="name"><code class="tname">system.colors.accent</code><span class="pill">color</span></div>
+    <span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">#18181b</code></span>
+    <a class="alias" href="#t-ref.color.primary.700" data-goto="t-ref.color.primary.700">→ ref.color.primary.700</a>
+  </div>
+</div>
+<div class="card" id="t-system.colors.backgroundBody" data-search="system.colors.backgroundBody color System" data-kind="token" data-name="system.colors.backgroundBody" data-meta="color · System" data-swatch="--system-colors-backgroundBody">
+  <div class="swatch"><span class="sw" style="background:var(--system-colors-backgroundBody)"></span></div>
+  <div class="card-body">
+    <div class="name"><code class="tname">system.colors.backgroundBody</code><span class="pill">color</span></div>
+    <span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">#fafafa</code></span>
+    <a class="alias" href="#t-ref.color.secondary.50" data-goto="t-ref.color.secondary.50">→ ref.color.secondary.50</a>
+  </div>
+</div>
+<div class="card" id="t-system.colors.backgroundCard" data-search="system.colors.backgroundCard color System" data-kind="token" data-name="system.colors.backgroundCard" data-meta="color · System" data-swatch="--system-colors-backgroundCard">
+  <div class="swatch"><span class="sw" style="background:var(--system-colors-backgroundCard)"></span></div>
+  <div class="card-body">
+    <div class="name"><code class="tname">system.colors.backgroundCard</code><span class="pill">color</span></div>
+    <span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">#ffffff</code></span>
+    <a class="alias" href="#t-ref.color.white.100" data-goto="t-ref.color.white.100">→ ref.color.white.100</a>
+  </div>
+</div>
+<div class="card" id="t-system.colors.backgroundMuted" data-search="system.colors.backgroundMuted color System" data-kind="token" data-name="system.colors.backgroundMuted" data-meta="color · System" data-swatch="--system-colors-backgroundMuted">
+  <div class="swatch"><span class="sw" style="background:var(--system-colors-backgroundMuted)"></span></div>
+  <div class="card-body">
+    <div class="name"><code class="tname">system.colors.backgroundMuted</code><span class="pill">color</span></div>
+    <span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">#fafafa</code></span>
+    <a class="alias" href="#t-ref.color.secondary.50" data-goto="t-ref.color.secondary.50">→ ref.color.secondary.50</a>
+  </div>
+</div>
+<div class="card" id="t-system.colors.backgroundSurface" data-search="system.colors.backgroundSurface color System" data-kind="token" data-name="system.colors.backgroundSurface" data-meta="color · System" data-swatch="--system-colors-backgroundSurface">
+  <div class="swatch"><span class="sw" style="background:var(--system-colors-backgroundSurface)"></span></div>
+  <div class="card-body">
+    <div class="name"><code class="tname">system.colors.backgroundSurface</code><span class="pill">color</span></div>
+    <span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">#ffffff</code></span>
+    <a class="alias" href="#t-ref.color.white.100" data-goto="t-ref.color.white.100">→ ref.color.white.100</a>
+  </div>
+</div>
+<div class="card" id="t-system.colors.border" data-search="system.colors.border color System" data-kind="token" data-name="system.colors.border" data-meta="color · System" data-swatch="--system-colors-border">
+  <div class="swatch"><span class="sw" style="background:var(--system-colors-border)"></span></div>
+  <div class="card-body">
+    <div class="name"><code class="tname">system.colors.border</code><span class="pill">color</span></div>
+    <span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">#e4e4e7</code></span>
+    <a class="alias" href="#t-ref.color.secondary.200" data-goto="t-ref.color.secondary.200">→ ref.color.secondary.200</a>
+  </div>
+</div>
+<div class="card" id="t-system.colors.borderEmphasized" data-search="system.colors.borderEmphasized color System" data-kind="token" data-name="system.colors.borderEmphasized" data-meta="color · System" data-swatch="--system-colors-borderEmphasized">
+  <div class="swatch"><span class="sw" style="background:var(--system-colors-borderEmphasized)"></span></div>
+  <div class="card-body">
+    <div class="name"><code class="tname">system.colors.borderEmphasized</code><span class="pill">color</span></div>
+    <span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">#a1a1aa</code></span>
+    <a class="alias" href="#t-ref.color.secondary.400" data-goto="t-ref.color.secondary.400">→ ref.color.secondary.400</a>
+  </div>
+</div>
+<div class="card" id="t-system.colors.error" data-search="system.colors.error color System" data-kind="token" data-name="system.colors.error" data-meta="color · System" data-swatch="--system-colors-error">
+  <div class="swatch"><span class="sw" style="background:var(--system-colors-error)"></span></div>
+  <div class="card-body">
+    <div class="name"><code class="tname">system.colors.error</code><span class="pill">color</span></div>
+    <span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">#ef4444</code></span>
+    <a class="alias" href="#t-ref.color.danger.500" data-goto="t-ref.color.danger.500">→ ref.color.danger.500</a>
+  </div>
+</div>
+<div class="card" id="t-system.colors.onAccent" data-search="system.colors.onAccent color System" data-kind="token" data-name="system.colors.onAccent" data-meta="color · System" data-swatch="--system-colors-onAccent">
+  <div class="swatch"><span class="sw" style="background:var(--system-colors-onAccent)"></span></div>
+  <div class="card-body">
+    <div class="name"><code class="tname">system.colors.onAccent</code><span class="pill">color</span></div>
+    <span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">#ffffff</code></span>
+    <a class="alias" href="#t-ref.color.white.100" data-goto="t-ref.color.white.100">→ ref.color.white.100</a>
+  </div>
+</div>
+<div class="card" id="t-system.colors.onError" data-search="system.colors.onError color System" data-kind="token" data-name="system.colors.onError" data-meta="color · System" data-swatch="--system-colors-onError">
+  <div class="swatch"><span class="sw" style="background:var(--system-colors-onError)"></span></div>
+  <div class="card-body">
+    <div class="name"><code class="tname">system.colors.onError</code><span class="pill">color</span></div>
+    <span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">#ffffff</code></span>
+    <a class="alias" href="#t-ref.color.white.100" data-goto="t-ref.color.white.100">→ ref.color.white.100</a>
+  </div>
+</div>
+<div class="card" id="t-system.colors.onSuccess" data-search="system.colors.onSuccess color System" data-kind="token" data-name="system.colors.onSuccess" data-meta="color · System" data-swatch="--system-colors-onSuccess">
+  <div class="swatch"><span class="sw" style="background:var(--system-colors-onSuccess)"></span></div>
+  <div class="card-body">
+    <div class="name"><code class="tname">system.colors.onSuccess</code><span class="pill">color</span></div>
+    <span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">#ffffff</code></span>
+    <a class="alias" href="#t-ref.color.white.100" data-goto="t-ref.color.white.100">→ ref.color.white.100</a>
+  </div>
+</div>
+<div class="card" id="t-system.colors.onWarning" data-search="system.colors.onWarning color System" data-kind="token" data-name="system.colors.onWarning" data-meta="color · System" data-swatch="--system-colors-onWarning">
+  <div class="swatch"><span class="sw" style="background:var(--system-colors-onWarning)"></span></div>
+  <div class="card-body">
+    <div class="name"><code class="tname">system.colors.onWarning</code><span class="pill">color</span></div>
+    <span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">#09090b</code></span>
+    <a class="alias" href="#t-ref.color.secondary.900" data-goto="t-ref.color.secondary.900">→ ref.color.secondary.900</a>
+  </div>
+</div>
+<div class="card" id="t-system.colors.skeleton" data-search="system.colors.skeleton color System" data-kind="token" data-name="system.colors.skeleton" data-meta="color · System" data-swatch="--system-colors-skeleton">
+  <div class="swatch"><span class="sw" style="background:var(--system-colors-skeleton)"></span></div>
+  <div class="card-body">
+    <div class="name"><code class="tname">system.colors.skeleton</code><span class="pill">color</span></div>
+    <span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">#e4e4e7</code></span>
+    <a class="alias" href="#t-ref.color.secondary.200" data-goto="t-ref.color.secondary.200">→ ref.color.secondary.200</a>
+  </div>
+</div>
+<div class="card" id="t-system.colors.success" data-search="system.colors.success color System" data-kind="token" data-name="system.colors.success" data-meta="color · System" data-swatch="--system-colors-success">
+  <div class="swatch"><span class="sw" style="background:var(--system-colors-success)"></span></div>
+  <div class="card-body">
+    <div class="name"><code class="tname">system.colors.success</code><span class="pill">color</span></div>
+    <span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">#22c55e</code></span>
+    <a class="alias" href="#t-ref.color.success.500" data-goto="t-ref.color.success.500">→ ref.color.success.500</a>
+  </div>
+</div>
+<div class="card" id="t-system.colors.textDisabled" data-search="system.colors.textDisabled color System" data-kind="token" data-name="system.colors.textDisabled" data-meta="color · System" data-swatch="--system-colors-textDisabled">
+  <div class="swatch"><span class="sw" style="background:var(--system-colors-textDisabled)"></span></div>
+  <div class="card-body">
+    <div class="name"><code class="tname">system.colors.textDisabled</code><span class="pill">color</span></div>
+    <span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">#a1a1aa</code></span>
+    <a class="alias" href="#t-ref.color.secondary.400" data-goto="t-ref.color.secondary.400">→ ref.color.secondary.400</a>
+  </div>
+</div>
+<div class="card" id="t-system.colors.textPrimary" data-search="system.colors.textPrimary color System" data-kind="token" data-name="system.colors.textPrimary" data-meta="color · System" data-swatch="--system-colors-textPrimary">
+  <div class="swatch"><span class="sw" style="background:var(--system-colors-textPrimary)"></span></div>
+  <div class="card-body">
+    <div class="name"><code class="tname">system.colors.textPrimary</code><span class="pill">color</span></div>
+    <span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">#09090b</code></span>
+    <a class="alias" href="#t-ref.color.secondary.900" data-goto="t-ref.color.secondary.900">→ ref.color.secondary.900</a>
+  </div>
+</div>
+<div class="card" id="t-system.colors.textSecondary" data-search="system.colors.textSecondary color System" data-kind="token" data-name="system.colors.textSecondary" data-meta="color · System" data-swatch="--system-colors-textSecondary">
+  <div class="swatch"><span class="sw" style="background:var(--system-colors-textSecondary)"></span></div>
+  <div class="card-body">
+    <div class="name"><code class="tname">system.colors.textSecondary</code><span class="pill">color</span></div>
+    <span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">#71717a</code></span>
+    <a class="alias" href="#t-ref.color.secondary.500" data-goto="t-ref.color.secondary.500">→ ref.color.secondary.500</a>
+  </div>
+</div>
+<div class="card" id="t-system.colors.warning" data-search="system.colors.warning color System" data-kind="token" data-name="system.colors.warning" data-meta="color · System" data-swatch="--system-colors-warning">
+  <div class="swatch"><span class="sw" style="background:var(--system-colors-warning)"></span></div>
+  <div class="card-body">
+    <div class="name"><code class="tname">system.colors.warning</code><span class="pill">color</span></div>
+    <span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">#f59e0b</code></span>
+    <a class="alias" href="#t-ref.color.warning.500" data-goto="t-ref.color.warning.500">→ ref.color.warning.500</a>
+  </div>
+</div></div>
+</section>
+<section class="group" id="g-system-system-colors-secondary">
+  <h3>system.colors.secondary <span class="count">1</span></h3>
+  
+  
+  <div class="grid"><div class="card" id="t-system.colors.secondary.200" data-search="system.colors.secondary.200 color System" data-kind="token" data-name="system.colors.secondary.200" data-meta="color · System" data-swatch="--system-colors-secondary-200">
+  <div class="swatch"><span class="sw" style="background:var(--system-colors-secondary-200)"></span></div>
+  <div class="card-body">
+    <div class="name"><code class="tname">system.colors.secondary.200</code><span class="pill">color</span></div>
+    <span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">#18181b</code></span>
+    <a class="alias" href="#t-ref.color.primary.700" data-goto="t-ref.color.primary.700">→ ref.color.primary.700</a>
+  </div>
+</div></div>
+</section>
+<section class="group" id="g-system-system-colors-textScale">
+  <h3>system.colors.textScale <span class="count">4</span></h3>
+  
+  
+  <div class="grid"><div class="card" id="t-system.colors.textScale.accent" data-search="system.colors.textScale.accent color System" data-kind="token" data-name="system.colors.textScale.accent" data-meta="color · System" data-swatch="--system-colors-textScale-accent">
+  <div class="swatch"><span class="sw" style="background:var(--system-colors-textScale-accent)"></span></div>
+  <div class="card-body">
+    <div class="name"><code class="tname">system.colors.textScale.accent</code><span class="pill">color</span></div>
+    <span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">#18181b</code></span>
+    <a class="alias" href="#t-ref.color.primary.700" data-goto="t-ref.color.primary.700">→ ref.color.primary.700</a>
+  </div>
+</div>
+<div class="card" id="t-system.colors.textScale.disabled" data-search="system.colors.textScale.disabled color System" data-kind="token" data-name="system.colors.textScale.disabled" data-meta="color · System" data-swatch="--system-colors-textScale-disabled">
+  <div class="swatch"><span class="sw" style="background:var(--system-colors-textScale-disabled)"></span></div>
+  <div class="card-body">
+    <div class="name"><code class="tname">system.colors.textScale.disabled</code><span class="pill">color</span></div>
+    <span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">#a1a1aa</code></span>
+    <a class="alias" href="#t-ref.color.secondary.400" data-goto="t-ref.color.secondary.400">→ ref.color.secondary.400</a>
+  </div>
+</div>
+<div class="card" id="t-system.colors.textScale.primary" data-search="system.colors.textScale.primary color System" data-kind="token" data-name="system.colors.textScale.primary" data-meta="color · System" data-swatch="--system-colors-textScale-primary">
+  <div class="swatch"><span class="sw" style="background:var(--system-colors-textScale-primary)"></span></div>
+  <div class="card-body">
+    <div class="name"><code class="tname">system.colors.textScale.primary</code><span class="pill">color</span></div>
+    <span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">#09090b</code></span>
+    <a class="alias" href="#t-ref.color.secondary.900" data-goto="t-ref.color.secondary.900">→ ref.color.secondary.900</a>
+  </div>
+</div>
+<div class="card" id="t-system.colors.textScale.secondary" data-search="system.colors.textScale.secondary color System" data-kind="token" data-name="system.colors.textScale.secondary" data-meta="color · System" data-swatch="--system-colors-textScale-secondary">
+  <div class="swatch"><span class="sw" style="background:var(--system-colors-textScale-secondary)"></span></div>
+  <div class="card-body">
+    <div class="name"><code class="tname">system.colors.textScale.secondary</code><span class="pill">color</span></div>
+    <span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">#71717a</code></span>
+    <a class="alias" href="#t-ref.color.secondary.500" data-goto="t-ref.color.secondary.500">→ ref.color.secondary.500</a>
+  </div>
+</div></div>
+</section>
+<section class="group" id="g-system-system-elevationScale">
+  <h3>system.elevationScale <span class="count">4</span></h3>
+  
+  
+  <div class="list"><div class="row" id="t-system.elevationScale.inset" data-search="system.elevationScale.inset shadow System" data-kind="token" data-name="system.elevationScale.inset" data-meta="shadow · System">
+  <div class="row-main">
+    <div class="name"><code class="tname">system.elevationScale.inset</code><span class="pill">shadow</span></div>
+    
+  </div>
+  <div class="row-preview"><span class="tile" style="box-shadow:var(--system-elevationScale-inset)"></span></div>
+  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">inset 0px 1px 2px 0px ref.color.secondary.900-10</code></span></div>
+</div>
+<div class="row" id="t-system.elevationScale.lg" data-search="system.elevationScale.lg shadow System" data-kind="token" data-name="system.elevationScale.lg" data-meta="shadow · System">
+  <div class="row-main">
+    <div class="name"><code class="tname">system.elevationScale.lg</code><span class="pill">shadow</span></div>
+    
+  </div>
+  <div class="row-preview"><span class="tile" style="box-shadow:var(--system-elevationScale-lg)"></span></div>
+  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">0px 0px 4px 0px ref.color.secondary.900-10, 0px 8px 40px 0px ref.color.secondary.900-15</code></span></div>
+</div>
+<div class="row" id="t-system.elevationScale.md" data-search="system.elevationScale.md shadow System" data-kind="token" data-name="system.elevationScale.md" data-meta="shadow · System">
+  <div class="row-main">
+    <div class="name"><code class="tname">system.elevationScale.md</code><span class="pill">shadow</span></div>
+    
+  </div>
+  <div class="row-preview"><span class="tile" style="box-shadow:var(--system-elevationScale-md)"></span></div>
+  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">0px 0px 3px 0px ref.color.secondary.900-10, 0px 4px 20px 0px ref.color.secondary.900-15</code></span></div>
+</div>
+<div class="row" id="t-system.elevationScale.sm" data-search="system.elevationScale.sm shadow System" data-kind="token" data-name="system.elevationScale.sm" data-meta="shadow · System">
+  <div class="row-main">
+    <div class="name"><code class="tname">system.elevationScale.sm</code><span class="pill">shadow</span></div>
+    
+  </div>
+  <div class="row-preview"><span class="tile" style="box-shadow:var(--system-elevationScale-sm)"></span></div>
+  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">0px 0px 2px 0px ref.color.secondary.900-20, 0px 2px 10px 0px ref.color.secondary.900-10</code></span></div>
+</div></div>
+</section>
+<section class="group" id="g-system-system-gradients">
+  <h3>system.gradients <span class="count">1</span></h3>
+  
+  
+  <div class="list"><div class="row" id="t-system.gradients.accent" data-search="system.gradients.accent gradient System" data-kind="token" data-name="system.gradients.accent" data-meta="gradient · System">
+  <div class="row-main">
+    <div class="name"><code class="tname">system.gradients.accent</code><span class="pill">gradient</span></div>
+    
+  </div>
+  <div class="row-preview"><span class="tile wide" style="background:var(--system-gradients-accent)"></span></div>
+  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">linear-gradient(135deg, ref.color.primary.700 0%, ref.color.primary.500 100%)</code></span></div>
+</div></div>
+</section>
+<section class="group" id="g-system-system-motion">
+  <h3>system.motion <span class="count">5</span></h3>
+  
+  
+  <div class="list"><div class="row" id="t-system.motion.fast" data-search="system.motion.fast duration System" data-kind="token" data-name="system.motion.fast" data-meta="duration · System">
+  <div class="row-main">
+    <div class="name"><code class="tname">system.motion.fast</code><span class="pill">duration</span></div>
+    
+  </div>
+  <div class="row-preview"></div>
+  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">175ms</code></span></div>
+</div>
+<div class="row" id="t-system.motion.medium" data-search="system.motion.medium duration System" data-kind="token" data-name="system.motion.medium" data-meta="duration · System">
+  <div class="row-main">
+    <div class="name"><code class="tname">system.motion.medium</code><span class="pill">duration</span></div>
+    
+  </div>
+  <div class="row-preview"></div>
+  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">410ms</code></span></div>
+</div>
+<div class="row" id="t-system.motion.mediumMax" data-search="system.motion.mediumMax duration System" data-kind="token" data-name="system.motion.mediumMax" data-meta="duration · System">
+  <div class="row-main">
+    <div class="name"><code class="tname">system.motion.mediumMax</code><span class="pill">duration</span></div>
+    
+  </div>
+  <div class="row-preview"></div>
+  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">550ms</code></span></div>
+</div>
+<div class="row" id="t-system.motion.slowMin" data-search="system.motion.slowMin duration System" data-kind="token" data-name="system.motion.slowMin" data-meta="duration · System">
+  <div class="row-main">
+    <div class="name"><code class="tname">system.motion.slowMin</code><span class="pill">duration</span></div>
+    
+  </div>
+  <div class="row-preview"></div>
+  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">730ms</code></span></div>
+</div>
+<div class="row" id="t-system.motion.standard" data-search="system.motion.standard cubicBezier System" data-kind="token" data-name="system.motion.standard" data-meta="cubicBezier · System">
+  <div class="row-main">
+    <div class="name"><code class="tname">system.motion.standard</code><span class="pill">cubicBezier</span></div>
+    
+  </div>
+  <div class="row-preview"></div>
+  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">cubic-bezier(0.24, 1, 0.4, 1)</code></span></div>
+</div></div>
+</section>
+<section class="group" id="g-system-system-radius">
+  <h3>system.radius <span class="count">6</span></h3>
+  
+  
+  <div class="list"><div class="row" id="t-system.radius.container" data-search="system.radius.container dimension System" data-kind="token" data-name="system.radius.container" data-meta="dimension · System">
+  <div class="row-main">
+    <div class="name"><code class="tname">system.radius.container</code><span class="pill">dimension</span></div>
+    <a class="alias" href="#t-ref.radius.container" data-goto="t-ref.radius.container">→ ref.radius.container</a>
+  </div>
+  <div class="row-preview"><span class="dim" style="width:min(var(--system-radius-container),100%)"></span></div>
+  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">8px</code></span></div>
+</div>
+<div class="row" id="t-system.radius.element" data-search="system.radius.element dimension System" data-kind="token" data-name="system.radius.element" data-meta="dimension · System">
+  <div class="row-main">
+    <div class="name"><code class="tname">system.radius.element</code><span class="pill">dimension</span></div>
+    <a class="alias" href="#t-ref.radius.element" data-goto="t-ref.radius.element">→ ref.radius.element</a>
+  </div>
+  <div class="row-preview"><span class="dim" style="width:min(var(--system-radius-element),100%)"></span></div>
+  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">6px</code></span></div>
+</div>
+<div class="row" id="t-system.radius.full" data-search="system.radius.full dimension System" data-kind="token" data-name="system.radius.full" data-meta="dimension · System">
+  <div class="row-main">
+    <div class="name"><code class="tname">system.radius.full</code><span class="pill">dimension</span></div>
+    <a class="alias" href="#t-ref.radius.full" data-goto="t-ref.radius.full">→ ref.radius.full</a>
+  </div>
+  <div class="row-preview"><span class="dim" style="width:min(var(--system-radius-full),100%)"></span></div>
+  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">9999px</code></span></div>
+</div>
+<div class="row" id="t-system.radius.inner" data-search="system.radius.inner dimension System" data-kind="token" data-name="system.radius.inner" data-meta="dimension · System">
+  <div class="row-main">
+    <div class="name"><code class="tname">system.radius.inner</code><span class="pill">dimension</span></div>
+    <a class="alias" href="#t-ref.radius.inner" data-goto="t-ref.radius.inner">→ ref.radius.inner</a>
+  </div>
+  <div class="row-preview"><span class="dim" style="width:min(var(--system-radius-inner),100%)"></span></div>
+  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">4px</code></span></div>
+</div>
+<div class="row" id="t-system.radius.none" data-search="system.radius.none dimension System" data-kind="token" data-name="system.radius.none" data-meta="dimension · System">
+  <div class="row-main">
+    <div class="name"><code class="tname">system.radius.none</code><span class="pill">dimension</span></div>
+    <a class="alias" href="#t-ref.radius.none" data-goto="t-ref.radius.none">→ ref.radius.none</a>
+  </div>
+  <div class="row-preview"><span class="dim" style="width:min(var(--system-radius-none),100%)"></span></div>
+  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">0px</code></span></div>
+</div>
+<div class="row" id="t-system.radius.page" data-search="system.radius.page dimension System" data-kind="token" data-name="system.radius.page" data-meta="dimension · System">
+  <div class="row-main">
+    <div class="name"><code class="tname">system.radius.page</code><span class="pill">dimension</span></div>
+    <a class="alias" href="#t-ref.radius.page" data-goto="t-ref.radius.page">→ ref.radius.page</a>
+  </div>
+  <div class="row-preview"><span class="dim" style="width:min(var(--system-radius-page),100%)"></span></div>
+  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">12px</code></span></div>
+</div></div>
+</section>
+<section class="group" id="g-system-system-spacing">
+  <h3>system.spacing <span class="count">15</span></h3>
+  
+  
+  <div class="list"><div class="row" id="t-system.spacing.0" data-search="system.spacing.0 dimension System" data-kind="token" data-name="system.spacing.0" data-meta="dimension · System">
+  <div class="row-main">
+    <div class="name"><code class="tname">system.spacing.0</code><span class="pill">dimension</span></div>
+    <a class="alias" href="#t-ref.spacing.0" data-goto="t-ref.spacing.0">→ ref.spacing.0</a>
+  </div>
+  <div class="row-preview"><span class="dim" style="width:min(var(--system-spacing-0),100%)"></span></div>
+  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">0px</code></span></div>
+</div>
+<div class="row" id="t-system.spacing.2" data-search="system.spacing.2 dimension System" data-kind="token" data-name="system.spacing.2" data-meta="dimension · System">
+  <div class="row-main">
+    <div class="name"><code class="tname">system.spacing.2</code><span class="pill">dimension</span></div>
+    <a class="alias" href="#t-ref.spacing.2" data-goto="t-ref.spacing.2">→ ref.spacing.2</a>
+  </div>
+  <div class="row-preview"><span class="dim" style="width:min(var(--system-spacing-2),100%)"></span></div>
+  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">2px</code></span></div>
+</div>
+<div class="row" id="t-system.spacing.4" data-search="system.spacing.4 dimension System" data-kind="token" data-name="system.spacing.4" data-meta="dimension · System">
+  <div class="row-main">
+    <div class="name"><code class="tname">system.spacing.4</code><span class="pill">dimension</span></div>
+    <a class="alias" href="#t-ref.spacing.4" data-goto="t-ref.spacing.4">→ ref.spacing.4</a>
+  </div>
+  <div class="row-preview"><span class="dim" style="width:min(var(--system-spacing-4),100%)"></span></div>
+  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">4px</code></span></div>
+</div>
+<div class="row" id="t-system.spacing.8" data-search="system.spacing.8 dimension System" data-kind="token" data-name="system.spacing.8" data-meta="dimension · System">
+  <div class="row-main">
+    <div class="name"><code class="tname">system.spacing.8</code><span class="pill">dimension</span></div>
+    <a class="alias" href="#t-ref.spacing.8" data-goto="t-ref.spacing.8">→ ref.spacing.8</a>
+  </div>
+  <div class="row-preview"><span class="dim" style="width:min(var(--system-spacing-8),100%)"></span></div>
+  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">8px</code></span></div>
+</div>
+<div class="row" id="t-system.spacing.12" data-search="system.spacing.12 dimension System" data-kind="token" data-name="system.spacing.12" data-meta="dimension · System">
+  <div class="row-main">
+    <div class="name"><code class="tname">system.spacing.12</code><span class="pill">dimension</span></div>
+    <a class="alias" href="#t-ref.spacing.12" data-goto="t-ref.spacing.12">→ ref.spacing.12</a>
+  </div>
+  <div class="row-preview"><span class="dim" style="width:min(var(--system-spacing-12),100%)"></span></div>
+  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">12px</code></span></div>
+</div>
+<div class="row" id="t-system.spacing.16" data-search="system.spacing.16 dimension System" data-kind="token" data-name="system.spacing.16" data-meta="dimension · System">
+  <div class="row-main">
+    <div class="name"><code class="tname">system.spacing.16</code><span class="pill">dimension</span></div>
+    <a class="alias" href="#t-ref.spacing.16" data-goto="t-ref.spacing.16">→ ref.spacing.16</a>
+  </div>
+  <div class="row-preview"><span class="dim" style="width:min(var(--system-spacing-16),100%)"></span></div>
+  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">16px</code></span></div>
+</div>
+<div class="row" id="t-system.spacing.20" data-search="system.spacing.20 dimension System" data-kind="token" data-name="system.spacing.20" data-meta="dimension · System">
+  <div class="row-main">
+    <div class="name"><code class="tname">system.spacing.20</code><span class="pill">dimension</span></div>
+    <a class="alias" href="#t-ref.spacing.20" data-goto="t-ref.spacing.20">→ ref.spacing.20</a>
+  </div>
+  <div class="row-preview"><span class="dim" style="width:min(var(--system-spacing-20),100%)"></span></div>
+  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">20px</code></span></div>
+</div>
+<div class="row" id="t-system.spacing.24" data-search="system.spacing.24 dimension System" data-kind="token" data-name="system.spacing.24" data-meta="dimension · System">
+  <div class="row-main">
+    <div class="name"><code class="tname">system.spacing.24</code><span class="pill">dimension</span></div>
+    <a class="alias" href="#t-ref.spacing.24" data-goto="t-ref.spacing.24">→ ref.spacing.24</a>
+  </div>
+  <div class="row-preview"><span class="dim" style="width:min(var(--system-spacing-24),100%)"></span></div>
+  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">24px</code></span></div>
+</div>
+<div class="row" id="t-system.spacing.32" data-search="system.spacing.32 dimension System" data-kind="token" data-name="system.spacing.32" data-meta="dimension · System">
+  <div class="row-main">
+    <div class="name"><code class="tname">system.spacing.32</code><span class="pill">dimension</span></div>
+    <a class="alias" href="#t-ref.spacing.32" data-goto="t-ref.spacing.32">→ ref.spacing.32</a>
+  </div>
+  <div class="row-preview"><span class="dim" style="width:min(var(--system-spacing-32),100%)"></span></div>
+  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">32px</code></span></div>
+</div>
+<div class="row" id="t-system.spacing.40" data-search="system.spacing.40 dimension System" data-kind="token" data-name="system.spacing.40" data-meta="dimension · System">
+  <div class="row-main">
+    <div class="name"><code class="tname">system.spacing.40</code><span class="pill">dimension</span></div>
+    <a class="alias" href="#t-ref.spacing.40" data-goto="t-ref.spacing.40">→ ref.spacing.40</a>
+  </div>
+  <div class="row-preview"><span class="dim" style="width:min(var(--system-spacing-40),100%)"></span></div>
+  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">40px</code></span></div>
+</div>
+<div class="row" id="t-system.spacing.48" data-search="system.spacing.48 dimension System" data-kind="token" data-name="system.spacing.48" data-meta="dimension · System">
+  <div class="row-main">
+    <div class="name"><code class="tname">system.spacing.48</code><span class="pill">dimension</span></div>
+    <a class="alias" href="#t-ref.spacing.48" data-goto="t-ref.spacing.48">→ ref.spacing.48</a>
+  </div>
+  <div class="row-preview"><span class="dim" style="width:min(var(--system-spacing-48),100%)"></span></div>
+  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">48px</code></span></div>
+</div>
+<div class="row" id="t-system.spacing.56" data-search="system.spacing.56 dimension System" data-kind="token" data-name="system.spacing.56" data-meta="dimension · System">
+  <div class="row-main">
+    <div class="name"><code class="tname">system.spacing.56</code><span class="pill">dimension</span></div>
+    <a class="alias" href="#t-ref.spacing.56" data-goto="t-ref.spacing.56">→ ref.spacing.56</a>
+  </div>
+  <div class="row-preview"><span class="dim" style="width:min(var(--system-spacing-56),100%)"></span></div>
+  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">56px</code></span></div>
+</div>
+<div class="row" id="t-system.spacing.64" data-search="system.spacing.64 dimension System" data-kind="token" data-name="system.spacing.64" data-meta="dimension · System">
+  <div class="row-main">
+    <div class="name"><code class="tname">system.spacing.64</code><span class="pill">dimension</span></div>
+    <a class="alias" href="#t-ref.spacing.64" data-goto="t-ref.spacing.64">→ ref.spacing.64</a>
+  </div>
+  <div class="row-preview"><span class="dim" style="width:min(var(--system-spacing-64),100%)"></span></div>
+  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">64px</code></span></div>
+</div>
+<div class="row" id="t-system.spacing.72" data-search="system.spacing.72 dimension System" data-kind="token" data-name="system.spacing.72" data-meta="dimension · System">
+  <div class="row-main">
+    <div class="name"><code class="tname">system.spacing.72</code><span class="pill">dimension</span></div>
+    <a class="alias" href="#t-ref.spacing.72" data-goto="t-ref.spacing.72">→ ref.spacing.72</a>
+  </div>
+  <div class="row-preview"><span class="dim" style="width:min(var(--system-spacing-72),100%)"></span></div>
+  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">72px</code></span></div>
+</div>
+<div class="row" id="t-system.spacing.80" data-search="system.spacing.80 dimension System" data-kind="token" data-name="system.spacing.80" data-meta="dimension · System">
+  <div class="row-main">
+    <div class="name"><code class="tname">system.spacing.80</code><span class="pill">dimension</span></div>
+    <a class="alias" href="#t-ref.spacing.80" data-goto="t-ref.spacing.80">→ ref.spacing.80</a>
+  </div>
+  <div class="row-preview"><span class="dim" style="width:min(var(--system-spacing-80),100%)"></span></div>
+  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">80px</code></span></div>
+</div></div>
+</section>
+<section class="group" id="g-system-system-textScale">
+  <h3>system.textScale <span class="count">18</span></h3>
+  
+  
+  <div class="list"><div class="row" id="t-system.textScale.clickable" data-search="system.textScale.clickable typography System" data-kind="token" data-name="system.textScale.clickable" data-meta="typography · System">
+  <div class="row-main">
+    <div class="name"><code class="tname">system.textScale.clickable</code><span class="pill">typography</span></div>
+    
+  </div>
+  <div class="row-preview"><span class="sample" style="font-family:var(--system-textScale-clickable-font-family);font-size:var(--system-textScale-clickable-font-size);font-weight:var(--system-textScale-clickable-font-weight);letter-spacing:var(--system-textScale-clickable-letter-spacing);line-height:var(--system-textScale-clickable-line-height)">The quick brown fox</span></div>
+  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">fontFamily: ref.fontFamily.sans, fontSize: 14px, fontWeight: 500, letterSpacing: 0px, lineHeight: 1.4286</code></span></div>
+</div>
+<div class="row" id="t-system.textScale.heading-branding-page" data-search="system.textScale.heading-branding-page typography System" data-kind="token" data-name="system.textScale.heading-branding-page" data-meta="typography · System">
+  <div class="row-main">
+    <div class="name"><code class="tname">system.textScale.heading-branding-page</code><span class="pill">typography</span></div>
+    
+  </div>
+  <div class="row-preview"><span class="sample" style="font-family:var(--system-textScale-heading-branding-page-font-family);font-size:var(--system-textScale-heading-branding-page-font-size);font-weight:var(--system-textScale-heading-branding-page-font-weight);letter-spacing:var(--system-textScale-heading-branding-page-letter-spacing);line-height:var(--system-textScale-heading-branding-page-line-height)">The quick brown fox</span></div>
+  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">fontFamily: ref.fontFamily.sans, fontSize: 32px, fontWeight: 600, letterSpacing: 0px, lineHeight: 1.25</code></span></div>
+</div>
+<div class="row" id="t-system.textScale.heading-branding-page-l" data-search="system.textScale.heading-branding-page-l typography System" data-kind="token" data-name="system.textScale.heading-branding-page-l" data-meta="typography · System">
+  <div class="row-main">
+    <div class="name"><code class="tname">system.textScale.heading-branding-page-l</code><span class="pill">typography</span></div>
+    
+  </div>
+  <div class="row-preview"><span class="sample" style="font-family:var(--system-textScale-heading-branding-page-l-font-family);font-size:var(--system-textScale-heading-branding-page-l-font-size);font-weight:var(--system-textScale-heading-branding-page-l-font-weight);letter-spacing:var(--system-textScale-heading-branding-page-l-letter-spacing);line-height:var(--system-textScale-heading-branding-page-l-line-height)">The quick brown fox</span></div>
+  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">fontFamily: ref.fontFamily.sans, fontSize: 48px, fontWeight: 600, letterSpacing: 0px, lineHeight: 1.2083</code></span></div>
+</div>
+<div class="row" id="t-system.textScale.heading-page" data-search="system.textScale.heading-page typography System" data-kind="token" data-name="system.textScale.heading-page" data-meta="typography · System">
+  <div class="row-main">
+    <div class="name"><code class="tname">system.textScale.heading-page</code><span class="pill">typography</span></div>
+    
+  </div>
+  <div class="row-preview"><span class="sample" style="font-family:var(--system-textScale-heading-page-font-family);font-size:var(--system-textScale-heading-page-font-size);font-weight:var(--system-textScale-heading-page-font-weight);letter-spacing:var(--system-textScale-heading-page-letter-spacing);line-height:var(--system-textScale-heading-page-line-height)">The quick brown fox</span></div>
+  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">fontFamily: ref.fontFamily.sans, fontSize: 22px, fontWeight: 600, letterSpacing: 0px, lineHeight: 1.3636</code></span></div>
+</div>
+<div class="row" id="t-system.textScale.heading-page-l" data-search="system.textScale.heading-page-l typography System" data-kind="token" data-name="system.textScale.heading-page-l" data-meta="typography · System">
+  <div class="row-main">
+    <div class="name"><code class="tname">system.textScale.heading-page-l</code><span class="pill">typography</span></div>
+    
+  </div>
+  <div class="row-preview"><span class="sample" style="font-family:var(--system-textScale-heading-page-l-font-family);font-size:var(--system-textScale-heading-page-l-font-size);font-weight:var(--system-textScale-heading-page-l-font-weight);letter-spacing:var(--system-textScale-heading-page-l-letter-spacing);line-height:var(--system-textScale-heading-page-l-line-height)">The quick brown fox</span></div>
+  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">fontFamily: ref.fontFamily.sans, fontSize: 24px, fontWeight: 700, letterSpacing: 0px, lineHeight: 1.25</code></span></div>
+</div>
+<div class="row" id="t-system.textScale.heading-section-1" data-search="system.textScale.heading-section-1 typography System" data-kind="token" data-name="system.textScale.heading-section-1" data-meta="typography · System">
+  <div class="row-main">
+    <div class="name"><code class="tname">system.textScale.heading-section-1</code><span class="pill">typography</span></div>
+    
+  </div>
+  <div class="row-preview"><span class="sample" style="font-family:var(--system-textScale-heading-section-1-font-family);font-size:var(--system-textScale-heading-section-1-font-size);font-weight:var(--system-textScale-heading-section-1-font-weight);letter-spacing:var(--system-textScale-heading-section-1-letter-spacing);line-height:var(--system-textScale-heading-section-1-line-height)">The quick brown fox</span></div>
+  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">fontFamily: ref.fontFamily.sans, fontSize: 20px, fontWeight: 600, letterSpacing: 0px, lineHeight: 1.5</code></span></div>
+</div>
+<div class="row" id="t-system.textScale.heading-section-2" data-search="system.textScale.heading-section-2 typography System" data-kind="token" data-name="system.textScale.heading-section-2" data-meta="typography · System">
+  <div class="row-main">
+    <div class="name"><code class="tname">system.textScale.heading-section-2</code><span class="pill">typography</span></div>
+    
+  </div>
+  <div class="row-preview"><span class="sample" style="font-family:var(--system-textScale-heading-section-2-font-family);font-size:var(--system-textScale-heading-section-2-font-size);font-weight:var(--system-textScale-heading-section-2-font-weight);letter-spacing:var(--system-textScale-heading-section-2-letter-spacing);line-height:var(--system-textScale-heading-section-2-line-height)">The quick brown fox</span></div>
+  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">fontFamily: ref.fontFamily.sans, fontSize: 18px, fontWeight: 600, letterSpacing: 0px, lineHeight: 1.3333</code></span></div>
+</div>
+<div class="row" id="t-system.textScale.heading-section-3" data-search="system.textScale.heading-section-3 typography System" data-kind="token" data-name="system.textScale.heading-section-3" data-meta="typography · System">
+  <div class="row-main">
+    <div class="name"><code class="tname">system.textScale.heading-section-3</code><span class="pill">typography</span></div>
+    
+  </div>
+  <div class="row-preview"><span class="sample" style="font-family:var(--system-textScale-heading-section-3-font-family);font-size:var(--system-textScale-heading-section-3-font-size);font-weight:var(--system-textScale-heading-section-3-font-weight);letter-spacing:var(--system-textScale-heading-section-3-letter-spacing);line-height:var(--system-textScale-heading-section-3-line-height)">The quick brown fox</span></div>
+  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">fontFamily: ref.fontFamily.sans, fontSize: 16px, fontWeight: 600, letterSpacing: 0px, lineHeight: 1.5</code></span></div>
+</div>
+<div class="row" id="t-system.textScale.heading-section-4" data-search="system.textScale.heading-section-4 typography System" data-kind="token" data-name="system.textScale.heading-section-4" data-meta="typography · System">
+  <div class="row-main">
+    <div class="name"><code class="tname">system.textScale.heading-section-4</code><span class="pill">typography</span></div>
+    
+  </div>
+  <div class="row-preview"><span class="sample" style="font-family:var(--system-textScale-heading-section-4-font-family);font-size:var(--system-textScale-heading-section-4-font-size);font-weight:var(--system-textScale-heading-section-4-font-weight);letter-spacing:var(--system-textScale-heading-section-4-letter-spacing);line-height:var(--system-textScale-heading-section-4-line-height)">The quick brown fox</span></div>
+  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">fontFamily: ref.fontFamily.sans, fontSize: 14px, fontWeight: 600, letterSpacing: 0px, lineHeight: 1.4286</code></span></div>
+</div>
+<div class="row" id="t-system.textScale.paragraph-body-l" data-search="system.textScale.paragraph-body-l typography System" data-kind="token" data-name="system.textScale.paragraph-body-l" data-meta="typography · System">
+  <div class="row-main">
+    <div class="name"><code class="tname">system.textScale.paragraph-body-l</code><span class="pill">typography</span></div>
+    
+  </div>
+  <div class="row-preview"><span class="sample" style="font-family:var(--system-textScale-paragraph-body-l-font-family);font-size:var(--system-textScale-paragraph-body-l-font-size);font-weight:var(--system-textScale-paragraph-body-l-font-weight);letter-spacing:var(--system-textScale-paragraph-body-l-letter-spacing);line-height:var(--system-textScale-paragraph-body-l-line-height)">The quick brown fox</span></div>
+  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">fontFamily: ref.fontFamily.sans, fontSize: 16px, fontWeight: 400, letterSpacing: 0px, lineHeight: 1.5</code></span></div>
+</div>
+<div class="row" id="t-system.textScale.paragraph-body-l-strong" data-search="system.textScale.paragraph-body-l-strong typography System" data-kind="token" data-name="system.textScale.paragraph-body-l-strong" data-meta="typography · System">
+  <div class="row-main">
+    <div class="name"><code class="tname">system.textScale.paragraph-body-l-strong</code><span class="pill">typography</span></div>
+    
+  </div>
+  <div class="row-preview"><span class="sample" style="font-family:var(--system-textScale-paragraph-body-l-strong-font-family);font-size:var(--system-textScale-paragraph-body-l-strong-font-size);font-weight:var(--system-textScale-paragraph-body-l-strong-font-weight);letter-spacing:var(--system-textScale-paragraph-body-l-strong-letter-spacing);line-height:var(--system-textScale-paragraph-body-l-strong-line-height)">The quick brown fox</span></div>
+  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">fontFamily: ref.fontFamily.sans, fontSize: 16px, fontWeight: 500, letterSpacing: 0px, lineHeight: 1.5</code></span></div>
+</div>
+<div class="row" id="t-system.textScale.paragraph-body-m" data-search="system.textScale.paragraph-body-m typography System" data-kind="token" data-name="system.textScale.paragraph-body-m" data-meta="typography · System">
+  <div class="row-main">
+    <div class="name"><code class="tname">system.textScale.paragraph-body-m</code><span class="pill">typography</span></div>
+    
+  </div>
+  <div class="row-preview"><span class="sample" style="font-family:var(--system-textScale-paragraph-body-m-font-family);font-size:var(--system-textScale-paragraph-body-m-font-size);font-weight:var(--system-textScale-paragraph-body-m-font-weight);letter-spacing:var(--system-textScale-paragraph-body-m-letter-spacing);line-height:var(--system-textScale-paragraph-body-m-line-height)">The quick brown fox</span></div>
+  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">fontFamily: ref.fontFamily.sans, fontSize: 14px, fontWeight: 400, letterSpacing: 0px, lineHeight: 1.4286</code></span></div>
+</div>
+<div class="row" id="t-system.textScale.paragraph-body-m-strong" data-search="system.textScale.paragraph-body-m-strong typography System" data-kind="token" data-name="system.textScale.paragraph-body-m-strong" data-meta="typography · System">
+  <div class="row-main">
+    <div class="name"><code class="tname">system.textScale.paragraph-body-m-strong</code><span class="pill">typography</span></div>
+    
+  </div>
+  <div class="row-preview"><span class="sample" style="font-family:var(--system-textScale-paragraph-body-m-strong-font-family);font-size:var(--system-textScale-paragraph-body-m-strong-font-size);font-weight:var(--system-textScale-paragraph-body-m-strong-font-weight);letter-spacing:var(--system-textScale-paragraph-body-m-strong-letter-spacing);line-height:var(--system-textScale-paragraph-body-m-strong-line-height)">The quick brown fox</span></div>
+  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">fontFamily: ref.fontFamily.sans, fontSize: 14px, fontWeight: 600, letterSpacing: 0px, lineHeight: 1.4286</code></span></div>
+</div>
+<div class="row" id="t-system.textScale.paragraph-body-xl" data-search="system.textScale.paragraph-body-xl typography System" data-kind="token" data-name="system.textScale.paragraph-body-xl" data-meta="typography · System">
+  <div class="row-main">
+    <div class="name"><code class="tname">system.textScale.paragraph-body-xl</code><span class="pill">typography</span></div>
+    
+  </div>
+  <div class="row-preview"><span class="sample" style="font-family:var(--system-textScale-paragraph-body-xl-font-family);font-size:var(--system-textScale-paragraph-body-xl-font-size);font-weight:var(--system-textScale-paragraph-body-xl-font-weight);letter-spacing:var(--system-textScale-paragraph-body-xl-letter-spacing);line-height:var(--system-textScale-paragraph-body-xl-line-height)">The quick brown fox</span></div>
+  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">fontFamily: ref.fontFamily.sans, fontSize: 18px, fontWeight: 400, letterSpacing: 0px, lineHeight: 1.3333</code></span></div>
+</div>
+<div class="row" id="t-system.textScale.paragraph-body-xl-strong" data-search="system.textScale.paragraph-body-xl-strong typography System" data-kind="token" data-name="system.textScale.paragraph-body-xl-strong" data-meta="typography · System">
+  <div class="row-main">
+    <div class="name"><code class="tname">system.textScale.paragraph-body-xl-strong</code><span class="pill">typography</span></div>
+    
+  </div>
+  <div class="row-preview"><span class="sample" style="font-family:var(--system-textScale-paragraph-body-xl-strong-font-family);font-size:var(--system-textScale-paragraph-body-xl-strong-font-size);font-weight:var(--system-textScale-paragraph-body-xl-strong-font-weight);letter-spacing:var(--system-textScale-paragraph-body-xl-strong-letter-spacing);line-height:var(--system-textScale-paragraph-body-xl-strong-line-height)">The quick brown fox</span></div>
+  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">fontFamily: ref.fontFamily.sans, fontSize: 18px, fontWeight: 500, letterSpacing: 0px, lineHeight: 1.3333</code></span></div>
+</div>
+<div class="row" id="t-system.textScale.tiny-caption" data-search="system.textScale.tiny-caption typography System" data-kind="token" data-name="system.textScale.tiny-caption" data-meta="typography · System">
+  <div class="row-main">
+    <div class="name"><code class="tname">system.textScale.tiny-caption</code><span class="pill">typography</span></div>
+    
+  </div>
+  <div class="row-preview"><span class="sample" style="font-family:var(--system-textScale-tiny-caption-font-family);font-size:var(--system-textScale-tiny-caption-font-size);font-weight:var(--system-textScale-tiny-caption-font-weight);letter-spacing:var(--system-textScale-tiny-caption-letter-spacing);line-height:var(--system-textScale-tiny-caption-line-height)">The quick brown fox</span></div>
+  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">fontFamily: ref.fontFamily.sans, fontSize: 12px, fontWeight: 500, letterSpacing: 0px, lineHeight: 1.3333</code></span></div>
+</div>
+<div class="row" id="t-system.textScale.tiny-caption-strong" data-search="system.textScale.tiny-caption-strong typography System" data-kind="token" data-name="system.textScale.tiny-caption-strong" data-meta="typography · System">
+  <div class="row-main">
+    <div class="name"><code class="tname">system.textScale.tiny-caption-strong</code><span class="pill">typography</span></div>
+    
+  </div>
+  <div class="row-preview"><span class="sample" style="font-family:var(--system-textScale-tiny-caption-strong-font-family);font-size:var(--system-textScale-tiny-caption-strong-font-size);font-weight:var(--system-textScale-tiny-caption-strong-font-weight);letter-spacing:var(--system-textScale-tiny-caption-strong-letter-spacing);line-height:var(--system-textScale-tiny-caption-strong-line-height)">The quick brown fox</span></div>
+  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">fontFamily: ref.fontFamily.sans, fontSize: 12px, fontWeight: 700, letterSpacing: 0px, lineHeight: 1.3333</code></span></div>
+</div>
+<div class="row" id="t-system.textScale.tiny-subcaption" data-search="system.textScale.tiny-subcaption typography System" data-kind="token" data-name="system.textScale.tiny-subcaption" data-meta="typography · System">
+  <div class="row-main">
+    <div class="name"><code class="tname">system.textScale.tiny-subcaption</code><span class="pill">typography</span></div>
+    
+  </div>
+  <div class="row-preview"><span class="sample" style="font-family:var(--system-textScale-tiny-subcaption-font-family);font-size:var(--system-textScale-tiny-subcaption-font-size);font-weight:var(--system-textScale-tiny-subcaption-font-weight);letter-spacing:var(--system-textScale-tiny-subcaption-letter-spacing);line-height:var(--system-textScale-tiny-subcaption-line-height)">The quick brown fox</span></div>
+  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">fontFamily: ref.fontFamily.sans, fontSize: 10px, fontWeight: 500, letterSpacing: 0px, lineHeight: 1</code></span></div>
+</div></div>
+</section>
+<section class="group" id="g-system-system-transitionScale">
+  <h3>system.transitionScale <span class="count">2</span></h3>
+  
+  
+  <div class="list"><div class="row" id="t-system.transitionScale.fast" data-search="system.transitionScale.fast transition System" data-kind="token" data-name="system.transitionScale.fast" data-meta="transition · System">
+  <div class="row-main">
+    <div class="name"><code class="tname">system.transitionScale.fast</code><span class="pill">transition</span></div>
+    
+  </div>
+  <div class="row-preview"><span class="track" title="Hover the row to preview"><span class="demo" style="transition:transform var(--system-transitionScale-fast-transition-duration) var(--system-transitionScale-fast-transition-timing-function) var(--system-transitionScale-fast-transition-delay)"></span></span></div>
+  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">transitionDuration: 100ms, transitionDelay: 0ms, transitionTimingFunction: cubic-bezier(0.24, 1, 0.4, 1)</code></span></div>
+</div>
+<div class="row" id="t-system.transitionScale.slow" data-search="system.transitionScale.slow transition System" data-kind="token" data-name="system.transitionScale.slow" data-meta="transition · System">
+  <div class="row-main">
+    <div class="name"><code class="tname">system.transitionScale.slow</code><span class="pill">transition</span></div>
+    
+  </div>
+  <div class="row-preview"><span class="track" title="Hover the row to preview"><span class="demo" style="transition:transform var(--system-transitionScale-slow-transition-duration) var(--system-transitionScale-slow-transition-timing-function) var(--system-transitionScale-slow-transition-delay)"></span></span></div>
+  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">transitionDuration: 400ms, transitionDelay: 0ms, transitionTimingFunction: cubic-bezier(0.24, 1, 0.4, 1)</code></span></div>
+</div></div>
+</section>
+<section class="group" id="g-system-system-typography">
+  <h3>system.typography <span class="count">2</span></h3>
+  
+  
+  <div class="list"><div class="row" id="t-system.typography.bodyFontFamily" data-search="system.typography.bodyFontFamily fontFamily System" data-kind="token" data-name="system.typography.bodyFontFamily" data-meta="fontFamily · System">
+  <div class="row-main">
+    <div class="name"><code class="tname">system.typography.bodyFontFamily</code><span class="pill">fontFamily</span></div>
+    <a class="alias" href="#t-ref.fontFamily.sans" data-goto="t-ref.fontFamily.sans">→ ref.fontFamily.sans</a>
+  </div>
+  <div class="row-preview"><span class="sample" style="font-family:var(--system-typography-bodyFontFamily)">Aa Bb Cc 123</span></div>
+  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif</code></span></div>
+</div>
+<div class="row" id="t-system.typography.codeFontFamily" data-search="system.typography.codeFontFamily fontFamily System" data-kind="token" data-name="system.typography.codeFontFamily" data-meta="fontFamily · System">
+  <div class="row-main">
+    <div class="name"><code class="tname">system.typography.codeFontFamily</code><span class="pill">fontFamily</span></div>
+    <a class="alias" href="#t-ref.fontFamily.mono" data-goto="t-ref.fontFamily.mono">→ ref.fontFamily.mono</a>
+  </div>
+  <div class="row-preview"><span class="sample" style="font-family:var(--system-typography-codeFontFamily)">Aa Bb Cc 123</span></div>
+  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">SF Mono, Monaco, Consolas, monospace</code></span></div>
+</div></div>
+</section>
 </div>
 <div id="layer-components" class="layer">
   <h2 class="title">Components</h2>
-  <p class="sub">0 tokens</p>
-  <p class="empty">No components tokens defined.</p>
+  <p class="sub">3 tokens</p>
+  <section class="group" id="g-components-sticker">
+  <h3>sticker <span class="count">3</span></h3>
+  
+  
+  <div class="list"><div class="row" id="t-sticker.borderRadius" data-search="sticker.borderRadius dimension Components" data-kind="token" data-name="sticker.borderRadius" data-meta="dimension · Components">
+  <div class="row-main">
+    <div class="name"><code class="tname">sticker.borderRadius</code><span class="pill">dimension</span></div>
+    
+  </div>
+  <div class="row-preview"><span class="dim" style="width:min(var(--sticker-borderRadius),100%)"></span></div>
+  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">4px</code></span></div>
+</div>
+<div class="row" id="t-sticker.paddingX" data-search="sticker.paddingX dimension Components" data-kind="token" data-name="sticker.paddingX" data-meta="dimension · Components">
+  <div class="row-main">
+    <div class="name"><code class="tname">sticker.paddingX</code><span class="pill">dimension</span></div>
+    
+  </div>
+  <div class="row-preview"><span class="dim" style="width:min(var(--sticker-paddingX),100%)"></span></div>
+  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">8px</code></span></div>
+</div>
+<div class="row" id="t-sticker.paddingY" data-search="sticker.paddingY dimension Components" data-kind="token" data-name="sticker.paddingY" data-meta="dimension · Components">
+  <div class="row-main">
+    <div class="name"><code class="tname">sticker.paddingY</code><span class="pill">dimension</span></div>
+    
+  </div>
+  <div class="row-preview"><span class="dim" style="width:min(var(--sticker-paddingY),100%)"></span></div>
+  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">2px</code></span></div>
+</div></div>
+</section>
 </div>
     </main>
   </div>
@@ -506,12 +2539,13 @@ sparingly: one tilted sticker per surface keeps it feeling spontaneous.</p>
   function route(hash) {
     try { hash = decodeURIComponent(hash); } catch (e) {}
     if (viewKeys.indexOf(hash) >= 0) {
+      if (!document.querySelector('[data-view="' + hash + '"]')) return false;
       showView(hash);
       showPage(OVERVIEW);
       return true;
     }
-    if (layerKeys.indexOf(hash) >= 0) { showView("tokens"); document.getElementById(hash).scrollIntoView(); return true; }
     var el = hash && document.getElementById(hash);
+    if (layerKeys.indexOf(hash) >= 0 && el) { showView("tokens"); el.scrollIntoView(); return true; }
     if (!el) return false;
     reveal(el);
     return true;
@@ -799,9 +2833,7 @@ sparingly: one tilted sticker per surface keeps it feeling spontaneous.</p>
     trigger.querySelector("kbd").textContent = "Ctrl K";
   }
 
-  var start = document.querySelector('[data-view="tokens"]').getAttribute("data-count") === "0" &&
-    document.querySelector('[data-view="components"]') ? "components" : "tokens";
-  showView(start);
+  showView(views[0].getAttribute("data-view"));
   showPage(OVERVIEW);
   route(location.hash.slice(1));
 })();

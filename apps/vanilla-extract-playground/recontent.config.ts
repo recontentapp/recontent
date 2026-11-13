@@ -404,8 +404,8 @@ const components = defineComponentTokens({
 
 export default defineConfig({
   introspection: { entry: "src/components.ts" },
-  // tokens: { ref, system, components },
-  // themes: {},
+  tokens: { ref, system, components },
+  themes: {},
   plugins: [
     docs({
       outDir: "docs",

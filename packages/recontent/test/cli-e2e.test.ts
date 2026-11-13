@@ -1013,8 +1013,10 @@ describe("recontent inspect", () => {
       expect(detail.stdout).toContain("| `label` | `string` | — | yes |");
       expect(detail.stdout).toContain("Also accepts: `ButtonHTMLAttributes`");
       expect(detail.stdout).not.toContain("## Legacy");
-      expect(detail.stdout).toContain("### Usage");
-      expect(detail.stdout).toContain("Prefer it over a link when the click changes something.");
+      // Fenced, so that headings in the usage can't break the hierarchy.
+      expect(detail.stdout).toContain(
+        "### Usage\n\n```md\nPrefer it over a link when the click changes something.\n```",
+      );
       expect(detail.stdout).toContain(
         '### Examples\n\n**Basic**\n\n```tsx\n<Button label="Save" />\n```',
       );

@@ -710,12 +710,13 @@ const SCRIPT = `
   function route(hash) {
     try { hash = decodeURIComponent(hash); } catch (e) {}
     if (viewKeys.indexOf(hash) >= 0) {
+      if (!document.querySelector('[data-view="' + hash + '"]')) return false;
       showView(hash);
       showPage(OVERVIEW);
       return true;
     }
-    if (layerKeys.indexOf(hash) >= 0) { showView("tokens"); document.getElementById(hash).scrollIntoView(); return true; }
     var el = hash && document.getElementById(hash);
+    if (layerKeys.indexOf(hash) >= 0 && el) { showView("tokens"); el.scrollIntoView(); return true; }
     if (!el) return false;
     reveal(el);
     return true;
@@ -1003,9 +1004,7 @@ const SCRIPT = `
     trigger.querySelector("kbd").textContent = "Ctrl K";
   }
 
-  var start = document.querySelector('[data-view="tokens"]').getAttribute("data-count") === "0" &&
-    document.querySelector('[data-view="components"]') ? "components" : "tokens";
-  showView(start);
+  showView(views[0].getAttribute("data-view"));
   showPage(OVERVIEW);
   route(location.hash.slice(1));
 })();
@@ -1014,6 +1013,8 @@ const SCRIPT = `
 export function renderHtml(model: DocsModel, ctx: GeneratorContext, gitBaseUrl?: string): string {
   const hasThemes = model.themes.length > 0;
   const hasComponents = model.components.length > 0;
+  // Without tokens the tab would be empty; keep it only when it is all there is to show.
+  const hasTokens = model.tokenCount > 0 || !hasComponents;
   const title = escapeHtml(model.title);
 
   const themePicker = hasThemes
@@ -1056,6 +1057,20 @@ export function renderHtml(model: DocsModel, ctx: GeneratorContext, gitBaseUrl?:
 </div>`;
     })
     .join("\n");
+
+  const tokensView = hasTokens
+    ? `<div data-view="tokens">
+  <div class="layout">
+    <aside class="side">
+      ${sideToggle}
+      <nav aria-label="Design tokens">${tokenSide}</nav>
+    </aside>
+    <main>
+${tokenPanels}
+    </main>
+  </div>
+</div>`
+    : "";
 
   const categories = groupByCategory(model.components);
   const status = (c: ComponentInfo) =>
@@ -1113,24 +1128,14 @@ ${tokenCss(ctx)}
 <body>
 <header class="bar">
   <h1>${title}</h1>
-  <div class="views" role="tablist" aria-label="Sections">${viewTab("tokens", "Design tokens", model.tokenCount)}${hasComponents ? viewTab("components", "Components", model.components.length) : ""}</div>
+  <div class="views" role="tablist" aria-label="Sections">${hasTokens ? viewTab("tokens", "Design tokens", model.tokenCount) : ""}${hasComponents ? viewTab("components", "Components", model.components.length) : ""}</div>
   <div class="bar-end">
     <button type="button" class="search-btn" id="palette-open" aria-haspopup="dialog"><span>Search</span><kbd>⌘K</kbd></button>
     ${themePicker}
     <button type="button" class="mode-btn" id="mode" aria-label="Switch to dark mode" title="Switch to dark mode">${MODE_ICONS}</button>
   </div>
 </header>
-<div data-view="tokens" data-count="${model.tokenCount}">
-  <div class="layout">
-    <aside class="side">
-      ${sideToggle}
-      <nav aria-label="Design tokens">${tokenSide}</nav>
-    </aside>
-    <main>
-${tokenPanels}
-    </main>
-  </div>
-</div>
+${tokensView}
 ${componentsView}
 <div class="palette" id="palette" hidden>
   <div class="palette-panel" role="dialog" aria-modal="true" aria-label="Search tokens and components">
