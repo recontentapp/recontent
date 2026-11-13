@@ -148,7 +148,8 @@ function walk(
 
 function diagnoseTokenTree(tree: unknown, layer: TokenLayer): TokenDiagnostic[] {
   const diagnostics: TokenDiagnostic[] = [];
-  walk(tree, [layer], diagnostics);
+  // Component tokens live at the registry root, so their paths carry no layer prefix.
+  walk(tree, layer === "components" ? [] : [layer], diagnostics);
   return diagnostics;
 }
 

@@ -21,7 +21,7 @@ export type Overview = {
   components?: ComponentInfo[];
   types?: TypeInfo[];
   /** Why `components` is missing although the config asks for them. */
-  componentsError?: string;
+  introspectionError?: string;
 };
 
 export type InspectError = { message: string; input?: string; suggestions?: string[] };
@@ -52,7 +52,7 @@ const next = (...commands: string[]) =>
 const typeIds = (types: TypeInfo[]) => types.map((type) => code(type.id)).join(", ") || "_None._";
 
 export function renderOverview(overview: Overview, format: Format): string {
-  const { tokens, themes, components, types, componentsError } = overview;
+  const { tokens, themes, components, types, introspectionError } = overview;
   const layers = LAYERS.map((layer) => {
     const inLayer = tokens.filter((token) => token.layer === layer);
     return { layer, count: inLayer.length, types: countBy(inLayer, (token) => token.type) };
@@ -71,8 +71,8 @@ export function renderOverview(overview: Overview, format: Format): string {
               components: components.map((component) => component.name),
               types: (types ?? []).map((type) => type.id),
             }
-          : componentsError !== undefined
-            ? { components: { error: componentsError } }
+          : introspectionError !== undefined
+            ? { components: { error: introspectionError } }
             : {}),
       },
       null,
@@ -99,8 +99,8 @@ export function renderOverview(overview: Overview, format: Format): string {
     lines.push("", `## Components (${components.length})`, "");
     lines.push(components.map((component) => code(component.name)).join(", ") || "_None found._");
     if (types) lines.push("", `## Types (${types.length})`, "", typeIds(types));
-  } else if (componentsError !== undefined) {
-    lines.push("", "## Components", "", `_Unavailable: ${escapeText(componentsError)}_`);
+  } else if (introspectionError !== undefined) {
+    lines.push("", "## Components", "", `_Unavailable: ${escapeText(introspectionError)}_`);
   }
 
   const hints: string[] = [];

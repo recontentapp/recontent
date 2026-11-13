@@ -22,7 +22,7 @@
     "./plugins": "./dist/plugins/index.mjs"
   },
   "scripts": {
-    "build": "tsdown src/index.ts src/plugins/index.ts src/cli/bin.ts",
+    "build": "tsdown src/index.ts src/plugins/index.ts src/cli/bin.ts src/cli/main.ts",
     "typecheck": "tsc --noEmit",
     "test": "NODE_OPTIONS=--experimental-vm-modules jest"
   },

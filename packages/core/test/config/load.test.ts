@@ -85,6 +85,14 @@ test("rejects invalid configuration exports", async () => {
   });
 });
 
+test("a directory is not a config file", async () => {
+  await withFixture({ "configs/.keep": "" }, async (directory) => {
+    await expect(loadConfig(path.join(directory, "configs"))).rejects.toThrow(
+      /Config file not found/,
+    );
+  });
+});
+
 test("wraps loader failures in a ConfigLoadError", async () => {
   await withFixture(
     { "recontent.config.ts": "export default from syntax error(" },
@@ -106,8 +114,9 @@ test("resolves relative, absolute, and home config paths", () => {
   );
 });
 
-test("resolves a path starting with a bare ~", () => {
-  expect(resolveConfigPath("~config.ts")).toBe(path.join(os.homedir(), "config.ts"));
+test("expands only ~ and ~/, leaving ~user literal", () => {
+  expect(resolveConfigPath("~")).toBe(os.homedir());
+  expect(resolveConfigPath("~config.ts")).toBe(path.resolve(process.cwd(), "~config.ts"));
 });
 
 test("resolveConfigPath resolves relative paths against an explicit cwd", () => {

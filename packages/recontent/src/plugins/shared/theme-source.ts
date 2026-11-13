@@ -2,6 +2,8 @@ import {
   isCompositeType,
   pathKey,
   type Logger,
+  type PluginContext,
+  type PluginDiagnostic,
   type ThemeOverride,
   type TokenEntry,
   type TokenLayer,
@@ -102,14 +104,25 @@ const JS_RESERVED_WORDS = new Set([
 const IDENTIFIER_RE = /^[A-Za-z_$][\w$]*$/;
 const THEME_ATTRIBUTE_RE = /^[A-Za-z][\w-]*$/;
 
+function themeNameMessage(name: string, target: string): string {
+  return `Theme name "${name}" cannot be used with the "${target}" output target: theme names must be valid TypeScript identifiers.`;
+}
+
+/** Throws on direct generator calls; plugins surface the same problem earlier through `validate`. */
 export function validateThemeNames(themeNames: readonly string[], target: string): void {
   for (const name of themeNames) {
     if (!IDENTIFIER_RE.test(name)) {
-      throw new Error(
-        `Theme name "${name}" cannot be used with the "${target}" output target: theme names must be valid TypeScript identifiers.`,
-      );
+      throw new Error(themeNameMessage(name, target));
     }
   }
+}
+
+/** A plugin `validate` hook reporting theme names the target cannot use as identifiers. */
+export function themeNameDiagnostics(target: string): (ctx: PluginContext) => PluginDiagnostic[] {
+  return (ctx) =>
+    Object.keys(ctx.themes)
+      .filter((name) => !IDENTIFIER_RE.test(name))
+      .map((name) => ({ severity: "error", message: themeNameMessage(name, target) }));
 }
 
 export function validateThemeAttribute(themeAttribute: string, target: string): void {

@@ -3,10 +3,16 @@ import os from "node:os";
 import path from "node:path";
 import { loadConfig, type LogLevel } from "@recontentapp/core";
 import { diffComponents, type ComponentsDiff } from "../diff/components.js";
-import { countBreakingChanges, diffConfigs, formatDiff, type DiffFormat } from "../diff/diff.js";
-import { createLogger } from "../../logger.js";
-import { loadComponents, type Project } from "../../project.js";
-import { exitWithError } from "../utils/exit.js";
+import {
+  countBreakingChanges,
+  diffConfigs,
+  formatDiff,
+  formatDiffError,
+  type DiffFormat,
+} from "../diff/diff.js";
+import { loadIntrospection, loadProject } from "../../project.js";
+import { diagnoseRegistry } from "../registry-diagnostics.js";
+import { exitWithError, reportError } from "../utils/exit.js";
 import { plural } from "../utils/format.js";
 import {
   archiveRevision,
@@ -28,7 +34,19 @@ export type DiffOptions = {
   cache?: { version: string };
 };
 
+/** With `--format json`, a failure is also an error document on stdout, where a script reads it. */
 export async function runDiff(options: DiffOptions): Promise<void> {
+  try {
+    await diffAgainstRevision(options);
+  } catch (error) {
+    if (options.format !== "json") throw error;
+    reportError(error, options.logLevel === "debug");
+    console.log(formatDiffError(error instanceof Error ? error.message : String(error)));
+    process.exitCode = 1;
+  }
+}
+
+async function diffAgainstRevision(options: DiffOptions): Promise<void> {
   const rev = options.rev ?? "HEAD";
   const configPath = options.configPath;
   const configDir = path.dirname(configPath);
@@ -43,10 +61,14 @@ export async function runDiff(options: DiffOptions): Promise<void> {
   assertRevision(gitRoot, rev);
   assertAncestorOfHead(gitRoot, rev);
 
-  const headConfig = await loadConfig(configPath);
-  const logger = createLogger(options.logLevel ?? headConfig.logLevel);
-
-  const headProject: Project = { config: headConfig, logger, configPath, root: configDir };
+  const headProject = await loadProject({ configPath, logLevel: options.logLevel });
+  const { config: headConfig, logger } = headProject;
+  for (const diagnostic of headConfig.diagnostics) logger.warn(diagnostic.message);
+  const brokenTokens = diagnoseRegistry(headConfig.registry, headConfig.themes);
+  if (brokenTokens.length > 0) {
+    for (const diagnostic of brokenTokens) logger.error(diagnostic.message);
+    throw new Error(`${brokenTokens.length} token error(s) in ${relPath}`);
+  }
 
   const tmpDir = await fsp.mkdtemp(path.join(os.tmpdir(), "recontent-diff-"));
   let baseConfig;
@@ -66,9 +88,9 @@ export async function runDiff(options: DiffOptions): Promise<void> {
 
     if (headConfig.introspection && !baseConfig.introspection) {
       componentsNote = `Components were not compared: ${rev} has no introspection configured.`;
-    } else if (headConfig.introspection && baseConfig.introspection) {
+    } else if (baseConfig.introspection) {
       // A diff that silently dropped components would mislead, so a failure here fails the command.
-      const base = await loadComponents(
+      const base = await loadIntrospection(
         {
           // Dates are ignored by the diff, and the old revision's warnings are not actionable.
           config: {
@@ -84,8 +106,11 @@ export async function runDiff(options: DiffOptions): Promise<void> {
         const message = error instanceof Error ? error.message : String(error);
         throw new Error(`Introspecting the components at ${rev} failed: ${message}`);
       });
-      const head = await loadComponents(headProject, { cache: options.cache });
-      components = diffComponents(base.introspection, head.introspection);
+      // Dropping `introspection` removes every component and type, which is breaking.
+      const head = headConfig.introspection
+        ? (await loadIntrospection(headProject, { cache: options.cache })).introspection
+        : { components: [], types: [] };
+      components = diffComponents(base.introspection, head);
     }
   } finally {
     await fsp.rm(tmpDir, { recursive: true, force: true });

@@ -2,12 +2,12 @@ import {
   expandedMembers,
   isCompositeType,
   isExpandedComposite,
-  type OutputFile,
   type TokenEntry,
   type TokenTypeMap,
   type ThemeOverride,
   pathKey,
 } from "@recontentapp/core";
+import type { OutputFile } from "../shared/context.js";
 import {
   serializeCompositeCss,
   serializeValueCss,

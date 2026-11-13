@@ -24,26 +24,11 @@ export type Introspected = { components: ComponentInfo[]; types: TypeInfo[] };
 export type Snapshot = {
   schemaVersion: string;
   kind: "snapshot";
-  /** The version of recontent that wrote it. */
-  recontent: string;
   themes: string[];
   tokens: DocToken[];
 } & Partial<Introspected>;
 
 const numericCompare = (a: string, b: string) => a.localeCompare(b, undefined, { numeric: true });
-
-/** The version in the package.json of recontent itself, wherever the bundler put this module. */
-function recontentVersion(): string {
-  for (let directory = import.meta.dirname; ; directory = path.dirname(directory)) {
-    try {
-      const manifest = JSON.parse(fs.readFileSync(path.join(directory, "package.json"), "utf-8"));
-      if (manifest.name === "recontent") return manifest.version;
-    } catch {
-      // No package.json here, or not ours: keep looking upward.
-    }
-    if (directory === path.dirname(directory)) return "unknown";
-  }
-}
 
 export function createSnapshot(
   config: { registry: TokenRegistry; themes: Record<string, ThemeOverride> },
@@ -53,7 +38,6 @@ export function createSnapshot(
   return {
     schemaVersion: SCHEMA_VERSION,
     kind: "snapshot",
-    recontent: recontentVersion(),
     themes,
     tokens: [...config.registry.values()]
       .sort((a, b) => numericCompare(pathKey(a.path), pathKey(b.path)))

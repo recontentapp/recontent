@@ -5,7 +5,6 @@ import {
   type DimensionValue,
   type GradientValue,
   type NumberValue,
-  type OutputFile,
   type RecontentPlugin,
   type ShadowValue,
   type TokenEntry,
@@ -15,6 +14,7 @@ import {
   type TransitionValue,
   type TypographyValue,
 } from "@recontentapp/core";
+import type { OutputFile } from "./shared/context.js";
 import { createLogger } from "../logger.js";
 import {
   roundTo,
@@ -29,6 +29,7 @@ import {
 import { escapeString } from "./shared/ts-source.js";
 import {
   generateThemeSource,
+  themeNameDiagnostics,
   type MemberLookup,
   type ThemeTargetSpec,
 } from "./shared/theme-source.js";
@@ -301,6 +302,8 @@ function generateTypeScriptNativeSource(config: GeneratorContext, rootFontSize: 
 
 export type TypeScriptNativePluginOptions = {
   outDir: string;
+  /** Defaults to `tokens.ts`. Set one when another plugin writes to the same `outDir`. */
+  filename?: string;
   rootFontSize?: number;
 };
 
@@ -309,7 +312,12 @@ export function generateTypeScriptNativeFiles(
   options: TypeScriptNativePluginOptions,
 ): OutputFile[] {
   const rootFontSize = options.rootFontSize ?? DEFAULT_ROOT_FONT_SIZE;
-  return [{ filename: "tokens.ts", content: generateTypeScriptNativeSource(config, rootFontSize) }];
+  return [
+    {
+      filename: options.filename ?? "tokens.ts",
+      content: generateTypeScriptNativeSource(config, rootFontSize),
+    },
+  ];
 }
 
 export function typescriptNative(options: TypeScriptNativePluginOptions): RecontentPlugin {
@@ -318,5 +326,6 @@ export function typescriptNative(options: TypeScriptNativePluginOptions): Recont
     ["tokens"],
     options,
     generateTypeScriptNativeFiles,
+    themeNameDiagnostics("typescript-native"),
   );
 }

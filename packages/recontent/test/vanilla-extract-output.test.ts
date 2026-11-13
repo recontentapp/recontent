@@ -15,7 +15,8 @@ import {
   themedConfig,
   type Fixture,
 } from "./helpers/fixtures.js";
-import type { Config, OutputFile } from "@recontentapp/core";
+import type { Config } from "@recontentapp/core";
+import type { OutputFile } from "../src/plugins/shared/context.js";
 
 type GenerateInput = Fixture | { config: Config };
 

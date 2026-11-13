@@ -6,7 +6,8 @@ import { generateStylexFiles } from "../src/plugins/stylex.js";
 import { generateVanillaExtractFiles } from "../src/plugins/vanilla-extract/generate.js";
 import { generateDtcg, generateDtcgThemed } from "../src/plugins/dtcg.js";
 import { goldenConfig } from "./helpers/fixtures.js";
-import type { OutputFile } from "@recontentapp/core";
+import type {} from "@recontentapp/core";
+import type { OutputFile } from "../src/plugins/shared/context.js";
 
 /**
  * One config exercising every token kind and layer, and 2 themes overriding

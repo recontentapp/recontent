@@ -39,7 +39,9 @@ loads correctly there. Nothing in your working tree or git state is changed.
 ### Components
 
 Components are compared automatically when the config in your working tree sets `introspection`. If
-the config at `rev` does not, they are skipped, with a note in the output.
+the config at `rev` does not, they are skipped, with a note in the output. The reverse is not
+symmetric: if `rev` sets `introspection` and your working tree does not, every component counts as
+removed, which is breaking.
 
 To introspect `rev`, its sources must be able to resolve their dependencies (`react`, `@types/react`
 and so on). The archive has no `node_modules`, so every `node_modules` directory ignored by git in
@@ -65,7 +67,7 @@ written to stderr, so redirecting stdout leaves just the markdown.
   **Changed** subsections (tokens also get a `diff` code block and **Themes**). A section with
   nothing in it is left out. When nothing differs, the output is
   `No changes between the working tree and <rev>.`
-- `json`: one document with `config`, `rev`, `breaking` (boolean), `counts` and the diffs
+- `json`: one document with `schemaVersion`, `kind: "diff"`, `config`, `rev`, `breaking` (boolean), `counts` and the diffs
   themselves, nested by kind:
 
   | Field        | Contents                                                                                                                                                                    |

@@ -38,7 +38,7 @@ export interface RecontentPlugin {
   /** What the plugin consumes. `"introspection"` requires `introspection` in defineConfig(); `"introspection?"`
    *  uses the components when it is configured and works without them otherwise. Either way it is the
    *  only way `ctx.components` gets filled in. */
-  dependsOn: ("tokens" | "introspection" | "introspection?")[];
+  dependsOn?: ("tokens" | "introspection" | "introspection?")[];
 
   buildStart?(ctx: PluginContext): void | Promise<void>;
   /** Errors abort the build before anything is written. */

@@ -12,7 +12,7 @@ export type InitOptions = {
   configPath: string;
   force?: boolean;
   /** A preset name, or DTCG sources (resolver, token files or directories) to generate the config from. */
-  source: { preset: string } | { from: string[] };
+  source: { preset: string } | { dtcg: string[] };
 };
 
 function describeImport({ tokens, ref, system, themes, skipped }: DtcgImportStats): string {
@@ -26,8 +26,8 @@ export async function runInit(options: InitOptions): Promise<void> {
   let text: string;
   let imported: ReturnType<typeof generateConfigFromDtcg> | undefined;
   let preset: ReturnType<typeof getPreset> | undefined;
-  if ("from" in source) {
-    imported = generateConfigFromDtcg({ sources: source.from, cwd });
+  if ("dtcg" in source) {
+    imported = generateConfigFromDtcg({ sources: source.dtcg, cwd });
     text = imported.source;
   } else {
     preset = getPreset(source.preset);

@@ -1,6 +1,6 @@
 import { expect, test } from "@jest/globals";
 import { defineConfig, defineReferenceTokens, defineSystemTokens, tokens } from "../src/index.js";
-import { css } from "../src/plugins/index.js";
+import { css, stylex, typescript, typescriptNative, vanillaExtract } from "../src/plugins/index.js";
 import { runPlugins } from "../src/plugins/runner.js";
 
 function configWithRef(ref: Record<string, unknown>) {
@@ -171,16 +171,24 @@ test("introspection is validated and passed through", () => {
   );
 });
 
-test("every plugin must declare what it depends on", () => {
+test("dependsOn is optional but must be valid when given", () => {
   const tokensOnly = { name: "acme:a", dependsOn: ["tokens"] as ("tokens" | "components")[] };
   const config = (plugin: unknown) =>
     defineConfig({ introspection: { entry: "a.ts" }, plugins: plugin as never });
 
   expect(() => config(tokensOnly)).not.toThrow();
-  expect(() => config({ name: "acme:a" })).toThrow(/"acme:a" must declare `dependsOn`/);
-  expect(() => config({ name: "acme:a", dependsOn: ["tokenz"] })).toThrow(
-    /must declare `dependsOn`/,
+  expect(() => config({ name: "acme:a" })).not.toThrow();
+  expect(() => config({ name: "acme:a", dependsOn: "tokens" as never })).toThrow(
+    /"acme:a": `dependsOn` must be an array/,
   );
+  expect(() => config({ name: "acme:a", dependsOn: ["tokenz"] })).toThrow(
+    /`dependsOn` must be an array/,
+  );
+});
+
+test("tokens that define nothing do not satisfy the tokens-or-introspection requirement", () => {
+  expect(() => defineConfig({ tokens: {} })).toThrow(/either tokens or an introspection block/);
+  expect(() => defineConfig({ tokens: {}, introspection: { entry: "a.ts" } })).not.toThrow();
 });
 
 test("a config with only the system layer registers just those entries, without diagnostics", () => {
@@ -188,6 +196,16 @@ test("a config with only the system layer registers just those entries, without 
   const config = defineConfig({ tokens: { system } });
   expect([...config.registry.keys()]).toEqual(["system.color.background"]);
   expect(config.diagnostics).toEqual([]);
+});
+
+test("a Windows-style outDir is normalized to forward slashes", async () => {
+  const ref = defineReferenceTokens({ color: { black: tokens.color("#000000") } });
+  const config = defineConfig({ tokens: { ref }, plugins: css({ outDir: "out\\tokens" }) });
+  const result = await runPlugins(config, {
+    root: "/project",
+    logger: { info: () => {}, warn: () => {}, error: () => {}, debug: () => {} },
+  });
+  expect(result.files.map((file) => file.path)).toEqual(["out/tokens/tokens.css"]);
 });
 
 test("a config with only the ref layer builds through a plugin", async () => {
@@ -231,4 +249,54 @@ test("defineConfig accepts hyphenated and underscored theme names", () => {
       themes: { "dark-mode": new Map(), high_contrast: new Map() },
     }),
   ).not.toThrow();
+});
+
+test.each(["ref", "system"])("a top-level %s group in the components layer throws", (name) => {
+  expect(() =>
+    defineConfig({
+      tokens: { components: { [name]: { x: tokens.color("#000000") } } as never },
+    }),
+  ).toThrow(new RegExp(`"${name}" would overwrite`));
+});
+
+test.each([
+  ["typescript", (outDir: string) => typescript({ outDir })],
+  ["typescript-native", (outDir: string) => typescriptNative({ outDir })],
+  ["stylex", (outDir: string) => stylex({ outDir })],
+  ["vanilla-extract", (outDir: string) => vanillaExtract({ outDir })],
+])("a hyphenated theme name is a %s validate error, not a generate failure", async (_, plugin) => {
+  const config = defineConfig({
+    tokens: { ref: defineReferenceTokens({ black: tokens.color("#000000") }) },
+    themes: { "dark-hc": new Map() },
+    plugins: plugin("out"),
+  });
+  const result = await runPlugins(config, {
+    root: "/project",
+    logger: { info: () => {}, warn: () => {}, error: () => {}, debug: () => {} },
+  });
+  expect(result.failures).toEqual([]);
+  expect(result.files).toEqual([]);
+  expect(result.diagnostics).toEqual([
+    expect.objectContaining({
+      severity: "error",
+      message: expect.stringContaining('Theme name "dark-hc"'),
+    }),
+  ]);
+});
+
+test("an absolute path inside the root collides with its relative twin", async () => {
+  const emit = (name: string, filePath: string) => ({
+    name,
+    generate: () => [{ path: filePath, content: "" }],
+  });
+  const config = defineConfig({
+    tokens: { ref: defineReferenceTokens({ black: tokens.color("#000000") }) },
+    plugins: [emit("a", "a.css"), emit("b", "/project/a.css")],
+  });
+  await expect(
+    runPlugins(config, {
+      root: "/project",
+      logger: { info: () => {}, warn: () => {}, error: () => {}, debug: () => {} },
+    }),
+  ).rejects.toThrow(/File path collision/);
 });

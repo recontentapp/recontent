@@ -253,6 +253,7 @@ describe("formatDiff with components", () => {
     renamed: [],
     retyped: [],
     changed: [],
+    metadata: [],
     themes: { addedThemes: [], removedThemes: [], changedThemes: {} },
   };
 

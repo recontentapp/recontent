@@ -18,13 +18,13 @@ import {
   isCompositeType,
   isExpandedComposite,
   pathKey,
-  type OutputFile,
   type RecontentPlugin,
   type ThemeOverride,
   type TokenEntry,
   type TokenRegistry,
   type TokenTypeMap,
 } from "@recontentapp/core";
+import type { OutputFile } from "./shared/context.js";
 import {
   serializeCompositeCss,
   serializeValueCss,
@@ -32,7 +32,7 @@ import {
 } from "../serialize/values.js";
 import { CircularAliasError, getEntry, terminalEntry } from "./shared/alias.js";
 import type { GeneratorContext } from "./shared/context.js";
-import { validateThemeNames } from "./shared/theme-source.js";
+import { themeNameDiagnostics, validateThemeNames } from "./shared/theme-source.js";
 import {
   capitalize,
   escapeString,
@@ -498,5 +498,11 @@ export function generateStylexFiles(config: GeneratorContext): OutputFile[] {
 }
 
 export function stylex(options: StylexPluginOptions): RecontentPlugin {
-  return outputPlugin("recontent:stylex", ["tokens"], options, generateStylexFiles);
+  return outputPlugin(
+    "recontent:stylex",
+    ["tokens"],
+    options,
+    generateStylexFiles,
+    themeNameDiagnostics("stylex"),
+  );
 }

@@ -80,7 +80,7 @@ export type ComponentInfo = Documentation & {
   line: number;
   /** ISO 8601 date of the last commit touching `sourceFilePath`. Only with `introspection.history`. */
   lastUpdatedAt?: string;
-  /** `@category`: groups components in the docs and in `recontent inspect --summary`. */
+  /** `@category`: groups components in the docs and in `recontent inspect components`. */
   category?: string;
   /** Props declared outside node_modules, sorted by name. */
   props: PropInfo[];

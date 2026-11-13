@@ -3,8 +3,8 @@ import path from "node:path";
 import type { ComponentInfo, EmittedFile, LogLevel, Logger, TypeInfo } from "@recontentapp/core";
 import type ts from "typescript";
 import { createLogger } from "../../logger.js";
-import { needsComponents, runPlugins } from "../../plugins/runner.js";
-import { loadComponents, loadProject } from "../../project.js";
+import { needsIntrospection, runPlugins } from "../../plugins/runner.js";
+import { loadIntrospection, loadProject } from "../../project.js";
 import { collectLocalImports } from "../config-graph.js";
 import { diagnoseRegistry } from "../registry-diagnostics.js";
 import { exitWithError, reportError, summarizeDiagnostics } from "../utils/exit.js";
@@ -148,7 +148,7 @@ async function buildOnce(
     logger.warn(diagnostic.message);
   }
   let warnings = config.diagnostics.length;
-  const wantsComponents = needsComponents(config);
+  const wantsIntrospection = needsIntrospection(config);
 
   // Each diagnostic is logged where it is found; aborting only adds the
   // closing "N errors, M warnings" line, so no error is reported twice.
@@ -161,7 +161,7 @@ async function buildOnce(
     }
   };
 
-  const registryDiagnostics = diagnoseRegistry(config.registry);
+  const registryDiagnostics = diagnoseRegistry(config.registry, config.themes);
   if (registryDiagnostics.length > 0) {
     for (const diagnostic of registryDiagnostics) {
       logger.error(diagnostic.message);
@@ -186,10 +186,10 @@ async function buildOnce(
   // Only when a plugin consumes them, and a failure only fails those plugins.
   let components: ComponentInfo[] | undefined;
   let types: TypeInfo[] | undefined;
-  let componentsError: string | undefined;
-  if (wantsComponents) {
+  let introspectionError: string | undefined;
+  if (wantsIntrospection) {
     try {
-      const loaded = await loadComponents(project, {
+      const loaded = await loadIntrospection(project, {
         oldProgram: state.program,
         cache: options.cache,
       });
@@ -197,7 +197,7 @@ async function buildOnce(
       warnings += loaded.warnings.length;
       state = { program: loaded.program ?? state.program, watch: loaded.watch };
     } catch (error) {
-      componentsError = error instanceof Error ? error.message : String(error);
+      introspectionError = error instanceof Error ? error.message : String(error);
     }
   }
 
@@ -206,7 +206,7 @@ async function buildOnce(
     logger,
     components,
     types,
-    componentsError,
+    introspectionError,
   });
 
   let errors = 0;
@@ -233,7 +233,9 @@ async function buildOnce(
     const outOfDate = await checkFiles(result.files, configDir, options.cwd, logger);
     if (outOfDate > 0) {
       const message = `check failed: ${outOfDate} of ${result.files.length} files out of date; run \`recontent build\``;
-      if (exitOnError) exitWithError(message);
+      // With failed plugins, `abort` below is the one closing error line.
+      if (failed > 0) logger.warn(message);
+      else if (exitOnError) exitWithError(message);
       else logger.error(message);
     } else {
       logger.info(`${plural(result.files.length, "file")} up to date`);

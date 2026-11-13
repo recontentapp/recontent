@@ -18,7 +18,16 @@ export function oneLine(text: string): string {
   return text.replace(/\s+/g, " ").trim();
 }
 
+const packages = new Map<string, string | undefined>();
+
 function packageOf(fileName: string): string | undefined {
+  if (packages.has(fileName)) return packages.get(fileName);
+  const found = lookupPackage(fileName);
+  packages.set(fileName, found);
+  return found;
+}
+
+function lookupPackage(fileName: string): string | undefined {
   const normalized = fileName.split(path.sep).join("/");
   const index = normalized.lastIndexOf("/node_modules/");
   if (index === -1) return undefined;
@@ -333,11 +342,11 @@ export function describeMembers(
   defaults: Map<string, string>,
 ): { props: PropInfo[]; inherits: InheritedProps[] } {
   const { checker } = analysis;
-  const byName = new Map<string, Occurrence[]>();
+  const byName = new Map<string, { symbol: ts.Symbol }[]>();
   for (const member of propsTypes) {
     for (const property of checker.getPropertiesOfType(member)) {
       const list = byName.get(property.name) ?? [];
-      list.push({ symbol: property, type: checker.getTypeOfSymbolAtLocation(property, location) });
+      list.push({ symbol: property });
       byName.set(property.name, list);
     }
   }
@@ -345,10 +354,12 @@ export function describeMembers(
   const props: PropInfo[] = [];
   const inherited: ts.Symbol[] = [];
   for (const [name, occurrences] of byName) {
-    const own = occurrences.filter(({ symbol: property }) => {
-      const propertyDeclaration = declarationOf(property);
-      return !propertyDeclaration || !isExternal(analysis, propertyDeclaration.getSourceFile());
-    });
+    const own: Occurrence[] = occurrences
+      .filter(({ symbol: property }) => {
+        const propertyDeclaration = declarationOf(property);
+        return !propertyDeclaration || !isExternal(analysis, propertyDeclaration.getSourceFile());
+      })
+      .map(({ symbol }) => ({ symbol, type: checker.getTypeOfSymbolAtLocation(symbol, location) }));
     if (own.length === 0) {
       inherited.push(occurrences[0]!.symbol);
       continue;

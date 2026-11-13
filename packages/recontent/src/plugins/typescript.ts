@@ -1,13 +1,13 @@
 import {
   expandedMembers,
   isExpandedComposite,
-  type OutputFile,
   type RecontentPlugin,
   type TokenEntry,
   type TokenMember,
   type TokenType,
   type TokenTypeMap,
 } from "@recontentapp/core";
+import type { OutputFile } from "./shared/context.js";
 import { createLogger } from "../logger.js";
 import {
   serializeCompositeCss,
@@ -22,6 +22,7 @@ import {
 } from "./shared/ts-source.js";
 import {
   generateThemeSource,
+  themeNameDiagnostics,
   type MemberLookup,
   type ThemeTargetSpec,
 } from "./shared/theme-source.js";
@@ -139,15 +140,23 @@ function generateTypeScriptSource(config: GeneratorContext): string {
 
 export type TypeScriptPluginOptions = {
   outDir: string;
+  /** Defaults to `tokens.ts`. Set one when another plugin writes to the same `outDir`. */
+  filename?: string;
 };
 
 export function generateTypeScriptFiles(
   config: GeneratorContext,
-  _options: TypeScriptPluginOptions,
+  options: TypeScriptPluginOptions,
 ): OutputFile[] {
-  return [{ filename: "tokens.ts", content: generateTypeScriptSource(config) }];
+  return [{ filename: options.filename ?? "tokens.ts", content: generateTypeScriptSource(config) }];
 }
 
 export function typescript(options: TypeScriptPluginOptions): RecontentPlugin {
-  return outputPlugin("recontent:typescript", ["tokens"], options, generateTypeScriptFiles);
+  return outputPlugin(
+    "recontent:typescript",
+    ["tokens"],
+    options,
+    generateTypeScriptFiles,
+    themeNameDiagnostics("typescript"),
+  );
 }

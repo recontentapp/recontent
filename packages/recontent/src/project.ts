@@ -42,7 +42,7 @@ export type Components = {
  * building a TypeScript program (and writing the cache). Throws when the
  * introspection setup is broken.
  */
-export async function loadComponents(
+export async function loadIntrospection(
   project: Project,
   options: {
     oldProgram?: ts.Program;

@@ -8,3 +8,6 @@ export type GeneratorContext = {
   themes: Record<string, ThemeOverride>;
   logger?: Logger;
 };
+
+/** A file a generator produces, named relative to the plugin's `outDir`. */
+export type OutputFile = { filename: string; content: string; writeMode?: "always" | "once" };

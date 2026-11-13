@@ -3,7 +3,12 @@ import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { afterEach, beforeEach, describe, expect, jest, test } from "@jest/globals";
 import type { Config, ThemeOverride, TokenEntry, TokenRegistry } from "@recontentapp/core";
-import { diffConfigs, formatDiff, hasBreakingChanges } from "../src/cli/diff/diff.js";
+import {
+  countBreakingChanges,
+  diffConfigs,
+  formatDiff,
+  hasBreakingChanges,
+} from "../src/cli/diff/diff.js";
 import { findExternalImports } from "../src/cli/config-graph.js";
 import { runDiff } from "../src/cli/commands/diff.js";
 
@@ -44,6 +49,17 @@ test("diffConfigs reports a straight add", () => {
   expect(diff.removed).toHaveLength(0);
   expect(diff.renamed).toHaveLength(0);
   expect(hasBreakingChanges(diff)).toBe(false);
+});
+
+test("a token with the same type and value in another layer is not a rename", () => {
+  const base = config(new Map([["ref.color.blue", entry(["ref", "color", "blue"])]]));
+  const head = config(
+    new Map([["system.accent", entry(["system", "accent"], { layer: "system" })]]),
+  );
+  const diff = diffConfigs(base, head);
+  expect(diff.renamed).toHaveLength(0);
+  expect(diff.removed).toHaveLength(1);
+  expect(diff.added).toHaveLength(1);
 });
 
 test("diffConfigs reports a straight remove", () => {
@@ -285,7 +301,7 @@ test("formatDiff json carries a breaking verdict and counts", () => {
   );
   expect(removed.breaking).toBe(true);
   expect(removed.counts).toEqual({
-    tokens: { added: 0, removed: 1, renamed: 0, retyped: 0, changed: 0, breaking: 1 },
+    tokens: { added: 0, removed: 1, renamed: 0, retyped: 0, changed: 0, metadata: 0, breaking: 1 },
     breaking: 1,
   });
 
@@ -302,7 +318,7 @@ test("formatDiff names the compared revision when nothing changed", () => {
   ).toBe("No changes between the working tree and origin/main.");
 });
 
-test("diffConfigs counts removed themes and removed theme overrides as breaking", () => {
+test("diffConfigs counts removed themes as breaking, and removed theme overrides as theme changes", () => {
   const override = (keys: string[]): ThemeOverride =>
     new Map(keys.map((key) => [key, color("#000000")])) as ThemeOverride;
   const registry: TokenRegistry = new Map();
@@ -316,10 +332,9 @@ test("diffConfigs counts removed themes and removed theme overrides as breaking"
     config(registry, { dark: override(["a", "b"]) }),
     config(registry, { dark: override(["a"]) }),
   );
-  expect(hasBreakingChanges(removedOverride)).toBe(true);
-  expect(formatDiff({ tokens: removedOverride })).toContain(
-    "**removed override** `b` in theme `dark`",
-  );
+  expect(removedOverride.themes.changedThemes.dark!.removed).toHaveLength(1);
+  expect(hasBreakingChanges(removedOverride)).toBe(false);
+  expect(formatDiff({ tokens: removedOverride })).toContain("`dark`: +0 override, -1, ~0 changed");
 
   const addedOverride = diffConfigs(
     config(registry, { dark: override(["a"]) }),
@@ -718,4 +733,56 @@ describe("runDiff rejects a revision that is not an ancestor of HEAD (S1)", () =
       runDiff({ cwd: repoDir, configPath: path.join(repoDir, "recontent.config.ts"), rev: "v1" }),
     ).resolves.not.toThrow();
   });
+});
+
+test("renaming a token that a theme overrides is one breaking change, not two", () => {
+  const dark = (key: string) => ({ dark: new Map([[key, color("#111111")]]) });
+  const base = config(
+    new Map([["ref.color.blue", entry(["ref", "color", "blue"])]]),
+    dark("ref.color.blue"),
+  );
+  const head = config(
+    new Map([["ref.color.azure", entry(["ref", "color", "azure"])]]),
+    dark("ref.color.azure"),
+  );
+
+  const diff = diffConfigs(base, head);
+
+  expect(diff.renamed).toHaveLength(1);
+  expect(diff.themes.changedThemes).toEqual({});
+  expect(countBreakingChanges({ tokens: diff })).toBe(1);
+});
+
+test("removing a token that a theme overrides is one breaking change, not two", () => {
+  const base = config(new Map([["ref.color.blue", entry(["ref", "color", "blue"])]]), {
+    dark: new Map([["ref.color.blue", color("#111111")]]),
+  });
+  const head = config(new Map(), { dark: new Map() });
+
+  const diff = diffConfigs(base, head);
+
+  expect(diff.removed).toHaveLength(1);
+  expect(diff.themes.changedThemes).toEqual({});
+  expect(countBreakingChanges({ tokens: diff })).toBe(1);
+});
+
+test("diffConfigs reports a changed deprecation or description, and nothing else", () => {
+  const base = config(new Map([["ref.color.blue", entry(["ref", "color", "blue"])]]));
+  const head = config(
+    new Map([
+      [
+        "ref.color.blue",
+        entry(["ref", "color", "blue"], { $deprecated: true, $description: "Blue." }),
+      ],
+    ]),
+  );
+
+  const diff = diffConfigs(base, head);
+
+  expect(diff.metadata).toHaveLength(1);
+  expect(diff.changed).toHaveLength(0);
+  expect(hasBreakingChanges(diff)).toBe(false);
+  expect(formatDiff({ tokens: diff })).toContain(
+    "`ref.color.blue`: now deprecated, description changed",
+  );
 });

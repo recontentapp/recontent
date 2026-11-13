@@ -19,13 +19,20 @@ import {
   themedConfig,
   type Fixture,
 } from "./helpers/fixtures.js";
-import type { Config, OutputFile } from "@recontentapp/core";
+import type { Config } from "@recontentapp/core";
+import type { OutputFile } from "../src/plugins/shared/context.js";
 
 const TS: TypeScriptPluginOptions = { outDir: "dist-test" };
 
 function generate(config: Config, options: TypeScriptPluginOptions = TS): OutputFile[] {
   return generateTypeScriptFiles(config, options);
 }
+
+test("filename renames the output, so it can share an outDir with typescriptNative", () => {
+  const { config } = aliasChainConfig();
+  expect(generate(config, { ...TS, filename: "web-tokens.ts" })[0]!.filename).toBe("web-tokens.ts");
+  expect(generate(config)[0]!.filename).toBe("tokens.ts");
+});
 
 describe("scalars", () => {
   test("fontWeight and number are emitted as bare numbers", () => {

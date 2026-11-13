@@ -59,7 +59,7 @@ Any other value is an error.
 ## Output streams
 
 - **stdout** carries only a command's result: help and version text, and the output of
-  `recontent diff`. It is safe to redirect or pipe.
+  `recontent diff` and `recontent inspect`. It is safe to redirect or pipe.
 - **stderr** carries everything else: progress (`Wrote …`), warnings (`warning: …`) and errors
   (`error: …`).
 
@@ -69,5 +69,6 @@ Any other value is an error.
 | ---- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `0`  | Success, or help and version output.                                                                                                                                                                          |
 | `1`  | Any failure: invalid usage or option value, a config that cannot be loaded, a build that reports errors, `init` on an existing file without `--force`, or `diff --fail-on-breaking` finding breaking changes. |
+| `2`  | `inspect` found nothing matching the path, name, type or theme you gave it.                                                                                                                                   |
 
 Warnings never change the exit code.

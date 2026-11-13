@@ -46,10 +46,10 @@ A change is **breaking** when code that used a token would stop working:
 | A token is renamed (same type and value, new path)         | Yes      |
 | A token changes type (for example `dimension` to `number`) | Yes      |
 | A theme is removed                                         | Yes      |
-| A theme stops overriding a token                           | Yes      |
 | A token is added                                           | No       |
+| A token is deprecated, or its description changes          | No       |
 | A token's value or alias changes                           | No       |
-| A theme is added, or gains/changes overrides               | No       |
+| A theme is added, or gains, changes or drops overrides     | No       |
 
 Renames are detected by pairing one removed and one added token that have the same type and the
 same value (or the same alias). If several tokens share a value, the pairing is ambiguous and they

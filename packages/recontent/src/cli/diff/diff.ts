@@ -43,6 +43,8 @@ export type TokenDiff = {
   renamed: { from: TokenEntry; to: TokenEntry }[];
   retyped: { from: TokenEntry; to: TokenEntry }[];
   changed: { from: TokenEntry; to: TokenEntry }[];
+  /** Deprecation or description changed, whether or not the value did. Never breaking. */
+  metadata: { from: TokenEntry; to: TokenEntry }[];
   themes: ThemeDiff;
 };
 
@@ -65,7 +67,8 @@ function fingerprintValue(entry: TokenEntry): string {
 }
 
 function renameFingerprint(entry: TokenEntry): string {
-  return `${entry.$type}|${fingerprintValue(entry)}`;
+  // A token that moves to another layer is a removal and an addition, not a rename.
+  return `${entry.layer}|${entry.$type}|${fingerprintValue(entry)}`;
 }
 
 function findRenames(
@@ -161,6 +164,25 @@ function diffThemes(
   return { addedThemes, removedThemes, changedThemes };
 }
 
+// An override of a renamed token follows the rename, and an override of a removed token goes with
+// it, so neither is also reported as a removed override.
+function followTokenChanges(
+  themes: Record<string, ThemeOverride>,
+  renamedKeys: Map<string, string>,
+  removedKeys: Set<string>,
+): Record<string, ThemeOverride> {
+  return Object.fromEntries(
+    Object.entries(themes).map(([name, overrides]) => [
+      name,
+      new Map(
+        [...overrides]
+          .filter(([key]) => !removedKeys.has(key))
+          .map(([key, value]) => [renamedKeys.get(key) ?? key, value]),
+      ),
+    ]),
+  );
+}
+
 export function diffConfigs(base: Config, head: Config): TokenDiff {
   const baseKeys = new Set(base.registry.keys());
   const headKeys = new Set(head.registry.keys());
@@ -169,6 +191,7 @@ export function diffConfigs(base: Config, head: Config): TokenDiff {
   const removedCandidates: TokenEntry[] = [];
   const retyped: { from: TokenEntry; to: TokenEntry }[] = [];
   const changed: { from: TokenEntry; to: TokenEntry }[] = [];
+  const metadata: { from: TokenEntry; to: TokenEntry }[] = [];
 
   for (const key of headKeys) {
     if (!baseKeys.has(key)) addedCandidates.push(head.registry.get(key)!);
@@ -197,6 +220,12 @@ export function diffConfigs(base: Config, head: Config): TokenDiff {
       retyped.push({ from, to });
       continue;
     }
+    if (
+      (from.$deprecated ?? false) !== (to.$deprecated ?? false) ||
+      from.$description !== to.$description
+    ) {
+      metadata.push({ from, to });
+    }
     if (fingerprintFollowingRenames(from) !== fingerprintValue(to)) {
       changed.push({ from, to });
     }
@@ -208,24 +237,21 @@ export function diffConfigs(base: Config, head: Config): TokenDiff {
     renamed,
     retyped,
     changed,
-    themes: diffThemes(base.themes, head.themes),
+    metadata,
+    themes: diffThemes(
+      followTokenChanges(base.themes, renamedKeys, new Set(removed.map((e) => pathKey(e.path)))),
+      head.themes,
+    ),
   };
 }
 
-function removedOverrides(diff: TokenDiff): { theme: string; key: string }[] {
-  return Object.entries(diff.themes.changedThemes).flatMap(([theme, themeDiff]) =>
-    themeDiff.removed.map(({ key }) => ({ theme, key })),
-  );
-}
-
-/** Removing a token, a theme, or a theme's override breaks consumers that reference it. */
+/** Removing a token or a theme breaks consumers that reference it. A dropped override only falls back to the base value. */
 function countTokenBreakingChanges(diff: TokenDiff): number {
   return (
     diff.removed.length +
     diff.renamed.length +
     diff.retyped.length +
-    diff.themes.removedThemes.length +
-    removedOverrides(diff).length
+    diff.themes.removedThemes.length
   );
 }
 
@@ -344,6 +370,9 @@ function formatChangedLine(path: string, from: string, to: string): string[] {
   return [`# ${path}`, `- ${from}`, `+ ${to}`];
 }
 
+/** Versions the `--format json` documents of `recontent diff`, independently of the snapshot's. */
+const DIFF_SCHEMA_VERSION = "1";
+
 export type DiffFormat = "markdown" | "json";
 
 export const DIFF_FORMATS: readonly DiffFormat[] = ["markdown", "json"];
@@ -367,9 +396,6 @@ function formatTokensMarkdown(diff: TokenDiff): string {
     }
     for (const name of diff.themes.removedThemes) {
       lines.push(`- **removed theme** ${code(name)}`);
-    }
-    for (const { theme, key } of removedOverrides(diff)) {
-      lines.push(`- **removed override** ${code(key)} in theme ${code(theme)}`);
     }
     sections.push(lines.join("\n"));
   }
@@ -400,6 +426,23 @@ function formatTokensMarkdown(diff: TokenDiff): string {
       lines.push(...formatChangedLine(pathStr(from), shortValue(from), shortValue(to)));
     }
     lines.push("```");
+    sections.push(lines.join("\n"));
+  }
+
+  if (diff.metadata.length > 0) {
+    const lines = [`## Metadata (${diff.metadata.length})`, ""];
+    for (const { from, to } of diff.metadata) {
+      const notes: string[] = [];
+      if ((from.$deprecated ?? false) !== (to.$deprecated ?? false)) {
+        notes.push(
+          to.$deprecated
+            ? `now deprecated${typeof to.$deprecated === "string" ? `: ${to.$deprecated}` : ""}`
+            : "no longer deprecated",
+        );
+      }
+      if (from.$description !== to.$description) notes.push("description changed");
+      lines.push(`- ${code(pathStr(to))}: ${notes.join(", ")}`);
+    }
     sections.push(lines.join("\n"));
   }
 
@@ -577,6 +620,8 @@ function formatDiffJson(diff: Diff, context: DiffContext): string {
   const { tokens, components } = diff;
   return JSON.stringify(
     {
+      schemaVersion: DIFF_SCHEMA_VERSION,
+      kind: "diff",
       ...context,
       breaking: breaking > 0,
       counts: {
@@ -586,6 +631,7 @@ function formatDiffJson(diff: Diff, context: DiffContext): string {
           renamed: tokens.renamed.length,
           retyped: tokens.retyped.length,
           changed: tokens.changed.length,
+          metadata: tokens.metadata.length,
           breaking: countTokenBreakingChanges(tokens),
         },
         ...(components && {
@@ -609,4 +655,13 @@ export function formatDiff(
   context: DiffContext = { config: "", rev: "HEAD" },
 ): string {
   return format === "json" ? formatDiffJson(diff, context) : formatDiffMarkdown(diff, context.rev);
+}
+
+/** What `--format json` prints on stdout when the diff could not be computed. */
+export function formatDiffError(message: string): string {
+  return JSON.stringify(
+    { schemaVersion: DIFF_SCHEMA_VERSION, kind: "error", errors: [{ message }] },
+    null,
+    2,
+  );
 }

@@ -2,11 +2,11 @@ import {
   expandedMembers,
   pathKey,
   type ComponentInfo,
-  type OutputFile,
   type PluginContext,
   type RecontentPlugin,
   type TokenEntry,
 } from "@recontentapp/core";
+import type { OutputFile } from "./shared/context.js";
 import { code, escapeText } from "../markdown.js";
 import { serializeValueCss } from "../serialize/values.js";
 import { outputPlugin } from "./factory.js";

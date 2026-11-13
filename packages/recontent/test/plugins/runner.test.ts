@@ -1,5 +1,5 @@
 import { describe, expect, test } from "@jest/globals";
-import { needsComponents, runPlugins, sortPlugins } from "../../src/plugins/runner.js";
+import { needsIntrospection, runPlugins, sortPlugins } from "../../src/plugins/runner.js";
 import type { Config, PluginContext, RecontentPlugin } from "@recontentapp/core";
 
 test("sortPlugins stably partitions pre / unenforced / post", () => {
@@ -111,6 +111,18 @@ test("a plugin emitting the same file path twice throws", async () => {
   );
 });
 
+test("paths that differ only by case collide", async () => {
+  const a: RecontentPlugin = {
+    name: "a",
+    dependsOn: ["tokens"],
+    generate: () => [
+      { path: "out/Tokens.css", content: "1" },
+      { path: "out/tokens.css", content: "2" },
+    ],
+  };
+  await expect(runPlugins(baseConfig([a]), runOptions)).rejects.toThrow(/File path collision/);
+});
+
 test("an error-severity validate diagnostic short-circuits before any generate runs", async () => {
   let generated = false;
   const a: RecontentPlugin = {
@@ -209,7 +221,7 @@ describe("dependsOn", () => {
   test("a components failure fails the plugins that depend on it; the others still generate", async () => {
     const result = await runPlugins(
       baseConfig([record("tokens-only", ["tokens"]), record("docs", ["tokens", "introspection"])]),
-      { ...runOptions, componentsError: "Could not find React's types" },
+      { ...runOptions, introspectionError: "Could not find React's types" },
     );
 
     expect(result.failures).toEqual(["[docs] Could not find React's types"]);
@@ -217,22 +229,22 @@ describe("dependsOn", () => {
     expect(result.diagnostics).toEqual([]);
   });
 
-  test("needsComponents is true when any plugin depends on components", () => {
+  test("needsIntrospection is true when any plugin depends on components", () => {
     const config = (introspection?: Config["introspection"]): Config => ({
       ...baseConfig([record("tokens-only", ["tokens"]), record("api", ["introspection"])]),
       introspection,
     });
 
-    expect(needsComponents(baseConfig([record("tokens-only", ["tokens"])]))).toBe(false);
-    expect(needsComponents(config({ entry: "src/index.ts" }))).toBe(true);
+    expect(needsIntrospection(baseConfig([record("tokens-only", ["tokens"])]))).toBe(false);
+    expect(needsIntrospection(config({ entry: "src/index.ts" }))).toBe(true);
   });
 
   test("a plugin whose components are optional runs without introspection, and gets them with it", async () => {
     const optional = record("docs", ["tokens", "introspection?"]);
 
-    expect(needsComponents(baseConfig([optional]))).toBe(false);
+    expect(needsIntrospection(baseConfig([optional]))).toBe(false);
     expect(
-      needsComponents({ ...baseConfig([optional]), introspection: { entry: "src/index.ts" } }),
+      needsIntrospection({ ...baseConfig([optional]), introspection: { entry: "src/index.ts" } }),
     ).toBe(true);
 
     await runPlugins(baseConfig([optional]), runOptions);
@@ -243,7 +255,7 @@ describe("dependsOn", () => {
 
   test("a plugin depending on components without an introspection block is a config error", () => {
     expect(() =>
-      needsComponents(baseConfig([record("recontent:docs", ["tokens", "introspection"])])),
+      needsIntrospection(baseConfig([record("recontent:docs", ["tokens", "introspection"])])),
     ).toThrow("`recontent:docs` depends on introspection; add `introspection` to defineConfig().");
   });
 });

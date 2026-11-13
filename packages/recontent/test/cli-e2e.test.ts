@@ -1,7 +1,7 @@
 /**
  * End-to-end tests that invoke the built CLI binary (dist/cli/bin.mjs) as a
  * subprocess, the same way a real user would, and assert on exit codes,
- * stdout/stderr, and files written to disk. This exercises `bin.ts`'s
+ * stdout/stderr, and files written to disk. This exercises `main.ts`'s
  * argument parsing and process-exit contract in a way unit tests on
  * individual command modules cannot.
  *
@@ -219,13 +219,13 @@ describe("recontent init", () => {
   });
 });
 
-describe("recontent init --from", () => {
+describe("recontent init --dtcg", () => {
   const resolver = "fixture.resolver.json";
 
   function initFromFixture(prefix: string, extraArgs: string[] = []) {
     const dir = makeScratchDir(prefix);
     copyFixture("dtcg", dir);
-    const result = runCli(["--cwd", dir, "init", "--from", resolver, ...extraArgs]);
+    const result = runCli(["--cwd", dir, "init", "--dtcg", resolver, ...extraArgs]);
     return { dir, result };
   }
 
@@ -246,7 +246,7 @@ describe("recontent init --from", () => {
   test("is mutually exclusive with a preset", () => {
     const dir = makeScratchDir("init-from-and-preset");
     copyFixture("dtcg", dir);
-    const result = runCli(["--cwd", dir, "init", "--from", resolver, "neutral"]);
+    const result = runCli(["--cwd", dir, "init", "--dtcg", resolver, "neutral"]);
 
     expect(result.status).toBe(1);
     expect(result.stderr).toContain("mutually exclusive");
@@ -260,9 +260,9 @@ describe("recontent init --from", () => {
       "--cwd",
       dir,
       "init",
-      "--from",
+      "--dtcg",
       "primitives.tokens.json",
-      "--from",
+      "--dtcg",
       "semantic.tokens.json",
     ]);
 
@@ -276,18 +276,18 @@ describe("recontent init --from", () => {
     const configPath = path.join(dir, "recontent.config.ts");
     writeFileSync(configPath, "// mine\n");
 
-    const result = runCli(["--cwd", dir, "init", "--from", resolver]);
+    const result = runCli(["--cwd", dir, "init", "--dtcg", resolver]);
     expect(result.status).toBe(1);
     expect(result.stderr).toContain("--force");
     expect(readFileSync(configPath, "utf-8")).toBe("// mine\n");
 
-    expect(runCli(["--cwd", dir, "init", "--from", resolver, "--force"]).status).toBe(0);
+    expect(runCli(["--cwd", dir, "init", "--dtcg", resolver, "--force"]).status).toBe(0);
     expect(readFileSync(configPath, "utf-8")).toContain("defineConfig(");
   });
 
   test("fails with a clear error for a missing source", () => {
     const dir = makeScratchDir("init-from-missing");
-    const result = runCli(["--cwd", dir, "init", "--from", "nope.resolver.json"]);
+    const result = runCli(["--cwd", dir, "init", "--dtcg", "nope.resolver.json"]);
 
     expect(result.status).toBe(1);
     expect(result.stderr).toContain("does not exist");
@@ -593,6 +593,46 @@ describe("recontent build", () => {
   });
 });
 
+describe("a theme overriding a token that does not exist", () => {
+  function danglingProject(prefix: string): string {
+    const dir = makeScratchDir(prefix);
+    copyFixture("valid", dir);
+    const configPath = path.join(dir, "recontent.config.ts");
+    writeFileSync(
+      configPath,
+      readFileSync(configPath, "utf-8")
+        .replace("  defineSystemTokens,\n", "  defineSystemTokens,\n  defineTheme,\n")
+        .replace(
+          "const components =",
+          'const other = defineReferenceTokens({ color: { nope: tokens.color("#000000") } });\n' +
+            'const dark = defineTheme(other, { color: { nope: tokens.color("#111111") } });\nconst components =',
+        )
+        .replace("  plugins: [", "  themes: { dark },\n  plugins: ["),
+    );
+    return dir;
+  }
+
+  test("fails build with one message, before any plugin writes", () => {
+    const dir = danglingProject("build-dangling-override");
+
+    const result = runCli(["--cwd", dir, "build"]);
+
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain('Theme "dark" overrides unknown token "ref.color.nope"');
+    expect(result.stderr.match(/ref\.color\.nope/g)).toHaveLength(1);
+    expect(existsSync(path.join(dir, "dist"))).toBe(false);
+  });
+
+  test("fails inspect too", () => {
+    const dir = danglingProject("inspect-dangling-override");
+
+    const result = runCli(["--cwd", dir, "inspect"]);
+
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain('Theme "dark" overrides unknown token "ref.color.nope"');
+  });
+});
+
 describe("recontent diff", () => {
   function git(args: string[], cwd: string): void {
     const result = spawnSync("git", args, { cwd, encoding: "utf-8" });
@@ -670,6 +710,8 @@ describe("recontent diff", () => {
     expect(result.status).toBe(0);
     expect(result.stderr).toBe("");
     const parsed = JSON.parse(result.stdout);
+    expect(parsed.kind).toBe("diff");
+    expect(typeof parsed.schemaVersion).toBe("string");
     expect(parsed.config).toBe("recontent.config.ts");
     expect(parsed.rev).toBe("HEAD");
     expect(parsed.breaking).toBe(false);
@@ -677,6 +719,34 @@ describe("recontent diff", () => {
     expect(parsed.tokens.changed).toHaveLength(1);
     expect(parsed.tokens.changed[0].to.path.join(".")).toBe("ref.color.brand.primary");
     expect(parsed.components).toBeUndefined();
+  });
+
+  test("--format json with an invalid revision prints an error document on stdout", () => {
+    const dir = makeScratchDir("diff-json-bad-rev");
+    copyFixture("valid", dir);
+    initRepoWithCommit(dir);
+
+    const result = runCli(["--cwd", dir, "diff", "nope", "--format", "json"]);
+
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain("error:");
+    const parsed = JSON.parse(result.stdout);
+    expect(parsed.kind).toBe("error");
+    expect(typeof parsed.schemaVersion).toBe("string");
+    expect(parsed.errors).toHaveLength(1);
+    expect(parsed.errors[0].message).toContain("nope");
+  });
+
+  test("fails on a broken alias in the working tree, like build and inspect", () => {
+    const dir = makeScratchDir("diff-broken-alias");
+    copyFixture("broken-alias", dir);
+    initRepoWithCommit(dir);
+
+    const result = runCli(["--cwd", dir, "diff"]);
+
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain("Broken alias");
+    expect(result.stdout).toBe("");
   });
 
   test("rejects an unknown --format with a usage error", () => {
@@ -713,6 +783,29 @@ describe("recontent diff", () => {
     const withBreaking = runCli(["--cwd", dir, "diff", "--fail-on-breaking"]);
     expect(withBreaking.status).toBe(1);
     expect(withBreaking.stderr).toContain("error: 2 breaking changes found");
+  });
+
+  test("reports a deprecated token, without calling it breaking", () => {
+    const dir = makeScratchDir("diff-deprecated");
+    copyFixture("valid", dir);
+    initRepoWithCommit(dir);
+
+    const configPath = path.join(dir, "recontent.config.ts");
+    writeFileSync(
+      configPath,
+      readFileSync(configPath, "utf-8").replace(
+        'tokens.color("#2563eb")',
+        'tokens.color("#2563eb").deprecate("Use something else.")',
+      ),
+    );
+
+    const result = runCli(["--cwd", dir, "diff", "--fail-on-breaking"]);
+
+    expect(result.status).toBe(0);
+    expect(result.stdout).toContain("## Metadata (2)");
+    expect(result.stdout).toContain(
+      "`ref.color.brand.primary`: now deprecated: Use something else.",
+    );
   });
 
   describe("components", () => {
@@ -797,6 +890,24 @@ describe("recontent diff", () => {
       const result = runCli(["--cwd", dir, "diff", "--fail-on-breaking"]);
       expect(result.status).toBe(1);
       expect(result.stderr).toContain("error: 3 breaking changes found");
+    });
+
+    test("--fail-on-breaking exits 1 when introspection is removed", () => {
+      const dir = introspectedRepo("diff-components-head-without");
+      initRepoWithCommit(dir);
+      const configPath = path.join(dir, "recontent.config.ts");
+      writeFileSync(
+        configPath,
+        readFileSync(configPath, "utf-8").replace(
+          '  introspection: { entry: "src/index.ts" },\n',
+          "",
+        ),
+      );
+
+      const result = runCli(["--cwd", dir, "diff", "--fail-on-breaking"]);
+
+      expect(result.status).toBe(1);
+      expect(result.stdout).toContain("**removed**");
     });
 
     test("skips components, with a note, when the revision has no introspection", () => {
@@ -1302,6 +1413,10 @@ describe("recontent inspect --from", () => {
   test("build --check fails when the published snapshot is stale", () => {
     const { system } = setup("inspect-from-stale");
     expect(runCli(["--cwd", system, "build", "--check"]).status).toBe(0);
+    // Nothing in it depends on the installed recontent, so an upgrade cannot make it stale.
+    expect(readFileSync(path.join(system, "dist/recontent.json"), "utf-8")).not.toContain(
+      '"recontent"',
+    );
 
     const button = path.join(system, "src/button.tsx");
     writeFileSync(button, readFileSync(button, "utf-8").replace("  icon?: IconName;\n", ""));

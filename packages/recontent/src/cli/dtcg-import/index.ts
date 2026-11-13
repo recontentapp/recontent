@@ -16,7 +16,7 @@ export type DtcgImportStats = {
 };
 
 export type DtcgImportOptions = {
-  /** A resolver file, token files or directories, as given to `--from`. */
+  /** A resolver file, token files or directories, as given to `--dtcg`. */
   sources: string[];
   cwd: string;
 };

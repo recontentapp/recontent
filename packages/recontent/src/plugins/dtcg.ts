@@ -1,11 +1,11 @@
 import {
   pathKey,
-  type OutputFile,
   type RecontentPlugin,
   type ThemeOverride,
   type TokenEntry,
   type TokenRegistry,
 } from "@recontentapp/core";
+import type { OutputFile } from "./shared/context.js";
 import { entryToDtcgNode, setNested } from "../serialize/values.js";
 import { getThemeOverride } from "./shared/alias.js";
 import type { GeneratorContext } from "./shared/context.js";
@@ -151,5 +151,17 @@ function generateDtcgFiles(ctx: GeneratorContext, _options: DtcgPluginOptions): 
 }
 
 export function dtcg(options: DtcgPluginOptions): RecontentPlugin {
-  return outputPlugin("recontent:dtcg", ["tokens"], options, generateDtcgFiles);
+  return {
+    ...outputPlugin("recontent:dtcg", ["tokens"], options, generateDtcgFiles),
+    // The base tokens are `tokens.tokens.json`, which a theme named "tokens" would also claim.
+    validate: (ctx) =>
+      "tokens" in ctx.themes
+        ? [
+            {
+              severity: "error",
+              message: `Theme "tokens" would write tokens.tokens.json, the file of the base tokens; rename the theme.`,
+            },
+          ]
+        : [],
+  };
 }

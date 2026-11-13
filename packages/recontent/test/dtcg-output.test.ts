@@ -220,7 +220,7 @@ describe("em dimensions", () => {
   });
 });
 
-test('a theme named "tokens" collides with the base file instead of overwriting it', async () => {
+test('a theme named "tokens" is reported before it can collide with the base file', async () => {
   const ref = defineReferenceTokens({ color: { black: tokens.color("#000000") } });
   const config = defineConfig({
     tokens: { ref },
@@ -229,7 +229,14 @@ test('a theme named "tokens" collides with the base file instead of overwriting 
   });
   const logger = { info() {}, warn() {}, error() {}, debug() {} };
 
-  await expect(runPlugins(config, { root: "/project", logger })).rejects.toThrow(
-    /File path collision at "out\/tokens.tokens.json"/,
-  );
+  const result = await runPlugins(config, { root: "/project", logger });
+
+  expect(result.files).toEqual([]);
+  expect(result.diagnostics).toEqual([
+    expect.objectContaining({
+      plugin: "recontent:dtcg",
+      severity: "error",
+      message: expect.stringContaining('Theme "tokens" would write tokens.tokens.json'),
+    }),
+  ]);
 });

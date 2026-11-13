@@ -4,10 +4,19 @@ export type {
   PluginDiagnostic,
   EmittedFile,
   ComponentInfo,
+  Documentation,
+  ExampleInfo,
+  ExternalLink,
   PropInfo,
   TypeInfo,
   InheritedProps,
   TypeParameterInfo,
+  Logger,
+  ThemeOverride,
+  TokenEntry,
+  TokenRegistry,
+  TokenType,
+  TokenTypeMap,
 } from "@recontentapp/core";
 export { css, type CssPluginOptions } from "./css.js";
 export { dtcg, type DtcgPluginOptions } from "./dtcg.js";

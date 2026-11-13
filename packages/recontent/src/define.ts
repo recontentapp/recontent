@@ -225,7 +225,8 @@ function normalizePlugins(
         "defineConfig's `plugins` must be RecontentPlugin instances (objects with at least a `name` string).",
       );
     }
-    const expected = `Plugin "${plugin.name}" must declare \`dependsOn\`, an array of "tokens", "introspection" and/or "introspection?".`;
+    if (plugin.dependsOn === undefined) continue;
+    const expected = `Plugin "${plugin.name}": \`dependsOn\` must be an array of "tokens", "introspection" and/or "introspection?".`;
     if (!Array.isArray(plugin.dependsOn)) {
       throw new Error(expected);
     }
@@ -302,8 +303,20 @@ export function defineConfig(input: DefineConfigInput): Config {
     const { ref, system, components } = input.tokens;
     if (ref) collectEntries(ref, ["ref"], "ref", registry);
     if (system) collectEntries(system, ["system"], "system", registry);
-    if (components) collectEntries(components, [], "components", registry);
-  } else if (!input.introspection) {
+    if (components) {
+      for (const reserved of ["ref", "system"]) {
+        if (Object.hasOwn(components, reserved)) {
+          throw new Error(
+            `Invalid component group name "${reserved}": component tokens live at the registry root, so "${reserved}" would overwrite the ${reserved} layer.`,
+          );
+        }
+      }
+      collectEntries(components, [], "components", registry);
+    }
+  }
+  const hasLayer =
+    input.tokens && (input.tokens.ref || input.tokens.system || input.tokens.components);
+  if (!hasLayer && !input.introspection) {
     throw new Error("defineConfig requires either tokens or an introspection block.");
   }
 

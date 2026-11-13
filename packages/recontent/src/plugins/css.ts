@@ -1,13 +1,14 @@
 import {
   expandedMembers,
   isExpandedComposite,
-  type OutputFile,
+  type PluginDiagnostic,
   type RecontentPlugin,
   type TokenEntry,
   type TokenLayer,
   type TokenRegistry,
   type TokenTypeMap,
 } from "@recontentapp/core";
+import type { OutputFile } from "./shared/context.js";
 import { cssVarName, serializeValueCss } from "../serialize/values.js";
 import type { GeneratorContext } from "./shared/context.js";
 import { validateThemeAttribute } from "./shared/theme-source.js";
@@ -177,11 +178,25 @@ export function generateCssFiles(
   return [
     {
       filename: "tokens.css",
-      content: generateCss(config, { themeSelector: "class", ...options }),
+      content: generateCss(config, { ...options, themeSelector: options.themeSelector ?? "class" }),
+    },
+  ];
+}
+
+/** `themeAttribute` only applies to the "attribute" selector, which is not the plugins' default. */
+export function themeSelectorWarnings(options: CssGeneratorOptions): PluginDiagnostic[] {
+  if (options.themeAttribute === undefined || options.themeSelector === "attribute") return [];
+  return [
+    {
+      severity: "warning",
+      message: `\`themeAttribute\` is ignored: themes are selected by class unless you set \`themeSelector: "attribute"\`.`,
     },
   ];
 }
 
 export function css(options: CssPluginOptions): RecontentPlugin {
-  return outputPlugin("recontent:css", ["tokens"], options, generateCssFiles);
+  return {
+    ...outputPlugin("recontent:css", ["tokens"], options, generateCssFiles),
+    validate: () => themeSelectorWarnings(options),
+  };
 }

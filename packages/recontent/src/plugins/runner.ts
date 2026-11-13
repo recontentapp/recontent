@@ -28,8 +28,11 @@ export function sortPlugins(plugins: RecontentPlugin[]): RecontentPlugin[] {
   return [...pre, ...normal, ...post];
 }
 
-function consumesComponents(plugin: RecontentPlugin): boolean {
-  return plugin.dependsOn.includes("introspection") || plugin.dependsOn.includes("introspection?");
+function consumesIntrospection(plugin: RecontentPlugin): boolean {
+  return (
+    plugin.dependsOn?.includes("introspection") === true ||
+    plugin.dependsOn?.includes("introspection?") === true
+  );
 }
 
 /**
@@ -37,14 +40,14 @@ function consumesComponents(plugin: RecontentPlugin): boolean {
  * a plugin consumes components. A plugin that requires them (`"introspection"`,
  * not `"introspection?"`) while the config has no block is a config error.
  */
-export function needsComponents(config: Config): boolean {
-  const required = config.plugins.find((plugin) => plugin.dependsOn.includes("introspection"));
+export function needsIntrospection(config: Config): boolean {
+  const required = config.plugins.find((plugin) => plugin.dependsOn?.includes("introspection"));
   if (required && !config.introspection) {
     throw new Error(
       `\`${required.name}\` depends on introspection; add \`introspection\` to defineConfig().`,
     );
   }
-  return config.introspection !== undefined && config.plugins.some(consumesComponents);
+  return config.introspection !== undefined && config.plugins.some(consumesIntrospection);
 }
 
 export type RunPluginsOptions = {
@@ -55,7 +58,7 @@ export type RunPluginsOptions = {
   /** The types `components` reference; handed over with them. */
   types?: TypeInfo[];
   /** Why `components` is missing: the plugins that depend on it fail with this message, the others still run. */
-  componentsError?: string;
+  introspectionError?: string;
 };
 
 /** A plugin's diagnostic, tagged with the plugin that reported it. */
@@ -88,8 +91,8 @@ export async function runPlugins(
 ): Promise<RunPluginsResult> {
   const failures: string[] = [];
   const plugins = sortPlugins(config.plugins).filter((plugin) => {
-    const blocked = options.componentsError !== undefined && consumesComponents(plugin);
-    if (blocked) failures.push(`[${plugin.name}] ${options.componentsError}`);
+    const blocked = options.introspectionError !== undefined && consumesIntrospection(plugin);
+    if (blocked) failures.push(`[${plugin.name}] ${options.introspectionError}`);
     return !blocked;
   });
   const base: PluginContext = {
@@ -99,7 +102,7 @@ export async function runPlugins(
     logger: options.logger,
   };
   const contextFor = (plugin: RecontentPlugin): PluginContext =>
-    consumesComponents(plugin)
+    consumesIntrospection(plugin)
       ? { ...base, components: options.components, types: options.types }
       : base;
 
@@ -130,7 +133,10 @@ export async function runPlugins(
     );
     for (const file of pluginFiles) {
       const normalized = path.posix.normalize(file.path);
-      const ownerIndex = owners.get(normalized);
+      // Resolved against the root so an absolute path inside it collides with its relative twin.
+      // Lowercased because macOS and Windows file systems are case-insensitive.
+      const key = path.resolve(options.root, file.path).toLowerCase();
+      const ownerIndex = owners.get(key);
       if (ownerIndex !== undefined) {
         const owner = plugins[ownerIndex]!;
         throw new Error(
@@ -139,7 +145,7 @@ export async function runPlugins(
             : `File path collision at "${normalized}": both plugin "${owner.name}" and plugin "${plugin.name}" emitted this file.`,
         );
       }
-      owners.set(normalized, index);
+      owners.set(key, index);
       files.push(file);
     }
   }

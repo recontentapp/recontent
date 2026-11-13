@@ -1,5 +1,5 @@
 import type { LogLevel } from "@recontentapp/core";
-import { loadComponents, loadProject } from "../../../project.js";
+import { loadIntrospection, loadProject } from "../../../project.js";
 import { typeClosure } from "../../../introspection/types.js";
 import {
   createSnapshot,
@@ -56,7 +56,7 @@ function fail(format: Format, errors: InspectError[], exitCode = 1): void {
 }
 
 /** What the selection and rendering below read: the data, where it came from, and why components are missing. */
-type Loaded = { snapshot: Snapshot; source: string; componentsError?: string };
+type Loaded = { snapshot: Snapshot; source: string; introspectionError?: string };
 
 async function loadLocal(
   options: Extract<InspectOptions, { configPath: string }>,
@@ -80,7 +80,7 @@ async function loadLocal(
 
   for (const diagnostic of config.diagnostics) logger.warn(diagnostic.message);
   // Before the TS program, which is the slow part: no point waiting for it to report a token error.
-  const brokenAliases = diagnoseRegistry(config.registry);
+  const brokenAliases = diagnoseRegistry(config.registry, config.themes);
   if (brokenAliases.length > 0) {
     for (const diagnostic of brokenAliases) logger.error(diagnostic.message);
     fail(format, [{ message: `${brokenAliases.length} token error(s) in ${configName}` }]);
@@ -89,21 +89,26 @@ async function loadLocal(
 
   // Tokens never need a TS program; only look at components when asked.
   let introspected: Introspected | undefined;
-  let componentsError: string | undefined;
+  let introspectionError: string | undefined;
   if (target.kind !== "tokens" && config.introspection) {
     try {
-      ({ introspection: introspected } = await loadComponents(project, { cache: options.cache }));
+      ({ introspection: introspected } = await loadIntrospection(project, {
+        cache: options.cache,
+      }));
     } catch (error) {
-      componentsError = error instanceof Error ? error.message : String(error);
+      introspectionError = error instanceof Error ? error.message : String(error);
     }
   }
   // The overview is where to start, so it still shows the tokens and says what is wrong with the components.
-  if (componentsError !== undefined && (target.kind === "components" || target.kind === "types")) {
-    fail(format, [{ message: componentsError }]);
+  if (
+    introspectionError !== undefined &&
+    (target.kind === "components" || target.kind === "types")
+  ) {
+    fail(format, [{ message: introspectionError }]);
     return undefined;
   }
 
-  return { snapshot: createSnapshot(config, introspected), source: configName, componentsError };
+  return { snapshot: createSnapshot(config, introspected), source: configName, introspectionError };
 }
 
 function loadHeadless(options: Extract<InspectOptions, { from: string }>): Loaded | undefined {
@@ -131,14 +136,14 @@ export async function runInspect(options: InspectOptions): Promise<void> {
   const { target, format } = options;
   const loaded = "from" in options ? loadHeadless(options) : await loadLocal(options);
   if (!loaded) return;
-  const { snapshot, source, componentsError } = loaded;
+  const { snapshot, source, introspectionError } = loaded;
   const { tokens, themes, components, types } = snapshot;
 
   switch (target.kind) {
     case "overview":
       print(
         renderOverview(
-          { config: source, tokens, themes, components, types, componentsError },
+          { config: source, tokens, themes, components, types, introspectionError },
           format,
         ),
       );
