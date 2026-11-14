@@ -65,13 +65,11 @@ const dark = defineTheme(system, {
 });
 
 export default defineConfig({
-  tokens: { ref, system, components: {} },
+  tokens: { ref, system },
   themes: { dark },
   plugins: [
     stylex({
       outDir: "src/generated/stylex",
-      fontFamily: system.fontFamily,
-      placeholderColor: system.colors.textMuted,
     }),
   ],
 });

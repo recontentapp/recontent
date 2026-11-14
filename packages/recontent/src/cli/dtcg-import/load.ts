@@ -220,7 +220,7 @@ export function loadSources(sources: string[], cwd: string, warn: Warn): LoadedS
   const resolvers = files.filter((file) => isResolver(file, parsed.get(file)));
   if (resolvers.length > 0) {
     if (files.length > 1) {
-      throw new Error("A resolver file must be the only --from source.");
+      throw new Error("A resolver file must be the only --dtcg source.");
     }
     const resolver = resolvers[0]!;
     return { ...loadResolver(resolver, parsed.get(resolver), warn), files: [display(resolver)] };

@@ -10,6 +10,7 @@ type Page =
   | { path: '/cli/diff'; render: 'static' }
   | { path: '/cli'; render: 'static' }
   | { path: '/cli/init'; render: 'static' }
+  | { path: '/cli/inspect'; render: 'static' }
   | { path: '/guides/defining-tokens'; render: 'static' }
   | { path: '/guides/diffs'; render: 'static' }
   | { path: '/guides/troubleshooting'; render: 'static' }

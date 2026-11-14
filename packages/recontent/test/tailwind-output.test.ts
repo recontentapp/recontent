@@ -58,7 +58,6 @@ function ctxOf(config: ReturnType<typeof build>["config"]): PluginContext {
     themes: config.themes,
     root: "/project",
     logger: { info: () => {}, warn: () => {}, error: () => {}, debug: () => {} },
-    mode: "build",
   };
 }
 

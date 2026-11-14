@@ -9,11 +9,12 @@ description: "Global options, config discovery, output streams and exit codes of
 recontent [options] <command>
 ```
 
-| Command               | Description                                                        |
-| --------------------- | ------------------------------------------------------------------ |
-| [`init`](/cli/init)   | Scaffold a `recontent.config.ts` from a preset or from DTCG files. |
-| [`build`](/cli/build) | Run the configured plugins and write their output.                 |
-| [`diff`](/cli/diff)   | Compare the config's tokens against a previous git revision.       |
+| Command                   | Description                                                        |
+| ------------------------- | ------------------------------------------------------------------ |
+| [`init`](/cli/init)       | Scaffold a `recontent.config.ts` from a preset or from DTCG files. |
+| [`build`](/cli/build)     | Run the configured plugins and write their output.                 |
+| [`diff`](/cli/diff)       | Compare the config's tokens against a previous git revision.       |
+| [`inspect`](/cli/inspect) | Browse the tokens and components the project defines.              |
 
 Running `recontent` with no arguments prints the help, like `recontent --help`.
 
@@ -58,7 +59,7 @@ Any other value is an error.
 ## Output streams
 
 - **stdout** carries only a command's result: help and version text, and the output of
-  `recontent diff`. It is safe to redirect or pipe.
+  `recontent diff` and `recontent inspect`. It is safe to redirect or pipe.
 - **stderr** carries everything else: progress (`Wrote …`), warnings (`warning: …`) and errors
   (`error: …`).
 
@@ -68,5 +69,6 @@ Any other value is an error.
 | ---- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `0`  | Success, or help and version output.                                                                                                                                                                          |
 | `1`  | Any failure: invalid usage or option value, a config that cannot be loaded, a build that reports errors, `init` on an existing file without `--force`, or `diff --fail-on-breaking` finding breaking changes. |
+| `2`  | `inspect` found nothing matching the path, name, type or theme you gave it.                                                                                                                                   |
 
 Warnings never change the exit code.

@@ -1,6 +1,16 @@
+import type { ComponentInfo, PropInfo } from "@recontentapp/core";
+import {
+  displayName,
+  groupByCategory,
+  propCount,
+  updatedText,
+} from "../../introspection/markdown.js";
 import { generateCss } from "../css.js";
 import type { GeneratorContext } from "../shared/context.js";
-import type { DocGroup, DocToken, DocsModel } from "./model.js";
+import type { DocToken } from "../shared/doc-token.js";
+import type { DocGroup, DocsModel } from "./model.js";
+import { highlight } from "./highlight.js";
+import { renderUsage } from "./usage.js";
 
 const LAYER_TITLES = { ref: "Reference", system: "System", components: "Components" } as const;
 
@@ -16,6 +26,9 @@ function slug(value: string): string {
   return value.replace(/[^A-Za-z0-9_-]+/g, "-");
 }
 
+/** The `components` token layer must not collide with the Components view. */
+const layerKey = (layer: keyof typeof LAYER_TITLES) =>
+  layer === "components" ? "layer-components" : layer;
 const tokenId = (path: string) => `t-${path}`;
 const groupId = (layer: string, path: string) => `g-${layer}-${slug(path)}`;
 
@@ -85,8 +98,39 @@ function valueHtml(token: DocToken): string {
   return `<span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val"${data}>${escapeHtml(defaultValue)}</code></span>`;
 }
 
+/** What the ⌘K palette indexes, read back from the DOM by the script. */
+function searchAttrs(
+  name: string,
+  haystack: string[],
+  kind: "token" | "component",
+  meta: string,
+  swatch?: string,
+): string {
+  const attrs = {
+    "data-search": [name, ...haystack].filter(Boolean).join(" "),
+    "data-kind": kind,
+    "data-name": name,
+    "data-meta": meta,
+    ...(swatch ? { "data-swatch": swatch } : {}),
+  };
+  return Object.entries(attrs)
+    .map(([key, value]) => `${key}="${escapeHtml(value)}"`)
+    .join(" ");
+}
+
+function tokenSearchAttrs(token: DocToken): string {
+  const layer = LAYER_TITLES[token.layer];
+  return searchAttrs(
+    token.path,
+    [token.type, layer],
+    "token",
+    `${token.type} · ${layer}`,
+    token.type === "color" ? token.cssVar : undefined,
+  );
+}
+
 function cardHtml(token: DocToken): string {
-  return `<div class="card" id="${escapeHtml(tokenId(token.path))}">
+  return `<div class="card" id="${escapeHtml(tokenId(token.path))}" ${tokenSearchAttrs(token)}>
   <div class="swatch">${previewHtml(token)}</div>
   <div class="card-body">
     <div class="name">${nameHtml(token)}</div>
@@ -97,7 +141,7 @@ function cardHtml(token: DocToken): string {
 }
 
 function rowHtml(token: DocToken): string {
-  return `<div class="row" id="${escapeHtml(tokenId(token.path))}">
+  return `<div class="row" id="${escapeHtml(tokenId(token.path))}" ${tokenSearchAttrs(token)}>
   <div class="row-main">
     <div class="name">${nameHtml(token)}</div>
     ${annotationsHtml(token)}
@@ -122,6 +166,174 @@ function groupHtml(layer: string, group: DocGroup): string {
 </section>`;
 }
 
+const componentId = (name: string) => `c-${slug(name)}`;
+
+/** Past this length a type is collapsed to a one-line preview that expands on click. */
+const LONG_TYPE = 80;
+
+/** Types wrap after each `|` first, so long unions break between members rather than mid-word. */
+function typeHtml(type: string): string {
+  const full = `<code>${escapeHtml(type).replace(/ \| /g, " |<wbr> ")}</code>`;
+  if (type.length <= LONG_TYPE) return full;
+  const short = `<code>${escapeHtml(type.slice(0, LONG_TYPE).trimEnd())}…</code>`;
+  return `<details class="type-long"><summary>${short}${full}</summary></details>`;
+}
+
+function propRowHtml(prop: PropInfo): string {
+  const type = prop.values
+    ? prop.values.map((value) => JSON.stringify(value)).join(" | ")
+    : prop.type;
+  const resolved = prop.resolved ? typeHtml(prop.resolved) : "";
+  const notes = [
+    prop.description ? `<p class="desc">${escapeHtml(prop.description)}</p>` : "",
+    prop.deprecated
+      ? `<p class="reason"><span class="capsule">Deprecated</span>${prop.deprecated === true ? "" : ` ${escapeHtml(prop.deprecated)}`}</p>`
+      : "",
+    prop.experimental
+      ? `<p class="reason"><span class="capsule">Experimental</span>${prop.experimental === true ? "" : ` ${escapeHtml(prop.experimental)}`}</p>`
+      : "",
+  ].join("");
+  return `<tr>
+  <td><code class="${prop.deprecated ? "is-deprecated" : ""}">${escapeHtml(prop.name)}</code>${prop.required ? '<span class="req" title="Required">*</span>' : ""}</td>
+  <td class="type">${typeHtml(type)}${resolved}</td>
+  <td>${prop.defaultValue ? `<code>${escapeHtml(prop.defaultValue)}</code>` : ""}</td>
+  <td>${notes}</td>
+</tr>`;
+}
+
+function usageHtml(usage: string | undefined): string {
+  if (!usage) return "";
+  return `<div class="comp-section">
+  <h4>Usage</h4>
+  <div class="md">${renderUsage(usage)}</div>
+  </div>`;
+}
+
+function examplesHtml(component: ComponentInfo): string {
+  const examples = component.examples;
+  if (!examples?.length) return "";
+  const label = (title: string | undefined, index: number) =>
+    title ?? (examples.length === 1 ? "Example" : `Example ${index + 1}`);
+  const tabs = examples
+    .map(
+      ({ title }, index) =>
+        `<button type="button" role="tab" data-ex-tab="${index}" aria-selected="${index === 0}">${escapeHtml(label(title, index))}</button>`,
+    )
+    .join("");
+  const panels = examples
+    .map(
+      ({ code }, index) =>
+        `<div class="ex-panel" role="tabpanel" data-ex-panel="${index}"${index === 0 ? "" : " hidden"}><button type="button" class="copy" data-copy>Copy</button><pre><code>${highlight(code)}</code></pre></div>`,
+    )
+    .join("\n  ");
+  return `<div class="comp-section examples" id="${examplesId(component)}">
+  <h4>Examples</h4>
+  <div class="ex-tabs" role="tablist" aria-label="Examples">${tabs}</div>
+  ${panels}
+  </div>`;
+}
+
+const examplesId = (component: ComponentInfo) => `${componentId(component.name)}-examples`;
+
+/** Status badge; the `@deprecated` / `@experimental` description (and replacement) shows in a tooltip. */
+function statusBadgeHtml(
+  label: "Deprecated" | "Experimental",
+  reason: true | string,
+  note = "",
+): string {
+  const tip = [reason === true ? "" : reason, note].filter(Boolean).join(" ");
+  const cls = label === "Experimental" ? "capsule exp" : "capsule";
+  return tip
+    ? `<span class="${cls} has-tip" tabindex="0" data-tip="${escapeHtml(tip)}">${label}</span>`
+    : `<span class="${cls}">${label}</span>`;
+}
+
+/** The source code link (when `gitBaseUrl` is set), then the `@link` URLs and the update date. */
+function linkTags(
+  component: ComponentInfo,
+  gitBaseUrl: string | undefined,
+  updated: string | undefined,
+): string[] {
+  const links: string[] = [];
+  if (gitBaseUrl) {
+    const href = `${gitBaseUrl.replace(/\/+$/, "")}/${encodeURI(component.sourceFilePath)}#L${component.line}`;
+    links.push(
+      `<a class="tag" href="${escapeHtml(href)}" target="_blank" rel="noopener noreferrer">Source code ↗</a>`,
+    );
+  }
+  for (const { title, url } of component.externalLinks ?? []) {
+    links.push(
+      `<a class="tag" href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(title ?? url)} ↗</a>`,
+    );
+  }
+  if (updated) links.push(`<span class="note">${escapeHtml(updated)}</span>`);
+  return links;
+}
+
+function componentSearchAttrs(component: ComponentInfo): string {
+  const tags = [
+    component.experimental ? "Experimental" : "",
+    component.deprecated ? "Deprecated" : "",
+  ].filter(Boolean);
+  return searchAttrs(
+    displayName(component),
+    [component.category ?? "", ...tags],
+    "component",
+    [component.category, ...tags].filter(Boolean).join(" · ") || "Component",
+  );
+}
+
+function componentCardHtml(component: ComponentInfo): string {
+  const id = escapeHtml(componentId(component.name));
+  const status = component.deprecated
+    ? '<span class="capsule">Deprecated</span>'
+    : component.experimental
+      ? '<span class="capsule exp">Experimental</span>'
+      : "";
+  return `<a class="comp-card" href="#${id}" data-goto="${id}"><strong>${escapeHtml(displayName(component))}${status}</strong>${component.description ? `<span>${escapeHtml(component.description)}</span>` : ""}</a>`;
+}
+
+function componentHtml(component: ComponentInfo, gitBaseUrl: string | undefined): string {
+  const updated = updatedText(component);
+  const inherits = component.inherits
+    .map(
+      (group) =>
+        `<code>${escapeHtml(group.name)}</code> (${propCount(group)}${group.package ? ` from ${escapeHtml(group.package)}` : ""})`,
+    )
+    .join(", ");
+  const replacement = component.replacement ? `Replaced by ${component.replacement}.` : "";
+  const tags = [
+    component.experimental ? statusBadgeHtml("Experimental", component.experimental) : "",
+    component.deprecated ? statusBadgeHtml("Deprecated", component.deprecated, replacement) : "",
+    ...linkTags(component, gitBaseUrl, updated),
+  ].join("");
+  const crumb = `<a class="crumb" href="#components-overview" data-goto="components-overview">Components</a>${component.category ? ` / ${escapeHtml(component.category)}` : ""}`;
+  return `<section class="group" id="${escapeHtml(componentId(component.name))}" data-page ${componentSearchAttrs(component)} hidden>
+  <header class="comp-head">
+    <p class="breadcrumb">${crumb}</p>
+    <div class="comp-intro">
+      <h2 class="title">${escapeHtml(displayName(component))}</h2>
+      ${component.description ? `<p class="lead">${escapeHtml(component.description)}</p>` : ""}
+      ${tags ? `<div class="tags">${tags}</div>` : ""}
+    </div>
+  </header>
+  ${usageHtml(component.usage)}
+  ${examplesHtml(component)}
+  <div class="comp-section">
+    <h4>Props</h4>
+    ${
+      component.props.length === 0
+        ? '<p class="lead">No own props.</p>'
+        : `<div class="list"><table class="props">
+  <thead><tr><th>Prop</th><th>Type</th><th>Default</th><th>Description</th></tr></thead>
+  <tbody>${component.props.map(propRowHtml).join("\n")}</tbody>
+</table></div>`
+    }
+    ${inherits ? `<p class="lead">Also accepts: ${inherits}</p>` : ""}
+  </div>
+</section>`;
+}
+
 function tokenCss(ctx: GeneratorContext): string {
   return generateCss(ctx).replace(/<\/(style)/gi, "<\\/$1");
 }
@@ -131,14 +343,56 @@ const STYLES = `
   color-scheme: light;
   --hig-bg: #ffffff;
   --hig-bg-2: #f5f5f7;
+  --hig-surface: #ffffff;
+  --hig-bar: rgba(255, 255, 255, 0.8);
+  --hig-scrim: rgba(255, 255, 255, 0.6);
   --hig-text: #1d1d1f;
   --hig-text-2: #6e6e73;
   --hig-line: #d2d2d7;
-  --hig-blue: #0071e3;
+  --hig-accent: #0071e3;
   --hig-orange: #ff9f0a;
   --hig-orange-bg: rgba(255, 159, 10, 0.14);
   --hig-orange-text: #a35f00;
+  --hig-accent-bg: color-mix(in srgb, var(--hig-accent) 10%, transparent);
   --hig-mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, monospace;
+  /* Type scale: every font size below comes from here. */
+  --hig-fs-xs: 12px;
+  --hig-fs-sm: 14px;
+  --hig-fs-md: 16px;
+  --hig-fs-lg: 20px;
+  --hig-fs-xl: 24px;
+  --hig-fs-2xl: 32px;
+  --hig-fs-3xl: 40px;
+  --tk-comment: #6e6e73;
+  --tk-string: #0a3069;
+  --tk-number: #0550ae;
+  --tk-keyword: #cf222e;
+  --tk-tag: #116329;
+  --tk-attr: #953800;
+  --tk-fn: #8250df;
+}
+/* Chrome mode only: [data-theme] belongs to the design token themes. */
+:root[data-mode="dark"] {
+  color-scheme: dark;
+  --hig-bg: #000000;
+  --hig-bg-2: #1c1c1e;
+  --hig-surface: #101012;
+  --hig-bar: rgba(0, 0, 0, 0.72);
+  --hig-scrim: rgba(0, 0, 0, 0.6);
+  --hig-text: #f5f5f7;
+  --hig-text-2: #a1a1a6;
+  --hig-line: #38383a;
+  --hig-accent: #0a84ff;
+  --hig-orange-bg: rgba(255, 159, 10, 0.18);
+  --hig-orange-text: #ffb340;
+  --hig-accent-bg: color-mix(in srgb, var(--hig-accent) 18%, transparent);
+  --tk-comment: #98a1ab;
+  --tk-string: #a5d6ff;
+  --tk-number: #79c0ff;
+  --tk-keyword: #ff7b72;
+  --tk-tag: #7ee787;
+  --tk-attr: #ffa657;
+  --tk-fn: #d2a8ff;
 }
 * { box-sizing: border-box; }
 html { scroll-behavior: smooth; }
@@ -146,62 +400,140 @@ body {
   margin: 0;
   background: var(--hig-bg);
   color: var(--hig-text);
-  font: 17px/1.47 -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Helvetica Neue", sans-serif;
+  font: var(--hig-fs-md)/1.5 -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Helvetica Neue", sans-serif;
   -webkit-font-smoothing: antialiased;
 }
-code { font-family: var(--hig-mono); font-size: 0.82em; }
+/* Inline code follows its surroundings; blocks take the size of their pre. */
+code { font-family: var(--hig-mono); font-size: 0.9em; }
+pre code { font-size: inherit; }
 .bar {
   position: sticky; top: 0; z-index: 10;
-  display: flex; align-items: center; justify-content: space-between; gap: 16px;
-  height: 56px; padding: 0 24px;
-  background: rgba(255, 255, 255, 0.8);
+  display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: 16px;
+  min-height: 56px; padding: 0 24px;
+  background: var(--hig-bar);
   -webkit-backdrop-filter: saturate(180%) blur(20px);
   backdrop-filter: saturate(180%) blur(20px);
   border-bottom: 1px solid var(--hig-line);
 }
-.bar h1 { margin: 0; font-size: 19px; font-weight: 600; letter-spacing: -0.01em; }
-.picker { display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--hig-text-2); }
+.bar h1 { margin: 0; font-size: var(--hig-fs-md); font-weight: 600; letter-spacing: -0.01em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.views { display: flex; align-self: stretch; gap: 8px; }
+.views button {
+  font: inherit; font-size: var(--hig-fs-sm); font-weight: 500; color: var(--hig-text-2);
+  padding: 0 10px; border: 0; background: transparent; cursor: pointer;
+}
+.views button[aria-selected="true"] { color: var(--hig-text); box-shadow: inset 0 -2px 0 var(--hig-text); }
+.views .n { margin-left: 6px; font-weight: 400; color: var(--hig-text-2); }
+.bar-end { display: flex; align-items: center; justify-content: flex-end; gap: 16px; }
+.search-btn {
+  display: inline-flex; align-items: center; justify-content: space-between; gap: 10px;
+  width: 260px; max-width: 100%;
+  font: inherit; font-size: var(--hig-fs-sm); color: var(--hig-text-2);
+  padding: 6px 8px 6px 12px; background: var(--hig-bg-2); border: 1px solid var(--hig-line); border-radius: 8px; cursor: pointer;
+}
+kbd { font: inherit; font-size: var(--hig-fs-xs); padding: 0 6px; border-radius: 5px; background: var(--hig-bg); border: 1px solid var(--hig-line); }
+.picker { display: flex; align-items: center; gap: 8px; font-size: var(--hig-fs-sm); color: var(--hig-text-2); }
 .picker select {
   appearance: none; -webkit-appearance: none;
-  font: inherit; font-size: 14px; color: var(--hig-text);
+  font: inherit; font-size: var(--hig-fs-sm); color: var(--hig-text);
   padding: 5px 30px 5px 12px;
   background: var(--hig-bg-2) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%236e6e73' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat right 11px center;
   border: 1px solid var(--hig-line); border-radius: 8px; cursor: pointer;
 }
-.picker select:focus-visible, .tabs button:focus-visible, .side a:focus-visible, .alias:focus-visible {
-  outline: 2px solid var(--hig-blue); outline-offset: 2px;
+.mode-btn {
+  display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; padding: 0;
+  color: var(--hig-text-2); background: transparent; border: 1px solid var(--hig-line); border-radius: 8px; cursor: pointer;
 }
-.tabs { display: flex; justify-content: center; padding: 28px 16px 8px; }
-.seg { display: inline-flex; padding: 2px; background: var(--hig-bg-2); border-radius: 9px; }
-.seg button {
-  font: inherit; font-size: 14px; font-weight: 500; color: var(--hig-text);
-  padding: 5px 18px; border: 0; border-radius: 7px; background: transparent; cursor: pointer;
+.mode-btn:hover { color: var(--hig-text); }
+.mode-btn svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+.mode-btn .moon, :root[data-mode="dark"] .mode-btn .sun { display: none; }
+:root[data-mode="dark"] .mode-btn .moon { display: block; }
+.mode-btn:focus-visible, .picker select:focus-visible, .views button:focus-visible, .search-btn:focus-visible, .side-toggle:focus-visible, .ex-tabs button:focus-visible, .copy:focus-visible, .comp-card:focus-visible, .crumb:focus-visible, .side a:focus-visible, .alias:focus-visible, .tag:focus-visible, .has-tip:focus-visible {
+  outline: 2px solid var(--hig-accent); outline-offset: 2px;
 }
-.seg button[aria-selected="true"] { background: #fff; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18), 0 0 0 0.5px rgba(0, 0, 0, 0.06); }
-.seg .n { color: var(--hig-text-2); margin-left: 4px; font-weight: 400; }
-.layout { display: grid; grid-template-columns: 240px minmax(0, 980px); gap: 40px; justify-content: center; padding: 16px 24px 96px; }
-.side { position: sticky; top: 80px; align-self: start; max-height: calc(100vh - 100px); overflow: auto; font-size: 14px; }
+.layout { display: grid; grid-template-columns: 240px minmax(0, 980px); gap: 40px; justify-content: center; padding: 0 24px; }
+/* Bottom space lives on main: padding on .layout would stop the sticky sidebar short of the page end. */
+.layout main { padding: 40px 0 96px; }
+.side { position: sticky; top: 57px; align-self: start; max-height: calc(100vh - 57px); overflow: auto; padding: 40px 0 48px; font-size: var(--hig-fs-sm); }
 .side nav { display: flex; flex-direction: column; gap: 2px; }
 .side a { display: block; padding: 5px 10px; border-radius: 8px; color: var(--hig-text); text-decoration: none; word-break: break-word; }
 .side a:hover { background: var(--hig-bg-2); }
-.side a.active { color: var(--hig-blue); background: rgba(0, 113, 227, 0.08); font-weight: 500; }
-.title { margin: 0 0 4px; font-size: 40px; line-height: 1.1; font-weight: 700; letter-spacing: -0.02em; }
+.side a.active { color: var(--hig-accent); background: var(--hig-accent-bg); font-weight: 500; }
+.title { margin: 0 0 4px; font-size: var(--hig-fs-3xl); line-height: 1.1; font-weight: 700; letter-spacing: -0.02em; }
 .sub { margin: 0 0 40px; color: var(--hig-text-2); }
+.breadcrumb { margin: 0 0 8px; font-size: var(--hig-fs-sm); color: var(--hig-text-2); }
+.crumb { color: var(--hig-accent); text-decoration: none; }
+.crumb:hover { text-decoration: underline; }
+.comp-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 12px; }
+.comp-card { display: flex; flex-direction: column; gap: 4px; padding: 14px 16px; border: 1px solid var(--hig-line); border-radius: 14px; color: var(--hig-text); text-decoration: none; }
+.comp-card:hover { background: var(--hig-bg-2); }
+.comp-card strong { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; font-weight: 600; }
+.comp-card > span { font-size: var(--hig-fs-sm); color: var(--hig-text-2); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+/* Proximity: tight inside the header and inside a section, generous between sections. */
+.comp-head { display: flex; flex-direction: column; gap: 12px; }
+.comp-intro { display: flex; flex-direction: column; gap: 8px; }
+.comp-head :is(p, h2, div) { margin: 0; }
+.comp-section { margin-top: 48px; }
+.comp-section > h4 { margin: 0 0 12px; font-size: var(--hig-fs-lg); line-height: 1.2; font-weight: 600; letter-spacing: -0.01em; }
+.comp-section > :last-child { margin-bottom: 0; }
+.comp-section > .list { margin-top: 0; }
+.comp-section > .list + .lead { margin-top: 12px; }
+.md > :first-child { margin-top: 0; }
+.md > :last-child { margin-bottom: 0; }
+.md :is(p, ul, ol, blockquote, table, hr) { margin: 0 0 16px; }
+.md :is(h5, h6) { margin: 24px 0 8px; font-weight: 600; line-height: 1.3; }
+.md h5 { font-size: var(--hig-fs-md); }
+.md h6 { font-size: var(--hig-fs-sm); }
+.md :is(ul, ol) { padding-left: 24px; }
+.md li + li { margin-top: 4px; }
+.md a { color: var(--hig-accent); text-decoration: none; }
+.md a:hover { text-decoration: underline; }
+.md blockquote { padding-left: 14px; border-left: 3px solid var(--hig-line); color: var(--hig-text-2); }
+.md hr { border: 0; border-top: 1px solid var(--hig-line); }
+.md table { border-collapse: collapse; font-size: var(--hig-fs-sm); }
+.md :is(th, td) { text-align: left; padding: 8px 12px; border: 1px solid var(--hig-line); }
+.md th { background: var(--hig-bg-2); font-weight: 500; }
+.ex-tabs { display: flex; gap: 4px; overflow-x: auto; margin-bottom: 8px; border-bottom: 1px solid var(--hig-line); }
+.ex-tabs button { font: inherit; font-size: var(--hig-fs-sm); color: var(--hig-text-2); padding: 6px 12px; border: 0; background: transparent; cursor: pointer; white-space: nowrap; }
+.ex-tabs button[aria-selected="true"] { color: var(--hig-text); box-shadow: inset 0 -2px 0 var(--hig-text); }
+.ex-panel { position: relative; }
+.ex-panel pre { margin: 0; padding-right: 72px; }
+.tk-comment { color: var(--tk-comment); font-style: italic; }
+.tk-string { color: var(--tk-string); }
+.tk-number { color: var(--tk-number); }
+.tk-keyword { color: var(--tk-keyword); }
+.tk-tag { color: var(--tk-tag); }
+.tk-attr { color: var(--tk-attr); }
+.tk-fn { color: var(--tk-fn); }
+.copy { position: absolute; top: 8px; right: 8px; font: inherit; font-size: var(--hig-fs-xs); color: var(--hig-text-2); padding: 2px 10px; border: 1px solid var(--hig-line); border-radius: 6px; background: var(--hig-bg); cursor: pointer; }
+.copy:hover { color: var(--hig-text); }
+.side-toggle { display: none; }
+.category-title { margin: 0 0 24px; font-size: var(--hig-fs-xl); line-height: 1.2; font-weight: 600; letter-spacing: -0.01em; }
+.category + .category { margin-top: 24px; }
+.layer + .layer { margin-top: 64px; }
+.mini { margin-left: 6px; font-size: var(--hig-fs-xs); color: var(--hig-text-2); }
+.tags { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 0 0 16px; }
+.tag { font-size: var(--hig-fs-xs); color: var(--hig-text-2); background: var(--hig-bg-2); border-radius: 999px; padding: 1px 9px; text-decoration: none; }
+a.tag { color: var(--hig-accent); }
+a.tag:hover { text-decoration: underline; }
+.note { font-size: var(--hig-fs-xs); color: var(--hig-text-2); }
 .group { margin-bottom: 56px; scroll-margin-top: 80px; }
-.group h3 { margin: 0 0 8px; font-size: 28px; line-height: 1.2; font-weight: 600; letter-spacing: -0.01em; }
-.count { font-size: 15px; font-weight: 400; color: var(--hig-text-2); margin-left: 6px; }
+.group h3 { margin: 0 0 8px; font-size: var(--hig-fs-xl); line-height: 1.2; font-weight: 600; letter-spacing: -0.01em; }
+.cat { margin: 12px 0 4px; font-size: var(--hig-fs-xs); font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--hig-text-2); }
+.side .cat { display: block; padding: 0 10px; }
+pre { margin: 0 0 16px; padding: 12px 14px; overflow-x: auto; border-radius: 12px; background: var(--hig-bg-2); font-size: var(--hig-fs-sm); line-height: 1.5; }
+.count { font-size: var(--hig-fs-md); font-weight: 400; color: var(--hig-text-2); margin-left: 6px; }
 .lead { margin: 0 0 16px; color: var(--hig-text-2); }
-.callout { margin: 0 0 16px; padding: 10px 14px; border-radius: 12px; background: var(--hig-orange-bg); color: var(--hig-orange-text); font-size: 15px; }
+.callout { margin: 0 0 16px; padding: 10px 14px; border-radius: 12px; background: var(--hig-orange-bg); color: var(--hig-orange-text); font-size: var(--hig-fs-sm); }
 .callout .capsule { margin: 0 8px 0 0; }
-.empty { padding: 56px 0; text-align: center; color: var(--hig-text-2); }
+.empty { padding: 24px 0; text-align: center; color: var(--hig-text-2); }
 .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 16px; margin-top: 16px; }
-.card { scroll-margin-top: 80px; border: 1px solid var(--hig-line); border-radius: 18px; background: #fff; overflow: hidden; }
+.card { scroll-margin-top: 80px; border: 1px solid var(--hig-line); border-radius: 18px; background: var(--hig-surface); overflow: hidden; }
 .card .swatch { height: 96px; background: var(--hig-bg-2); }
 .card .sw { display: block; width: 100%; height: 100%; border-radius: 0; }
 .card-body { padding: 12px 14px 14px; display: flex; flex-direction: column; gap: 4px; }
 .card .name { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; }
 .card .tname { word-break: break-all; }
-.list { margin-top: 16px; border: 1px solid var(--hig-line); border-radius: 18px; background: #fff; overflow: hidden; }
+.list { margin-top: 16px; border: 1px solid var(--hig-line); border-radius: 18px; background: var(--hig-surface); overflow: hidden; }
 .row { scroll-margin-top: 80px; display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 200px) minmax(0, 1.2fr); gap: 16px; align-items: center; padding: 14px 18px; }
 .row + .row { border-top: 1px solid var(--hig-bg-2); }
 .row .name { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; }
@@ -210,107 +542,249 @@ code { font-family: var(--hig-mono); font-size: 0.82em; }
 .row-value { min-width: 0; }
 .val-wrap { display: inline-flex; align-items: baseline; gap: 6px; color: var(--hig-text-2); }
 .val { word-break: break-word; }
-.dot { display: none; width: 7px; height: 7px; border-radius: 50%; background: var(--hig-blue); flex: none; transform: translateY(-1px); }
+.dot { display: none; width: 7px; height: 7px; border-radius: 50%; background: var(--hig-accent); flex: none; transform: translateY(-1px); }
 .overridden .dot { display: inline-block; }
-.pill { font-size: 12px; color: var(--hig-text-2); background: var(--hig-bg-2); border-radius: 999px; padding: 1px 9px; }
-.capsule { font-size: 12px; font-weight: 600; color: var(--hig-orange-text); background: var(--hig-orange-bg); border-radius: 999px; padding: 1px 9px; }
+.pill { font-size: var(--hig-fs-xs); color: var(--hig-text-2); background: var(--hig-bg-2); border-radius: 999px; padding: 1px 9px; }
+.capsule { font-size: var(--hig-fs-xs); font-weight: 600; color: var(--hig-orange-text); background: var(--hig-orange-bg); border-radius: 999px; padding: 1px 9px; }
+.capsule.exp { color: var(--hig-accent); background: var(--hig-accent-bg); }
+.has-tip { position: relative; cursor: help; }
+.has-tip::after { content: attr(data-tip); position: absolute; z-index: 5; top: calc(100% + 6px); left: 0; width: max-content; max-width: min(320px, 80vw); padding: 8px 12px; border-radius: 10px; background: var(--hig-text); color: var(--hig-bg); font-size: var(--hig-fs-xs); font-weight: 400; line-height: 1.4; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2); opacity: 0; visibility: hidden; pointer-events: none; transition: opacity 0.12s; }
+.has-tip:hover::after, .has-tip:focus-visible::after { opacity: 1; visibility: visible; }
 .is-deprecated { text-decoration: line-through; text-decoration-color: var(--hig-orange); }
-.desc, .reason { margin: 4px 0 0; font-size: 14px; color: var(--hig-text-2); }
+.desc, .reason { margin: 4px 0 0; font-size: var(--hig-fs-sm); color: var(--hig-text-2); }
 .reason { color: var(--hig-orange-text); }
-.alias { display: inline-block; margin-top: 4px; font-family: var(--hig-mono); font-size: 12px; color: var(--hig-blue); text-decoration: none; word-break: break-all; }
+.alias { display: inline-block; margin-top: 4px; font-family: var(--hig-mono); font-size: var(--hig-fs-xs); color: var(--hig-accent); text-decoration: none; word-break: break-all; }
 .alias:hover { text-decoration: underline; }
 .flash { animation: flash 1.6s ease-out; }
-@keyframes flash { 0%, 40% { background: rgba(0, 113, 227, 0.12); } 100% { background: transparent; } }
+@keyframes flash { 0%, 40% { background: var(--hig-accent-bg); } 100% { background: transparent; } }
 .sample { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.row-preview .dim { display: block; height: 8px; min-width: 2px; border-radius: 4px; background: var(--hig-blue); }
+.row-preview .dim { display: block; height: 8px; min-width: 2px; border-radius: 4px; background: var(--hig-accent); }
 .row-preview .sw { display: block; width: 44px; height: 44px; border-radius: 10px; }
-.tile { display: block; width: 56px; height: 56px; margin: 6px; border-radius: 12px; background: #fff; }
+.tile { display: block; width: 56px; height: 56px; margin: 6px; border-radius: 12px; background: var(--hig-surface); }
 .tile.wide { width: 100%; max-width: 160px; height: 40px; margin: 0; }
 .track { display: block; width: 120px; height: 8px; border-radius: 4px; background: var(--hig-bg-2); position: relative; }
-.demo { position: absolute; top: -4px; left: 0; width: 16px; height: 16px; border-radius: 50%; background: var(--hig-blue); }
+.demo { position: absolute; top: -4px; left: 0; width: 16px; height: 16px; border-radius: 50%; background: var(--hig-accent); }
 .row:hover .demo { transform: translateX(104px); }
+.source { margin: 0 0 16px; font-size: var(--hig-fs-sm); color: var(--hig-text-2); }
+.source a { color: var(--hig-accent); text-decoration: none; }
+.source a:hover { text-decoration: underline; }
+.props { width: 100%; border-collapse: collapse; font-size: var(--hig-fs-sm); }
+.props th { text-align: left; font-weight: 500; color: var(--hig-text-2); padding: 10px 18px; background: var(--hig-bg-2); }
+.props td { vertical-align: top; padding: 10px 18px; border-top: 1px solid var(--hig-bg-2); word-break: break-word; }
+.props td:first-child { white-space: nowrap; }
+.props th:nth-child(2), .props td.type { width: 36%; }
+.props td.type code { overflow-wrap: anywhere; }
+.props td.type > * + * { display: block; margin-top: 4px; }
+.type-long > summary { cursor: pointer; }
+.type-long > summary code + code, .type-long[open] > summary code:first-child { display: none; }
+.type-long[open] > summary code + code { display: inline; }
+.req { color: var(--hig-orange-text); margin-left: 2px; }
+.palette {
+  position: fixed; inset: 0; z-index: 50;
+  display: flex; align-items: flex-start; justify-content: center; padding: 12vh 16px 16px;
+  background: var(--hig-scrim);
+  -webkit-backdrop-filter: saturate(180%) blur(14px); backdrop-filter: saturate(180%) blur(14px);
+}
+.palette-panel {
+  display: flex; flex-direction: column; width: min(600px, 100%); max-height: 70vh; overflow: hidden;
+  background: var(--hig-surface); border-radius: 14px;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.16), 0 0 0 1px var(--hig-line);
+}
+.palette-panel input {
+  font: inherit; font-size: var(--hig-fs-md); color: var(--hig-text);
+  padding: 16px 18px; border: 0; border-bottom: 1px solid var(--hig-line); background: transparent; outline: none;
+}
+.palette-list { list-style: none; margin: 0; padding: 6px; overflow: auto; }
+.palette-label { padding: 8px 10px 4px; font-size: var(--hig-fs-xs); font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--hig-text-2); }
+.palette-item { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 8px; cursor: pointer; font-size: var(--hig-fs-md); }
+.palette-item .pname { font-family: var(--hig-mono); font-size: var(--hig-fs-sm); word-break: break-all; }
+.palette-item .pmeta { margin-left: auto; padding-left: 12px; font-size: var(--hig-fs-xs); color: var(--hig-text-2); white-space: nowrap; }
+.palette-item .psw { flex: none; width: 18px; height: 18px; border-radius: 5px; box-shadow: inset 0 0 0 1px var(--hig-line); }
+.palette-item[aria-selected="true"] { background: var(--hig-accent); color: #fff; }
+.palette-item[aria-selected="true"] .pmeta { color: rgba(255, 255, 255, 0.8); }
+.palette-empty { padding: 24px; text-align: center; color: var(--hig-text-2); }
+.palette-foot { display: flex; align-items: center; gap: 16px; padding: 10px 18px; border-top: 1px solid var(--hig-line); font-size: var(--hig-fs-xs); color: var(--hig-text-2); }
+.palette-foot span { display: inline-flex; align-items: center; gap: 6px; }
+.palette-foot kbd { line-height: 18px; }
 [hidden] { display: none !important; }
 @media (max-width: 800px) {
-  .bar { padding: 0 16px; }
-  .layout { grid-template-columns: minmax(0, 1fr); gap: 16px; padding: 8px 16px 64px; }
-  .side { position: static; max-height: none; }
-  .side nav { flex-direction: row; overflow-x: auto; gap: 6px; padding-bottom: 4px; }
-  .side a { white-space: nowrap; background: var(--hig-bg-2); }
-  .title { font-size: 32px; }
+  .bar { grid-template-columns: minmax(0, 1fr) auto; padding: 8px 16px 0; gap: 8px 16px; }
+  .views { grid-column: 1 / -1; grid-row: 2; justify-content: center; min-height: 40px; }
+  .search-btn { width: auto; }
+  .search-btn kbd { display: none; }
+  .group, .card, .row { scroll-margin-top: 120px; }
+  .layout { grid-template-columns: minmax(0, 1fr); gap: 16px; padding: 0 16px; }
+  .layout main { padding: 8px 0 64px; }
+  .side { position: static; max-height: none; overflow: visible; padding: 0; border: 1px solid var(--hig-line); border-radius: 12px; }
+  .side-toggle {
+    display: flex; align-items: center; justify-content: space-between; width: 100%;
+    font: inherit; font-size: var(--hig-fs-sm); font-weight: 500; color: var(--hig-text);
+    padding: 10px 14px; border: 0; background: transparent; cursor: pointer;
+  }
+  .side-toggle::after {
+    content: ""; width: 7px; height: 7px; margin-right: 3px;
+    border-right: 1.5px solid var(--hig-text-2); border-bottom: 1.5px solid var(--hig-text-2);
+    transform: rotate(45deg); transition: transform 0.15s;
+  }
+  .side-toggle[aria-expanded="true"]::after { transform: rotate(-135deg) translate(-2px, -2px); }
+  .side nav { display: none; max-height: 50vh; overflow-y: auto; padding: 0 6px 8px; border-top: 1px solid var(--hig-line); }
+  .side.open nav { display: flex; }
+  .side .cat { padding-top: 8px; }
+  .examples .ex-panel pre { padding-right: 14px; padding-top: 38px; }
+  .title { font-size: var(--hig-fs-2xl); }
   .row { grid-template-columns: minmax(0, 1fr); gap: 8px; }
   .row-preview:empty { display: none; }
 }
 `;
 
+const MODE_KEY = "recontent-docs-mode";
+
+const MODE_ICONS = `<svg class="sun" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="3"/><path d="M8 1.5v1.5M8 13v1.5M1.5 8H3M13 8h1.5M3.4 3.4l1 1M11.6 11.6l1 1M3.4 12.6l1-1M11.6 4.4l1-1"/></svg><svg class="moon" viewBox="0 0 16 16" aria-hidden="true"><path d="M13.5 9.5A5.5 5.5 0 0 1 6.5 2.5a5.5 5.5 0 1 0 7 7z"/></svg>`;
+
+/** Runs in <head>, before first paint, so a dark page never flashes light. */
+const MODE_INIT = `
+(function () {
+  var mode;
+  try { mode = localStorage.getItem("${MODE_KEY}"); } catch (e) {}
+  if (mode !== "light" && mode !== "dark") {
+    mode = window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+  }
+  document.documentElement.setAttribute("data-mode", mode);
+})();
+`;
+
 const SCRIPT = `
 (function () {
-  var layers = ["ref", "system", "components"];
-  var tabs = document.querySelectorAll("[data-tab]");
-  var panels = document.querySelectorAll("[data-panel]");
-  var sides = document.querySelectorAll("[data-side]");
+  var OVERVIEW = "components-overview";
+  var viewKeys = ["tokens", "components"];
+  var layerKeys = ["ref", "system", "layer-components"];
+  var viewTabs = document.querySelectorAll("[data-view-tab]");
+  var views = document.querySelectorAll("[data-view]");
+  var pages = document.querySelectorAll("[data-page]");
   var observer = null;
 
-  function show(layer) {
-    tabs.forEach(function (t) { t.setAttribute("aria-selected", String(t.getAttribute("data-tab") === layer)); });
-    panels.forEach(function (p) { p.hidden = p.getAttribute("data-panel") !== layer; });
-    sides.forEach(function (s) { s.hidden = s.getAttribute("data-side") !== layer; });
-    watch(layer);
+  function showView(view) {
+    viewTabs.forEach(function (t) { t.setAttribute("aria-selected", String(t.getAttribute("data-view-tab") === view)); });
+    views.forEach(function (v) { v.hidden = v.getAttribute("data-view") !== view; });
+    watch(view);
   }
 
-  function watch(layer) {
-    if (!("IntersectionObserver" in window)) return;
+  // Components are one page each, so only the token groups are tracked while scrolling.
+  function showPage(id) {
+    pages.forEach(function (p) { p.hidden = p.id !== id; });
+    document.querySelectorAll('[data-view="components"] .side a').forEach(function (a) {
+      a.classList.toggle("active", a.getAttribute("data-goto") === id);
+    });
+  }
+
+  // Highlights the sidebar entry of the group being read; hidden groups never intersect.
+  function watch(view) {
     if (observer) observer.disconnect();
+    if (view !== "tokens" || !("IntersectionObserver" in window)) return;
+    var root = document.querySelector('[data-view="' + view + '"]');
     var links = {};
-    document.querySelectorAll('[data-side="' + layer + '"] a').forEach(function (a) { links[a.getAttribute("href").slice(1)] = a; });
+    root.querySelectorAll(".side a").forEach(function (a) { links[a.getAttribute("data-goto")] = a; });
     observer = new IntersectionObserver(function (entries) {
       entries.forEach(function (e) {
         if (!e.isIntersecting) return;
         Object.keys(links).forEach(function (id) { links[id].classList.toggle("active", id === e.target.id); });
       });
     }, { rootMargin: "-80px 0px -70% 0px" });
-    document.querySelectorAll('[data-panel="' + layer + '"] .group').forEach(function (g) { observer.observe(g); });
+    root.querySelectorAll(".group").forEach(function (g) { observer.observe(g); });
   }
 
-  function initial() {
-    var h = location.hash.slice(1);
-    if (layers.indexOf(h) >= 0) return h;
-    for (var i = 0; i < layers.length; i++) {
-      var p = document.querySelector('[data-panel="' + layers[i] + '"]');
-      if (p && p.getAttribute("data-count") !== "0") return layers[i];
+  // Activates the view and page around an element, then scrolls to it.
+  function reveal(el) {
+    var view = el.closest("[data-view]");
+    if (view) showView(view.getAttribute("data-view"));
+    var page = el.closest("[data-page]");
+    if (page) showPage(page.id);
+    if (el.id) history.replaceState(null, "", "#" + encodeURIComponent(el.id));
+    el.scrollIntoView({ block: el.classList.contains("group") ? "start" : "center" });
+    if (el.hasAttribute("data-page")) return;
+    el.classList.remove("flash");
+    void el.offsetWidth;
+    el.classList.add("flash");
+  }
+
+  function route(hash) {
+    try { hash = decodeURIComponent(hash); } catch (e) {}
+    if (viewKeys.indexOf(hash) >= 0) {
+      if (!document.querySelector('[data-view="' + hash + '"]')) return false;
+      showView(hash);
+      showPage(OVERVIEW);
+      return true;
     }
-    return "ref";
+    var el = hash && document.getElementById(hash);
+    if (layerKeys.indexOf(hash) >= 0 && el) { showView("tokens"); el.scrollIntoView(); return true; }
+    if (!el) return false;
+    reveal(el);
+    return true;
   }
 
-  tabs.forEach(function (t) {
+  viewTabs.forEach(function (t) {
     t.addEventListener("click", function () {
-      var layer = t.getAttribute("data-tab");
-      history.replaceState(null, "", "#" + layer);
-      show(layer);
+      var view = t.getAttribute("data-view-tab");
+      history.replaceState(null, "", "#" + view);
+      showView(view);
+      showPage(OVERVIEW);
       window.scrollTo(0, 0);
     });
   });
-  window.addEventListener("hashchange", function () {
-    var h = location.hash.slice(1);
-    if (layers.indexOf(h) >= 0) show(h);
-  });
+  window.addEventListener("hashchange", function () { route(location.hash.slice(1)); });
 
   document.addEventListener("click", function (e) {
-    var link = e.target.closest && e.target.closest("[data-goto]");
-    if (!link) return;
-    var target = document.getElementById(link.getAttribute("data-goto"));
+    var from = e.target.closest ? e.target : e.target.parentElement;
+    var toggle = from.closest(".side-toggle");
+    if (toggle) {
+      var open = toggle.parentNode.classList.toggle("open");
+      toggle.setAttribute("aria-expanded", String(open));
+      return;
+    }
+    var exTab = from.closest("[data-ex-tab]");
+    if (exTab) {
+      var box = exTab.closest(".examples");
+      var n = exTab.getAttribute("data-ex-tab");
+      box.querySelectorAll("[data-ex-tab]").forEach(function (t) { t.setAttribute("aria-selected", String(t === exTab)); });
+      box.querySelectorAll("[data-ex-panel]").forEach(function (p) { p.hidden = p.getAttribute("data-ex-panel") !== n; });
+      return;
+    }
+    var copy = from.closest("[data-copy]");
+    if (copy) { copyCode(copy); return; }
+    var link = from.closest("[data-goto]");
+    var target = link && document.getElementById(link.getAttribute("data-goto"));
     if (!target) return;
     e.preventDefault();
-    var panel = target.closest("[data-panel]");
-    if (panel) {
-      var layer = panel.getAttribute("data-panel");
-      history.replaceState(null, "", "#" + layer);
-      show(layer);
+    var side = link.closest(".side");
+    if (side) {
+      side.classList.remove("open");
+      var button = side.querySelector(".side-toggle");
+      if (button) button.setAttribute("aria-expanded", "false");
     }
-    target.scrollIntoView({ block: "center" });
-    target.classList.remove("flash");
-    void target.offsetWidth;
-    target.classList.add("flash");
+    reveal(target);
   });
+
+  function copyCode(button) {
+    var text = button.parentNode.querySelector("code").textContent;
+    function done(ok) {
+      button.textContent = ok ? "Copied" : "Press Ctrl+C";
+      setTimeout(function () { button.textContent = "Copy"; }, 1500);
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(function () { done(true); }, function () { done(false); });
+      return;
+    }
+    var area = document.createElement("textarea");
+    area.value = text;
+    area.style.position = "fixed";
+    area.style.opacity = "0";
+    document.body.appendChild(area);
+    area.select();
+    var ok = false;
+    try { ok = document.execCommand("copy"); } catch (err) {}
+    document.body.removeChild(area);
+    done(ok);
+  }
 
   var select = document.getElementById("theme");
   var themed = null;
@@ -330,12 +804,221 @@ const SCRIPT = `
   }
   if (select) select.addEventListener("change", function () { applyTheme(select.value); });
 
-  show(initial());
+  var modeBtn = document.getElementById("mode");
+  function labelMode() {
+    var next = document.documentElement.getAttribute("data-mode") === "dark" ? "light" : "dark";
+    var label = "Switch to " + next + " mode";
+    modeBtn.setAttribute("aria-label", label);
+    modeBtn.title = label;
+  }
+  modeBtn.addEventListener("click", function () {
+    var next = document.documentElement.getAttribute("data-mode") === "dark" ? "light" : "dark";
+    document.documentElement.setAttribute("data-mode", next);
+    try { localStorage.setItem("${MODE_KEY}", next); } catch (e) {}
+    labelMode();
+  });
+  labelMode();
+
+  // ⌘K palette over every [data-search] element: recent picks, components, then tokens.
+  var palette = document.getElementById("palette");
+  var input = document.getElementById("palette-input");
+  var list = document.getElementById("palette-list");
+  var trigger = document.getElementById("palette-open");
+  var LIMIT = 50;
+  var MAX_RECENT = 5;
+  var RECENT_KEY = "recontent-docs-recent:" + location.pathname;
+  var LABELS = { recent: "Recent", component: "Components", token: "Tokens" };
+  var index = [];
+  var byId = {};
+  document.querySelectorAll("[data-search]").forEach(function (el) {
+    var item = {
+      el: el,
+      id: el.id,
+      kind: el.getAttribute("data-kind"),
+      name: el.getAttribute("data-name"),
+      meta: el.getAttribute("data-meta"),
+      swatch: el.getAttribute("data-swatch"),
+      text: el.getAttribute("data-search").toLowerCase()
+    };
+    index.push(item);
+    byId[item.id] = item;
+  });
+  var shown = [];
+  var active = 0;
+  var returnTo = null;
+
+  function loadRecent() {
+    try {
+      var ids = JSON.parse(localStorage.getItem(RECENT_KEY));
+      return Array.isArray(ids) ? ids : [];
+    } catch (e) { return []; }
+  }
+
+  function saveRecent(id) {
+    try {
+      var ids = [id].concat(loadRecent().filter(function (other) { return other !== id; }));
+      localStorage.setItem(RECENT_KEY, JSON.stringify(ids.slice(0, MAX_RECENT)));
+    } catch (e) {}
+  }
+
+  // 0 name prefix, 1 word start, 2 substring, -1 no match
+  function score(item, q) {
+    if (item.name.toLowerCase().indexOf(q) === 0) return 0;
+    var at = item.text.indexOf(q);
+    var best = -1;
+    while (at >= 0) {
+      if (at === 0 || /[^a-z0-9]/.test(item.text.charAt(at - 1))) return 1;
+      best = 2;
+      at = item.text.indexOf(q, at + 1);
+    }
+    return best;
+  }
+
+  function search(query) {
+    var q = query.trim().toLowerCase();
+    var out = [];
+    var seen = {};
+    if (!q) {
+      loadRecent().forEach(function (id) {
+        if (!byId[id]) return;
+        seen[id] = true;
+        out.push({ item: byId[id], group: "recent" });
+      });
+    }
+    ["component", "token"].forEach(function (kind) {
+      var hits = [];
+      index.forEach(function (item) {
+        if (item.kind !== kind || seen[item.id]) return;
+        var s = q ? score(item, q) : 0;
+        if (s >= 0) hits.push({ item: item, score: s, order: hits.length });
+      });
+      hits.sort(function (a, b) { return a.score - b.score || a.order - b.order; });
+      hits.forEach(function (h) { out.push({ item: h.item, group: kind }); });
+    });
+    return out.slice(0, LIMIT);
+  }
+
+  function setActive(i) {
+    active = i;
+    list.querySelectorAll("[role=option]").forEach(function (li, n) {
+      li.setAttribute("aria-selected", String(n === i));
+      if (n === i) li.scrollIntoView({ block: "nearest" });
+    });
+  }
+
+  function render() {
+    shown = search(input.value);
+    list.textContent = "";
+    if (shown.length === 0) {
+      var none = document.createElement("li");
+      none.className = "palette-empty";
+      none.textContent = "No results";
+      list.appendChild(none);
+      return;
+    }
+    var group = null;
+    shown.forEach(function (result, n) {
+      var item = result.item;
+      if (result.group !== group) {
+        group = result.group;
+        var label = document.createElement("li");
+        label.className = "palette-label";
+        label.setAttribute("role", "presentation");
+        label.textContent = LABELS[group];
+        list.appendChild(label);
+      }
+      var li = document.createElement("li");
+      li.className = "palette-item";
+      li.setAttribute("role", "option");
+      if (item.swatch) {
+        var sw = document.createElement("span");
+        sw.className = "psw";
+        sw.style.background = "var(" + item.swatch + ")";
+        li.appendChild(sw);
+      }
+      var name = document.createElement("span");
+      name.className = "pname";
+      name.textContent = item.name;
+      var meta = document.createElement("span");
+      meta.className = "pmeta";
+      meta.textContent = item.meta;
+      li.appendChild(name);
+      li.appendChild(meta);
+      li.addEventListener("mousemove", function () { if (active !== n) setActive(n); });
+      li.addEventListener("click", function () { choose(n); });
+      list.appendChild(li);
+    });
+    setActive(0);
+  }
+
+  function openPalette() {
+    if (!palette.hidden) return;
+    returnTo = document.activeElement;
+    palette.hidden = false;
+    input.value = "";
+    render();
+    input.focus();
+  }
+
+  function closePalette() {
+    if (palette.hidden) return;
+    palette.hidden = true;
+    var back = returnTo && returnTo !== document.body ? returnTo : trigger;
+    if (back && back.focus) back.focus({ preventScroll: true });
+  }
+
+  function choose(n) {
+    var result = shown[n];
+    if (!result) return;
+    closePalette();
+    saveRecent(result.item.id);
+    reveal(result.item.el);
+  }
+
+  trigger.addEventListener("click", openPalette);
+  input.addEventListener("input", render);
+  palette.addEventListener("mousedown", function (e) { if (e.target === palette) closePalette(); });
+  input.addEventListener("keydown", function (e) {
+    if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+      e.preventDefault();
+      if (shown.length === 0) return;
+      setActive((active + (e.key === "ArrowDown" ? 1 : shown.length - 1)) % shown.length);
+    } else if (e.key === "Enter") {
+      e.preventDefault();
+      choose(active);
+    }
+  });
+  document.addEventListener("keydown", function (e) {
+    var typing = /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName) || e.target.isContentEditable;
+    if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+      e.preventDefault();
+      if (palette.hidden) openPalette(); else closePalette();
+    } else if (e.key === "/" && !typing && !e.metaKey && !e.ctrlKey && !e.altKey) {
+      e.preventDefault();
+      openPalette();
+    } else if (e.key === "Escape") {
+      closePalette();
+    }
+  });
+  if (!/Mac|iPhone|iPad/.test(navigator.userAgent)) {
+    trigger.querySelector("kbd").textContent = "Ctrl K";
+  }
+
+  showView(views[0].getAttribute("data-view"));
+  showPage(OVERVIEW);
+  route(location.hash.slice(1));
 })();
 `;
 
-export function renderHtml(model: DocsModel, ctx: GeneratorContext): string {
+export function renderHtml(
+  model: DocsModel,
+  ctx: GeneratorContext,
+  { gitBaseUrl, color }: { gitBaseUrl?: string; color?: string } = {},
+): string {
   const hasThemes = model.themes.length > 0;
+  const hasComponents = model.components.length > 0;
+  // Without tokens the tab would be empty; keep it only when it is all there is to show.
+  const hasTokens = model.tokenCount > 0 || !hasComponents;
   const title = escapeHtml(model.title);
 
   const themePicker = hasThemes
@@ -347,30 +1030,31 @@ export function renderHtml(model: DocsModel, ctx: GeneratorContext): string {
     </label>`
     : "";
 
-  const tabs = model.layers
+  const viewTab = (view: string, label: string, count: number) =>
+    `<button type="button" role="tab" data-view-tab="${view}" aria-selected="false">${label}<span class="n">${count}</span></button>`;
+
+  const sideToggle = `<button type="button" class="side-toggle" aria-expanded="false">Contents</button>`;
+
+  const sideLink = (id: string, label: string, status = "") =>
+    `<a href="#${escapeHtml(id)}" data-goto="${escapeHtml(id)}">${escapeHtml(label)}${status ? `<span class="mini">${status}</span>` : ""}</a>`;
+
+  const tokenSide = model.layers
     .map(
       ({ layer, groups }) =>
-        `<button type="button" role="tab" data-tab="${layer}" aria-selected="false">${LAYER_TITLES[layer]}<span class="n">${groups.reduce((sum, g) => sum + g.tokens.length, 0)}</span></button>`,
+        `<span class="cat">${LAYER_TITLES[layer]}</span>${groups
+          .map((g) => sideLink(groupId(layer, g.path), g.label))
+          .join("")}`,
     )
     .join("");
 
-  const sides = model.layers
-    .map(
-      ({ layer, groups }) =>
-        `<nav data-side="${layer}" aria-label="${LAYER_TITLES[layer]} groups">${groups
-          .map((g) => `<a href="#${escapeHtml(groupId(layer, g.path))}">${escapeHtml(g.label)}</a>`)
-          .join("")}</nav>`,
-    )
-    .join("\n");
-
-  const panels = model.layers
+  const tokenPanels = model.layers
     .map(({ layer, groups }) => {
       const total = groups.reduce((sum, g) => sum + g.tokens.length, 0);
       const content =
         groups.length === 0
           ? `<p class="empty">No ${LAYER_TITLES[layer].toLowerCase()} tokens defined.</p>`
           : groups.map((g) => groupHtml(layer, g)).join("\n");
-      return `<div data-panel="${layer}" data-count="${total}" role="tabpanel">
+      return `<div id="${layerKey(layer)}" class="layer">
   <h2 class="title">${LAYER_TITLES[layer]}</h2>
   <p class="sub">${total} token${total === 1 ? "" : "s"}</p>
   ${content}
@@ -378,13 +1062,69 @@ export function renderHtml(model: DocsModel, ctx: GeneratorContext): string {
     })
     .join("\n");
 
+  const tokensView = hasTokens
+    ? `<div data-view="tokens">
+  <div class="layout">
+    <aside class="side">
+      ${sideToggle}
+      <nav aria-label="Design tokens">${tokenSide}</nav>
+    </aside>
+    <main>
+${tokenPanels}
+    </main>
+  </div>
+</div>`
+    : "";
+
+  const categories = groupByCategory(model.components);
+  const status = (c: ComponentInfo) =>
+    c.deprecated ? "deprecated" : c.experimental ? "experimental" : "";
+
+  const componentsView = hasComponents
+    ? `<div data-view="components" hidden>
+  <div class="layout">
+    <aside class="side">
+      ${sideToggle}
+      <nav aria-label="Components">${sideLink("components-overview", "Overview")}${categories
+        .map(
+          ({ category, components }) =>
+            (category ? `<span class="cat">${escapeHtml(category)}</span>` : "") +
+            components.map((c) => sideLink(componentId(c.name), c.name, status(c))).join(""),
+        )
+        .join("")}</nav>
+    </aside>
+    <main>
+      <div class="group" id="components-overview" data-page>
+        <h2 class="title">Components</h2>
+        <p class="sub">${model.components.length} component${model.components.length === 1 ? "" : "s"}</p>
+${categories
+  .map(
+    ({ category, components }) =>
+      `<section class="category">
+  ${
+    category || categories.length > 1
+      ? `<h2 class="category-title">${escapeHtml(category ?? "Other")} <span class="count">${components.length}</span></h2>`
+      : ""
+  }
+  <div class="comp-grid">${components.map(componentCardHtml).join("")}</div>
+</section>`,
+  )
+  .join("\n")}
+      </div>
+${model.components.map((c) => componentHtml(c, gitBaseUrl)).join("\n")}
+    </main>
+  </div>
+</div>`
+    : "";
+
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>${title}</title>
-<style>${STYLES}</style>
+<script>${MODE_INIT}</script>
+<style>${STYLES}</style>${color ? `\n<style>:root, :root[data-mode="dark"] { --hig-accent: ${color.replace(/<\/(style)/gi, "<\\/$1")}; }</style>` : ""}
 <style>
 ${tokenCss(ctx)}
 </style>
@@ -392,16 +1132,25 @@ ${tokenCss(ctx)}
 <body>
 <header class="bar">
   <h1>${title}</h1>
-  ${themePicker}
+  <div class="views" role="tablist" aria-label="Sections">${hasTokens ? viewTab("tokens", "Design tokens", model.tokenCount) : ""}${hasComponents ? viewTab("components", "Components", model.components.length) : ""}</div>
+  <div class="bar-end">
+    <button type="button" class="search-btn" id="palette-open" aria-haspopup="dialog"><span>Search</span><kbd>⌘K</kbd></button>
+    ${themePicker}
+    <button type="button" class="mode-btn" id="mode" aria-label="Switch to dark mode" title="Switch to dark mode">${MODE_ICONS}</button>
+  </div>
 </header>
-<div class="tabs"><div class="seg" role="tablist" aria-label="Token layers">${tabs}</div></div>
-<div class="layout">
-  <aside class="side">
-${sides}
-  </aside>
-  <main>
-${panels}
-  </main>
+${tokensView}
+${componentsView}
+<div class="palette" id="palette" hidden>
+  <div class="palette-panel" role="dialog" aria-modal="true" aria-label="Search tokens and components">
+    <input id="palette-input" type="text" placeholder="Search tokens and components" autocomplete="off" spellcheck="false" aria-label="Search" aria-controls="palette-list">
+    <ul class="palette-list" id="palette-list" role="listbox"></ul>
+    <div class="palette-foot" aria-hidden="true">
+      <span><kbd>↑↓</kbd> move</span>
+      <span><kbd>↵</kbd> open</span>
+      <span><kbd>esc</kbd> close</span>
+    </div>
+  </div>
 </div>
 <script>${SCRIPT}</script>
 </body>

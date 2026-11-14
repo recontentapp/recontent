@@ -17,21 +17,30 @@ export class ConfigLoadError extends Error {
 }
 
 function getTsconfigAliases(cwd: string): Record<string, string> {
-  const tsConfigPath = path.resolve(cwd, "tsconfig.json");
-  if (!fs.existsSync(tsConfigPath)) return {};
+  // Like tsc, the nearest tsconfig.json upward: a monorepo package often shares its root's.
+  const tsConfigPath = ts.findConfigFile(cwd, ts.sys.fileExists);
+  if (!tsConfigPath) return {};
 
   const configFile = ts.readConfigFile(tsConfigPath, ts.sys.readFile);
   if (configFile.error) return {};
 
-  const parsed = ts.parseJsonConfigFileContent(configFile.config, ts.sys, cwd);
+  const configDir = path.dirname(tsConfigPath);
+  // Only `paths` is read: skip walking the `include` set (its "no inputs" error is ignored).
+  const host = { ...ts.sys, readDirectory: () => [] };
+  const parsed = ts.parseJsonConfigFileContent(configFile.config, host, configDir);
   const aliases: Record<string, string> = {};
   const paths = parsed.options.paths ?? {};
-  const baseUrl = parsed.options.baseUrl ? path.resolve(cwd, String(parsed.options.baseUrl)) : cwd;
+  // Without a baseUrl, paths are relative to the tsconfig that declares them, which may be an extended one.
+  const base = parsed.options.baseUrl ?? parsed.options.pathsBasePath ?? configDir;
 
   for (const [key, values] of Object.entries(paths)) {
     const pattern = key.replace(/\/\*$/, "");
-    const target = values[0]?.replace(/\/\*$/, "");
-    if (target) aliases[pattern] = path.resolve(baseUrl, target);
+    // A bare "*" has no prefix to alias.
+    if (pattern === "" || pattern === "*") continue;
+    // Fallbacks are tried in order: the first target that exists wins.
+    const targets = values.map((value) => path.resolve(String(base), value.replace(/\/\*$/, "")));
+    const target = targets.find((candidate) => fs.existsSync(candidate)) ?? targets[0];
+    if (target) aliases[pattern] = target;
   }
   return aliases;
 }
@@ -77,8 +86,9 @@ function extractConfig(module: Record<string, unknown>): unknown {
 }
 
 export function resolveConfigPath(configArg: string, options?: { cwd?: string }): string {
+  // Only the current user's home: "~user" is another user's, which this does not resolve.
+  if (configArg === "~") return os.homedir();
   if (configArg.startsWith("~/")) return path.join(os.homedir(), configArg.slice(2));
-  if (configArg.startsWith("~")) return path.join(os.homedir(), configArg.slice(1));
   if (path.isAbsolute(configArg)) return configArg;
   return path.resolve(options?.cwd ?? process.cwd(), configArg);
 }
@@ -129,17 +139,21 @@ export async function loadConfig(
   options?: { resolveFrom?: string },
 ): Promise<Config> {
   const resolved = resolveConfigPath(configPath ?? DEFAULT_CONFIG);
-  if (!fs.existsSync(resolved)) {
+  if (!fs.statSync(resolved, { throwIfNoEntry: false })?.isFile()) {
     throw new ConfigLoadError(`Config file not found: "${resolved}".`);
   }
-  const configDir = options?.resolveFrom ?? path.dirname(resolved);
+  const configDir = path.dirname(resolved);
 
   let module: Record<string, unknown>;
   try {
     const jiti = createJiti(import.meta.url, {
       interopDefault: true,
+      // `build --watch` reloads the same path in-process; a cached module would keep serving the old tokens.
+      moduleCache: false,
       alias: {
-        ...getRecontentAliases(configDir),
+        // `resolveFrom` only redirects where `recontent` is found; the config's own
+        // tsconfig `paths` always belong to the directory the config lives in.
+        ...getRecontentAliases(options?.resolveFrom ?? configDir),
         ...getTsconfigAliases(configDir),
       },
     });

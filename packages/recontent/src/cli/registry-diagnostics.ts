@@ -1,11 +1,19 @@
-import { pathKey, type TokenDiagnostic, type TokenRegistry } from "@recontentapp/core";
+import {
+  pathKey,
+  type ThemeOverride,
+  type TokenDiagnostic,
+  type TokenRegistry,
+} from "@recontentapp/core";
 import {
   AliasTargetNotFoundError,
   CircularAliasError,
   walkAliasChain,
 } from "../plugins/shared/alias.js";
 
-export function diagnoseRegistry(registry: TokenRegistry): TokenDiagnostic[] {
+export function diagnoseRegistry(
+  registry: TokenRegistry,
+  themes: Record<string, ThemeOverride>,
+): TokenDiagnostic[] {
   const diagnostics: TokenDiagnostic[] = [];
 
   for (const entry of registry.values()) {
@@ -28,6 +36,16 @@ export function diagnoseRegistry(registry: TokenRegistry): TokenDiagnostic[] {
       } else {
         throw error;
       }
+    }
+  }
+
+  for (const [themeName, overrides] of Object.entries(themes)) {
+    for (const key of overrides.keys()) {
+      if (registry.has(key)) continue;
+      diagnostics.push({
+        path: key.split("."),
+        message: `Theme "${themeName}" overrides unknown token "${key}"; it matches no token in the config.`,
+      });
     }
   }
 

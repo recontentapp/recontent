@@ -7,7 +7,8 @@ import {
   defineTheme,
   tokens,
 } from "../src/index.js";
-import { generateDtcg, generateDtcgThemed } from "../src/plugins/dtcg.js";
+import { dtcg, generateDtcg, generateDtcgThemed } from "../src/plugins/dtcg.js";
+import { runPlugins } from "../src/plugins/runner.js";
 
 function fullTreeConfig() {
   const ref = defineReferenceTokens({
@@ -217,4 +218,25 @@ describe("em dimensions", () => {
     ]);
     expect(JSON.stringify(output)).not.toContain('"em"');
   });
+});
+
+test('a theme named "tokens" is reported before it can collide with the base file', async () => {
+  const ref = defineReferenceTokens({ color: { black: tokens.color("#000000") } });
+  const config = defineConfig({
+    tokens: { ref },
+    themes: { tokens: defineTheme(ref, { color: { black: tokens.color("#111111") } }) },
+    plugins: dtcg({ outDir: "out" }),
+  });
+  const logger = { info() {}, warn() {}, error() {}, debug() {} };
+
+  const result = await runPlugins(config, { root: "/project", logger });
+
+  expect(result.files).toEqual([]);
+  expect(result.diagnostics).toEqual([
+    expect.objectContaining({
+      plugin: "recontent:dtcg",
+      severity: "error",
+      message: expect.stringContaining('Theme "tokens" would write tokens.tokens.json'),
+    }),
+  ]);
 });

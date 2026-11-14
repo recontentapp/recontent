@@ -146,9 +146,9 @@ Numeric names such as `500` are fine. A few characters and names are rejected, a
 If your tokens already exist in the DTCG format, generate the config instead of writing it:
 
 ```bash
-recontent init --from tokens/
+recontent init --dtcg tokens/
 ```
 
 Literal tokens become `ref` tokens, tokens that reference others become `system` tokens, and each
 extra theme or modifier context becomes a theme. See
-[`init --from`](/cli/init#importing-dtcg-tokens) for the accepted inputs and what is skipped.
+[`init --dtcg`](/cli/init#importing-dtcg-tokens) for the accepted inputs and what is skipped.

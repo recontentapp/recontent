@@ -1,20 +1,17 @@
 import {
   expandedMembers,
   isExpandedComposite,
-  type OutputFile,
+  type PluginDiagnostic,
   type RecontentPlugin,
   type TokenEntry,
   type TokenLayer,
   type TokenRegistry,
   type TokenTypeMap,
 } from "@recontentapp/core";
+import type { OutputFile } from "./shared/context.js";
 import { cssVarName, serializeValueCss } from "../serialize/values.js";
 import type { GeneratorContext } from "./shared/context.js";
-import {
-  CSS_IDENTIFIER_RE,
-  validateThemeAttribute,
-  validateThemeNames,
-} from "./shared/theme-source.js";
+import { validateThemeAttribute } from "./shared/theme-source.js";
 import { outputPlugin } from "./factory.js";
 
 export type CssGeneratorOptions = {
@@ -130,11 +127,6 @@ export function generateCss(config: GeneratorContext, options: CssGeneratorOptio
   const { registry, themes } = config;
   const blocks: string[] = [];
 
-  validateThemeNames(Object.keys(themes), "css", {
-    pattern: CSS_IDENTIFIER_RE,
-    description:
-      "theme names must contain only letters, digits, underscores, and hyphens, and cannot start with a digit or hyphen",
-  });
   if (options.themeAttribute !== undefined) {
     validateThemeAttribute(options.themeAttribute, "css");
   }
@@ -186,11 +178,25 @@ export function generateCssFiles(
   return [
     {
       filename: "tokens.css",
-      content: generateCss(config, { themeSelector: "class", ...options }),
+      content: generateCss(config, { ...options, themeSelector: options.themeSelector ?? "class" }),
+    },
+  ];
+}
+
+/** `themeAttribute` only applies to the "attribute" selector, which is not the plugins' default. */
+export function themeSelectorWarnings(options: CssGeneratorOptions): PluginDiagnostic[] {
+  if (options.themeAttribute === undefined || options.themeSelector === "attribute") return [];
+  return [
+    {
+      severity: "warning",
+      message: `\`themeAttribute\` is ignored: themes are selected by class unless you set \`themeSelector: "attribute"\`.`,
     },
   ];
 }
 
 export function css(options: CssPluginOptions): RecontentPlugin {
-  return outputPlugin("recontent:css", options, generateCssFiles);
+  return {
+    ...outputPlugin("recontent:css", ["tokens"], options, generateCssFiles),
+    validate: () => themeSelectorWarnings(options),
+  };
 }

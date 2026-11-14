@@ -1,12 +1,5 @@
-import type {
-  ThemeOverride,
-  TokenEntry,
-  TokenLayer,
-  TokenRegistry,
-  TokenScaleMetadata,
-} from "@recontentapp/core";
+import type { TokenLayer, TokenScaleMetadata } from "@recontentapp/core";
 import { pathKey } from "@recontentapp/core";
-import { walkAliasChain } from "./alias.js";
 import type { GeneratorContext } from "./context.js";
 
 export type SourceValue = { value: string; source?: true };
@@ -62,22 +55,6 @@ export function propertyAccess(root: string, path: readonly string[]): string {
 
 export function entryPath(entry: { path: string[]; layer: TokenLayer }): string[] {
   return entry.layer === "components" ? entry.path : entry.path.slice(1);
-}
-
-export function resolveEntryValue(
-  registry: TokenRegistry,
-  entry: TokenEntry,
-  overrides?: ThemeOverride,
-): TokenEntry["$value"] {
-  let last = entry;
-  for (const current of walkAliasChain(registry, entry)) {
-    const overridden = overrides?.get(pathKey(current.path));
-    if (overridden !== undefined) {
-      return overridden;
-    }
-    last = current;
-  }
-  return last.$value;
 }
 
 export function setTreeValue(

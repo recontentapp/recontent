@@ -18,7 +18,7 @@ const ref = defineReferenceTokens({
 });
 
 export default defineConfig({
-  tokens: { ref, system: {}, components: {} },
+  tokens: { ref, system: {} },
   plugins: [
     css({ outDir: "src/generated/css" }),
     typescript({ outDir: "src/generated/ts" }),
@@ -30,7 +30,7 @@ export default defineConfig({
 Each plugin has its own page with its options and emitted files: [CSS](/plugins/css),
 [Tailwind](/plugins/tailwind), [vanilla-extract](/plugins/vanilla-extract),
 [StyleX](/plugins/stylex), [TypeScript](/plugins/typescript), [DTCG](/plugins/dtcg) and
-[Docs](/plugins/docs).
+[Docs](/plugins/docs) and [designMD](/plugins/design-md).
 
 ## outDir
 

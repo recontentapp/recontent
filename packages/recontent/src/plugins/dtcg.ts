@@ -1,12 +1,13 @@
 import {
   pathKey,
-  type OutputFile,
   type RecontentPlugin,
   type ThemeOverride,
   type TokenEntry,
   type TokenRegistry,
 } from "@recontentapp/core";
+import type { OutputFile } from "./shared/context.js";
 import { entryToDtcgNode, setNested } from "../serialize/values.js";
+import { getThemeOverride } from "./shared/alias.js";
 import type { GeneratorContext } from "./shared/context.js";
 import { outputPlugin } from "./factory.js";
 
@@ -114,12 +115,7 @@ export function generateDtcg(input: TokenRegistry | GeneratorContext): DtcgOutpu
 }
 
 export function generateDtcgThemed(ctx: GeneratorContext, themeName: string): DtcgOutput {
-  const themeOverride = ctx.themes[themeName];
-  if (!themeOverride) {
-    throw new Error(
-      `Theme "${themeName}" is not defined in the config. Available themes: ${Object.keys(ctx.themes).join(", ") || "(none)"}`,
-    );
-  }
+  const themeOverride = getThemeOverride(ctx.themes, themeName);
 
   const output: DtcgOutput = {};
 
@@ -155,5 +151,17 @@ function generateDtcgFiles(ctx: GeneratorContext, _options: DtcgPluginOptions): 
 }
 
 export function dtcg(options: DtcgPluginOptions): RecontentPlugin {
-  return outputPlugin("recontent:dtcg", options, generateDtcgFiles);
+  return {
+    ...outputPlugin("recontent:dtcg", ["tokens"], options, generateDtcgFiles),
+    // The base tokens are `tokens.tokens.json`, which a theme named "tokens" would also claim.
+    validate: (ctx) =>
+      "tokens" in ctx.themes
+        ? [
+            {
+              severity: "error",
+              message: `Theme "tokens" would write tokens.tokens.json, the file of the base tokens; rename the theme.`,
+            },
+          ]
+        : [],
+  };
 }

@@ -1,7 +1,7 @@
 import { expect, test } from "@jest/globals";
 import type { RawToken, ShadowLayer, StampedToken } from "@recontentapp/core";
 import { isTokenScale, toOklch } from "@recontentapp/core";
-import { defineReferenceTokens, tokens } from "../src/index.js";
+import { defineReferenceTokens, defineTheme, tokens } from "../src/index.js";
 
 test("tokens.color rejects a hex string with non-hex characters", () => {
   expect(() => tokens.color("#zzzzzz")).toThrow(/Invalid hex color/);
@@ -448,4 +448,19 @@ test("tokens.generateColorScale rejects invalid input", () => {
   expect(() =>
     tokens.generateColorScale({ base: "#3e63dd", steps: [1, 1, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] }),
   ).toThrow(/unique/);
+});
+
+test("defineTheme records an override whose replacement scale is built from stamped tokens", () => {
+  const ref = defineReferenceTokens({
+    gray: tokens.colorScale({ 100: "#f0f0f0", 900: "#101010" }),
+    brand: tokens.colorScale({ 100: "#e0e0ff", 900: "#000066" }),
+  });
+
+  const dark = defineTheme(ref, {
+    gray: tokens.colorScale({ 100: ref.brand[900], 900: ref.brand[100] }),
+  });
+
+  expect([...dark.keys()].sort()).toEqual(["ref.gray.100", "ref.gray.900"]);
+  expect(dark.get("ref.gray.100")).toEqual(ref.brand[900].$value);
+  expect(dark.get("ref.gray.900")).toEqual(ref.brand[100].$value);
 });

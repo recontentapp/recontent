@@ -10,7 +10,7 @@ run [`recontent build`](/cli/build).
 
 ```bash
 recontent init <preset> [--force]
-recontent init --from <path>... [--force]
+recontent init --dtcg <path>... [--force]
 ```
 
 ## Presets
@@ -24,8 +24,8 @@ recontent init --from <path>... [--force]
 
 | Option          | Description                                                                                 |
 | --------------- | ------------------------------------------------------------------------------------------- |
-| `[preset]`      | One of the presets above. Required unless `--from` is used; the two are mutually exclusive. |
-| `--from <path>` | Generate the config from DTCG tokens instead. Repeatable.                                   |
+| `[preset]`      | One of the presets above. Required unless `--dtcg` is used; the two are mutually exclusive. |
+| `--dtcg <path>` | Generate the config from DTCG tokens instead. Repeatable.                                   |
 | `--force`       | Overwrite the config file if it exists. Without it, `init` fails with exit code `1`.        |
 
 The file is written to `-c, --config` if given, otherwise to `recontent.config.ts` in `--cwd`.
@@ -33,7 +33,7 @@ Unlike other commands, `init` does not search for an existing config.
 
 ## Importing DTCG tokens
 
-`--from` accepts, and can be repeated for:
+`--dtcg` accepts, and can be repeated for:
 
 - a **resolver** file (`*.resolver.json`, or any JSON with a resolver `$schema`). It must be the only
   source;
@@ -44,8 +44,8 @@ Several token files are merged in the order given; when the same token is define
 different values, the later one wins and a warning is printed.
 
 ```bash
-recontent init --from design/tokens/
-recontent init --from design/resolver.json -c packages/tokens/recontent.config.ts
+recontent init --dtcg design/tokens/
+recontent init --dtcg design/resolver.json -c packages/tokens/recontent.config.ts
 ```
 
 How the tokens are mapped:

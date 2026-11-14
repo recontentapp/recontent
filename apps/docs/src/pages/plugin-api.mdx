@@ -5,7 +5,7 @@ description: "Write your own Recontent plugin to validate tokens or generate any
 
 # Plugin API
 
-A plugin is an object with a `name` and up to four lifecycle hooks. It receives the resolved tokens
+A plugin is an object with a `name`, what it `dependsOn` and up to four lifecycle hooks. It receives the resolved tokens
 and returns the files to write. Everything the built-in plugins do goes through this interface, so
 you can add outputs the same way: a Swift or Kotlin file, a Style Dictionary JSON, a linter, an
 icon sheet.
@@ -26,6 +26,7 @@ import type {
 ```ts
 interface RecontentPlugin {
   name: string;
+  dependsOn?: ("tokens" | "introspection" | "introspection?")[];
   enforce?: "pre" | "post";
   buildStart?(ctx: PluginContext): void | Promise<void>;
   validate?(ctx: PluginContext): PluginDiagnostic[] | Promise<PluginDiagnostic[]>;
@@ -34,28 +35,31 @@ interface RecontentPlugin {
 }
 ```
 
-| Member       | Description                                                                                                                                    |
-| ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| `name`       | Required. Namespaced, for example `"acme:a11y-contrast"` (built-ins use `recontent:css`). Used in logs, diagnostics and file-collision errors. |
-| `enforce`    | `"pre"` runs the plugin before plugins without `enforce`, `"post"` after them. Within each group, the order of the `plugins` array is kept.    |
-| `buildStart` | Called first, once per build, for every plugin.                                                                                                |
-| `validate`   | Return diagnostics for problems you find. Any `"error"` aborts the build before anything is written.                                           |
-| `generate`   | Return the files to write.                                                                                                                     |
-| `buildEnd`   | Called after generation with the files of **all** plugins in `ctx.files`. Nothing has been written yet.                                        |
+| Member       | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `name`       | Required. Namespaced, for example `"acme:a11y-contrast"` (built-ins use `recontent:css`). Used in logs, diagnostics and file-collision errors.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| `dependsOn`  | Optional: what the plugin consumes beyond the tokens, which every plugin receives (`"tokens"` is accepted and changes nothing). `"introspection"` for `ctx.components`, or `"introspection?"` when the plugin works without them. A plugin that depends on `"introspection"` in a config without [`introspection`](/tokens/configuration#introspection) is a config error naming the plugin; one that depends on `"introspection?"` just gets no components, like `docs()` and `designMD()`. If introspection fails, only the plugins that depend on components (either form) fail, with the error attributed to them; the others still run and write their files. |
+| `enforce`    | `"pre"` runs the plugin before plugins without `enforce`, `"post"` after them. Within each group, the order of the `plugins` array is kept.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| `buildStart` | Called first, once per build, for every plugin.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| `validate`   | Return diagnostics for problems you find. Any `"error"` aborts the build before anything is written.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| `generate`   | Return the files to write.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| `buildEnd`   | Called after generation with the files of **all** plugins in `ctx.files`. Nothing has been written yet.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
 
 All hooks may be `async`. Each hook runs for every plugin before the next hook starts: all
 `buildStart`s, then all `validate`s, then all `generate`s, then all `buildEnd`s. If a hook throws,
-the build fails with the error's message and exit code `1`.
+the build fails with the error's message and exit code `1`. `buildEnd` also runs under
+`recontent build --check`, and is skipped when validation fails or `generate` throws.
 
 ## PluginContext
 
-| Field      | Type                            | Description                                                             |
-| ---------- | ------------------------------- | ----------------------------------------------------------------------- |
-| `registry` | `Map<string, TokenEntry>`       | Every token, keyed by its dotted path (`"system.color.accent"`).        |
-| `themes`   | `Record<string, ThemeOverride>` | Each theme's overrides: a `Map` from token key to the overriding value. |
-| `root`     | `string`                        | Absolute path of the directory containing the config.                   |
-| `logger`   | `Logger`                        | `info`, `warn`, `error` and `debug` methods. All write to stderr.       |
-| `mode`     | `"build" \| "watch"`            | `"watch"` under `build --watch`, otherwise `"build"`.                   |
+| Field        | Type                            | Description                                                                                                                                              |
+| ------------ | ------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `registry`   | `Map<string, TokenEntry>`       | Every token, keyed by its dotted path (`"system.color.accent"`).                                                                                         |
+| `themes`     | `Record<string, ThemeOverride>` | Each theme's overrides: a `Map` from token key to the overriding value.                                                                                  |
+| `root`       | `string`                        | Absolute path of the directory containing the config.                                                                                                    |
+| `logger`     | `Logger`                        | `info`, `warn`, `error` and `debug` methods. All write to stderr.                                                                                        |
+| `components` | `ComponentInfo[] \| undefined`  | The project's [components](#componentinfo). Only set when the plugin declares `"introspection"` or `"introspection?"` and `introspection` is configured. |
+| `types`      | `TypeInfo[] \| undefined`       | The project [types](#typeinfo) that components' props reference. Set together with `components`.                                                         |
 
 A `TokenEntry` describes one token:
 
@@ -81,8 +85,98 @@ Values are structured, never strings:
 | `strokeStyle`                                              | `{ style }` or `{ dashArray, lineCap }`                                                                                 |
 | `shadow`, `border`, `transition`, `gradient`, `typography` | Objects whose members are `{ $value, alias? }`                                                                          |
 
-To apply a theme to a token, check `ctx.themes[name].get(key)` first, then fall back to the entry's
-own `$value`.
+## resolveValue
+
+```ts
+import { resolveValue } from "recontent/plugins";
+
+resolveValue(ctx, entry, theme?): TokenEntry["$value"]
+```
+
+Returns the value of `entry` as a theme sees it. It follows the alias chain to the end, and a theme's
+override on any token along the way wins, so an alias to a token the theme overrides picks up the
+override. Without `theme` it returns the base value. An unknown theme name throws, listing the
+themes the config defines.
+
+## ComponentInfo
+
+`ctx.components` lets a plugin generate Storybook argTypes, Figma Code Connect stubs, MCP resources,
+lint rules or a changelog without building a TypeScript program of its own. It is a `ComponentInfo[]`
+sorted by name, set only for plugins that declare `"introspection"` or `"introspection?"` in `dependsOn` and computed only when
+`introspection` is configured and at least one plugin does. Warnings about
+introspection are printed by the CLI and are not part of what plugins receive.
+
+```ts
+// What the JSDoc comment says, shared by components, props and types.
+type Documentation = {
+  description?: string;
+  deprecated?: true | string;
+  experimental?: true | string; // @experimental: the API may change without notice
+  replacement?: string; // the first {@link} of the @deprecated text that names a component or type
+  examples?: { title?: string; code: string }[]; // @example, title from <caption>, without code fences
+  usage?: string; // @usage, markdown
+  links?: string[]; // components and types that {@link}s resolve to, sorted
+  externalLinks?: { title: string; url: string }[]; // @link <caption>Figma</caption> https://…, design files and guidelines outside the code
+};
+
+type ComponentInfo = Documentation & {
+  name: string; // export name, "Tabs.Item" for subcomponents
+  typeParameters?: { name: string; constraint?: string; default?: string }[]; // generic components
+  sourceFilePath: string; // posix, relative to the config root
+  line: number; // 1-based
+  lastUpdatedAt?: string; // ISO 8601, with introspection.history
+  category?: string; // @category
+  props: PropInfo[]; // declared in your project, sorted by name
+  inherits: { name: string; package?: string; props: string[] }[]; // sorted prop names
+  references: string[]; // ids of the project types its props mention, see TypeInfo
+};
+
+type PropInfo = Documentation & {
+  name: string;
+  type: string;
+  resolved?: string; // type with your own alias expanded: "Width" → 'number | "auto"'
+  values?: (string | number | boolean)[]; // when the type is a union of literals
+  references?: string[]; // ids of the project types `type` mentions
+  required: boolean;
+  defaultValue?: string;
+};
+```
+
+The tags are described in [Documenting components](/cli/inspect#documenting-components). A
+`{@link}` that names neither a component nor a type stays plain text and has no entry in `links`.
+
+### TypeInfo
+
+A prop typed `items: TabItem[]` or `icon: IconName` names a type that is declared in your project.
+`ctx.types` holds each such type once, sorted by `id`, so a plugin can describe `TabItem`'s members or
+`IconName`'s values. It holds the types that props mention and, transitively, the types those mention;
+follow `references` to walk from a component to everything it depends on. Types from `node_modules`
+or the TypeScript library stay as written in `type`: they are not collected.
+
+```ts
+type TypeInfo = Documentation & {
+  id: string; // the declared name, "Entry (src/a.ts)" when two project types share a name
+  name: string;
+  kind: "interface" | "type" | "enum";
+  typeParameters?: { name: string; constraint?: string; default?: string }[];
+  sourceFilePath: string; // posix, relative to the config root
+  line: number; // 1-based
+  definition: string; // the declaration without comments or `export`
+  members?: PropInfo[]; // interfaces and object types, described like props
+  inherits?: { name: string; package?: string; props: string[] }[]; // members from outside the project
+  values?: (string | number | boolean)[]; // enums and unions of literals
+  references: string[]; // ids of the project types it mentions, sorted
+};
+```
+
+The props type of a component itself (`ButtonProps`) is not a referenced type: its members are the
+component's `props`.
+
+All of these types are exported from `recontent/plugins`. See [`introspection`](/tokens/configuration#introspection)
+for how components and props are found, and `lastUpdatedAt`.
+
+`ctx` carries no repository state (no commit, branch or remote), so a plugin's output depends only on
+your sources and config.
 
 ## EmittedFile
 
@@ -99,7 +193,8 @@ type EmittedFile = {
   directory is refused.
 - `writeMode: "always"` (the default) rewrites the file when its content changed. `"once"` creates the
   file if it does not exist and never touches it again. Use it for files the user is meant to edit.
-- Two plugins emitting the same `path` is an error that names both plugins.
+- Two files with the same `path` are an error that names the plugins: this includes two instances of
+  the same plugin and a plugin emitting a path twice.
 
 ## PluginDiagnostic
 
@@ -111,8 +206,11 @@ type PluginDiagnostic = {
 };
 ```
 
-Errors and warnings are printed, in order, as `error: <message>` and `warning: <message>`. Prefix the
-message with your plugin's name so users know where it came from. Errors abort the build.
+Errors and warnings are printed, in order, as `error: [<plugin name>] <message> (<path>)` and
+`warning: [<plugin name>] <message> (<path>)`; the CLI adds the plugin name and the token path, so
+the message does not need to repeat them. Errors abort the build.
+
+An error thrown from a hook is reported as `[<plugin name>] <hook> failed: <message>`.
 
 ## Example
 

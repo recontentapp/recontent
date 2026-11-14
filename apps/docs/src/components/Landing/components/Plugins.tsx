@@ -4,7 +4,7 @@ import { CodePanel, lines } from "./CodePanel.tsx";
 
 // Built-in plugins next to a custom one: same interface, called the same way.
 const pluginsConfig = lines(`export default defineConfig({
-  tokens: { ref, system, components },
+  tokens: { ref, system },
   plugins: [
     css({ outDir: "src/styles" }),
     tailwind({ outDir: "src/styles", theme: { color: system.color } }),
@@ -12,6 +12,7 @@ const pluginsConfig = lines(`export default defineConfig({
     typescriptNative({ outDir: "mobile/theme" }),
     dtcg({ outDir: "design" }),
     docs({ outDir: "public/tokens" }),
+    designMD({ outDir: "." }),
     swift({ outDir: "ios/Tokens" }), // your own
   ],
 });
@@ -19,6 +20,7 @@ const pluginsConfig = lines(`export default defineConfig({
 // A plugin reads the resolved tokens and returns files.
 const swift = (options: { outDir: string }): RecontentPlugin => ({
   name: "acme:swift",
+  dependsOn: ["tokens"],
   generate: ({ registry }) => [
     { path: \`\${options.outDir}/Tokens.swift\`, content: toSwift(registry) },
   ],
@@ -53,7 +55,7 @@ const builtInPlugins = [
     label: "Docs",
     fn: "docs()",
     to: "/plugins/docs",
-    text: "An HTML and Markdown catalogue for your team and agents.",
+    text: "A searchable HTML page for your team, or DESIGN.md for agents.",
   },
   {
     label: "& more",

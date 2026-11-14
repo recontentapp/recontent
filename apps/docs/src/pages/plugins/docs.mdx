@@ -1,13 +1,12 @@
 ---
 title: "Docs"
-description: "Generate a browsable token catalogue as HTML and Markdown."
+description: "Generate a browsable design system page: tokens and components in one HTML file."
 ---
 
 # Docs
 
-`docs()` writes a catalogue of your tokens: every token with its type, value, alias, description and
-deprecation, grouped by layer and scale, with a column for each theme. Use the HTML for a static page
-your team can open or host, and the Markdown for repositories and agents.
+`docs()` writes `design.html`, a single self-contained page for your design system that your team can open
+or host. For a Markdown version aimed at repositories and agents, see [`designMD()`](/plugins/design-md).
 
 ```ts twoslash
 // [!include ~/snippets/docs.config.ts]
@@ -19,33 +18,74 @@ your team can open or host, and the Markdown for repositories and agents.
 docs(options: DocsPluginOptions): RecontentPlugin
 ```
 
-| Option     | Type      | Default           | Description                                    |
-| ---------- | --------- | ----------------- | ---------------------------------------------- |
-| `outDir`   | `string`  | required          | Output directory, relative to the config file. |
-| `html`     | `boolean` | `true`            | Write `design.html`.                           |
-| `markdown` | `boolean` | `false`           | Write `design.md`.                             |
-| `title`    | `string`  | `"Design tokens"` | Page and document title.                       |
-
-At least one of `html` and `markdown` must be enabled, or `docs()` throws.
+| Option       | Type     | Default           | Description                                                                                                                                                                                                                                                                 |
+| ------------ | -------- | ----------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `outDir`     | `string` | required          | Output directory, relative to the config file.                                                                                                                                                                                                                              |
+| `title`      | `string` | `"Design system"` | Title of the page: the header and the browser tab (`<title>`).                                                                                                                                                                                                              |
+| `gitBaseUrl` | `string` | none              | Where the repository's files are browsable, e.g. `https://github.com/acme/ui/blob/main`. A component's source location links to `<gitBaseUrl>/<path>#L<line>`, the path being relative to the config file: include the config's own folder if it isn't the repository root. |
+| `color`      | `string` | blue              | Accent color of the page: links, the active sidebar entry, focus rings and selections. Any CSS color, e.g. `#e5484d`. It applies to light and dark mode alike, so pick one that reads on both.                                                                              |
 
 Plugin name: `recontent:docs`.
 
 ## Emitted files
 
-| File          | Content                                                                              |
-| ------------- | ------------------------------------------------------------------------------------ |
-| `design.html` | A single self-contained page, with a theme switcher that swaps the displayed values. |
-| `design.md`   | The same catalogue as Markdown tables.                                               |
+| File          | Content                                                                          |
+| ------------- | -------------------------------------------------------------------------------- |
+| `design.html` | A single self-contained page, with a theme switcher that swaps displayed values. |
 
-Both list, per layer and group, the token's path, type, resolved value, the value in each theme, the
-alias it points to and its description or deprecation notice:
+## The page
 
-```md
-## System
+The header holds the title, two top-level tabs, a search button, the theme picker and a light/dark switch.
 
-### system.color
+**Design tokens** lists every token with its type, resolved value, alias, description and deprecation
+notice. The Reference, System and Components layers follow one another, and the sidebar has a section
+for each layer listing its scale groups. Choosing a theme swaps the displayed values, with a dot on those the theme
+overrides, and an alias links to the token it points to.
 
-| Token                     | Type  | Value     | dark      | Notes                                  |
-| ------------------------- | ----- | --------- | --------- | -------------------------------------- |
-| `system.color.background` | color | `#ffffff` | `#18181b` | → `ref.color.white`<br>Page background |
-```
+**Components** appears when the config has an [`introspection`](/tokens/configuration#introspection)
+block. It opens on an overview of the components, grouped by `@category` with the others last, and each
+component has a page of its own (`design.html#c-Button`). The sidebar lists them in the same order. A
+component page shows its description, a deprecation or experimental notice, a props table
+(name, type or allowed values, default, notes), an `Also accepts:` line for props inherited from
+libraries and its source location, followed by its `Usage` and `Examples` when it has
+[documented them](/cli/inspect#documenting-components). `Usage` is rendered as markdown (GitHub
+flavored: lists, tables, code blocks, links); raw HTML in it is shown as text. Examples are tabs with syntax highlighting,
+each with a button that copies the code.
+
+On small screens the sidebar collapses into a **Contents** list that you expand and shrink.
+
+A row of tags under each component name shows:
+
+- `Experimental` and `Deprecated`.
+- `N examples`, a link to the examples.
+- One tag per [`@link`](/cli/inspect#documenting-components) to an external page (a Figma file, a guideline),
+  labelled with its caption and opening in a new tab.
+- One tag per `{@link}` in its documentation. A link to another component jumps to it; a link to a type is
+  shown as plain text, since types are not rendered on the page.
+
+## Light and dark mode
+
+The sun/moon button in the header switches the page between light and dark. It starts from your
+system preference and remembers your choice in the browser. It only restyles the page itself: it is
+independent of the theme picker, which swaps token values, and of the tokens' own themes.
+
+## Search
+
+`⌘K` (`Ctrl+K` elsewhere), or `/` when you are not typing, opens a palette that jumps to any token or
+component. Names that start with what you type, or contain it at the start of a word, rank above other
+matches; components are listed before tokens, and colour tokens show a swatch. The last results you
+opened are listed first when the search is empty, and are remembered in the browser. Arrow keys move, `Enter`
+goes to the result and `Esc` closes. Every token and component also has an `id` in the page, so the URL
+hash (`design.html#c-Button`, `#t-system.color.accent`) deep-links to it.
+
+## Components
+
+Without an `introspection` block the page covers the tokens only, as for any token-only design system.
+
+The output depends only on your sources and config, never on repository state, so a "generated files
+are up to date" check in CI can pass. The one exception is opt-in: with
+[`introspection.history`](/tokens/configuration#history), `Updated <date>` is the last commit that
+touched the component's file, and committing that file changes the page.
+
+If `introspection` is configured but fails, `docs()` fails with the error attributed to it while the other plugins
+still write their files.

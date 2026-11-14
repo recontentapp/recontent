@@ -1,13 +1,15 @@
 ---
 title: "Catching breaking changes"
-description: "Compare your tokens against a previous revision and fail CI on breaking changes."
+description: "Compare your tokens and components against a previous revision and fail CI on breaking changes."
 ---
 
 # Catching breaking changes
 
 `recontent diff` compares the tokens in your working tree with the tokens at an earlier git
 revision and prints what changed. Use it in pull requests to see the effect of a token change and
-to block removals and renames that would break consumers.
+to block removals and renames that would break consumers. If your config sets
+[`introspection`](/tokens/configuration#introspection), it also compares the props of your components and the
+types they use.
 
 ```bash
 recontent diff main
@@ -44,14 +46,38 @@ A change is **breaking** when code that used a token would stop working:
 | A token is renamed (same type and value, new path)         | Yes      |
 | A token changes type (for example `dimension` to `number`) | Yes      |
 | A theme is removed                                         | Yes      |
-| A theme stops overriding a token                           | Yes      |
 | A token is added                                           | No       |
+| A token is deprecated, or its description changes          | No       |
 | A token's value or alias changes                           | No       |
-| A theme is added, or gains/changes overrides               | No       |
+| A theme is added, or gains, changes or drops overrides     | No       |
 
 Renames are detected by pairing one removed and one added token that have the same type and the
 same value (or the same alias). If several tokens share a value, the pairing is ambiguous and they
 are reported as a removal plus an addition, which is still breaking.
+
+### Components and types
+
+A change to a component or to a type its props use is **breaking** when code that used it would
+stop type-checking:
+
+| Change                                                                          | Breaking |
+| ------------------------------------------------------------------------------- | -------- |
+| A component or type is removed                                                  | Yes      |
+| A prop (or type member) is removed                                              | Yes      |
+| A required prop is added, or an optional prop becomes required                  | Yes      |
+| A literal union loses a value, or an enum or union type loses a value           | Yes      |
+| A prop's type changes in any other way                                          | Yes      |
+| Props inherited from another type are dropped                                   | Yes      |
+| A type parameter is added without a default, removed, or its constraint changes | Yes      |
+| A type changes kind (`interface`, `type`, `enum`)                               | Yes      |
+| A component, type or optional prop is added                                     | No       |
+| A literal union gains a value                                                   | No       |
+| A required prop becomes optional                                                | No       |
+| A default value changes, or something is deprecated or no longer deprecated     | No       |
+
+A change to a prop's type that cannot be classified is treated as breaking. Descriptions, line
+numbers, file moves and formatting are ignored. A type only appears in the diff while a component's
+props reference it, so removing the last prop that uses one also reports the type as removed.
 
 ## Failing a build
 
@@ -126,5 +152,6 @@ against an unmerged branch is rejected with an explanation; merge or rebase firs
 recontent diff main --format json
 ```
 
-It contains `config`, `rev`, a `breaking` flag, `counts` (`added`, `removed`, `renamed`, `retyped`,
-`changed`, `breaking`) and the full lists behind each count, including theme changes.
+It contains `config`, `rev`, a `breaking` flag, `counts` and the full diffs behind them, nested as
+`tokens` (including theme changes), `components` and `types`. See the
+[`diff` reference](/cli/diff#output) for the exact shape.

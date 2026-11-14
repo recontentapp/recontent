@@ -865,53 +865,6 @@ export const vars = stylex.defineVars({
 });
 
 
-// ---- reset.gen.css ----
-*, *::before, *::after {
-  box-sizing: border-box;
-}
-
-*:not(dialog) {
-  margin: 0;
-}
-
-@media (prefers-reduced-motion: no-preference) {
-html {
-  interpolate-size: allow-keywords;
-}
-}
-
-body {
-  line-height: 1.5;
-  -webkit-font-smoothing: antialiased;
-  font-family: Arial;
-}
-
-img, picture, video, canvas, svg {
-  display: block;
-  max-width: 100%;
-}
-
-input, button, textarea, select {
-  font: inherit;
-}
-
-p, h1, h2, h3, h4, h5, h6 {
-  overflow-wrap: break-word;
-}
-
-p {
-  text-wrap: pretty;
-}
-
-h1, h2, h3, h4, h5, h6 {
-  text-wrap: balance;
-}
-
-::placeholder {
-  color: #000000;
-}
-
-
 // ---- themes.ts ----
 import * as stylex from "@stylexjs/stylex";
 import { vars } from "./tokens.stylex.js";
@@ -1695,58 +1648,6 @@ export const highContrastThemeClass = createTheme(vars, {
       "border": vars.system.border.default,
     },
   },
-});
-
-
-// ---- reset.gen.css.ts ----
-import { globalStyle } from "@vanilla-extract/css";
-import { vars } from "./tokens.css";
-
-globalStyle("*, *::before, *::after", {
-  boxSizing: "border-box",
-});
-
-globalStyle("*:not(dialog)", {
-  margin: 0,
-});
-
-globalStyle("html", {
-  "@media": {
-    "(prefers-reduced-motion: no-preference)": {
-      interpolateSize: "allow-keywords",
-    },
-  },
-});
-
-globalStyle("body", {
-  lineHeight: 1.5,
-  WebkitFontSmoothing: "antialiased",
-  fontFamily: vars.ref.fontFamily.body,
-});
-
-globalStyle("img, picture, video, canvas, svg", {
-  display: "block",
-  maxWidth: "100%",
-});
-
-globalStyle("input, button, textarea, select", {
-  font: "inherit",
-});
-
-globalStyle("p, h1, h2, h3, h4, h5, h6", {
-  overflowWrap: "break-word",
-});
-
-globalStyle("p", {
-  textWrap: "pretty",
-});
-
-globalStyle("h1, h2, h3, h4, h5, h6", {
-  textWrap: "balance",
-});
-
-globalStyle("::placeholder", {
-  color: vars.ref.color.black,
 });
 "
 `;

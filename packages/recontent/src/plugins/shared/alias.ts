@@ -1,4 +1,10 @@
-import { pathKey, type TokenEntry, type TokenRegistry } from "@recontentapp/core";
+import {
+  pathKey,
+  type PluginContext,
+  type ThemeOverride,
+  type TokenEntry,
+  type TokenRegistry,
+} from "@recontentapp/core";
 
 export class AliasTargetNotFoundError extends Error {
   constructor(readonly key: string) {
@@ -66,4 +72,55 @@ export function terminalEntry(
     }
   }
   return last;
+}
+
+/**
+ * The entry's value after following its alias chain; an override in `overrides`
+ * wins at the first chain entry that has one.
+ */
+export function resolveEntryValue(
+  registry: TokenRegistry,
+  entry: TokenEntry,
+  overrides?: ThemeOverride,
+): TokenEntry["$value"] {
+  let last = entry;
+  for (const current of walkAliasChain(registry, entry)) {
+    const overridden = overrides?.get(pathKey(current.path));
+    if (overridden !== undefined) {
+      return overridden;
+    }
+    last = current;
+  }
+  return last.$value;
+}
+
+/** The named theme's overrides, or an error listing the themes the config does define. */
+export function getThemeOverride(
+  themes: PluginContext["themes"],
+  themeName: string,
+): ThemeOverride {
+  const override = themes[themeName];
+  if (!override) {
+    throw new Error(
+      `Theme "${themeName}" is not defined in the config. Available themes: ${Object.keys(themes).join(", ") || "(none)"}`,
+    );
+  }
+  return override;
+}
+
+/**
+ * The value of `entry` once its alias chain is followed to the end, as `theme`
+ * sees it: an override on any entry along the chain wins. Without a `theme` it
+ * is the base value. Throws on an unknown theme.
+ */
+export function resolveValue(
+  ctx: Pick<PluginContext, "registry" | "themes">,
+  entry: TokenEntry,
+  theme?: string,
+): TokenEntry["$value"] {
+  return resolveEntryValue(
+    ctx.registry,
+    entry,
+    theme === undefined ? undefined : getThemeOverride(ctx.themes, theme),
+  );
 }

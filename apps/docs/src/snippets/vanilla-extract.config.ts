@@ -31,16 +31,10 @@ const system = defineSystemTokens({
 });
 
 export default defineConfig({
-  tokens: { ref, system, components: {} },
+  tokens: { ref, system },
   plugins: [
     vanillaExtract({
       outDir: "src/generated",
-      fontFamily: system.fontFamily.sans,
-      placeholderColor: system.color.muted,
-      focusRingColor: system.color.accent,
-      builtInComponents: {
-        Stack: { spacing: system.spacing },
-      },
     }),
   ],
 });

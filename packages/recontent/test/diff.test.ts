@@ -1,9 +1,14 @@
 import { spawnSync } from "node:child_process";
-import { mkdtemp, rm, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { afterEach, beforeEach, describe, expect, jest, test } from "@jest/globals";
 import type { Config, ThemeOverride, TokenEntry, TokenRegistry } from "@recontentapp/core";
-import { diffConfigs, formatDiff, hasBreakingChanges } from "../src/cli/diff/diff.js";
+import {
+  countBreakingChanges,
+  diffConfigs,
+  formatDiff,
+  hasBreakingChanges,
+} from "../src/cli/diff/diff.js";
 import { findExternalImports } from "../src/cli/config-graph.js";
 import { runDiff } from "../src/cli/commands/diff.js";
 
@@ -44,6 +49,17 @@ test("diffConfigs reports a straight add", () => {
   expect(diff.removed).toHaveLength(0);
   expect(diff.renamed).toHaveLength(0);
   expect(hasBreakingChanges(diff)).toBe(false);
+});
+
+test("a token with the same type and value in another layer is not a rename", () => {
+  const base = config(new Map([["ref.color.blue", entry(["ref", "color", "blue"])]]));
+  const head = config(
+    new Map([["system.accent", entry(["system", "accent"], { layer: "system" })]]),
+  );
+  const diff = diffConfigs(base, head);
+  expect(diff.renamed).toHaveLength(0);
+  expect(diff.removed).toHaveLength(1);
+  expect(diff.added).toHaveLength(1);
 });
 
 test("diffConfigs reports a straight remove", () => {
@@ -165,7 +181,7 @@ test("formatDiff reports no changes for an identical config", () => {
     ["ref.color.black", entry(["ref", "color", "black"], { $value: color("#000000") })],
   ]);
   const diff = diffConfigs(config(registry), config(registry));
-  expect(formatDiff(diff)).toMatch(/No token changes/);
+  expect(formatDiff({ tokens: diff })).toMatch(/No changes between the working tree and HEAD/);
 });
 
 test("formatDiff shows human-readable values, not raw JSON, for a scalar change", () => {
@@ -191,7 +207,7 @@ test("formatDiff shows human-readable values, not raw JSON, for a scalar change"
       ],
     ]),
   );
-  const output = formatDiff(diffConfigs(base, head));
+  const output = formatDiff({ tokens: diffConfigs(base, head) });
   expect(output).toContain("ref.fontSize.base");
   expect(output).toContain("- 14px");
   expect(output).toContain("+ 16px");
@@ -225,7 +241,7 @@ test("formatDiff reports only the nested member that changed inside a composite 
   const diff = diffConfigs(config(registry(14)), config(registry(16)));
   expect(diff.changed).toHaveLength(1);
 
-  const output = formatDiff(diff);
+  const output = formatDiff({ tokens: diff });
   expect(output).toContain("system.textStyles.body.fontSize");
   expect(output).toContain("- 14px");
   expect(output).toContain("+ 16px");
@@ -246,8 +262,8 @@ test("formatDiff renders markdown sections with a fenced diff block by default",
       ["ref.color.green", entry(["ref", "color", "green"], { $value: color("#00ff00") })],
     ]),
   );
-  const output = formatDiff(diffConfigs(base, head));
-  expect(output).toBe(formatDiff(diffConfigs(base, head), "markdown"));
+  const output = formatDiff({ tokens: diffConfigs(base, head) });
+  expect(output).toBe(formatDiff({ tokens: diffConfigs(base, head) }, "markdown"));
   expect(output).toContain("## Breaking (1)");
   expect(output).toContain("- **removed** `ref.color.red`");
   expect(output).toContain("## Added (1)");
@@ -263,12 +279,15 @@ test("formatDiff json is the raw diff plus its comparison context, empty or not"
   ]);
   const empty = diffConfigs(config(registry), config(registry));
   const context = { config: "recontent.config.ts", rev: "HEAD" };
-  expect(JSON.parse(formatDiff(empty, "json", context))).toMatchObject({ ...context, ...empty });
+  expect(JSON.parse(formatDiff({ tokens: empty }, "json", context))).toMatchObject({
+    ...context,
+    tokens: empty,
+  });
 
   const added = diffConfigs(config(new Map()), config(registry));
-  const parsed = JSON.parse(formatDiff(added, "json", context));
-  expect(parsed.added).toHaveLength(1);
-  expect(parsed.added[0].path).toEqual(["ref", "color", "black"]);
+  const parsed = JSON.parse(formatDiff({ tokens: added }, "json", context));
+  expect(parsed.tokens.added).toHaveLength(1);
+  expect(parsed.tokens.added[0].path).toEqual(["ref", "color", "black"]);
 });
 
 test("formatDiff json carries a breaking verdict and counts", () => {
@@ -278,32 +297,28 @@ test("formatDiff json carries a breaking verdict and counts", () => {
   const context = { config: "recontent.config.ts", rev: "HEAD" };
 
   const removed = JSON.parse(
-    formatDiff(diffConfigs(config(registry), config(new Map())), "json", context),
+    formatDiff({ tokens: diffConfigs(config(registry), config(new Map())) }, "json", context),
   );
   expect(removed.breaking).toBe(true);
   expect(removed.counts).toEqual({
-    added: 0,
-    removed: 1,
-    renamed: 0,
-    retyped: 0,
-    changed: 0,
+    tokens: { added: 0, removed: 1, renamed: 0, retyped: 0, changed: 0, metadata: 0, breaking: 1 },
     breaking: 1,
   });
 
   const unchanged = JSON.parse(
-    formatDiff(diffConfigs(config(registry), config(registry)), "json", context),
+    formatDiff({ tokens: diffConfigs(config(registry), config(registry)) }, "json", context),
   );
   expect(unchanged.breaking).toBe(false);
 });
 
 test("formatDiff names the compared revision when nothing changed", () => {
   const diff = diffConfigs(config(new Map()), config(new Map()));
-  expect(formatDiff(diff, "markdown", { config: "recontent.config.ts", rev: "origin/main" })).toBe(
-    "No token changes between the working tree and origin/main.",
-  );
+  expect(
+    formatDiff({ tokens: diff }, "markdown", { config: "recontent.config.ts", rev: "origin/main" }),
+  ).toBe("No changes between the working tree and origin/main.");
 });
 
-test("diffConfigs counts removed themes and removed theme overrides as breaking", () => {
+test("diffConfigs counts removed themes as breaking, and removed theme overrides as theme changes", () => {
   const override = (keys: string[]): ThemeOverride =>
     new Map(keys.map((key) => [key, color("#000000")])) as ThemeOverride;
   const registry: TokenRegistry = new Map();
@@ -311,14 +326,15 @@ test("diffConfigs counts removed themes and removed theme overrides as breaking"
   const removedTheme = diffConfigs(config(registry, { dark: override(["a"]) }), config(registry));
   expect(removedTheme.themes.removedThemes).toEqual(["dark"]);
   expect(hasBreakingChanges(removedTheme)).toBe(true);
-  expect(formatDiff(removedTheme)).toContain("**removed theme** `dark`");
+  expect(formatDiff({ tokens: removedTheme })).toContain("**removed theme** `dark`");
 
   const removedOverride = diffConfigs(
     config(registry, { dark: override(["a", "b"]) }),
     config(registry, { dark: override(["a"]) }),
   );
-  expect(hasBreakingChanges(removedOverride)).toBe(true);
-  expect(formatDiff(removedOverride)).toContain("**removed override** `b` in theme `dark`");
+  expect(removedOverride.themes.changedThemes.dark!.removed).toHaveLength(1);
+  expect(hasBreakingChanges(removedOverride)).toBe(false);
+  expect(formatDiff({ tokens: removedOverride })).toContain("`dark`: +0 override, -1, ~0 changed");
 
   const addedOverride = diffConfigs(
     config(registry, { dark: override(["a"]) }),
@@ -502,8 +518,10 @@ describe("runDiff against a config that imports a sibling file", () => {
 
     expect(stdoutSpy).toHaveBeenCalledTimes(1);
     const parsed = JSON.parse(String(stdoutSpy.mock.calls[0]![0]));
-    expect(parsed.removed.map((e: TokenEntry) => e.path.join("."))).toEqual(["ref.color.red"]);
-    expect(parsed.changed).toHaveLength(1);
+    expect(parsed.tokens.removed.map((e: TokenEntry) => e.path.join("."))).toEqual([
+      "ref.color.red",
+    ]);
+    expect(parsed.tokens.changed).toHaveLength(1);
   });
 
   test("--fail-on-breaking exits 1 on the removed token", async () => {
@@ -517,6 +535,63 @@ describe("runDiff against a config that imports a sibling file", () => {
     });
 
     expect(process.exitCode).toBe(1);
+  });
+});
+
+describe("runDiff against a config that imports through a tsconfig paths alias", () => {
+  let repoDir: string;
+  let stdoutSpy: ReturnType<typeof jest.spyOn>;
+  let logSpy: ReturnType<typeof jest.spyOn>;
+
+  const commit = (message: string) => {
+    git(["add", "-A"], repoDir);
+    git(
+      ["-c", "user.email=test@example.com", "-c", "user.name=Test", "commit", "-q", "-m", message],
+      repoDir,
+    );
+  };
+
+  beforeEach(async () => {
+    repoDir = await mkdtemp(path.join(process.cwd(), "test", "diff-alias-fixture-"));
+    git(["init", "-q"], repoDir);
+    await writeFile(
+      path.join(repoDir, "tsconfig.json"),
+      JSON.stringify({ compilerOptions: { baseUrl: ".", paths: { "@tokens/*": ["tokens/*"] } } }),
+      "utf-8",
+    );
+    await mkdir(path.join(repoDir, "tokens"));
+    await writeFile(
+      path.join(repoDir, "recontent.config.ts"),
+      CONFIG_BASE.replace('"./colors"', '"@tokens/colors"'),
+      "utf-8",
+    );
+    await writeFile(path.join(repoDir, "tokens", "colors.ts"), COLORS_BASE, "utf-8");
+    commit("base");
+    await writeFile(path.join(repoDir, "tokens", "colors.ts"), COLORS_HEAD, "utf-8");
+
+    logSpy = jest.spyOn(console, "error").mockImplementation(() => {});
+    stdoutSpy = jest.spyOn(console, "log").mockImplementation(() => {});
+  });
+
+  afterEach(async () => {
+    logSpy.mockRestore();
+    stdoutSpy.mockRestore();
+    process.exitCode = undefined;
+    await rm(repoDir, { recursive: true, force: true });
+  });
+
+  test("loads the base revision's tokens, not the working tree's", async () => {
+    await runDiff({
+      cwd: repoDir,
+      configPath: path.join(repoDir, "recontent.config.ts"),
+      rev: "HEAD",
+      format: "json",
+    });
+
+    const parsed = JSON.parse(String(stdoutSpy.mock.calls[0]![0]));
+    expect(parsed.tokens.changed.map((e: { to: TokenEntry }) => e.to.path.join("."))).toEqual([
+      "ref.color.blue",
+    ]);
   });
 });
 
@@ -658,4 +733,56 @@ describe("runDiff rejects a revision that is not an ancestor of HEAD (S1)", () =
       runDiff({ cwd: repoDir, configPath: path.join(repoDir, "recontent.config.ts"), rev: "v1" }),
     ).resolves.not.toThrow();
   });
+});
+
+test("renaming a token that a theme overrides is one breaking change, not two", () => {
+  const dark = (key: string) => ({ dark: new Map([[key, color("#111111")]]) });
+  const base = config(
+    new Map([["ref.color.blue", entry(["ref", "color", "blue"])]]),
+    dark("ref.color.blue"),
+  );
+  const head = config(
+    new Map([["ref.color.azure", entry(["ref", "color", "azure"])]]),
+    dark("ref.color.azure"),
+  );
+
+  const diff = diffConfigs(base, head);
+
+  expect(diff.renamed).toHaveLength(1);
+  expect(diff.themes.changedThemes).toEqual({});
+  expect(countBreakingChanges({ tokens: diff })).toBe(1);
+});
+
+test("removing a token that a theme overrides is one breaking change, not two", () => {
+  const base = config(new Map([["ref.color.blue", entry(["ref", "color", "blue"])]]), {
+    dark: new Map([["ref.color.blue", color("#111111")]]),
+  });
+  const head = config(new Map(), { dark: new Map() });
+
+  const diff = diffConfigs(base, head);
+
+  expect(diff.removed).toHaveLength(1);
+  expect(diff.themes.changedThemes).toEqual({});
+  expect(countBreakingChanges({ tokens: diff })).toBe(1);
+});
+
+test("diffConfigs reports a changed deprecation or description, and nothing else", () => {
+  const base = config(new Map([["ref.color.blue", entry(["ref", "color", "blue"])]]));
+  const head = config(
+    new Map([
+      [
+        "ref.color.blue",
+        entry(["ref", "color", "blue"], { $deprecated: true, $description: "Blue." }),
+      ],
+    ]),
+  );
+
+  const diff = diffConfigs(base, head);
+
+  expect(diff.metadata).toHaveLength(1);
+  expect(diff.changed).toHaveLength(0);
+  expect(hasBreakingChanges(diff)).toBe(false);
+  expect(formatDiff({ tokens: diff })).toContain(
+    "`ref.color.blue`: now deprecated, description changed",
+  );
 });

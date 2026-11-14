@@ -7,14 +7,15 @@ import {
   defineTheme,
   tokens,
 } from "../src/index.js";
-import { generateCssFiles, generateCss } from "../src/plugins/css.js";
+import { css, generateCssFiles, generateCss } from "../src/plugins/css.js";
 import {
   aliasChainConfig,
   compositeConfig,
   scaleConfig,
   themedConfig,
 } from "./helpers/fixtures.js";
-import type { OutputFile } from "@recontentapp/core";
+import type {} from "@recontentapp/core";
+import type { OutputFile } from "../src/plugins/shared/context.js";
 
 describe("reference preservation", () => {
   test("a system token aliasing a ref color emits var(--ref-color-black), and the hex appears only in the :root ref block", () => {
@@ -330,5 +331,37 @@ describe("structure & options", () => {
       },
     });
     expect(generateCss(config)).toBe("");
+  });
+});
+
+describe("themeAttribute without the attribute selector", () => {
+  const ctx = {} as never;
+
+  test("css warns that it is ignored", () => {
+    const warnings = css({ outDir: "out", themeAttribute: "data-mode" }).validate!(ctx);
+    expect(warnings).toEqual([
+      expect.objectContaining({
+        severity: "warning",
+        message: expect.stringContaining("themeAttribute"),
+      }),
+    ]);
+  });
+
+  test("an explicit undefined selector falls back to the class default", () => {
+    const { config } = themedConfig({ layer: "ref" });
+    const [file] = generateCssFiles(config, { outDir: "out", themeSelector: undefined });
+    expect(file.content).toMatch(/\.dark \{/);
+    expect(
+      css({ outDir: "out", themeSelector: undefined, themeAttribute: "data-mode" }).validate!(ctx),
+    ).toHaveLength(1);
+  });
+
+  test("and stays quiet when the selector is attribute, or no attribute is set", () => {
+    expect(
+      css({ outDir: "out", themeSelector: "attribute", themeAttribute: "data-mode" }).validate!(
+        ctx,
+      ),
+    ).toEqual([]);
+    expect(css({ outDir: "out" }).validate!(ctx)).toEqual([]);
   });
 });

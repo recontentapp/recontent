@@ -1,13 +1,14 @@
 import fs from "node:fs";
 import path from "node:path";
+import type { ComponentInfo, EmittedFile, LogLevel, Logger, TypeInfo } from "@recontentapp/core";
+import type ts from "typescript";
 import { createLogger } from "../../logger.js";
-import { MissingDesignTokensError } from "../../plugins/errors.js";
-import { runPlugins } from "../../plugins/runner.js";
-import { loadConfig, type LogLevel } from "@recontentapp/core";
+import { needsIntrospection, runPlugins } from "../../plugins/runner.js";
+import { loadIntrospection, loadProject } from "../../project.js";
 import { collectLocalImports } from "../config-graph.js";
 import { diagnoseRegistry } from "../registry-diagnostics.js";
 import { exitWithError, reportError, summarizeDiagnostics } from "../utils/exit.js";
-import { displayPath, writeOutputFile } from "../utils/fs.js";
+import { checkOutputFile, displayPath, writeOutputFile } from "../utils/fs.js";
 import { plural } from "../utils/format.js";
 
 export type BuildOptions = {
@@ -15,6 +16,10 @@ export type BuildOptions = {
   configPath: string;
   logLevel?: LogLevel;
   watch?: boolean;
+  /** Write nothing; fail if any generated file is missing or differs from what the build would write. */
+  check?: boolean;
+  /** Where the introspection cache is read and written; absent for `--no-cache`. */
+  cache?: { version: string };
 };
 
 export async function runBuild(options: BuildOptions): Promise<void> {
@@ -26,12 +31,17 @@ export async function runBuild(options: BuildOptions): Promise<void> {
   await buildOnce(options, { exitOnError: true });
 }
 
+/** What a build leaves behind for the next one in watch mode. */
+type BuildState = { program?: ts.Program; watch?: string[] };
+
 async function watchBuild(options: BuildOptions): Promise<void> {
   const logger = createLogger(options.logLevel);
 
+  let state: BuildState = {};
+
   const safeBuild = async () => {
     try {
-      await buildOnce(options, { exitOnError: false });
+      state = await buildOnce(options, { exitOnError: false, previous: state });
     } catch (error) {
       reportError(error, options.logLevel === "debug");
     }
@@ -57,6 +67,8 @@ async function watchBuild(options: BuildOptions): Promise<void> {
       files = new Set([options.configPath]);
     }
     files.add(options.configPath);
+    // Editing a component changes the docs generated from its props.
+    for (const file of state.watch ?? []) files.add(file);
 
     const sameSet =
       files.size === trackedFiles.size && [...files].every((file) => trackedFiles.has(file));
@@ -127,15 +139,16 @@ async function watchBuild(options: BuildOptions): Promise<void> {
 
 async function buildOnce(
   options: BuildOptions,
-  { exitOnError }: { exitOnError: boolean },
-): Promise<void> {
-  const config = await loadConfig(options.configPath);
-  const effectiveLogLevel = options.logLevel ?? config.logLevel;
-  const logger = createLogger(effectiveLogLevel);
+  { exitOnError, previous = {} }: { exitOnError: boolean; previous?: BuildState },
+): Promise<BuildState> {
+  const project = await loadProject({ configPath: options.configPath, logLevel: options.logLevel });
+  const { config, logger, root } = project;
+  let state = previous;
   for (const diagnostic of config.diagnostics) {
     logger.warn(diagnostic.message);
   }
   let warnings = config.diagnostics.length;
+  const wantsIntrospection = needsIntrospection(config);
 
   // Each diagnostic is logged where it is found; aborting only adds the
   // closing "N errors, M warnings" line, so no error is reported twice.
@@ -148,68 +161,102 @@ async function buildOnce(
     }
   };
 
-  const registryDiagnostics = diagnoseRegistry(config.registry);
+  const registryDiagnostics = diagnoseRegistry(config.registry, config.themes);
   if (registryDiagnostics.length > 0) {
     for (const diagnostic of registryDiagnostics) {
       logger.error(diagnostic.message);
     }
     abort(registryDiagnostics.length);
-    return;
+    return state;
   }
 
   logger.debug(
     `Loaded build config with ${config.plugins.length} plugin(s), ${config.registry.size} token(s), and ${Object.keys(config.themes).length} theme(s).`,
   );
 
-  const configDir = path.dirname(options.configPath);
+  const configDir = root;
 
   if (config.plugins.length === 0) {
     logger.warn(
       `No plugins configured in ${displayPath(options.cwd, options.configPath)}; add some from "recontent/plugins" to generate output.`,
     );
-    return;
+    return state;
   }
 
-  const mode = options.watch ? "watch" : "build";
-  let result;
-  try {
-    result = await runPlugins(config, { root: configDir, mode, logger });
-  } catch (error) {
-    if (error instanceof MissingDesignTokensError) {
-      for (const message of error.errors) {
-        logger.error(message);
-      }
-      abort(error.errors.length);
-      return;
+  // Only when a plugin consumes them, and a failure only fails those plugins.
+  let components: ComponentInfo[] | undefined;
+  let types: TypeInfo[] | undefined;
+  let introspectionError: string | undefined;
+  if (wantsIntrospection) {
+    try {
+      const loaded = await loadIntrospection(project, {
+        oldProgram: state.program,
+        cache: options.cache,
+      });
+      ({ components, types } = loaded.introspection);
+      warnings += loaded.warnings.length;
+      state = { program: loaded.program ?? state.program, watch: loaded.watch };
+    } catch (error) {
+      introspectionError = error instanceof Error ? error.message : String(error);
     }
-    throw error;
   }
+
+  const result = await runPlugins(config, {
+    root: configDir,
+    logger,
+    components,
+    types,
+    introspectionError,
+  });
 
   let errors = 0;
   for (const diagnostic of result.diagnostics) {
+    const text = `[${diagnostic.plugin}] ${diagnostic.message}${diagnostic.path ? ` (${diagnostic.path.join(".")})` : ""}`;
     if (diagnostic.severity === "error") {
       errors += 1;
-      logger.error(diagnostic.message);
+      logger.error(text);
     } else {
       warnings += 1;
-      logger.warn(diagnostic.message);
+      logger.warn(text);
     }
   }
 
+  const failed = result.failures.length;
+  for (const failure of result.failures) logger.error(failure);
+
   if (errors > 0) {
-    abort(errors);
-    return;
+    abort(errors + failed);
+    return state;
   }
 
+  if (options.check) {
+    const outOfDate = await checkFiles(result.files, configDir, options.cwd, logger);
+    if (outOfDate > 0) {
+      const message = `check failed: ${outOfDate} of ${result.files.length} files out of date; run \`recontent build\``;
+      // With failed plugins, `abort` below is the one closing error line.
+      if (failed > 0) logger.warn(message);
+      else if (exitOnError) exitWithError(message);
+      else logger.error(message);
+    } else {
+      logger.info(`${plural(result.files.length, "file")} up to date`);
+    }
+  } else {
+    await writeFiles(result.files, configDir, options.cwd, logger);
+  }
+  if (failed > 0) abort(failed);
+  return state;
+}
+
+async function writeFiles(files: EmittedFile[], root: string, cwd: string, logger: Logger) {
   let written = 0;
   let skipped = 0;
-  for (const file of result.files) {
+  for (const file of files) {
     const {
       path: outputPath,
       written: wasWritten,
       skipReason,
-    } = await writeOutputFile(file.path, file.content, configDir, { writeMode: file.writeMode });
-    const shownPath = displayPath(options.cwd, outputPath);
+    } = await writeOutputFile(file.path, file.content, root, { writeMode: file.writeMode });
+    const shownPath = displayPath(cwd, outputPath);
     if (wasWritten) {
       written += 1;
       logger.info(`Wrote ${shownPath}`);
@@ -222,4 +269,22 @@ async function buildOnce(
     }
   }
   logger.info(`Wrote ${plural(written, "file")}${skipped > 0 ? ` (${skipped} skipped)` : ""}`);
+}
+
+/** Logs each stale or missing file and returns how many there were. */
+async function checkFiles(files: EmittedFile[], root: string, cwd: string, logger: Logger) {
+  let outOfDate = 0;
+  for (const file of files) {
+    const { path: outputPath, status } = await checkOutputFile(file.path, file.content, root, {
+      writeMode: file.writeMode,
+    });
+    const shownPath = displayPath(cwd, outputPath);
+    if (status === "fresh") {
+      logger.debug(`Up to date ${shownPath}`);
+      continue;
+    }
+    outOfDate += 1;
+    logger.error(`${status === "stale" ? "Stale" : "Missing"} ${shownPath}`);
+  }
+  return outOfDate;
 }

@@ -148,18 +148,18 @@ function walk(
 
 function diagnoseTokenTree(tree: unknown, layer: TokenLayer): TokenDiagnostic[] {
   const diagnostics: TokenDiagnostic[] = [];
-  walk(tree, [layer], diagnostics);
+  // Component tokens live at the registry root, so their paths carry no layer prefix.
+  walk(tree, layer === "components" ? [] : [layer], diagnostics);
   return diagnostics;
 }
 
 export function diagnoseTokenTrees(tokens: {
-  ref: unknown;
-  system: unknown;
-  components: unknown;
+  ref?: unknown;
+  system?: unknown;
+  components?: unknown;
 }): TokenDiagnostic[] {
-  return [
-    ...diagnoseTokenTree(tokens.ref, "ref"),
-    ...diagnoseTokenTree(tokens.system, "system"),
-    ...diagnoseTokenTree(tokens.components, "components"),
-  ];
+  const layers = ["ref", "system", "components"] as const;
+  return layers.flatMap((layer) =>
+    tokens[layer] === undefined ? [] : diagnoseTokenTree(tokens[layer], layer),
+  );
 }

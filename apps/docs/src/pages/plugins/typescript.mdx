@@ -13,7 +13,7 @@ runtime: charts, canvas drawing, email templates, tests, or React Native.
 | `typescript()`       | CSS strings (`"16px"`, `"#2563eb"`)     | Web code, charts, SSR |
 | `typescriptNative()` | React Native numbers and strings (`16`) | React Native, Expo    |
 
-They write the same file name, so give each its own `outDir` if you use both.
+They write the same file name by default, so give each its own `outDir` or `filename` if you use both.
 
 ## typescript()
 
@@ -25,9 +25,10 @@ They write the same file name, so give each its own `outDir` if you use both.
 typescript(options: TypeScriptPluginOptions): RecontentPlugin
 ```
 
-| Option   | Type     | Default  | Description                                    |
-| -------- | -------- | -------- | ---------------------------------------------- |
-| `outDir` | `string` | required | Output directory, relative to the config file. |
+| Option     | Type     | Default     | Description                                    |
+| ---------- | -------- | ----------- | ---------------------------------------------- |
+| `outDir`   | `string` | required    | Output directory, relative to the config file. |
+| `filename` | `string` | `tokens.ts` | Name of the generated file.                    |
 
 Plugin name: `recontent:typescript`. Emits `tokens.ts`.
 
@@ -66,10 +67,11 @@ export type BaseTheme = typeof theme;
 typescriptNative(options: TypeScriptNativePluginOptions): RecontentPlugin
 ```
 
-| Option         | Type     | Default  | Description                                                         |
-| -------------- | -------- | -------- | ------------------------------------------------------------------- |
-| `outDir`       | `string` | required | Output directory, relative to the config file.                      |
-| `rootFontSize` | `number` | `16`     | Pixels per `rem` and `em`, since native has no cascading font size. |
+| Option         | Type     | Default     | Description                                                         |
+| -------------- | -------- | ----------- | ------------------------------------------------------------------- |
+| `outDir`       | `string` | required    | Output directory, relative to the config file.                      |
+| `filename`     | `string` | `tokens.ts` | Name of the generated file.                                         |
+| `rootFontSize` | `number` | `16`        | Pixels per `rem` and `em`, since native has no cascading font size. |
 
 Plugin name: `recontent:typescript-native`. Emits `tokens.ts` with the same structure as above and
 values in the shapes React Native expects:

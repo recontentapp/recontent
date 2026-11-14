@@ -1,6 +1,6 @@
 import type {
   Config,
-  // IntrospectionConfigInput,
+  IntrospectionConfigInput,
   LogLevel,
   RawToken,
   RecontentPlugin,
@@ -202,14 +202,14 @@ export function defineComponentTokens<T extends TokenTree>(input: T): StampTree<
 
 export type DefineConfigInput = {
   tokens?: {
-    ref: TokenTree;
-    system: TokenTree;
-    components: TokenTree;
+    ref?: TokenTree;
+    system?: TokenTree;
+    components?: TokenTree;
   };
   themes?: Record<string, ThemeOverride>;
   plugins?: RecontentPlugin | RecontentPlugin[];
   logLevel?: LogLevel;
-  // introspection?: IntrospectionConfigInput;
+  introspection?: IntrospectionConfigInput;
 };
 
 function normalizePlugins(
@@ -225,8 +225,51 @@ function normalizePlugins(
         "defineConfig's `plugins` must be RecontentPlugin instances (objects with at least a `name` string).",
       );
     }
+    if (plugin.dependsOn === undefined) continue;
+    const expected = `Plugin "${plugin.name}": \`dependsOn\` must be an array of "tokens", "introspection" and/or "introspection?".`;
+    if (!Array.isArray(plugin.dependsOn)) {
+      throw new Error(expected);
+    }
+    for (const input of plugin.dependsOn as string[]) {
+      if (input === "components" || input === "components?") {
+        throw new Error(
+          `Plugin "${plugin.name}": dependsOn "${input}" was renamed to "${input.replace("components", "introspection")}".`,
+        );
+      }
+      if (input !== "tokens" && input !== "introspection" && input !== "introspection?") {
+        throw new Error(expected);
+      }
+    }
   }
   return list;
+}
+
+function normalizeIntrospection(
+  introspection: IntrospectionConfigInput | undefined,
+): IntrospectionConfigInput | undefined {
+  if (introspection === undefined) return undefined;
+  const { entry, tsconfig, exclude, history } = introspection;
+  if (typeof entry !== "string" || entry === "") {
+    throw new Error("defineConfig's `introspection.entry` must be a non-empty string.");
+  }
+  if (tsconfig !== undefined && (typeof tsconfig !== "string" || tsconfig === "")) {
+    throw new Error("defineConfig's `introspection.tsconfig` must be a non-empty string.");
+  }
+  if (
+    exclude !== undefined &&
+    (!Array.isArray(exclude) || exclude.some((n) => typeof n !== "string"))
+  ) {
+    throw new Error("defineConfig's `introspection.exclude` must be an array of export names.");
+  }
+  if (history !== undefined && typeof history !== "boolean") {
+    throw new Error("defineConfig's `introspection.history` must be a boolean.");
+  }
+  return {
+    entry,
+    ...(tsconfig !== undefined ? { tsconfig } : {}),
+    ...(exclude !== undefined ? { exclude } : {}),
+    ...(history !== undefined ? { history } : {}),
+  };
 }
 
 function normalizeLogLevel(logLevel: LogLevel | undefined): LogLevel {
@@ -241,19 +284,41 @@ function normalizeLogLevel(logLevel: LogLevel | undefined): LogLevel {
   return logLevel;
 }
 
+/** Safe as a file name, a CSS class or attribute value, and a path segment, for every output. */
+const THEME_NAME_RE = /^[A-Za-z_][\w-]*$/;
+
 export function defineConfig(input: DefineConfigInput): Config {
+  for (const name of Object.keys(input.themes ?? {})) {
+    if (!THEME_NAME_RE.test(name)) {
+      throw new Error(
+        `Invalid theme name "${name}": theme names must contain only letters, digits, underscores, and hyphens, and cannot start with a digit or hyphen.`,
+      );
+    }
+  }
+
   const registry: TokenRegistry = new Map();
   const diagnostics = input.tokens ? diagnoseTokenTrees(input.tokens) : [];
 
   if (input.tokens) {
-    collectEntries(input.tokens.ref, ["ref"], "ref", registry);
-    collectEntries(input.tokens.system, ["system"], "system", registry);
-    collectEntries(input.tokens.components, [], "components", registry);
+    const { ref, system, components } = input.tokens;
+    if (ref) collectEntries(ref, ["ref"], "ref", registry);
+    if (system) collectEntries(system, ["system"], "system", registry);
+    if (components) {
+      for (const reserved of ["ref", "system"]) {
+        if (Object.hasOwn(components, reserved)) {
+          throw new Error(
+            `Invalid component group name "${reserved}": component tokens live at the registry root, so "${reserved}" would overwrite the ${reserved} layer.`,
+          );
+        }
+      }
+      collectEntries(components, [], "components", registry);
+    }
   }
-  // TODO(introspection): not ready, re-enable the check below together with the other introspection lines.
-  // else if (!input.introspection) {
-  //   throw new Error("defineConfig requires either tokens or an introspection block.");
-  // }
+  const hasLayer =
+    input.tokens && (input.tokens.ref || input.tokens.system || input.tokens.components);
+  if (!hasLayer && !input.introspection) {
+    throw new Error("defineConfig requires either tokens or an introspection block.");
+  }
 
   return {
     registry,
@@ -261,6 +326,6 @@ export function defineConfig(input: DefineConfigInput): Config {
     themes: input.themes ?? {},
     plugins: normalizePlugins(input.plugins),
     logLevel: normalizeLogLevel(input.logLevel),
-    // introspection: input.introspection,
+    introspection: normalizeIntrospection(input.introspection),
   };
 }

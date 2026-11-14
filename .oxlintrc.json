@@ -4,12 +4,5 @@
   "categories": {
     "correctness": "error"
   },
-  "ignorePatterns": [
-    "**/dist/**",
-    "**/.vocs/**",
-    "**/storybook-static/**",
-    "**/*.gen.ts",
-    "**/*.gen.tsx",
-    "**/*.gen.css.ts"
-  ]
+  "ignorePatterns": ["**/dist/**", "**/.vocs/**", "**/*.gen.ts", "**/*.gen.tsx", "**/*.gen.css.ts"]
 }

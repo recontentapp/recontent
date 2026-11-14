@@ -1,7 +1,7 @@
 /**
  * End-to-end tests that invoke the built CLI binary (dist/cli/bin.mjs) as a
  * subprocess, the same way a real user would, and assert on exit codes,
- * stdout/stderr, and files written to disk. This exercises `bin.ts`'s
+ * stdout/stderr, and files written to disk. This exercises `main.ts`'s
  * argument parsing and process-exit contract in a way unit tests on
  * individual command modules cannot.
  *
@@ -14,14 +14,17 @@
  * finds this workspace's `node_modules/recontent` symlink by walking up
  * parent directories.
  */
-import { spawnSync } from "node:child_process";
+import { spawn, spawnSync } from "node:child_process";
 import {
+  copyFileSync,
   cpSync,
   existsSync,
   mkdirSync,
   mkdtempSync,
+  readdirSync,
   readFileSync,
   rmSync,
+  symlinkSync,
   writeFileSync,
 } from "node:fs";
 import path from "node:path";
@@ -60,10 +63,11 @@ function copyFixture(name: string, destDir: string): void {
   cpSync(path.join(fixturesDir, name), destDir, { recursive: true });
 }
 
-function runCli(args: string[], options?: { cwd?: string }) {
+function runCli(args: string[], options?: { cwd?: string; env?: NodeJS.ProcessEnv }) {
   const result = spawnSync("node", [binPath, ...args], {
     cwd: options?.cwd ?? packageRoot,
     encoding: "utf-8",
+    env: options?.env ? { ...process.env, ...options.env } : process.env,
   });
   return {
     status: result.status,
@@ -153,6 +157,27 @@ describe("recontent init", () => {
     expect(readFileSync(configPath, "utf-8")).toContain("defineConfig(");
   });
 
+  test("--force on an up-to-date config succeeds, run after run", () => {
+    const dir = makeScratchDir("init-force-twice");
+
+    expect(runCli(["--cwd", dir, "init", "neutral", "--force"]).status).toBe(0);
+    const again = runCli(["--cwd", dir, "init", "neutral", "--force"]);
+
+    expect(again.status).toBe(0);
+    expect(again.stderr).not.toContain("already exists");
+  });
+
+  test("-c may point outside --cwd", () => {
+    const dir = makeScratchDir("init-config-outside");
+    const cwd = path.join(dir, "app");
+    mkdirSync(cwd);
+
+    const result = runCli(["--cwd", cwd, "init", "neutral", "-c", "../shared.config.ts"]);
+
+    expect(result.status).toBe(0);
+    expect(existsSync(path.join(dir, "shared.config.ts"))).toBe(true);
+  });
+
   test("honors -c for the file it writes, and says so in its messages", () => {
     const dir = makeScratchDir("init-config-flag");
     const result = runCli(["--cwd", dir, "init", "neutral", "-c", "tokens.config.ts"]);
@@ -194,13 +219,13 @@ describe("recontent init", () => {
   });
 });
 
-describe("recontent init --from", () => {
+describe("recontent init --dtcg", () => {
   const resolver = "fixture.resolver.json";
 
   function initFromFixture(prefix: string, extraArgs: string[] = []) {
     const dir = makeScratchDir(prefix);
     copyFixture("dtcg", dir);
-    const result = runCli(["--cwd", dir, "init", "--from", resolver, ...extraArgs]);
+    const result = runCli(["--cwd", dir, "init", "--dtcg", resolver, ...extraArgs]);
     return { dir, result };
   }
 
@@ -221,7 +246,7 @@ describe("recontent init --from", () => {
   test("is mutually exclusive with a preset", () => {
     const dir = makeScratchDir("init-from-and-preset");
     copyFixture("dtcg", dir);
-    const result = runCli(["--cwd", dir, "init", "--from", resolver, "neutral"]);
+    const result = runCli(["--cwd", dir, "init", "--dtcg", resolver, "neutral"]);
 
     expect(result.status).toBe(1);
     expect(result.stderr).toContain("mutually exclusive");
@@ -235,9 +260,9 @@ describe("recontent init --from", () => {
       "--cwd",
       dir,
       "init",
-      "--from",
+      "--dtcg",
       "primitives.tokens.json",
-      "--from",
+      "--dtcg",
       "semantic.tokens.json",
     ]);
 
@@ -251,18 +276,18 @@ describe("recontent init --from", () => {
     const configPath = path.join(dir, "recontent.config.ts");
     writeFileSync(configPath, "// mine\n");
 
-    const result = runCli(["--cwd", dir, "init", "--from", resolver]);
+    const result = runCli(["--cwd", dir, "init", "--dtcg", resolver]);
     expect(result.status).toBe(1);
     expect(result.stderr).toContain("--force");
     expect(readFileSync(configPath, "utf-8")).toBe("// mine\n");
 
-    expect(runCli(["--cwd", dir, "init", "--from", resolver, "--force"]).status).toBe(0);
+    expect(runCli(["--cwd", dir, "init", "--dtcg", resolver, "--force"]).status).toBe(0);
     expect(readFileSync(configPath, "utf-8")).toContain("defineConfig(");
   });
 
   test("fails with a clear error for a missing source", () => {
     const dir = makeScratchDir("init-from-missing");
-    const result = runCli(["--cwd", dir, "init", "--from", "nope.resolver.json"]);
+    const result = runCli(["--cwd", dir, "init", "--dtcg", "nope.resolver.json"]);
 
     expect(result.status).toBe(1);
     expect(result.stderr).toContain("does not exist");
@@ -458,25 +483,13 @@ describe("recontent build", () => {
     expect(css).toContain("#2563eb");
   });
 
-  test("runs the configured dtcg and docs plugins", () => {
-    const dir = makeScratchDir("build-dtcg-docs");
+  test("runs the configured dtcg plugin", () => {
+    const dir = makeScratchDir("build-dtcg");
     copyFixture("valid", dir);
 
     const result = runCli(["--cwd", dir, "build"]);
 
     expect(result.status).toBe(0);
-
-    const htmlPath = path.join(dir, "dist/design.html");
-    expect(existsSync(htmlPath)).toBe(true);
-    const html = readFileSync(htmlPath, "utf-8");
-    expect(html).toContain("<!DOCTYPE html>");
-    expect(html).toContain("system.color.accent");
-
-    const mdPath = path.join(dir, "dist/design.md");
-    expect(existsSync(mdPath)).toBe(true);
-    const md = readFileSync(mdPath, "utf-8");
-    expect(md).toContain("system.color.accent");
-    expect(md).toContain("Primary accent color.");
 
     const dtcgPath = path.join(dir, "dist/tokens.tokens.json");
     expect(existsSync(dtcgPath)).toBe(true);
@@ -485,6 +498,67 @@ describe("recontent build", () => {
     // `system.color.accent` aliases `ref.color.brand.primary` — DTCG
     // represents that as a `{...}` reference rather than a resolved value.
     expect(json.system.color.accent.$value).toBe("{ref.color.brand.primary}");
+  });
+
+  describe("--check", () => {
+    test("passes right after a build", () => {
+      const dir = makeScratchDir("build-check-fresh");
+      copyFixture("valid", dir);
+      expect(runCli(["--cwd", dir, "build"]).status).toBe(0);
+
+      const result = runCli(["--cwd", dir, "build", "--check"]);
+
+      expect(result.status).toBe(0);
+      expect(result.stderr).toMatch(/\d+ files up to date\n$/);
+    });
+
+    test("fails on a file that differs, and writes nothing", () => {
+      const dir = makeScratchDir("build-check-stale");
+      copyFixture("valid", dir);
+      runCli(["--cwd", dir, "build"]);
+      const cssPath = path.join(dir, "dist/tokens.css");
+      writeFileSync(cssPath, "/* edited */\n");
+
+      const result = runCli(["--cwd", dir, "build", "--check"]);
+
+      expect(result.status).toBe(1);
+      expect(result.stderr).toContain("Stale dist/tokens.css");
+      expect(result.stderr).toMatch(
+        /error: check failed: 1 of \d+ files out of date; run `recontent build`\n$/,
+      );
+      expect(readFileSync(cssPath, "utf-8")).toBe("/* edited */\n");
+    });
+
+    test("fails on a missing file without creating the output directory", () => {
+      const dir = makeScratchDir("build-check-missing");
+      copyFixture("valid", dir);
+
+      const result = runCli(["--cwd", dir, "build", "--check"]);
+
+      expect(result.status).toBe(1);
+      expect(result.stderr).toContain("Missing dist/tokens.css");
+      expect(existsSync(path.join(dir, "dist"))).toBe(false);
+    });
+
+    test("still fails with the build summary when the build itself is broken", () => {
+      const dir = makeScratchDir("build-check-broken");
+      copyFixture("broken-alias", dir);
+
+      const result = runCli(["--cwd", dir, "build", "--check"]);
+
+      expect(result.status).toBe(1);
+      expect(result.stderr).toContain("error: build failed: 1 error, 0 warnings");
+    });
+
+    test("cannot be combined with --watch", () => {
+      const dir = makeScratchDir("build-check-watch");
+      copyFixture("valid", dir);
+
+      const result = runCli(["--cwd", dir, "build", "--check", "--watch"]);
+
+      expect(result.status).toBe(1);
+      expect(result.stderr).toContain("cannot be used with");
+    });
   });
 
   test("a missing -c file is reported as such, without a stale default-name hint", () => {
@@ -519,6 +593,46 @@ describe("recontent build", () => {
   });
 });
 
+describe("a theme overriding a token that does not exist", () => {
+  function danglingProject(prefix: string): string {
+    const dir = makeScratchDir(prefix);
+    copyFixture("valid", dir);
+    const configPath = path.join(dir, "recontent.config.ts");
+    writeFileSync(
+      configPath,
+      readFileSync(configPath, "utf-8")
+        .replace("  defineSystemTokens,\n", "  defineSystemTokens,\n  defineTheme,\n")
+        .replace(
+          "const components =",
+          'const other = defineReferenceTokens({ color: { nope: tokens.color("#000000") } });\n' +
+            'const dark = defineTheme(other, { color: { nope: tokens.color("#111111") } });\nconst components =',
+        )
+        .replace("  plugins: [", "  themes: { dark },\n  plugins: ["),
+    );
+    return dir;
+  }
+
+  test("fails build with one message, before any plugin writes", () => {
+    const dir = danglingProject("build-dangling-override");
+
+    const result = runCli(["--cwd", dir, "build"]);
+
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain('Theme "dark" overrides unknown token "ref.color.nope"');
+    expect(result.stderr.match(/ref\.color\.nope/g)).toHaveLength(1);
+    expect(existsSync(path.join(dir, "dist"))).toBe(false);
+  });
+
+  test("fails inspect too", () => {
+    const dir = danglingProject("inspect-dangling-override");
+
+    const result = runCli(["--cwd", dir, "inspect"]);
+
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain('Theme "dark" overrides unknown token "ref.color.nope"');
+  });
+});
+
 describe("recontent diff", () => {
   function git(args: string[], cwd: string): void {
     const result = spawnSync("git", args, { cwd, encoding: "utf-8" });
@@ -543,7 +657,7 @@ describe("recontent diff", () => {
     const result = runCli(["--cwd", dir, "diff"]);
 
     expect(result.status).toBe(0);
-    expect(result.stdout).toContain("No token changes between the working tree and HEAD");
+    expect(result.stdout).toContain("No changes between the working tree and HEAD");
   });
 
   test("names the compared revision when nothing changed", () => {
@@ -596,12 +710,43 @@ describe("recontent diff", () => {
     expect(result.status).toBe(0);
     expect(result.stderr).toBe("");
     const parsed = JSON.parse(result.stdout);
+    expect(parsed.kind).toBe("diff");
+    expect(typeof parsed.schemaVersion).toBe("string");
     expect(parsed.config).toBe("recontent.config.ts");
     expect(parsed.rev).toBe("HEAD");
     expect(parsed.breaking).toBe(false);
-    expect(parsed.counts.changed).toBe(1);
-    expect(parsed.changed).toHaveLength(1);
-    expect(parsed.changed[0].to.path.join(".")).toBe("ref.color.brand.primary");
+    expect(parsed.counts.tokens.changed).toBe(1);
+    expect(parsed.tokens.changed).toHaveLength(1);
+    expect(parsed.tokens.changed[0].to.path.join(".")).toBe("ref.color.brand.primary");
+    expect(parsed.components).toBeUndefined();
+  });
+
+  test("--format json with an invalid revision prints an error document on stdout", () => {
+    const dir = makeScratchDir("diff-json-bad-rev");
+    copyFixture("valid", dir);
+    initRepoWithCommit(dir);
+
+    const result = runCli(["--cwd", dir, "diff", "nope", "--format", "json"]);
+
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain("error:");
+    const parsed = JSON.parse(result.stdout);
+    expect(parsed.kind).toBe("error");
+    expect(typeof parsed.schemaVersion).toBe("string");
+    expect(parsed.errors).toHaveLength(1);
+    expect(parsed.errors[0].message).toContain("nope");
+  });
+
+  test("fails on a broken alias in the working tree, like build and inspect", () => {
+    const dir = makeScratchDir("diff-broken-alias");
+    copyFixture("broken-alias", dir);
+    initRepoWithCommit(dir);
+
+    const result = runCli(["--cwd", dir, "diff"]);
+
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain("Broken alias");
+    expect(result.stdout).toBe("");
   });
 
   test("rejects an unknown --format with a usage error", () => {
@@ -638,5 +783,982 @@ describe("recontent diff", () => {
     const withBreaking = runCli(["--cwd", dir, "diff", "--fail-on-breaking"]);
     expect(withBreaking.status).toBe(1);
     expect(withBreaking.stderr).toContain("error: 2 breaking changes found");
+  });
+
+  test("reports a deprecated token, without calling it breaking", () => {
+    const dir = makeScratchDir("diff-deprecated");
+    copyFixture("valid", dir);
+    initRepoWithCommit(dir);
+
+    const configPath = path.join(dir, "recontent.config.ts");
+    writeFileSync(
+      configPath,
+      readFileSync(configPath, "utf-8").replace(
+        'tokens.color("#2563eb")',
+        'tokens.color("#2563eb").deprecate("Use something else.")',
+      ),
+    );
+
+    const result = runCli(["--cwd", dir, "diff", "--fail-on-breaking"]);
+
+    expect(result.status).toBe(0);
+    expect(result.stdout).toContain("## Metadata (2)");
+    expect(result.stdout).toContain(
+      "`ref.color.brand.primary`: now deprecated: Use something else.",
+    );
+  });
+
+  describe("components", () => {
+    // `react`'s types are installed in the package, not in the scratch repo: link them the way
+    // a project's ignored `node_modules` is, so that `linkNodeModules` has something to find.
+    function introspectedRepo(prefix: string): string {
+      const dir = makeScratchDir(prefix);
+      copyFixture("inspect", dir);
+      mkdirSync(path.join(dir, "node_modules/@types"), { recursive: true });
+      symlinkSync(
+        path.join(packageRoot, "node_modules/@types/react"),
+        path.join(dir, "node_modules/@types/react"),
+      );
+      writeFileSync(path.join(dir, ".gitignore"), "node_modules/\n.recontent/\ndocs/\n");
+      return dir;
+    }
+
+    function editButton(dir: string): void {
+      const file = path.join(dir, "src/button.tsx");
+      writeFileSync(
+        file,
+        readFileSync(file, "utf-8")
+          .replace('"solid" | "outline"', '"solid"')
+          .replace("  icon?: IconName;\n", ""),
+      );
+    }
+
+    test("reports API changes to components and the types they use", () => {
+      const dir = introspectedRepo("diff-components");
+      initRepoWithCommit(dir);
+      editButton(dir);
+
+      const result = runCli(["--cwd", dir, "diff"]);
+
+      expect(result.status).toBe(0);
+      expect(result.stdout).toContain("# Components\n\n## Breaking (2)");
+      expect(result.stdout).toContain(
+        '- `Button`\n  - **prop** `variant`: removed value `"outline"`\n  - **removed prop** `icon`',
+      );
+      expect(result.stdout).not.toContain("# Tokens");
+    });
+
+    test("--format json nests tokens, components and types with their counts", () => {
+      const dir = introspectedRepo("diff-components-json");
+      initRepoWithCommit(dir);
+      editButton(dir);
+      const file = path.join(dir, "src/button.tsx");
+      writeFileSync(file, readFileSync(file, "utf-8").replace('"sm" | "md"', '"sm"'));
+
+      const result = runCli(["--cwd", dir, "diff", "--format", "json"]);
+
+      expect(result.status).toBe(0);
+      const parsed = JSON.parse(result.stdout);
+      expect(parsed.breaking).toBe(true);
+      // Dropping `icon` leaves `IconName` unused, so it leaves the introspected types too.
+      expect(parsed.counts.components).toEqual({ added: 0, removed: 0, changed: 1, breaking: 3 });
+      // `ButtonSize` is an alias of `IconSize`, so both lose the value.
+      expect(parsed.counts.types).toEqual({ added: 0, removed: 1, changed: 2, breaking: 3 });
+      expect(parsed.counts.breaking).toBe(6);
+      expect(parsed.components.changed[0].name).toBe("Button");
+      expect(parsed.types.changed.map((type: { name: string }) => type.name)).toEqual([
+        "ButtonSize",
+        "IconSize",
+      ]);
+    });
+
+    test("--fail-on-breaking exits 1 on a breaking component change only", () => {
+      const dir = introspectedRepo("diff-components-fail");
+      initRepoWithCommit(dir);
+      const file = path.join(dir, "src/button.tsx");
+      writeFileSync(
+        file,
+        readFileSync(file, "utf-8").replace(
+          "  size?: ButtonSize;",
+          "  size?: ButtonSize;\n  tone?: string;",
+        ),
+      );
+
+      expect(runCli(["--cwd", dir, "diff", "--fail-on-breaking"]).status).toBe(0);
+
+      editButton(dir);
+      const result = runCli(["--cwd", dir, "diff", "--fail-on-breaking"]);
+      expect(result.status).toBe(1);
+      expect(result.stderr).toContain("error: 3 breaking changes found");
+    });
+
+    test("--fail-on-breaking exits 1 when introspection is removed", () => {
+      const dir = introspectedRepo("diff-components-head-without");
+      initRepoWithCommit(dir);
+      const configPath = path.join(dir, "recontent.config.ts");
+      writeFileSync(
+        configPath,
+        readFileSync(configPath, "utf-8").replace(
+          '  introspection: { entry: "src/index.ts" },\n',
+          "",
+        ),
+      );
+
+      const result = runCli(["--cwd", dir, "diff", "--fail-on-breaking"]);
+
+      expect(result.status).toBe(1);
+      expect(result.stdout).toContain("**removed**");
+    });
+
+    test("skips components, with a note, when the revision has no introspection", () => {
+      const dir = introspectedRepo("diff-components-base-without");
+      const configPath = path.join(dir, "recontent.config.ts");
+      const config = readFileSync(configPath, "utf-8");
+      writeFileSync(
+        configPath,
+        config.replace('  introspection: { entry: "src/index.ts" },\n', ""),
+      );
+      initRepoWithCommit(dir);
+      writeFileSync(configPath, config);
+
+      const result = runCli(["--cwd", dir, "diff"]);
+
+      expect(result.status).toBe(0);
+      expect(result.stdout).toContain("No changes between the working tree and HEAD.");
+      expect(result.stdout).toContain("Components were not compared: HEAD has no introspection");
+    });
+  });
+});
+
+describe("recontent inspect", () => {
+  function inspectProject(prefix = "inspect"): string {
+    const dir = makeScratchDir(prefix);
+    copyFixture("inspect", dir);
+    return dir;
+  }
+
+  describe("for humans and agents (markdown)", () => {
+    test("the overview lists counts, themes and components, and ends with a Next hint", () => {
+      const result = runCli(["--cwd", inspectProject(), "inspect"]);
+
+      expect(result.status).toBe(0);
+      expect(result.stdout).toContain("# Overview");
+      expect(result.stdout).toMatch(/\| ref \| 3 \|/);
+      expect(result.stdout).toMatch(/\| system \| 4 \|/);
+      expect(result.stdout).toContain("Themes: `dark`");
+      expect(result.stdout).toContain("`Button`, `Legacy`");
+      expect(result.stdout.trimEnd().split("\n").at(-1)).toMatch(
+        /^Next: `recontent inspect tokens system/,
+      );
+    });
+
+    test("tokens without a path lists groups, not individual tokens", () => {
+      const result = runCli(["--cwd", inspectProject(), "inspect", "tokens"]);
+
+      expect(result.status).toBe(0);
+      expect(result.stdout).toContain("| `system.color` | system | 3 |");
+      expect(result.stdout).not.toContain("system.color.accent");
+      expect(result.stdout).toContain("Next: `recontent inspect tokens system");
+    });
+
+    test("tokens with a path lists the subtree with CSS variables and theme values", () => {
+      const result = runCli(["--cwd", inspectProject(), "inspect", "tokens", "system.color"]);
+
+      expect(result.status).toBe(0);
+      expect(result.stdout).toContain("| Token | Type | Value | dark | CSS variable | Notes |");
+      expect(result.stdout).toContain("`system.color.accent`");
+      expect(result.stdout).toContain("var(--system-color-accent)");
+      expect(result.stdout).toContain("`#60a5fa`");
+      expect(result.stdout).toContain("**Deprecated**: Use system.color.accent.");
+      expect(result.stdout).not.toContain("system.spacing");
+    });
+
+    test("--type, --theme and --deprecated narrow the tokens", () => {
+      const dir = inspectProject();
+
+      const dimension = runCli(["--cwd", dir, "inspect", "tokens", "--type", "dimension"]);
+      expect(dimension.stdout).toContain("system.spacing.sm");
+      expect(dimension.stdout).not.toContain("system.color");
+
+      const deprecated = runCli(["--cwd", dir, "inspect", "tokens", "--deprecated"]);
+      expect(deprecated.stdout).toContain("system.color.legacy");
+      expect(deprecated.stdout).not.toContain("system.color.surface");
+
+      const unknownTheme = runCli(["--cwd", dir, "inspect", "tokens", "--theme", "drak"]);
+      expect(unknownTheme.status).toBe(2);
+      expect(unknownTheme.stderr).toContain("Did you mean `dark`?");
+
+      const unknownType = runCli(["--cwd", dir, "inspect", "tokens", "--type", "colr"]);
+      expect(unknownType.status).toBe(2);
+      expect(unknownType.stderr).toContain("Did you mean `color`?");
+    });
+
+    test("components lists one line each; a name shows the props table", () => {
+      const dir = inspectProject();
+
+      const list = runCli(["--cwd", dir, "inspect", "components"]);
+      expect(list.status).toBe(0);
+      expect(list.stdout).toContain("- `Button` (4 props) — Triggers an action.");
+      expect(list.stdout).toContain("- `Legacy` (1 prop, deprecated → Button, experimental)");
+      // Categorised components first, under their category; the others last.
+      expect(list.stdout.indexOf("## Actions")).toBeLessThan(list.stdout.indexOf("- `Button`"));
+      expect(list.stdout.indexOf("- `Button`")).toBeLessThan(list.stdout.indexOf("- `Legacy`"));
+      expect(list.stdout).toContain("Next: `recontent inspect components Button`");
+
+      const detail = runCli(["--cwd", dir, "inspect", "components", "Button"]);
+      expect(detail.status).toBe(0);
+      expect(detail.stdout).toContain("## Button");
+      expect(detail.stdout).toMatch(/Source: \[?`src\/button\.tsx:\d+`/);
+      expect(detail.stdout).toContain('| `variant` | `"solid" \\| "outline"` | `"solid"` | no |');
+      expect(detail.stdout).toContain("| `label` | `string` | — | yes |");
+      expect(detail.stdout).toContain("Also accepts: `ButtonHTMLAttributes`");
+      expect(detail.stdout).not.toContain("## Legacy");
+      // Fenced, so that headings in the usage can't break the hierarchy.
+      expect(detail.stdout).toContain(
+        "### Usage\n\n```md\nPrefer it over a link when the click changes something.\n```",
+      );
+      expect(detail.stdout).toContain(
+        '### Examples\n\n**Basic**\n\n```tsx\n<Button label="Save" />\n```',
+      );
+    });
+
+    test("a deprecated component says what replaces it, and links to it", () => {
+      const dir = inspectProject();
+
+      const detail = runCli(["--cwd", dir, "inspect", "components", "Legacy"]);
+      expect(detail.stdout).toContain("> ⚠️ Deprecated: Use \\`Button\\` instead.");
+      expect(detail.stdout).toContain("Replaced by: `Button`");
+      expect(detail.stdout).toContain("> 🧪 Experimental");
+    });
+
+    test("components shows the types its props reference, once, after the props", () => {
+      const detail = runCli(["--cwd", inspectProject(), "inspect", "components", "Button"]);
+
+      expect(detail.status).toBe(0);
+      const output = detail.stdout;
+      expect(output.indexOf("## Types")).toBeGreaterThan(output.indexOf("## Button"));
+      expect(output).toContain("### IconName");
+      expect(output).toContain("Names an icon of the set.");
+      expect(output).toContain('Values: `"home"`, `"search"`');
+      // Reached through ButtonSize, not through a prop.
+      expect(output).toContain("### IconSize");
+      expect(output.match(/### IconName/g)).toHaveLength(1);
+      expect(output).toContain("References: `IconSize`");
+    });
+
+    test("types lists one line each; a name shows it with what it references", () => {
+      const dir = inspectProject();
+      const list = runCli(["--cwd", dir, "inspect", "types"]);
+      expect(list.status).toBe(0);
+      expect(list.stdout).toContain("- `IconName` (type, 2 values) — Names an icon of the set.");
+      expect(list.stdout).toContain("Next: `recontent inspect types ButtonSize`");
+
+      const detail = runCli(["--cwd", dir, "inspect", "types", "ButtonSize"]);
+      expect(detail.status).toBe(0);
+      expect(detail.stdout).toContain("### ButtonSize");
+      expect(detail.stdout).toContain("### IconSize");
+      expect(detail.stdout).not.toContain("### IconName");
+    });
+
+    test("the overview names the types", () => {
+      const result = runCli(["--cwd", inspectProject(), "inspect"]);
+      expect(result.stdout).toContain("## Types (3)");
+      expect(result.stdout).toContain("`ButtonSize`, `IconName`, `IconSize`");
+    });
+  });
+
+  describe("for scripts (json)", () => {
+    function json(args: string[], dir: string) {
+      const result = runCli(["--cwd", dir, "inspect", ...args, "--format", "json"]);
+      return { ...result, data: JSON.parse(result.stdout) as Record<string, any> };
+    }
+
+    test("documentation tags come with the components", () => {
+      const dir = inspectProject();
+      const [legacy] = json(["components", "Legacy"], dir).data.components;
+      expect(legacy).toMatchObject({
+        replacement: "Button",
+        links: ["Button"],
+        experimental: true,
+      });
+      const [button] = json(["components", "Button"], dir).data.components;
+      expect(button).toMatchObject({
+        category: "Actions",
+        usage: "Prefer it over a link when the click changes something.",
+        examples: [{ title: "Basic", code: '<Button label="Save" />' }],
+      });
+    });
+
+    test("every form parses, is versioned and kind-tagged, and returns full detail", () => {
+      const dir = inspectProject();
+
+      const overview = json([], dir);
+      expect(overview.status).toBe(0);
+      expect(overview.data).toMatchObject({
+        schemaVersion: "1",
+        kind: "overview",
+        themes: ["dark"],
+        components: ["Button", "Legacy"],
+      });
+      expect(overview.data.tokens.total).toBe(7);
+
+      const tokens = json(["tokens"], dir);
+      expect(tokens.data).toMatchObject({ schemaVersion: "1", kind: "tokens" });
+      expect(tokens.data.tokens).toHaveLength(7);
+      expect(tokens.data.tokens[0]).toHaveProperty("cssVar");
+      expect(
+        tokens.data.tokens.find((t: any) => t.path === "ref.color.brand.primary").values,
+      ).toEqual({
+        default: "#2563eb",
+        dark: "#60a5fa",
+      });
+
+      const components = json(["components"], dir);
+      expect(components.data).toMatchObject({ schemaVersion: "1", kind: "components" });
+      expect(components.data.components.map((c: any) => c.name)).toEqual(["Button", "Legacy"]);
+      expect(components.data.components[0].props.map((p: any) => p.name)).toEqual([
+        "icon",
+        "label",
+        "size",
+        "variant",
+      ]);
+      expect(components.data.components[0].references).toEqual(["ButtonSize", "IconName"]);
+      expect(components.data.types.map((t: any) => t.id)).toEqual([
+        "ButtonSize",
+        "IconName",
+        "IconSize",
+      ]);
+
+      const types = json(["types"], dir);
+      expect(types.status).toBe(0);
+      expect(types.data).toMatchObject({ schemaVersion: "1", kind: "types" });
+      expect(types.data.types.map((t: any) => t.id)).toEqual([
+        "ButtonSize",
+        "IconName",
+        "IconSize",
+      ]);
+      expect(overview.data.types).toEqual(["ButtonSize", "IconName", "IconSize"]);
+    });
+
+    test("types adds what the selection references", () => {
+      const result = json(["types", "ButtonSize"], inspectProject());
+      expect(result.data.types.map((t: any) => t.id)).toEqual(["ButtonSize", "IconSize"]);
+    });
+
+    test("a selection narrows the output", () => {
+      const dir = inspectProject();
+      expect(json(["tokens", "system.spacing"], dir).data.tokens).toHaveLength(1);
+      expect(json(["components", "Legacy"], dir).data.components).toHaveLength(1);
+      expect(json(["tokens", "--deprecated"], dir).data.tokens).toHaveLength(1);
+    });
+
+    test("an empty result from filters alone is a success", () => {
+      const result = json(["components", "--deprecated", "Button"], inspectProject());
+      expect(result.status).toBe(0);
+      expect(result.data.components).toEqual([]);
+    });
+
+    test("stdout holds nothing but JSON; logs and warnings go to stderr", () => {
+      const result = runCli([
+        "--cwd",
+        inspectProject(),
+        "--log-level",
+        "debug",
+        "inspect",
+        "components",
+        "--format",
+        "json",
+      ]);
+
+      expect(result.status).toBe(0);
+      expect(() => JSON.parse(result.stdout)).not.toThrow();
+      expect(result.stderr).toContain("debug: introspection:");
+    });
+
+    test("nothing about the repository leaks into the output", () => {
+      const dir = inspectProject();
+      for (const args of [[], ["components"]]) {
+        expect(json(args, dir).data.git).toBeUndefined();
+      }
+      expect(runCli(["--cwd", dir, "inspect"]).stdout).not.toContain("Git:");
+    });
+
+    test("inherited props are listed by name", () => {
+      const button = json(["components", "Button"], inspectProject()).data.components[0];
+      expect(button.inherits[0].props).toContain("onClick");
+    });
+  });
+
+  describe("recovery from mistakes", () => {
+    test.each([
+      [["tokens", "system.colr"], "Did you mean `system.color`?"],
+      [["tokens", "system.color.acent"], "Did you mean `system.color.accent`?"],
+      [["components", "Buton"], "Did you mean `Button`?"],
+      [["types", "IconNam"], "Did you mean `IconName`?"],
+    ])("inspect %s exits 2 with a suggestion on stderr", (args, hint) => {
+      const result = runCli(["--cwd", inspectProject(), "inspect", ...args]);
+
+      expect(result.status).toBe(2);
+      expect(result.stderr).toContain(hint);
+      expect(result.stdout).toBe("");
+    });
+
+    test("--format json also prints the error on stdout, with the suggestions", () => {
+      const result = runCli([
+        "--cwd",
+        inspectProject(),
+        "inspect",
+        "tokens",
+        "system.colr",
+        "--format",
+        "json",
+      ]);
+
+      expect(result.status).toBe(2);
+      expect(result.stderr).toContain("Did you mean `system.color`?");
+      expect(JSON.parse(result.stdout)).toEqual({
+        schemaVersion: "1",
+        kind: "error",
+        errors: [
+          {
+            message: expect.stringContaining("system.colr"),
+            input: "system.colr",
+            suggestions: expect.arrayContaining(["system.color"]),
+          },
+        ],
+      });
+    });
+
+    test.each(["components", "types"])(
+      "inspect %s without an introspection block exits 1 with a hint",
+      (subcommand) => {
+        const dir = makeScratchDir("inspect-no-block");
+        copyFixture("valid", dir);
+        const result = runCli(["--cwd", dir, "inspect", subcommand]);
+
+        expect(result.status).toBe(1);
+        expect(result.stderr).toContain("no `introspection` block");
+      },
+    );
+
+    test("the overview without an introspection block succeeds and omits components", () => {
+      const dir = makeScratchDir("inspect-overview-no-block");
+      copyFixture("valid", dir);
+      const result = runCli(["--cwd", dir, "inspect"]);
+
+      expect(result.status).toBe(0);
+      expect(result.stdout).toContain("## Tokens");
+      expect(result.stdout).not.toContain("## Components");
+    });
+  });
+
+  test("inspect tokens never builds a TS program, so a broken entry doesn't matter", () => {
+    const dir = makeScratchDir("inspect-broken-entry");
+    copyFixture("inspect-broken-entry", dir);
+
+    expect(runCli(["--cwd", dir, "inspect", "tokens", "ref"]).status).toBe(0);
+
+    const components = runCli(["--cwd", dir, "inspect", "components"]);
+    expect(components.status).toBe(1);
+    expect(components.stderr).toContain("does-not-exist.ts");
+
+    const asJson = runCli(["--cwd", dir, "inspect", "components", "--format", "json"]);
+    expect(asJson.status).toBe(1);
+    expect(JSON.parse(asJson.stdout)).toMatchObject({
+      kind: "error",
+      errors: [{ message: expect.stringContaining("does-not-exist.ts") }],
+    });
+  });
+
+  test("the overview survives a broken entry and says why components are missing", () => {
+    const dir = makeScratchDir("inspect-overview-broken-entry");
+    copyFixture("inspect-broken-entry", dir);
+
+    const markdown = runCli(["--cwd", dir, "inspect"]);
+    expect(markdown.status).toBe(0);
+    expect(markdown.stdout).toContain("## Tokens");
+    expect(markdown.stdout).toMatch(/## Components\n\n_Unavailable: .*does-not-exist\.ts/);
+
+    const json = JSON.parse(runCli(["--cwd", dir, "inspect", "--format", "json"]).stdout);
+    expect(json.tokens.total).toBeGreaterThan(0);
+    expect(json.components.error).toContain("does-not-exist.ts");
+  });
+
+  test("the command is discoverable from --help", () => {
+    const result = runCli(["inspect", "--help"]);
+
+    expect(result.status).toBe(0);
+    expect(result.stdout).toContain("recontent inspect tokens [path...]");
+    expect(result.stdout).toContain("recontent inspect components [name...]");
+    expect(runCli(["--help"]).stdout).toContain("inspect");
+  });
+});
+
+describe("recontent inspect --from", () => {
+  /** The design system, built; and an app that depends on it as `@acme/ds`. */
+  function setup(prefix: string): { system: string; app: string } {
+    const system = makeScratchDir(prefix);
+    copyFixture("inspect", system);
+    mkdirSync(path.join(system, "node_modules/@types"), { recursive: true });
+    symlinkSync(
+      path.join(packageRoot, "node_modules/@types/react"),
+      path.join(system, "node_modules/@types/react"),
+    );
+    expect(runCli(["--cwd", system, "build"]).status).toBe(0);
+
+    const app = makeScratchDir(`${prefix}-app`);
+    const installed = path.join(app, "node_modules/@acme/ds");
+    mkdirSync(path.join(installed, "dist"), { recursive: true });
+    copyFileSync(
+      path.join(system, "dist/recontent.json"),
+      path.join(installed, "dist/recontent.json"),
+    );
+    writeFileSync(
+      path.join(installed, "package.json"),
+      JSON.stringify({ name: "@acme/ds", version: "1.4.0", recontent: "./dist/recontent.json" }),
+    );
+    return { system, app };
+  }
+
+  const commands = [
+    ["inspect"],
+    ["inspect", "tokens", "system.color"],
+    ["inspect", "components", "Button"],
+    ["inspect", "types"],
+    ["inspect", "components", "--format", "json"],
+    ["inspect", "--format", "json"],
+  ];
+  const withoutSource = (output: string) =>
+    output.replace(/^(\s*"config": |Config: ).*$/m, "$1<source>");
+
+  test.each(commands)("%s matches a local inspect, via a package and via a file", (...args) => {
+    const { system, app } = setup("inspect-from");
+    const local = runCli(["--cwd", system, ...args]);
+    expect(local.status).toBe(0);
+
+    const viaPackage = runCli(["--cwd", app, ...args, "--from", "@acme/ds"]);
+    const viaFile = runCli([
+      "--cwd",
+      app,
+      ...args,
+      "--from",
+      "./node_modules/@acme/ds/dist/recontent.json",
+    ]);
+
+    expect(viaPackage.status).toBe(0);
+    expect(withoutSource(viaPackage.stdout)).toBe(withoutSource(local.stdout));
+    expect(withoutSource(viaFile.stdout)).toBe(withoutSource(local.stdout));
+  });
+
+  test("the overview names the package and its version", () => {
+    const { app } = setup("inspect-from-source");
+    const result = runCli(["--cwd", app, "inspect", "--from", "@acme/ds"]);
+    expect(result.stdout).toContain("Config: `@acme/ds@1.4.0`");
+  });
+
+  test("a snapshot without components can't be asked for them", () => {
+    const { app } = setup("inspect-from-tokens-only");
+    const file = path.join(app, "node_modules/@acme/ds/dist/recontent.json");
+    const snapshot = JSON.parse(readFileSync(file, "utf-8"));
+    delete snapshot.components;
+    delete snapshot.types;
+    writeFileSync(file, JSON.stringify(snapshot));
+
+    expect(runCli(["--cwd", app, "inspect", "tokens", "ref", "--from", "@acme/ds"]).status).toBe(0);
+    const result = runCli(["--cwd", app, "inspect", "components", "--from", "@acme/ds"]);
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain("has no components in its snapshot");
+  });
+
+  test("errors say what to do", () => {
+    const { app } = setup("inspect-from-errors");
+    const from = (value: string, ...rest: string[]) =>
+      runCli(["--cwd", app, "inspect", "--from", value, ...rest]);
+
+    const missing = from("@acme/nope");
+    expect(missing.status).toBe(1);
+    expect(missing.stderr).toContain('package "@acme/nope" is not installed');
+
+    mkdirSync(path.join(app, "node_modules/bare"));
+    writeFileSync(path.join(app, "node_modules/bare/package.json"), '{ "name": "bare" }');
+    const bare = from("bare");
+    expect(bare.status).toBe(1);
+    expect(bare.stderr).toContain('no "recontent" field');
+    expect(bare.stderr).toContain("`inspect()` plugin");
+
+    const snapshot = path.join(app, "node_modules/@acme/ds/dist/recontent.json");
+    writeFileSync(
+      snapshot,
+      readFileSync(snapshot, "utf-8").replace('"schemaVersion": "1"', '"schemaVersion": "2"'),
+    );
+    const newer = from("@acme/ds");
+    expect(newer.status).toBe(1);
+    expect(newer.stderr).toContain("Upgrade recontent");
+  });
+
+  test("it replaces -c/--config and --no-cache", () => {
+    const { app } = setup("inspect-from-conflicts");
+    for (const flag of [["-c", "recontent.config.ts"], ["--no-cache"]]) {
+      const result = runCli(["--cwd", app, "inspect", "--from", "@acme/ds", ...flag]);
+      expect(result.status).toBe(1);
+      expect(result.stderr).toContain("cannot be used with option");
+    }
+  });
+
+  test("without a config, the error points at --from", () => {
+    const { app } = setup("inspect-from-hint");
+    const result = runCli(["--cwd", app, "inspect"]);
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain("--from <package|file>");
+  });
+
+  test("build --check fails when the published snapshot is stale", () => {
+    const { system } = setup("inspect-from-stale");
+    expect(runCli(["--cwd", system, "build", "--check"]).status).toBe(0);
+    // Nothing in it depends on the installed recontent, so an upgrade cannot make it stale.
+    expect(readFileSync(path.join(system, "dist/recontent.json"), "utf-8")).not.toContain(
+      '"recontent"',
+    );
+
+    const button = path.join(system, "src/button.tsx");
+    writeFileSync(button, readFileSync(button, "utf-8").replace("  icon?: IconName;\n", ""));
+    const result = runCli(["--cwd", system, "build", "--check"]);
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain("recontent.json");
+  });
+});
+
+describe("recontent build plugin diagnostics", () => {
+  test("names the plugin and the token a diagnostic is about", () => {
+    const dir = makeScratchDir("build-plugin-diagnostic");
+    writeFileSync(
+      path.join(dir, "recontent.config.ts"),
+      `import { defineConfig, defineReferenceTokens, tokens } from "recontent";
+export default defineConfig({
+  tokens: { ref: defineReferenceTokens({ color: { blue: tokens.color("#2563eb") } }) },
+  plugins: [
+    {
+      name: "acme:lint",
+      dependsOn: ["tokens"],
+      validate: () => [{ severity: "warning", message: "no description", path: ["ref", "color", "blue"] }],
+    },
+  ],
+});
+`,
+    );
+
+    const result = runCli(["--cwd", dir, "build"]);
+
+    expect(result.status).toBe(0);
+    expect(result.stderr).toContain("warning: [acme:lint] no description (ref.color.blue)");
+  });
+});
+
+describe("recontent build --watch", () => {
+  async function waitFor(condition: () => boolean, what: string, timeoutMs = 20_000) {
+    const deadline = Date.now() + timeoutMs;
+    while (!condition()) {
+      if (Date.now() > deadline) throw new Error(`Timed out waiting for ${what}`);
+      await new Promise((resolve) => setTimeout(resolve, 50));
+    }
+  }
+
+  test("rebuilds with the edited config, not a cached copy of it", async () => {
+    const dir = makeScratchDir("build-watch-edit");
+    copyFixture("valid", dir);
+    const configPath = path.join(dir, "recontent.config.ts");
+    const cssPath = path.join(dir, "dist/tokens.css");
+    const watcher = spawn("node", [binPath, "build", "--watch", "--cwd", dir], {
+      stdio: ["ignore", "ignore", "pipe"],
+    });
+    let stderr = "";
+    watcher.stderr.on("data", (chunk) => (stderr += String(chunk)));
+
+    try {
+      // Edits made before the watchers are installed are not seen.
+      await waitFor(() => stderr.includes("Watching "), `the watcher to start\n${stderr}`);
+      expect(readFileSync(cssPath, "utf-8")).toContain("#2563eb");
+
+      writeFileSync(configPath, readFileSync(configPath, "utf-8").replace("#2563eb", "#dc2626"));
+
+      await waitFor(
+        () => readFileSync(cssPath, "utf-8").includes("#dc2626"),
+        `the rebuild after the edit\n${stderr}`,
+      );
+      expect(readFileSync(cssPath, "utf-8")).not.toContain("#2563eb");
+    } finally {
+      watcher.kill("SIGINT");
+    }
+  }, 60_000);
+});
+
+describe("recontent build with introspection", () => {
+  const configWith = (
+    introspection: string,
+    plugins: string,
+  ) => `import { defineConfig, defineReferenceTokens, defineSystemTokens, defineComponentTokens, tokens } from "recontent";
+import { css, designMD, docs } from "recontent/plugins";
+
+const ref = defineReferenceTokens({ color: { white: tokens.color("#ffffff") } });
+const system = defineSystemTokens({ color: { surface: ref.color.white } });
+
+export default defineConfig({
+  tokens: { ref, system, components: defineComponentTokens({}) },
+  ${introspection}
+  plugins: [${plugins}],
+});
+`;
+
+  function buildProject(prefix: string, config?: string): string {
+    const dir = makeScratchDir(prefix);
+    copyFixture("inspect", dir);
+    if (config) writeFileSync(path.join(dir, "recontent.config.ts"), config);
+    return dir;
+  }
+
+  const gitIn = (dir: string, args: string[]) => {
+    const result = spawnSync("git", args, { cwd: dir, encoding: "utf-8" });
+    if (result.status !== 0) throw new Error(result.stderr);
+  };
+
+  test("the docs plugins get component APIs, and the output holds no repository state", () => {
+    const dir = buildProject("build-introspection");
+    const result = runCli(["--cwd", dir, "build"]);
+
+    expect(result.status).toBe(0);
+    const html = readFileSync(path.join(dir, "docs/design.html"), "utf-8");
+    expect(html).toContain("<!DOCTYPE html>");
+    expect(html).toContain("system.color.accent");
+
+    const markdown = readFileSync(path.join(dir, "docs/DESIGN.md"), "utf-8");
+    expect(markdown).toMatch(/^---\nversion: alpha\n/);
+    expect(markdown).toContain('system-color-accent: "{colors.ref-color-brand-primary}"');
+    expect(markdown).toContain("- `system-color-accent`: Primary accent color.");
+    expect(markdown).toContain("## Components");
+    expect(markdown).toContain("- **Button**: Triggers an action.");
+    expect(markdown).toContain("recontent inspect components <Name>");
+    expect(markdown).toContain(
+      "- Don't use `{colors.system-color-legacy}`: Use system.color.accent.",
+    );
+    expect(markdown).toContain("- Don't use `Legacy`: Use \\`Button\\`");
+    expect(markdown).not.toContain("Source:");
+    expect(markdown).not.toContain("Generated from");
+    expect(markdown).not.toContain("Updated");
+  });
+
+  test("a config with introspection but no tokens builds the docs", () => {
+    const dir = buildProject(
+      "build-introspection-only",
+      `import { defineConfig } from "recontent";
+import { designMD } from "recontent/plugins";
+
+export default defineConfig({
+  introspection: { entry: "src/index.ts" },
+  plugins: [designMD({ outDir: "docs" })],
+});
+`,
+    );
+
+    const result = runCli(["--cwd", dir, "build"]);
+    expect(result.status).toBe(0);
+    expect(readFileSync(path.join(dir, "docs/DESIGN.md"), "utf-8")).toContain(
+      "- **Button**: Triggers an action.",
+    );
+  });
+
+  describe("introspection happens only for plugins that consume components", () => {
+    const broken = 'introspection: { entry: "src/does-not-exist.ts" },';
+
+    test("token-only plugins never trigger it, so a broken entry is harmless", () => {
+      const dir = buildProject("build-lazy", configWith(broken, 'css({ outDir: "out" })'));
+      const result = runCli(["--cwd", dir, "build"]);
+
+      expect(result.status).toBe(0);
+      expect(existsSync(path.join(dir, "out/tokens.css"))).toBe(true);
+    });
+
+    test("a failure fails the plugin that depends on components, not the others", () => {
+      const dir = buildProject(
+        "build-partial",
+        configWith(broken, 'css({ outDir: "out" }), docs({ outDir: "docs" })'),
+      );
+      const result = runCli(["--cwd", dir, "build"]);
+
+      expect(result.status).toBe(1);
+      expect(result.stderr).toContain("error: [recontent:docs]");
+      expect(result.stderr).toContain("does-not-exist.ts");
+      expect(result.stderr).toContain("build failed: 1 error");
+      expect(existsSync(path.join(dir, "out/tokens.css"))).toBe(true);
+      expect(existsSync(path.join(dir, "docs/design.html"))).toBe(false);
+    });
+
+    test("designMD() works without introspection, just without components", () => {
+      const dir = buildProject("build-no-block", configWith("", 'designMD({ outDir: "docs" })'));
+      const result = runCli(["--cwd", dir, "build"]);
+
+      expect(result.status).toBe(0);
+      const markdown = readFileSync(path.join(dir, "docs/DESIGN.md"), "utf-8");
+      expect(markdown).toContain("system-color-surface");
+      expect(markdown).not.toContain("## Components");
+    });
+  });
+
+  describe("history is opt-in", () => {
+    const withHistory = configWith(
+      'introspection: { entry: "src/index.ts", history: true },',
+      'docs({ outDir: "docs" })',
+    );
+
+    test("lastUpdatedAt comes from git when asked for", () => {
+      const dir = buildProject("build-history", withHistory);
+      gitIn(dir, ["init", "-q"]);
+      gitIn(dir, ["add", "-A"]);
+      gitIn(dir, [
+        "-c",
+        "user.email=e2e@example.com",
+        "-c",
+        "user.name=e2e",
+        "commit",
+        "-q",
+        "-m",
+        "initial",
+      ]);
+
+      expect(runCli(["--cwd", dir, "build"]).status).toBe(0);
+      expect(readFileSync(path.join(dir, "docs/design.html"), "utf-8")).toMatch(
+        /Updated \d{4}-\d{2}-\d{2}/,
+      );
+    });
+
+    test("outside a git work tree it warns once and still builds", () => {
+      const dir = buildProject("build-history-no-git", withHistory);
+      const result = runCli(["--cwd", dir, "build"], {
+        env: { GIT_CEILING_DIRECTORIES: scratchRoot },
+      });
+
+      expect(result.status).toBe(0);
+      expect(result.stderr.match(/not a git repository/g)).toHaveLength(1);
+      expect(readFileSync(path.join(dir, "docs/design.html"), "utf-8")).not.toContain("Updated");
+    });
+  });
+
+  describe("the introspection cache", () => {
+    const cached = (result: { stderr: string }) => result.stderr.includes("reused the cache");
+    const debug = (dir: string, ...args: string[]) =>
+      runCli(["--cwd", dir, "--log-level", "debug", ...args]);
+    const cacheFiles = (dir: string) =>
+      existsSync(path.join(dir, ".recontent"))
+        ? readdirSync(path.join(dir, ".recontent")).filter((name) => /^cache-\w+\.json$/.test(name))
+        : [];
+
+    test("a second build reuses it, and so does inspect", () => {
+      const dir = buildProject("cache-reuse");
+
+      expect(cached(debug(dir, "build"))).toBe(false);
+      expect(cacheFiles(dir)).toHaveLength(1);
+      expect(readFileSync(path.join(dir, ".recontent/.gitignore"), "utf-8")).toBe("*\n");
+      expect(cached(debug(dir, "build"))).toBe(true);
+      expect(cached(debug(dir, "inspect", "components"))).toBe(true);
+    });
+
+    test("it is invalidated when a source file changes", () => {
+      const dir = buildProject("cache-invalidate");
+      runCli(["--cwd", dir, "build"]);
+
+      const file = path.join(dir, "src/button.tsx");
+      writeFileSync(file, readFileSync(file, "utf-8").replace("label", "caption"));
+
+      const result = debug(dir, "inspect", "components", "Button", "--format", "json");
+      expect(cached(result)).toBe(false);
+      expect(JSON.parse(result.stdout).components[0].props.map((p: any) => p.name)).toContain(
+        "caption",
+      );
+    });
+
+    test("it is invalidated when a file an @example points to changes", () => {
+      const dir = buildProject("cache-example-file");
+      const source = path.join(dir, "src/button.tsx");
+      writeFileSync(
+        source,
+        readFileSync(source, "utf-8").replace(
+          ' * <Button label="Save" />',
+          " * ./button.example.tsx",
+        ),
+      );
+      const example = path.join(dir, "src/button.example.tsx");
+      writeFileSync(example, '<Button label="Save" />\n');
+      runCli(["--cwd", dir, "build"]);
+      expect(cached(debug(dir, "inspect", "components"))).toBe(true);
+
+      writeFileSync(example, '<Button label="Saved" />\n');
+
+      const result = debug(dir, "inspect", "components", "Button", "--format", "json");
+      expect(cached(result)).toBe(false);
+      expect(JSON.parse(result.stdout).components[0].examples).toEqual([
+        { title: "Basic", code: '<Button label="Saved" />' },
+      ]);
+    });
+
+    test("--no-cache neither reads nor writes it", () => {
+      const dir = buildProject("cache-off");
+
+      expect(runCli(["--cwd", dir, "build", "--no-cache"]).status).toBe(0);
+      expect(existsSync(path.join(dir, ".recontent"))).toBe(false);
+
+      runCli(["--cwd", dir, "build"]);
+      expect(cached(debug(dir, "build", "--no-cache"))).toBe(false);
+      expect(cached(debug(dir, "inspect", "components", "--no-cache"))).toBe(false);
+    });
+
+    test("a new file next to the project's own files is a miss", () => {
+      const dir = buildProject("cache-new-file");
+      runCli(["--cwd", dir, "build"]);
+      expect(cached(debug(dir, "inspect", "components"))).toBe(true);
+
+      writeFileSync(path.join(dir, "src/unrelated.ts"), "export {};\n");
+
+      expect(cached(debug(dir, "inspect", "components"))).toBe(false);
+    });
+
+    test("it keeps a .gitignore it did not write, and does not follow a symlink in its place", () => {
+      const kept = buildProject("cache-gitignore");
+      mkdirSync(path.join(kept, ".recontent"));
+      writeFileSync(path.join(kept, ".recontent/.gitignore"), "cache-*.json\n");
+      runCli(["--cwd", kept, "build"]);
+      expect(readFileSync(path.join(kept, ".recontent/.gitignore"), "utf-8")).toBe(
+        "cache-*.json\n",
+      );
+
+      const linked = buildProject("cache-symlink");
+      const target = path.join(linked, "precious.txt");
+      writeFileSync(target, "keep me\n");
+      mkdirSync(path.join(linked, ".recontent"));
+      symlinkSync(target, path.join(linked, ".recontent/.gitignore"));
+      expect(runCli(["--cwd", linked, "build"]).status).toBe(0);
+      expect(readFileSync(target, "utf-8")).toBe("keep me\n");
+    });
+
+    test("two configs in one directory each keep their own cache", () => {
+      const dir = buildProject("cache-two-configs");
+      copyFileSync(path.join(dir, "recontent.config.ts"), path.join(dir, "other.config.ts"));
+      const run = (config: string) => debug(dir, "--config", config, "inspect", "components");
+
+      run("recontent.config.ts");
+      run("other.config.ts");
+
+      expect(cacheFiles(dir)).toHaveLength(2);
+      expect(cached(run("recontent.config.ts"))).toBe(true);
+      expect(cached(run("other.config.ts"))).toBe(true);
+    });
+
+    test("a corrupt cache is a miss, not an error", () => {
+      const dir = buildProject("cache-corrupt");
+      runCli(["--cwd", dir, "build"]);
+      writeFileSync(path.join(dir, ".recontent", cacheFiles(dir)[0]!), "{ not json");
+
+      const result = debug(dir, "inspect", "components");
+      expect(result.status).toBe(0);
+      expect(cached(result)).toBe(false);
+    });
   });
 });

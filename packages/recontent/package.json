@@ -22,13 +22,14 @@
     "./plugins": "./dist/plugins/index.mjs"
   },
   "scripts": {
-    "build": "tsdown src/index.ts src/plugins/index.ts src/cli/bin.ts",
+    "build": "tsdown src/index.ts src/plugins/index.ts src/cli/bin.ts src/cli/main.ts",
     "typecheck": "tsc --noEmit",
     "test": "NODE_OPTIONS=--experimental-vm-modules jest"
   },
   "dependencies": {
     "@recontentapp/core": "workspace:*",
     "commander": "^15.0.0",
+    "marked": "^18.1.2",
     "typescript": "npm:@typescript/typescript6@^6.0.2"
   },
   "devDependencies": {
@@ -41,8 +42,11 @@
     "@swc/jest": "0.2.39",
     "@tailwindcss/node": "4.3.3",
     "@types/node": "24.1.0",
+    "@types/react": "19.3.0",
     "@typescript/native": "npm:typescript@7.0.2",
+    "class-variance-authority": "0.7.1",
     "jest": "30.2.0",
+    "react": "19.3.0",
     "tailwindcss": "4.3.3",
     "tsdown": "0.22.9"
   }

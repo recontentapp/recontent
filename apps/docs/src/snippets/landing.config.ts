@@ -18,7 +18,7 @@ const system = defineSystemTokens({
 const dark = defineTheme(system, { color: { surface: tokens.color("#18181b") } });
 
 export default defineConfig({
-  tokens: { ref, system, components: {} },
+  tokens: { ref, system },
   themes: { dark },
   plugins: [
     css({ outDir: "src/generated/css" }),

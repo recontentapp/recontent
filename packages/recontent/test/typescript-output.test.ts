@@ -1,6 +1,5 @@
 import { describe, expect, test } from "@jest/globals";
 import {
-  defineComponentTokens,
   defineConfig,
   defineReferenceTokens,
   defineSystemTokens,
@@ -20,13 +19,20 @@ import {
   themedConfig,
   type Fixture,
 } from "./helpers/fixtures.js";
-import type { Config, OutputFile } from "@recontentapp/core";
+import type { Config } from "@recontentapp/core";
+import type { OutputFile } from "../src/plugins/shared/context.js";
 
 const TS: TypeScriptPluginOptions = { outDir: "dist-test" };
 
 function generate(config: Config, options: TypeScriptPluginOptions = TS): OutputFile[] {
   return generateTypeScriptFiles(config, options);
 }
+
+test("filename renames the output, so it can share an outDir with typescriptNative", () => {
+  const { config } = aliasChainConfig();
+  expect(generate(config, { ...TS, filename: "web-tokens.ts" })[0]!.filename).toBe("web-tokens.ts");
+  expect(generate(config)[0]!.filename).toBe("tokens.ts");
+});
 
 describe("scalars", () => {
   test("fontWeight and number are emitted as bare numbers", () => {
@@ -281,24 +287,6 @@ describe("parses and typechecks", () => {
       assertParses(file!.content);
       assertTypechecks(file!.content);
     }
-  });
-
-  test("component built-in options are not accepted by the typescript output type", () => {
-    const options: TypeScriptPluginOptions = {
-      outDir: "dist-test",
-      // @ts-expect-error builtInComponents does not exist on TypeScriptPluginOptions
-      builtInComponents: {},
-    };
-    const ref = defineReferenceTokens({ color: { black: tokens.color("#000000") } });
-    const config = defineConfig({
-      tokens: {
-        ref,
-        system: defineSystemTokens({}),
-        components: defineComponentTokens({}),
-      },
-    });
-    const [file] = generate(config, options);
-    assertTypechecks(file!.content);
   });
 });
 

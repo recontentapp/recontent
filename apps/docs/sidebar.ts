@@ -40,6 +40,8 @@ export const sidebar: NonNullable<Config["sidebar"]> = [
       { text: "TypeScript", link: "/plugins/typescript" },
       { text: "DTCG", link: "/plugins/dtcg" },
       { text: "Docs", link: "/plugins/docs" },
+      { text: "designMD", link: "/plugins/design-md" },
+      { text: "inspect", link: "/plugins/inspect" },
       { text: "Writing a plugin", link: "/plugin-api" },
     ],
   },
@@ -51,6 +53,7 @@ export const sidebar: NonNullable<Config["sidebar"]> = [
       { text: "init", link: "/cli/init" },
       { text: "build", link: "/cli/build" },
       { text: "diff", link: "/cli/diff" },
+      { text: "inspect", link: "/cli/inspect" },
     ],
   },
 ];

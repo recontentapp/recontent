@@ -1,0 +1,181 @@
+---
+title: "inspect"
+description: "Browse the tokens and components a project defines, for people, agents and scripts."
+---
+
+# inspect
+
+Prints what `recontent.config.ts` defines: its tokens, and its components and the types they use when
+[`introspection`](/tokens/configuration#introspection) is configured.
+
+```bash
+recontent inspect [--format <format>] [--from <package|file>] [--no-cache]
+recontent inspect tokens [path...] [--type <type>] [--theme <theme>] [--deprecated] [--format <format>]
+recontent inspect components [name...] [--deprecated] [--format <format>] [--no-cache]
+recontent inspect types [name...] [--deprecated] [--format <format>] [--no-cache]
+```
+
+Uses the [global options](/cli#global-options) `-c`, `--cwd` and `--log-level`. Every subcommand also accepts
+`--from`, to [browse an installed design system](#headless-design-system-consumers) instead of a config.
+
+## Browsing
+
+Start with the overview, then drill down. Each step prints more about less, so you never have to read
+a whole design system to find one token.
+
+```bash
+recontent inspect                      # counts per layer and type, themes, component names
+recontent inspect tokens               # one row per group, with counts
+recontent inspect tokens system.color  # the tokens at or under system.color, with values and CSS variables
+recontent inspect components           # one line per component
+recontent inspect components Button    # its props: type or allowed values, default, required, notes, then the types they use
+recontent inspect types                # one line per type that components' props reference
+recontent inspect types TabItem        # its members or values, and the types it references in turn
+```
+
+Every overview, even an empty one, ends with a `Next:` line that names a command to try.
+
+| Command                        | Without arguments         | With arguments                                                                       |
+| ------------------------------ | ------------------------- | ------------------------------------------------------------------------------------ |
+| `inspect`                      | The overview.             | None.                                                                                |
+| `inspect tokens [path...]`     | Token groups with counts. | Each path is an exact token or a group: `system.color` includes everything under it. |
+| `inspect components [name...]` | One line per component.   | Each name is a component or a family: `Tabs` includes `Tabs.Item`.                   |
+| `inspect types [name...]`      | One line per type.        | Each name is a type, by its id or its bare name. Types it references are included.   |
+
+Options for `tokens`:
+
+| Option            | Description                                                                            |
+| ----------------- | -------------------------------------------------------------------------------------- |
+| `--type <type>`   | Only tokens of this type, such as `color` or `dimension`. An unknown type is an error. |
+| `--theme <theme>` | Show only this theme's column next to the default value. An unknown theme is an error. |
+| `--deprecated`    | Only deprecated tokens.                                                                |
+
+`components` and `types` take `--deprecated` too. A filter that matches nothing (a valid type no token has,
+`--deprecated` with nothing deprecated) prints an empty result and exits `0`.
+
+`--no-cache` (for `inspect`, `inspect components` and `inspect types`) neither reads nor writes the
+[introspection cache](/tokens/configuration#cache).
+
+A token is printed with its path, type, value, CSS variable and notes (alias, description,
+deprecation), and its value in each theme that overrides it. A component is printed with its source
+location (and the date of its last commit with [`history`](/tokens/configuration#history)) and a
+table of its **own** props, with the expansion of your own type aliases under the type. Props
+inherited from outside the project, such as the 260 attributes of `ButtonHTMLAttributes`, are
+summarized on an `Also accepts:` line instead of listed; `--format json` lists their names.
+
+## Documenting components
+
+`inspect`, the [docs](/plugins/docs) and [designMD](/plugins/design-md) plugins and other plugins read the JSDoc comments of your components, props and
+types. Besides the description, `@deprecated` and `@default`, six tags help someone (or an agent) who has
+to use a component without opening its source:
+
+| Tag                         | On                    | Effect                                                                                                                                                                                                                                                                                                |
+| --------------------------- | --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `@example`                  | component, prop, type | One example per tag. `<caption>Title</caption>` titles it, and surrounding code fences are removed. A relative path (`./Button.basic.tsx`) uses the file's content verbatim, so the example is typechecked with your code. Props show one-line examples in `inspect`; the rest is in `--format json`. |
+| `@usage`                    | component, type       | When to use it and when not to, in markdown. Kept out of the description, so that summaries stay one line. A relative path (`./Button.usage.md`) uses the file's content verbatim.                                                                                                                    |
+| `@link`                     | component, prop, type | An external page: `@link <caption>Figma</caption> https://figma.com/docs/button`. The caption is optional; only `http(s)` URLs are kept, the others are reported as warnings. Listed in `externalLinks`, and shown on the component's page in the [docs plugin](/plugins/docs).                       |
+| `{@link Name}`              | anywhere in the text  | Names a component or a type. It is listed in `links`. Anything else stays plain text.                                                                                                                                                                                                                 |
+| `@deprecated Use {@link X}` | component, prop, type | The first link is the `replacement`, shown as `deprecated → X` in summaries.                                                                                                                                                                                                                          |
+| `@experimental`             | component, prop, type | Marks it as experimental, with an optional note. Shown as a callout, and as `experimental` in summaries.                                                                                                                                                                                              |
+| `@category`                 | component             | Groups components in `inspect components` and in the docs navigation. Components without one come last.                                                                                                                                                                                               |
+
+```tsx
+/**
+ * Triggers an action.
+ *
+ * @usage Prefer a link when the click only navigates.
+ * @link <caption>Figma</caption> https://figma.com/docs/button
+ * @example <caption>Basic</caption>
+ * <Button label="Save" />
+ * @example <caption>With an icon</caption> ./Button.icon.tsx
+ * @category Actions
+ */
+export function Button(props: ButtonProps) {}
+
+/** @deprecated Use {@link Button} instead. */
+export function PrimaryButton(props: ButtonProps) {}
+```
+
+Examples, usage, links and category are documentation, not API: [`recontent diff`](/cli/diff) does not report them.
+
+## For agents
+
+The output is plain markdown, which coding agents read well, and it is designed to be used without
+reading source:
+
+- identifiers are printed exactly as they are used: token paths, CSS variables, component and prop names;
+- the drill-down keeps each answer small, so an agent can ask for `system.color` or `Select` and nothing else;
+- an unknown path, name, type or theme exits `2` and suggests the closest matches on stderr, so a typo is
+  recoverable:
+
+  ```text
+  error: No token or group matches "system.colr". Did you mean `system.color`?
+  ```
+
+`recontent --help` lists the command, and `recontent inspect --help` explains the drill-down.
+
+## For scripts
+
+`--format json` prints one JSON document with the **full detail of the whole selection**, never a
+summary, so `recontent inspect tokens --format json` is every token.
+
+| Command              | Document                                                                                                                                                                                                           |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `inspect`            | `{ schemaVersion, kind: "overview", config, tokens: { total, layers }, themes, components?, types? }`                                                                                                              |
+| `inspect tokens`     | `{ schemaVersion, kind: "tokens", tokens }`, each token with `layer`, `path`, `name`, `type`, `alias?`, `description?`, `deprecated?`, `cssVar` and `values` (`default` plus the themes that differ)               |
+| `inspect components` | `{ schemaVersion, kind: "components", components, types }`, each component as described in the [plugin API](/plugin-api#componentinfo), and `types` the [types](/plugin-api#typeinfo) they reference, transitively |
+| `inspect types`      | `{ schemaVersion, kind: "types", types }`, the selected types and, transitively, the types they reference                                                                                                          |
+
+`schemaVersion` is `"1"` and only changes with a breaking change to these documents.
+
+- **stdout** carries the result and nothing else. Logs and warnings, such as an introspection warning,
+  go to stderr.
+- With `--theme`, every token has that theme in `values`: a theme that does not override a token
+  reads as its default, so the value is the default's.
+- Exit code `0` is success, including an empty result from `--deprecated` or an empty project.
+  Exit code `2` means the request matched nothing: an unknown path, name, type or `--theme`. Exit code
+  `1` means the project is broken: token aliases, an introspection failure, or `inspect components` in
+  a config without an `introspection` block.
+- With `--format json`, an error is also printed on stdout, so that a script never parses prose:
+  `{ schemaVersion, kind: "error", errors: [{ message, input?, suggestions? }] }`. The same text is on stderr.
+- The overview is the exception to `1`: with a broken `introspection` block it still prints the
+  tokens and exits `0`, with `components: { error }` in JSON and an `_Unavailable: …_` line in markdown.
+
+```bash
+# Fail CI when a deprecated component is still exported
+test "$(recontent inspect components --deprecated --format json | jq '.components | length')" = 0
+```
+
+## Headless (design system consumers)
+
+An app that installs `@acme/design-system` from npm has neither its `recontent.config.ts` nor its
+source. If the design system publishes a snapshot with the [`inspect()` plugin](/plugins/inspect), the app
+(and its agents) can browse its tokens, components and types anyway:
+
+```bash
+recontent inspect --from @acme/design-system            # a package: reads the "recontent" field of its package.json
+recontent inspect --from ./vendor/acme/recontent.json   # a snapshot file
+recontent inspect components Button --from @acme/design-system --format json
+```
+
+The output is the same as when you inspect the design system's own config, except that the overview names
+the source (`@acme/design-system@1.4.0`) where it names the config file. Everything is read from the
+snapshot: nothing is executed and no TypeScript program is built.
+
+- **A package or a file**: a value that starts with `.` or `/`, or ends in `.json`, is a file. Anything
+  else is a package name, found by looking in `node_modules` from `--cwd` upward. The `recontent` field of
+  its `package.json` is resolved from the package's directory.
+- **Not with `-c/--config` or `--no-cache`**: neither means anything for a snapshot, so combining them is a
+  usage error.
+- **Components** are in the snapshot only if the design system configures `introspection`. Without them,
+  `inspect components` and `inspect types` exit `1`, and `inspect` and `inspect tokens` still work.
+- **A newer snapshot** than your `recontent` understands is an error that asks you to upgrade it.
+
+## Cost
+
+`inspect tokens` only loads the config, so it is instant, and keeps working when `introspection` is
+misconfigured. `inspect`, `inspect components` and `inspect types` need the components: building a TypeScript
+program from the configured entry takes about two seconds for 50 components, so the result is
+[cached](/tokens/configuration#cache) in `.recontent/` and later calls skip the program
+until a source file changes. Run with `--log-level debug` to see the timings and whether the cache
+was used.

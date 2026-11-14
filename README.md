@@ -21,7 +21,7 @@ npm install --save-dev recontent
 npx recontent init neutral
 
 # Starts from DTCG tokens
-npx recontent init --from <path>
+npx recontent init --dtcg <path>
 ```
 
 2. Define your design tokens
