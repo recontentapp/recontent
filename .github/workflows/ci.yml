@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Setup
         uses: ./.github/actions/setup
@@ -24,18 +24,17 @@ jobs:
         run: pnpm build
 
       - name: Upload package builds
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: package-dist
-          path: |
-            packages/recontent/dist
+          path: packages/recontent/dist
           retention-days: 1
 
   lint:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Setup
         uses: ./.github/actions/setup
@@ -50,7 +49,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Setup
         uses: ./.github/actions/setup
@@ -66,7 +65,7 @@ jobs:
     needs: build
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Setup
         uses: ./.github/actions/setup
@@ -75,10 +74,10 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Download package builds
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: package-dist
-          path: packages
+          path: packages/recontent/dist
 
       - name: Typecheck
         run: pnpm typecheck
@@ -88,7 +87,7 @@ jobs:
     needs: build
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Setup
         uses: ./.github/actions/setup
@@ -97,10 +96,10 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Download package builds
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: package-dist
-          path: packages
+          path: packages/recontent/dist
 
       - name: Test
         run: pnpm test
@@ -110,7 +109,7 @@ jobs:
     needs: build
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Setup
         uses: ./.github/actions/setup
@@ -119,10 +118,10 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Download package builds
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: package-dist
-          path: packages
+          path: packages/recontent/dist
 
       - name: Knip
         run: pnpm knip
