@@ -77,8 +77,11 @@ test("honors TypeScript path aliases", async () => {
   );
 });
 
-test("rejects invalid configuration exports", async () => {
-  await withFixture({ "recontent.config.ts": "export default {};" }, async (directory) => {
+test.each([
+  ["a config that does not export a configuration", "export default {};"],
+  ["a config the loader cannot parse", "export default from syntax error("],
+])("rejects %s with a ConfigLoadError", async (_name, source) => {
+  await withFixture({ "recontent.config.ts": source }, async (directory) => {
     await expect(loadConfig(path.join(directory, "recontent.config.ts"))).rejects.toBeInstanceOf(
       ConfigLoadError,
     );
@@ -93,36 +96,20 @@ test("a directory is not a config file", async () => {
   });
 });
 
-test("wraps loader failures in a ConfigLoadError", async () => {
-  await withFixture(
-    { "recontent.config.ts": "export default from syntax error(" },
-    async (directory) => {
-      await expect(loadConfig(path.join(directory, "recontent.config.ts"))).rejects.toBeInstanceOf(
-        ConfigLoadError,
-      );
-    },
-  );
-});
-
-test("resolves relative, absolute, and home config paths", () => {
-  expect(resolveConfigPath("/tmp/recontent.config.ts")).toBe("/tmp/recontent.config.ts");
-  expect(resolveConfigPath("~/recontent.config.ts")).toBe(
-    path.join(os.homedir(), "recontent.config.ts"),
-  );
-  expect(resolveConfigPath("recontent.config.ts")).toBe(
-    path.resolve(process.cwd(), "recontent.config.ts"),
-  );
-});
-
-test("expands only ~ and ~/, leaving ~user literal", () => {
-  expect(resolveConfigPath("~")).toBe(os.homedir());
-  expect(resolveConfigPath("~config.ts")).toBe(path.resolve(process.cwd(), "~config.ts"));
-});
-
-test("resolveConfigPath resolves relative paths against an explicit cwd", () => {
-  expect(resolveConfigPath("recontent.config.ts", { cwd: "/tmp/some/dir" })).toBe(
+test.each<[string, string, { cwd: string } | undefined]>([
+  ["/tmp/recontent.config.ts", "/tmp/recontent.config.ts", undefined],
+  ["~/recontent.config.ts", path.join(os.homedir(), "recontent.config.ts"), undefined],
+  ["recontent.config.ts", path.resolve(process.cwd(), "recontent.config.ts"), undefined],
+  ["~", os.homedir(), undefined],
+  // Only ~ and ~/ are expanded; ~user stays literal.
+  ["~config.ts", path.resolve(process.cwd(), "~config.ts"), undefined],
+  [
+    "recontent.config.ts",
     path.join("/tmp/some/dir", "recontent.config.ts"),
-  );
+    { cwd: "/tmp/some/dir" },
+  ],
+])("resolveConfigPath(%s) is %s", (input, expected, options) => {
+  expect(resolveConfigPath(input, options)).toBe(expected);
 });
 
 test("discoverConfigPath finds a config in an ancestor directory", async () => {

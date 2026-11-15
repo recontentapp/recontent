@@ -4,7 +4,7 @@ import type { Config } from "../config/types.js";
 import type { EmittedFile, PluginContext, PluginDiagnostic, RecontentPlugin } from "./types.js";
 import type { Logger } from "../logger.js";
 
-export function sortPlugins(plugins: RecontentPlugin[]): RecontentPlugin[] {
+function sortPlugins(plugins: RecontentPlugin[]): RecontentPlugin[] {
   const pre: RecontentPlugin[] = [];
   const normal: RecontentPlugin[] = [];
   const post: RecontentPlugin[] = [];

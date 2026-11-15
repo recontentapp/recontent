@@ -1,31 +1,14 @@
 import { describe, expect, test } from "@jest/globals";
-import { needsIntrospection, runPlugins, sortPlugins } from "../../src/plugins/runner.js";
+import { defineConfig, defineReferenceTokens, tokens } from "../../src/index.js";
+import { stylex, typescript, typescriptNative, vanillaExtract } from "../../src/plugins/index.js";
+import { needsIntrospection, runPlugins } from "../../src/plugins/runner.js";
+import { generateStylexFiles } from "../../src/plugins/stylex.js";
+import { generateTypeScriptFiles } from "../../src/plugins/typescript.js";
+import { generateTypeScriptNativeFiles } from "../../src/plugins/typescript-native.js";
+import { generateVanillaExtractFiles } from "../../src/plugins/vanilla-extract/generate.js";
 import type { Config } from "../../src/config/types.js";
 import type { PluginContext, RecontentPlugin } from "../../src/plugins/types.js";
-
-test("sortPlugins stably partitions pre / unenforced / post", () => {
-  const plugin = (name: string, enforce?: "pre" | "post"): RecontentPlugin => ({
-    name,
-    enforce,
-    dependsOn: ["tokens"],
-  });
-  const plugins = [
-    plugin("normal-a"),
-    plugin("post-a", "post"),
-    plugin("pre-a", "pre"),
-    plugin("normal-b"),
-    plugin("pre-b", "pre"),
-    plugin("post-b", "post"),
-  ];
-  expect(sortPlugins(plugins).map((p) => p.name)).toEqual([
-    "pre-a",
-    "pre-b",
-    "normal-a",
-    "normal-b",
-    "post-a",
-    "post-b",
-  ]);
-});
+import { themedConfig } from "../helpers/fixtures.js";
 
 function baseConfig(plugins: RecontentPlugin[]): Config {
   return {
@@ -71,31 +54,29 @@ test("enforce ordering: pre before unenforced before post, stable within each gr
   });
 });
 
-test("two plugins emitting the same file path throws, naming both plugins", async () => {
-  const a: RecontentPlugin = {
-    name: "a",
-    dependsOn: ["tokens"],
-    generate: () => [{ path: "out.txt", content: "a" }],
-  };
-  const b: RecontentPlugin = {
-    name: "b",
-    dependsOn: ["tokens"],
-    generate: () => [{ path: "out.txt", content: "b" }],
-  };
-  await expect(runPlugins(baseConfig([a, b]), runOptions)).rejects.toThrow(
-    /File path collision at "out.txt": both plugin "a" and plugin "b"/,
+test.each([
+  ["two plugins", ["a", "b"], ["out.txt", "out.txt"], /"out.txt": both plugin "a" and plugin "b"/],
+  [
+    "two instances of the same plugin",
+    ["recontent:css", "recontent:css"],
+    ["out/tokens.css", "out/tokens.css"],
+    /"out\/tokens.css": both plugin "recontent:css" and plugin "recontent:css"/,
+  ],
+  [
+    "an absolute path inside the root and its relative twin",
+    ["a", "b"],
+    ["a.css", "/project/a.css"],
+    /File path collision/,
+  ],
+])("%s emitting the same file path throws", async (_name, names, paths, message) => {
+  const plugins = names.map(
+    (name, index): RecontentPlugin => ({
+      name,
+      dependsOn: ["tokens"],
+      generate: () => [{ path: paths[index]!, content: String(index) }],
+    }),
   );
-});
-
-test("two instances of the same plugin emitting the same file path throw", async () => {
-  const instance = (): RecontentPlugin => ({
-    name: "recontent:css",
-    dependsOn: ["tokens"],
-    generate: () => [{ path: "out/tokens.css", content: "x" }],
-  });
-  await expect(runPlugins(baseConfig([instance(), instance()]), runOptions)).rejects.toThrow(
-    /File path collision at "out\/tokens.css": both plugin "recontent:css" and plugin "recontent:css"/,
-  );
+  await expect(runPlugins(baseConfig(plugins), runOptions)).rejects.toThrow(message);
 });
 
 test("a plugin emitting the same file path twice throws", async () => {
@@ -259,4 +240,43 @@ describe("dependsOn", () => {
       needsIntrospection(baseConfig([record("recontent:docs", ["tokens", "introspection"])])),
     ).toThrow("`recontent:docs` depends on introspection; add `introspection` to defineConfig().");
   });
+});
+
+test.each([
+  ["typescript", (outDir: string) => typescript({ outDir })],
+  ["typescript-native", (outDir: string) => typescriptNative({ outDir })],
+  ["stylex", (outDir: string) => stylex({ outDir })],
+  ["vanilla-extract", (outDir: string) => vanillaExtract({ outDir })],
+])("a hyphenated theme name is a %s validate error, not a generate failure", async (_, plugin) => {
+  const config = defineConfig({
+    tokens: { ref: defineReferenceTokens({ black: tokens.color("#000000") }) },
+    themes: { "dark-hc": new Map() },
+    plugins: plugin("out"),
+  });
+  const result = await runPlugins(config, runOptions);
+
+  expect(result.failures).toEqual([]);
+  expect(result.files).toEqual([]);
+  expect(result.diagnostics).toEqual([
+    expect.objectContaining({
+      severity: "error",
+      message: expect.stringContaining('Theme name "dark-hc"'),
+    }),
+  ]);
+});
+
+test.each([
+  ["typescript", (config: Config) => generateTypeScriptFiles(config, { outDir: "out" })],
+  [
+    "typescript-native",
+    (config: Config) => generateTypeScriptNativeFiles(config, { outDir: "out" }),
+  ],
+  ["stylex", (config: Config) => generateStylexFiles(config)],
+  ["vanilla-extract", (config: Config) => generateVanillaExtractFiles(config)],
+])("the %s generator throws on a theme name that is not an identifier", (target, generate) => {
+  const { config } = themedConfig({ layer: "ref", name: "dark-mode" });
+
+  expect(() => generate(config)).toThrow(
+    `Theme name "dark-mode" cannot be used with the "${target}" output target`,
+  );
 });

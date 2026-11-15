@@ -23,7 +23,7 @@ export function isCompositeType(type: TokenType): type is CompositeTokenType {
   return (COMPOSITE_TOKEN_TYPES as readonly TokenType[]).includes(type);
 }
 
-export const EXPANDED_COMPOSITE_TYPES = [
+const EXPANDED_COMPOSITE_TYPES = [
   "typography",
   "transition",
 ] as const satisfies readonly CompositeTokenType[];

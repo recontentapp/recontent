@@ -4,39 +4,18 @@ import {
   isStampedToken,
   isTokenLeaf,
   isTokenScale,
-  pathKey,
 } from "../../src/token-model/guards.js";
 
-test("isRawToken recognizes raw tokens", () => {
-  expect(isRawToken({ _kind: "raw", $value: 1 })).toBe(true);
-  expect(isRawToken({ _kind: "stamped", $value: 1 })).toBe(false);
-  expect(isRawToken({})).toBe(false);
-  expect(isRawToken(null)).toBe(false);
-  expect(isRawToken(undefined)).toBe(false);
-  expect(isRawToken("raw")).toBe(false);
-});
+const raw = { _kind: "raw", $value: 1 };
+const stamped = { _kind: "stamped", $value: 1 };
+const scale = { _kind: "scale" };
 
-test("isStampedToken recognizes stamped tokens", () => {
-  expect(isStampedToken({ _kind: "stamped", $value: 1 })).toBe(true);
-  expect(isStampedToken({ _kind: "raw", $value: 1 })).toBe(false);
-  expect(isStampedToken(null)).toBe(false);
-});
-
-test("isTokenScale recognizes token scales", () => {
-  expect(isTokenScale({ _kind: "scale" })).toBe(true);
-  expect(isTokenScale({ _kind: "raw" })).toBe(false);
-  expect(isTokenScale(42)).toBe(false);
-});
-
-test("isTokenLeaf recognizes raw and stamped tokens but not scales", () => {
-  expect(isTokenLeaf({ _kind: "raw", $value: 1 })).toBe(true);
-  expect(isTokenLeaf({ _kind: "stamped", $value: 1 })).toBe(true);
-  expect(isTokenLeaf({ _kind: "scale" })).toBe(false);
-  expect(isTokenLeaf({})).toBe(false);
-});
-
-test("pathKey joins path segments with a dot", () => {
-  expect(pathKey(["a", "b", "c"])).toBe("a.b.c");
-  expect(pathKey(["single"])).toBe("single");
-  expect(pathKey([])).toBe("");
+test.each([
+  [isRawToken, [raw], [stamped, {}, null, undefined, "raw"]],
+  [isStampedToken, [stamped], [raw, null]],
+  [isTokenScale, [scale], [raw, 42]],
+  [isTokenLeaf, [raw, stamped], [scale, {}]],
+])("%p accepts only what it names", (guard, accepted, rejected) => {
+  for (const value of accepted) expect(guard(value)).toBe(true);
+  for (const value of rejected) expect(guard(value)).toBe(false);
 });

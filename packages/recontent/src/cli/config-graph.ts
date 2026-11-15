@@ -2,10 +2,6 @@ import fs from "node:fs";
 import path from "node:path";
 import ts from "typescript";
 
-function isAllowedSpecifier(specifier: string): boolean {
-  return specifier === "recontent" || specifier.startsWith("recontent/");
-}
-
 function isRelativeSpecifier(specifier: string): boolean {
   return specifier.startsWith("./") || specifier.startsWith("../");
 }
@@ -65,15 +61,6 @@ function collectAllSpecifiers(source: string, fileName: string): string[] {
   const specifiers = new Set<string>();
   ts.forEachChild(sourceFile, (node) => collectFromNode(node, specifiers));
   return Array.from(specifiers);
-}
-
-/** Specifiers that are not the `recontent` package (or a `recontent/*`
- *  subpath) — includes relative imports, matching the original semantics
- *  this was extracted from. */
-export function findExternalImports(source: string, fileName: string): string[] {
-  return collectAllSpecifiers(source, fileName).filter(
-    (specifier) => !isAllowedSpecifier(specifier),
-  );
 }
 
 const RESOLVABLE_EXTENSIONS = [".ts", ".tsx", ".mts", ".cts", ".js", ".jsx", ".mjs", ".cjs"];
