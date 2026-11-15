@@ -11,8 +11,12 @@ type Page =
   | { path: '/cli'; render: 'static' }
   | { path: '/cli/init'; render: 'static' }
   | { path: '/cli/inspect'; render: 'static' }
+  | { path: '/guides/agents'; render: 'static' }
   | { path: '/guides/defining-tokens'; render: 'static' }
   | { path: '/guides/diffs'; render: 'static' }
+  | { path: '/guides/documenting-components'; render: 'static' }
+  | { path: '/guides/introspecting-components'; render: 'static' }
+  | { path: '/guides/publishing'; render: 'static' }
   | { path: '/guides/troubleshooting'; render: 'static' }
   | { path: '/guides/using-plugins'; render: 'static' }
   | { path: '/guides/working-with-themes'; render: 'static' }
@@ -22,8 +26,10 @@ type Page =
   | { path: '/introduction/why-recontent'; render: 'static' }
   | { path: '/plugin-api'; render: 'static' }
   | { path: '/plugins/css'; render: 'static' }
+  | { path: '/plugins/design-md'; render: 'static' }
   | { path: '/plugins/docs'; render: 'static' }
   | { path: '/plugins/dtcg'; render: 'static' }
+  | { path: '/plugins/inspect'; render: 'static' }
   | { path: '/plugins/stylex'; render: 'static' }
   | { path: '/plugins/tailwind'; render: 'static' }
   | { path: '/plugins/typescript'; render: 'static' }

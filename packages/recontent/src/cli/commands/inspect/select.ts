@@ -110,7 +110,7 @@ export function selectTokens(
 
 export function selectComponents(
   components: ComponentInfo[],
-  query: { names: string[]; deprecated?: boolean },
+  query: { names: string[]; deprecated?: boolean; props?: string[] },
 ): Selection<ComponentInfo> {
   const errors: SelectionError[] = [];
   let selected = components;
@@ -125,6 +125,26 @@ export function selectComponents(
     );
   }
   if (query.deprecated) selected = selected.filter((component) => component.deprecated);
+
+  if (query.props?.length) {
+    if (query.names.length === 0) {
+      errors.push({
+        message: "--props needs the name of a component.",
+        input: "--props",
+        suggestions: [],
+      });
+    }
+    // Own and inherited alike: any of them can be asked for.
+    const known = new Set(
+      selected.flatMap((component) => [
+        ...component.props.map((prop) => prop.name),
+        ...component.inherits.flatMap((group) => group.props),
+      ]),
+    );
+    for (const prop of query.props) {
+      if (!known.has(prop)) errors.push(unknown("prop", prop, known));
+    }
+  }
   return { selected, errors };
 }
 

@@ -8,7 +8,7 @@ import type {
 import ts from "typescript";
 import { categoryOf, jsDoc } from "./jsdoc.js";
 import { resolveAlias, type Analysis, type Candidate } from "./components.js";
-import { referencesOfProperty } from "./types.js";
+import { declaredTypeId, referencesOfProperty } from "./types.js";
 
 type Origin = InheritedProps & { symbol?: ts.Symbol };
 
@@ -69,16 +69,20 @@ function locate(checker: ts.TypeChecker, symbol: ts.Symbol): ts.Declaration | un
   return declarationOf(current);
 }
 
-function typeText(checker: ts.TypeChecker, symbol: ts.Symbol, optional: boolean): string {
+/** The type as written on the property, not a method's return type. */
+export function declaredTypeNode(symbol: ts.Symbol): ts.TypeNode | undefined {
   const declaration = declarationOf(symbol);
-  // Only declarations whose `type` is the property's own type (not a method's return type).
-  const node =
-    declaration &&
+  return declaration &&
     (ts.isPropertySignature(declaration) ||
       ts.isPropertyDeclaration(declaration) ||
       ts.isParameter(declaration))
-      ? declaration.type
-      : undefined;
+    ? declaration.type
+    : undefined;
+}
+
+function typeText(checker: ts.TypeChecker, symbol: ts.Symbol, optional: boolean): string {
+  const declaration = declarationOf(symbol);
+  const node = declaredTypeNode(symbol);
   if (node) {
     return oneLine(printer.printNode(ts.EmitHint.Unspecified, node, node.getSourceFile()));
   }
@@ -90,11 +94,17 @@ function typeText(checker: ts.TypeChecker, symbol: ts.Symbol, optional: boolean)
   return optional ? text.replace(/ \| undefined$/, "") : text;
 }
 
+function containsIndexedAccess(node: ts.Node): boolean {
+  return ts.isIndexedAccessTypeNode(node) || !!ts.forEachChild(node, containsIndexedAccess);
+}
+
 /**
  * The prop's type with the project's own alias expanded, e.g. `Width` →
  * `number | "100%" | "auto"`, or `undefined` when there is no such alias.
  * Library aliases stay as written: `MouseEventHandler<…>` reads better than
- * what it expands to.
+ * what it expands to. An indexed access (`Sprinkles["gap"]`) is resolved too,
+ * since it names nothing the reader can look up: to the alias the checker
+ * kept (`ReactNode`), else to what it is.
  */
 function resolvedText(
   analysis: Analysis,
@@ -105,12 +115,17 @@ function resolvedText(
   const { checker } = analysis;
   const nonNull = checker.getNonNullableType(type);
   const aliasDeclaration = nonNull.aliasSymbol?.declarations?.[0];
-  if (!aliasDeclaration || isExternal(analysis, aliasDeclaration.getSourceFile())) return undefined;
+  const projectAlias =
+    !!aliasDeclaration && !isExternal(analysis, aliasDeclaration.getSourceFile());
+  const node = declaredTypeNode(symbol);
+  if (!projectAlias && !(node && containsIndexedAccess(node))) return undefined;
   const text = checker
     .typeToString(
-      nonNull,
+      projectAlias || !type.aliasSymbol ? nonNull : type,
       declarationOf(symbol),
-      ts.TypeFormatFlags.NoTruncation | ts.TypeFormatFlags.InTypeAlias,
+      projectAlias
+        ? ts.TypeFormatFlags.NoTruncation | ts.TypeFormatFlags.InTypeAlias
+        : ts.TypeFormatFlags.NoTruncation,
     )
     .replace(/ \| undefined$/, "");
   return text === declared ? undefined : text;
@@ -244,6 +259,21 @@ function defaultPropsDefaults(checker: ts.TypeChecker, type: ts.Type): Map<strin
   return defaults;
 }
 
+/** The project interface or alias a property is declared in; none for inline literals, mapped types and classes. */
+function declaringType(
+  analysis: Analysis,
+  declaration: ts.Declaration | undefined,
+): string | undefined {
+  for (let current = declaration?.parent; current; current = current.parent) {
+    if (ts.isInterfaceDeclaration(current) || ts.isTypeAliasDeclaration(current)) {
+      return declaredTypeId(analysis, current);
+    }
+    // A parameter's literal type or a class belongs to no named type.
+    if (!ts.isTypeNode(current) && !ts.isTypeElement(current)) return undefined;
+  }
+  return undefined;
+}
+
 function enclosingTypeDeclaration(node: ts.Node): ts.Declaration | undefined {
   for (let current = node.parent; current; current = current.parent) {
     if (
@@ -330,6 +360,86 @@ function groupInherited(analysis: Analysis, symbols: ts.Symbol[]): InheritedProp
 
 type Occurrence = { symbol: ts.Symbol; type: ts.Type };
 
+/** Library wrappers that keep the keys of their first argument as they are, or narrow them. */
+const TRANSPARENT = new Set(["Partial", "Required", "Readonly", "PropsWithoutRef"]);
+
+/**
+ * The keys that project code picks from library types with `Pick<Lib, "a" | "b">`.
+ * Naming them is a deliberate choice, so they are the project's own props even
+ * though the declarations stay in the library. `Omit` is not: it keeps whatever
+ * the project never named. Only the project's own declarations are walked, and
+ * the library types whose keys are not picked are not entered.
+ */
+function pickedKeys(analysis: Analysis, propsTypes: Iterable<ts.Type>): Set<string> {
+  const { checker } = analysis;
+  const keys = new Set<string>();
+  const seen = new Set<unknown>();
+
+  const isLibrary = (symbol: ts.Symbol) =>
+    !symbol.declarations?.length ||
+    symbol.declarations.every((declaration) => isExternal(analysis, declaration.getSourceFile()));
+
+  const addKeys = (type: ts.Type) => {
+    for (const value of literalValues(checker, type) ?? []) {
+      if (typeof value === "string") keys.add(value);
+    }
+  };
+
+  /** The heritage clauses of a project interface or class, and the type of a project alias. */
+  const fromDeclarations = (symbol: ts.Symbol) => {
+    for (const declaration of symbol.declarations ?? []) {
+      if (ts.isTypeAliasDeclaration(declaration)) {
+        fromNode(declaration.type);
+      } else if (ts.isInterfaceDeclaration(declaration) || ts.isClassLike(declaration)) {
+        for (const clause of declaration.heritageClauses ?? []) clause.types.forEach(fromNode);
+      }
+    }
+  };
+
+  function fromNode(node: ts.Node): void {
+    if (ts.isParenthesizedTypeNode(node)) return fromNode(node.type);
+    if (ts.isIntersectionTypeNode(node) || ts.isUnionTypeNode(node)) {
+      return node.types.forEach(fromNode);
+    }
+    if (!ts.isTypeReferenceNode(node) && !ts.isExpressionWithTypeArguments(node)) return;
+    const name = ts.isTypeReferenceNode(node) ? node.typeName : node.expression;
+    const found = checker.getSymbolAtLocation(name);
+    if (!found) return;
+    const symbol = resolveAlias(checker, found);
+    if (isLibrary(symbol)) {
+      const args = node.typeArguments ?? [];
+      if (symbol.name === "Pick" && args[1]) addKeys(checker.getTypeFromTypeNode(args[1]));
+      else if (TRANSPARENT.has(symbol.name) && args[0]) fromNode(args[0]);
+    } else if (!seen.has(symbol)) {
+      seen.add(symbol);
+      fromDeclarations(symbol);
+    }
+  }
+
+  function fromType(type: ts.Type): void {
+    if (seen.has(type)) return;
+    seen.add(type);
+    const alias = type.aliasSymbol;
+    if (alias) {
+      if (isLibrary(alias)) {
+        const args = type.aliasTypeArguments ?? [];
+        if (alias.name === "Pick" && args[1]) addKeys(args[1]);
+        else if (TRANSPARENT.has(alias.name) && args[0]) fromType(args[0]);
+      } else {
+        // The alias hides what it is made of, so read it as written.
+        fromDeclarations(alias);
+      }
+    } else if (type.isUnionOrIntersection()) {
+      type.types.forEach(fromType);
+    } else if (type.symbol && !isLibrary(type.symbol)) {
+      fromDeclarations(type.symbol);
+    }
+  }
+
+  for (const type of propsTypes) fromType(type);
+  return keys;
+}
+
 /**
  * Describes the properties of `propsTypes` (a union is merged member by member,
  * because the checker only reports the properties every member shares): the
@@ -340,6 +450,7 @@ export function describeMembers(
   propsTypes: Set<ts.Type>,
   location: ts.Node,
   defaults: Map<string, string>,
+  component?: string,
 ): { props: PropInfo[]; inherits: InheritedProps[] } {
   const { checker } = analysis;
   const byName = new Map<string, { symbol: ts.Symbol }[]>();
@@ -353,13 +464,23 @@ export function describeMembers(
 
   const props: PropInfo[] = [];
   const inherited: ts.Symbol[] = [];
+  let picked: Set<string> | undefined;
   for (const [name, occurrences] of byName) {
-    const own: Occurrence[] = occurrences
-      .filter(({ symbol: property }) => {
+    const describe = (list: { symbol: ts.Symbol }[]): Occurrence[] =>
+      list.map(({ symbol }) => ({
+        symbol,
+        type: checker.getTypeOfSymbolAtLocation(symbol, location),
+      }));
+    let own = describe(
+      occurrences.filter(({ symbol: property }) => {
         const propertyDeclaration = declarationOf(property);
         return !propertyDeclaration || !isExternal(analysis, propertyDeclaration.getSourceFile());
-      })
-      .map(({ symbol }) => ({ symbol, type: checker.getTypeOfSymbolAtLocation(symbol, location) }));
+      }),
+    );
+    // Declared by a library, but named by the project in a `Pick`: its own prop.
+    if (own.length === 0 && (picked ??= pickedKeys(analysis, propsTypes)).has(name)) {
+      own = describe(occurrences);
+    }
     if (own.length === 0) {
       inherited.push(occurrences[0]!.symbol);
       continue;
@@ -389,7 +510,10 @@ export function describeMembers(
       ),
     ].sort((a, b) => a.localeCompare(b));
 
-    const doc = jsDoc(analysis, own[0]!.symbol);
+    const owners = new Set(own.map(({ symbol }) => declaringType(analysis, declarationOf(symbol))));
+    const [declaredIn] = owners.size === 1 ? owners : [];
+
+    const doc = jsDoc(analysis, own[0]!.symbol, component);
     const defaultValue = doc.defaultValue ?? defaults.get(name);
     props.push({
       name,
@@ -398,6 +522,7 @@ export function describeMembers(
       ...(resolved && !values ? { resolved } : {}),
       ...(values ? { values } : {}),
       ...(references.length > 0 ? { references } : {}),
+      ...(declaredIn ? { declaredIn } : {}),
       // Required only when every member of a props union has it, and requires it.
       required:
         occurrences.length === propsTypes.size &&
@@ -438,7 +563,13 @@ export function describeComponent(
     ...defaultPropsDefaults(checker, type),
     ...implementationDefaults(checker, located),
   ]);
-  const { props, inherits } = describeMembers(analysis, propsTypes, located, defaults);
+  const { props, inherits } = describeMembers(
+    analysis,
+    propsTypes,
+    located,
+    defaults,
+    candidate.name,
+  );
 
   const category = categoryOf(checker, symbol);
   const file = located.getSourceFile();
@@ -451,18 +582,12 @@ export function describeComponent(
     sourceFilePath: path.relative(root, file.fileName).split(path.sep).join("/"),
     line: file.getLineAndCharacterOfPosition(located.getStart(file)).line + 1,
     ...(category ? { category } : {}),
-    ...jsDoc(analysis, symbol),
+    ...jsDoc(analysis, symbol, candidate.name),
     props,
     inherits,
     references: [...new Set(props.flatMap((prop) => prop.references ?? []))].sort((a, b) =>
       a.localeCompare(b),
     ),
   };
-  const inheritedCount = inherits.reduce((total, group) => total + group.props.length, 0);
-  if (props.length === 0 && inheritedCount > 0) {
-    analysis.warnings.push(
-      `${candidate.name} has no own props (all ${inheritedCount} props are inherited).`,
-    );
-  }
   return info;
 }

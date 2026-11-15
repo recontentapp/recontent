@@ -1,10 +1,13 @@
-import type { ComponentInfo, TokenLayer, TypeInfo } from "@recontentapp/core";
+import type { ComponentInfo, PropInfo, TokenLayer, TypeInfo } from "@recontentapp/core";
 import { plural } from "../../utils/format.js";
 import {
   groupByCategory,
   renderComponentMarkdown,
   renderTypeMarkdown,
+  type Brevity,
+  type ComponentView,
 } from "../../../introspection/markdown.js";
+import { typeClosure } from "../../../introspection/types.js";
 import { code, escapeText } from "../../../markdown.js";
 import { SCHEMA_VERSION } from "../../../snapshot.js";
 import type { DocToken } from "../../../plugins/shared/doc-token.js";
@@ -223,19 +226,102 @@ function renderTypesSection(types: TypeInfo[]): string {
   return ["## Types", ...types.map((type) => renderTypeMarkdown(type, 3))].join("\n\n");
 }
 
+/** The types that declare props of two or more components: what is worth saying once instead of in every table. */
+export function sharedDeclarations(components: ComponentInfo[]): Set<string> {
+  const counts = new Map<string, number>();
+  for (const component of components) {
+    const ids = new Set(component.props.map((prop) => prop.declaredIn));
+    for (const id of ids) if (id) counts.set(id, (counts.get(id) ?? 0) + 1);
+  }
+  return new Set([...counts].filter(([, count]) => count >= 2).map(([id]) => id));
+}
+
+const BREVITY: Brevity = { maxValues: 12, maxTypeLength: 200 };
+
+/** Only the requested props: own ones in full, inherited ones as a row naming where they come from. */
+function onlyProps(component: ComponentInfo, names: string[]): PropInfo[] {
+  const own = new Map(component.props.map((prop) => [prop.name, prop]));
+  const inherited = new Map(
+    component.inherits.flatMap((group) =>
+      group.props.map((name) => [
+        name,
+        group.package ? `${group.name} (${group.package})` : group.name,
+      ]),
+    ),
+  );
+  return names.flatMap((name): PropInfo[] => {
+    const prop = own.get(name);
+    const origin = inherited.get(name);
+    if (prop) return [prop];
+    return origin ? [{ name, type: origin, required: false }] : [];
+  });
+}
+
+/** The component as `--props` asks for it, in JSON too: the props, what they reference, and who else provides them. */
+function narrowed(component: ComponentInfo, names: string[]): ComponentInfo {
+  const wanted = new Set(names);
+  const props = component.props.filter((prop) => wanted.has(prop.name));
+  return {
+    ...component,
+    props,
+    inherits: component.inherits
+      .map((group) => ({ ...group, props: group.props.filter((name) => wanted.has(name)) }))
+      .filter((group) => group.props.length > 0),
+    references: [...new Set(props.flatMap((prop) => prop.references ?? []))].sort((a, b) =>
+      a.localeCompare(b),
+    ),
+  };
+}
+
+/** What of a component is printed: by default the props it declares itself and the ones nobody else shares. */
+function compactView(
+  component: ComponentInfo,
+  shared: Set<string>,
+  typeFiles: Map<string, string>,
+): ComponentView {
+  const collapsed = new Map<string, string[]>();
+  const props = component.props.filter((prop) => {
+    const { declaredIn: id } = prop;
+    // The component that owns the declaration still lists it.
+    if (!id || !shared.has(id) || typeFiles.get(id) === component.sourceFilePath) return true;
+    collapsed.set(id, [...(collapsed.get(id) ?? []), prop.name]);
+    return false;
+  });
+  return {
+    props,
+    collapsed: [...collapsed]
+      .map(([type, names]) => ({ type, props: names }))
+      .sort((a, b) => a.type.localeCompare(b.type)),
+    brevity: BREVITY,
+  };
+}
+
 export function renderComponents(
   components: ComponentInfo[],
   options: {
     format: Format;
     summary: boolean;
-    /** What the components reference, transitively. */
+    /** Every project type, for what the components reference to be found. */
     types: TypeInfo[];
+    /** See `sharedDeclarations`, over all components, not only the selected ones. */
+    shared?: Set<string>;
+    /** Only these props, in full. */
+    props?: string[];
   },
 ): string {
-  const { format, summary, types } = options;
+  const { format, summary, types, shared = new Set(), props: only } = options;
   if (format === "json") {
+    const shown = only ? components.map((component) => narrowed(component, only)) : components;
     return JSON.stringify(
-      { schemaVersion: SCHEMA_VERSION, kind: "components", components, types },
+      {
+        schemaVersion: SCHEMA_VERSION,
+        kind: "components",
+        components: shown,
+        types: typeClosure(
+          shown.flatMap((component) => component.references),
+          types,
+        ),
+      },
       null,
       2,
     );
@@ -274,8 +360,42 @@ export function renderComponents(
   }
 
   if (components.length === 0) return "No components.";
-  const sections = components.map((component) => renderComponentMarkdown(component, 2));
-  if (types.length > 0) sections.push(renderTypesSection(types));
+  const typeFiles = new Map(types.map((type) => [type.id, type.sourceFilePath]));
+  const views = components.map(
+    (component): ComponentView =>
+      only
+        ? { props: onlyProps(component, only), hideInherits: true }
+        : compactView(component, shared, typeFiles),
+  );
+  const sections = components.map((component, index) =>
+    renderComponentMarkdown(component, 2, views[index]),
+  );
+
+  // Types the shown props name and that have members are worth their own table; the rest says as much in the props.
+  const referenced = [
+    ...new Set(
+      components.flatMap((component, index) =>
+        views[index]!.props!.flatMap((prop) => prop.references ?? []),
+      ),
+    ),
+  ];
+  const closure = typeClosure(referenced, types);
+  const direct = closure.filter((type) => referenced.includes(type.id) && type.members);
+  const more = closure.filter((type) => !direct.includes(type));
+  if (direct.length > 0) sections.push(renderTypesSection(direct));
+  if (more.length > 0) sections.push(`More types: ${more.map((type) => code(type.id)).join(", ")}`);
+
+  if (!only) {
+    const first = components[0]!;
+    const collapsed = views.flatMap((view) => view.collapsed ?? []);
+    const prop = collapsed[0]?.props[0] ?? views[0]!.props![0]?.name;
+    const type = collapsed[0]?.type ?? more[0]?.id ?? direct[0]?.id;
+    const hints = [
+      ...(prop ? [`components ${first.name} --props ${prop}`] : []),
+      ...(type ? [`types ${type}`] : []),
+    ];
+    if (hints.length > 0) sections.push(next(...hints));
+  }
   return sections.join("\n\n");
 }
 

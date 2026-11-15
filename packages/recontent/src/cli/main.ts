@@ -199,8 +199,9 @@ const inspect = program
     `
 Start with \`recontent inspect\` for an overview, then drill down:
   recontent inspect tokens [path...]       groups with counts; a path shows one token or everything under it
-  recontent inspect components [name...]   one line per component; a name shows its props in full,
-                                           then the project types they reference
+  recontent inspect components [name...]   one line per component; a name shows its import, props and the
+                                           types they reference, long lists shortened and props shared with
+                                           other components summarized. --props <name...> shows those props in full
   recontent inspect types [name...]        one line per project type; a name shows its members or values
 
 Output is markdown by default. --format json returns full detail for the whole selection
@@ -290,12 +291,19 @@ inspect
     "List components, or the props of the given components (Tabs also matches Tabs.Item)",
   )
   .option("--deprecated", "Only deprecated components")
-  .action(async (names: string[], options: { deprecated?: boolean }, command: Command) => {
-    await runInspectTarget(
-      { kind: "components", names, deprecated: options.deprecated },
-      inspectOptions(command),
-    );
-  });
+  .option("--props <names...>", "Only these props, in full, with none of the shortening below")
+  .action(
+    async (
+      names: string[],
+      options: { deprecated?: boolean; props?: string[] },
+      command: Command,
+    ) => {
+      await runInspectTarget(
+        { kind: "components", names, deprecated: options.deprecated, props: options.props },
+        inspectOptions(command),
+      );
+    },
+  );
 
 inspect
   .command("types [name...]")

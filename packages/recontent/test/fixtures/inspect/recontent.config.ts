@@ -30,6 +30,6 @@ const dark = defineTheme(ref, { color: { brand: { primary: tokens.color("#60a5fa
 export default defineConfig({
   tokens: { ref, system, components: defineComponentTokens({}) },
   themes: { dark },
-  introspection: { entry: "src/index.ts" },
+  introspection: { entry: "src/index.ts", importPath: "@acme/ui" },
   plugins: [docs({ outDir: "docs" }), designMD({ outDir: "docs" }), inspect({ outDir: "dist" })],
 });

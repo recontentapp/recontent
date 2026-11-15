@@ -12,20 +12,20 @@ const stack: Brick[][] = [
   [
     {
       title: "Recontent",
-      text: "Typed layers for your design tokens",
+      text: "Tokens, components & their docs, typed",
       tone: "yellow",
       studs: 6,
     },
   ],
   [
     {
-      title: "Styling solution",
-      text: "CSS modules, Tailwind, StyleX & more",
+      title: "Styling",
+      text: "CSS, Tailwind, StyleX & more",
       tone: "blue",
       studs: 3,
     },
     {
-      title: "Components",
+      title: "Your components",
       text: "Your codebase's own building blocks",
       tone: "green",
       studs: 3,
@@ -33,8 +33,8 @@ const stack: Brick[][] = [
   ],
   [
     {
-      title: "Screens & Pages",
-      text: "A consistent experience without drift for users",
+      title: "People, agents & CI",
+      text: "Everyone builds UI from the same source",
       tone: "coral",
       studs: 5,
     },
@@ -61,15 +61,15 @@ export function WhereItFits() {
     <section className="lp-section lp-wrap lp-fits" id="where-it-fits">
       <div>
         <h2 className="lp-h2">
-          Aiming at <span className="lp-hl">consistency</span> & limiting drift
+          One source of truth for <span className="lp-hl">whoever writes UI</span>
         </h2>
         <p className="lp-sub">
-          Recontent sits at the base of your design system, exposing design tokens for consistent
-          use across your stack.
+          Recontent sits at the base of your design system. Tokens and components are typed once,
+          then read the same way by designers, engineers, coding agents and CI.
         </p>
         <p className="lp-more">
-          <Link to="/guides/using-plugins" className="lp-link">
-            Using plugins
+          <Link to="/introduction/why-recontent" className="lp-link">
+            Why Recontent
           </Link>
         </p>
       </div>

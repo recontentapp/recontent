@@ -91,6 +91,7 @@ function readFile(
   symbol: ts.Symbol,
   tag: string,
   file: string,
+  component: string | undefined,
 ): string | undefined {
   const declaration = symbol.declarations?.[0];
   const absolute = path.resolve(
@@ -102,12 +103,16 @@ function readFile(
     analysis.docFiles.add(absolute);
     return code || undefined;
   } catch {
-    analysis.warnings.push(`${symbol.getName()}: @${tag} file ${file} not found.`);
+    analysis.warnings.push({
+      message: `${symbol.getName()}: @${tag} file ${file} not found.`,
+      component,
+    });
     return undefined;
   }
 }
 
-export function jsDoc(analysis: Analysis, symbol: ts.Symbol): JsDoc {
+/** `component` is the component the symbol is, or belongs to, so that warnings about its documentation can be tied to it. */
+export function jsDoc(analysis: Analysis, symbol: ts.Symbol, component?: string): JsDoc {
   const { checker } = analysis;
   const tags = symbol.getJsDocTags(checker);
   const tag = (name: string) => tags.find((candidate) => candidate.name === name);
@@ -121,7 +126,7 @@ export function jsDoc(analysis: Analysis, symbol: ts.Symbol): JsDoc {
   const usageFile = relativePath(renderedUsage.text);
   // The file is markdown, where `{@link}` is plain text: no link targets to resolve.
   const usage: Rendered = usageFile
-    ? { text: readFile(analysis, symbol, "usage", usageFile) ?? "", targets: [] }
+    ? { text: readFile(analysis, symbol, "usage", usageFile, component) ?? "", targets: [] }
     : renderedUsage;
   const deprecatedTag = tag("deprecated");
   const deprecated = deprecatedTag && render(deprecatedTag.text);
@@ -134,7 +139,7 @@ export function jsDoc(analysis: Analysis, symbol: ts.Symbol): JsDoc {
     .flatMap((example): ExampleInfo[] => {
       if (!example) return [];
       const { file, title } = example;
-      const code = file ? readFile(analysis, symbol, "example", file) : example.code;
+      const code = file ? readFile(analysis, symbol, "example", file, component) : example.code;
       return code ? [{ ...(title ? { title } : {}), code }] : [];
     });
   const externalLinks = tags
@@ -142,8 +147,12 @@ export function jsDoc(analysis: Analysis, symbol: ts.Symbol): JsDoc {
     .flatMap((candidate): ExternalLink[] => {
       const text = ts.displayPartsToString(candidate.text);
       const link = parseLink(text);
-      if (!link)
-        analysis.warnings.push(`${symbol.getName()}: @link ${text} is not an http(s) URL.`);
+      if (!link) {
+        analysis.warnings.push({
+          message: `${symbol.getName()}: @link ${text} is not an http(s) URL.`,
+          component,
+        });
+      }
       return link ? [link] : [];
     });
   const targets = [description, usage, deprecated, experimental].flatMap(

@@ -11,6 +11,7 @@ import {
   type DiffFormat,
 } from "../diff/diff.js";
 import { loadIntrospection, loadProject } from "../../project.js";
+import type { Introspected } from "../../snapshot.js";
 import { diagnoseRegistry } from "../registry-diagnostics.js";
 import { exitWithError, reportError } from "../utils/exit.js";
 import { plural } from "../utils/format.js";
@@ -97,7 +98,7 @@ async function diffAgainstRevision(options: DiffOptions): Promise<void> {
             ...baseConfig,
             introspection: { ...baseConfig.introspection, history: false },
           },
-          logger: { ...logger, warn: () => {} },
+          logger,
           configPath: tmpConfigPath,
           root: path.dirname(tmpConfigPath),
         },
@@ -107,9 +108,12 @@ async function diffAgainstRevision(options: DiffOptions): Promise<void> {
         throw new Error(`Introspecting the components at ${rev} failed: ${message}`);
       });
       // Dropping `introspection` removes every component and type, which is breaking.
-      const head = headConfig.introspection
-        ? (await loadIntrospection(headProject, { cache: options.cache })).introspection
-        : { components: [], types: [] };
+      let head: Introspected = { components: [], types: [] };
+      if (headConfig.introspection) {
+        const loaded = await loadIntrospection(headProject, { cache: options.cache });
+        for (const warning of loaded.warnings) logger.warn(warning.message);
+        head = loaded.introspection;
+      }
       components = diffComponents(base.introspection, head);
     }
   } finally {

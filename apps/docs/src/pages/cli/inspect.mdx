@@ -50,6 +50,10 @@ Options for `tokens`:
 | `--theme <theme>` | Show only this theme's column next to the default value. An unknown theme is an error. |
 | `--deprecated`    | Only deprecated tokens.                                                                |
 
+`components` also takes `--props <name...>`: only those props, in full, with none of the shortening described
+below. An unknown prop name exits `2` with the closest matches, and an inherited prop (`id`, say) is a
+row naming where it comes from.
+
 `components` and `types` take `--deprecated` too. A filter that matches nothing (a valid type no token has,
 `--deprecated` with nothing deprecated) prints an empty result and exits `0`.
 
@@ -57,46 +61,27 @@ Options for `tokens`:
 [introspection cache](/tokens/configuration#cache).
 
 A token is printed with its path, type, value, CSS variable and notes (alias, description,
-deprecation), and its value in each theme that overrides it. A component is printed with its source
+deprecation), and its value in each theme that overrides it. A component is printed with its
+[import statement](/tokens/configuration#import-statements) (with `importPath`), its source
 location (and the date of its last commit with [`history`](/tokens/configuration#history)) and a
 table of its **own** props, with the expansion of your own type aliases under the type. Props
 inherited from outside the project, such as the 260 attributes of `ButtonHTMLAttributes`, are
 summarized on an `Also accepts:` line instead of listed; `--format json` lists their names.
 
+The markdown is compact by default, so that a component fits in a few KB:
+
+- props declared by a type that several components share (a `BoxProps` of system props, say) are named on
+  the `Also accepts:` line, unless the component itself declares that type;
+- a literal union shows its first 12 values (`… 30 more`) and a long type is cut between union members;
+- `## Types` holds only the object types the shown props name; the others are listed on a `More types:`
+  line, since their values are in the props already.
+
+A `Next:` line points to `--props` and `inspect types` for what was left out. `--format json` is never shortened.
+
 ## Documenting components
 
-`inspect`, the [docs](/plugins/docs) and [designMD](/plugins/design-md) plugins and other plugins read the JSDoc comments of your components, props and
-types. Besides the description, `@deprecated` and `@default`, six tags help someone (or an agent) who has
-to use a component without opening its source:
-
-| Tag                         | On                    | Effect                                                                                                                                                                                                                                                                                                |
-| --------------------------- | --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `@example`                  | component, prop, type | One example per tag. `<caption>Title</caption>` titles it, and surrounding code fences are removed. A relative path (`./Button.basic.tsx`) uses the file's content verbatim, so the example is typechecked with your code. Props show one-line examples in `inspect`; the rest is in `--format json`. |
-| `@usage`                    | component, type       | When to use it and when not to, in markdown. Kept out of the description, so that summaries stay one line. A relative path (`./Button.usage.md`) uses the file's content verbatim.                                                                                                                    |
-| `@link`                     | component, prop, type | An external page: `@link <caption>Figma</caption> https://figma.com/docs/button`. The caption is optional; only `http(s)` URLs are kept, the others are reported as warnings. Listed in `externalLinks`, and shown on the component's page in the [docs plugin](/plugins/docs).                       |
-| `{@link Name}`              | anywhere in the text  | Names a component or a type. It is listed in `links`. Anything else stays plain text.                                                                                                                                                                                                                 |
-| `@deprecated Use {@link X}` | component, prop, type | The first link is the `replacement`, shown as `deprecated → X` in summaries.                                                                                                                                                                                                                          |
-| `@experimental`             | component, prop, type | Marks it as experimental, with an optional note. Shown as a callout, and as `experimental` in summaries.                                                                                                                                                                                              |
-| `@category`                 | component             | Groups components in `inspect components` and in the docs navigation. Components without one come last.                                                                                                                                                                                               |
-
-```tsx
-/**
- * Triggers an action.
- *
- * @usage Prefer a link when the click only navigates.
- * @link <caption>Figma</caption> https://figma.com/docs/button
- * @example <caption>Basic</caption>
- * <Button label="Save" />
- * @example <caption>With an icon</caption> ./Button.icon.tsx
- * @category Actions
- */
-export function Button(props: ButtonProps) {}
-
-/** @deprecated Use {@link Button} instead. */
-export function PrimaryButton(props: ButtonProps) {}
-```
-
-Examples, usage, links and category are documentation, not API: [`recontent diff`](/cli/diff) does not report them.
+The JSDoc tags `inspect` reads (`@usage`, `@example`, `@link`, `@category`, `@deprecated`, `@experimental`) are described in
+[Documenting components](/guides/documenting-components).
 
 ## For agents
 
@@ -129,7 +114,8 @@ summary, so `recontent inspect tokens --format json` is every token.
 `schemaVersion` is `"1"` and only changes with a breaking change to these documents.
 
 - **stdout** carries the result and nothing else. Logs and warnings, such as an introspection warning,
-  go to stderr.
+  go to stderr. `inspect components` only warns about the components it shows, plus the warnings
+  that concern the whole project.
 - With `--theme`, every token has that theme in `values`: a theme that does not override a token
   reads as its default, so the value is the default's.
 - Exit code `0` is success, including an empty result from `--deprecated` or an empty project.
@@ -148,7 +134,7 @@ test "$(recontent inspect components --deprecated --format json | jq '.component
 
 ## Headless (design system consumers)
 
-An app that installs `@acme/design-system` from npm has neither its `recontent.config.ts` nor its
+How design system authors publish a snapshot is in [Publishing your design system](/guides/publishing). An app that installs `@acme/design-system` from npm has neither its `recontent.config.ts` nor its
 source. If the design system publishes a snapshot with the [`inspect()` plugin](/plugins/inspect), the app
 (and its agents) can browse its tokens, components and types anyway:
 

@@ -4,7 +4,7 @@ import ts from "typescript";
 import { resolveAlias, type Analysis } from "./components.js";
 import { jsDoc } from "./jsdoc.js";
 import {
-  declarationOf,
+  declaredTypeNode,
   describeMembers,
   inSourceOrder,
   isExternal,
@@ -23,10 +23,12 @@ export type TypeStore = {
   root: string;
   ids: Map<ts.Symbol, string>;
   types: TypeInfo[];
+  /** Types seen declaring a prop, collected or not, by id. */
+  declarers: Map<string, { symbol: ts.Symbol; declaration: TypeDeclaration }>;
 };
 
 export function createTypeStore(root: string): TypeStore {
-  return { root, ids: new Map(), types: [] };
+  return { root, ids: new Map(), types: [], declarers: new Map() };
 }
 
 function isTypeDeclaration(node: ts.Declaration): node is TypeDeclaration {
@@ -43,6 +45,27 @@ function consider(analysis: Analysis, symbol: ts.Symbol | undefined, found: Set<
   if (declaration && !isExternal(analysis, declaration.getSourceFile())) {
     found.add(collect(analysis, target, declaration));
   }
+}
+
+function typeId(store: TypeStore, declaration: TypeDeclaration): string {
+  const file = declaration.getSourceFile();
+  return `${declaration.name.text} (${path.relative(store.root, file.fileName).split(path.sep).join("/")})`;
+}
+
+/**
+ * The id the project interface or alias `declaration` has, or `undefined` for a
+ * library's. It is not registered: a type that declares props is only worth
+ * listing when several components share it, which `finishTypes` decides.
+ */
+export function declaredTypeId(
+  analysis: Analysis,
+  declaration: ts.InterfaceDeclaration | ts.TypeAliasDeclaration,
+): string | undefined {
+  const symbol = analysis.checker.getSymbolAtLocation(declaration.name);
+  if (!symbol || isExternal(analysis, declaration.getSourceFile())) return undefined;
+  const id = typeId(analysis.types, declaration);
+  analysis.types.declarers.set(id, { symbol, declaration });
+  return id;
 }
 
 /** Every type reference under `node`. Library types are skipped, but their type arguments are not: `Record<Key, Item>`. */
@@ -95,14 +118,7 @@ export function referencesOfProperty(
   property: ts.Symbol,
   type: ts.Type,
 ): string[] {
-  const declaration = declarationOf(property);
-  const node =
-    declaration &&
-    (ts.isPropertySignature(declaration) ||
-      ts.isPropertyDeclaration(declaration) ||
-      ts.isParameter(declaration))
-      ? declaration.type
-      : undefined;
+  const node = declaredTypeNode(property);
   const found = new Set<string>();
   if (node) referencesIn(analysis, node, found);
   else referencesOfType(analysis, type, found);
@@ -138,7 +154,7 @@ function collect(analysis: Analysis, symbol: ts.Symbol, declaration: TypeDeclara
   const file = declaration.getSourceFile();
   const name = declaration.name.text;
   const sourceFilePath = path.relative(store.root, file.fileName).split(path.sep).join("/");
-  const id = `${name} (${sourceFilePath})`;
+  const id = typeId(store, declaration);
   // Before looking inside: a type may mention itself.
   store.ids.set(symbol, id);
 
@@ -196,7 +212,27 @@ const byText = (a: string, b: string) => a.localeCompare(b);
  * so that ids do not depend on the order components were visited in.
  */
 export function finishTypes(analysis: Analysis, components: ComponentInfo[]): TypeInfo[] {
-  const { types } = analysis.types;
+  const { types, declarers } = analysis.types;
+
+  // A type that declares props of several components is listed, to say once what each of them accepts.
+  const sharers = new Map<string, number>();
+  for (const component of components) {
+    for (const id of new Set(component.props.map((prop) => prop.declaredIn))) {
+      if (id) sharers.set(id, (sharers.get(id) ?? 0) + 1);
+    }
+  }
+  for (const [id, count] of sharers) {
+    const declarer = declarers.get(id);
+    if (count >= 2 && declarer) collect(analysis, declarer.symbol, declarer.declaration);
+  }
+  const listed = new Set(types.map((type) => type.id));
+  const dropUnlisted = (props: { declaredIn?: string }[]) => {
+    for (const prop of props)
+      if (prop.declaredIn && !listed.has(prop.declaredIn)) delete prop.declaredIn;
+  };
+  for (const type of types) dropUnlisted(type.members ?? []);
+  for (const component of components) dropUnlisted(component.props);
+
   const names = new Map<string, number>();
   for (const type of types) names.set(type.name, (names.get(type.name) ?? 0) + 1);
   const ids = new Map(
@@ -204,8 +240,11 @@ export function finishTypes(analysis: Analysis, components: ComponentInfo[]): Ty
   );
   const remap = (list: string[]) => [...new Set(list.map((id) => ids.get(id)!))].sort(byText);
 
-  const remapProps = (props: { references?: string[] }[]) => {
-    for (const prop of props) if (prop.references) prop.references = remap(prop.references);
+  const remapProps = (props: { references?: string[]; declaredIn?: string }[]) => {
+    for (const prop of props) {
+      if (prop.references) prop.references = remap(prop.references);
+      if (prop.declaredIn) prop.declaredIn = ids.get(prop.declaredIn)!;
+    }
   };
   for (const type of types) {
     type.references = remap(type.references);

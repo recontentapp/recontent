@@ -6,10 +6,11 @@ export function FinalCta() {
     <section className="lp-final">
       <div className="lp-wrap lp-final-inner">
         <div className="lp-final-copy">
-          <h2 className="lp-h2 lp-h2-big">Let Recontent guard your tokens.</h2>
+          <h2 className="lp-h2 lp-h2-big">Give your design system a toolchain.</h2>
           <p className="lp-lede">
-            Install it, scaffold a config with <code>recontent init neutral</code>, add a plugin,
-            then run <code>recontent build</code>.
+            Install it, scaffold a config with <code>recontent init neutral</code>, point{" "}
+            <code>introspection.entry</code> at your components, then run{" "}
+            <code>recontent inspect</code>.
           </p>
           <Install />
         </div>

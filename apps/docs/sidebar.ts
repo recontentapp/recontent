@@ -10,20 +10,39 @@ export const sidebar: NonNullable<Config["sidebar"]> = [
     ],
   },
   {
-    text: "Guides",
+    text: "Design tokens",
     items: [
       { text: "Defining tokens", link: "/guides/defining-tokens" },
       { text: "Working with themes", link: "/guides/working-with-themes" },
+    ],
+  },
+  {
+    text: "Components",
+    items: [
+      { text: "Introspecting components", link: "/guides/introspecting-components" },
+      { text: "Documenting components", link: "/guides/documenting-components" },
+    ],
+  },
+  {
+    text: "Agents & consumers",
+    items: [
+      { text: "Coding with agents", link: "/guides/agents" },
+      { text: "Publishing your design system", link: "/guides/publishing" },
+    ],
+  },
+  {
+    text: "Workflow",
+    items: [
       { text: "Using plugins", link: "/guides/using-plugins" },
       { text: "Catching breaking changes", link: "/guides/diffs" },
       { text: "Troubleshooting", link: "/guides/troubleshooting" },
     ],
   },
   {
-    text: "Tokens reference",
+    text: "Config reference",
     collapsed: true,
     items: [
-      { text: "Configuration", link: "/tokens/configuration" },
+      { text: "defineConfig", link: "/tokens/configuration" },
       { text: "Primitives", link: "/tokens/primitives" },
       { text: "Scales", link: "/tokens/scales" },
       { text: "Composites", link: "/tokens/composites" },
@@ -33,15 +52,25 @@ export const sidebar: NonNullable<Config["sidebar"]> = [
     text: "Plugins reference",
     collapsed: true,
     items: [
-      { text: "CSS", link: "/plugins/css" },
-      { text: "Tailwind", link: "/plugins/tailwind" },
-      { text: "vanilla-extract", link: "/plugins/vanilla-extract" },
-      { text: "StyleX", link: "/plugins/stylex" },
-      { text: "TypeScript", link: "/plugins/typescript" },
-      { text: "DTCG", link: "/plugins/dtcg" },
-      { text: "Docs", link: "/plugins/docs" },
-      { text: "designMD", link: "/plugins/design-md" },
-      { text: "inspect", link: "/plugins/inspect" },
+      {
+        text: "Styling",
+        items: [
+          { text: "CSS", link: "/plugins/css" },
+          { text: "Tailwind", link: "/plugins/tailwind" },
+          { text: "vanilla-extract", link: "/plugins/vanilla-extract" },
+          { text: "StyleX", link: "/plugins/stylex" },
+          { text: "TypeScript", link: "/plugins/typescript" },
+          { text: "DTCG", link: "/plugins/dtcg" },
+        ],
+      },
+      {
+        text: "Docs & agents",
+        items: [
+          { text: "Docs", link: "/plugins/docs" },
+          { text: "designMD", link: "/plugins/design-md" },
+          { text: "inspect", link: "/plugins/inspect" },
+        ],
+      },
       { text: "Writing a plugin", link: "/plugin-api" },
     ],
   },
@@ -52,8 +81,8 @@ export const sidebar: NonNullable<Config["sidebar"]> = [
       { text: "Overview", link: "/cli" },
       { text: "init", link: "/cli/init" },
       { text: "build", link: "/cli/build" },
-      { text: "diff", link: "/cli/diff" },
       { text: "inspect", link: "/cli/inspect" },
+      { text: "diff", link: "/cli/diff" },
     ],
   },
 ];

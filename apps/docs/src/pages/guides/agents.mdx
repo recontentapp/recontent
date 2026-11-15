@@ -1,0 +1,83 @@
+---
+title: "Coding with agents"
+description: "Give coding agents the exact props, tokens and usage notes of your design system instead of letting them guess."
+---
+
+# Coding with agents
+
+Left alone, a coding agent writes UI from what it remembers of other design systems: it invents prop
+names, passes values a component does not accept and hard-codes `#2563eb` where your system has
+`system.color.accent`. The fix is not a longer prompt, it is giving the agent a way to look things up.
+
+Recontent does that in two layers:
+
+- [`DESIGN.md`](/plugins/design-md) is a short file loaded up front: your tokens, a few rules and the list of components.
+- [`recontent inspect`](/cli/inspect) answers the detailed questions on demand: the props of one component, the value of one token.
+
+## Set it up
+
+Configure [`introspection`](/guides/introspecting-components) so that Recontent reads your components,
+and add `designMD()`:
+
+```ts twoslash
+// [!include ~/snippets/design-md.config.ts]
+```
+
+Run `recontent build` to write `DESIGN.md`, in the format of Google's
+[DESIGN.md specification](https://github.com/google-labs-code/design.md).
+
+Then tell the agent to load it and how to use the CLI. Add this to your `AGENTS.md` or `CLAUDE.md`
+(adjust the path to where `designMD()` writes the file):
+
+```md
+## Design system
+
+- Read `docs/DESIGN.md` before writing UI.
+- Before using a component, run `recontent inspect components <Name>` for its exact props, and read its usage notes.
+- Use design tokens from `recontent inspect tokens`, never raw colors, sizes or font stacks.
+- If a command fails with "Did you mean", use the suggestion.
+- Do not edit generated files. Run `recontent build` instead.
+```
+
+## The loop
+
+Each step prints more about less, so the agent never reads a whole design system to find one answer:
+
+```bash
+recontent inspect                      # what exists: counts, themes, component names, then a Next: line
+recontent inspect components Select    # the props of one component, with types, defaults and usage notes
+recontent inspect tokens system.color  # the tokens under one group, with values and CSS variables
+recontent inspect types TabItem        # a type that a prop references
+```
+
+Identifiers are printed exactly as they are used in code: token paths, CSS variables, component and prop
+names. The agent can copy them.
+
+## Recovering from mistakes
+
+A name that matches nothing exits with code `2` and suggests the closest matches on stderr:
+
+```text
+error: No token or group matches "system.colr". Did you mean `system.color`?
+```
+
+The agent retries with the suggestion, instead of guessing again. Exit code `1` means the project
+itself is broken (a bad alias, an introspection failure), which is something to report rather than retry.
+
+## Cost
+
+`inspect tokens` only loads the config. Commands that need components build a TypeScript program from
+your entry once, then use a [cache](/tokens/configuration#cache) in `.recontent/` until a source file
+changes, so an agent calling `recontent inspect` repeatedly gets instant answers. In CI, pass `--no-cache`.
+
+## For scripts
+
+`--format json` prints the full detail of the whole selection on stdout, with `schemaVersion` and stable exit
+codes. Use it for checks that must not parse prose, such as failing when a deprecated component is still exported.
+See [For scripts](/cli/inspect#for-scripts).
+
+## Next
+
+- Write [usage notes and examples](/guides/documenting-components) that agents will read.
+- Let apps that install your design system [browse it with `--from`](/guides/publishing).
+- The reference: [`recontent inspect`](/cli/inspect#for-agents).

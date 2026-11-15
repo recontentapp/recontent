@@ -1,0 +1,98 @@
+---
+title: "Introspecting components"
+description: "Let Recontent read your React components, their props and the types they use."
+---
+
+# Introspecting components
+
+Point Recontent at your components and it reads them with the TypeScript checker: props, defaults,
+subcomponents and the types your props reference. Nothing to annotate, nothing to keep in sync. What
+it finds is served by [`recontent inspect`](/cli/inspect), the [docs](/plugins/docs) and
+[designMD](/plugins/design-md) plugins, [`recontent diff`](/cli/diff) and any [plugin](/plugin-api) that
+depends on `introspection`.
+
+## Set it up
+
+Add `introspection` to your config, with a barrel file that exports your components:
+
+```ts
+export default defineConfig({
+  tokens: { ref, system, components },
+  introspection: {
+    entry: "src/components/index.ts",
+    exclude: ["ThemeProvider"],
+  },
+  plugins: [docs({ outDir: "docs" })],
+});
+```
+
+Then check what was found:
+
+```bash
+recontent inspect
+```
+
+The options (`entry`, `tsconfig`, `exclude`, `history`, `importPath`) are in the
+[configuration reference](/tokens/configuration#introspection).
+
+## What counts as a component
+
+An export is a component when its name is PascalCase and it is callable with a return type React can
+render, or a class with a `render` method. This covers plain functions, `FC`, `memo`, `forwardRef`,
+`lazy` and class components alike, because the TypeScript checker has already resolved them. Hooks,
+constants, enums, types and PascalCase helpers such as `FormatDate(date): string` are skipped.
+
+Subcomponents are reported one level deep with a dotted name: `Object.assign(Tabs, { Item })` and
+`Tabs.Item = Item` give `Tabs.Item`, and `export * as Dialog from "./dialog"` gives `Dialog.Root`,
+`Dialog.Trigger`.
+
+## Props
+
+For each component Recontent lists the props declared in your project and, separately, the names of
+the props inherited from libraries (`ButtonHTMLAttributes` from `@types/react`, for instance). Keys you
+name with `Pick<LibraryProps, "open" | "onOpenChange">` are your component's own props, with the
+library's type and description, because choosing them is part of your API; `Omit` keeps every other
+prop inherited. A union of props types lists every member's props, and a prop is required only when
+every member requires it. Descriptions, `@default` and `@deprecated` come from [JSDoc](/guides/documenting-components);
+without `@default`, a destructuring default in the implementation is used.
+
+A prop typed with one of your own aliases keeps its name in `type` (`Width`) and gets the expansion in
+`resolved` (`number | "100%" | "auto"`). Library aliases such as `MouseEventHandler<…>` are left as
+written. A generic component lists its type parameters: `Accordion<Value extends string>`.
+
+The declared types are followed transitively: interfaces, type aliases and enums of your project that
+props reference are available with `recontent inspect types`. Types from `node_modules` are not.
+
+## Warnings
+
+Two kinds of exports are accepted only on weak evidence and reported with a warning that names them:
+a function without types, whose return type is `any`, and a class that has a `render` method but
+does not extend `React.Component`. Add them to `exclude` if they are not components. The same goes
+for an entry that exports PascalCase values but no components at all, which is almost always a setup
+problem such as `@types/react` not resolving from the entry.
+
+## When it runs
+
+The TypeScript program is built only when a plugin that depends on components is configured (such
+as [`docs()`](/plugins/docs) or [`designMD()`](/plugins/design-md)) or when you run `recontent inspect` or `recontent inspect components`; a
+build with token-only plugins does not touch it, and a broken `introspection` block cannot stop them.
+`recontent build --watch` rebuilds when a component file changes, within the entry's package. The
+result is [cached](/tokens/configuration#cache), so repeated calls are near instant.
+
+## Components only
+
+Tokens are optional when `introspection` is set. A project can describe its components alone:
+
+```ts
+export default defineConfig({
+  introspection: { entry: "src/components/index.ts" },
+  plugins: [docs({ outDir: "docs" })],
+});
+```
+
+`defineConfig` throws when neither `tokens` nor `introspection` is set.
+
+## Next
+
+- [Document your components](/guides/documenting-components) where they live.
+- Give [coding agents](/guides/agents) the exact API with `recontent inspect`.

@@ -7,6 +7,15 @@ export type IntrospectionConfigInput = {
   exclude?: string[];
   /** Read each component file's last commit date into `lastUpdatedAt`. Defaults to `false`. */
   history?: boolean;
+  /**
+   * How consumers import the components, to print an import statement for each.
+   * - A module specifier (a package, or an alias of `entry`): `import { Button } from "<specifier>"`.
+   * - `{ root, prefix }` when there is no barrel for consumers and each component's own file is imported:
+   *   the specifier is `prefix` plus the path of the file defining the component relative to `root`
+   *   (relative to the config), without extension or trailing `/index`. A default export is imported as a default import.
+   * Without it, components have no import statement.
+   */
+  importPath?: string | { root: string; prefix?: string };
 };
 
 export type ExampleInfo = {
@@ -51,6 +60,8 @@ export type PropInfo = Documentation & {
   values?: (string | number | boolean)[];
   /** Ids of the project types `type` mentions, sorted. Each is in the introspection's `types`. */
   references?: string[];
+  /** Id of the project interface or type alias that declares the prop, when there is one. It is in the introspection's `types`. */
+  declaredIn?: string;
   required: boolean;
   /** `@default` tag, else the destructuring default in the implementation, as written in source (`"\"solid\""`), not evaluated: unlike `values`, which holds JSON values. */
   defaultValue?: string;
@@ -78,6 +89,8 @@ export type ComponentInfo = Documentation & {
   sourceFilePath: string;
   /** 1-based line of the declaration. */
   line: number;
+  /** The statement that imports it, e.g. `import { Button } from "@acme/ds"`. Only with `introspection.importPath`. */
+  import?: string;
   /** ISO 8601 date of the last commit touching `sourceFilePath`. Only with `introspection.history`. */
   lastUpdatedAt?: string;
   /** `@category`: groups components in the docs and in `recontent inspect components`. */

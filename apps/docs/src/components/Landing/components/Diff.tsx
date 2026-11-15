@@ -1,16 +1,21 @@
 import { Link } from "vocs";
 import { CodePanel, lines } from "./CodePanel.tsx";
 
+// Real output of `recontent diff`, in the format the CLI prints.
 const diffOutput = lines(`$ recontent diff origin/main --fail-on-breaking
 
-## Breaking (2)
+# Tokens
 
-- renamed system.color.bg -> system.color.background
-- removed system.color.legacyBlue (color #0000ff)
+## Breaking (1)
 
-## Changed (1)
+- **renamed** \`system.color.accent\` -> \`system.color.brand\` (color, alias -> ref.color.blue.9)
 
-- ref.color.gray.900  #18181b -> #09090b`);
+# Components
+
+## Breaking (1)
+
+- \`Button\`
+  - **prop** \`variant\`: removed value \`"ghost"\``);
 
 /** Safe changes in CI. */
 export function Diff() {
@@ -18,11 +23,12 @@ export function Diff() {
     <section className="lp-band">
       <div className="lp-wrap">
         <h2 className="lp-h2">
-          Rename a token. <span className="lp-hl">CI knows</span> who it breaks.
+          Rename a prop. <span className="lp-hl">CI knows</span> who it breaks.
         </h2>
         <p className="lp-sub">
-          <code>recontent diff</code> compares your tokens with any git revision. It tells a rename
-          from a removal, and a value change from a breaking one.
+          <code>recontent diff</code> compares your tokens and your components with any git
+          revision. It tells a rename from a removal, and a prop that lost a value from one that
+          gained one.
         </p>
         <p className="lp-more">
           <Link to="/guides/diffs" className="lp-link">
@@ -30,7 +36,12 @@ export function Diff() {
           </Link>
         </p>
         <div className="lp-diff">
-          <CodePanel code={diffOutput} tone="coral" />
+          <CodePanel
+            code={diffOutput}
+            language="sh"
+            tone="coral"
+            error="2 breaking changes found (exit 1)"
+          />
         </div>
       </div>
     </section>

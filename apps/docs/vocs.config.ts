@@ -4,7 +4,7 @@ import { sidebar } from "./sidebar.ts";
 export default defineConfig({
   title: "Recontent.app",
   description:
-    "Define design tokens once. Generate CSS, Tailwind, vanilla-extract, StyleX, TypeScript and DTCG.",
+    "Recontent turns your tokens and components into a design system that people, agents and CI can read.",
   baseUrl: process.env.DOCS_BASE_URL, // set once hosting is chosen
   renderStrategy: "full-static",
   logoUrl: { light: "/logo-light.svg", dark: "/logo-dark.svg" },

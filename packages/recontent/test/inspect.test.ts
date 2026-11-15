@@ -1,12 +1,16 @@
 import { describe, expect, test } from "@jest/globals";
-import type { ComponentInfo, TypeInfo } from "@recontentapp/core";
+import type { ComponentInfo, PropInfo, TypeInfo } from "@recontentapp/core";
 import {
   closestMatches,
   selectComponents,
   selectTokens,
   selectTypes,
 } from "../src/cli/commands/inspect/select.js";
-import { renderComponents, renderTokens } from "../src/cli/commands/inspect/render.js";
+import {
+  renderComponents,
+  renderTokens,
+  sharedDeclarations,
+} from "../src/cli/commands/inspect/render.js";
 import { typeClosure } from "../src/introspection/types.js";
 import type { DocToken } from "../src/plugins/shared/doc-token.js";
 
@@ -107,6 +111,13 @@ describe("selectTokens", () => {
   });
 });
 
+const prop = (name: string, extra: Partial<PropInfo> = {}): PropInfo => ({
+  name,
+  type: "string",
+  required: false,
+  ...extra,
+});
+
 const component = (name: string, extra: Partial<ComponentInfo> = {}): ComponentInfo => ({
   name,
   sourceFilePath: "src/x.tsx",
@@ -115,6 +126,33 @@ const component = (name: string, extra: Partial<ComponentInfo> = {}): ComponentI
   inherits: [],
   references: [],
   ...extra,
+});
+
+describe("selectComponents --props", () => {
+  const button = component("Button", {
+    props: [prop("variant")],
+    inherits: [{ name: "ButtonHTMLAttributes", props: ["id", "title"] }],
+  });
+
+  test("own and inherited props are accepted", () => {
+    expect(
+      selectComponents([button], { names: ["Button"], props: ["variant", "id"] }).errors,
+    ).toEqual([]);
+  });
+
+  test("an unknown prop suggests the closest ones", () => {
+    expect(selectComponents([button], { names: ["Button"], props: ["varient"] }).errors).toEqual([
+      {
+        message: 'No prop matches "varient". Did you mean `variant`?',
+        input: "varient",
+        suggestions: ["variant"],
+      },
+    ]);
+  });
+
+  test("without a component name there is nothing to narrow", () => {
+    expect(selectComponents([button], { names: [], props: ["variant"] }).errors).toHaveLength(1);
+  });
 });
 
 describe("selectComponents", () => {
@@ -257,6 +295,99 @@ describe("renderComponents", () => {
     expect(
       renderComponents([], { format: "markdown", summary: true, types: [] }).trimEnd(),
     ).toMatch(/Next: `recontent inspect --help`$/);
+  });
+});
+
+describe("renderComponents, compactly", () => {
+  const base = typeInfo("BaseProps", [], {
+    sourceFilePath: "src/base.ts",
+    members: [prop("gap"), prop("color")],
+  });
+  const shared = (name: string, own: PropInfo[]) =>
+    component(name, {
+      sourceFilePath: `src/${name}.tsx`,
+      props: [
+        prop("gap", { declaredIn: "BaseProps" }),
+        prop("color", { declaredIn: "BaseProps" }),
+        ...own,
+      ],
+    });
+  const a = shared("A", [prop("kind")]);
+  const b = shared("B", []);
+  const render = (selected: ComponentInfo[], props?: string[]) =>
+    renderComponents(selected, {
+      format: "markdown",
+      summary: false,
+      types: [base],
+      shared: sharedDeclarations([a, b]),
+      props,
+    });
+
+  test("sharedDeclarations is what two components or more declare through", () => {
+    expect([...sharedDeclarations([a, b])]).toEqual(["BaseProps"]);
+    expect([...sharedDeclarations([a])]).toEqual([]);
+  });
+
+  test("shared props are summarized on the Also accepts line, and the table keeps the rest", () => {
+    const output = render([a]);
+    expect(output).toContain("| `kind` |");
+    expect(output).not.toContain("| `gap` |");
+    expect(output).toContain("Also accepts: `BaseProps` (2 props: gap, color)");
+  });
+
+  test("the component that owns the declaration still lists its props", () => {
+    const owner = component("BaseBox", {
+      sourceFilePath: "src/base.ts",
+      props: [prop("gap", { declaredIn: "BaseProps" })],
+    });
+    const output = renderComponents([owner], {
+      format: "markdown",
+      summary: false,
+      types: [base],
+      shared: new Set(["BaseProps"]),
+    });
+    expect(output).toContain("| `gap` |");
+    expect(output).not.toContain("Also accepts");
+  });
+
+  test("--props lists those props only, whatever is shared, and nothing is cut", () => {
+    const values = Array.from({ length: 20 }, (_, index) => `v${index}`);
+    const wide = component("W", { props: [prop("tone", { values })] });
+    expect(render([wide])).toContain("… 8 more");
+    const output = render([wide], ["tone"]);
+    expect(output).toContain("v19");
+    expect(output).not.toContain("more");
+
+    const full = render([a], ["gap"]);
+    expect(full).toContain("| `gap` |");
+    expect(full).not.toContain("| `kind` |");
+  });
+
+  test("a long union is cut between members", () => {
+    const type = Array.from({ length: 60 }, (_, index) => `"option${index}"`).join(" | ");
+    const output = render([component("W", { props: [prop("tone", { type })] })]);
+    expect(output).toContain("| …`");
+    expect(output).not.toContain("option59");
+    expect(output.length).toBeLessThan(type.length);
+  });
+
+  test("the Types section holds the object types the props name; the others are only listed", () => {
+    const item = typeInfo("Item", [], { members: [prop("id")] });
+    const tone = typeInfo("Tone", [], { values: ["a", "b"] });
+    const withTypes = component("T", {
+      props: [prop("item", { references: ["Item"] }), prop("tone", { references: ["Tone"] })],
+      references: ["Item", "Tone"],
+    });
+    const output = renderComponents([withTypes], {
+      format: "markdown",
+      summary: false,
+      types: [item, tone],
+    });
+    expect(output).toContain("## Types");
+    expect(output).toContain("### Item");
+    expect(output).not.toContain("### Tone");
+    expect(output).toContain("More types: `Tone`");
+    expect(output).toMatch(/Next: .*recontent inspect types/);
   });
 });
 

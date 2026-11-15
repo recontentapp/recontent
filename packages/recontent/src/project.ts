@@ -2,6 +2,7 @@ import path from "node:path";
 import { loadConfig, type Config, type Logger, type LogLevel } from "@recontentapp/core";
 import ts from "typescript";
 import { readHead, readLastUpdated } from "./git.js";
+import type { IntrospectionWarning } from "./introspection/components.js";
 import { introspect, watchableFiles } from "./introspection/index.js";
 import { readCache, writeCache } from "./introspection/cache.js";
 import { resolveInputs } from "./introspection/program.js";
@@ -28,8 +29,8 @@ export async function loadProject(options: {
 export type Components = {
   /** Components sorted by name, and what they reference sorted by id. */
   introspection: Introspected;
-  /** Already logged; kept to count them. */
-  warnings: string[];
+  /** Not logged: what to report, and when, is up to the caller. */
+  warnings: IntrospectionWarning[];
   /** Files whose change should trigger a rebuild. */
   watch: string[];
   /** Pass back as `oldProgram`. Absent when the cache answered. */
@@ -69,7 +70,6 @@ export async function loadIntrospection(
   const cached = key === undefined ? undefined : readCache(root, configPath, key);
   if (cached) {
     logger.debug("introspection: reused the cache.");
-    for (const warning of cached.warnings) logger.warn(warning);
     return {
       introspection: cached.introspection,
       warnings: cached.warnings,
@@ -93,7 +93,7 @@ export async function loadIntrospection(
       const date = dates.get(path.resolve(root, component.sourceFilePath));
       if (date) component.lastUpdatedAt = date;
     }
-    if (warning) warnings.push(warning);
+    if (warning) warnings.push({ message: warning });
   }
 
   const watch = watchableFiles(entry, result.files);
@@ -108,7 +108,6 @@ export async function loadIntrospection(
       ),
     });
   }
-  for (const warning of warnings) logger.warn(warning);
   return {
     introspection: { components: result.components, types: result.types },
     warnings,

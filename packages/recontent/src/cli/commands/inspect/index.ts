@@ -1,6 +1,7 @@
-import type { LogLevel } from "@recontentapp/core";
-import { loadIntrospection, loadProject } from "../../../project.js";
+import type { Logger, LogLevel } from "@recontentapp/core";
+import type { IntrospectionWarning } from "../../../introspection/components.js";
 import { typeClosure } from "../../../introspection/types.js";
+import { loadIntrospection, loadProject } from "../../../project.js";
 import {
   createSnapshot,
   readSnapshot,
@@ -16,6 +17,7 @@ import {
   renderOverview,
   renderTokens,
   renderTypes,
+  sharedDeclarations,
   type Format,
   type InspectError,
 } from "./render.js";
@@ -24,7 +26,7 @@ import { selectComponents, selectTokens, selectTypes } from "./select.js";
 export type InspectTarget =
   | { kind: "overview" }
   | { kind: "tokens"; paths: string[]; type?: string; theme?: string; deprecated?: boolean }
-  | { kind: "components"; names: string[]; deprecated?: boolean }
+  | { kind: "components"; names: string[]; deprecated?: boolean; props?: string[] }
   | { kind: "types"; names: string[]; deprecated?: boolean };
 
 export type InspectOptions = {
@@ -56,7 +58,15 @@ function fail(format: Format, errors: InspectError[], exitCode = 1): void {
 }
 
 /** What the selection and rendering below read: the data, where it came from, and why components are missing. */
-type Loaded = { snapshot: Snapshot; source: string; introspectionError?: string };
+type Loaded = {
+  snapshot: Snapshot;
+  source: string;
+  introspectionError?: string;
+  /** What introspecting the project had to say; none from a published snapshot. */
+  warnings?: IntrospectionWarning[];
+  /** Where to report them. */
+  logger?: Logger;
+};
 
 async function loadLocal(
   options: Extract<InspectOptions, { configPath: string }>,
@@ -90,9 +100,10 @@ async function loadLocal(
   // Tokens never need a TS program; only look at components when asked.
   let introspected: Introspected | undefined;
   let introspectionError: string | undefined;
+  let warnings: IntrospectionWarning[] | undefined;
   if (target.kind !== "tokens" && config.introspection) {
     try {
-      ({ introspection: introspected } = await loadIntrospection(project, {
+      ({ introspection: introspected, warnings } = await loadIntrospection(project, {
         cache: options.cache,
       }));
     } catch (error) {
@@ -108,7 +119,13 @@ async function loadLocal(
     return undefined;
   }
 
-  return { snapshot: createSnapshot(config, introspected), source: configName, introspectionError };
+  return {
+    snapshot: createSnapshot(config, introspected),
+    source: configName,
+    introspectionError,
+    warnings,
+    logger,
+  };
 }
 
 function loadHeadless(options: Extract<InspectOptions, { from: string }>): Loaded | undefined {
@@ -136,11 +153,16 @@ export async function runInspect(options: InspectOptions): Promise<void> {
   const { target, format } = options;
   const loaded = "from" in options ? loadHeadless(options) : await loadLocal(options);
   if (!loaded) return;
-  const { snapshot, source, introspectionError } = loaded;
+  const { snapshot, source, introspectionError, warnings = [], logger } = loaded;
   const { tokens, themes, components, types } = snapshot;
+  // What was asked for decides which warnings matter: not the other components'.
+  const report = (relevant: (warning: IntrospectionWarning) => boolean) => {
+    for (const warning of warnings) if (relevant(warning)) logger?.warn(warning.message);
+  };
 
   switch (target.kind) {
     case "overview":
+      report(() => true);
       print(
         renderOverview(
           { config: source, tokens, themes, components, types, introspectionError },
@@ -166,11 +188,17 @@ export async function runInspect(options: InspectOptions): Promise<void> {
         return;
       }
       const summary = target.names.length === 0;
-      const referenced = typeClosure(
-        selected.flatMap((component) => component.references),
-        types ?? [],
+      const names = new Set(selected.map((component) => component.name));
+      report(({ component }) => component === undefined || names.has(component));
+      print(
+        renderComponents(selected, {
+          format,
+          summary,
+          types: types ?? [],
+          shared: sharedDeclarations(components ?? []),
+          props: target.props,
+        }),
       );
-      print(renderComponents(selected, { format, summary, types: referenced }));
       return;
     }
     case "types": {
@@ -180,6 +208,7 @@ export async function runInspect(options: InspectOptions): Promise<void> {
         return;
       }
       const summary = target.names.length === 0;
+      report(({ component }) => component === undefined);
       const closure = typeClosure(
         selected.map((type) => type.id),
         types ?? [],

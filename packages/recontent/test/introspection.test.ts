@@ -3,6 +3,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { beforeAll, describe, expect, test } from "@jest/globals";
 import type { ComponentInfo, PropInfo, TypeInfo } from "@recontentapp/core";
+import type { IntrospectionWarning } from "../src/introspection/components.js";
 import { introspect } from "../src/introspection/index.js";
 
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), "fixtures/introspection");
@@ -10,16 +11,21 @@ const logger = { info() {}, warn() {}, error() {}, debug() {} };
 
 let components: ComponentInfo[];
 let types: TypeInfo[];
+/** The messages; `scoped` has the components they are about. */
 let warnings: string[];
+let scoped: IntrospectionWarning[];
 let files: string[];
 let byName: Map<string, ComponentInfo>;
 
 beforeAll(() => {
-  ({ components, types, warnings, files } = introspect({
+  let result;
+  ({ components, types, files } = result = introspect({
     config: { entry: "src/index.ts", exclude: ["Excluded"] },
     root,
     logger,
   }));
+  scoped = result.warnings;
+  warnings = scoped.map((warning) => warning.message);
   byName = new Map(components.map((component) => [component.name, component]));
 }, 60_000);
 
@@ -261,7 +267,7 @@ describe("D. props type shapes", () => {
 
   test("D13 no props", () => {
     expect(component("D13")).toMatchObject({ props: [], inherits: [] });
-    expect(warnings.some((warning) => warning.startsWith("D13 "))).toBe(false);
+    expect(warnings.some((message) => message.startsWith("D13 "))).toBe(false);
   });
 });
 
@@ -282,11 +288,39 @@ describe("E. wrapping external libraries", () => {
     );
   });
 
-  test("E3 re-exported library components: everything is inherited, with a warning", () => {
+  test("E3 re-exported library components: everything is inherited, without a warning", () => {
     const popup = component("Dialog.Popup");
     expect(popup.props).toEqual([]);
     expect(popup.inherits.some((group) => group.package === "@base-ui/react")).toBe(true);
-    expect(warnings).toContainEqual(expect.stringMatching(/^Dialog\.Popup has no own props/));
+    expect(warnings.some((message) => message.startsWith("Dialog.Popup"))).toBe(false);
+  });
+
+  test("E4 keys picked from a library type are own props, with the library's docs and the implementation's defaults", () => {
+    expect(names("E4")).toEqual(["defaultOpen", "modal"]);
+    expect(component("E4").inherits).toEqual([]);
+    expect(prop("E4", "defaultOpen")).toMatchObject({
+      type: "boolean",
+      required: false,
+      defaultValue: "false",
+      description: expect.stringContaining("initially open"),
+    });
+    expect(prop("E4", "modal").defaultValue).toBe("true");
+  });
+
+  test("E5-E7 a Pick inside an intersection, behind an alias, or under Partial", () => {
+    expect(names("E5")).toEqual(["defaultOpen", "own"]);
+    expect(component("E5").inherits).toEqual([]);
+    expect(names("E6")).toEqual(["defaultOpen"]);
+    expect(component("E6").inherits).toEqual([]);
+    expect(names("E7")).toEqual(["modal"]);
+    expect(component("E7").inherits).toEqual([]);
+  });
+
+  test("E8 Omit keeps everything inherited", () => {
+    expect(names("E8")).toEqual([]);
+    expect(component("E8").inherits.flatMap((group) => group.props)).toEqual(
+      expect.arrayContaining(["defaultOpen", "modal"]),
+    );
   });
 });
 
@@ -382,8 +416,11 @@ describe("G. things that are not components", () => {
       ),
     );
     // Real components are not second-guessed, nor are class components.
-    expect(warnings.filter((warning) => warning.includes("treated as a component"))).toHaveLength(
+    expect(warnings.filter((message) => message.includes("treated as a component"))).toHaveLength(
       2,
+    );
+    expect(scoped.find((warning) => warning.message.startsWith("Untyped "))?.component).toBe(
+      "Untyped",
     );
   });
 
@@ -567,7 +604,7 @@ describe("performance and setup", () => {
 
     expect(result.components).toEqual([]);
     expect(result.warnings).toEqual([
-      expect.stringMatching(/No React components found.*1 PascalCase/),
+      { message: expect.stringMatching(/No React components found.*1 PascalCase/) },
     ]);
   });
 
@@ -583,7 +620,10 @@ describe("performance and setup", () => {
       { title: "Figma", url: "https://figma.com/docs/f9" },
       { url: "https://example.com/f9" },
     ]);
-    expect(warnings).toContainEqual("F9: @link javascript:alert(1) is not an http(s) URL.");
+    expect(scoped).toContainEqual({
+      message: "F9: @link javascript:alert(1) is not an http(s) URL.",
+      component: "F9",
+    });
     expect(component("F8").externalLinks).toBeUndefined();
   });
 });

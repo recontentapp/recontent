@@ -43,13 +43,31 @@ export function groupByCategory(
 }
 
 /** "53 props" */
-export function propCount({ props }: InheritedProps): string {
+export function propCount({ props }: { props: unknown[] }): string {
   return `${props.length} ${props.length === 1 ? "prop" : "props"}`;
 }
 
-function typeCell(prop: PropInfo): string {
-  if (prop.values) return code(prop.values.map((value) => JSON.stringify(value)).join(" | "));
-  return prop.resolved ? `${code(prop.type)}<br>${code(prop.resolved)}` : code(prop.type);
+/** How much of a long prop to print: the first values of a union, the first members of a long type. */
+export type Brevity = { maxValues: number; maxTypeLength: number };
+
+/** `a | b | …` cut at a union member once it is longer than `max`. */
+function shortenType(text: string, max: number): string {
+  if (text.length <= max) return text;
+  const cut = text.lastIndexOf(" | ", max);
+  return cut > 0 ? `${text.slice(0, cut)} | …` : `${text.slice(0, max).trimEnd()} …`;
+}
+
+function typeCell(prop: PropInfo, brevity?: Brevity): string {
+  if (prop.values) {
+    const shown = brevity ? prop.values.slice(0, brevity.maxValues) : prop.values;
+    const more = prop.values.length - shown.length;
+    return (
+      code(shown.map((value) => JSON.stringify(value)).join(" | ")) +
+      (more > 0 ? ` … ${more} more` : "")
+    );
+  }
+  const text = (value: string) => code(brevity ? shortenType(value, brevity.maxTypeLength) : value);
+  return prop.resolved ? `${text(prop.type)}<br>${text(prop.resolved)}` : text(prop.type);
 }
 
 function notes(prop: PropInfo): string {
@@ -103,7 +121,7 @@ function documentationLines(item: Documentation, headingLevel: number): string[]
   return lines;
 }
 
-/** `src/button.tsx:12` */
+/** `Import: …` and `Source: src/button.tsx:12` */
 function sourceLine(component: ComponentInfo | TypeInfo): string {
   return [
     `Source: ${code(`${component.sourceFilePath}:${component.line}`)}`,
@@ -113,22 +131,34 @@ function sourceLine(component: ComponentInfo | TypeInfo): string {
     .join(" · ");
 }
 
-function inheritsLine(inherits: InheritedProps[]): string | undefined {
-  if (inherits.length === 0) return undefined;
+/** Props a project type declares that are left out of the table, to be asked for with `--props`. */
+export type CollapsedProps = { type: string; props: string[] };
+
+const COLLAPSED_NAMES = 8;
+
+function inheritsLine(
+  inherits: InheritedProps[],
+  collapsed: CollapsedProps[] = [],
+): string | undefined {
+  if (inherits.length + collapsed.length === 0) return undefined;
+  const shared = collapsed.map(({ type, props }) => {
+    const names = props.slice(0, COLLAPSED_NAMES).join(", ");
+    return `${code(type)} (${propCount({ props })}: ${names}${props.length > COLLAPSED_NAMES ? ", …" : ""})`;
+  });
   const groups = inherits.map(
     (group) =>
       `${code(group.name)} (${propCount(group)}${group.package ? ` from ${group.package}` : ""})`,
   );
-  return `Also accepts: ${groups.join(", ")}`;
+  return `Also accepts: ${[...shared, ...groups].join(", ")}`;
 }
 
-function renderPropsTable(props: PropInfo[]): string[] {
+function renderPropsTable(props: PropInfo[], brevity?: Brevity): string[] {
   const header = ["Prop", "Type", "Default", "Required", "Notes"];
   const lines = [`| ${header.join(" | ")} |`, `| ${header.map(() => "---").join(" | ")} |`];
   for (const prop of props) {
     const row = [
       code(prop.name),
-      typeCell(prop),
+      typeCell(prop, brevity),
       prop.defaultValue ? code(prop.defaultValue) : "—",
       prop.required ? "yes" : "no",
       notes(prop),
@@ -159,19 +189,35 @@ function headerLines(item: ComponentInfo | TypeInfo, headingLevel: number): stri
       "",
     );
   }
+  if ("import" in item && item.import) lines.push(`Import: ${code(item.import)}`, "");
   lines.push(sourceLine(item), "", ...documentationLines(item, headingLevel));
   return lines;
 }
 
-export function renderComponentMarkdown(component: ComponentInfo, headingLevel: number): string {
+/** What of a component to print; all of it by default. */
+export type ComponentView = {
+  /** The props of the table, in the order given. */
+  props?: PropInfo[];
+  collapsed?: CollapsedProps[];
+  brevity?: Brevity;
+  /** Leaves out the "Also accepts" line. */
+  hideInherits?: boolean;
+};
+
+export function renderComponentMarkdown(
+  component: ComponentInfo,
+  headingLevel: number,
+  view: ComponentView = {},
+): string {
+  const { props = component.props, collapsed = [], brevity } = view;
   const lines = headerLines(component, headingLevel);
-  if (component.props.length === 0) {
+  if (props.length > 0) {
+    lines.push(...renderPropsTable(props, brevity), "");
+  } else if (collapsed.length === 0 && !view.hideInherits) {
     lines.push("_No own props._", "");
-  } else {
-    lines.push(...renderPropsTable(component.props), "");
   }
 
-  const inherits = inheritsLine(component.inherits);
+  const inherits = view.hideInherits ? undefined : inheritsLine(component.inherits, collapsed);
   if (inherits) lines.push(inherits, "");
   return lines.join("\n").trimEnd();
 }

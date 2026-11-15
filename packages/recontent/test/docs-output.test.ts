@@ -241,10 +241,11 @@ describe("components", () => {
     expect(html).toContain('data-view-tab="components"');
   });
 
-  test("a resolved alias is shown under the type, and type parameters next to the name", () => {
+  test("a resolved alias is shown under the type, and type parameters are hidden from names", () => {
     const html = renderWith(components);
 
-    expect(html).toContain("Accordion&lt;Value extends string&gt;");
+    expect(html).toContain('<h2 class="title">Accordion</h2>');
+    expect(html).not.toContain("Accordion&lt;Value extends string&gt;");
     expect(html).toContain("<code>Width</code><code>number |<wbr> &quot;auto&quot;</code>");
   });
 

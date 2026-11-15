@@ -2,9 +2,10 @@ import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import type { Introspected } from "../snapshot.js";
+import type { IntrospectionWarning } from "./components.js";
 
 /** Bumped when the shape below changes. */
-const FORMAT = 6;
+const FORMAT = 7;
 
 type FileStamp = [path: string, mtimeMs: number, size: number];
 
@@ -16,7 +17,7 @@ type CacheFile = {
   /** Directories of the project's own files: adding a file bumps its directory's mtime. */
   directories: FileStamp[];
   introspection: Introspected;
-  warnings: string[];
+  warnings: IntrospectionWarning[];
 };
 
 export type Cached = Pick<CacheFile, "introspection" | "warnings"> & { files: string[] };

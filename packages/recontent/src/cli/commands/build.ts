@@ -194,6 +194,7 @@ async function buildOnce(
         cache: options.cache,
       });
       ({ components, types } = loaded.introspection);
+      for (const warning of loaded.warnings) logger.warn(warning.message);
       warnings += loaded.warnings.length;
       state = { program: loaded.program ?? state.program, watch: loaded.watch };
     } catch (error) {

@@ -2,6 +2,9 @@ import type { Logger } from "@recontentapp/core";
 import ts from "typescript";
 import type { TypeStore } from "./types.js";
 
+/** `component` is set when the warning is about one component (or one of its props), and absent when it concerns the whole project. */
+export type IntrospectionWarning = { message: string; component?: string };
+
 export type Analysis = {
   program: ts.Program;
   checker: ts.TypeChecker;
@@ -12,7 +15,7 @@ export type Analysis = {
   /** Absolute paths of the files `@example`/`@usage` tags pointed to and that could be read. */
   docFiles: Set<string>;
   /** Reported by the CLI, not part of what plugins see. */
-  warnings: string[];
+  warnings: IntrospectionWarning[];
 };
 
 /** A signature through which a type renders, and why it is only a guess when it is one. */
@@ -159,9 +162,10 @@ export function findComponents(
       found.push({ name, symbol, type, matches });
       const loose = matches.every((match) => match.loose) ? matches[0]!.loose : undefined;
       if (loose) {
-        warnings.push(
-          `${name} is treated as a component only because ${loose}. Add it to \`exclude\` if it is not one.`,
-        );
+        warnings.push({
+          message: `${name} is treated as a component only because ${loose}. Add it to \`exclude\` if it is not one.`,
+          component: name,
+        });
       }
     } else {
       logger.debug(`introspection: ${name} is not a React component.`);
@@ -180,10 +184,11 @@ export function findComponents(
     else logger.debug(`introspection: ignored export ${exported.name} (not PascalCase).`);
   }
   if (found.length === 0 && valueExports > 0) {
-    warnings.push(
-      `No React components found in "${entry}" although it exports ${valueExports} PascalCase value(s). ` +
+    warnings.push({
+      message:
+        `No React components found in "${entry}" although it exports ${valueExports} PascalCase value(s). ` +
         "Check that @types/react resolves from the entry and that the components are typed against it.",
-    );
+    });
   }
   return found;
 }

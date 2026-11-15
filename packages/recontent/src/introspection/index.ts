@@ -8,9 +8,15 @@ import type {
   TypeInfo,
 } from "@recontentapp/core";
 import ts from "typescript";
-import { findComponents, findReactNode, type Analysis } from "./components.js";
+import {
+  findComponents,
+  findReactNode,
+  type Analysis,
+  type IntrospectionWarning,
+} from "./components.js";
 import type { PendingLinks } from "./jsdoc.js";
 import { createIntrospectionProgram, resolveInputs } from "./program.js";
+import { createImportResolver } from "./imports.js";
 import { describeComponent } from "./props.js";
 import { createTypeStore, finishTypes } from "./types.js";
 
@@ -19,7 +25,7 @@ export type IntrospectionResult = {
   components: ComponentInfo[];
   /** The project types the components' props reference, sorted by id. */
   types: TypeInfo[];
-  warnings: string[];
+  warnings: IntrospectionWarning[];
   /** Pass back as `oldProgram` on the next run to reuse unchanged source files. */
   program: ts.Program;
   /** Absolute paths of everything the result was computed from: every source file of the program, dependencies' declarations included, and the tsconfig files. */
@@ -94,9 +100,12 @@ export function introspect(options: {
     docFiles: new Set(),
     warnings: [],
   };
-  const components = findComponents(analysis, entry, config.exclude).map((candidate) =>
-    describeComponent(analysis, candidate, root),
-  );
+  const importOf = createImportResolver(analysis, { entry, root, importPath: config.importPath });
+  const components = findComponents(analysis, entry, config.exclude).map((candidate) => {
+    const component = describeComponent(analysis, candidate, root);
+    const statement = importOf?.(component.name);
+    return statement ? { ...component, import: statement } : component;
+  });
   components.sort((a, b) => a.name.localeCompare(b.name));
   const types = finishTypes(analysis, components);
   resolveLinks(components, types, logger);

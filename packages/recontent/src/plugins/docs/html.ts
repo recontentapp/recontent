@@ -1,10 +1,5 @@
 import type { ComponentInfo, PropInfo } from "@recontentapp/core";
-import {
-  displayName,
-  groupByCategory,
-  propCount,
-  updatedText,
-} from "../../introspection/markdown.js";
+import { groupByCategory, propCount, updatedText } from "../../introspection/markdown.js";
 import { generateCss } from "../css.js";
 import type { GeneratorContext } from "../shared/context.js";
 import type { DocToken } from "../shared/doc-token.js";
@@ -276,7 +271,7 @@ function componentSearchAttrs(component: ComponentInfo): string {
     component.deprecated ? "Deprecated" : "",
   ].filter(Boolean);
   return searchAttrs(
-    displayName(component),
+    component.name,
     [component.category ?? "", ...tags],
     "component",
     [component.category, ...tags].filter(Boolean).join(" · ") || "Component",
@@ -290,7 +285,7 @@ function componentCardHtml(component: ComponentInfo): string {
     : component.experimental
       ? '<span class="capsule exp">Experimental</span>'
       : "";
-  return `<a class="comp-card" href="#${id}" data-goto="${id}"><strong>${escapeHtml(displayName(component))}${status}</strong>${component.description ? `<span>${escapeHtml(component.description)}</span>` : ""}</a>`;
+  return `<a class="comp-card" href="#${id}" data-goto="${id}"><strong><span class="comp-name">${escapeHtml(component.name)}</span>${status}</strong>${component.description ? `<span>${escapeHtml(component.description)}</span>` : ""}</a>`;
 }
 
 function componentHtml(component: ComponentInfo, gitBaseUrl: string | undefined): string {
@@ -312,7 +307,7 @@ function componentHtml(component: ComponentInfo, gitBaseUrl: string | undefined)
   <header class="comp-head">
     <p class="breadcrumb">${crumb}</p>
     <div class="comp-intro">
-      <h2 class="title">${escapeHtml(displayName(component))}</h2>
+      <h2 class="title">${escapeHtml(component.name)}</h2>
       ${component.description ? `<p class="lead">${escapeHtml(component.description)}</p>` : ""}
       ${tags ? `<div class="tags">${tags}</div>` : ""}
     </div>
@@ -464,10 +459,11 @@ kbd { font: inherit; font-size: var(--hig-fs-xs); padding: 0 6px; border-radius:
 .crumb { color: var(--hig-accent); text-decoration: none; }
 .crumb:hover { text-decoration: underline; }
 .comp-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 12px; }
-.comp-card { display: flex; flex-direction: column; gap: 4px; padding: 14px 16px; border: 1px solid var(--hig-line); border-radius: 14px; color: var(--hig-text); text-decoration: none; }
+.comp-card { display: flex; min-width: 0; flex-direction: column; gap: 4px; padding: 14px 16px; border: 1px solid var(--hig-line); border-radius: 14px; color: var(--hig-text); text-decoration: none; }
+.comp-name { min-width: 0; overflow-wrap: anywhere; }
 .comp-card:hover { background: var(--hig-bg-2); }
 .comp-card strong { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; font-weight: 600; }
-.comp-card > span { font-size: var(--hig-fs-sm); color: var(--hig-text-2); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.comp-card > span { overflow-wrap: anywhere; font-size: var(--hig-fs-sm); color: var(--hig-text-2); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 /* Proximity: tight inside the header and inside a section, generous between sections. */
 .comp-head { display: flex; flex-direction: column; gap: 12px; }
 .comp-intro { display: flex; flex-direction: column; gap: 8px; }

@@ -140,10 +140,11 @@ kbd { font: inherit; font-size: var(--hig-fs-xs); padding: 0 6px; border-radius:
 .crumb { color: var(--hig-accent); text-decoration: none; }
 .crumb:hover { text-decoration: underline; }
 .comp-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 12px; }
-.comp-card { display: flex; flex-direction: column; gap: 4px; padding: 14px 16px; border: 1px solid var(--hig-line); border-radius: 14px; color: var(--hig-text); text-decoration: none; }
+.comp-card { display: flex; min-width: 0; flex-direction: column; gap: 4px; padding: 14px 16px; border: 1px solid var(--hig-line); border-radius: 14px; color: var(--hig-text); text-decoration: none; }
+.comp-name { min-width: 0; overflow-wrap: anywhere; }
 .comp-card:hover { background: var(--hig-bg-2); }
 .comp-card strong { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; font-weight: 600; }
-.comp-card > span { font-size: var(--hig-fs-sm); color: var(--hig-text-2); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.comp-card > span { overflow-wrap: anywhere; font-size: var(--hig-fs-sm); color: var(--hig-text-2); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 /* Proximity: tight inside the header and inside a section, generous between sections. */
 .comp-head { display: flex; flex-direction: column; gap: 12px; }
 .comp-intro { display: flex; flex-direction: column; gap: 8px; }
@@ -312,7 +313,7 @@ pre { margin: 0 0 16px; padding: 12px 14px; overflow-x: auto; border-radius: 12p
   .row-preview:empty { display: none; }
 }
 </style>
-<style>:root, :root[data-mode="dark"] { --hig-accent: #00f872; }</style>
+<style>:root, :root[data-mode="dark"] { --hig-accent: #2563eb; }</style>
 <style>
 :root {
   --ref-color-danger-50: #fef2f2;
@@ -2397,7 +2398,7 @@ pre { margin: 0 0 16px; padding: 12px 14px; overflow-x: auto; border-radius: 12p
         <p class="sub">1 component</p>
 <section class="category">
   <h2 class="category-title">Data display <span class="count">1</span></h2>
-  <div class="comp-grid"><a class="comp-card" href="#c-Sticker" data-goto="c-Sticker"><strong>Sticker<span class="capsule exp">Experimental</span></strong><span>Playful label stuck on the corner of a card or an image.</span></a></div>
+  <div class="comp-grid"><a class="comp-card" href="#c-Sticker" data-goto="c-Sticker"><strong><span class="comp-name">Sticker</span><span class="capsule exp">Experimental</span></strong><span>Playful label stuck on the corner of a card or an image.</span></a></div>
 </section>
       </div>
 <section class="group" id="c-Sticker" data-page data-search="Sticker Data display Experimental" data-kind="component" data-name="Sticker" data-meta="Data display · Experimental" hidden>

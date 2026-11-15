@@ -1,6 +1,6 @@
 import { Link } from "vocs";
 import { ButtonIcon, PaletteIcon, TagIcon, Underline } from "../doodles.tsx";
-import { CodePanel, lines } from "./CodePanel.tsx";
+import { CodePanel, lines, type Line } from "./CodePanel.tsx";
 
 const chain = [
   {
@@ -38,25 +38,42 @@ const chainCss = lines(`:root {
   --button-background: var(--system-color-accent);
 }`);
 
-/** Layers: follow one token through the chain. */
+// Errors are real TypeScript diagnostics from recontent, shortened to their first line.
+// A rename in the system layer is caught in every component still using the old name.
+const renameLines: Line[] = [
+  { code: "const system = defineSystemTokens({" },
+  { code: "  color: { primary: ref.color.blue[9] }, // was: accent" },
+  { code: "});" },
+  { code: "" },
+  { code: "const components = defineComponentTokens({" },
+  { code: "  button: { background: system.color.accent },", squiggle: "accent" },
+  { code: "  link: { color: system.color.accent },", squiggle: "accent" },
+  { code: "});" },
+];
+
+/** Layers: follow one token through the chain, then rename it. */
 export function TokenLayers() {
   return (
     <section className="lp-section lp-wrap">
       <h2 className="lp-h2">
-        Change what a token{" "}
+        Tokens that{" "}
         <span className="lp-underlined">
-          means
+          type-check.
           <Underline color="#2563eb" />
-        </span>{" "}
-        in one place.
+        </span>
       </h2>
       <p className="lp-sub">
         Components read meaning, meaning reads values. Aliases stay aliases all the way into the
-        output, so re-pointing <code>system.color.accent</code> moves every button with it.
+        output, so re-pointing <code>system.color.accent</code> moves every button with it. Themes
+        override values, never component code.
       </p>
       <p className="lp-more">
         <Link to="/guides/defining-tokens" className="lp-link">
           Defining tokens
+        </Link>{" "}
+        ·{" "}
+        <Link to="/guides/working-with-themes" className="lp-link">
+          Working with themes
         </Link>
       </p>
       <ol className="lp-layers">
@@ -81,6 +98,19 @@ export function TokenLayers() {
         <p>
           <strong>The chain survives the build.</strong> Each layer becomes a variable that points
           at the one below it, so the output reads like your config.
+        </p>
+      </div>
+      <div className="lp-chain-out">
+        <CodePanel
+          title="recontent.config.ts"
+          code={renameLines}
+          error="Property 'accent' does not exist on type '{ primary: … }'. (2 errors)"
+          tone="coral"
+        />
+        <p>
+          <strong>Rename a token, and the compiler finds the rest.</strong> Every component still
+          using the old name fails in your editor and at <code>recontent build</code>, not in
+          production.
         </p>
       </div>
     </section>

@@ -16,6 +16,7 @@
  */
 import { spawn, spawnSync } from "node:child_process";
 import {
+  appendFileSync,
   copyFileSync,
   cpSync,
   existsSync,
@@ -898,10 +899,7 @@ describe("recontent diff", () => {
       const configPath = path.join(dir, "recontent.config.ts");
       writeFileSync(
         configPath,
-        readFileSync(configPath, "utf-8").replace(
-          '  introspection: { entry: "src/index.ts" },\n',
-          "",
-        ),
+        readFileSync(configPath, "utf-8").replace(/ {2}introspection: \{.*\},\n/, ""),
       );
 
       const result = runCli(["--cwd", dir, "diff", "--fail-on-breaking"]);
@@ -914,10 +912,7 @@ describe("recontent diff", () => {
       const dir = introspectedRepo("diff-components-base-without");
       const configPath = path.join(dir, "recontent.config.ts");
       const config = readFileSync(configPath, "utf-8");
-      writeFileSync(
-        configPath,
-        config.replace('  introspection: { entry: "src/index.ts" },\n', ""),
-      );
+      writeFileSync(configPath, config.replace(/ {2}introspection: \{.*\},\n/, ""));
       initRepoWithCommit(dir);
       writeFileSync(configPath, config);
 
@@ -1022,6 +1017,25 @@ describe("recontent inspect", () => {
       );
     });
 
+    test("warnings are limited to the selected components, plus the project-wide ones", () => {
+      const dir = inspectProject();
+      writeFileSync(
+        path.join(dir, "src/warned.tsx"),
+        "/** @link javascript:alert(1) */\nexport function Warned() {\n  return <span />;\n}\n",
+      );
+      appendFileSync(path.join(dir, "src/index.ts"), 'export { Warned } from "./warned";\n');
+      const warning = "warning: Warned: @link javascript:alert(1) is not an http(s) URL.";
+
+      expect(runCli(["--cwd", dir, "inspect", "components", "Button"]).stderr).not.toContain(
+        warning,
+      );
+      expect(runCli(["--cwd", dir, "inspect", "components", "Warned"]).stderr).toContain(warning);
+      // Cached from here on, and still attributed.
+      expect(runCli(["--cwd", dir, "inspect", "components"]).stderr).toContain(warning);
+      expect(runCli(["--cwd", dir, "inspect", "types"]).stderr).not.toContain(warning);
+      expect(runCli(["--cwd", dir, "inspect"]).stderr).toContain(warning);
+    });
+
     test("a deprecated component says what replaces it, and links to it", () => {
       const dir = inspectProject();
 
@@ -1031,19 +1045,63 @@ describe("recontent inspect", () => {
       expect(detail.stdout).toContain("> 🧪 Experimental");
     });
 
-    test("components shows the types its props reference, once, after the props", () => {
+    test("components shows the import and the props, with the types they mention listed after", () => {
       const detail = runCli(["--cwd", inspectProject(), "inspect", "components", "Button"]);
 
       expect(detail.status).toBe(0);
       const output = detail.stdout;
-      expect(output.indexOf("## Types")).toBeGreaterThan(output.indexOf("## Button"));
-      expect(output).toContain("### IconName");
-      expect(output).toContain("Names an icon of the set.");
-      expect(output).toContain('Values: `"home"`, `"search"`');
-      // Reached through ButtonSize, not through a prop.
-      expect(output).toContain("### IconSize");
-      expect(output.match(/### IconName/g)).toHaveLength(1);
-      expect(output).toContain("References: `IconSize`");
+      expect(output).toContain('Import: `import { Button } from "@acme/ui"`');
+      expect(output.indexOf("Import:")).toBeLessThan(output.indexOf("Source:"));
+      // Literal unions are in the table already, so the types are only named.
+      expect(output).toContain('`"home" \\| "search"`');
+      expect(output).not.toContain("## Types");
+      expect(output).toContain("More types: `IconName`, `ButtonSize`, `IconSize`");
+      expect(output).toContain("--props icon");
+    });
+
+    test("components --props shows only those props, and what they reference", () => {
+      const dir = inspectProject();
+      const detail = runCli(["--cwd", dir, "inspect", "components", "Button", "--props", "icon"]);
+
+      expect(detail.status).toBe(0);
+      expect(detail.stdout).toContain("| `icon` |");
+      expect(detail.stdout).not.toContain("| `label` |");
+      expect(detail.stdout).not.toContain("Also accepts");
+      expect(detail.stdout).toContain("More types: `IconName`");
+      expect(detail.stdout).not.toContain("ButtonSize");
+
+      // An inherited prop is a row naming where it comes from.
+      const inherited = runCli(["--cwd", dir, "inspect", "components", "Button", "--props", "id"]);
+      expect(inherited.stdout).toContain("| `id` | `ButtonHTMLAttributes (@types/react)` |");
+
+      const json = runCli([
+        "--cwd",
+        dir,
+        "inspect",
+        "components",
+        "Button",
+        "--props",
+        "icon",
+        "--format",
+        "json",
+      ]);
+      expect(
+        JSON.parse(json.stdout).components[0].props.map((p: { name: string }) => p.name),
+      ).toEqual(["icon"]);
+    });
+
+    test("components --props with an unknown prop exits 2 and suggests", () => {
+      const result = runCli([
+        "--cwd",
+        inspectProject(),
+        "inspect",
+        "components",
+        "Button",
+        "--props",
+        "icn",
+      ]);
+      expect(result.status).toBe(2);
+      expect(result.stderr).toContain('No prop matches "icn". Did you mean `icon`');
     });
 
     test("types lists one line each; a name shows it with what it references", () => {

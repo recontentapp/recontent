@@ -705,14 +705,61 @@
   margin-inline: auto;
 }
 
-.lp-plugins {
+.lp-cards {
   display: grid;
   gap: 1.1rem;
   margin-top: var(--system-spacing-xl);
   text-align: left;
 }
 
-.lp-plugins li {
+.lp-group {
+  margin-top: var(--system-spacing-2xl);
+}
+
+.lp-group .lp-cards {
+  margin-top: var(--system-spacing-sm);
+}
+
+.lp-steps {
+  display: grid;
+  gap: var(--system-spacing-lg);
+  max-width: 46rem;
+  margin-top: var(--system-spacing-xl);
+}
+
+.lp-steps li {
+  min-width: 0;
+}
+
+.lp-chips-title {
+  font-family: var(--system-fontFamily-display);
+  font-weight: var(--system-fontWeight-black);
+  font-size: 1.15rem;
+  margin-bottom: var(--system-spacing-sm);
+}
+
+.lp-chips {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.lp-chips li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.35rem 0.7rem;
+  padding: 0.8rem 1rem;
+  background: var(--system-color-surface);
+  border: var(--system-border-thin);
+  border-radius: var(--lp-wobble-2);
+  box-shadow: var(--system-shadow-press-ink);
+}
+
+.lp-chips li span {
+  font-size: 0.95rem;
+}
+
+.lp-cards li {
   min-width: 0;
 }
 
@@ -733,19 +780,19 @@
     box-shadow var(--system-motion-duration) var(--system-motion-easing);
 }
 
-.lp-plugins li:nth-child(4n + 1) .lp-output {
+.lp-cards li:nth-child(4n + 1) .lp-output {
   box-shadow: var(--system-shadow-sm-blue);
 }
 
-.lp-plugins li:nth-child(4n + 2) .lp-output {
+.lp-cards li:nth-child(4n + 2) .lp-output {
   box-shadow: var(--system-shadow-sm-green);
 }
 
-.lp-plugins li:nth-child(4n + 3) .lp-output {
+.lp-cards li:nth-child(4n + 3) .lp-output {
   box-shadow: var(--system-shadow-sm-coral);
 }
 
-.lp-plugins li:nth-child(4n) .lp-output {
+.lp-cards li:nth-child(4n) .lp-output {
   box-shadow: var(--system-shadow-sm-yellow);
 }
 
@@ -776,13 +823,13 @@
 }
 
 @media (min-width: 40rem) {
-  .lp-plugins {
+  .lp-cards {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
 @media (min-width: 60rem) {
-  .lp-plugins {
+  .lp-cards {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
@@ -808,7 +855,7 @@
 }
 
 .lp-final-copy .lp-h2 {
-  max-width: 12ch;
+  max-width: 14ch;
 }
 
 .lp-final-copy .lp-lede {
