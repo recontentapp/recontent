@@ -6,7 +6,6 @@ import { generateStylexFiles } from "../src/plugins/stylex.js";
 import { generateVanillaExtractFiles } from "../src/plugins/vanilla-extract/generate.js";
 import { generateDtcg, generateDtcgThemed } from "../src/plugins/dtcg.js";
 import { goldenConfig } from "./helpers/fixtures.js";
-import type {} from "@recontentapp/core";
 import type { OutputFile } from "../src/plugins/shared/context.js";
 
 /**

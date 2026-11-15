@@ -99,7 +99,7 @@ export type TransitionValue = {
   delay: TokenMember<"duration">;
   timingFunction: TokenMember<"cubicBezier">;
 };
-export type GradientStop = { color: TokenMember<"color">; position: TokenMember<"number"> };
+type GradientStop = { color: TokenMember<"color">; position: TokenMember<"number"> };
 export type GradientValue = {
   kind: "linear" | "radial" | "conic";
   angle: string;

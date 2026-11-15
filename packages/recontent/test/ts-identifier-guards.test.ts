@@ -17,7 +17,7 @@ import {
 import { generateVanillaExtractFiles } from "../src/plugins/vanilla-extract/generate.js";
 import { generateCss } from "../src/plugins/css.js";
 import { generateStylexFiles } from "../src/plugins/stylex.js";
-import type { Config } from "@recontentapp/core";
+import type { Config } from "../src/config/types.js";
 
 function configWithTheme(themeName: string): Config {
   const ref = defineReferenceTokens({

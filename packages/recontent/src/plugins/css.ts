@@ -1,13 +1,8 @@
-import {
-  expandedMembers,
-  isExpandedComposite,
-  type PluginDiagnostic,
-  type RecontentPlugin,
-  type TokenEntry,
-  type TokenLayer,
-  type TokenRegistry,
-  type TokenTypeMap,
-} from "@recontentapp/core";
+import { expandedMembers, isExpandedComposite } from "../token-model/composite.js";
+import { type PluginDiagnostic, type RecontentPlugin } from "./types.js";
+import { type TokenEntry, type TokenRegistry } from "../token-model/registry.js";
+import { type TokenLayer } from "../token-model/model.js";
+import { type TokenTypeMap } from "../token-model/values.js";
 import type { OutputFile } from "./shared/context.js";
 import { cssVarName, serializeValueCss } from "../serialize/values.js";
 import type { GeneratorContext } from "./shared/context.js";

@@ -1,10 +1,4 @@
-import type {
-  ComponentInfo,
-  Documentation,
-  InheritedProps,
-  PropInfo,
-  TypeInfo,
-} from "@recontentapp/core";
+import type { ComponentInfo, Documentation, InheritedProps, PropInfo, TypeInfo } from "./model.js";
 import { code, escapeText } from "../markdown.js";
 
 /** `Accordion<Value extends string>` for a generic component, else its name. */

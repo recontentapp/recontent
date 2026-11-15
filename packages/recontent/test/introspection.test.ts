@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { beforeAll, describe, expect, test } from "@jest/globals";
-import type { ComponentInfo, PropInfo, TypeInfo } from "@recontentapp/core";
+import type { ComponentInfo, PropInfo, TypeInfo } from "../src/introspection/model.js";
 import type { IntrospectionWarning } from "../src/introspection/components.js";
 import { introspect } from "../src/introspection/index.js";
 

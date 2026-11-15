@@ -28,7 +28,6 @@ jobs:
         with:
           name: package-dist
           path: |
-            packages/core/dist
             packages/recontent/dist
           retention-days: 1
 

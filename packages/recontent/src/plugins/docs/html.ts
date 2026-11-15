@@ -1,4 +1,4 @@
-import type { ComponentInfo, PropInfo } from "@recontentapp/core";
+import type { ComponentInfo, PropInfo } from "../../introspection/model.js";
 import { groupByCategory, propCount, updatedText } from "../../introspection/markdown.js";
 import { generateCss } from "../css.js";
 import type { GeneratorContext } from "../shared/context.js";

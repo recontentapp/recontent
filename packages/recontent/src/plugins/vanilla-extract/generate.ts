@@ -2,11 +2,10 @@ import {
   expandedMembers,
   isCompositeType,
   isExpandedComposite,
-  type TokenEntry,
-  type TokenTypeMap,
-  type ThemeOverride,
-  pathKey,
-} from "@recontentapp/core";
+} from "../../token-model/composite.js";
+import { type TokenEntry, type ThemeOverride } from "../../token-model/registry.js";
+import { type TokenTypeMap } from "../../token-model/values.js";
+import { pathKey } from "../../token-model/guards.js";
 import type { OutputFile } from "../shared/context.js";
 import {
   serializeCompositeCss,

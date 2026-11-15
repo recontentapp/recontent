@@ -1,14 +1,8 @@
 import path from "node:path";
-import type {
-  ComponentInfo,
-  Config,
-  EmittedFile,
-  Logger,
-  PluginContext,
-  PluginDiagnostic,
-  RecontentPlugin,
-  TypeInfo,
-} from "@recontentapp/core";
+import type { ComponentInfo, TypeInfo } from "../introspection/model.js";
+import type { Config } from "../config/types.js";
+import type { EmittedFile, PluginContext, PluginDiagnostic, RecontentPlugin } from "./types.js";
+import type { Logger } from "../logger.js";
 
 export function sortPlugins(plugins: RecontentPlugin[]): RecontentPlugin[] {
   const pre: RecontentPlugin[] = [];

@@ -18,6 +18,5 @@ export default {
   },
   moduleNameMapper: {
     "^(\\.{1,2}/.*)\\.js$": "$1",
-    "^@recontentapp/core$": "<rootDir>/../core/src/index.ts",
   },
 };

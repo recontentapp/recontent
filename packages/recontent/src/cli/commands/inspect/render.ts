@@ -1,4 +1,5 @@
-import type { ComponentInfo, PropInfo, TokenLayer, TypeInfo } from "@recontentapp/core";
+import type { ComponentInfo, PropInfo, TypeInfo } from "../../../introspection/model.js";
+import type { TokenLayer } from "../../../token-model/model.js";
 import { plural } from "../../utils/format.js";
 import {
   groupByCategory,

@@ -1,4 +1,4 @@
-import type { RecontentPlugin } from "@recontentapp/core";
+import type { RecontentPlugin } from "./types.js";
 import { createSnapshot } from "../snapshot.js";
 import { outputPlugin } from "./factory.js";
 

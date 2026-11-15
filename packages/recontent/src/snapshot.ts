@@ -1,12 +1,8 @@
 import fs from "node:fs";
 import path from "node:path";
-import {
-  pathKey,
-  type ComponentInfo,
-  type ThemeOverride,
-  type TokenRegistry,
-  type TypeInfo,
-} from "@recontentapp/core";
+import { pathKey } from "./token-model/guards.js";
+import { type ComponentInfo, type TypeInfo } from "./introspection/model.js";
+import { type ThemeOverride, type TokenRegistry } from "./token-model/registry.js";
 import { buildToken, type DocToken } from "./plugins/shared/doc-token.js";
 
 /** Shared by the snapshot and every `recontent inspect --format json` output. */

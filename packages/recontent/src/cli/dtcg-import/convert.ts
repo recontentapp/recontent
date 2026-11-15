@@ -1,5 +1,6 @@
-import { COLOR_SPACES, componentRanges, FONT_WEIGHT_NUMERIC } from "@recontentapp/core";
-import type { ColorSpace } from "@recontentapp/core";
+import { COLOR_SPACES, componentRanges } from "../../color/spaces.js";
+import { FONT_WEIGHT_NUMERIC } from "../../token-model/values.js";
+import type { ColorSpace } from "../../color/spaces.js";
 import { escapeString } from "../../plugins/shared/ts-source.js";
 import { tokens } from "../../tokens.js";
 import { aliasTarget, containsJsonPointer, isObject } from "./types.js";

@@ -1,10 +1,10 @@
+import { pathKey } from "../token-model/guards.js";
+import { type RecontentPlugin } from "./types.js";
 import {
-  pathKey,
-  type RecontentPlugin,
   type ThemeOverride,
   type TokenEntry,
   type TokenRegistry,
-} from "@recontentapp/core";
+} from "../token-model/registry.js";
 import type { OutputFile } from "./shared/context.js";
 import { entryToDtcgNode, setNested } from "../serialize/values.js";
 import { getThemeOverride } from "./shared/alias.js";

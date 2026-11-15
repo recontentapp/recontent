@@ -4,7 +4,7 @@ import type {
   PropInfo,
   TypeInfo,
   TypeParameterInfo,
-} from "@recontentapp/core";
+} from "../../introspection/model.js";
 import type { Introspected } from "../../snapshot.js";
 
 type Literal = string | number | boolean;

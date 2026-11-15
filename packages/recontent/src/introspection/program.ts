@@ -1,6 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
-import type { IntrospectionConfigInput } from "@recontentapp/core";
+import type { IntrospectionConfigInput } from "./model.js";
 import ts from "typescript";
 
 function formatDiagnostic(diagnostic: ts.Diagnostic): string {

@@ -1,7 +1,8 @@
 import { describe, expect, test } from "@jest/globals";
 import { defineConfig, defineReferenceTokens, defineSystemTokens, tokens } from "../src/index.js";
 import { generateDocsFiles } from "../src/plugins/docs/index.js";
-import type { ComponentInfo, PluginContext } from "@recontentapp/core";
+import type { ComponentInfo } from "../src/introspection/model.js";
+import type { PluginContext } from "../src/plugins/types.js";
 import { goldenConfig } from "./helpers/fixtures.js";
 
 type Config = ReturnType<typeof goldenConfig>["config"];

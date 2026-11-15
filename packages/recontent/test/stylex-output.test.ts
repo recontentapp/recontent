@@ -21,7 +21,6 @@ import {
   themedConfig,
   type Fixture,
 } from "./helpers/fixtures.js";
-import type {} from "@recontentapp/core";
 import type { OutputFile } from "../src/plugins/shared/context.js";
 import type { PluginItem } from "@babel/core";
 

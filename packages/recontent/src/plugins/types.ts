@@ -1,6 +1,6 @@
-import type { TokenRegistry, ThemeOverride } from "../tokens/registry.js";
+import type { TokenRegistry, ThemeOverride } from "../token-model/registry.js";
 import type { Logger } from "../logger.js";
-import type { ComponentInfo, TypeInfo } from "../introspection/types.js";
+import type { ComponentInfo, TypeInfo } from "../introspection/model.js";
 
 /** A file a plugin wants written. `path` is relative to the project root — the
  *  plugin, not the CLI, owns its outDir. */

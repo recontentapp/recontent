@@ -41,11 +41,5 @@ export type TokenScale<
     extend(namespace: string, value: Record<string, unknown>): TokenScale<Key, T, Value>;
   };
 
-export type RefToken<T extends TokenType = TokenType> = StampedToken<T, "ref">;
-export type SystemToken<T extends TokenType = TokenType> = StampedToken<T, "system">;
-export type CompToken<T extends TokenType = TokenType> = StampedToken<T, "components">;
-export type SystemInput<T extends TokenType> = RawToken<T> | RefToken<T>;
-export type CompInput<T extends TokenType> = RawToken<T> | RefToken<T> | SystemToken<T>;
-
 export type ScaleBinding<T extends TokenType = TokenType> = TokenScale<never, T, StampedToken<T>>;
 export type TokenBinding<T extends TokenType = TokenType> = StampedToken<T>;

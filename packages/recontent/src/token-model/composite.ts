@@ -9,7 +9,7 @@ import type {
   TypographyValue,
 } from "./values.js";
 
-export const COMPOSITE_TOKEN_TYPES = [
+const COMPOSITE_TOKEN_TYPES = [
   "shadow",
   "border",
   "transition",

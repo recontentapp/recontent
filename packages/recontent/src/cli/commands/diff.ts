@@ -1,7 +1,8 @@
 import { promises as fsp } from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { loadConfig, type LogLevel } from "@recontentapp/core";
+import { loadConfig } from "../../config/load.js";
+import { type LogLevel } from "../../logger.js";
 import { diffComponents, type ComponentsDiff } from "../diff/components.js";
 import {
   countBreakingChanges,

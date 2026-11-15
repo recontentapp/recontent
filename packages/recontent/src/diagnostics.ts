@@ -1,10 +1,6 @@
-import {
-  isRawToken,
-  isStampedToken,
-  isTokenScale,
-  type TokenDiagnostic,
-  type TokenLayer,
-} from "@recontentapp/core";
+import { isRawToken, isStampedToken, isTokenScale } from "./token-model/guards.js";
+import { type TokenDiagnostic } from "./token-model/registry.js";
+import { type TokenLayer } from "./token-model/model.js";
 import { isNumericKey } from "./plugins/shared/ts-source.js";
 
 function looksLikeCompositeObject(value: Record<string, unknown>): string | null {

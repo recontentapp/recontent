@@ -1,9 +1,7 @@
-import {
-  pathKey,
-  type ComponentInfo,
-  type PluginContext,
-  type TokenLayer,
-} from "@recontentapp/core";
+import { pathKey } from "../../token-model/guards.js";
+import { type ComponentInfo } from "../../introspection/model.js";
+import { type PluginContext } from "../types.js";
+import { type TokenLayer } from "../../token-model/model.js";
 import { buildToken, deprecation, type DocToken } from "../shared/doc-token.js";
 
 const DOC_LAYERS: TokenLayer[] = ["ref", "system", "components"];

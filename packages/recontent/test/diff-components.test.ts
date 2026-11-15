@@ -1,5 +1,5 @@
 import { describe, expect, test } from "@jest/globals";
-import type { ComponentInfo, PropInfo, TypeInfo } from "@recontentapp/core";
+import type { ComponentInfo, PropInfo, TypeInfo } from "../src/introspection/model.js";
 import { countComponentBreakingChanges, diffComponents } from "../src/cli/diff/components.js";
 import { formatDiff } from "../src/cli/diff/diff.js";
 

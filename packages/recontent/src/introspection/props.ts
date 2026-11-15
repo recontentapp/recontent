@@ -1,10 +1,5 @@
 import path from "node:path";
-import type {
-  ComponentInfo,
-  InheritedProps,
-  PropInfo,
-  TypeParameterInfo,
-} from "@recontentapp/core";
+import type { ComponentInfo, InheritedProps, PropInfo, TypeParameterInfo } from "./model.js";
 import ts from "typescript";
 import { categoryOf, jsDoc } from "./jsdoc.js";
 import { resolveAlias, type Analysis, type Candidate } from "./components.js";

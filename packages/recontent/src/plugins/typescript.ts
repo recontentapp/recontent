@@ -1,12 +1,7 @@
-import {
-  expandedMembers,
-  isExpandedComposite,
-  type RecontentPlugin,
-  type TokenEntry,
-  type TokenMember,
-  type TokenType,
-  type TokenTypeMap,
-} from "@recontentapp/core";
+import { expandedMembers, isExpandedComposite } from "../token-model/composite.js";
+import { type RecontentPlugin } from "./types.js";
+import { type TokenEntry } from "../token-model/registry.js";
+import { type TokenMember, type TokenType, type TokenTypeMap } from "../token-model/values.js";
 import type { OutputFile } from "./shared/context.js";
 import { createLogger } from "../logger.js";
 import {

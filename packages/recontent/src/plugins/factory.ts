@@ -1,5 +1,5 @@
 import path from "node:path";
-import type { PluginContext, PluginDiagnostic, RecontentPlugin } from "@recontentapp/core";
+import type { PluginContext, PluginDiagnostic, RecontentPlugin } from "./types.js";
 import type { OutputFile } from "./shared/context.js";
 
 /**

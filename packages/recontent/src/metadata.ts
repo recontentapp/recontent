@@ -1,4 +1,5 @@
-import type { RawToken, StampedToken, TokenLayer, TokenType } from "@recontentapp/core";
+import type { RawToken, StampedToken, TokenLayer } from "./token-model/model.js";
+import type { TokenType } from "./token-model/values.js";
 
 export type ChainableMethods<Token> = {
   describe(description: string): Token & ChainableMethods<Token>;

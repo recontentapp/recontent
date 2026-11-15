@@ -1,7 +1,5 @@
 import type {
   ColorValue,
-  CompositeTokenType,
-  Config,
   CubicBezierValue,
   DimensionValue,
   DurationValue,
@@ -9,13 +7,15 @@ import type {
   FontWeightValue,
   NumberValue,
   StrokeStyleValue,
-  ThemeOverride,
-  TokenEntry,
   TokenMember,
   TokenType,
   TokenTypeMap,
-} from "@recontentapp/core";
-import { compositeMembers, isCompositeType, pathKey } from "@recontentapp/core";
+} from "../../token-model/values.js";
+import type { CompositeTokenType } from "../../token-model/composite.js";
+import type { Config } from "../../config/types.js";
+import type { ThemeOverride, TokenEntry } from "../../token-model/registry.js";
+import { compositeMembers, isCompositeType } from "../../token-model/composite.js";
+import { pathKey } from "../../token-model/guards.js";
 import { code } from "../../markdown.js";
 import {
   countComponentBreakingChanges,

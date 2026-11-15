@@ -1,8 +1,5 @@
+export type { RecontentPlugin, PluginContext, PluginDiagnostic, EmittedFile } from "./types.js";
 export type {
-  RecontentPlugin,
-  PluginContext,
-  PluginDiagnostic,
-  EmittedFile,
   ComponentInfo,
   Documentation,
   ExampleInfo,
@@ -11,13 +8,10 @@ export type {
   TypeInfo,
   InheritedProps,
   TypeParameterInfo,
-  Logger,
-  ThemeOverride,
-  TokenEntry,
-  TokenRegistry,
-  TokenType,
-  TokenTypeMap,
-} from "@recontentapp/core";
+} from "../introspection/model.js";
+export type { Logger } from "../logger.js";
+export type { ThemeOverride, TokenEntry, TokenRegistry } from "../token-model/registry.js";
+export type { TokenType, TokenTypeMap } from "../token-model/values.js";
 export { css, type CssPluginOptions } from "./css.js";
 export { dtcg, type DtcgPluginOptions } from "./dtcg.js";
 export { inspect, type InspectPluginOptions } from "./inspect.js";

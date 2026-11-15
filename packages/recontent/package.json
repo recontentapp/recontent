@@ -27,8 +27,8 @@
     "test": "NODE_OPTIONS=--experimental-vm-modules jest"
   },
   "dependencies": {
-    "@recontentapp/core": "workspace:*",
     "commander": "^15.0.0",
+    "jiti": "^2.7.0",
     "marked": "^18.1.2",
     "typescript": "npm:@typescript/typescript6@^6.0.2"
   },

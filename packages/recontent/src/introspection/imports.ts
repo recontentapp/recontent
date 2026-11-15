@@ -1,5 +1,5 @@
 import path from "node:path";
-import type { IntrospectionConfigInput } from "@recontentapp/core";
+import type { IntrospectionConfigInput } from "./model.js";
 import ts from "typescript";
 import type { Analysis } from "./components.js";
 

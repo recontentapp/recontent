@@ -1,4 +1,5 @@
-import type { Logger, ThemeOverride, TokenRegistry } from "@recontentapp/core";
+import type { Logger } from "../../logger.js";
+import type { ThemeOverride, TokenRegistry } from "../../token-model/registry.js";
 
 /** Structural subset of `Config`/`PluginContext` every generator needs. Both
  *  types are assignable to this, so generators work unchanged whether called

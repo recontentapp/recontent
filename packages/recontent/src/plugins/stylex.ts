@@ -17,13 +17,15 @@ import {
   expandedMembers,
   isCompositeType,
   isExpandedComposite,
-  pathKey,
-  type RecontentPlugin,
+} from "../token-model/composite.js";
+import { pathKey } from "../token-model/guards.js";
+import { type RecontentPlugin } from "./types.js";
+import {
   type ThemeOverride,
   type TokenEntry,
   type TokenRegistry,
-  type TokenTypeMap,
-} from "@recontentapp/core";
+} from "../token-model/registry.js";
+import { type TokenTypeMap } from "../token-model/values.js";
 import type { OutputFile } from "./shared/context.js";
 import {
   serializeCompositeCss,

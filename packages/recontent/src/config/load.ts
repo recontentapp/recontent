@@ -7,7 +7,7 @@ import { createJiti } from "jiti";
 import ts from "typescript";
 import type { Config } from "./types.js";
 
-export const DEFAULT_CONFIG = "recontent.config.ts";
+const DEFAULT_CONFIG = "recontent.config.ts";
 
 export class ConfigLoadError extends Error {
   constructor(message: string, options?: { cause?: unknown }) {

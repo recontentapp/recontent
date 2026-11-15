@@ -1,7 +1,7 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import { describe, expect, test } from "@jest/globals";
-import type { PluginContext } from "@recontentapp/core";
+import type { PluginContext } from "../src/plugins/types.js";
 import {
   defineConfig,
   defineReferenceTokens,

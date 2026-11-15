@@ -1,16 +1,12 @@
+import { isStampedToken, pathKey } from "../token-model/guards.js";
+import { type PluginContext, type PluginDiagnostic, type RecontentPlugin } from "./types.js";
+import { type ScaleBinding, type TokenBinding } from "../token-model/model.js";
 import {
-  isStampedToken,
-  pathKey,
-  type PluginContext,
-  type PluginDiagnostic,
-  type RecontentPlugin,
-  type ScaleBinding,
-  type TokenBinding,
   type TokenEntry,
   type ThemeOverride,
   type TokenRegistry,
-  type TokenType,
-} from "@recontentapp/core";
+} from "../token-model/registry.js";
+import { type TokenType } from "../token-model/values.js";
 import type { OutputFile } from "./shared/context.js";
 import { cssVarName, serializeValueCss } from "../serialize/values.js";
 import {

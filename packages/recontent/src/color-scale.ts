@@ -1,7 +1,7 @@
 // Generates a 12-step UI color scale from one color: rather than computing
 // lightness steps, it starts from hand-tuned reference scales, blends the two closest to the
 // input color, re-hues them, and moves the lightness curve to sit on the page background.
-import { toOklch } from "@recontentapp/core";
+import { toOklch } from "./color/convert.js";
 import { COLORED_SCALES, GRAY_SCALES, type ReferenceScale } from "./color-scale-data.js";
 
 type Oklch = [number, number, number];

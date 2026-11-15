@@ -1,12 +1,7 @@
 import { performance } from "node:perf_hooks";
 import path from "node:path";
-import type {
-  ComponentInfo,
-  Documentation,
-  IntrospectionConfigInput,
-  Logger,
-  TypeInfo,
-} from "@recontentapp/core";
+import type { ComponentInfo, Documentation, IntrospectionConfigInput, TypeInfo } from "./model.js";
+import type { Logger } from "../logger.js";
 import ts from "typescript";
 import {
   findComponents,

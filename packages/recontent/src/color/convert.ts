@@ -234,7 +234,7 @@ function clamp01(rgb: Vec3): Vec3 {
   return rgb.map((v) => Math.min(1, Math.max(0, v))) as Vec3;
 }
 
-export function toSrgbRgb(colorSpace: ColorSpace, components: readonly Component[]): Vec3 {
+function toSrgbRgb(colorSpace: ColorSpace, components: readonly Component[]): Vec3 {
   const resolved = none0(components);
   const xyz = toXyzD65(colorSpace, resolved);
   return clamp01(xyzD65ToSrgb(xyz));

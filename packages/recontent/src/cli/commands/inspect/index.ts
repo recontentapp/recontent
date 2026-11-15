@@ -1,4 +1,4 @@
-import type { Logger, LogLevel } from "@recontentapp/core";
+import type { Logger, LogLevel } from "../../../logger.js";
 import type { IntrospectionWarning } from "../../../introspection/components.js";
 import { typeClosure } from "../../../introspection/types.js";
 import { loadIntrospection, loadProject } from "../../../project.js";

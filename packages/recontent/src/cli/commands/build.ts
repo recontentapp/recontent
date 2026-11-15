@@ -1,6 +1,8 @@
 import fs from "node:fs";
 import path from "node:path";
-import type { ComponentInfo, EmittedFile, LogLevel, Logger, TypeInfo } from "@recontentapp/core";
+import type { ComponentInfo, TypeInfo } from "../../introspection/model.js";
+import type { EmittedFile } from "../../plugins/types.js";
+import type { LogLevel, Logger } from "../../logger.js";
 import type ts from "typescript";
 import { createLogger } from "../../logger.js";
 import { needsIntrospection, runPlugins } from "../../plugins/runner.js";

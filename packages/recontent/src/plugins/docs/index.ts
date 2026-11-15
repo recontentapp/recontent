@@ -1,4 +1,4 @@
-import type { PluginContext, RecontentPlugin } from "@recontentapp/core";
+import type { PluginContext, RecontentPlugin } from "../types.js";
 import type { OutputFile } from "../shared/context.js";
 import { outputPlugin } from "../factory.js";
 import { buildDocsModel } from "./model.js";

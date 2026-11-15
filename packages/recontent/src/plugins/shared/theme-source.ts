@@ -1,16 +1,14 @@
+import { isCompositeType } from "../../token-model/composite.js";
+import { pathKey } from "../../token-model/guards.js";
+import { type Logger } from "../../logger.js";
+import { type PluginContext, type PluginDiagnostic } from "../types.js";
 import {
-  isCompositeType,
-  pathKey,
-  type Logger,
-  type PluginContext,
-  type PluginDiagnostic,
   type ThemeOverride,
   type TokenEntry,
-  type TokenLayer,
   type TokenRegistry,
-  type TokenType,
-  type TokenTypeMap,
-} from "@recontentapp/core";
+} from "../../token-model/registry.js";
+import { type TokenLayer } from "../../token-model/model.js";
+import { type TokenType, type TokenTypeMap } from "../../token-model/values.js";
 import { getEntry, resolveEntryValue, walkAliasChain } from "./alias.js";
 import type { GeneratorContext } from "./context.js";
 import {

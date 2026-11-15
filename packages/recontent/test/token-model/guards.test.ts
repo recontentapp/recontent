@@ -5,7 +5,7 @@ import {
   isTokenLeaf,
   isTokenScale,
   pathKey,
-} from "../../src/tokens/guards.js";
+} from "../../src/token-model/guards.js";
 
 test("isRawToken recognizes raw tokens", () => {
   expect(isRawToken({ _kind: "raw", $value: 1 })).toBe(true);

@@ -3,14 +3,14 @@ import type {
   GradientValue,
   ShadowLayer,
   ShadowValue,
-  TokenEntry,
   TokenMember,
   TokenType,
   TokenTypeMap,
   TransitionValue,
   TypographyValue,
-} from "@recontentapp/core";
-import { FONT_WEIGHT_NUMERIC } from "@recontentapp/core";
+} from "../token-model/values.js";
+import type { TokenEntry } from "../token-model/registry.js";
+import { FONT_WEIGHT_NUMERIC } from "../token-model/values.js";
 
 function serializeColorDtcg(value: TokenTypeMap["color"]): TokenTypeMap["color"] {
   return value;

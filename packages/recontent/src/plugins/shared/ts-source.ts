@@ -1,5 +1,6 @@
-import type { TokenLayer, TokenScaleMetadata } from "@recontentapp/core";
-import { pathKey } from "@recontentapp/core";
+import type { TokenLayer } from "../../token-model/model.js";
+import type { TokenScaleMetadata } from "../../token-model/registry.js";
+import { pathKey } from "../../token-model/guards.js";
 import type { GeneratorContext } from "./context.js";
 
 export type SourceValue = { value: string; source?: true };

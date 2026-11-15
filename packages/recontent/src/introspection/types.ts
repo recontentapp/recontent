@@ -1,5 +1,5 @@
 import path from "node:path";
-import type { ComponentInfo, TypeInfo, TypeParameterInfo } from "@recontentapp/core";
+import type { ComponentInfo, TypeInfo, TypeParameterInfo } from "./model.js";
 import ts from "typescript";
 import { resolveAlias, type Analysis } from "./components.js";
 import { jsDoc } from "./jsdoc.js";

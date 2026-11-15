@@ -1,5 +1,7 @@
 import path from "node:path";
-import { loadConfig, type Config, type Logger, type LogLevel } from "@recontentapp/core";
+import { loadConfig } from "./config/load.js";
+import { type Config } from "./config/types.js";
+import { type Logger, type LogLevel } from "./logger.js";
 import ts from "typescript";
 import { readHead, readLastUpdated } from "./git.js";
 import type { IntrospectionWarning } from "./introspection/components.js";

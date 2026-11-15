@@ -1,19 +1,19 @@
+import { pathKey } from "../token-model/guards.js";
 import {
-  pathKey,
   type BorderValue,
   type ColorValue,
   type DimensionValue,
   type GradientValue,
   type NumberValue,
-  type RecontentPlugin,
   type ShadowValue,
-  type TokenEntry,
   type TokenMember,
   type TokenType,
   type TokenTypeMap,
   type TransitionValue,
   type TypographyValue,
-} from "@recontentapp/core";
+} from "../token-model/values.js";
+import { type RecontentPlugin } from "./types.js";
+import { type TokenEntry } from "../token-model/registry.js";
 import type { OutputFile } from "./shared/context.js";
 import { createLogger } from "../logger.js";
 import {

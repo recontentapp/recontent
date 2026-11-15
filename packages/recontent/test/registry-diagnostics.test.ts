@@ -1,5 +1,5 @@
 import { expect, test } from "@jest/globals";
-import type { TokenEntry, TokenRegistry } from "@recontentapp/core";
+import type { TokenEntry, TokenRegistry } from "../src/token-model/registry.js";
 import { diagnoseRegistry } from "../src/cli/registry-diagnostics.js";
 
 function entry(path: string[], overrides: Partial<TokenEntry> = {}): TokenEntry {

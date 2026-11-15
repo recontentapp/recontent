@@ -1,12 +1,8 @@
-import {
-  expandedMembers,
-  pathKey,
-  type TokenEntry,
-  type TokenLayer,
-  type TokenMember,
-  type TokenType,
-  type TokenTypeMap,
-} from "@recontentapp/core";
+import { expandedMembers } from "../../token-model/composite.js";
+import { pathKey } from "../../token-model/guards.js";
+import { type TokenEntry } from "../../token-model/registry.js";
+import { type TokenLayer } from "../../token-model/model.js";
+import { type TokenMember, type TokenType, type TokenTypeMap } from "../../token-model/values.js";
 import { cssVarName, serializeCompositeCss, serializeValueCss } from "../../serialize/values.js";
 import type { GeneratorContext } from "./context.js";
 import { resolveEntryValue } from "./alias.js";

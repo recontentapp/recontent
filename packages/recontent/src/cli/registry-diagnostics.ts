@@ -1,9 +1,9 @@
+import { pathKey } from "../token-model/guards.js";
 import {
-  pathKey,
   type ThemeOverride,
   type TokenDiagnostic,
   type TokenRegistry,
-} from "@recontentapp/core";
+} from "../token-model/registry.js";
 import {
   AliasTargetNotFoundError,
   CircularAliasError,

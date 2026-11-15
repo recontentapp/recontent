@@ -17,7 +17,7 @@ import {
   defineTheme,
   tokens,
 } from "../../src/index.js";
-import type { PluginContext } from "@recontentapp/core";
+import type { PluginContext } from "../../src/plugins/types.js";
 
 const ref = defineReferenceTokens({
   color: { black: tokens.color("#000000") },

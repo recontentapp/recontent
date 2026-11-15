@@ -1,6 +1,8 @@
 import { expect, test } from "@jest/globals";
-import type { RawToken, ShadowLayer, StampedToken } from "@recontentapp/core";
-import { isTokenScale, toOklch } from "@recontentapp/core";
+import type { RawToken, StampedToken } from "../src/token-model/model.js";
+import type { ShadowLayer } from "../src/token-model/values.js";
+import { isTokenScale } from "../src/token-model/guards.js";
+import { toOklch } from "../src/color/convert.js";
 import { defineReferenceTokens, defineTheme, tokens } from "../src/index.js";
 
 test("tokens.color rejects a hex string with non-hex characters", () => {

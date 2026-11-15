@@ -5,7 +5,7 @@ import {
   expandedMembers,
   isCompositeType,
   isExpandedComposite,
-} from "../../src/tokens/composite.js";
+} from "../../src/token-model/composite.js";
 import type {
   BorderValue,
   GradientValue,
@@ -13,7 +13,7 @@ import type {
   TokenMember,
   TransitionValue,
   TypographyValue,
-} from "../../src/tokens/values.js";
+} from "../../src/token-model/values.js";
 
 function member<T>(value: T): TokenMember<any> {
   return { $value: value } as TokenMember<any>;

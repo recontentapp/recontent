@@ -1,4 +1,4 @@
-import type { Logger } from "@recontentapp/core";
+import type { Logger } from "../logger.js";
 import ts from "typescript";
 import type { TypeStore } from "./types.js";
 

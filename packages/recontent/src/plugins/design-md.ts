@@ -1,11 +1,8 @@
-import {
-  expandedMembers,
-  pathKey,
-  type ComponentInfo,
-  type PluginContext,
-  type RecontentPlugin,
-  type TokenEntry,
-} from "@recontentapp/core";
+import { expandedMembers } from "../token-model/composite.js";
+import { pathKey } from "../token-model/guards.js";
+import { type ComponentInfo } from "../introspection/model.js";
+import { type PluginContext, type RecontentPlugin } from "./types.js";
+import { type TokenEntry } from "../token-model/registry.js";
 import type { OutputFile } from "./shared/context.js";
 import { code, escapeText } from "../markdown.js";
 import { serializeValueCss } from "../serialize/values.js";

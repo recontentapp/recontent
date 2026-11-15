@@ -1,4 +1,4 @@
-import type { RecontentPlugin } from "@recontentapp/core";
+import type { RecontentPlugin } from "../types.js";
 import { outputPlugin } from "../factory.js";
 import { themeNameDiagnostics } from "../shared/theme-source.js";
 import { generateVanillaExtractFiles, type VanillaExtractPluginOptions } from "./generate.js";

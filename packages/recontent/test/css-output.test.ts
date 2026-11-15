@@ -14,7 +14,6 @@ import {
   scaleConfig,
   themedConfig,
 } from "./helpers/fixtures.js";
-import type {} from "@recontentapp/core";
 import type { OutputFile } from "../src/plugins/shared/context.js";
 
 describe("reference preservation", () => {

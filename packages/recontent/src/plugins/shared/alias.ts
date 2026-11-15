@@ -1,10 +1,10 @@
+import { pathKey } from "../../token-model/guards.js";
+import { type PluginContext } from "../types.js";
 import {
-  pathKey,
-  type PluginContext,
   type ThemeOverride,
   type TokenEntry,
   type TokenRegistry,
-} from "@recontentapp/core";
+} from "../../token-model/registry.js";
 
 export class AliasTargetNotFoundError extends Error {
   constructor(readonly key: string) {

@@ -1,6 +1,7 @@
 import { describe, expect, test } from "@jest/globals";
 import { needsIntrospection, runPlugins, sortPlugins } from "../../src/plugins/runner.js";
-import type { Config, PluginContext, RecontentPlugin } from "@recontentapp/core";
+import type { Config } from "../../src/config/types.js";
+import type { PluginContext, RecontentPlugin } from "../../src/plugins/types.js";
 
 test("sortPlugins stably partitions pre / unenforced / post", () => {
   const plugin = (name: string, enforce?: "pre" | "post"): RecontentPlugin => ({

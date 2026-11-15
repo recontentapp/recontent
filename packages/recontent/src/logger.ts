@@ -1,6 +1,11 @@
-import type { Logger, LogLevel } from "@recontentapp/core";
+export type LogLevel = "info" | "debug";
 
-export type { Logger, LogLevel } from "@recontentapp/core";
+export type Logger = {
+  info(message: string): void;
+  warn(message: string): void;
+  error(message: string): void;
+  debug(message: string): void;
+};
 
 export function createLogger(logLevel: LogLevel = "info"): Logger {
   return {

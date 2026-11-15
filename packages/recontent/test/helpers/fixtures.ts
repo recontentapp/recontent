@@ -1,4 +1,6 @@
-import type { Config, ThemeOverride, TokenBinding } from "@recontentapp/core";
+import type { Config } from "../../src/config/types.js";
+import type { ThemeOverride } from "../../src/token-model/registry.js";
+import type { TokenBinding } from "../../src/token-model/model.js";
 import ts from "typescript";
 import {
   defineComponentTokens,

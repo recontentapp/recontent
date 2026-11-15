@@ -30,22 +30,19 @@ jobs:
       - name: Ensure npm supports trusted publishing
         run: npm install -g npm@latest
 
-      - name: Verify package versions match release tag
+      - name: Verify package version matches release tag
         env:
           TAG: ${{ github.event.release.tag_name }}
         run: |
-          for dir in packages/core packages/recontent; do
-            pkg_version=$(node -p "require('./$dir/package.json').version")
-            if [ "$pkg_version" != "$TAG" ]; then
-              echo "Tag version ($TAG) does not match $dir/package.json version ($pkg_version)" >&2
-              exit 1
-            fi
-          done
+          pkg_version=$(node -p "require('./packages/recontent/package.json').version")
+          if [ "$pkg_version" != "$TAG" ]; then
+            echo "Tag version ($TAG) does not match packages/recontent/package.json version ($pkg_version)" >&2
+            exit 1
+          fi
 
       - name: Build
         run: pnpm build
 
-      # Publishes core before recontent (dependency order) and skips versions already on npm,
-      # so a partially failed run can be re-run
+      # Skips versions already on npm, so a partially failed run can be re-run
       - name: Publish to npm
         run: pnpm publish --recursive --provenance --access public --no-git-checks

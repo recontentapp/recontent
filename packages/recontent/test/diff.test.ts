@@ -2,7 +2,8 @@ import { spawnSync } from "node:child_process";
 import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { afterEach, beforeEach, describe, expect, jest, test } from "@jest/globals";
-import type { Config, ThemeOverride, TokenEntry, TokenRegistry } from "@recontentapp/core";
+import type { Config } from "../src/config/types.js";
+import type { ThemeOverride, TokenEntry, TokenRegistry } from "../src/token-model/registry.js";
 import {
   countBreakingChanges,
   diffConfigs,

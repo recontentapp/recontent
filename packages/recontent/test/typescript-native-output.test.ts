@@ -11,7 +11,7 @@ import {
   type TypeScriptNativePluginOptions,
 } from "../src/plugins/typescript-native.js";
 import { assertParses, assertTypechecks, compositeConfig } from "./helpers/fixtures.js";
-import type { Config } from "@recontentapp/core";
+import type { Config } from "../src/config/types.js";
 import type { OutputFile } from "../src/plugins/shared/context.js";
 
 const NATIVE: TypeScriptNativePluginOptions = { outDir: "dist-test" };

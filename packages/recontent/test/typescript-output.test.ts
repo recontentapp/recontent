@@ -19,7 +19,7 @@ import {
   themedConfig,
   type Fixture,
 } from "./helpers/fixtures.js";
-import type { Config } from "@recontentapp/core";
+import type { Config } from "../src/config/types.js";
 import type { OutputFile } from "../src/plugins/shared/context.js";
 
 const TS: TypeScriptPluginOptions = { outDir: "dist-test" };
