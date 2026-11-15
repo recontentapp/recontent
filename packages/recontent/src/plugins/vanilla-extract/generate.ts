@@ -12,19 +12,21 @@ import {
   serializeValueCss,
   type MemberResolver,
 } from "../../serialize/values.js";
-import { getEntry, resolveEntryValue, terminalEntry } from "../shared/alias.js";
+import { getEntry, resolveEntryValue, terminalEntry } from "../../token-model/alias.js";
 import type { GeneratorContext } from "../shared/context.js";
 import { validateThemeNames } from "../shared/theme-source.js";
 import {
-  entryPath,
   escapeTemplateLiteral,
   formatTree,
-  generateScaleExports,
   propertyAccess,
-  scaleExportsForConfig,
   setTreeValue,
-  type ScaleExport,
   type SourceTree,
+} from "../../ts-source.js";
+import {
+  entryPath,
+  generateScaleExports,
+  scaleExportsForConfig,
+  type ScaleExport,
 } from "../shared/ts-source.js";
 
 function variableReference(entry: TokenEntry): string {

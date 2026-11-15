@@ -1,16 +1,16 @@
-import type { Config } from "./config/types.js";
-import type { IntrospectionConfigInput } from "./introspection/model.js";
-import type { LogLevel } from "./logger.js";
+import type { Config } from "../config/types.js";
+import type { IntrospectionConfigInput } from "../introspection/model.js";
+import type { LogLevel } from "../logger.js";
 import type {
   RawToken,
   StampedToken,
   TokenLayer,
   TokenMetadata,
   TokenScale,
-} from "./token-model/model.js";
-import type { RecontentPlugin } from "./plugins/types.js";
-import type { ThemeOverride, TokenRegistry, TokenScaleMetadata } from "./token-model/registry.js";
-import type { TokenType } from "./token-model/values.js";
+} from "../token-model/model.js";
+import type { RecontentPlugin } from "../plugins/types.js";
+import type { ThemeOverride, TokenRegistry, TokenScaleMetadata } from "../token-model/registry.js";
+import type { TokenType } from "../token-model/values.js";
 import { diagnoseTokenTrees } from "./diagnostics.js";
 import {
   isRawToken,
@@ -18,7 +18,7 @@ import {
   isTokenLeaf,
   isTokenScale,
   pathKey,
-} from "./token-model/guards.js";
+} from "../token-model/guards.js";
 import { withScaleMethods, withStampedTokenMethods, type ChainableMethods } from "./metadata.js";
 
 type TokenTree = Record<string, unknown>;

@@ -26,14 +26,14 @@ import {
   serializeFontWeightNative,
   serializeStrokeStyleNative,
 } from "../serialize/native.js";
-import { escapeString } from "./shared/ts-source.js";
+import { escapeString } from "../ts-source.js";
 import {
   generateThemeSource,
   themeNameDiagnostics,
   type MemberLookup,
   type ThemeTargetSpec,
 } from "./shared/theme-source.js";
-import type { SourceTree, SourceValue } from "./shared/ts-source.js";
+import type { SourceTree, SourceValue } from "../ts-source.js";
 import type { GeneratorContext } from "./shared/context.js";
 import { outputPlugin } from "./factory.js";
 

@@ -1,21 +1,16 @@
 import { promises as fsp } from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { loadConfig } from "../../config/load.js";
-import { type LogLevel } from "../../logger.js";
-import { diffComponents, type ComponentsDiff } from "../diff/components.js";
-import {
-  countBreakingChanges,
-  diffConfigs,
-  formatDiff,
-  formatDiffError,
-  type DiffFormat,
-} from "../diff/diff.js";
+import { loadConfig } from "../../../config/load.js";
+import { type LogLevel } from "../../../logger.js";
+import { diffComponents, type ComponentsDiff } from "./components.js";
+import { diffConfigs } from "./tokens.js";
+import { countBreakingChanges, formatDiff, formatDiffError, type DiffFormat } from "./format.js";
 import { loadIntrospection, loadProject } from "../../project.js";
-import type { Introspected } from "../../snapshot.js";
-import { diagnoseRegistry } from "../registry-diagnostics.js";
-import { exitWithError, reportError } from "../utils/exit.js";
-import { plural } from "../utils/format.js";
+import type { Introspected } from "../../../snapshot/snapshot.js";
+import { diagnoseRegistry } from "../../../token-model/alias.js";
+import { exitWithError, reportError } from "../../utils/exit.js";
+import { plural } from "../../utils/format.js";
 import {
   archiveRevision,
   assertAncestorOfHead,

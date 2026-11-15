@@ -10,8 +10,8 @@ import {
 } from "../../../introspection/markdown.js";
 import { typeClosure } from "../../../introspection/types.js";
 import { code, escapeText } from "../../../markdown.js";
-import { SCHEMA_VERSION } from "../../../snapshot.js";
-import type { DocToken } from "../../../plugins/shared/doc-token.js";
+import { SCHEMA_VERSION } from "../../../snapshot/snapshot.js";
+import type { DocToken } from "../../../snapshot/doc-token.js";
 
 export type Format = "markdown" | "json";
 export const FORMATS: Format[] = ["markdown", "json"];

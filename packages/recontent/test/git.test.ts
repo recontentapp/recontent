@@ -3,7 +3,7 @@ import { mkdirSync, mkdtempSync, realpathSync, rmSync, writeFileSync } from "nod
 import os from "node:os";
 import path from "node:path";
 import { afterAll, beforeAll, describe, expect, test } from "@jest/globals";
-import { readHead, readLastUpdated } from "../src/git.js";
+import { readHead, readLastUpdated } from "../src/cli/git.js";
 
 let repo: string;
 let outside: string;

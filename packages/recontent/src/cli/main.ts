@@ -5,12 +5,12 @@ import { Argument, Command, CommanderError, Option } from "commander";
 import type { LogLevel } from "../logger.js";
 import { ConfigLoadError, discoverConfigPath, resolveConfigPath } from "../config/load.js";
 import { runBuild } from "./commands/build.js";
-import { runDiff } from "./commands/diff.js";
-import { DIFF_FORMATS, type DiffFormat } from "./diff/diff.js";
-import { runInit } from "./commands/init.js";
+import { runDiff } from "./commands/diff/index.js";
+import { DIFF_FORMATS, type DiffFormat } from "./commands/diff/format.js";
+import { runInit } from "./commands/init/index.js";
 import { runInspect, type InspectTarget } from "./commands/inspect/index.js";
 import { FORMATS, type Format } from "./commands/inspect/render.js";
-import { PRESETS, PRESET_NAMES } from "./presets/index.js";
+import { PRESETS, PRESET_NAMES } from "./commands/init/presets/index.js";
 import { reportError } from "./utils/exit.js";
 
 const require = createRequire(import.meta.url);

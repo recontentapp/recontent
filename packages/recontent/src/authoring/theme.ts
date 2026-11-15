@@ -1,7 +1,7 @@
-import { isRawToken, isStampedToken, pathKey } from "./token-model/guards.js";
-import type { RawToken, StampedToken, TokenScale } from "./token-model/model.js";
-import type { ThemeOverride } from "./token-model/registry.js";
-import type { TokenType } from "./token-model/values.js";
+import { isRawToken, isStampedToken, pathKey } from "../token-model/guards.js";
+import type { RawToken, StampedToken, TokenScale } from "../token-model/model.js";
+import type { ThemeOverride } from "../token-model/registry.js";
+import type { TokenType } from "../token-model/values.js";
 
 type TokenTree = Record<string, unknown>;
 

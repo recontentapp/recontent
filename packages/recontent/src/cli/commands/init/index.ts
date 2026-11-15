@@ -1,11 +1,11 @@
 import path from "node:path";
-import { createLogger } from "../../logger.js";
-import { exitWithError } from "../utils/exit.js";
-import { generateConfigFromDtcg } from "../dtcg-import/index.js";
-import type { DtcgImportStats } from "../dtcg-import/index.js";
-import { getPreset } from "../presets/index.js";
-import { plural } from "../utils/format.js";
-import { displayPath, writeOutputFile } from "../utils/fs.js";
+import { createLogger } from "../../../logger.js";
+import { exitWithError } from "../../utils/exit.js";
+import { generateConfigFromDtcg } from "./dtcg-import/index.js";
+import type { DtcgImportStats } from "./dtcg-import/index.js";
+import { getPreset } from "./presets/index.js";
+import { plural } from "../../utils/format.js";
+import { displayPath, writeOutputFile } from "../../utils/fs.js";
 
 export type InitOptions = {
   cwd: string;

@@ -1,6 +1,6 @@
 import { expect, test } from "@jest/globals";
 import type { TokenEntry, TokenRegistry } from "../src/token-model/registry.js";
-import { diagnoseRegistry } from "../src/cli/registry-diagnostics.js";
+import { diagnoseRegistry } from "../src/token-model/alias.js";
 
 function entry(path: string[], overrides: Partial<TokenEntry> = {}): TokenEntry {
   return {

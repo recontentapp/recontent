@@ -1,15 +1,15 @@
 import path from "node:path";
-import { loadConfig } from "./config/load.js";
-import { type Config } from "./config/types.js";
-import { type Logger, type LogLevel } from "./logger.js";
+import { loadConfig } from "../config/load.js";
+import { type Config } from "../config/types.js";
+import { type Logger, type LogLevel } from "../logger.js";
 import ts from "typescript";
 import { readHead, readLastUpdated } from "./git.js";
-import type { IntrospectionWarning } from "./introspection/components.js";
-import { introspect, watchableFiles } from "./introspection/index.js";
-import { readCache, writeCache } from "./introspection/cache.js";
-import { resolveInputs } from "./introspection/program.js";
-import { createLogger } from "./logger.js";
-import type { Introspected } from "./snapshot.js";
+import type { IntrospectionWarning } from "../introspection/components.js";
+import { introspect, watchableFiles } from "../introspection/index.js";
+import { readCache, writeCache } from "../introspection/cache.js";
+import { resolveInputs } from "../introspection/program.js";
+import { createLogger } from "../logger.js";
+import type { Introspected } from "../snapshot/snapshot.js";
 
 export type Project = {
   config: Config;

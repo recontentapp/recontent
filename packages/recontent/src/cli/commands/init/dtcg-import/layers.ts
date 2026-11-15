@@ -1,4 +1,4 @@
-import { propertyAccess } from "../../plugins/shared/ts-source.js";
+import { propertyAccess } from "../../../../ts-source.js";
 import { convertValue, SUPPORTED_TYPES } from "./convert.js";
 import type { Converted } from "./convert.js";
 import { aliasTarget, containsAlias, lookupToken, sourceKey } from "./types.js";

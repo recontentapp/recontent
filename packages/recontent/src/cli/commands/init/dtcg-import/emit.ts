@@ -1,5 +1,5 @@
-import { escapeString, formatTree, setTreeValue } from "../../plugins/shared/ts-source.js";
-import type { SourceTree } from "../../plugins/shared/ts-source.js";
+import { escapeString, formatTree, setTreeValue } from "../../../../ts-source.js";
+import type { SourceTree } from "../../../../ts-source.js";
 import type { ConvertedToken } from "./layers.js";
 import type { Theme } from "./themes.js";
 

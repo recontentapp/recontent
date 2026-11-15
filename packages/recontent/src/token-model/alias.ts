@@ -1,12 +1,18 @@
-import { pathKey } from "../../token-model/guards.js";
-import { type PluginContext } from "../types.js";
+import { pathKey } from "./guards.js";
 import {
   type ThemeOverride,
+  type TokenDiagnostic,
   type TokenEntry,
   type TokenRegistry,
-} from "../../token-model/registry.js";
+} from "./registry.js";
 
-export class AliasTargetNotFoundError extends Error {
+/** Structural subset of `PluginContext` that alias resolution needs. */
+type AliasContext = {
+  registry: TokenRegistry;
+  themes: Record<string, ThemeOverride>;
+};
+
+class AliasTargetNotFoundError extends Error {
   constructor(readonly key: string) {
     super(`Alias target not found: ${key}`);
   }
@@ -95,10 +101,7 @@ export function resolveEntryValue(
 }
 
 /** The named theme's overrides, or an error listing the themes the config does define. */
-export function getThemeOverride(
-  themes: PluginContext["themes"],
-  themeName: string,
-): ThemeOverride {
+export function getThemeOverride(themes: AliasContext["themes"], themeName: string): ThemeOverride {
   const override = themes[themeName];
   if (!override) {
     throw new Error(
@@ -114,7 +117,7 @@ export function getThemeOverride(
  * is the base value. Throws on an unknown theme.
  */
 export function resolveValue(
-  ctx: Pick<PluginContext, "registry" | "themes">,
+  ctx: AliasContext,
   entry: TokenEntry,
   theme?: string,
 ): TokenEntry["$value"] {
@@ -123,4 +126,46 @@ export function resolveValue(
     entry,
     theme === undefined ? undefined : getThemeOverride(ctx.themes, theme),
   );
+}
+
+export function diagnoseRegistry(
+  registry: TokenRegistry,
+  themes: Record<string, ThemeOverride>,
+): TokenDiagnostic[] {
+  const diagnostics: TokenDiagnostic[] = [];
+
+  for (const entry of registry.values()) {
+    if (!entry.alias) continue;
+
+    const entryKey = pathKey(entry.path);
+    try {
+      for (const _ of walkAliasChain(registry, entry));
+    } catch (error) {
+      if (error instanceof AliasTargetNotFoundError) {
+        diagnostics.push({
+          path: entry.path,
+          message: `Broken alias at "${entryKey}": target "${error.key}" does not exist in the registry.`,
+        });
+      } else if (error instanceof CircularAliasError) {
+        diagnostics.push({
+          path: entry.path,
+          message: `Circular alias at "${entryKey}": alias chain revisits "${error.key}".`,
+        });
+      } else {
+        throw error;
+      }
+    }
+  }
+
+  for (const [themeName, overrides] of Object.entries(themes)) {
+    for (const key of overrides.keys()) {
+      if (registry.has(key)) continue;
+      diagnostics.push({
+        path: key.split("."),
+        message: `Theme "${themeName}" overrides unknown token "${key}"; it matches no token in the config.`,
+      });
+    }
+  }
+
+  return diagnostics;
 }

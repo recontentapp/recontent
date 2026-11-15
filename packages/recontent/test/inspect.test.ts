@@ -12,7 +12,7 @@ import {
   sharedDeclarations,
 } from "../src/cli/commands/inspect/render.js";
 import { typeClosure } from "../src/introspection/types.js";
-import type { DocToken } from "../src/plugins/shared/doc-token.js";
+import type { DocToken } from "../src/snapshot/doc-token.js";
 
 function token(path: string, type: DocToken["type"], extra: Partial<DocToken> = {}): DocToken {
   return {

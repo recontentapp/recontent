@@ -7,7 +7,7 @@ import {
 } from "../token-model/registry.js";
 import type { OutputFile } from "./shared/context.js";
 import { entryToDtcgNode, setNested } from "../serialize/values.js";
-import { getThemeOverride } from "./shared/alias.js";
+import { getThemeOverride } from "../token-model/alias.js";
 import type { GeneratorContext } from "./shared/context.js";
 import { outputPlugin } from "./factory.js";
 

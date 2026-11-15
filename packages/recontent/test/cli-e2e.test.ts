@@ -32,11 +32,11 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { afterEach, beforeAll, describe, expect, test } from "@jest/globals";
 import { FONT_WEIGHT_NUMERIC } from "../src/token-model/values.js";
-import { flattenDocument } from "../src/cli/dtcg-import/flatten.js";
-import { loadSources } from "../src/cli/dtcg-import/load.js";
-import { aliasTarget, isObject, lookupToken } from "../src/cli/dtcg-import/types.js";
-import type { TokenMap } from "../src/cli/dtcg-import/types.js";
-import { PRESET_NAMES } from "../src/cli/presets/index.js";
+import { flattenDocument } from "../src/cli/commands/init/dtcg-import/flatten.js";
+import { loadSources } from "../src/cli/commands/init/dtcg-import/load.js";
+import { aliasTarget, isObject, lookupToken } from "../src/cli/commands/init/dtcg-import/types.js";
+import type { TokenMap } from "../src/cli/commands/init/dtcg-import/types.js";
+import { PRESET_NAMES } from "../src/cli/commands/init/presets/index.js";
 
 const dirname = path.dirname(fileURLToPath(import.meta.url));
 const packageRoot = path.resolve(dirname, "..");

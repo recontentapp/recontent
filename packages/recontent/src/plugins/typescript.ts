@@ -10,18 +10,15 @@ import {
   serializeValueCss,
   type MemberResolver,
 } from "../serialize/values.js";
-import {
-  escapeTemplateLiteral,
-  generateScaleExports,
-  scaleExportsForConfig,
-} from "./shared/ts-source.js";
+import { escapeTemplateLiteral } from "../ts-source.js";
+import { generateScaleExports, scaleExportsForConfig } from "./shared/ts-source.js";
 import {
   generateThemeSource,
   themeNameDiagnostics,
   type MemberLookup,
   type ThemeTargetSpec,
 } from "./shared/theme-source.js";
-import type { SourceTree, SourceValue } from "./shared/ts-source.js";
+import type { SourceTree, SourceValue } from "../ts-source.js";
 import type { GeneratorContext } from "./shared/context.js";
 import { outputPlugin } from "./factory.js";
 

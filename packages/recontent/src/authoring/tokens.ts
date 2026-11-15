@@ -11,15 +11,15 @@ import type {
   TokenType,
   TransitionValue,
   TypographyValue,
-} from "./token-model/values.js";
-import type { Component } from "./color/spaces.js";
-import type { RawToken, StampedToken, TokenScale } from "./token-model/model.js";
-import { componentRanges } from "./color/spaces.js";
-import { FONT_WEIGHT_NUMERIC } from "./token-model/values.js";
-import { isRawToken, isStampedToken, isTokenLeaf } from "./token-model/guards.js";
-import { fitOklchToSrgb, toOklch, toSrgbHex } from "./color/convert.js";
-import { generateScale, SCALE_STEPS } from "./color-scale.js";
-import { roundTo } from "./serialize/native.js";
+} from "../token-model/values.js";
+import type { Component } from "../color/spaces.js";
+import type { RawToken, StampedToken, TokenScale } from "../token-model/model.js";
+import { componentRanges } from "../color/spaces.js";
+import { FONT_WEIGHT_NUMERIC } from "../token-model/values.js";
+import { isRawToken, isStampedToken, isTokenLeaf } from "../token-model/guards.js";
+import { fitOklchToSrgb, toOklch, toSrgbHex } from "../color/convert.js";
+import { generateScale, SCALE_STEPS } from "../color/scale.js";
+import { roundTo } from "../serialize/native.js";
 import { withRawTokenMethods, withScaleMethods, type ChainableMethods } from "./metadata.js";
 
 type ColorInput =
@@ -32,7 +32,7 @@ type ColorInput =
 
 function createRawToken<T extends TokenType>(
   type: T,
-  value: import("./token-model/values.js").TokenTypeMap[T],
+  value: import("../token-model/values.js").TokenTypeMap[T],
 ): RawToken<T> & ChainableMethods<RawToken<T>> {
   return withRawTokenMethods({ _kind: "raw", $type: type, $value: value });
 }
@@ -206,12 +206,12 @@ function memberFromToken<T extends TokenType>(
 ): TokenMember<T> {
   if ("_path" in token) {
     return {
-      $value: token.$value as import("./token-model/values.js").TokenTypeMap[T],
+      $value: token.$value as import("../token-model/values.js").TokenTypeMap[T],
       alias: token._path,
     };
   }
   return {
-    $value: token.$value as import("./token-model/values.js").TokenTypeMap[T],
+    $value: token.$value as import("../token-model/values.js").TokenTypeMap[T],
   };
 }
 

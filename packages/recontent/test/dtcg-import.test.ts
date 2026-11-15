@@ -2,7 +2,7 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { afterEach, describe, expect, test } from "@jest/globals";
-import { generateConfigFromDtcg } from "../src/cli/dtcg-import/index.js";
+import { generateConfigFromDtcg } from "../src/cli/commands/init/dtcg-import/index.js";
 import { assertParses } from "./helpers/fixtures.js";
 
 const dirs: string[] = [];

@@ -32,15 +32,13 @@ import {
   serializeValueCss,
   type MemberResolver,
 } from "../serialize/values.js";
-import { CircularAliasError, getEntry, terminalEntry } from "./shared/alias.js";
+import { CircularAliasError, getEntry, terminalEntry } from "../token-model/alias.js";
 import type { GeneratorContext } from "./shared/context.js";
 import { themeNameDiagnostics, validateThemeNames } from "./shared/theme-source.js";
+import { escapeString, escapeTemplateLiteral, quotedKey } from "../ts-source.js";
 import {
   capitalize,
-  escapeString,
   entryPath,
-  escapeTemplateLiteral,
-  quotedKey,
   scaleExportsForConfig,
   type ScaleExport,
 } from "./shared/ts-source.js";

@@ -1,7 +1,10 @@
 import { describe, expect, test } from "@jest/globals";
 import type { ComponentInfo, PropInfo, TypeInfo } from "../src/introspection/model.js";
-import { countComponentBreakingChanges, diffComponents } from "../src/cli/diff/components.js";
-import { formatDiff } from "../src/cli/diff/diff.js";
+import {
+  countComponentBreakingChanges,
+  diffComponents,
+} from "../src/cli/commands/diff/components.js";
+import { formatDiff } from "../src/cli/commands/diff/format.js";
 
 function prop(name: string, overrides: Partial<PropInfo> = {}): PropInfo {
   return { name, type: "string", required: false, ...overrides };

@@ -4,8 +4,8 @@ import type {
   PropInfo,
   TypeInfo,
   TypeParameterInfo,
-} from "../../introspection/model.js";
-import type { Introspected } from "../../snapshot.js";
+} from "../../../introspection/model.js";
+import type { Introspected } from "../../../snapshot/snapshot.js";
 
 type Literal = string | number | boolean;
 

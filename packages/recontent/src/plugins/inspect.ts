@@ -1,5 +1,5 @@
 import type { RecontentPlugin } from "./types.js";
-import { createSnapshot } from "../snapshot.js";
+import { createSnapshot } from "../snapshot/snapshot.js";
 import { outputPlugin } from "./factory.js";
 
 export type InspectPluginOptions = {

@@ -7,8 +7,8 @@ import type { OutputFile } from "./shared/context.js";
 import { code, escapeText } from "../markdown.js";
 import { serializeValueCss } from "../serialize/values.js";
 import { outputPlugin } from "./factory.js";
-import { buildToken, deprecation, type DocToken } from "./shared/doc-token.js";
-import { resolveEntryValue } from "./shared/alias.js";
+import { buildToken, deprecation, type DocToken } from "../snapshot/doc-token.js";
+import { resolveEntryValue } from "../token-model/alias.js";
 
 export type DesignMdPluginOptions = {
   outDir: string;

@@ -1,9 +1,9 @@
 import fs from "node:fs";
 import path from "node:path";
-import { pathKey } from "./token-model/guards.js";
-import { type ComponentInfo, type TypeInfo } from "./introspection/model.js";
-import { type ThemeOverride, type TokenRegistry } from "./token-model/registry.js";
-import { buildToken, type DocToken } from "./plugins/shared/doc-token.js";
+import { pathKey } from "../token-model/guards.js";
+import { type ComponentInfo, type TypeInfo } from "../introspection/model.js";
+import { type ThemeOverride, type TokenRegistry } from "../token-model/registry.js";
+import { buildToken, type DocToken } from "./doc-token.js";
 
 /** Shared by the snapshot and every `recontent inspect --format json` output. */
 export const SCHEMA_VERSION = "1";

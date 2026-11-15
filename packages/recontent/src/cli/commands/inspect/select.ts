@@ -1,6 +1,6 @@
 import type { ComponentInfo, TypeInfo } from "../../../introspection/model.js";
 import type { TokenType } from "../../../token-model/values.js";
-import type { DocToken } from "../../../plugins/shared/doc-token.js";
+import type { DocToken } from "../../../snapshot/doc-token.js";
 
 /** Every token type; the keys are checked against `TokenType` in both directions. */
 const TOKEN_TYPES = Object.keys({

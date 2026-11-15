@@ -1,7 +1,7 @@
 import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
-import type { Introspected } from "../snapshot.js";
+import type { Introspected } from "../snapshot/snapshot.js";
 import type { IntrospectionWarning } from "./components.js";
 
 /** Bumped when the shape below changes. */

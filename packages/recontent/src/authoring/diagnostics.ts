@@ -1,7 +1,7 @@
-import { isRawToken, isStampedToken, isTokenScale } from "./token-model/guards.js";
-import { type TokenDiagnostic } from "./token-model/registry.js";
-import { type TokenLayer } from "./token-model/model.js";
-import { isNumericKey } from "./plugins/shared/ts-source.js";
+import { isRawToken, isStampedToken, isTokenScale } from "../token-model/guards.js";
+import { type TokenDiagnostic } from "../token-model/registry.js";
+import { type TokenLayer } from "../token-model/model.js";
+import { isNumericKey } from "../ts-source.js";
 
 function looksLikeCompositeObject(value: Record<string, unknown>): string | null {
   if ("layers" in value || "offsetX" in value || "blur" in value) {

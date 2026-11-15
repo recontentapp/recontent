@@ -1,14 +1,14 @@
 import type { Logger, LogLevel } from "../../../logger.js";
 import type { IntrospectionWarning } from "../../../introspection/components.js";
 import { typeClosure } from "../../../introspection/types.js";
-import { loadIntrospection, loadProject } from "../../../project.js";
+import { loadIntrospection, loadProject } from "../../project.js";
 import {
   createSnapshot,
   readSnapshot,
   type Introspected,
   type Snapshot,
-} from "../../../snapshot.js";
-import { diagnoseRegistry } from "../../registry-diagnostics.js";
+} from "../../../snapshot/snapshot.js";
+import { diagnoseRegistry } from "../../../token-model/alias.js";
 import { exitWithError } from "../../utils/exit.js";
 import { displayPath } from "../../utils/fs.js";
 import {

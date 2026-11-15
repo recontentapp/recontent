@@ -9,19 +9,16 @@ import {
 } from "../../token-model/registry.js";
 import { type TokenLayer } from "../../token-model/model.js";
 import { type TokenType, type TokenTypeMap } from "../../token-model/values.js";
-import { getEntry, resolveEntryValue, walkAliasChain } from "./alias.js";
+import { getEntry, resolveEntryValue, walkAliasChain } from "../../token-model/alias.js";
 import type { GeneratorContext } from "./context.js";
 import {
-  capitalize,
-  entryPath,
   formatTree,
   propertyAccess,
-  scaleExportsForConfig,
   setTreeValue,
-  type ScaleExport,
   type SourceTree,
   type SourceValue,
-} from "./ts-source.js";
+} from "../../ts-source.js";
+import { capitalize, entryPath, scaleExportsForConfig, type ScaleExport } from "./ts-source.js";
 
 type LossReporter = (tokenPath: string[], message: string) => void;
 
