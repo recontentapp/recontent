@@ -44,7 +44,7 @@ export function isExternal(analysis: Analysis, file: ts.SourceFile): boolean {
   );
 }
 
-export function declarationOf(symbol: ts.Symbol): ts.Declaration | undefined {
+function declarationOf(symbol: ts.Symbol): ts.Declaration | undefined {
   return symbol.valueDeclaration ?? symbol.declarations?.[0];
 }
 

@@ -8,7 +8,7 @@ import type {
 import { code, escapeText } from "../markdown.js";
 
 /** `Accordion<Value extends string>` for a generic component, else its name. */
-export function displayName({ name, typeParameters }: ComponentInfo | TypeInfo): string {
+function displayName({ name, typeParameters }: ComponentInfo | TypeInfo): string {
   if (!typeParameters?.length) return name;
   const parameters = typeParameters.map(
     (parameter) =>
@@ -132,7 +132,7 @@ function sourceLine(component: ComponentInfo | TypeInfo): string {
 }
 
 /** Props a project type declares that are left out of the table, to be asked for with `--props`. */
-export type CollapsedProps = { type: string; props: string[] };
+type CollapsedProps = { type: string; props: string[] };
 
 const COLLAPSED_NAMES = 8;
 

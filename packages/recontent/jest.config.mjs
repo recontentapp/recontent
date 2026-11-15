@@ -2,6 +2,7 @@
 export default {
   testEnvironment: "node",
   extensionsToTreatAsEsm: [".ts"],
+  globalSetup: "<rootDir>/test/helpers/isolate-git.ts",
   testMatch: ["<rootDir>/test/**/*.test.ts"],
   transform: {
     "^.+\\.ts$": [
