@@ -86,6 +86,7 @@ describe("recontent inspect", () => {
       expect(detail.stdout).toContain(
         "### Usage\n\n```md\nPrefer it over a link when the click changes something.\n```",
       );
+      expect(detail.stdout).toContain("### Stories\n\n- `src/button.stories.tsx`");
       expect(detail.stdout).toContain(
         '### Examples\n\n**Basic**\n\n```tsx\n<Button label="Save" />\n```',
       );
@@ -212,6 +213,7 @@ describe("recontent inspect", () => {
         category: "Actions",
         usage: "Prefer it over a link when the click changes something.",
         examples: [{ title: "Basic", code: '<Button label="Save" />' }],
+        stories: ["src/button.stories.tsx"],
       });
     });
 

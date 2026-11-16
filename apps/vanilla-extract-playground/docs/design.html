@@ -172,6 +172,8 @@ kbd { font: inherit; font-size: var(--hig-fs-xs); padding: 0 6px; border-radius:
 .ex-tabs { display: flex; gap: 4px; overflow-x: auto; margin-bottom: 8px; border-bottom: 1px solid var(--hig-line); }
 .ex-tabs button { font: inherit; font-size: var(--hig-fs-sm); color: var(--hig-text-2); padding: 6px 12px; border: 0; background: transparent; cursor: pointer; white-space: nowrap; }
 .ex-tabs button[aria-selected="true"] { color: var(--hig-text); box-shadow: inset 0 -2px 0 var(--hig-text); }
+.story-frame { display: block; width: 100%; height: 280px; border: 1px solid var(--hig-line); border-radius: 8px; background: #fff; }
+.story-open { display: inline-block; margin-top: 6px; font-size: var(--hig-fs-sm); }
 .code-box { position: relative; }
 .code-box pre { margin: 0; padding-right: 72px; }
 .tk-comment { color: var(--tk-comment); font-style: italic; }
@@ -2406,7 +2408,7 @@ pre { margin: 0 0 16px; padding: 12px 14px; overflow-x: auto; border-radius: 12p
     <div class="comp-intro">
       <h2 class="title">Sticker</h2>
       <p class="lead">Playful label stuck on the corner of a card or an image.</p>
-      <div class="tags"><span class="capsule exp has-tip" tabindex="0" data-tip="The API may change while we collect feedback.">Experimental</span><a class="tag" href="https://github.com/recontentapp/recontent/blob/master/apps/vanilla-extract-playground/src/Sticker.tsx#L26" target="_blank" rel="noopener noreferrer">Source code ↗</a><a class="tag" href="https://figma.com/docs/sticker" target="_blank" rel="noopener noreferrer">Figma ↗</a></div>
+      <div class="tags"><span class="capsule exp has-tip" tabindex="0" data-tip="The API may change while we collect feedback.">Experimental</span><a class="tag" href="https://github.com/recontentapp/recontent/blob/master/apps/vanilla-extract-playground/src/Sticker.tsx#L28" target="_blank" rel="noopener noreferrer">Source code ↗</a><a class="tag" href="https://figma.com/docs/sticker" target="_blank" rel="noopener noreferrer">Figma ↗</a></div>
     </div>
   </header>
   <div class="comp-section">
@@ -2435,7 +2437,7 @@ sparingly: one tilted sticker per surface keeps it feeling spontaneous.</p>
 <h6>Title 3</h6>
 </div>
   </div>
-  <div class="comp-section examples" id="c-Sticker-examples">
+  <div class="comp-section tabbed" id="c-Sticker-examples">
   <h4>Examples</h4>
   <div class="ex-tabs" role="tablist" aria-label="Examples"><button type="button" role="tab" data-ex-tab="0" aria-selected="true">Basic</button><button type="button" role="tab" data-ex-tab="1" aria-selected="false">Tilted</button><button type="button" role="tab" data-ex-tab="2" aria-selected="false">In a card</button></div>
   <div class="ex-panel code-box" role="tabpanel" data-ex-panel="0"><button type="button" class="copy" data-copy>Copy</button><pre><code><span class="tk-keyword">import</span> { Sticker } <span class="tk-keyword">from</span> <span class="tk-string">"../components"</span>;
@@ -2452,6 +2454,13 @@ sparingly: one tilted sticker per surface keeps it feeling spontaneous.</p>
     &lt;<span class="tk-tag">p</span>&gt;Summer collection&lt;/p&gt;
   &lt;/<span class="tk-tag">div</span>&gt;
 );</code></pre></div>
+  </div>
+  <div class="comp-section tabbed">
+  <h4>Stories</h4>
+  <div class="ex-tabs" role="tablist" aria-label="Stories"><button type="button" role="tab" data-ex-tab="0" aria-selected="true">Basic</button><button type="button" role="tab" data-ex-tab="1" aria-selected="false">Tilted</button><button type="button" role="tab" data-ex-tab="2" aria-selected="false">In a card</button></div>
+  <div class="ex-panel" role="tabpanel" data-ex-panel="0"><iframe class="story-frame" src="http://localhost:6006/iframe.html?id=sticker--basic&amp;viewMode=story" title="Basic" loading="lazy"></iframe><a class="story-open" href="http://localhost:6006/?path=/story/sticker--basic" target="_blank" rel="noopener">Open in Storybook ↗</a></div>
+  <div class="ex-panel" role="tabpanel" data-ex-panel="1" hidden><iframe class="story-frame" src="http://localhost:6006/iframe.html?id=sticker--tilted&amp;viewMode=story" title="Tilted" loading="lazy"></iframe><a class="story-open" href="http://localhost:6006/?path=/story/sticker--tilted" target="_blank" rel="noopener">Open in Storybook ↗</a></div>
+  <div class="ex-panel" role="tabpanel" data-ex-panel="2" hidden><iframe class="story-frame" src="http://localhost:6006/iframe.html?id=sticker--in-a-card&amp;viewMode=story" title="In a card" loading="lazy"></iframe><a class="story-open" href="http://localhost:6006/?path=/story/sticker--in-a-card" target="_blank" rel="noopener">Open in Storybook ↗</a></div>
   </div>
   <div class="comp-section">
     <h4>Props</h4>
@@ -2577,7 +2586,7 @@ sparingly: one tilted sticker per surface keeps it feeling spontaneous.</p>
     }
     var exTab = from.closest("[data-ex-tab]");
     if (exTab) {
-      var box = exTab.closest(".examples");
+      var box = exTab.closest(".tabbed");
       var n = exTab.getAttribute("data-ex-tab");
       box.querySelectorAll("[data-ex-tab]").forEach(function (t) { t.setAttribute("aria-selected", String(t === exTab)); });
       box.querySelectorAll("[data-ex-panel]").forEach(function (p) { p.hidden = p.getAttribute("data-ex-panel") !== n; });

@@ -1,11 +1,14 @@
-import { describe, expect, test } from "@jest/globals";
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import path from "node:path";
+import { afterAll, describe, expect, test } from "@jest/globals";
 import {
   defineConfig,
   defineReferenceTokens,
   defineSystemTokens,
   tokens,
 } from "../../src/index.js";
-import { generateDocsFiles } from "../../src/plugins/docs/index.js";
+import { generateDocsFiles, type DocsPluginOptions } from "../../src/plugins/docs/index.js";
 import type { ComponentInfo } from "../../src/introspection/model.js";
 import type { PluginContext } from "../../src/plugins/types.js";
 import { goldenConfig } from "../helpers/fixtures.js";
@@ -21,10 +24,7 @@ function ctxFor(config: Config): PluginContext {
   };
 }
 
-function renderCtx(
-  ctx: PluginContext,
-  options: { title?: string; gitBaseUrl?: string; color?: string } = {},
-): string {
+function renderCtx(ctx: PluginContext, options: Partial<DocsPluginOptions> = {}): string {
   const files = generateDocsFiles(ctx, { outDir: "docs", ...options });
   expect(files.map((file) => file.filename)).toEqual(["design.html"]);
   return files[0]!.content;
@@ -438,6 +438,70 @@ describe("components", () => {
     expect(render("https://github.com/acme/ui/blob/main/")).toContain(
       `<a class="tag" href="https://github.com/acme/ui/blob/main/${sourceFilePath}#L${line}" target="_blank" rel="noopener noreferrer">Source code ↗</a>`,
     );
+  });
+
+  describe("storybook", () => {
+    const root = mkdtempSync(path.join(tmpdir(), "recontent-docs-"));
+    afterAll(() => rmSync(root, { recursive: true, force: true }));
+    const story = (id: string, name: string, importPath: string, type = "story") => [
+      id,
+      { type, id, name, title: "Button", importPath },
+    ];
+    mkdirSync(path.join(root, "storybook-static"));
+    writeFileSync(
+      path.join(root, "storybook-static/index.json"),
+      JSON.stringify({
+        v: 5,
+        entries: Object.fromEntries([
+          // `root` is `ui`: import paths are relative to it.
+          story("button--basic", 'Basic <"b">', "./src/button.stories.tsx"),
+          story("button--docs", "Docs", "./src/button.stories.tsx", "docs"),
+          story("button--wide", "Wide", "./src/button.stories.tsx"),
+          story("other--one", "One", "./src/other.stories.tsx"),
+        ]),
+      }),
+    );
+    const button = { ...components[0]!, stories: ["ui/src/button.stories.tsx"] };
+    const warnings: string[] = [];
+    const ctx = {
+      ...withComponents,
+      root,
+      components: [button],
+      logger: { ...withComponents.logger, warn: (message: string) => warnings.push(message) },
+    };
+    const storybook = { outDir: "storybook-static", url: "http://localhost:6006/", root: "ui" };
+
+    test("embeds the stories of the @stories files, one tab each, in index order", () => {
+      const html = renderCtx(ctx, { storybook });
+      const section = html.slice(html.indexOf("<h4>Stories</h4>"));
+
+      expect(section).toContain(
+        '<button type="button" role="tab" data-ex-tab="0" aria-selected="true">Basic &lt;&quot;b&quot;&gt;</button>',
+      );
+      expect(section).toContain('data-ex-tab="1" aria-selected="false">Wide</button>');
+      expect(section).toContain(
+        '<iframe class="story-frame" src="http://localhost:6006/iframe.html?id=button--basic&amp;viewMode=story" title="Basic &lt;&quot;b&quot;&gt;" loading="lazy">',
+      );
+      expect(section).toContain('href="http://localhost:6006/?path=/story/button--wide"');
+      // Docs pages and the stories of other files are not stories of the component.
+      expect(section).not.toContain("button--docs");
+      expect(section).not.toContain("other--one");
+      expect(warnings).toEqual([]);
+    });
+
+    test("without stories in the index, or without a usable index, the page has none and warns", () => {
+      const html = renderCtx(ctx, { storybook: { ...storybook, root: "." } });
+      expect(html).not.toContain("<h4>Stories</h4>");
+      expect(warnings).toEqual([
+        expect.stringContaining("Button: no story of ui/src/button.stories.tsx"),
+      ]);
+
+      warnings.length = 0;
+      expect(renderCtx(ctx, { storybook: { ...storybook, outDir: "missing" } })).not.toContain(
+        "<h4>Stories</h4>",
+      );
+      expect(warnings).toEqual([expect.stringContaining("missing/index.json")]);
+    });
   });
 
   test("a page reads description, badges, links, usage, examples, props; {@link}s are not links", () => {

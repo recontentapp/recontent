@@ -88,8 +88,11 @@ function fenced(text: string, language: string): string[] {
   return [`${fence}${language}`, text, fence];
 }
 
-/** `Usage`, `Links` and `Examples`, one level below the item's heading. */
-function documentationLines(item: Documentation, headingLevel: number): string[] {
+/** `Usage`, `Links`, `Stories` and `Examples`, one level below the item's heading. */
+function documentationLines(
+  item: Documentation & { stories?: string[] },
+  headingLevel: number,
+): string[] {
   const heading = "#".repeat(headingLevel + 1);
   const lines: string[] = [];
   // Usage is markdown, fenced so that its own headings (an h1, say) don't break ours.
@@ -99,6 +102,9 @@ function documentationLines(item: Documentation, headingLevel: number): string[]
     for (const { title, url } of item.externalLinks)
       lines.push(`- [${escapeText(title ?? url)}](${url})`);
     lines.push("");
+  }
+  if (item.stories?.length) {
+    lines.push(`${heading} Stories`, "", ...item.stories.map((file) => `- ${code(file)}`), "");
   }
   if (item.examples?.length) {
     lines.push(`${heading} Examples`, "");

@@ -6,6 +6,7 @@ import type { DocToken } from "../../snapshot/doc-token.js";
 import type { DocGroup, DocsModel } from "./model.js";
 import { highlight } from "./highlight.js";
 import { renderUsage } from "./usage.js";
+import type { Story } from "./storybook.js";
 
 const LAYER_TITLES = { ref: "Reference", system: "System", components: "Components" } as const;
 
@@ -229,7 +230,7 @@ function examplesHtml(component: ComponentInfo): string {
         `<div class="ex-panel code-box" role="tabpanel" data-ex-panel="${index}"${index === 0 ? "" : " hidden"}><button type="button" class="copy" data-copy>Copy</button><pre><code>${highlight(code)}</code></pre></div>`,
     )
     .join("\n  ");
-  return `<div class="comp-section examples" id="${examplesId(component)}">
+  return `<div class="comp-section tabbed" id="${examplesId(component)}">
   <h4>Examples</h4>
   <div class="ex-tabs" role="tablist" aria-label="Examples">${tabs}</div>
   ${panels}
@@ -237,6 +238,30 @@ function examplesHtml(component: ComponentInfo): string {
 }
 
 const examplesId = (component: ComponentInfo) => `${componentId(component.name)}-examples`;
+
+/** The component's Storybook stories, embedded one per tab. `url` is where the Storybook build is served. */
+function storiesHtml(stories: Story[] | undefined, url: string | undefined): string {
+  if (!stories?.length || !url) return "";
+  const base = url.replace(/\/+$/, "");
+  const tabs = stories
+    .map(
+      ({ name }, index) =>
+        `<button type="button" role="tab" data-ex-tab="${index}" aria-selected="${index === 0}">${escapeHtml(name)}</button>`,
+    )
+    .join("");
+  const panels = stories
+    .map(({ id, name }, index) => {
+      const src = `${base}/iframe.html?id=${encodeURIComponent(id)}&viewMode=story`;
+      const open = `${base}/?path=/story/${encodeURIComponent(id)}`;
+      return `<div class="ex-panel" role="tabpanel" data-ex-panel="${index}"${index === 0 ? "" : " hidden"}><iframe class="story-frame" src="${escapeHtml(src)}" title="${escapeHtml(name)}" loading="lazy"></iframe><a class="story-open" href="${escapeHtml(open)}" target="_blank" rel="noopener">Open in Storybook ↗</a></div>`;
+    })
+    .join("\n  ");
+  return `<div class="comp-section tabbed">
+  <h4>Stories</h4>
+  <div class="ex-tabs" role="tablist" aria-label="Stories">${tabs}</div>
+  ${panels}
+  </div>`;
+}
 
 /** Status badge; the `@deprecated` / `@experimental` description (and replacement) shows in a tooltip. */
 function statusBadgeHtml(
@@ -291,7 +316,12 @@ function componentCardHtml(component: ComponentInfo): string {
   return `<a class="comp-card" href="#${id}" data-goto="${id}"><strong><span class="comp-name">${escapeHtml(component.name)}</span>${status}</strong>${component.description ? `<span>${escapeHtml(component.description)}</span>` : ""}</a>`;
 }
 
-function componentHtml(component: ComponentInfo, gitBaseUrl: string | undefined): string {
+function componentHtml(
+  component: ComponentInfo,
+  gitBaseUrl: string | undefined,
+  stories: Story[] | undefined,
+  storybookUrl: string | undefined,
+): string {
   const inherits = component.inherits
     .map(
       (group) =>
@@ -317,6 +347,7 @@ function componentHtml(component: ComponentInfo, gitBaseUrl: string | undefined)
   ${importHtml(component)}
   ${usageHtml(component.usage)}
   ${examplesHtml(component)}
+  ${storiesHtml(stories, storybookUrl)}
   <div class="comp-section">
     <h4>Props</h4>
     ${
@@ -494,6 +525,8 @@ kbd { font: inherit; font-size: var(--hig-fs-xs); padding: 0 6px; border-radius:
 .ex-tabs { display: flex; gap: 4px; overflow-x: auto; margin-bottom: 8px; border-bottom: 1px solid var(--hig-line); }
 .ex-tabs button { font: inherit; font-size: var(--hig-fs-sm); color: var(--hig-text-2); padding: 6px 12px; border: 0; background: transparent; cursor: pointer; white-space: nowrap; }
 .ex-tabs button[aria-selected="true"] { color: var(--hig-text); box-shadow: inset 0 -2px 0 var(--hig-text); }
+.story-frame { display: block; width: 100%; height: 280px; border: 1px solid var(--hig-line); border-radius: 8px; background: #fff; }
+.story-open { display: inline-block; margin-top: 6px; font-size: var(--hig-fs-sm); }
 .code-box { position: relative; }
 .code-box pre { margin: 0; padding-right: 72px; }
 .tk-comment { color: var(--tk-comment); font-style: italic; }
@@ -741,7 +774,7 @@ const SCRIPT = `
     }
     var exTab = from.closest("[data-ex-tab]");
     if (exTab) {
-      var box = exTab.closest(".examples");
+      var box = exTab.closest(".tabbed");
       var n = exTab.getAttribute("data-ex-tab");
       box.querySelectorAll("[data-ex-tab]").forEach(function (t) { t.setAttribute("aria-selected", String(t === exTab)); });
       box.querySelectorAll("[data-ex-panel]").forEach(function (p) { p.hidden = p.getAttribute("data-ex-panel") !== n; });
@@ -1011,7 +1044,18 @@ const SCRIPT = `
 export function renderHtml(
   model: DocsModel,
   ctx: GeneratorContext,
-  { gitBaseUrl, color }: { gitBaseUrl?: string; color?: string } = {},
+  {
+    gitBaseUrl,
+    color,
+    stories = new Map(),
+    storybookUrl,
+  }: {
+    gitBaseUrl?: string;
+    color?: string;
+    /** By component name. */
+    stories?: Map<string, Story[]>;
+    storybookUrl?: string;
+  } = {},
 ): string {
   const hasThemes = model.themes.length > 0;
   const hasComponents = model.components.length > 0;
@@ -1109,7 +1153,7 @@ ${categories
   )
   .join("\n")}
       </div>
-${model.components.map((c) => componentHtml(c, gitBaseUrl)).join("\n")}
+${model.components.map((c) => componentHtml(c, gitBaseUrl, stories.get(c.name), storybookUrl)).join("\n")}
     </main>
   </div>
 </div>`

@@ -89,6 +89,9 @@ export function F7(props: {
  * @example <caption>From file</caption> ./F8.example.tsx
  * @example ./missing.tsx
  * @usage ./F8.usage.md
+ * @stories ./F8.stories.tsx
+ * @stories ./missing.stories.tsx
+ * @stories F8.stories.tsx
  */
 export function F8(props: { rows?: number }) {
   return <ul>{props.rows}</ul>;

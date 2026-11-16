@@ -11,13 +11,14 @@ finds, and shows them wherever someone (or an agent) needs to use a component wi
 
 ## Tags
 
-Besides the description, `@deprecated` and `@default`, six tags help:
+Besides the description, `@deprecated` and `@default`, seven tags help:
 
 | Tag                         | On                    | Effect                                                                                                                                                                                                                                                                                                |
 | --------------------------- | --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `@example`                  | component, prop, type | One example per tag. `<caption>Title</caption>` titles it, and surrounding code fences are removed. A relative path (`./Button.basic.tsx`) uses the file's content verbatim, so the example is typechecked with your code. Props show one-line examples in `inspect`; the rest is in `--format json`. |
 | `@usage`                    | component, type       | When to use it and when not to, in markdown. Kept out of the description, so that summaries stay one line. A relative path (`./Button.usage.md`) uses the file's content verbatim.                                                                                                                    |
 | `@link`                     | component, prop, type | An external page: `@link <caption>Figma</caption> https://figma.com/docs/button`. The caption is optional; only `http(s)` URLs are kept, the others are reported as warnings. Listed in `externalLinks`, and shown on the component's page in the [docs plugin](/plugins/docs).                       |
+| `@stories`                  | component             | A Storybook stories file: `@stories ./Button.stories.tsx`, one tag per file. Only `./` paths to existing files are kept, the others are reported as warnings. Listed in `stories`, and embedded in the component's page when the [docs plugin](/plugins/docs) is given a `storybook` build.           |
 | `{@link Name}`              | anywhere in the text  | Names a component or a type. It is listed in `links`. Anything else stays plain text.                                                                                                                                                                                                                 |
 | `@deprecated Use {@link X}` | component, prop, type | The first link is the `replacement`, shown as `deprecated → X` in summaries.                                                                                                                                                                                                                          |
 | `@experimental`             | component, prop, type | Marks it as experimental, with an optional note. Shown as a callout, and as `experimental` in summaries.                                                                                                                                                                                              |
@@ -32,6 +33,7 @@ Besides the description, `@deprecated` and `@default`, six tags help:
  * @example <caption>Basic</caption>
  * <Button label="Save" />
  * @example <caption>With an icon</caption> ./Button.icon.tsx
+ * @stories ./Button.stories.tsx
  * @category Actions
  */
 export function Button(props: ButtonProps) {}
@@ -51,9 +53,10 @@ export function PrimaryButton(props: ButtonProps) {}
 | `@usage`        | Yes                                   | Yes, rendered as markdown | No, points to `recontent inspect` | Ignored                           |
 | `@example`      | Yes, one-line examples only for props | Yes, as tabs              | No, points to `recontent inspect` | Ignored                           |
 | `@link`         | Yes, as a list of links               | Yes, as tags              | No                                | Ignored                           |
+| `@stories`      | Yes, as a list of files               | Yes, embedded as tabs     | No                                | Ignored                           |
 | `@category`     | Groups `inspect components`           | Groups the navigation     | No                                | Ignored                           |
 
-Examples, usage, links and category are documentation, not API: [`recontent diff`](/cli/diff) does not
+Examples, usage, links, stories and category are documentation, not API: [`recontent diff`](/cli/diff) does not
 report them.
 
 ## Next

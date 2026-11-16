@@ -90,6 +90,8 @@ export type ComponentInfo = Documentation & {
   import?: string;
   /** `@category`: groups components in the docs and in `recontent inspect components`. */
   category?: string;
+  /** One per `@stories` tag: posix paths, relative to the config root, of Storybook stories files. */
+  stories?: string[];
   /** Props declared outside node_modules, sorted by name. */
   props: PropInfo[];
   inherits: InheritedProps[];

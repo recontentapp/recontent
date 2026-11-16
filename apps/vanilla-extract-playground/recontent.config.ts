@@ -410,6 +410,7 @@ export default defineConfig({
     docs({
       outDir: "docs",
       color: "#2563eb",
+      storybook: { outDir: "storybook-static", url: "http://localhost:6006" },
       gitBaseUrl:
         "https://github.com/recontentapp/recontent/blob/master/apps/vanilla-extract-playground",
     }),

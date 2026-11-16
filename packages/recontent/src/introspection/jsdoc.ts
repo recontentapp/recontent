@@ -11,7 +11,12 @@ export type PendingLinks = {
   replacementTargets?: string[];
 };
 
-type JsDoc = Documentation & PendingLinks & { defaultValue?: string };
+type JsDoc = Documentation &
+  PendingLinks & {
+    defaultValue?: string;
+    /** Absolute paths of the existing files of the `@stories` tags. Only components keep them. */
+    storiesFiles?: string[];
+  };
 
 type Rendered = { text: string; targets: string[] };
 
@@ -85,6 +90,12 @@ function parseLink(text: string): ExternalLink | undefined {
   return { ...(title ? { title } : {}), url };
 }
 
+/** A tag's `./relative` path, resolved against the directory of the declaration. */
+function resolveFile(symbol: ts.Symbol, file: string): string {
+  const declaration = symbol.declarations?.[0];
+  return path.resolve(declaration ? path.dirname(declaration.getSourceFile().fileName) : ".", file);
+}
+
 /** The file an `@example` or `@usage` tag points to, read verbatim, or a warning and nothing when it can't be. */
 function readFile(
   analysis: Analysis,
@@ -93,11 +104,7 @@ function readFile(
   file: string,
   component: string | undefined,
 ): string | undefined {
-  const declaration = symbol.declarations?.[0];
-  const absolute = path.resolve(
-    declaration ? path.dirname(declaration.getSourceFile().fileName) : ".",
-    file,
-  );
+  const absolute = resolveFile(symbol, file);
   try {
     const code = fs.readFileSync(absolute, "utf8").trimEnd();
     analysis.docFiles.add(absolute);
@@ -155,6 +162,24 @@ export function jsDoc(analysis: Analysis, symbol: ts.Symbol, component?: string)
       }
       return link ? [link] : [];
     });
+  const storiesFiles = tags
+    .filter((candidate) => candidate.name === "stories")
+    .flatMap((candidate): string[] => {
+      const text = ts.displayPartsToString(candidate.text);
+      const file = relativePath(text);
+      const absolute = file && resolveFile(symbol, file);
+      if (absolute && fs.existsSync(absolute)) {
+        analysis.docFiles.add(absolute);
+        return [absolute];
+      }
+      analysis.warnings.push({
+        message: file
+          ? `${symbol.getName()}: @stories file ${file} not found.`
+          : `${symbol.getName()}: @stories ${text} is not a ./relative path.`,
+        component,
+      });
+      return [];
+    });
   const targets = [description, usage, deprecated, experimental].flatMap(
     (part) => part?.targets ?? [],
   );
@@ -167,6 +192,7 @@ export function jsDoc(analysis: Analysis, symbol: ts.Symbol, component?: string)
     ...(externalLinks.length > 0 ? { externalLinks } : {}),
     ...(usage.text ? { usage: usage.text } : {}),
     ...(defaultValue ? { defaultValue } : {}),
+    ...(storiesFiles.length > 0 ? { storiesFiles } : {}),
     ...(targets.length > 0 ? { linkTargets: targets } : {}),
     ...(deprecated?.targets.length ? { replacementTargets: deprecated.targets } : {}),
   };

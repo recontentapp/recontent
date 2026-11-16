@@ -372,7 +372,7 @@ describe("F. JSDoc", () => {
     expect(f6.experimental).toBeUndefined();
   });
 
-  test("F8 @example and @usage from files, verbatim, and a missing file is skipped with a warning", () => {
+  test("F8 @example, @usage and @stories from files, verbatim, and a missing file is skipped with a warning", () => {
     const file = path.join(root, "src/f-jsdoc/F8.example.tsx");
     expect(component("F8").examples).toEqual([
       { title: "From file", code: readFileSync(file, "utf8").trimEnd() },
@@ -387,6 +387,12 @@ describe("F. JSDoc", () => {
     expect(files).toContain(usageFile);
     expect(component("F10").usage).toBeUndefined();
     expect(warnings).toContainEqual("F10: @usage file ./missing.md not found.");
+
+    const storiesFile = path.join(root, "src/f-jsdoc/F8.stories.tsx");
+    expect(component("F8").stories).toEqual(["src/f-jsdoc/F8.stories.tsx"]);
+    expect(warnings).toContainEqual("F8: @stories file ./missing.stories.tsx not found.");
+    expect(warnings).toContainEqual("F8: @stories F8.stories.tsx is not a ./relative path.");
+    expect(files).toContain(storiesFile);
   });
 
   test("F9 @link keeps http(s) URLs, with their caption, and warns about the rest", () => {

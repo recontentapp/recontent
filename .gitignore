@@ -182,3 +182,6 @@ dist
 
 # Vocs
 .vocs/
+
+# Storybook
+storybook-static

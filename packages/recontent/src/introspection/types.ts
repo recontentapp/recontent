@@ -182,6 +182,7 @@ function collect(analysis: Analysis, symbol: ts.Symbol, declaration: TypeDeclara
   const references = new Set<string>();
   referencesIn(analysis, declaration, references);
 
+  const { storiesFiles: _stories, ...doc } = jsDoc(analysis, symbol);
   const typeParameters = typeParametersOf(declaration);
   store.types.push({
     id,
@@ -194,7 +195,7 @@ function collect(analysis: Analysis, symbol: ts.Symbol, declaration: TypeDeclara
     ...(typeParameters ? { typeParameters } : {}),
     sourceFilePath,
     line: file.getLineAndCharacterOfPosition(declaration.getStart(file)).line + 1,
-    ...jsDoc(analysis, symbol),
+    ...doc,
     definition,
     ...(described ? { members: described.props } : {}),
     ...(described?.inherits.length ? { inherits: described.inherits } : {}),

@@ -21,6 +21,7 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
  * @usage Prefer it over a link when the click changes something.
  * @example <caption>Basic</caption>
  * <Button label="Save" />
+ * @stories ./button.stories.tsx
  * @category Actions
  */
 export function Button({ variant = "solid", label, ...rest }: ButtonProps) {

@@ -6,5 +6,5 @@
     "declaration": false,
     "declarationMap": false
   },
-  "include": ["src", "recontent.config.ts"]
+  "include": ["src", ".storybook", "recontent.config.ts"]
 }

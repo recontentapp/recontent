@@ -508,7 +508,7 @@ export function describeMembers(
     const owners = new Set(own.map(({ symbol }) => declaringType(analysis, declarationOf(symbol))));
     const [declaredIn] = owners.size === 1 ? owners : [];
 
-    const doc = jsDoc(analysis, own[0]!.symbol, component);
+    const { storiesFiles: _stories, ...doc } = jsDoc(analysis, own[0]!.symbol, component);
     const defaultValue = doc.defaultValue ?? defaults.get(name);
     props.push({
       name,
@@ -567,6 +567,8 @@ export function describeComponent(
   );
 
   const category = categoryOf(checker, symbol);
+  const { storiesFiles = [], ...doc } = jsDoc(analysis, symbol, candidate.name);
+  const stories = storiesFiles.map((file) => path.relative(root, file).split(path.sep).join("/"));
   const file = located.getSourceFile();
   const typeParameters = matches
     .map(({ signature }) => typeParametersOf(checker, signature, located))
@@ -577,7 +579,8 @@ export function describeComponent(
     sourceFilePath: path.relative(root, file.fileName).split(path.sep).join("/"),
     line: file.getLineAndCharacterOfPosition(located.getStart(file)).line + 1,
     ...(category ? { category } : {}),
-    ...jsDoc(analysis, symbol, candidate.name),
+    ...(stories.length > 0 ? { stories } : {}),
+    ...doc,
     props,
     inherits,
     references: [...new Set(props.flatMap((prop) => prop.references ?? []))].sort((a, b) =>

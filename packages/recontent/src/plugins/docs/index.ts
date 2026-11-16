@@ -3,6 +3,7 @@ import type { OutputFile } from "../shared/context.js";
 import { outputPlugin } from "../factory.js";
 import { buildDocsModel } from "./model.js";
 import { renderHtml } from "./html.js";
+import { loadStories, type StorybookOptions } from "./storybook.js";
 
 export type DocsPluginOptions = {
   outDir: string;
@@ -20,11 +21,23 @@ export type DocsPluginOptions = {
    * Defaults to a blue.
    */
   color?: string;
+  /**
+   * Embeds the stories of each component's `@stories` files, from a Storybook build.
+   * Storybook must be built before the docs: its `index.json` tells which stories there are.
+   */
+  storybook?: StorybookOptions;
 };
 
 export function generateDocsFiles(ctx: PluginContext, options: DocsPluginOptions): OutputFile[] {
   const model = buildDocsModel(ctx, options.title ?? "Design system");
-  return [{ filename: "design.html", content: renderHtml(model, ctx, options) }];
+  const stories = loadStories(ctx, options.storybook);
+  const storybookUrl = options.storybook?.url;
+  return [
+    {
+      filename: "design.html",
+      content: renderHtml(model, ctx, { ...options, stories, storybookUrl }),
+    },
+  ];
 }
 
 export function docs(options: DocsPluginOptions): RecontentPlugin {

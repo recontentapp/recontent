@@ -125,6 +125,7 @@ type ComponentInfo = Documentation & {
   sourceFilePath: string; // posix, relative to the config root
   line: number; // 1-based
   category?: string; // @category
+  stories?: string[]; // @stories files, posix, relative to the config root
   props: PropInfo[]; // declared in your project, sorted by name
   inherits: { name: string; package?: string; props: string[] }[]; // sorted prop names
   references: string[]; // ids of the project types its props mention, see TypeInfo

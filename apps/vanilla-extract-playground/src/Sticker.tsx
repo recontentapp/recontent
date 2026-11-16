@@ -21,6 +21,8 @@ export interface StickerProps extends HTMLAttributes<HTMLSpanElement> {
  * @example <caption>Tilted</caption> ./examples/Sticker.tilted.tsx
  * @example <caption>In a card</caption> ./examples/Sticker.card.tsx
  *
+ * @stories ./Sticker.stories.tsx
+ *
  * @category Data display
  */
 export function Sticker({ tilt = "none", className, children, ...props }: StickerProps) {
