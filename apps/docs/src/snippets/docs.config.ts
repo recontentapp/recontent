@@ -31,6 +31,6 @@ const dark = defineTheme(system, {
 export default defineConfig({
   tokens: { ref, system },
   themes: { dark },
-  introspection: { entry: "src/components/index.ts" },
+  introspection: { entry: "src/components/index.ts", importPath: "@acme/ds" },
   plugins: [docs({ outDir: "docs", title: "Acme design system" })],
 });

@@ -98,7 +98,7 @@ export function introspect(options: {
   const importOf = createImportResolver(analysis, { entry, root, importPath: config.importPath });
   const components = findComponents(analysis, entry, config.exclude).map((candidate) => {
     const component = describeComponent(analysis, candidate, root);
-    const statement = importOf?.(component.name);
+    const statement = importOf(component.name);
     return statement ? { ...component, import: statement } : component;
   });
   components.sort((a, b) => a.name.localeCompare(b.name));

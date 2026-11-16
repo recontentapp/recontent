@@ -21,6 +21,7 @@ export default defineConfig({
   introspection: {
     entry: "src/components/index.ts",
     exclude: ["ThemeProvider"],
+    importPath: "@acme/ds",
   },
   plugins: [docs({ outDir: "docs" })],
 });
@@ -32,7 +33,7 @@ Then check what was found:
 recontent inspect
 ```
 
-The options (`entry`, `tsconfig`, `exclude`, `history`, `importPath`) are in the
+The options (`entry`, `tsconfig`, `exclude`, `importPath`) are in the
 [configuration reference](/tokens/configuration#introspection).
 
 ## What counts as a component
@@ -85,7 +86,7 @@ Tokens are optional when `introspection` is set. A project can describe its comp
 
 ```ts
 export default defineConfig({
-  introspection: { entry: "src/components/index.ts" },
+  introspection: { entry: "src/components/index.ts", importPath: "@acme/ds" },
   plugins: [docs({ outDir: "docs" })],
 });
 ```

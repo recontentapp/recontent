@@ -5,7 +5,7 @@ import { CodePanel, lines } from "./CodePanel.tsx";
 // Built-in plugins next to a custom one: same interface, called the same way.
 const pluginsConfig = lines(`export default defineConfig({
   tokens: { ref, system },
-  introspection: { entry: "src/components/index.ts" },
+  introspection: { entry: "src/components/index.ts", importPath: "@acme/ds" },
   plugins: [
     css({ outDir: "src/styles" }),
     tailwind({ outDir: "src/styles", theme: { color: system.color } }),

@@ -141,10 +141,14 @@ test("describe on a stamped scale returns a stamped scale with the new metadata"
 
 test("defineConfig requires tokens or an introspection block", () => {
   expect(() => defineConfig({})).toThrow(/either tokens or an introspection block/);
-  expect(() => defineConfig({ introspection: { entry: "src/index.ts" } })).not.toThrow();
+  expect(() =>
+    defineConfig({ introspection: { entry: "src/index.ts", importPath: "@acme/ds" } }),
+  ).not.toThrow();
   // Tokens that define nothing do not count.
   expect(() => defineConfig({ tokens: {} })).toThrow(/either tokens or an introspection block/);
-  expect(() => defineConfig({ tokens: {}, introspection: { entry: "a.ts" } })).not.toThrow();
+  expect(() =>
+    defineConfig({ tokens: {}, introspection: { entry: "a.ts", importPath: "@acme/ds" } }),
+  ).not.toThrow();
 });
 
 test("introspection is validated and passed through", () => {
@@ -153,36 +157,48 @@ test("introspection is validated and passed through", () => {
       entry: "src/index.ts",
       tsconfig: "tsconfig.app.json",
       exclude: ["Internal"],
-      history: true,
+      importPath: "@acme/ds",
     },
   });
   expect(config.introspection).toEqual({
     entry: "src/index.ts",
     tsconfig: "tsconfig.app.json",
     exclude: ["Internal"],
-    history: true,
+    importPath: "@acme/ds",
   });
   expect(config.registry.size).toBe(0);
 
-  expect(() => defineConfig({ introspection: { entry: "" } })).toThrow(/introspection\.entry/);
-  expect(() => defineConfig({ introspection: { entry: "a.ts", tsconfig: "" } })).toThrow(
-    /introspection\.tsconfig/,
+  expect(() => defineConfig({ introspection: { entry: "", importPath: "@acme/ds" } })).toThrow(
+    /introspection\.entry/,
   );
   expect(() =>
-    defineConfig({ introspection: { entry: "a.ts", exclude: "Button" as never } }),
+    defineConfig({ introspection: { entry: "a.ts", tsconfig: "", importPath: "@acme/ds" } }),
+  ).toThrow(/introspection\.tsconfig/);
+  expect(() =>
+    defineConfig({
+      introspection: { entry: "a.ts", exclude: "Button" as never, importPath: "@acme/ds" },
+    }),
   ).toThrow(/introspection\.exclude/);
-  expect(() => defineConfig({ introspection: { entry: "a.ts", exclude: [1 as never] } })).toThrow(
-    /introspection\.exclude/,
+  expect(() =>
+    defineConfig({
+      introspection: { entry: "a.ts", exclude: [1 as never], importPath: "@acme/ds" },
+    }),
+  ).toThrow(/introspection\.exclude/);
+  expect(() => defineConfig({ introspection: { entry: "a.ts" } as never })).toThrow(
+    /introspection\.importPath/,
   );
-  expect(() => defineConfig({ introspection: { entry: "a.ts", history: "yes" as never } })).toThrow(
-    /introspection\.history/,
-  );
+  expect(() =>
+    defineConfig({ introspection: { entry: "a.ts", importPath: { root: 1 } as never } }),
+  ).toThrow(/introspection\.importPath/);
 });
 
 test("dependsOn is optional but must be valid when given", () => {
   const tokensOnly = { name: "acme:a", dependsOn: ["tokens"] as ("tokens" | "components")[] };
   const config = (plugin: unknown) =>
-    defineConfig({ introspection: { entry: "a.ts" }, plugins: plugin as never });
+    defineConfig({
+      introspection: { entry: "a.ts", importPath: "@acme/ds" },
+      plugins: plugin as never,
+    });
 
   expect(() => config(tokensOnly)).not.toThrow();
   expect(() => config({ name: "acme:a" })).not.toThrow();
@@ -198,11 +214,13 @@ test("plugins may be given as a single plugin or as a list", () => {
   const a = { name: "acme:a", dependsOn: ["tokens" as const] };
   const b = { name: "acme:b", dependsOn: ["tokens" as const] };
 
-  expect(defineConfig({ introspection: { entry: "a.ts" }, plugins: a }).plugins).toEqual([a]);
-  expect(defineConfig({ introspection: { entry: "a.ts" }, plugins: [a, b] }).plugins).toEqual([
-    a,
-    b,
-  ]);
+  expect(
+    defineConfig({ introspection: { entry: "a.ts", importPath: "@acme/ds" }, plugins: a }).plugins,
+  ).toEqual([a]);
+  expect(
+    defineConfig({ introspection: { entry: "a.ts", importPath: "@acme/ds" }, plugins: [a, b] })
+      .plugins,
+  ).toEqual([a, b]);
 });
 
 test("a config with only the system layer registers just those entries, without diagnostics", () => {
@@ -236,7 +254,10 @@ test.each(['x" { } .evil {', "a/b", "../up", "1st", "-dark", "dark mode", ""])(
   "defineConfig rejects the theme name %j",
   (name) => {
     expect(() =>
-      defineConfig({ introspection: { entry: "a.ts" }, themes: { [name]: new Map() } }),
+      defineConfig({
+        introspection: { entry: "a.ts", importPath: "@acme/ds" },
+        themes: { [name]: new Map() },
+      }),
     ).toThrow(/Invalid theme name/);
   },
 );
@@ -244,7 +265,7 @@ test.each(['x" { } .evil {', "a/b", "../up", "1st", "-dark", "dark mode", ""])(
 test("defineConfig accepts hyphenated and underscored theme names", () => {
   expect(() =>
     defineConfig({
-      introspection: { entry: "a.ts" },
+      introspection: { entry: "a.ts", importPath: "@acme/ds" },
       themes: { "dark-mode": new Map(), high_contrast: new Map() },
     }),
   ).not.toThrow();

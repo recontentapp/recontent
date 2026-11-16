@@ -182,7 +182,7 @@ describe("components", () => {
       name: "Button",
       sourceFilePath: "src/button.tsx",
       line: 12,
-      lastUpdatedAt: "2024-03-01T10:00:00Z",
+      import: 'import { Button } from "ui"',
       description: "Triggers an action.",
       props: [
         {
@@ -232,7 +232,6 @@ describe("components", () => {
     expect(html).toContain('<h2 class="title">Components</h2>');
     expect(html).toContain('id="c-Button"');
     expect(html).not.toContain("Source code");
-    expect(html).toContain('<span class="note">Updated 2024-03-01</span>');
     expect(html).not.toContain('<a href="http');
   });
 
@@ -394,7 +393,7 @@ describe("components", () => {
       '<img alt="</code><script>alert(1)</script>" />',
     ].join("\n");
     const html = renderWith([{ ...components[0]!, examples: [{ code }] }]);
-    const block = /<pre><code>([\s\S]*?)<\/code><\/pre>/.exec(html)![1]!;
+    const block = /data-ex-panel="0">[\s\S]*?<pre><code>([\s\S]*?)<\/code><\/pre>/.exec(html)![1]!;
     const text = block
       .replace(/<\/?span[^>]*>/g, "")
       .replace(/&lt;/g, "<")
@@ -468,6 +467,7 @@ describe("components", () => {
       '<p class="lead">A button.</p>',
       'class="capsule exp"',
       "Figma ↗",
+      "<h4>Import</h4>",
       "<h4>Usage</h4>",
       "<h4>Examples</h4>",
       "<h4>Props</h4>",
@@ -483,6 +483,11 @@ describe("components", () => {
     expect(button).not.toContain("examples</a>");
     expect(section("Accordion")).toContain('<span class="capsule exp">Experimental</span>');
     expect(section("Spacer")).toContain('<span class="capsule">Deprecated</span>');
+    // Copyable, and only for a component that has an import statement.
+    expect(button).toMatch(
+      /<h4>Import<\/h4>\s*<div class="code-box"><button[^>]*data-copy>Copy<\/button><pre><code><span class="tk-keyword">import<\/span>.*Button.*<\/code><\/pre>/,
+    );
+    expect(section("Spacer")).not.toContain("<h4>Import</h4>");
     // The sidebar flags them compactly.
     expect(html).toContain('Accordion<span class="mini">experimental</span>');
     expect(html).toContain('Spacer<span class="mini">deprecated</span>');
@@ -512,7 +517,7 @@ describe("components", () => {
     expect(html).toContain('data-ex-tab="1" aria-selected="false">Example 2</button>');
     expect(html).toContain('data-ex-panel="0">');
     expect(html).toContain('data-ex-panel="1" hidden>');
-    expect(html.match(/class="copy" data-copy/g)).toHaveLength(2);
+    expect(html.match(/data-ex-panel="\d"[^>]*><button[^>]*data-copy/g)).toHaveLength(2);
     expect(html).toContain(
       '<pre><code>&lt;<span class="tk-tag">Button</span> disabled /&gt;</code></pre>',
     );

@@ -124,7 +124,6 @@ type ComponentInfo = Documentation & {
   typeParameters?: { name: string; constraint?: string; default?: string }[]; // generic components
   sourceFilePath: string; // posix, relative to the config root
   line: number; // 1-based
-  lastUpdatedAt?: string; // ISO 8601, with introspection.history
   category?: string; // @category
   props: PropInfo[]; // declared in your project, sorted by name
   inherits: { name: string; package?: string; props: string[] }[]; // sorted prop names
@@ -173,7 +172,7 @@ The props type of a component itself (`ButtonProps`) is not a referenced type: i
 component's `props`.
 
 All of these types are exported from `recontent/plugins`. See [`introspection`](/tokens/configuration#introspection)
-for how components and props are found, and `lastUpdatedAt`.
+for how components and props are found.
 
 `ctx` carries no repository state (no commit, branch or remote), so a plugin's output depends only on
 your sources and config.

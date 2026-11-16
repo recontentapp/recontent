@@ -92,6 +92,3 @@ On success it prints `7 files up to date`. In GitHub Actions:
     fetch-depth: 0
 - run: npx recontent build --check
 ```
-
-With [`introspection.history`](/tokens/configuration#introspection), a shallow clone omits the
-last-updated dates, so outputs that include them look stale; `fetch-depth: 0` fetches the full history.

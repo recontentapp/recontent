@@ -252,7 +252,7 @@ function normalizeIntrospection(
   introspection: IntrospectionConfigInput | undefined,
 ): IntrospectionConfigInput | undefined {
   if (introspection === undefined) return undefined;
-  const { entry, tsconfig, exclude, history, importPath } = introspection;
+  const { entry, tsconfig, exclude, importPath } = introspection;
   if (typeof entry !== "string" || entry === "") {
     throw new Error("defineConfig's `introspection.entry` must be a non-empty string.");
   }
@@ -265,29 +265,23 @@ function normalizeIntrospection(
   ) {
     throw new Error("defineConfig's `introspection.exclude` must be an array of export names.");
   }
-  if (history !== undefined && typeof history !== "boolean") {
-    throw new Error("defineConfig's `introspection.history` must be a boolean.");
-  }
-  if (importPath !== undefined) {
-    const valid =
-      typeof importPath === "string"
-        ? importPath !== ""
-        : typeof importPath === "object" &&
-          importPath !== null &&
-          typeof importPath.root === "string" &&
-          (importPath.prefix === undefined || typeof importPath.prefix === "string");
-    if (!valid) {
-      throw new Error(
-        "defineConfig's `introspection.importPath` must be a module specifier or `{ root: string; prefix?: string }`.",
-      );
-    }
+  const validImportPath =
+    typeof importPath === "string"
+      ? importPath !== ""
+      : typeof importPath === "object" &&
+        importPath !== null &&
+        typeof importPath.root === "string" &&
+        (importPath.prefix === undefined || typeof importPath.prefix === "string");
+  if (!validImportPath) {
+    throw new Error(
+      "defineConfig's `introspection.importPath` must be a module specifier or `{ root: string; prefix?: string }`.",
+    );
   }
   return {
     entry,
     ...(tsconfig !== undefined ? { tsconfig } : {}),
     ...(exclude !== undefined ? { exclude } : {}),
-    ...(history !== undefined ? { history } : {}),
-    ...(importPath !== undefined ? { importPath } : {}),
+    importPath,
   };
 }
 

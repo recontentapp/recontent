@@ -54,10 +54,10 @@ The trees are walked once:
 
 ### `introspection`
 
-|          |                                                                                                                                         |
-| -------- | --------------------------------------------------------------------------------------------------------------------------------------- |
-| Type     | `{ entry: string; tsconfig?: string; exclude?: string[]; history?: boolean; importPath?: string \| { root: string; prefix?: string } }` |
-| Required | Yes, unless [`tokens`](#tokens) is set                                                                                                  |
+|          |                                                                                                                     |
+| -------- | ------------------------------------------------------------------------------------------------------------------- |
+| Type     | `{ entry: string; tsconfig?: string; exclude?: string[]; importPath: string \| { root: string; prefix?: string } }` |
+| Required | Yes, unless [`tokens`](#tokens) is set                                                                              |
 
 Tells Recontent where your React components are, so that [`recontent inspect`](/cli/inspect) and
 plugins can read their props, and the types declared in your project that those props reference
@@ -70,18 +70,18 @@ export default defineConfig({
   introspection: {
     entry: "src/components/index.ts",
     exclude: ["ThemeProvider"],
+    importPath: "@acme/ds",
   },
   plugins: [docs({ outDir: "docs" })],
 });
 ```
 
-| Field        | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
-| ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `entry`      | Required. A barrel file, relative to the config. Every export that resolves to a React component is introspected.                                                                                                                                                                                                                                                                                                                                                                                        |
-| `tsconfig`   | The tsconfig used to resolve types and path aliases, relative to the config. Default: the nearest `tsconfig.json` above `entry`. It must include `entry`: for a solution-style tsconfig, point at the project file such as `tsconfig.app.json`.                                                                                                                                                                                                                                                          |
-| `exclude`    | Export names to skip, such as `"ThemeProvider"` or `"Dialog.Root"`.                                                                                                                                                                                                                                                                                                                                                                                                                                      |
-| `history`    | Default `false`. Reads the date of the last commit that touched each component's file into `lastUpdatedAt`, shown as `Updated 2025-03-01` in the docs. See [History](#history).                                                                                                                                                                                                                                                                                                                          |
-| `importPath` | How consumers import the components, to print an `import` statement for each. A module specifier (`"@acme/ds"`) gives `import { Button } from "@acme/ds"`. `{ root, prefix }` is for design systems without a barrel for consumers: the specifier is `prefix` plus the path of the file defining the component relative to `root` (relative to the config), without extension or trailing `/index`, and a `default` export is imported as a default import. See [Import statements](#import-statements). |
+| Field        | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `entry`      | Required. A barrel file, relative to the config. Every export that resolves to a React component is introspected.                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| `tsconfig`   | The tsconfig used to resolve types and path aliases, relative to the config. Default: the nearest `tsconfig.json` above `entry`. It must include `entry`: for a solution-style tsconfig, point at the project file such as `tsconfig.app.json`.                                                                                                                                                                                                                                                                                                                               |
+| `exclude`    | Export names to skip, such as `"ThemeProvider"` or `"Dialog.Root"`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| `importPath` | Required. How consumers import the components, to print an `import` statement for each, shown on each component page by [`docs()`](/plugins/docs). A module specifier (`"@acme/ds"`) gives `import { Button } from "@acme/ds"`. `{ root, prefix }` is for design systems without a barrel for consumers: the specifier is `prefix` plus the path of the file defining the component relative to `root` (relative to the config), without extension or trailing `/index`, and a `default` export is imported as a default import. See [Import statements](#import-statements). |
 
 For what counts as a component, subcomponents, inherited props, generics, warnings and components-only
 configs, see [Introspecting components](/guides/introspecting-components). The TypeScript program is
@@ -101,8 +101,8 @@ neither read nor write the cache, in CI for instance, or to debug introspection.
 
 #### Import statements
 
-With `importPath`, each component has an `import` statement, printed by `recontent inspect components <name>`
-so that an agent knows how to use it without searching your codebase:
+Each component has an `import` statement, printed by `recontent inspect components <name>` so that an
+agent knows how to use it without searching your codebase, and shown on its page by `docs()`:
 
 ```ts
 // Consumers import from the barrel (a package, or an alias of the entry)
@@ -117,18 +117,6 @@ importPath: { root: "src", prefix: "@/" };
 
 A component defined outside `root`, such as a re-exported library component, has no import statement.
 A subcomponent (`Tabs.Item`) imports its root component.
-
-#### History
-
-With `history: true`, `lastUpdatedAt` is the date of the last commit touching the component's file,
-read from `git log` and stopping as soon as every file has been seen. It is off by default so that
-no `git` process runs and generated docs depend only on your sources and config: with it on, committed
-docs change whenever a component's file is committed, so regenerate them in CI rather than by hand.
-
-- The date is per file: components sharing a file share it, and uncommitted edits are not reflected.
-- In a shallow clone, such as `actions/checkout`'s default, `lastUpdatedAt` is left out with a warning
-  rather than set to the one commit that was fetched. Fetch more history to get it.
-- Outside a git work tree, or without `git`, it is left out with a single warning.
 
 ### `themes`
 

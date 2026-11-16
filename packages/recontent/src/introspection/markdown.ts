@@ -13,11 +13,6 @@ function displayName({ name, typeParameters }: ComponentInfo | TypeInfo): string
   return `${name}<${parameters.join(", ")}>`;
 }
 
-/** "Updated 2025-03-01" when the component has a last commit date. */
-export function updatedText(component: { lastUpdatedAt?: string }): string | undefined {
-  return component.lastUpdatedAt ? `Updated ${component.lastUpdatedAt.slice(0, 10)}` : undefined;
-}
-
 /**
  * Components by `category`, alphabetically, the uncategorised last. A single
  * group without a category when none of them has one.
@@ -115,14 +110,9 @@ function documentationLines(item: Documentation, headingLevel: number): string[]
   return lines;
 }
 
-/** `Import: …` and `Source: src/button.tsx:12` */
+/** `Source: src/button.tsx:12` */
 function sourceLine(component: ComponentInfo | TypeInfo): string {
-  return [
-    `Source: ${code(`${component.sourceFilePath}:${component.line}`)}`,
-    "lastUpdatedAt" in component ? updatedText(component) : undefined,
-  ]
-    .filter(Boolean)
-    .join(" · ");
+  return `Source: ${code(`${component.sourceFilePath}:${component.line}`)}`;
 }
 
 /** Props a project type declares that are left out of the table, to be asked for with `--props`. */

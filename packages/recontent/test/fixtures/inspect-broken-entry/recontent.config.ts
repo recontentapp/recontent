@@ -11,5 +11,5 @@ const system = defineSystemTokens({ color: { surface: ref.color.white } });
 
 export default defineConfig({
   tokens: { ref, system, components: defineComponentTokens({}) },
-  introspection: { entry: "src/does-not-exist.ts" },
+  introspection: { entry: "src/does-not-exist.ts", importPath: "@acme/ui" },
 });

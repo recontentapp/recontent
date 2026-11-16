@@ -5,17 +5,14 @@ export type IntrospectionConfigInput = {
   tsconfig?: string;
   /** Export names to skip. */
   exclude?: string[];
-  /** Read each component file's last commit date into `lastUpdatedAt`. Defaults to `false`. */
-  history?: boolean;
   /**
    * How consumers import the components, to print an import statement for each.
    * - A module specifier (a package, or an alias of `entry`): `import { Button } from "<specifier>"`.
    * - `{ root, prefix }` when there is no barrel for consumers and each component's own file is imported:
    *   the specifier is `prefix` plus the path of the file defining the component relative to `root`
    *   (relative to the config), without extension or trailing `/index`. A default export is imported as a default import.
-   * Without it, components have no import statement.
    */
-  importPath?: string | { root: string; prefix?: string };
+  importPath: string | { root: string; prefix?: string };
 };
 
 export type ExampleInfo = {
@@ -89,10 +86,8 @@ export type ComponentInfo = Documentation & {
   sourceFilePath: string;
   /** 1-based line of the declaration. */
   line: number;
-  /** The statement that imports it, e.g. `import { Button } from "@acme/ds"`. Only with `introspection.importPath`. */
+  /** The statement that imports it, e.g. `import { Button } from "@acme/ds"`. Absent when `introspection.importPath` is a `{ root }` and the component is outside it. */
   import?: string;
-  /** ISO 8601 date of the last commit touching `sourceFilePath`. Only with `introspection.history`. */
-  lastUpdatedAt?: string;
   /** `@category`: groups components in the docs and in `recontent inspect components`. */
   category?: string;
   /** Props declared outside node_modules, sorted by name. */

@@ -403,7 +403,7 @@ const components = defineComponentTokens({
 });
 
 export default defineConfig({
-  introspection: { entry: "src/components.ts" },
+  introspection: { entry: "src/components.ts", importPath: { root: "src" } },
   tokens: { ref, system, components },
   themes: {},
   plugins: [

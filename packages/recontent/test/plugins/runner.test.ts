@@ -218,7 +218,9 @@ describe("dependsOn", () => {
     });
 
     expect(needsIntrospection(baseConfig([record("tokens-only", ["tokens"])]))).toBe(false);
-    expect(needsIntrospection(config({ entry: "src/index.ts" }))).toBe(true);
+    expect(needsIntrospection(config({ entry: "src/index.ts", importPath: "@acme/ds" }))).toBe(
+      true,
+    );
   });
 
   test("a plugin whose components are optional runs without introspection, and gets them with it", async () => {
@@ -226,7 +228,10 @@ describe("dependsOn", () => {
 
     expect(needsIntrospection(baseConfig([optional]))).toBe(false);
     expect(
-      needsIntrospection({ ...baseConfig([optional]), introspection: { entry: "src/index.ts" } }),
+      needsIntrospection({
+        ...baseConfig([optional]),
+        introspection: { entry: "src/index.ts", importPath: "@acme/ds" },
+      }),
     ).toBe(true);
 
     await runPlugins(baseConfig([optional]), runOptions);

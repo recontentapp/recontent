@@ -80,7 +80,7 @@ Point Recontent at the barrel file that exports your React components:
 export default defineConfig({
   tokens: { ref, system, components },
   themes: { dark },
-  introspection: { entry: "src/components/index.ts" },
+  introspection: { entry: "src/components/index.ts", importPath: "@acme/ds" },
   plugins: [css({ outDir: "src/generated" })],
 });
 ```

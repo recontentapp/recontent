@@ -20,7 +20,7 @@ let byName: Map<string, ComponentInfo>;
 beforeAll(() => {
   let result;
   ({ components, types, files } = result = introspect({
-    config: { entry: "src/index.ts", exclude: ["Excluded"] },
+    config: { entry: "src/index.ts", exclude: ["Excluded"], importPath: "@acme/ds" },
     root,
     logger,
   }));
@@ -577,27 +577,35 @@ describe("F. JSDoc", () => {
     });
 
     test("H2 a missing entry names the path", () => {
-      expect(() => introspect({ config: { entry: "src/missing.ts" }, root, logger })).toThrow(
-        path.join(root, "src/missing.ts"),
-      );
+      expect(() =>
+        introspect({ config: { entry: "src/missing.ts", importPath: "@acme/ds" }, root, logger }),
+      ).toThrow(path.join(root, "src/missing.ts"));
     });
 
     test("H2 an entry outside the tsconfig names the path", () => {
-      expect(() => introspect({ config: { entry: "outside/index.ts" }, root, logger })).toThrow(
-        /outside[\\/]index\.ts" is not included by/,
-      );
+      expect(() =>
+        introspect({ config: { entry: "outside/index.ts", importPath: "@acme/ds" }, root, logger }),
+      ).toThrow(/outside[\\/]index\.ts" is not included by/);
     });
 
     test("a missing tsconfig names the path", () => {
       expect(() =>
-        introspect({ config: { entry: "src/index.ts", tsconfig: "nope.json" }, root, logger }),
+        introspect({
+          config: { entry: "src/index.ts", tsconfig: "nope.json", importPath: "@acme/ds" },
+          root,
+          logger,
+        }),
       ).toThrow(path.join(root, "nope.json"));
     });
   });
 
   describe("performance and setup", () => {
     test("a build depends on declarations from node_modules and the tsconfig, and a rebuild with oldProgram reuses the parsed source files", () => {
-      const first = introspect({ config: { entry: "src/index.ts" }, root, logger });
+      const first = introspect({
+        config: { entry: "src/index.ts", importPath: "@acme/ds" },
+        root,
+        logger,
+      });
 
       expect(first.files).toContain(path.join(root, "tsconfig.json"));
       expect(first.files.some((file) => /@types[\\/]react[\\/]index\.d\.ts$/.test(file))).toBe(
@@ -605,7 +613,7 @@ describe("F. JSDoc", () => {
       );
 
       const second = introspect({
-        config: { entry: "src/index.ts" },
+        config: { entry: "src/index.ts", importPath: "@acme/ds" },
         root,
         logger,
         oldProgram: first.program,
@@ -618,7 +626,11 @@ describe("F. JSDoc", () => {
 
     test("zero components behind PascalCase exports is a warning, not silence", () => {
       const empty = path.join(root, "../introspection-empty");
-      const result = introspect({ config: { entry: "src/index.ts" }, root: empty, logger });
+      const result = introspect({
+        config: { entry: "src/index.ts", importPath: "@acme/ds" },
+        root: empty,
+        logger,
+      });
 
       expect(result.components).toEqual([]);
       expect(result.warnings).toEqual([

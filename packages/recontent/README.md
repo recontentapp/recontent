@@ -79,7 +79,7 @@ npx recontent build   # add --watch to rebuild on save
 
 4. Introspect your components
 
-Add `introspection: { entry: "src/components/index.ts" }` to `defineConfig`, then:
+Add `introspection: { entry: "src/components/index.ts", importPath: "@acme/ds" }` to `defineConfig`, then:
 
 ```bash
 npx recontent inspect                    # counts, themes and component names

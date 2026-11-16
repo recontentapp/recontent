@@ -89,11 +89,8 @@ async function diffAgainstRevision(options: DiffOptions): Promise<void> {
       // A diff that silently dropped components would mislead, so a failure here fails the command.
       const base = await loadIntrospection(
         {
-          // Dates are ignored by the diff, and the old revision's warnings are not actionable.
-          config: {
-            ...baseConfig,
-            introspection: { ...baseConfig.introspection, history: false },
-          },
+          // The old revision's warnings are not actionable.
+          config: baseConfig,
           logger,
           configPath: tmpConfigPath,
           root: path.dirname(tmpConfigPath),

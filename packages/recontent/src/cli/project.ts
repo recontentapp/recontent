@@ -3,7 +3,6 @@ import { loadConfig } from "../config/load.js";
 import { type Config } from "../config/types.js";
 import { type Logger, type LogLevel } from "../logger.js";
 import ts from "typescript";
-import { readHead, readLastUpdated } from "./git.js";
 import type { IntrospectionWarning } from "../introspection/components.js";
 import { introspect, watchableFiles } from "../introspection/index.js";
 import { readCache, writeCache } from "../introspection/cache.js";
@@ -65,8 +64,6 @@ export async function loadIntrospection(
       config: introspection,
       entry,
       tsconfigPath,
-      // The last-updated dates move with every commit.
-      head: introspection.history ? readHead(root) : undefined,
     });
 
   const cached = key === undefined ? undefined : readCache(root, configPath, key);
@@ -86,17 +83,6 @@ export async function loadIntrospection(
     oldProgram: options.oldProgram,
   });
   const warnings = [...result.warnings];
-  if (introspection.history) {
-    const { dates, warning } = await readLastUpdated(
-      root,
-      result.components.map((component) => path.resolve(root, component.sourceFilePath)),
-    );
-    for (const component of result.components) {
-      const date = dates.get(path.resolve(root, component.sourceFilePath));
-      if (date) component.lastUpdatedAt = date;
-    }
-    if (warning) warnings.push({ message: warning });
-  }
 
   const watch = watchableFiles(entry, result.files);
   if (key !== undefined) {

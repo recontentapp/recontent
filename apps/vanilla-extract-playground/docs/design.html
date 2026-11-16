@@ -172,8 +172,8 @@ kbd { font: inherit; font-size: var(--hig-fs-xs); padding: 0 6px; border-radius:
 .ex-tabs { display: flex; gap: 4px; overflow-x: auto; margin-bottom: 8px; border-bottom: 1px solid var(--hig-line); }
 .ex-tabs button { font: inherit; font-size: var(--hig-fs-sm); color: var(--hig-text-2); padding: 6px 12px; border: 0; background: transparent; cursor: pointer; white-space: nowrap; }
 .ex-tabs button[aria-selected="true"] { color: var(--hig-text); box-shadow: inset 0 -2px 0 var(--hig-text); }
-.ex-panel { position: relative; }
-.ex-panel pre { margin: 0; padding-right: 72px; }
+.code-box { position: relative; }
+.code-box pre { margin: 0; padding-right: 72px; }
 .tk-comment { color: var(--tk-comment); font-style: italic; }
 .tk-string { color: var(--tk-string); }
 .tk-number { color: var(--tk-number); }
@@ -192,7 +192,6 @@ kbd { font: inherit; font-size: var(--hig-fs-xs); padding: 0 6px; border-radius:
 .tag { font-size: var(--hig-fs-xs); color: var(--hig-text-2); background: var(--hig-bg-2); border-radius: 999px; padding: 1px 9px; text-decoration: none; }
 a.tag { color: var(--hig-accent); }
 a.tag:hover { text-decoration: underline; }
-.note { font-size: var(--hig-fs-xs); color: var(--hig-text-2); }
 .group { margin-bottom: 56px; scroll-margin-top: 80px; }
 .group h3 { margin: 0 0 8px; font-size: var(--hig-fs-xl); line-height: 1.2; font-weight: 600; letter-spacing: -0.01em; }
 .cat { margin: 12px 0 4px; font-size: var(--hig-fs-xs); font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--hig-text-2); }
@@ -307,7 +306,7 @@ pre { margin: 0 0 16px; padding: 12px 14px; overflow-x: auto; border-radius: 12p
   .side nav { display: none; max-height: 50vh; overflow-y: auto; padding: 0 6px 8px; border-top: 1px solid var(--hig-line); }
   .side.open nav { display: flex; }
   .side .cat { padding-top: 8px; }
-  .examples .ex-panel pre { padding-right: 14px; padding-top: 38px; }
+  .code-box pre { padding-right: 14px; padding-top: 38px; }
   .title { font-size: var(--hig-fs-2xl); }
   .row { grid-template-columns: minmax(0, 1fr); gap: 8px; }
   .row-preview:empty { display: none; }
@@ -2411,6 +2410,10 @@ pre { margin: 0 0 16px; padding: 12px 14px; overflow-x: auto; border-radius: 12p
     </div>
   </header>
   <div class="comp-section">
+  <h4>Import</h4>
+  <div class="code-box"><button type="button" class="copy" data-copy>Copy</button><pre><code><span class="tk-keyword">import</span> { Sticker } <span class="tk-keyword">from</span> <span class="tk-string">"Sticker"</span></code></pre></div>
+  </div>
+  <div class="comp-section">
   <h4>Usage</h4>
   <div class="md"><p>Use to draw attention to a card or an image with a short, playful callout such as
 &quot;New&quot;, &quot;Sale&quot; or &quot;Hot&quot;. Place it on a corner of the element it labels. Use <code>tilt</code>
@@ -2435,13 +2438,13 @@ sparingly: one tilted sticker per surface keeps it feeling spontaneous.</p>
   <div class="comp-section examples" id="c-Sticker-examples">
   <h4>Examples</h4>
   <div class="ex-tabs" role="tablist" aria-label="Examples"><button type="button" role="tab" data-ex-tab="0" aria-selected="true">Basic</button><button type="button" role="tab" data-ex-tab="1" aria-selected="false">Tilted</button><button type="button" role="tab" data-ex-tab="2" aria-selected="false">In a card</button></div>
-  <div class="ex-panel" role="tabpanel" data-ex-panel="0"><button type="button" class="copy" data-copy>Copy</button><pre><code><span class="tk-keyword">import</span> { Sticker } <span class="tk-keyword">from</span> <span class="tk-string">"../components"</span>;
+  <div class="ex-panel code-box" role="tabpanel" data-ex-panel="0"><button type="button" class="copy" data-copy>Copy</button><pre><code><span class="tk-keyword">import</span> { Sticker } <span class="tk-keyword">from</span> <span class="tk-string">"../components"</span>;
 
 <span class="tk-keyword">export</span> <span class="tk-keyword">const</span> Basic = () =&gt; &lt;<span class="tk-tag">Sticker</span>&gt;New&lt;/Sticker&gt;;</code></pre></div>
-  <div class="ex-panel" role="tabpanel" data-ex-panel="1" hidden><button type="button" class="copy" data-copy>Copy</button><pre><code><span class="tk-keyword">import</span> { Sticker } <span class="tk-keyword">from</span> <span class="tk-string">"../components"</span>;
+  <div class="ex-panel code-box" role="tabpanel" data-ex-panel="1" hidden><button type="button" class="copy" data-copy>Copy</button><pre><code><span class="tk-keyword">import</span> { Sticker } <span class="tk-keyword">from</span> <span class="tk-string">"../components"</span>;
 
 <span class="tk-keyword">export</span> <span class="tk-keyword">const</span> Tilted = () =&gt; &lt;<span class="tk-tag">Sticker</span> <span class="tk-attr">tilt</span>=<span class="tk-string">"left"</span>&gt;Sale&lt;/Sticker&gt;;</code></pre></div>
-  <div class="ex-panel" role="tabpanel" data-ex-panel="2" hidden><button type="button" class="copy" data-copy>Copy</button><pre><code><span class="tk-keyword">import</span> { Sticker } <span class="tk-keyword">from</span> <span class="tk-string">"../components"</span>;
+  <div class="ex-panel code-box" role="tabpanel" data-ex-panel="2" hidden><button type="button" class="copy" data-copy>Copy</button><pre><code><span class="tk-keyword">import</span> { Sticker } <span class="tk-keyword">from</span> <span class="tk-string">"../components"</span>;
 
 <span class="tk-keyword">export</span> <span class="tk-keyword">const</span> InACard = () =&gt; (
   &lt;<span class="tk-tag">div</span>&gt;

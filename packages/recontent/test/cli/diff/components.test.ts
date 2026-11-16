@@ -181,7 +181,6 @@ describe("components", () => {
         component({
           line: 40,
           sourceFilePath: "src/ui/button.tsx",
-          lastUpdatedAt: "2026-01-01T00:00:00Z",
           description: "Now documented.",
           references: ["Size"],
           props: [prop("x", { description: "b" })],

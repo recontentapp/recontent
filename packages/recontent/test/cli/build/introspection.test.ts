@@ -9,14 +9,7 @@ import {
 } from "node:fs";
 import path from "node:path";
 import { describe, expect, test } from "@jest/globals";
-import {
-  copyFixture,
-  makeScratchDir,
-  runCli,
-  scratchRoot,
-  useCliScratch,
-} from "../../helpers/cli.js";
-import { commitAll, git } from "../../helpers/git.js";
+import { copyFixture, makeScratchDir, runCli, useCliScratch } from "../../helpers/cli.js";
 
 useCliScratch();
 
@@ -66,7 +59,6 @@ export default defineConfig({
     expect(markdown).toContain("- Don't use `Legacy`: Use \\`Button\\`");
     expect(markdown).not.toContain("Source:");
     expect(markdown).not.toContain("Generated from");
-    expect(markdown).not.toContain("Updated");
   });
 
   test("a config with introspection but no tokens builds the docs", () => {
@@ -76,7 +68,7 @@ export default defineConfig({
 import { designMD } from "recontent/plugins";
 
 export default defineConfig({
-  introspection: { entry: "src/index.ts" },
+  introspection: { entry: "src/index.ts", importPath: "@acme/ui" },
   plugins: [designMD({ outDir: "docs" })],
 });
 `,
@@ -90,7 +82,7 @@ export default defineConfig({
   });
 
   describe("introspection happens only for plugins that consume components", () => {
-    const broken = 'introspection: { entry: "src/does-not-exist.ts" },';
+    const broken = 'introspection: { entry: "src/does-not-exist.ts", importPath: "@acme/ui" },';
 
     test("token-only plugins never trigger it, so a broken entry is harmless", () => {
       const dir = buildProject("build-lazy", configWith(broken, 'css({ outDir: "out" })'));
@@ -123,35 +115,6 @@ export default defineConfig({
       const markdown = readFileSync(path.join(dir, "docs/DESIGN.md"), "utf-8");
       expect(markdown).toContain("system-color-surface");
       expect(markdown).not.toContain("## Components");
-    });
-  });
-
-  describe("history is opt-in", () => {
-    const withHistory = configWith(
-      'introspection: { entry: "src/index.ts", history: true },',
-      'docs({ outDir: "docs" })',
-    );
-
-    test("lastUpdatedAt comes from git when asked for", () => {
-      const dir = buildProject("build-history", withHistory);
-      git(dir, "init", "-q");
-      commitAll(dir);
-
-      expect(runCli(["--cwd", dir, "build"]).status).toBe(0);
-      expect(readFileSync(path.join(dir, "docs/design.html"), "utf-8")).toMatch(
-        /Updated \d{4}-\d{2}-\d{2}/,
-      );
-    });
-
-    test("outside a git work tree it warns once and still builds", () => {
-      const dir = buildProject("build-history-no-git", withHistory);
-      const result = runCli(["--cwd", dir, "build"], {
-        env: { GIT_CEILING_DIRECTORIES: scratchRoot },
-      });
-
-      expect(result.status).toBe(0);
-      expect(result.stderr.match(/not a git repository/g)).toHaveLength(1);
-      expect(readFileSync(path.join(dir, "docs/design.html"), "utf-8")).not.toContain("Updated");
     });
   });
 

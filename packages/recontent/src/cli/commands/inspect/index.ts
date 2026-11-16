@@ -82,7 +82,7 @@ async function loadLocal(
   if ((target.kind === "components" || target.kind === "types") && !config.introspection) {
     fail(format, [
       {
-        message: `${configName} has no \`introspection\` block. Add \`introspection: { entry: "src/components/index.ts" }\` to defineConfig() to inspect components.`,
+        message: `${configName} has no \`introspection\` block. Add \`introspection: { entry: "src/components/index.ts", importPath: "@acme/ds" }\` to defineConfig() to inspect components.`,
       },
     ]);
     return undefined;

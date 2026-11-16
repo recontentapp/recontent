@@ -1,5 +1,5 @@
 import type { ComponentInfo, PropInfo } from "../../introspection/model.js";
-import { groupByCategory, propCount, updatedText } from "../../introspection/markdown.js";
+import { groupByCategory, propCount } from "../../introspection/markdown.js";
 import { generateCss } from "../css.js";
 import type { GeneratorContext } from "../shared/context.js";
 import type { DocToken } from "../../snapshot/doc-token.js";
@@ -196,6 +196,14 @@ function propRowHtml(prop: PropInfo): string {
 </tr>`;
 }
 
+function importHtml(component: ComponentInfo): string {
+  if (!component.import) return "";
+  return `<div class="comp-section">
+  <h4>Import</h4>
+  <div class="code-box"><button type="button" class="copy" data-copy>Copy</button><pre><code>${highlight(component.import)}</code></pre></div>
+  </div>`;
+}
+
 function usageHtml(usage: string | undefined): string {
   if (!usage) return "";
   return `<div class="comp-section">
@@ -218,7 +226,7 @@ function examplesHtml(component: ComponentInfo): string {
   const panels = examples
     .map(
       ({ code }, index) =>
-        `<div class="ex-panel" role="tabpanel" data-ex-panel="${index}"${index === 0 ? "" : " hidden"}><button type="button" class="copy" data-copy>Copy</button><pre><code>${highlight(code)}</code></pre></div>`,
+        `<div class="ex-panel code-box" role="tabpanel" data-ex-panel="${index}"${index === 0 ? "" : " hidden"}><button type="button" class="copy" data-copy>Copy</button><pre><code>${highlight(code)}</code></pre></div>`,
     )
     .join("\n  ");
   return `<div class="comp-section examples" id="${examplesId(component)}">
@@ -243,12 +251,8 @@ function statusBadgeHtml(
     : `<span class="${cls}">${label}</span>`;
 }
 
-/** The source code link (when `gitBaseUrl` is set), then the `@link` URLs and the update date. */
-function linkTags(
-  component: ComponentInfo,
-  gitBaseUrl: string | undefined,
-  updated: string | undefined,
-): string[] {
+/** The source code link (when `gitBaseUrl` is set), then the `@link` URLs. */
+function linkTags(component: ComponentInfo, gitBaseUrl: string | undefined): string[] {
   const links: string[] = [];
   if (gitBaseUrl) {
     const href = `${gitBaseUrl.replace(/\/+$/, "")}/${encodeURI(component.sourceFilePath)}#L${component.line}`;
@@ -261,7 +265,6 @@ function linkTags(
       `<a class="tag" href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(title ?? url)} ↗</a>`,
     );
   }
-  if (updated) links.push(`<span class="note">${escapeHtml(updated)}</span>`);
   return links;
 }
 
@@ -289,7 +292,6 @@ function componentCardHtml(component: ComponentInfo): string {
 }
 
 function componentHtml(component: ComponentInfo, gitBaseUrl: string | undefined): string {
-  const updated = updatedText(component);
   const inherits = component.inherits
     .map(
       (group) =>
@@ -300,7 +302,7 @@ function componentHtml(component: ComponentInfo, gitBaseUrl: string | undefined)
   const tags = [
     component.experimental ? statusBadgeHtml("Experimental", component.experimental) : "",
     component.deprecated ? statusBadgeHtml("Deprecated", component.deprecated, replacement) : "",
-    ...linkTags(component, gitBaseUrl, updated),
+    ...linkTags(component, gitBaseUrl),
   ].join("");
   const crumb = `<a class="crumb" href="#components-overview" data-goto="components-overview">Components</a>${component.category ? ` / ${escapeHtml(component.category)}` : ""}`;
   return `<section class="group" id="${escapeHtml(componentId(component.name))}" data-page ${componentSearchAttrs(component)} hidden>
@@ -312,6 +314,7 @@ function componentHtml(component: ComponentInfo, gitBaseUrl: string | undefined)
       ${tags ? `<div class="tags">${tags}</div>` : ""}
     </div>
   </header>
+  ${importHtml(component)}
   ${usageHtml(component.usage)}
   ${examplesHtml(component)}
   <div class="comp-section">
@@ -491,8 +494,8 @@ kbd { font: inherit; font-size: var(--hig-fs-xs); padding: 0 6px; border-radius:
 .ex-tabs { display: flex; gap: 4px; overflow-x: auto; margin-bottom: 8px; border-bottom: 1px solid var(--hig-line); }
 .ex-tabs button { font: inherit; font-size: var(--hig-fs-sm); color: var(--hig-text-2); padding: 6px 12px; border: 0; background: transparent; cursor: pointer; white-space: nowrap; }
 .ex-tabs button[aria-selected="true"] { color: var(--hig-text); box-shadow: inset 0 -2px 0 var(--hig-text); }
-.ex-panel { position: relative; }
-.ex-panel pre { margin: 0; padding-right: 72px; }
+.code-box { position: relative; }
+.code-box pre { margin: 0; padding-right: 72px; }
 .tk-comment { color: var(--tk-comment); font-style: italic; }
 .tk-string { color: var(--tk-string); }
 .tk-number { color: var(--tk-number); }
@@ -511,7 +514,6 @@ kbd { font: inherit; font-size: var(--hig-fs-xs); padding: 0 6px; border-radius:
 .tag { font-size: var(--hig-fs-xs); color: var(--hig-text-2); background: var(--hig-bg-2); border-radius: 999px; padding: 1px 9px; text-decoration: none; }
 a.tag { color: var(--hig-accent); }
 a.tag:hover { text-decoration: underline; }
-.note { font-size: var(--hig-fs-xs); color: var(--hig-text-2); }
 .group { margin-bottom: 56px; scroll-margin-top: 80px; }
 .group h3 { margin: 0 0 8px; font-size: var(--hig-fs-xl); line-height: 1.2; font-weight: 600; letter-spacing: -0.01em; }
 .cat { margin: 12px 0 4px; font-size: var(--hig-fs-xs); font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--hig-text-2); }
@@ -626,7 +628,7 @@ pre { margin: 0 0 16px; padding: 12px 14px; overflow-x: auto; border-radius: 12p
   .side nav { display: none; max-height: 50vh; overflow-y: auto; padding: 0 6px 8px; border-top: 1px solid var(--hig-line); }
   .side.open nav { display: flex; }
   .side .cat { padding-top: 8px; }
-  .examples .ex-panel pre { padding-right: 14px; padding-top: 38px; }
+  .code-box pre { padding-right: 14px; padding-top: 38px; }
   .title { font-size: var(--hig-fs-2xl); }
   .row { grid-template-columns: minmax(0, 1fr); gap: 8px; }
   .row-preview:empty { display: none; }

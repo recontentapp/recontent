@@ -15,7 +15,7 @@ function specifierOf(file: string, root: string, prefix: string): string | undef
 
 /**
  * A function from a component's name to the statement that imports it, or
- * `undefined` when the config says nothing about imports. A dotted name
+ * `undefined` when a `{ root }` resolution misses. A dotted name
  * (`Tabs.Item`) imports its root component.
  */
 export function createImportResolver(
@@ -25,9 +25,8 @@ export function createImportResolver(
     root: string;
     importPath: IntrospectionConfigInput["importPath"];
   },
-): ((name: string) => string | undefined) | undefined {
+): (name: string) => string | undefined {
   const { importPath } = options;
-  if (importPath === undefined) return undefined;
   const { checker, program } = analysis;
   const sourceFile = program.getSourceFile(options.entry);
   const moduleSymbol = sourceFile && checker.getSymbolAtLocation(sourceFile);
