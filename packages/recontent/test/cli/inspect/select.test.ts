@@ -2,6 +2,7 @@ import { describe, expect, test } from "@jest/globals";
 import type { ComponentInfo, TypeInfo } from "../../../src/introspection/model.js";
 import {
   closestMatches,
+  searchSnapshot,
   selectComponents,
   selectTokens,
   selectTypes,
@@ -224,5 +225,77 @@ describe("closestMatches", () => {
       "Buttons",
     ]);
     expect(closestMatches("zzzzzz", ["Button"])).toEqual([]);
+  });
+});
+
+describe("searchSnapshot", () => {
+  const snapshot = {
+    tokens: [
+      token("system.color.accent", "color", {
+        cssVar: "--system-color-accent",
+        alias: "ref.color.brand",
+        description: "Primary action color.",
+        values: { default: "#2563eb", dark: "#60a5fa" },
+      }),
+      token("system.color.danger", "color", { values: { default: "#ef4444" } }),
+    ],
+    components: [
+      component("Button", {
+        usage: "Prefer it over a link.",
+        props: [prop("size", { description: "How big." })],
+      }),
+      component("Tooltip"),
+    ],
+    types: [
+      typeInfo("IconName", [], { kind: "type", values: ["home", "tooltip"] }),
+      typeInfo("ButtonProps", [], { members: [prop("variant")] }),
+    ],
+  };
+  const search = (...queries: string[]) => searchSnapshot(snapshot, queries);
+  const matchedIn = (hits: { item: unknown; matchedIn: string[] }[]) =>
+    hits.map((hit) => hit.matchedIn);
+
+  test.each([
+    ["a token by value", "#EF4444", "tokens", ["value"]],
+    ["a token by theme value", "60A5FA", "tokens", ["value (dark)"]],
+    ["a token by CSS variable", "--system-color-accent", "tokens", ["css variable"]],
+    ["a token by description", "primary action", "tokens", ["description"]],
+    ["a component by usage", "over a link", "components", ["usage"]],
+    ["a component by prop name", "size", "components", ["prop size"]],
+    ["a type by literal value", "tooltip", "types", ["value"]],
+  ] as const)("finds %s", (_name, query, kind, expected) => {
+    expect(matchedIn(search(query)[kind])).toEqual([...expected].map((label) => [label]));
+  });
+
+  test("several queries match as a union", () => {
+    const result = search("danger", "Button");
+    expect(paths(result.tokens.map((hit) => hit.item))).toEqual(["system.color.danger"]);
+    expect(result.components.map((hit) => hit.item.name)).toEqual(["Button"]);
+    expect(result.types.map((hit) => hit.item.id)).toEqual(["ButtonProps"]);
+  });
+
+  test("a name or path hit ranks before a hit elsewhere, keeping the original order within each", () => {
+    const result = searchSnapshot(
+      {
+        ...snapshot,
+        tokens: [
+          token("system.a", "color", { description: "tooltip" }),
+          token("system.tooltip", "color"),
+        ],
+      },
+      ["tooltip"],
+    );
+    expect(paths(result.tokens.map((hit) => hit.item))).toEqual(["system.tooltip", "system.a"]);
+    expect(result.components.map((hit) => hit.item.name)).toEqual(["Tooltip"]);
+  });
+
+  test("no hit gives suggestions, and a hit does not", () => {
+    expect(search("dangr")).toMatchObject({
+      tokens: [],
+      components: [],
+      types: [],
+      suggestions: ["danger"],
+    });
+    expect(search("danger").suggestions).toEqual([]);
   });
 });

@@ -12,6 +12,7 @@ import { typeClosure } from "../../../introspection/types.js";
 import { code, escapeText } from "../../../markdown.js";
 import { SCHEMA_VERSION } from "../../../snapshot/snapshot.js";
 import type { DocToken } from "../../../snapshot/doc-token.js";
+import type { Hit, SearchResult } from "./select.js";
 
 export type Format = "markdown" | "json";
 export const FORMATS: Format[] = ["markdown", "json"];
@@ -51,7 +52,7 @@ function groupOf(token: DocToken): string {
 }
 
 const next = (...commands: string[]) =>
-  `Next: ${commands.map((command) => code(`recontent inspect ${command}`)).join(" · ")}`;
+  `Next: ${(commands.length > 0 ? commands : [""]).map((command) => code(`recontent inspect ${command}`.trim())).join(" · ")}`;
 
 const typeIds = (types: TypeInfo[]) => types.map((type) => code(type.id)).join(", ") || "_None._";
 
@@ -112,6 +113,7 @@ export function renderOverview(overview: Overview, format: Format): string {
   if (firstGroup) hints.push(`tokens ${groupOf(firstGroup)}`);
   if (components?.[0]) hints.push(`components ${components[0].name}`);
   if (types?.[0]) hints.push("types");
+  hints.push("search <term>");
   lines.push("", hints.length > 0 ? next(...hints) : next("--help"));
   return lines.join("\n");
 }
@@ -128,6 +130,30 @@ function tokenNotes(token: DocToken): string {
     );
   }
   return parts.join("<br>");
+}
+
+function tokenTable(tokens: DocToken[], themes: string[]): string[] {
+  const header = [
+    "Token",
+    "Type",
+    "Value",
+    ...themes.map((theme) => escapeText(theme)),
+    "CSS variable",
+    "Notes",
+  ];
+  const lines = [`| ${header.join(" | ")} |`, `| ${header.map(() => "---").join(" | ")} |`];
+  for (const token of tokens) {
+    const row = [
+      code(token.path),
+      token.type,
+      code(token.values.default ?? ""),
+      ...themes.map((theme) => (token.values[theme] ? code(token.values[theme]) : "—")),
+      code(`var(${token.cssVar})`),
+      tokenNotes(token),
+    ];
+    lines.push(`| ${row.join(" | ")} |`);
+  }
+  return lines;
 }
 
 export function renderTokens(
@@ -186,28 +212,7 @@ export function renderTokens(
   }
 
   const lines = ["# Tokens", "", plural(shown.length, "token") + "."];
-  if (shown.length > 0) {
-    const header = [
-      "Token",
-      "Type",
-      "Value",
-      ...themes.map((theme) => escapeText(theme)),
-      "CSS variable",
-      "Notes",
-    ];
-    lines.push("", `| ${header.join(" | ")} |`, `| ${header.map(() => "---").join(" | ")} |`);
-    for (const token of shown) {
-      const row = [
-        code(token.path),
-        token.type,
-        code(token.values.default ?? ""),
-        ...themes.map((theme) => (token.values[theme] ? code(token.values[theme]) : "—")),
-        code(`var(${token.cssVar})`),
-        tokenNotes(token),
-      ];
-      lines.push(`| ${row.join(" | ")} |`);
-    }
-  }
+  if (shown.length > 0) lines.push("", ...tokenTable(shown, themes));
   return lines.join("\n");
 }
 
@@ -297,6 +302,20 @@ function compactView(
   };
 }
 
+function componentLine(component: ComponentInfo): string {
+  const tags = [
+    plural(component.props.length, "prop"),
+    ...(component.deprecated
+      ? [`deprecated${component.replacement ? ` → ${component.replacement}` : ""}`]
+      : []),
+    ...(component.experimental ? ["experimental"] : []),
+  ].join(", ");
+  const description = component.description
+    ? ` — ${escapeText(shorten(component.description))}`
+    : "";
+  return `- ${code(component.name)} (${tags})${description}`;
+}
+
 export function renderComponents(
   components: ComponentInfo[],
   options: {
@@ -333,19 +352,7 @@ export function renderComponents(
     const groups = groupByCategory(components);
     for (const { category, components: inGroup } of groups) {
       lines.push("", ...(category ? [`## ${escapeText(category)}`, ""] : []));
-      for (const component of inGroup) {
-        const tags = [
-          plural(component.props.length, "prop"),
-          ...(component.deprecated
-            ? [`deprecated${component.replacement ? ` → ${component.replacement}` : ""}`]
-            : []),
-          ...(component.experimental ? ["experimental"] : []),
-        ].join(", ");
-        const description = component.description
-          ? ` — ${escapeText(shorten(component.description))}`
-          : "";
-        lines.push(`- ${code(component.name)} (${tags})${description}`);
-      }
+      for (const component of inGroup) lines.push(componentLine(component));
     }
     const first = groups[0]?.components[0];
     // A link may name a type instead.
@@ -414,6 +421,11 @@ function typeTags(type: TypeInfo): string {
   ].join(", ");
 }
 
+function typeLine(type: TypeInfo): string {
+  const description = type.description ? ` — ${escapeText(shorten(type.description))}` : "";
+  return `- ${code(type.id)} (${typeTags(type)})${description}`;
+}
+
 /** `selected` is what was asked for; `types` adds what it references, so that the detail stands on its own. */
 export function renderTypes(
   selected: TypeInfo[],
@@ -427,8 +439,7 @@ export function renderTypes(
   if (summary) {
     const lines = ["# Types", "", `${plural(selected.length, "type")}.`, ""];
     for (const type of selected) {
-      const description = type.description ? ` — ${escapeText(shorten(type.description))}` : "";
-      lines.push(`- ${code(type.id)} (${typeTags(type)})${description}`);
+      lines.push(typeLine(type));
     }
     lines.push("", next(selected[0] ? `types ${selected[0].name}` : "--help"));
     return lines.join("\n");
@@ -436,4 +447,68 @@ export function renderTypes(
 
   if (types.length === 0) return "No types.";
   return renderTypesSection(types);
+}
+
+/** What `inspect search` found, and why each component and type did. */
+export function renderSearch(
+  result: SearchResult,
+  options: { format: Format; queries: string[]; themes: string[] },
+): string {
+  const { format, queries, themes } = options;
+  const { tokens, components, types, suggestions } = result;
+  const total = tokens.length + components.length + types.length;
+
+  if (format === "json") {
+    const flat = <T>(hits: Hit<T>[]) => hits.map(({ item, matchedIn }) => ({ ...item, matchedIn }));
+    return JSON.stringify(
+      {
+        schemaVersion: SCHEMA_VERSION,
+        kind: "search",
+        queries,
+        tokens: flat(tokens),
+        components: flat(components),
+        types: flat(types),
+        ...(total === 0 ? { suggestions } : {}),
+      },
+      null,
+      2,
+    );
+  }
+
+  const lines = ["# Search: " + queries.map(code).join(", "), ""];
+  if (total === 0) {
+    const hint = suggestions.length > 0 ? ` Did you mean ${suggestions.map(code).join(", ")}?` : "";
+    lines.push(`No matches.${hint}`, "", next());
+    return lines.join("\n");
+  }
+
+  lines.push(`${plural(total, "match", "matches")}.`);
+  const matched = (hit: Hit<unknown>, nameLabel: string) =>
+    hit.matchedIn.includes(nameLabel) ? "" : ` · matched in ${hit.matchedIn.join(", ")}`;
+  if (tokens.length > 0) {
+    lines.push(
+      "",
+      `## Tokens (${tokens.length})`,
+      "",
+      ...tokenTable(
+        tokens.map((hit) => hit.item),
+        themes,
+      ),
+    );
+  }
+  if (components.length > 0) {
+    lines.push("", `## Components (${components.length})`, "");
+    for (const hit of components) lines.push(componentLine(hit.item) + matched(hit, "name"));
+  }
+  if (types.length > 0) {
+    lines.push("", `## Types (${types.length})`, "");
+    for (const hit of types) lines.push(typeLine(hit.item) + matched(hit, "id"));
+  }
+  const first = components[0]?.item.name;
+  const firstType = types[0]?.item.name;
+  lines.push(
+    "",
+    first ? next(`components ${first}`) : firstType ? next(`types ${firstType}`) : next(),
+  );
+  return lines.join("\n");
 }

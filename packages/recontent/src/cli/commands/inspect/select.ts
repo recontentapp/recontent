@@ -168,3 +168,99 @@ export function selectTypes(
   if (query.deprecated) selected = selected.filter((type) => type.deprecated);
   return { selected, errors };
 }
+
+export type Hit<T> = { item: T; matchedIn: string[] };
+
+export type SearchResult = {
+  tokens: Hit<DocToken>[];
+  components: Hit<ComponentInfo>[];
+  types: Hit<TypeInfo>[];
+  /** Only when nothing matched: names a typo could have meant. */
+  suggestions: string[];
+};
+
+/** What is searched, as `[label, text]`; the label of the item's own name or path comes first. */
+type Field = [label: string, text: string | undefined];
+
+function tokenFields(token: DocToken): Field[] {
+  return [
+    ["path", token.path],
+    ["css variable", token.cssVar],
+    ["alias", token.alias],
+    ["description", token.description],
+    ["deprecated", typeof token.deprecated === "string" ? token.deprecated : undefined],
+    ...Object.entries(token.values).map(
+      ([name, value]): Field => [name === "default" ? "value" : `value (${name})`, value],
+    ),
+  ];
+}
+
+function componentFields(component: ComponentInfo): Field[] {
+  return [
+    ["name", component.name],
+    ["category", component.category],
+    ["description", component.description],
+    ["usage", component.usage],
+    ["deprecated", typeof component.deprecated === "string" ? component.deprecated : undefined],
+    ...component.props.flatMap((prop): Field[] => [
+      [`prop ${prop.name}`, prop.name],
+      [`prop ${prop.name}`, prop.description],
+    ]),
+  ];
+}
+
+function typeFields(type: TypeInfo): Field[] {
+  return [
+    ["id", type.id],
+    ["description", type.description],
+    ["usage", type.usage],
+    ["deprecated", typeof type.deprecated === "string" ? type.deprecated : undefined],
+    ...(type.members ?? []).flatMap((member): Field[] => [
+      [`member ${member.name}`, member.name],
+      [`member ${member.name}`, member.description],
+    ]),
+    ...(type.values ?? []).map((value): Field => ["value", String(value)]),
+  ];
+}
+
+/** Every item with at least one field containing a query, name hits first, otherwise in the original order. */
+function search<T>(items: T[], queries: string[], fields: (item: T) => Field[]): Hit<T>[] {
+  const hits = items.flatMap((item): Hit<T>[] => {
+    const matchedIn = new Set<string>();
+    for (const [label, text] of fields(item)) {
+      const lower = text?.toLowerCase();
+      if (lower !== undefined && queries.some((query) => lower.includes(query))) {
+        matchedIn.add(label);
+      }
+    }
+    return matchedIn.size > 0 ? [{ item, matchedIn: [...matchedIn] }] : [];
+  });
+  // Each kind's first field is its own name.
+  const isNameHit = (hit: Hit<T>) => hit.matchedIn.includes(fields(hit.item)[0]![0]);
+  return [...hits.filter(isNameHit), ...hits.filter((hit) => !isNameHit(hit))];
+}
+
+/** Case-insensitive substring search over everything `inspect` shows; an item matches when any query does. */
+export function searchSnapshot(
+  snapshot: { tokens: DocToken[]; components: ComponentInfo[]; types: TypeInfo[] },
+  queries: string[],
+): SearchResult {
+  const needles = queries.map((query) => query.toLowerCase());
+  const result: SearchResult = {
+    tokens: search(snapshot.tokens, needles, tokenFields),
+    components: search(snapshot.components, needles, componentFields),
+    types: search(snapshot.types, needles, typeFields),
+    suggestions: [],
+  };
+  if (result.tokens.length + result.components.length + result.types.length === 0) {
+    const candidates = [
+      ...snapshot.tokens.flatMap((token) => token.path.split(".")),
+      ...snapshot.components.map((component) => component.name),
+      ...snapshot.types.map((type) => type.name),
+    ];
+    result.suggestions = [
+      ...new Set(queries.flatMap((query) => closestMatches(query, candidates))),
+    ];
+  }
+  return result;
+}

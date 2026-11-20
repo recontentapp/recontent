@@ -15,19 +15,21 @@ import {
   renderComponents,
   renderErrors,
   renderOverview,
+  renderSearch,
   renderTokens,
   renderTypes,
   sharedDeclarations,
   type Format,
   type InspectError,
 } from "./render.js";
-import { selectComponents, selectTokens, selectTypes } from "./select.js";
+import { searchSnapshot, selectComponents, selectTokens, selectTypes } from "./select.js";
 
 export type InspectTarget =
   | { kind: "overview" }
   | { kind: "tokens"; paths: string[]; type?: string; theme?: string; deprecated?: boolean }
   | { kind: "components"; names: string[]; deprecated?: boolean; props?: string[] }
-  | { kind: "types"; names: string[]; deprecated?: boolean };
+  | { kind: "types"; names: string[]; deprecated?: boolean }
+  | { kind: "search"; queries: string[] };
 
 export type InspectOptions = {
   cwd: string;
@@ -170,6 +172,27 @@ export async function runInspect(options: InspectOptions): Promise<void> {
         ),
       );
       return;
+    case "search": {
+      const queries = target.queries.map((query) => query.trim()).filter((query) => query !== "");
+      if (queries.length === 0) {
+        fail(
+          format,
+          [{ message: "A search needs a query: `recontent inspect search <query...>`." }],
+          NO_MATCH,
+        );
+        return;
+      }
+      // Tokens are searched even when the components cannot be.
+      if (introspectionError !== undefined) logger?.warn(introspectionError);
+      report(() => true);
+      print(
+        renderSearch(
+          searchSnapshot({ tokens, components: components ?? [], types: types ?? [] }, queries),
+          { format, queries, themes },
+        ),
+      );
+      return;
+    }
     case "tokens": {
       const { selected, errors } = selectTokens(tokens, themes, target);
       if (errors.length > 0) {

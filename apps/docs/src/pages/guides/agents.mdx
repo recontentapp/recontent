@@ -35,6 +35,7 @@ Then tell the agent to load it and how to use the CLI. Add this to your `AGENTS.
 - Read `docs/DESIGN.md` before writing UI.
 - Before using a component, run `recontent inspect components <Name>` for its exact props, and read its usage notes.
 - Use design tokens from `recontent inspect tokens`, never raw colors, sizes or font stacks.
+- Search before hardcoding a value: `recontent inspect search "#ef4444"` or `search danger` finds the token or component that already exists.
 - If a command fails with "Did you mean", use the suggestion.
 - Do not edit generated files. Run `recontent build` instead.
 ```
@@ -48,6 +49,7 @@ recontent inspect                      # what exists: counts, themes, component 
 recontent inspect components Select    # the props of one component, with types, defaults and usage notes
 recontent inspect tokens system.color  # the tokens under one group, with values and CSS variables
 recontent inspect types TabItem        # a type that a prop references
+recontent inspect search danger        # tokens, components and types that mention a word, a value or a CSS variable
 ```
 
 Identifiers are printed exactly as they are used in code: token paths, CSS variables, component and prop

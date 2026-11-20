@@ -50,6 +50,15 @@ describe("recontent inspect", () => {
       expect(result.stdout).not.toContain("system.spacing");
     });
 
+    test("search finds tokens, components and types together, and any query may match", () => {
+      const result = runCli(["--cwd", inspectProject(), "inspect", "search", "#2563eb", "action"]);
+
+      expect(result.status).toBe(0);
+      expect(result.stdout).toContain("`system.color.accent`");
+      expect(result.stdout).toContain("`Button`");
+      expect(result.stdout).toContain("Next: `recontent inspect components");
+    });
+
     test("--type and --deprecated narrow the tokens", () => {
       const dir = inspectProject();
 
@@ -305,12 +314,49 @@ describe("recontent inspect", () => {
     });
   });
 
+  describe("search, for scripts", () => {
+    test("--format json is a single search document on stdout", () => {
+      const result = runCli([
+        "--cwd",
+        inspectProject(),
+        "inspect",
+        "search",
+        "accent",
+        "--format",
+        "json",
+      ]);
+
+      expect(result.status).toBe(0);
+      const data = JSON.parse(result.stdout);
+      expect(data).toMatchObject({ schemaVersion: "1", kind: "search", queries: ["accent"] });
+      expect(data.tokens[0]).toMatchObject({
+        path: "system.color.accent",
+        matchedIn: ["path", "css variable", "description"],
+      });
+      expect(data.suggestions).toBeUndefined();
+    });
+  });
+
   describe("recovery from mistakes", () => {
     test("an unknown name exits 2 with a suggestion on stderr and nothing on stdout", () => {
       const result = runCli(["--cwd", inspectProject(), "inspect", "components", "Buton"]);
 
       expect(result.status).toBe(2);
       expect(result.stderr).toContain("Did you mean `Button`?");
+      expect(result.stdout).toBe("");
+    });
+
+    test("a search matching nothing exits 0 and suggests the closest names", () => {
+      const result = runCli(["--cwd", inspectProject(), "inspect", "search", "acent"]);
+
+      expect(result.status).toBe(0);
+      expect(result.stdout).toContain("No matches. Did you mean `accent`?");
+    });
+
+    test("a blank search is a usage mistake", () => {
+      const result = runCli(["--cwd", inspectProject(), "inspect", "search", " "]);
+
+      expect(result.status).toBe(2);
       expect(result.stdout).toBe("");
     });
 

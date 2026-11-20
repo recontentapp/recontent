@@ -13,6 +13,7 @@ recontent inspect [--format <format>] [--from <package|file>] [--no-cache]
 recontent inspect tokens [path...] [--type <type>] [--theme <theme>] [--deprecated] [--format <format>]
 recontent inspect components [name...] [--deprecated] [--format <format>] [--no-cache]
 recontent inspect types [name...] [--deprecated] [--format <format>] [--no-cache]
+recontent inspect search <query...> [--format <format>] [--no-cache]
 ```
 
 Uses the [global options](/cli#global-options) `-c`, `--cwd` and `--log-level`. Every subcommand also accepts
@@ -31,6 +32,7 @@ recontent inspect components           # one line per component
 recontent inspect components Button    # its props: type or allowed values, default, required, notes, then the types they use
 recontent inspect types                # one line per type that components' props reference
 recontent inspect types TabItem        # its members or values, and the types it references in turn
+recontent inspect search danger        # every token, component and type that mentions "danger"
 ```
 
 Every overview, even an empty one, ends with a `Next:` line that names a command to try.
@@ -41,6 +43,7 @@ Every overview, even an empty one, ends with a `Next:` line that names a command
 | `inspect tokens [path...]`     | Token groups with counts. | Each path is an exact token or a group: `system.color` includes everything under it. |
 | `inspect components [name...]` | One line per component.   | Each name is a component or a family: `Tabs` includes `Tabs.Item`.                   |
 | `inspect types [name...]`      | One line per type.        | Each name is a type, by its id or its bare name. Types it references are included.   |
+| `inspect search <query...>`    | A query is required.      | Each query is searched in tokens, components and types at once.                      |
 
 Options for `tokens`:
 
@@ -78,6 +81,25 @@ The markdown is compact by default, so that a component fits in a few KB:
 
 A `Next:` line points to `--props` and `inspect types` for what was left out. `--format json` is never shortened.
 
+## Searching
+
+`inspect search <query...>` finds what you cannot name yet: "the danger color", "the component for tooltips",
+or which token a hardcoded `#ef4444` is. Matching is a case-insensitive substring, each argument is its own
+query, and an item matches when **any** query does.
+
+- **Tokens** are searched by path, CSS variable (`--system-color-accent` works), alias, description,
+  deprecation text and every value, in the default and in each theme.
+- **Components** by name, category, description, usage notes, deprecation text, and the name and description
+  of their own props.
+- **Types** by id, description, usage notes, the name and description of their members, and their literal values.
+
+Matches in a name or path come first, the others follow in their usual order. Markdown says what matched
+in a component or type whose name did not (`· matched in usage, prop size`), and JSON adds `matchedIn` to
+every result. Nothing matching is not an error: it exits `0` and suggests the closest names.
+
+A color is matched as it is written in the output, so `#ef4444` does not find a token defined in `oklch` or `hsl`.
+Without `introspection`, only tokens are searched.
+
 ## Documenting components
 
 `inspect` reads the JSDoc tags described in [Documenting components](/guides/documenting-components).
@@ -109,6 +131,8 @@ summary, so `recontent inspect tokens --format json` is every token.
 | `inspect tokens`     | `{ schemaVersion, kind: "tokens", tokens }`, each token with `layer`, `path`, `name`, `type`, `alias?`, `description?`, `deprecated?`, `cssVar` and `values` (`default` plus the themes that differ)               |
 | `inspect components` | `{ schemaVersion, kind: "components", components, types }`, each component as described in the [plugin API](/plugin-api#componentinfo), and `types` the [types](/plugin-api#typeinfo) they reference, transitively |
 | `inspect types`      | `{ schemaVersion, kind: "types", types }`, the selected types and, transitively, the types they reference                                                                                                          |
+
+| `inspect search` | `{ schemaVersion, kind: "search", queries, tokens, components, types, suggestions? }`, each result in full detail plus `matchedIn`; `suggestions` only when nothing matched |
 
 `schemaVersion` is `"1"` and only changes with a breaking change to these documents.
 

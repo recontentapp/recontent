@@ -2,6 +2,7 @@ import { describe, expect, test } from "@jest/globals";
 import type { ComponentInfo, PropInfo } from "../../../src/introspection/model.js";
 import {
   renderComponents,
+  renderSearch,
   renderTokens,
   sharedDeclarations,
 } from "../../../src/cli/commands/inspect/render.js";
@@ -144,6 +145,62 @@ describe("renderTokens", () => {
   test("a summary of no tokens still ends with a Next hint", () => {
     expect(renderTokens([], { format: "markdown", themes: [], summary: true }).trimEnd()).toMatch(
       /Next: `recontent inspect --help`$/,
+    );
+  });
+});
+
+describe("renderSearch", () => {
+  const render = (result: Partial<Parameters<typeof renderSearch>[0]>) =>
+    renderSearch(
+      { tokens: [], components: [], types: [], suggestions: [], ...result },
+      { format: "markdown", queries: ["tooltip", "#ef4444"], themes: ["dark"] },
+    );
+
+  test("sections list what matched, and why when the name did not", () => {
+    const output = render({
+      tokens: [
+        {
+          item: token("system.color.danger", "color", { values: { default: "#ef4444" } }),
+          matchedIn: ["value"],
+        },
+      ],
+      components: [
+        { item: component("Tooltip"), matchedIn: ["name"] },
+        { item: component("Popover"), matchedIn: ["usage", "prop label"] },
+      ],
+    });
+
+    expect(output).toBe(
+      [
+        "# Search: `tooltip`, `#ef4444`",
+        "",
+        "3 matches.",
+        "",
+        "## Tokens (1)",
+        "",
+        "| Token | Type | Value | dark | CSS variable | Notes |",
+        "| --- | --- | --- | --- | --- | --- |",
+        "| `system.color.danger` | color | `#ef4444` | — | `var(--system-color-danger)` |  |",
+        "",
+        "## Components (2)",
+        "",
+        "- `Tooltip` (0 props)",
+        "- `Popover` (0 props) · matched in usage, prop label",
+        "",
+        "Next: `recontent inspect components Tooltip`",
+      ].join("\n"),
+    );
+  });
+
+  test("no match says so, suggests and points at the overview", () => {
+    expect(render({ suggestions: ["tooltip"] })).toBe(
+      [
+        "# Search: `tooltip`, `#ef4444`",
+        "",
+        "No matches. Did you mean `tooltip`?",
+        "",
+        "Next: `recontent inspect`",
+      ].join("\n"),
     );
   });
 });

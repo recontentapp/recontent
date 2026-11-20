@@ -203,6 +203,8 @@ Start with \`recontent inspect\` for an overview, then drill down:
                                            types they reference, long lists shortened and props shared with
                                            other components summarized. --props <name...> shows those props in full
   recontent inspect types [name...]        one line per project type; a name shows its members or values
+  recontent inspect search <query...>      tokens, components and types whose names, descriptions, usage notes
+                                           or values contain any query (a color, a CSS variable, "tooltip")
 
 Output is markdown by default. --format json returns full detail for the whole selection
 (never a summary) under { schemaVersion, kind, ... }, with data on stdout and logs on stderr.
@@ -314,6 +316,15 @@ inspect
       { kind: "types", names, deprecated: options.deprecated },
       inspectOptions(command),
     );
+  });
+
+inspect
+  .command("search <query...>")
+  .description(
+    "Find tokens, components and types whose names, descriptions, usage notes or values contain any of the queries",
+  )
+  .action(async (queries: string[], _options: object, command: Command) => {
+    await runInspectTarget({ kind: "search", queries }, inspectOptions(command));
   });
 
 function reportFatalError(error: unknown): void {
