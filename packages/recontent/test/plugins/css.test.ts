@@ -210,6 +210,53 @@ describe("structure & options", () => {
     expect(explicit!.content).toBe(files[0]!.content);
   });
 
+  test("filename renames the output file", () => {
+    const { config } = themedConfig({ layer: "ref" });
+    const files = generateCssFiles(config, { outDir: "out", filename: "theme.css" });
+    expect(files.map((file) => file.filename)).toEqual(["theme.css"]);
+  });
+
+  test("prefix namespaces every variable it declares and references, themes included", () => {
+    const ref = defineReferenceTokens({
+      color: { black: tokens.color("#000000") },
+      typography: {
+        base: tokens.typography({ fontFamily: "Arial", fontSize: "16px", fontWeight: "regular" }),
+      },
+    });
+    const system = defineSystemTokens({
+      accent: ref.color.black,
+      body: ref.typography.base,
+      card: tokens.shadow({
+        color: ref.color.black,
+        offsetX: "0px",
+        offsetY: "2px",
+        blur: "4px",
+        spread: "0px",
+      }),
+    });
+    const components = defineComponentTokens({ button: { background: system.accent } });
+    const dark = defineTheme(ref, { color: { black: tokens.color("#111111") } });
+    const output = generateCss(
+      defineConfig({ tokens: { ref, system, components }, themes: { dark } }),
+      { prefix: "ds" },
+    );
+
+    expect(output).toContain("--ds-ref-color-black: #000000;");
+    expect(output).toContain("--ds-system-accent: var(--ds-ref-color-black);");
+    expect(output).toContain(
+      "--ds-system-body-font-size: var(--ds-ref-typography-base-font-size);",
+    );
+    expect(output).toContain("0px 2px 4px 0px var(--ds-ref-color-black)");
+    expect(output).toContain("--ds-button-background: var(--ds-system-accent);");
+    expect(output).toContain('[data-theme="dark"] {\n  --ds-ref-color-black: #111111;');
+    expect(output).not.toMatch(/--(?!ds-)[a-z]/);
+  });
+
+  test("a prefix that is no CSS identifier throws", () => {
+    const { config } = themedConfig({ layer: "ref" });
+    expect(() => generateCss(config, { prefix: "ds;}" })).toThrow(/prefix/);
+  });
+
   test("a description cannot close the comment it is emitted in", () => {
     const ref = defineReferenceTokens({
       evil: tokens.color("#000000").describe("x */ body{display:none} /* y"),

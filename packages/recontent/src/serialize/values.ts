@@ -58,10 +58,13 @@ function serializeStrokeStyleDtcg(value: TokenTypeMap["strokeStyle"]): unknown {
   if ("style" in value) {
     return value.style;
   }
-  return { dashArray: value.dashArray.map(serializeDimensionDtcg), lineCap: value.lineCap };
+  return {
+    dashArray: value.dashArray.map((member) => serializeMemberDtcg("dimension", member)),
+    lineCap: value.lineCap,
+  };
 }
 
-// DTCG only defines `px` and `rem` for dimensions, so `em` is emitted as `rem` with the same value.
+// DTCG only defines `px` and `rem` for dimensions, so `em` is emitted as `rem` with the same value (the dtcg plugin warns about it).
 function serializeDimensionDtcg(value: TokenTypeMap["dimension"]): TokenTypeMap["dimension"] {
   return value.unit === "em" ? { value: value.value, unit: "rem" } : value;
 }
@@ -242,7 +245,12 @@ export function serializeCompositeCss(
   }
 }
 
-export function serializeValueCss<T extends TokenType>(type: T, value: TokenTypeMap[T]): string {
+/** `prefix` is the one of the CSS variables the value may reference through its aliased members. */
+export function serializeValueCss<T extends TokenType>(
+  type: T,
+  value: TokenTypeMap[T],
+  prefix?: string,
+): string {
   switch (type) {
     case "color":
       return serializeColorCss(value as TokenTypeMap["color"]);
@@ -271,7 +279,7 @@ export function serializeValueCss<T extends TokenType>(type: T, value: TokenType
     case "gradient": {
       const resolve: MemberResolver = (memberType, member) =>
         member.alias
-          ? `var(${cssVarName(member.alias)})`
+          ? `var(${cssVarName(member.alias, prefix)})`
           : serializeValueCss(memberType, member.$value);
       return serializeCompositeCss(
         type as "shadow" | "border" | "gradient",
@@ -289,8 +297,8 @@ export function serializeValueCss<T extends TokenType>(type: T, value: TokenType
   }
 }
 
-export function cssVarName(path: string[]): string {
-  return `--${path.join("-")}`;
+export function cssVarName(path: string[], prefix?: string): string {
+  return `--${prefix ? `${prefix}-` : ""}${path.join("-")}`;
 }
 
 function dtcgAliasReference(path: string[]): string {

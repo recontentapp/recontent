@@ -297,10 +297,9 @@ export function generateDesignMdFiles(
 
   add("Overview", overview(items, options.description));
   for (const section of SECTIONS) {
-    const list = sectionLines(ctx, section, items).join("\n");
-    const table = section === "Colors" ? themeTable(items, themes) : undefined;
-    add(section, [list, table].filter(Boolean).join("\n\n"));
+    add(section, sectionLines(ctx, section, items).join("\n"));
   }
+  add("Themes", themeTable(items, themes));
   add("Components", componentLines(components).join("\n"));
   add("Do's and Don'ts", guidance(ctx, items, components, options).join("\n"));
 

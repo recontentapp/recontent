@@ -51,6 +51,16 @@ function diffProps(base: PropInfo[], head: PropInfo[]) {
   return { diff, breaking: countComponentBreakingChanges(diff) };
 }
 
+const emptyTokens = {
+  added: [],
+  removed: [],
+  renamed: [],
+  retyped: [],
+  changed: [],
+  metadata: [],
+  themes: { addedThemes: [], removedThemes: [], changedThemes: {} },
+};
+
 describe("components", () => {
   test("a removed component is breaking, an added one is not", () => {
     const removed = diffComponents(snapshot([component()]), snapshot());
@@ -110,6 +120,28 @@ describe("components", () => {
       diffProps([prop("x", { type: "{ a: 1 }" })], [prop("x", { type: "{\n  a: 1\n}" })]).diff
         .components.changed,
     ).toEqual([]);
+  });
+
+  test("widening a prop type to a superset union is not breaking, narrowing it is", () => {
+    const type = (text: string) => [prop("x", { type: text })];
+    expect(diffProps(type("string"), type("string | number")).breaking).toBe(0);
+    expect(diffProps(type("Array<A | B>"), type("Array<A | B> | null")).breaking).toBe(0);
+    expect(diffProps(type("string | number"), type("string")).breaking).toBe(1);
+    expect(diffProps(type("Array<A | B>"), type("Array<A>")).breaking).toBe(1);
+    expect(diffProps(type("() => void"), type("() => void | string")).breaking).toBe(1);
+  });
+
+  test("a changed import statement is breaking", () => {
+    const withImport = (statement?: string) =>
+      snapshot([component({ ...(statement && { import: statement }) })]);
+    const diff = diffComponents(
+      withImport('import { Button } from "@acme/ds"'),
+      withImport('import { Button } from "@acme/ds/button"'),
+    );
+    expect(countComponentBreakingChanges(diff)).toBe(1);
+    expect(formatDiff({ tokens: emptyTokens, components: diff })).toContain(
+      '**import** `import { Button } from "@acme/ds"` -> `import { Button } from "@acme/ds/button"`',
+    );
   });
 
   test("a default or deprecation change is not breaking", () => {
@@ -249,15 +281,7 @@ describe("types", () => {
 });
 
 describe("formatDiff with components", () => {
-  const tokens = {
-    added: [],
-    removed: [],
-    renamed: [],
-    retyped: [],
-    changed: [],
-    metadata: [],
-    themes: { addedThemes: [], removedThemes: [], changedThemes: {} },
-  };
+  const tokens = emptyTokens;
 
   test("renders components and types sections, and leaves empty ones out", () => {
     const components = diffComponents(

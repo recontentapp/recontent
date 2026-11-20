@@ -37,6 +37,8 @@ export type Change =
       breaking: boolean;
     }
   | { kind: "deprecated"; from?: true | string; to?: true | string; breaking: false }
+  /** Components only: consumers have to change their import. */
+  | { kind: "import"; from?: string; to?: string; breaking: true }
   /** Types only. */
   | { kind: "kind"; from: TypeInfo["kind"]; to: TypeInfo["kind"]; breaking: true }
   | { kind: "values"; from: Literal[]; to: Literal[]; breaking: boolean }
@@ -55,6 +57,47 @@ export type ComponentsDiff = {
 // Types are written by hand, so layout is not a change.
 function normalize(type: string): string {
   return type.replace(/\s+/g, " ").trim();
+}
+
+/** The members of a union written as `A | B | C`, split where the `|` is not nested in brackets, generics or quotes. */
+function unionMembers(type: string): string[] {
+  const members: string[] = [];
+  let depth = 0;
+  let quote: string | undefined;
+  let current = "";
+  for (let i = 0; i < type.length; i++) {
+    const char = type[i]!;
+    if (quote) {
+      if (char === "\\") {
+        current += char;
+        i++;
+        current += type[i] ?? "";
+        continue;
+      }
+      if (char === quote) quote = undefined;
+    } else if (char === '"' || char === "'" || char === "`") {
+      quote = char;
+    } else if ("([{<".includes(char)) {
+      depth++;
+    } else if (")]}".includes(char) || (char === ">" && type[i - 1] !== "=")) {
+      depth--;
+    } else if (char === "|" && depth === 0) {
+      members.push(current);
+      current = "";
+      continue;
+    }
+    current += char;
+  }
+  members.push(current);
+  return members.map((member) => member.trim()).filter(Boolean);
+}
+
+/** Whether `head` accepts everything `base` does, as far as the text of a union shows: `string` -> `string | number`. */
+function isWidening(base: string, head: string): boolean {
+  // `() => A | B` is a function returning a union, not a union: not worth guessing at.
+  if (base.includes("=>") || head.includes("=>")) return false;
+  const headMembers = new Set(unionMembers(head));
+  return unionMembers(base).every((member) => headMembers.has(member));
 }
 
 function sameSet(a: Literal[], b: Literal[]): boolean {
@@ -83,7 +126,7 @@ function diffProp(base: PropInfo, head: PropInfo): Change[] {
     // A union of literals that stops being one is as unclassifiable as any other rewrite.
     const from = normalize(base.resolved ?? base.type);
     const to = normalize(head.resolved ?? head.type);
-    if (from !== to) push("type", true, from, to);
+    if (from !== to) push("type", !isWidening(from, to), from, to);
   }
 
   if (base.defaultValue !== head.defaultValue) {
@@ -162,7 +205,12 @@ function diffDeprecated(base: ComponentInfo | TypeInfo, head: ComponentInfo | Ty
 }
 
 function diffComponent(base: ComponentInfo, head: ComponentInfo): Change[] {
+  const importChange: Change[] =
+    base.import === head.import
+      ? []
+      : [{ kind: "import", from: base.import, to: head.import, breaking: true }];
   return [
+    ...importChange,
     ...diffProps(base.props, head.props),
     ...diffInherits(base.inherits, head.inherits, head.props),
     ...diffTypeParameters(base.typeParameters, head.typeParameters),

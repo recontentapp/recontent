@@ -85,6 +85,18 @@ describe("array aliasing (§9.1)", () => {
   });
 });
 
+test("a strokeStyle dash can reference a dimension token", () => {
+  const ref = defineReferenceTokens({ dash: tokens.dimension("4px") });
+  const system = defineSystemTokens({
+    dashed: tokens.strokeStyle({ dashArray: [ref.dash, "2px"], lineCap: "round" }),
+  });
+  const config = defineConfig({ tokens: { ref, system, components: {} } });
+  const output = generateDtcg(config) as never as {
+    system: { dashed: { $value: { dashArray: unknown[] } } };
+  };
+  expect(output.system.dashed.$value.dashArray).toEqual(["{ref.dash}", { value: 2, unit: "px" }]);
+});
+
 describe("scale metadata", () => {
   function scaleMetadataConfig() {
     const ref = defineReferenceTokens({
@@ -172,6 +184,33 @@ describe("em dimensions", () => {
       { value: 2, unit: "px" },
     ]);
     expect(JSON.stringify(output)).not.toContain('"em"');
+  });
+
+  test("each em dimension is reported, since rem is relative to something else", () => {
+    const ref = defineReferenceTokens({
+      gap: tokens.dimension("0.5em"),
+      px: tokens.dimension("4px"),
+      type: tokens.typography({
+        fontFamily: "Inter",
+        fontSize: "16px",
+        fontWeight: 400,
+        letterSpacing: "-0.05em",
+      }),
+      dash: tokens.strokeStyle({ dashArray: ["0.5em", "2px"], lineCap: "round" }),
+    });
+    const ctx = { ...refOnlyConfig(ref), themes: {} } as never;
+
+    const warnings = dtcg({ outDir: "out" }).validate!(ctx) as {
+      severity: string;
+      message: string;
+    }[];
+
+    expect(warnings.map((warning) => warning.severity)).toEqual(["warning", "warning", "warning"]);
+    expect(warnings.map((warning) => warning.message.split(" is in")[0])).toEqual([
+      '"ref.gap"',
+      '"ref.type.letterSpacing"',
+      '"ref.dash.dashArray"',
+    ]);
   });
 });
 

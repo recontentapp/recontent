@@ -324,6 +324,21 @@ describe("layer", () => {
   });
 });
 
+describe("prefix", () => {
+  test("namespaces the variables @theme refers to along with the ones :root declares", () => {
+    const { system } = build();
+    const css = render({
+      prefix: "ds",
+      theme: { color: system.colors, text: system.typography, shadow: system.shadow },
+    });
+    expect(css).toContain("--ds-ref-color-primary: #0ea5e9;");
+    expect(css).toContain("--color-accent: var(--ds-system-colors-accent);");
+    expect(css).toContain("--text-heading: var(--ds-system-typography-heading-font-size);");
+    expect(css).toContain("0px 2px 4px 0px var(--ds-ref-color-primary)");
+    expect(css).not.toMatch(/var\(--(?:ref|system)-/);
+  });
+});
+
 describe("themes", () => {
   test(".dark by default with a matching @custom-variant", () => {
     const css = render({});

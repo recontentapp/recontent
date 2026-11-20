@@ -1,5 +1,16 @@
 import { pathKey } from "../token-model/guards.js";
-import { type RecontentPlugin } from "./types.js";
+import { type PluginContext, type PluginDiagnostic, type RecontentPlugin } from "./types.js";
+import type {
+  DimensionValue,
+  StrokeStyleValue,
+  TokenType,
+  TokenTypeMap,
+} from "../token-model/values.js";
+import {
+  compositeMembers,
+  isCompositeType,
+  type CompositeTokenType,
+} from "../token-model/composite.js";
 import { type TokenGroups, type TokenRegistry } from "../token-model/registry.js";
 import type { TokenMetadata } from "../token-model/model.js";
 import type { OutputFile } from "./shared/context.js";
@@ -138,18 +149,60 @@ function generateDtcgFiles(ctx: GeneratorContext, _options: DtcgPluginOptions): 
   return files;
 }
 
+/** Where a literal value (not an alias) is a dimension in `em`: the value itself, or the members of a composite. */
+function emDimensionLocations(type: TokenType, value: unknown): string[] {
+  const isEm = (candidate: unknown) => (candidate as DimensionValue).unit === "em";
+  if (type === "dimension") return isEm(value) ? [""] : [];
+  if (type === "strokeStyle") {
+    const stroke = value as StrokeStyleValue;
+    return "dashArray" in stroke &&
+      stroke.dashArray.some((member) => !member.alias && isEm(member.$value))
+      ? ["dashArray"]
+      : [];
+  }
+  if (!isCompositeType(type)) return [];
+  return compositeMembers(type, value as TokenTypeMap[CompositeTokenType])
+    .filter(({ type: memberType, member }) => memberType === "dimension" && !member.alias)
+    .filter(({ member }) => isEm(member.$value))
+    .map(({ key }) => key);
+}
+
+/** DTCG has no `em`, so those dimensions are exported as `rem` with the same value, which is relative to something else. */
+function emDimensionWarnings(ctx: PluginContext): PluginDiagnostic[] {
+  const sources = [
+    ...[...ctx.registry.values()].map((entry) => ({ ...entry, where: "" })),
+    ...Object.entries(ctx.themes).flatMap(([theme, override]) =>
+      [...override].flatMap(([key, value]) => {
+        const entry = ctx.registry.get(key);
+        return entry ? [{ ...entry, ...value, where: ` in theme "${theme}"` }] : [];
+      }),
+    ),
+  ];
+  return sources
+    .filter((source) => !source.alias)
+    .flatMap((source) =>
+      emDimensionLocations(source.$type, source.$value).map((location) => ({
+        severity: "warning" as const,
+        path: source.path,
+        message: `"${pathKey(source.path)}${location && `.${location}`}"${source.where} is in "em", which DTCG does not support: it is exported as "rem" with the same value. Use "rem" or "px" instead.`,
+      })),
+    );
+}
+
 export function dtcg(options: DtcgPluginOptions): RecontentPlugin {
   return {
     ...outputPlugin("recontent:dtcg", ["tokens"], options, generateDtcgFiles),
-    // The base tokens are `tokens.tokens.json`, which a theme named "tokens" would also claim.
-    validate: (ctx) =>
-      "tokens" in ctx.themes
+    validate: (ctx) => [
+      // The base tokens are `tokens.tokens.json`, which a theme named "tokens" would also claim.
+      ...("tokens" in ctx.themes
         ? [
             {
-              severity: "error",
+              severity: "error" as const,
               message: `Theme "tokens" would write tokens.tokens.json, the file of the base tokens; rename the theme.`,
             },
           ]
-        : [],
+        : []),
+      ...emDimensionWarnings(ctx),
+    ],
   };
 }

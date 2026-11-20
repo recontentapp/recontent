@@ -77,7 +77,7 @@ export type StrokeStyleName =
   | "inset";
 export type StrokeStyleValue =
   | { style: StrokeStyleName }
-  | { dashArray: DimensionValue[]; lineCap: "round" | "butt" | "square" };
+  | { dashArray: TokenMember<"dimension">[]; lineCap: "round" | "butt" | "square" };
 
 export type ShadowLayer = {
   color: TokenMember<"color">;

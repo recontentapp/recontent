@@ -3,6 +3,7 @@ import {
   defineConfig,
   defineReferenceTokens,
   defineSystemTokens,
+  defineTheme,
   tokens,
 } from "../../src/index.js";
 import { generateDesignMdFiles } from "../../src/plugins/design-md.js";
@@ -103,6 +104,7 @@ describe("DESIGN.md prose", () => {
       "Typography",
       "Elevation & Depth",
       "Shapes",
+      "Themes",
       "Do's and Don'ts",
     ]);
   });
@@ -130,6 +132,23 @@ describe("DESIGN.md prose", () => {
   test("themes list the tokens they override", () => {
     expect(md).toContain("| Token | default | dark | highContrast |");
     expect(md).toContain("| `system-colors-accent` | `#000000` | `#eeeeee` | `#ff0000` |");
+  });
+
+  test("themes have their own section, which also holds overrides that are not colors", () => {
+    const ref = defineReferenceTokens({
+      color: { black: tokens.color("#000000") },
+      space: { md: tokens.dimension("16px") },
+    });
+    const compact = defineTheme(ref, { space: { md: tokens.dimension("12px") } });
+    const sections = renderConfig(
+      defineConfig({
+        tokens: { ref, system: defineSystemTokens({}), components: {} },
+        themes: { compact },
+      }),
+    ).split(/^## /m);
+
+    const themes = sections.find((section) => section.startsWith("Themes"));
+    expect(themes).toContain("| `ref-space-md` | `16px` | `12px` |");
   });
 
   test("themes are left out when none overrides a token", () => {

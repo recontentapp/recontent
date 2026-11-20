@@ -274,8 +274,8 @@ function collectGroup(group: unknown, key: string[] = [], depth = 0): Leaf[] {
   );
 }
 
-function typographyVar(entry: TokenEntry, varSuffix: string): string {
-  return `var(${cssVarName([...entry.path, varSuffix])})`;
+function typographyVar(entry: TokenEntry, varSuffix: string, prefix?: string): string {
+  return `var(${cssVarName([...entry.path, varSuffix], prefix)})`;
 }
 
 function selectedThemeNames(themeNames: string[], options: TailwindPluginOptions): string[] {
@@ -365,26 +365,30 @@ function buildTailwindMapping(
       themeOwners.set(name, entry.path);
       if (entry.$type === "typography") {
         // `--text-*` sub-properties keep `leading-*` and `tracking-*` composable with `text-<key>`.
-        themeDecls[name] = typographyVar(entry, "font-size");
-        themeDecls[`${name}--line-height`] = typographyVar(entry, "line-height");
-        themeDecls[`${name}--letter-spacing`] = typographyVar(entry, "letter-spacing");
-        themeDecls[`${name}--font-weight`] = typographyVar(entry, "font-weight");
-        themeDecls[fontName!] = typographyVar(entry, "font-family");
+        themeDecls[name] = typographyVar(entry, "font-size", options.prefix);
+        themeDecls[`${name}--line-height`] = typographyVar(entry, "line-height", options.prefix);
+        themeDecls[`${name}--letter-spacing`] = typographyVar(
+          entry,
+          "letter-spacing",
+          options.prefix,
+        );
+        themeDecls[`${name}--font-weight`] = typographyVar(entry, "font-weight", options.prefix);
+        themeDecls[fontName!] = typographyVar(entry, "font-family", options.prefix);
         themeOwners.set(fontName!, entry.path);
         typographyLeaves.push({ key: leaf.key.join("-"), entry });
       } else if (SHADOW_NAMESPACES.includes(namespace)) {
         if (isThemeOverridden(entry, registry, overriddenKeys)) {
-          themeDecls[name] = `var(${cssVarName(entry.path)})`;
+          themeDecls[name] = `var(${cssVarName(entry.path, options.prefix)})`;
           diagnostics.push({
             severity: "warning",
             message: `${label}: ${name} stays a var() because a theme overrides it, so opacity and color modifiers (e.g. ${spec.prefix}-${leaf.key.join("-")}/50) have no effect on it.`,
             path: entry.path,
           });
         } else {
-          themeDecls[name] = serializeValueCss("shadow", entry.$value as never);
+          themeDecls[name] = serializeValueCss("shadow", entry.$value as never, options.prefix);
         }
       } else {
-        themeDecls[name] = `var(${cssVarName(entry.path)})`;
+        themeDecls[name] = `var(${cssVarName(entry.path, options.prefix)})`;
       }
     }
   }
@@ -393,7 +397,7 @@ function buildTailwindMapping(
     const spec = DEFAULTS[key as keyof typeof DEFAULTS];
     if (!spec || token === undefined) continue;
     const entry = resolve({ key: [], token }, `theme.defaults.${key}`, spec.types);
-    if (entry) themeDecls[spec.name] = `var(${cssVarName(entry.path)})`;
+    if (entry) themeDecls[spec.name] = `var(${cssVarName(entry.path, options.prefix)})`;
   }
 
   // Tailwind's native `text-<key>` sets both the colour (`--color-<key>`) and the size (`--text-<key>`).
@@ -415,7 +419,7 @@ function buildTailwindMapping(
     utilityNames.add(name);
     utilities.push({
       name,
-      declarations: { "font-family": typographyVar(entry, "font-family") },
+      declarations: { "font-family": typographyVar(entry, "font-family", options.prefix) },
     });
   }
 

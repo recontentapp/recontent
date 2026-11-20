@@ -2,6 +2,7 @@ import { expect, test } from "@jest/globals";
 import type { Config } from "../../../src/config/types.js";
 import type {
   ThemeOverride,
+  ThemeValue,
   TokenEntry,
   TokenRegistry,
 } from "../../../src/token-model/registry.js";
@@ -18,7 +19,7 @@ function entry(path: string[], overrides: Partial<TokenEntry> = {}): TokenEntry 
   };
 }
 
-function themed(hex: string) {
+function themed(hex: string): ThemeValue {
   return { $value: color(hex) };
 }
 
@@ -177,6 +178,44 @@ test("diffConfigs reports theme override added/removed/changed", () => {
   expect(diff.themes.changedThemes.dark!.changed).toHaveLength(1);
 });
 
+test("formatDiff lists the overrides that changed in a theme, with their values", () => {
+  const registry: TokenRegistry = new Map([
+    ["ref.color.bg", entry(["ref", "color", "bg"])],
+    ["ref.color.fg", entry(["ref", "color", "fg"])],
+    ["ref.color.line", entry(["ref", "color", "line"])],
+  ]);
+  const base = config(registry, {
+    dark: new Map([
+      ["ref.color.bg", themed("#111111")],
+      ["ref.color.fg", themed("#eeeeee")],
+    ]),
+  });
+  const head = config(registry, {
+    dark: new Map([
+      ["ref.color.bg", themed("#222222")],
+      ["ref.color.line", { $value: color("#333333"), alias: ["ref", "color", "bg"] }],
+    ]),
+  });
+  const output = formatDiff({ tokens: diffConfigs(base, head) });
+  expect(output).toContain("- `dark`");
+  expect(output).toContain("**changed** `ref.color.bg`: #111111 -> #222222");
+  expect(output).toContain("**added** `ref.color.line`: alias -> ref.color.bg");
+  expect(output).toContain("**removed** `ref.color.fg` (was #eeeeee)");
+});
+
+test("formatDiff shows the alpha and color space of a color change", () => {
+  const withColor = (value: TokenEntry["$value"]) =>
+    config(new Map([["ref.color.shadow", entry(["ref", "color", "shadow"], { $value: value })]]));
+  const output = formatDiff({
+    tokens: diffConfigs(
+      withColor({ colorSpace: "srgb", components: [0, 0, 0], alpha: 0.125, hex: "#000000" }),
+      withColor({ colorSpace: "oklch", components: [0.5, 0.1, 250], alpha: 0.5, hex: "#4b5f9c" }),
+    ),
+  });
+  expect(output).toContain("- #00000020");
+  expect(output).toContain("+ oklch(0.5 0.1 250 / 0.5)");
+});
+
 test("formatDiff reports no changes for an identical config", () => {
   const registry: TokenRegistry = new Map([
     ["ref.color.black", entry(["ref", "color", "black"], { $value: color("#000000") })],
@@ -322,7 +361,7 @@ test("diffConfigs counts removed themes as breaking, and removed theme overrides
   );
   expect(removedOverride.themes.changedThemes.dark!.removed).toHaveLength(1);
   expect(hasBreakingChanges(removedOverride)).toBe(false);
-  expect(formatDiff({ tokens: removedOverride })).toContain("`dark`: +0 override, -1, ~0 changed");
+  expect(formatDiff({ tokens: removedOverride })).toContain("**removed** `b`");
 
   const addedOverride = diffConfigs(
     config(registry, { dark: override(["a"]) }),

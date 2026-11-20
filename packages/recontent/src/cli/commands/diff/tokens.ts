@@ -1,10 +1,18 @@
 import type { Config } from "../../../config/types.js";
-import type { ThemeOverride, TokenEntry } from "../../../token-model/registry.js";
+import type {
+  ThemeOverride,
+  ThemeValue,
+  TokenEntry,
+  TokenRegistry,
+} from "../../../token-model/registry.js";
+import type { TokenType } from "../../../token-model/values.js";
 import { pathKey } from "../../../token-model/guards.js";
+
+/** `type` is the overridden token's, when it is still in the config. */
 type ThemeOverrideDiff = {
-  added: { key: string; value: unknown }[];
-  removed: { key: string; value: unknown }[];
-  changed: { key: string; from: unknown; to: unknown }[];
+  added: { key: string; type?: TokenType; value: ThemeValue }[];
+  removed: { key: string; type?: TokenType; value: ThemeValue }[];
+  changed: { key: string; type?: TokenType; from: ThemeValue; to: ThemeValue }[];
 };
 
 type ThemeDiff = {
@@ -92,22 +100,29 @@ function findRenames(
   };
 }
 
-function diffThemeOverride(base: ThemeOverride, head: ThemeOverride): ThemeOverrideDiff {
-  const added: { key: string; value: unknown }[] = [];
-  const removed: { key: string; value: unknown }[] = [];
-  const changed: { key: string; from: unknown; to: unknown }[] = [];
+function diffThemeOverride(
+  base: ThemeOverride,
+  head: ThemeOverride,
+  registries: { base: TokenRegistry; head: TokenRegistry },
+): ThemeOverrideDiff {
+  const added: ThemeOverrideDiff["added"] = [];
+  const removed: ThemeOverrideDiff["removed"] = [];
+  const changed: ThemeOverrideDiff["changed"] = [];
+  const typeOf = (key: string, registry: TokenRegistry) => {
+    const type = registry.get(key)?.$type;
+    return type ? { type } : {};
+  };
 
   for (const [key, value] of head) {
-    if (!base.has(key)) added.push({ key, value });
+    if (!base.has(key)) added.push({ key, ...typeOf(key, registries.head), value });
   }
   for (const [key, value] of base) {
-    if (!head.has(key)) removed.push({ key, value });
+    if (!head.has(key)) removed.push({ key, ...typeOf(key, registries.base), value });
   }
-  for (const [key, fromValue] of base) {
-    if (!head.has(key)) continue;
-    const toValue = head.get(key);
-    if (stableStringify(fromValue) !== stableStringify(toValue)) {
-      changed.push({ key, from: fromValue, to: toValue });
+  for (const [key, from] of base) {
+    const to = head.get(key);
+    if (to && stableStringify(from) !== stableStringify(to)) {
+      changed.push({ key, ...typeOf(key, registries.head), from, to });
     }
   }
 
@@ -117,6 +132,7 @@ function diffThemeOverride(base: ThemeOverride, head: ThemeOverride): ThemeOverr
 function diffThemes(
   base: Record<string, ThemeOverride>,
   head: Record<string, ThemeOverride>,
+  registries: { base: TokenRegistry; head: TokenRegistry },
 ): ThemeDiff {
   const baseNames = new Set(Object.keys(base));
   const headNames = new Set(Object.keys(head));
@@ -127,7 +143,7 @@ function diffThemes(
 
   for (const name of baseNames) {
     if (!headNames.has(name)) continue;
-    const themeDiff = diffThemeOverride(base[name]!, head[name]!);
+    const themeDiff = diffThemeOverride(base[name]!, head[name]!, registries);
     if (
       themeDiff.added.length > 0 ||
       themeDiff.removed.length > 0 ||
@@ -217,6 +233,7 @@ export function diffConfigs(base: Config, head: Config): TokenDiff {
     themes: diffThemes(
       followTokenChanges(base.themes, renamedKeys, new Set(removed.map((e) => pathKey(e.path)))),
       head.themes,
+      { base: base.registry, head: head.registry },
     ),
   };
 }

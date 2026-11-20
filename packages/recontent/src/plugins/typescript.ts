@@ -11,7 +11,7 @@ import {
   type MemberResolver,
 } from "../serialize/values.js";
 import { escapeTemplateLiteral } from "../ts-source.js";
-import { generateScaleExports, scaleExportsForConfig } from "./shared/ts-source.js";
+import { generateThemeModule } from "./shared/ts-source.js";
 import {
   generateThemeSource,
   themeNameDiagnostics,
@@ -110,24 +110,7 @@ const webSpec: ThemeTargetSpec = {
 
 function generateTypeScriptSource(config: GeneratorContext): string {
   const logger = config.logger ?? createLogger();
-  const body = generateThemeSource(config, webSpec, logger, "typescript");
-  const scaleExports = scaleExportsForConfig(config);
-  const themeConstNames = ["theme", ...Object.keys(config.themes).sort()];
-
-  const lines = [body];
-
-  for (const scale of scaleExports) {
-    lines.push(`${generateScaleExports(scale, "theme")}\n`);
-  }
-
-  lines.push(
-    `export const themes = { ${themeConstNames.join(", ")} } as const;`,
-    "export type ThemeName = keyof typeof themes;",
-    "export type Theme = (typeof themes)[ThemeName];",
-    "export type BaseTheme = typeof theme;",
-  );
-
-  return `${lines.join("\n")}\n`;
+  return generateThemeModule(config, generateThemeSource(config, webSpec, logger, "typescript"));
 }
 
 export type TypeScriptPluginOptions = {

@@ -13,18 +13,23 @@ import { themedEntry } from "../token-model/alias.js";
 export type CssGeneratorOptions = {
   themeAttribute?: string;
   themeSelector?: "attribute" | "class";
+  /** Namespaces the variables (`--<prefix>-ref-color-blue`), so they cannot collide with the host app's. Letters, digits, hyphens and underscores, starting with a letter. */
+  prefix?: string;
 };
 
-function entryCssValue(entry: TokenEntry): string {
+const PREFIX_RE = /^[A-Za-z][A-Za-z0-9_-]*$/;
+
+function entryCssValue(entry: TokenEntry, prefix?: string): string {
   if (entry.alias) {
-    return `var(${cssVarName(entry.alias)})`;
+    return `var(${cssVarName(entry.alias, prefix)})`;
   }
-  return serializeValueCss(entry.$type, entry.$value);
+  return serializeValueCss(entry.$type, entry.$value, prefix);
 }
 
 function expandedEntryDeclarations(
   entry: TokenEntry,
   value: TokenTypeMap[typeof entry.$type],
+  prefix: string | undefined,
   aliasPath?: string[],
 ): Record<string, string> {
   const declarations: Record<string, string> = {};
@@ -33,29 +38,25 @@ function expandedEntryDeclarations(
     entry.$type as "typography" | "transition",
     value as TokenTypeMap["typography"] | TokenTypeMap["transition"],
   )) {
-    const varName = cssVarName([...entry.path, varSuffix]);
+    const varName = cssVarName([...entry.path, varSuffix], prefix);
     if (aliasPath) {
-      declarations[varName] = `var(${cssVarName([...aliasPath, varSuffix])})`;
+      declarations[varName] = `var(${cssVarName([...aliasPath, varSuffix], prefix)})`;
       continue;
     }
     declarations[varName] = member.alias
-      ? `var(${cssVarName(member.alias)})`
-      : serializeValueCss(type, member.$value);
+      ? `var(${cssVarName(member.alias, prefix)})`
+      : serializeValueCss(type, member.$value, prefix);
   }
 
   return declarations;
 }
 
-function entryDeclarations(entry: TokenEntry): Record<string, string> {
+function entryDeclarations(entry: TokenEntry, prefix?: string): Record<string, string> {
   if (!isExpandedComposite(entry.$type)) {
-    return { [cssVarName(entry.path)]: entryCssValue(entry) };
+    return { [cssVarName(entry.path, prefix)]: entryCssValue(entry, prefix) };
   }
 
-  if (entry.alias) {
-    return expandedEntryDeclarations(entry, entry.$value, entry.alias);
-  }
-
-  return expandedEntryDeclarations(entry, entry.$value);
+  return expandedEntryDeclarations(entry, entry.$value, prefix, entry.alias);
 }
 
 export function formatRule(
@@ -77,6 +78,7 @@ type LayerDeclarations = { declarations: Record<string, string>; comments: Recor
 
 function collectAllLayerDeclarations(
   registry: TokenRegistry,
+  prefix?: string,
 ): Record<TokenLayer, LayerDeclarations> {
   const byLayer: Record<TokenLayer, LayerDeclarations> = {
     ref: { declarations: {}, comments: {} },
@@ -86,9 +88,9 @@ function collectAllLayerDeclarations(
 
   for (const entry of registry.values()) {
     const bucket = byLayer[entry.layer];
-    Object.assign(bucket.declarations, entryDeclarations(entry));
+    Object.assign(bucket.declarations, entryDeclarations(entry, prefix));
     if (entry.$description) {
-      bucket.comments[cssVarName(entry.path)] = entry.$description;
+      bucket.comments[cssVarName(entry.path, prefix)] = entry.$description;
     }
   }
 
@@ -111,7 +113,13 @@ export function generateCss(config: GeneratorContext, options: CssGeneratorOptio
     validateThemeAttribute(options.themeAttribute, "css");
   }
 
-  const byLayer = collectAllLayerDeclarations(registry);
+  if (options.prefix !== undefined && !PREFIX_RE.test(options.prefix)) {
+    throw new Error(
+      `prefix "${options.prefix}" cannot be used for CSS variables: it must match ${PREFIX_RE}.`,
+    );
+  }
+
+  const byLayer = collectAllLayerDeclarations(registry, options.prefix);
 
   if (Object.keys(byLayer.ref.declarations).length > 0) {
     blocks.push(formatRule(":root", byLayer.ref.declarations, byLayer.ref.comments));
@@ -134,7 +142,10 @@ export function generateCss(config: GeneratorContext, options: CssGeneratorOptio
       if (!entry) {
         throw new Error(`Theme override references an unknown token path: ${key}`);
       }
-      Object.assign(themeDeclarations, entryDeclarations(themedEntry(entry, override)));
+      Object.assign(
+        themeDeclarations,
+        entryDeclarations(themedEntry(entry, override), options.prefix),
+      );
     }
     if (Object.keys(themeDeclarations).length > 0) {
       blocks.push(formatRule(themeSelectorFor(themeName, options), themeDeclarations));
@@ -146,6 +157,8 @@ export function generateCss(config: GeneratorContext, options: CssGeneratorOptio
 
 export type CssPluginOptions = CssGeneratorOptions & {
   outDir: string;
+  /** Defaults to `tokens.css`. */
+  filename?: string;
 };
 
 export function generateCssFiles(
@@ -154,7 +167,7 @@ export function generateCssFiles(
 ): OutputFile[] {
   return [
     {
-      filename: "tokens.css",
+      filename: options.filename ?? "tokens.css",
       content: generateCss(config, { ...options, themeSelector: options.themeSelector ?? "class" }),
     },
   ];

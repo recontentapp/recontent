@@ -1,6 +1,6 @@
 import { expect, test } from "@jest/globals";
 import type { RawToken, StampedToken } from "../../src/token-model/model.js";
-import type { ShadowLayer } from "../../src/token-model/values.js";
+import type { ColorValue, ShadowLayer } from "../../src/token-model/values.js";
 import { isTokenScale } from "../../src/token-model/guards.js";
 import { toOklch } from "../../src/color/convert.js";
 import { defineReferenceTokens, tokens } from "../../src/index.js";
@@ -13,6 +13,9 @@ const GRADIENT_STOPS = [
 test.each<[string, () => unknown, RegExp | undefined]>([
   ["a hex color with non-hex characters", () => tokens.color("#zzzzzz"), /Invalid hex color/],
   ["a short hex color with non-hex characters", () => tokens.color("#zzz"), /Invalid hex color/],
+  ["a color function with a missing channel", () => tokens.color("rgb(0 0)"), /Invalid CSS color/],
+  ["an unknown color function", () => tokens.color("cmyk(0 0 0 0)"), /Invalid CSS color/],
+  ["a named color", () => tokens.color("red"), /Invalid CSS color/],
   ["a NaN number", () => tokens.number(NaN), /Invalid number/],
   ["an infinite number", () => tokens.number(Infinity), /Invalid number/],
   ["a NaN fontWeight", () => tokens.fontWeight(NaN), /Invalid fontWeight/],
@@ -136,6 +139,23 @@ test("tokens.fontFamily accepts quoted, spaced and non-ASCII family names", () =
   });
 });
 
+test.each<[string, Partial<ColorValue>]>([
+  [
+    "rgb(255 128 0)",
+    { colorSpace: "srgb", components: [1, 128 / 255, 0], alpha: 1, hex: "#ff8000" },
+  ],
+  ["rgba(0, 0, 0, 50%)", { colorSpace: "srgb", components: [0, 0, 0], alpha: 0.5, hex: "#000000" }],
+  ["hsl(210deg 50% 40% / 0.2)", { colorSpace: "hsl", components: [210, 50, 40], alpha: 0.2 }],
+  ["oklch(70% 0.1 0.5turn)", { colorSpace: "oklch", components: [0.7, 0.1, 180], alpha: 1 }],
+  ["OKLab(0.5 none -0.1)", { colorSpace: "oklab", components: [0.5, "none", -0.1], alpha: 1 }],
+  [
+    "color(display-p3 1 0 0)",
+    { colorSpace: "display-p3", components: [1, 0, 0], alpha: 1, hex: "#ff0000" },
+  ],
+])("tokens.color parses the CSS color string %s", (input, expected) => {
+  expect(tokens.color(input).$value).toMatchObject(expected);
+});
+
 test("alpha returns a plain translucent color without the metadata or alias", () => {
   const ref = defineReferenceTokens({
     ink: tokens.color("#09090b").describe("Ink").deprecate(),
@@ -177,10 +197,7 @@ test("tokens.strokeStyle accepts a keyword", () => {
 test("tokens.strokeStyle accepts a custom dash", () => {
   const token = tokens.strokeStyle({ dashArray: ["4px", "2px"], lineCap: "round" });
   expect(token.$value).toEqual({
-    dashArray: [
-      { value: 4, unit: "px" },
-      { value: 2, unit: "px" },
-    ],
+    dashArray: [{ $value: { value: 4, unit: "px" } }, { $value: { value: 2, unit: "px" } }],
     lineCap: "round",
   });
 });
@@ -320,6 +337,22 @@ test.each([
     ["thin", "thick"],
     (scale: any) => scale.thin.$value.style.$value,
     { style: "solid" },
+  ],
+  [
+    "fontFamilyScale",
+    () => tokens.fontFamilyScale({ sans: "Inter, Arial", mono: "Menlo" }),
+    "fontFamily",
+    ["sans", "mono"],
+    (scale: any) => scale.sans.$value,
+    { value: ["Inter", "Arial"] },
+  ],
+  [
+    "fontWeightScale",
+    () => tokens.fontWeightScale({ regular: "regular", bold: 700 }),
+    "fontWeight",
+    ["regular", "bold"],
+    (scale: any) => [scale.regular.$value, scale.bold.$value],
+    [{ value: 400 }, { value: 700 }],
   ],
   [
     "cubicBezierScale",

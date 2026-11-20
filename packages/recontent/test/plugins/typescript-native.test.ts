@@ -15,6 +15,7 @@ import {
   assertTypechecks,
   compositeConfig,
   refOnlyConfig,
+  scaleConfig,
 } from "../helpers/fixtures.js";
 import type { Config } from "../../src/config/types.js";
 import type { OutputFile } from "../../src/plugins/shared/context.js";
@@ -24,6 +25,16 @@ const NATIVE: TypeScriptNativePluginOptions = { outDir: "dist-test" };
 function generate(config: Config, options: TypeScriptNativePluginOptions = NATIVE): OutputFile[] {
   return generateTypeScriptNativeFiles(config, options);
 }
+
+describe("scales", () => {
+  test("scale exports are rooted at theme., as in the web target, and typecheck", () => {
+    const { config } = scaleConfig();
+    const [file] = generate(config);
+    expect(file!.content).toMatch(/export type RefSpacing = 0 \| 1 \| "0-5";/);
+    expect(file!.content).toMatch(/export const refSpacing = theme\.ref\.spacing;/);
+    assertTypechecks(file!.content);
+  });
+});
 
 describe("scalars", () => {
   test("dimension: px passes through, rem multiplies by rootFontSize (default 16), rounded to 4 decimals", () => {

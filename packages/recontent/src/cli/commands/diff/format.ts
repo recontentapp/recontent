@@ -12,10 +12,11 @@ import type {
   TokenTypeMap,
 } from "../../../token-model/values.js";
 import type { CompositeTokenType } from "../../../token-model/composite.js";
-import type { TokenEntry } from "../../../token-model/registry.js";
+import type { ThemeValue, TokenEntry } from "../../../token-model/registry.js";
 import { compositeMembers, isCompositeType } from "../../../token-model/composite.js";
 import { pathKey } from "../../../token-model/guards.js";
 import { code } from "../../../markdown.js";
+import { serializeColorCss } from "../../../serialize/values.js";
 import {
   countComponentBreakingChanges,
   countEntityBreakingChanges,
@@ -49,7 +50,7 @@ function pathStr(entry: TokenEntry): string {
 function formatPrimitiveValue(type: TokenType, value: unknown): string {
   switch (type) {
     case "color":
-      return (value as ColorValue).hex;
+      return serializeColorCss(value as ColorValue);
     case "dimension": {
       const dimension = value as DimensionValue;
       return `${dimension.value}${dimension.unit}`;
@@ -80,6 +81,11 @@ function formatPrimitiveValue(type: TokenType, value: unknown): string {
 function shortValue(entry: TokenEntry): string {
   if (entry.alias) return `alias -> ${pathKey(entry.alias)}`;
   return formatPrimitiveValue(entry.$type, entry.$value);
+}
+
+function formatThemeValue(type: TokenType | undefined, value: ThemeValue): string {
+  if (value.alias) return `alias -> ${pathKey(value.alias)}`;
+  return type ? formatPrimitiveValue(type, value.$value) : stableStringify(value.$value);
 }
 
 function describeEntry(entry: TokenEntry): string {
@@ -220,9 +226,18 @@ function formatTokensMarkdown(diff: TokenDiff): string {
       lines.push(`- ${code(name)}: added`);
     }
     for (const [name, themeDiff] of Object.entries(diff.themes.changedThemes)) {
-      lines.push(
-        `- ${code(name)}: +${themeDiff.added.length} override, -${themeDiff.removed.length}, ~${themeDiff.changed.length} changed`,
-      );
+      lines.push(`- ${code(name)}`);
+      for (const { key, type, value } of themeDiff.added) {
+        lines.push(`  - **added** ${code(key)}: ${formatThemeValue(type, value)}`);
+      }
+      for (const { key, type, value } of themeDiff.removed) {
+        lines.push(`  - **removed** ${code(key)} (was ${formatThemeValue(type, value)})`);
+      }
+      for (const { key, type, from, to } of themeDiff.changed) {
+        lines.push(
+          `  - **changed** ${code(key)}: ${formatThemeValue(type, from)} -> ${formatThemeValue(type, to)}`,
+        );
+      }
     }
     sections.push(lines.join("\n"));
   }
@@ -288,6 +303,8 @@ function describeChange(change: Change, noun: string): string {
       return `**type parameters** ${formatTypeParameters(change.from)} -> ${formatTypeParameters(change.to)}`;
     case "deprecated":
       return change.to ? "**deprecated**" : "**no longer deprecated**";
+    case "import":
+      return `**import** ${change.from ? code(change.from) : "none"} -> ${change.to ? code(change.to) : "none"}`;
     case "kind":
       return `**kind** ${change.from} -> ${change.to}`;
     case "values":

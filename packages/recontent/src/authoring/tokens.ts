@@ -19,6 +19,7 @@ import { componentRanges } from "../color/spaces.js";
 import { FONT_WEIGHT_NUMERIC } from "../token-model/values.js";
 import { isRawToken, isStampedToken, isTokenLeaf } from "../token-model/guards.js";
 import { fitOklchToSrgb, toOklch, toSrgbHex } from "../color/convert.js";
+import { parseCssColor } from "../color/parse.js";
 import { generateScale, SCALE_STEPS } from "../color/scale.js";
 import { roundTo } from "../serialize/native.js";
 import {
@@ -114,7 +115,10 @@ function validateComponentRanges(
 
 function color(input: ColorInput): RawToken<"color"> & ChainableMethods<RawToken<"color">> {
   if (typeof input === "string") {
-    return createRawToken("color", parseHex(input));
+    if (input.trim().startsWith("#")) {
+      return createRawToken("color", parseHex(input));
+    }
+    return color(parseCssColor(input));
   }
 
   validateComponentRanges(input.colorSpace, input.components);
@@ -267,7 +271,7 @@ function strokeStyle(
   }
 
   const dashArray = input.dashArray.map((item) =>
-    typeof item === "string" ? dimension(item).$value : item.$value,
+    toMember(item, (raw) => dimension(raw as string)),
   );
 
   const value: StrokeStyleValue = { dashArray, lineCap: input.lineCap };
@@ -625,6 +629,18 @@ function numberScale<Key extends string | number>(
   return scaleFrom("number", scale, number);
 }
 
+function fontFamilyScale<Key extends string | number>(
+  scale: Record<Key, string | RawToken<"fontFamily"> | StampedToken<"fontFamily">>,
+): ChainableScale<Key, "fontFamily", RawToken<"fontFamily"> | StampedToken<"fontFamily">> {
+  return scaleFrom("fontFamily", scale, fontFamily);
+}
+
+function fontWeightScale<Key extends string | number>(
+  scale: Record<Key, number | FontWeightName | RawToken<"fontWeight"> | StampedToken<"fontWeight">>,
+): ChainableScale<Key, "fontWeight", RawToken<"fontWeight"> | StampedToken<"fontWeight">> {
+  return scaleFrom("fontWeight", scale, fontWeight);
+}
+
 function durationScale<Key extends string | number>(
   scale: Record<Key, string | RawToken<"duration"> | StampedToken<"duration">>,
 ): ChainableScale<Key, "duration", RawToken<"duration"> | StampedToken<"duration">> {
@@ -685,6 +701,8 @@ export const tokens = {
   generateColorScale,
   dimensionScale,
   numberScale,
+  fontFamilyScale,
+  fontWeightScale,
   durationScale,
   borderScale,
   cubicBezierScale,

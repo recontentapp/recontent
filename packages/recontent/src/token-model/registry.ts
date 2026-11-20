@@ -25,5 +25,5 @@ export type TokenRegistry = Map<string, TokenEntry>;
 /** Metadata of the plain groups made by `tokens.group(...)`, keyed by path. */
 export type TokenGroups = Map<string, TokenGroupMetadata>;
 /** A theme's replacement for one token: a literal, or an alias (with `$value` snapshotting its target). */
-type ThemeValue = { $value: TokenTypeMap[TokenType]; alias?: string[] };
+export type ThemeValue = { $value: TokenTypeMap[TokenType]; alias?: string[] };
 export type ThemeOverride = Map<string, ThemeValue>;

@@ -36,6 +36,7 @@ import {
 import type { SourceTree, SourceValue } from "../ts-source.js";
 import type { GeneratorContext } from "./shared/context.js";
 import { outputPlugin } from "./factory.js";
+import { generateThemeModule } from "./shared/ts-source.js";
 
 const DEFAULT_ROOT_FONT_SIZE = 16;
 
@@ -286,18 +287,10 @@ function createNativeSpec(rootFontSize: number): ThemeTargetSpec {
 function generateTypeScriptNativeSource(config: GeneratorContext, rootFontSize: number): string {
   const logger = config.logger ?? createLogger();
   const spec = createNativeSpec(rootFontSize);
-  const body = generateThemeSource(config, spec, logger, "typescript-native");
-  const themeConstNames = ["theme", ...Object.keys(config.themes).sort()];
-
-  const lines = [
-    body,
-    `export const themes = { ${themeConstNames.join(", ")} } as const;`,
-    "export type ThemeName = keyof typeof themes;",
-    "export type Theme = (typeof themes)[ThemeName];",
-    "export type BaseTheme = typeof theme;",
-  ];
-
-  return `${lines.join("\n")}\n`;
+  return generateThemeModule(
+    config,
+    generateThemeSource(config, spec, logger, "typescript-native"),
+  );
 }
 
 export type TypeScriptNativePluginOptions = {
