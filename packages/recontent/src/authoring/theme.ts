@@ -1,5 +1,5 @@
 import { isRawToken, isStampedToken, pathKey } from "../token-model/guards.js";
-import type { RawToken, StampedToken, TokenScale } from "../token-model/model.js";
+import type { RawToken, StampedToken, TokenGroupKey, TokenScale } from "../token-model/model.js";
 import type { ThemeOverride } from "../token-model/registry.js";
 import type { TokenType } from "../token-model/values.js";
 
@@ -42,7 +42,9 @@ type ValidateThemeInput<Template, Override> =
           ? {
               [Key in keyof Override]: Key extends keyof Template
                 ? ValidateThemeInput<Template[Key], Override[Key]>
-                : never;
+                : Key extends TokenGroupKey
+                  ? Override[Key]
+                  : never;
             }
           : never
         : never;

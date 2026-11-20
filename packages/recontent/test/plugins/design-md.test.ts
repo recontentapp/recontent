@@ -13,6 +13,7 @@ import { goldenConfig } from "../helpers/fixtures.js";
 function ctxFor(config: ReturnType<typeof goldenConfig>["config"]): PluginContext {
   return {
     registry: config.registry,
+    groups: config.groups,
     themes: config.themes,
     root: "/project",
     logger: { info: () => {}, warn: () => {}, error: () => {}, debug: () => {} },
@@ -158,6 +159,21 @@ describe("DESIGN.md prose", () => {
     expect(md.match(/^- `ref-palette`: /gm)).toHaveLength(1);
     expect(md).toContain("- `ref-palette`: Brand \\<b\\>palette\\</b\\>");
     expect(md).toContain("- Don't use `ref-palette`: Use other");
+  });
+
+  test("group descriptions and deprecations are written once", () => {
+    const ref = defineReferenceTokens({
+      color: tokens
+        .group({ black: tokens.color("#000000"), white: tokens.color("#ffffff") })
+        .describe("Base colors")
+        .deprecate("Use other"),
+    });
+    const md = renderConfig(
+      defineConfig({ tokens: { ref, system: defineSystemTokens({}), components: {} } }),
+    );
+    expect(md.match(/^- `ref-color`: /gm)).toHaveLength(1);
+    expect(md).toContain("- `ref-color`: Base colors");
+    expect(md).toContain("- Don't use `ref-color`: Use other");
   });
 
   test("token descriptions are escaped", () => {

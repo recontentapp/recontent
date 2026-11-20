@@ -19,6 +19,8 @@ export type GenerateScaleOptions = {
   /** sRGB hex of `base`; used to detect pure white and black. */
   baseHex: string;
   appearance: Appearance;
+  /** The page color step 1 follows. Defaults to white for "light" and #111111 for "dark". */
+  background?: Oklch;
   /** Pick from the gray reference scales only, and do not pin step 9 to `base`. */
   neutral: boolean;
 };
@@ -228,7 +230,7 @@ function hoverColor(source: Oklch, scale: Oklch[]): Oklch {
 
 export function generateScale(options: GenerateScaleOptions): GeneratedScale {
   const { base, appearance } = options;
-  const background = BACKGROUNDS[appearance];
+  const background = options.background ?? BACKGROUNDS[appearance];
   const grays = grayScales(appearance);
   const isGray = (scale: string) => scale in grays;
 

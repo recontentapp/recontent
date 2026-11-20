@@ -1,6 +1,7 @@
 import { pathKey } from "../token-model/guards.js";
 import { type RecontentPlugin } from "./types.js";
-import { type TokenRegistry } from "../token-model/registry.js";
+import { type TokenGroups, type TokenRegistry } from "../token-model/registry.js";
+import type { TokenMetadata } from "../token-model/model.js";
 import type { OutputFile } from "./shared/context.js";
 import { entryToDtcgNode, setNested } from "../serialize/values.js";
 import { getThemeOverride, themedEntry } from "../token-model/alias.js";
@@ -13,25 +14,34 @@ function isConfig(input: TokenRegistry | GeneratorContext): input is GeneratorCo
   return "registry" in input;
 }
 
-function applyScaleMetadata(output: DtcgOutput, registry: TokenRegistry): void {
+/** Writes the description, deprecation and extensions of scales and `tokens.group(...)` groups onto their DTCG groups. */
+function applyGroupMetadata(
+  output: DtcgOutput,
+  registry: TokenRegistry,
+  groups: TokenGroups | undefined,
+): void {
   const seen = new Set<string>();
+  const sources: Array<TokenMetadata & { path: string[]; layer: string }> = [];
   for (const entry of registry.values()) {
-    const scale = entry.scale;
-    if (!scale) continue;
-    const key = `${scale.layer}:${pathKey(scale.path)}`;
+    if (entry.scale) sources.push(entry.scale);
+  }
+  sources.push(...(groups?.values() ?? []));
+
+  for (const source of sources) {
+    const key = `${source.layer}:${pathKey(source.path)}`;
     if (seen.has(key)) continue;
     seen.add(key);
 
     let group: unknown = output;
-    for (const segment of scale.path) {
+    for (const segment of source.path) {
       group = (group as Record<string, unknown> | undefined)?.[segment];
     }
     if (typeof group !== "object" || group === null) continue;
 
     const node = group as Record<string, unknown>;
-    if (scale.$description !== undefined) node.$description = scale.$description;
-    if (scale.$deprecated !== undefined) node.$deprecated = scale.$deprecated;
-    if (scale.$extensions !== undefined) node.$extensions = scale.$extensions;
+    if (source.$description !== undefined) node.$description = source.$description;
+    if (source.$deprecated !== undefined) node.$deprecated = source.$deprecated;
+    if (source.$extensions !== undefined) node.$extensions = source.$extensions;
   }
 }
 
@@ -88,7 +98,7 @@ export function generateDtcg(input: TokenRegistry | GeneratorContext): DtcgOutpu
     setNested(output, entry.path, entryToDtcgNode(entry));
   }
 
-  applyScaleMetadata(output, registry);
+  applyGroupMetadata(output, registry, isConfig(input) ? input.groups : undefined);
   return hoistGroupTypes(output);
 }
 
@@ -102,7 +112,7 @@ export function generateDtcgThemed(ctx: GeneratorContext, themeName: string): Dt
     setNested(output, resolved.path, entryToDtcgNode(resolved));
   }
 
-  applyScaleMetadata(output, ctx.registry);
+  applyGroupMetadata(output, ctx.registry, ctx.groups);
   return hoistGroupTypes(output);
 }
 

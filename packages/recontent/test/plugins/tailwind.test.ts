@@ -55,6 +55,7 @@ function build() {
 function ctxOf(config: ReturnType<typeof build>["config"]): PluginContext {
   return {
     registry: config.registry,
+    groups: config.groups,
     themes: config.themes,
     root: "/project",
     logger: { info: () => {}, warn: () => {}, error: () => {}, debug: () => {} },

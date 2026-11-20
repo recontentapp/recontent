@@ -9,7 +9,8 @@ const DOC_LAYERS: TokenLayer[] = ["ref", "system", "components"];
 export type DocGroup = {
   path: string;
   label: string;
-  scale?: { description?: string; deprecated?: true | string };
+  /** From the scale or `tokens.group(...)` the tokens belong to. */
+  metadata?: { description?: string; deprecated?: true | string };
   tokens: DocToken[];
 };
 
@@ -41,12 +42,11 @@ export function buildDocsModel(ctx: PluginContext, title: string): DocsModel {
         group = { path: groupPath, label: groupPath || layer, tokens: [] };
         groups.set(groupPath, group);
       }
-      if (entry.scale && !group.scale) {
-        const deprecated = deprecation(entry.scale.$deprecated);
-        group.scale = {
-          ...(entry.scale.$description !== undefined
-            ? { description: entry.scale.$description }
-            : {}),
+      const source = entry.scale ?? ctx.groups.get(groupPath);
+      if (source && !group.metadata) {
+        const deprecated = deprecation(source.$deprecated);
+        group.metadata = {
+          ...(source.$description !== undefined ? { description: source.$description } : {}),
           ...(deprecated !== undefined ? { deprecated } : {}),
         };
       }

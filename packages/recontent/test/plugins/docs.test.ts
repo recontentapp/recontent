@@ -18,6 +18,7 @@ type Config = ReturnType<typeof goldenConfig>["config"];
 function ctxFor(config: Config): PluginContext {
   return {
     registry: config.registry,
+    groups: config.groups,
     themes: config.themes,
     root: "/project",
     logger: { info: () => {}, warn: () => {}, error: () => {}, debug: () => {} },
@@ -139,6 +140,20 @@ describe("design.html", () => {
     expect(head.indexOf('"data-mode"')).toBeLessThan(head.indexOf("<style>"));
     expect(html).toContain(':root[data-mode="dark"] {');
     expect(html).not.toMatch(/setAttribute\("data-theme", "(light|dark)"/);
+  });
+
+  test("renders the description and deprecation of a tokens.group", () => {
+    const ref = defineReferenceTokens({
+      color: tokens
+        .group({ black: tokens.color("#000000") })
+        .describe("Base colors")
+        .deprecate("Use system.color"),
+    });
+    const output = render(
+      defineConfig({ tokens: { ref, system: defineSystemTokens({}), components: {} } }),
+    );
+    expect(output).toContain('<p class="lead">Base colors</p>');
+    expect(output).toContain("Use system.color");
   });
 
   test("omits the theme picker when there are no themes", () => {

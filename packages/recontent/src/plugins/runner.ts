@@ -91,6 +91,7 @@ export async function runPlugins(
   });
   const base: PluginContext = {
     registry: config.registry,
+    groups: config.groups,
     themes: config.themes,
     root: options.root,
     logger: options.logger,

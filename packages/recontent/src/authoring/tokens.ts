@@ -1,6 +1,7 @@
 import type {
   BorderValue,
   ColorValue,
+  DimensionValue,
   FontWeightName,
   GradientValue,
   ShadowLayer,
@@ -13,14 +14,19 @@ import type {
   TypographyValue,
 } from "../token-model/values.js";
 import type { Component } from "../color/spaces.js";
-import type { RawToken, StampedToken, TokenScale } from "../token-model/model.js";
+import type { RawToken, StampedToken, TokenGroup, TokenScale } from "../token-model/model.js";
 import { componentRanges } from "../color/spaces.js";
 import { FONT_WEIGHT_NUMERIC } from "../token-model/values.js";
 import { isRawToken, isStampedToken, isTokenLeaf } from "../token-model/guards.js";
 import { fitOklchToSrgb, toOklch, toSrgbHex } from "../color/convert.js";
 import { generateScale, SCALE_STEPS } from "../color/scale.js";
 import { roundTo } from "../serialize/native.js";
-import { withRawTokenMethods, withScaleMethods, type ChainableMethods } from "./metadata.js";
+import {
+  assertAlpha,
+  withRawTokenMethods,
+  withScaleMethods,
+  type ChainableMethods,
+} from "./metadata.js";
 
 type ColorInput =
   | string
@@ -113,9 +119,7 @@ function color(input: ColorInput): RawToken<"color"> & ChainableMethods<RawToken
 
   validateComponentRanges(input.colorSpace, input.components);
   const alpha = input.alpha ?? 1;
-  if (!Number.isFinite(alpha) || alpha < 0 || alpha > 1) {
-    throw new Error(`Invalid alpha: ${alpha}. Expected a number between 0 and 1.`);
-  }
+  assertAlpha(alpha);
   const value: ColorValue = {
     colorSpace: input.colorSpace,
     components: input.components,
@@ -416,8 +420,27 @@ type TypographyInput = {
   fontSize: string | RawToken<"dimension"> | StampedToken<"dimension">;
   fontWeight: number | FontWeightName | RawToken<"fontWeight"> | StampedToken<"fontWeight">;
   letterSpacing?: string | RawToken<"dimension"> | StampedToken<"dimension">;
-  lineHeight?: number | RawToken<"number"> | StampedToken<"number">;
+  /** A unitless ratio, or a dimension ("58px", "1.5rem", "1.2em") that is converted to one against `fontSize`. */
+  lineHeight?: number | string | RawToken<"number"> | StampedToken<"number">;
 };
+
+const REM_PX = 16;
+
+/** The unitless ratio a dimension line height stands for, relative to the font size. */
+function lineHeightRatio(
+  lineHeight: DimensionValue,
+  fontSize: DimensionValue,
+  input: string,
+): number {
+  if (lineHeight.unit === "em") return lineHeight.value;
+  if (fontSize.unit === "em") {
+    throw new Error(
+      `Invalid lineHeight ${JSON.stringify(input)}: cannot be converted against a fontSize in "em". Use a unitless number or an "em" lineHeight.`,
+    );
+  }
+  const px = (size: DimensionValue) => (size.unit === "rem" ? size.value * REM_PX : size.value);
+  return px(lineHeight) / px(fontSize);
+}
 
 function typography(
   input: TypographyInput,
@@ -426,12 +449,21 @@ function typography(
     throw new Error("tokens.typography(...) requires fontFamily, fontSize, and fontWeight.");
   }
 
+  const fontSize = toMember(input.fontSize, (raw) => dimension(raw as string));
+  const lineHeight = toMember(input.lineHeight ?? 1.4, (raw) =>
+    number(
+      typeof raw === "string"
+        ? roundTo(lineHeightRatio(dimension(raw).$value, fontSize.$value, raw), 4)
+        : (raw as number),
+    ),
+  );
+
   const value: TypographyValue = {
     fontFamily: toMember(input.fontFamily, (raw) => fontFamily(raw as string)),
-    fontSize: toMember(input.fontSize, (raw) => dimension(raw as string)),
+    fontSize,
     fontWeight: toMember(input.fontWeight, (raw) => fontWeight(raw as number | FontWeightName)),
     letterSpacing: toMember(input.letterSpacing ?? "0px", (raw) => dimension(raw as string)),
-    lineHeight: toMember(input.lineHeight ?? 1.4, (raw) => number(raw as number)),
+    lineHeight,
   };
   return createRawToken("typography", value);
 }
@@ -470,6 +502,12 @@ function scaleFrom<Key extends string | number, T extends TokenType, Value>(
   return createScale(type, result);
 }
 
+/** Groups tokens under a name and lets the group carry a description, deprecation or extensions. */
+function group<T extends object>(tree: T): TokenGroup<T> {
+  Object.defineProperty(tree, "_kind", { value: "group", enumerable: false });
+  return withScaleMethods(tree) as unknown as TokenGroup<T>;
+}
+
 function colorScale<Key extends string | number>(
   scale: Record<Key, ColorInput | RawToken<"color"> | StampedToken<"color">>,
 ): ChainableScale<Key, "color", RawToken<"color"> | StampedToken<"color">> {
@@ -490,6 +528,11 @@ type GenerateColorScaleInput<Key extends string | number> = {
    * Defaults to "light".
    */
   appearance?: "light" | "dark";
+  /**
+   * The opaque page color the scale sits on, which step 1 follows. Defaults to `#ffffff` for
+   * "light" and `#111111` for "dark". `appearance` still chooses the reference scales.
+   */
+  background?: ColorInput | RawToken<"color">;
   /**
    * Generate a gray scale (backgrounds, borders and text) tinted towards `base`, instead of
    * an accent scale. Step 9 is then not pinned to `base`.
@@ -529,11 +572,23 @@ function generateColorScale<Key extends string | number = ScaleStep>(
     );
   }
 
+  let background: [number, number, number] | undefined;
+  if (input.background !== undefined) {
+    const backgroundValue = colorValueOf(input.background);
+    if (backgroundValue.alpha < 1) {
+      throw new Error(
+        `tokens.generateColorScale(...) requires an opaque background, received alpha ${backgroundValue.alpha}.`,
+      );
+    }
+    background = toOklch(backgroundValue.colorSpace, backgroundValue.components);
+  }
+
   const baseValue = colorValueOf(input.base);
   const { steps: generated, baseIndex } = generateScale({
     base: toOklch(baseValue.colorSpace, baseValue.components),
     baseHex: toSrgbHex(baseValue.colorSpace, baseValue.components),
     appearance,
+    ...(background ? { background } : {}),
     neutral: input.neutral ?? false,
   });
 
@@ -643,4 +698,5 @@ export const tokens = {
   transition,
   gradient,
   typography,
+  group,
 };

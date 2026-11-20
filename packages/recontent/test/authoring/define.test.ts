@@ -130,6 +130,49 @@ test("scale metadata reaches the registry and survives stamping and aliasing", (
   expect(systemEntry.scale?.$deprecated).toBe("Use system.spacing");
 });
 
+test("group metadata reaches config.groups and survives stamping", () => {
+  const ref = defineReferenceTokens({
+    color: tokens
+      .group({
+        black: tokens.color("#000000"),
+        nested: tokens.group({ white: tokens.color("#ffffff") }),
+      })
+      .describe("Base colors")
+      .deprecate("Use system.color")
+      .extend("com.example", { team: "design" }),
+    plain: tokens.group({ a: tokens.color("#111111") }),
+    untouched: { b: tokens.color("#222222") },
+  });
+  const config = defineConfig({
+    tokens: { ref, system: {}, components: { button: tokens.group({}).describe("Buttons") } },
+  });
+
+  expect(Object.keys(ref.color)).toEqual(["black", "nested"]);
+  expect([...config.groups.keys()]).toEqual(["ref.color", "button"]);
+  expect(config.groups.get("ref.color")).toEqual({
+    path: ["ref", "color"],
+    layer: "ref",
+    $description: "Base colors",
+    $deprecated: "Use system.color",
+    $extensions: { "com.example": { team: "design" } },
+  });
+  expect(config.groups.get("button")).toMatchObject({
+    layer: "components",
+    $description: "Buttons",
+  });
+  expect(config.registry.get("ref.color.black")!.scale).toBeUndefined();
+});
+
+test("a tokens.group inside a theme override is accepted", () => {
+  const ref = defineReferenceTokens({
+    color: { black: tokens.color("#000000"), white: tokens.color("#ffffff") },
+  });
+  const dark = defineTheme(ref, {
+    color: tokens.group({ black: tokens.color("#222222") }).describe("Dark"),
+  });
+  expect([...dark.keys()]).toEqual(["ref.color.black"]);
+});
+
 test("describe on a stamped scale returns a stamped scale with the new metadata", () => {
   const ref = defineReferenceTokens({ spacing: tokens.dimensionScale({ 0: "0px" }) });
   const described = ref.spacing.describe("Later");

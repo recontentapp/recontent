@@ -1,14 +1,27 @@
 import type { RawToken, StampedToken, TokenLayer } from "../token-model/model.js";
-import type { TokenType } from "../token-model/values.js";
+import type { ColorValue, TokenType } from "../token-model/values.js";
 
 export type ChainableMethods<Token> = {
   describe(description: string): Token & ChainableMethods<Token>;
   deprecate(reason?: string): Token & ChainableMethods<Token>;
   extend(namespace: string, value: Record<string, unknown>): Token & ChainableMethods<Token>;
-};
+} & (Token extends { $type: "color" }
+  ? {
+      /** The same color with a different alpha, as a new literal without the metadata or alias. */
+      alpha(value: number): RawToken<"color"> & ChainableMethods<RawToken<"color">>;
+    }
+  : {});
+
+export function assertAlpha(alpha: number): void {
+  if (!Number.isFinite(alpha) || alpha < 0 || alpha > 1) {
+    throw new Error(`Invalid alpha: ${alpha}. Expected a number between 0 and 1.`);
+  }
+}
 
 function attachChainable<
   Token extends {
+    $type?: string;
+    $value?: unknown;
     $description?: string;
     $deprecated?: boolean | string;
     $extensions?: Record<string, unknown>;
@@ -34,6 +47,19 @@ function attachChainable<
         } as Partial<Token>),
     },
   });
+  if (token.$type === "color") {
+    Object.defineProperty(token, "alpha", {
+      enumerable: false,
+      value: (alpha: number) => {
+        assertAlpha(alpha);
+        return withRawTokenMethods({
+          _kind: "raw",
+          $type: "color",
+          $value: { ...(token.$value as ColorValue), alpha },
+        });
+      },
+    });
+  }
   return token as Token & ChainableMethods<Token>;
 }
 

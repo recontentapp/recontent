@@ -77,6 +77,38 @@ test.each<[string, () => unknown, RegExp | undefined]>([
     /Invalid appearance/,
   ],
   [
+    "an out-of-range alpha on .alpha()",
+    () => tokens.color("#000000").alpha(1.5),
+    /Invalid alpha: 1.5/,
+  ],
+  [
+    "a translucent generateColorScale background",
+    () => tokens.generateColorScale({ base: "#3e63dd", background: "#ffffff80" }),
+    /opaque background/,
+  ],
+  [
+    "a lineHeight dimension against an em fontSize",
+    () =>
+      tokens.typography({
+        fontFamily: "Arial",
+        fontSize: "1em",
+        fontWeight: "regular",
+        lineHeight: "24px",
+      }),
+    /cannot be converted against a fontSize in "em"/,
+  ],
+  [
+    "a lineHeight that is not a dimension",
+    () =>
+      tokens.typography({
+        fontFamily: "Arial",
+        fontSize: "16px",
+        fontWeight: "regular",
+        lineHeight: "tall",
+      }),
+    /Invalid dimension/,
+  ],
+  [
     "a color scale with duplicate steps",
     () =>
       tokens.generateColorScale({
@@ -102,6 +134,23 @@ test("tokens.fontFamily accepts quoted, spaced and non-ASCII family names", () =
   ).toEqual({
     value: ["Helvetica Neue", "Noto Sans JP", "-apple-system", "ヒラギノ"],
   });
+});
+
+test("alpha returns a plain translucent color without the metadata or alias", () => {
+  const ref = defineReferenceTokens({
+    ink: tokens.color("#09090b").describe("Ink").deprecate(),
+  });
+  const raw = tokens.color("#09090b").describe("Ink");
+
+  for (const source of [raw, ref.ink]) {
+    const faded = source.alpha(0.1);
+    expect(faded._kind).toBe("raw");
+    expect(faded.$value).toEqual({ ...source.$value, alpha: 0.1 });
+    expect(faded.$description).toBeUndefined();
+    expect(faded.$deprecated).toBeUndefined();
+    expect(faded.alpha(0.5).$value.alpha).toBe(0.5);
+  }
+  expect(raw.$value.alpha).toBe(1);
 });
 
 test("tokens.gradient accepts CSS angles", () => {
@@ -211,6 +260,32 @@ test("tokens.typography defaults letterSpacing and lineHeight", () => {
   const token = tokens.typography({ fontFamily: "Arial", fontSize: "16px", fontWeight: "regular" });
   expect(token.$value.letterSpacing.$value).toEqual({ value: 0, unit: "px" });
   expect(token.$value.lineHeight.$value.value).toBe(1.4);
+});
+
+test.each<[string, string, string, number]>([
+  ["the same unit", "16px", "24px", 1.5],
+  ["rem against px", "16px", "2rem", 2],
+  ["px against rem", "1rem", "20px", 1.25],
+  ["em", "20px", "1.2em", 1.2],
+  ["em against an em fontSize", "1.5em", "1.2em", 1.2],
+  ["a rounded ratio", "24px", "29px", 1.2083],
+])(
+  "tokens.typography converts a lineHeight dimension: %s",
+  (_name, fontSize, lineHeight, ratio) => {
+    const token = tokens.typography({ fontFamily: "Arial", fontSize, fontWeight: 400, lineHeight });
+    expect(token.$value.lineHeight).toEqual({ $value: { value: ratio } });
+  },
+);
+
+test("tokens.typography converts a lineHeight dimension against an aliased fontSize", () => {
+  const ref = defineReferenceTokens({ size: { body: tokens.dimension("20px") } });
+  const token = tokens.typography({
+    fontFamily: "Arial",
+    fontSize: ref.size.body,
+    fontWeight: 400,
+    lineHeight: "30px",
+  });
+  expect(token.$value.lineHeight.$value.value).toBe(1.5);
 });
 
 test("tokens.typography accepts a stamped token and records its alias", () => {
@@ -367,6 +442,22 @@ test("tokens.generateColorScale dark scales start on the background and end on l
   expect(oklchOf(scale[1])[0]).toBeCloseTo(backgroundL, 2);
   expect(oklchOf(scale[12])[0]).toBeGreaterThan(0.85);
   expect(oklchOf(scale[8])[0]).toBeGreaterThan(oklchOf(scale[1])[0]);
+});
+
+test("tokens.generateColorScale step 1 follows the background", () => {
+  const dark = tokens.generateColorScale({
+    base: "#3e63dd",
+    appearance: "dark",
+    background: "#000000",
+  });
+  const gray = tokens.generateColorScale({
+    base: "#3e63dd",
+    appearance: "dark",
+    background: "#333333",
+  });
+  expect(oklchOf(dark[1])[0]).toBeCloseTo(0, 2);
+  expect(oklchOf(gray[1])[0]).toBeCloseTo(toOklch("srgb", [0.2, 0.2, 0.2])[0], 2);
+  expect(gray[9].$value.hex).toBe("#3e63dd");
 });
 
 test("tokens.generateColorScale tints a neutral scale towards the base", () => {

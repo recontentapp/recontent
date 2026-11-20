@@ -149,14 +149,14 @@ function rowHtml(token: DocToken): string {
 
 function groupHtml(layer: string, group: DocGroup): string {
   const isGrid = group.tokens.every((token) => token.type === "color");
-  const scale = group.scale;
-  const deprecated = scale?.deprecated;
+  const metadata = group.metadata;
+  const deprecated = metadata?.deprecated;
   const body = isGrid
     ? `<div class="grid">${group.tokens.map(cardHtml).join("\n")}</div>`
     : `<div class="list">${group.tokens.map(rowHtml).join("\n")}</div>`;
   return `<section class="group" id="${escapeHtml(groupId(layer, group.path))}">
   <h3>${escapeHtml(group.label)} <span class="count">${group.tokens.length}</span></h3>
-  ${scale?.description ? `<p class="lead">${escapeHtml(scale.description)}</p>` : ""}
+  ${metadata?.description ? `<p class="lead">${escapeHtml(metadata.description)}</p>` : ""}
   ${deprecated ? `<p class="callout"><span class="capsule">Deprecated</span>${deprecated === true ? "" : ` ${escapeHtml(deprecated)}`}</p>` : ""}
   ${body}
 </section>`;

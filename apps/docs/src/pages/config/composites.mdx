@@ -144,7 +144,18 @@ const heading = tokens.typography({
 | `fontSize`      | dimension           | required |
 | `fontWeight`    | font weight or name | required |
 | `letterSpacing` | dimension           | `"0px"`  |
-| `lineHeight`    | number              | `1.4`    |
+| `lineHeight`    | number or dimension | `1.4`    |
+
+A `lineHeight` written as a dimension (`"58px"`, `"1.5rem"`, `"1.2em"`) is converted to a unitless
+ratio when the token is authored, rounded to 4 decimals, so every output sees a plain number:
+
+| `lineHeight` | `fontSize` | Ratio                                                                       |
+| ------------ | ---------- | --------------------------------------------------------------------------- |
+| `em`         | any        | the value itself (`"1.2em"` is `1.2`)                                       |
+| `px` / `rem` | `px`/`rem` | line height divided by font size (`px` and `rem` are mixed at 16px per rem) |
+| `px` / `rem` | `em`       | an error: use a number or an `em` line height                               |
+
+An aliased `fontSize` works too: the conversion uses its resolved value.
 
 CSS variables, for a token at `system.typography.body`: `--system-typography-body-font-family`,
 `-font-size`, `-font-weight`, `-letter-spacing` and `-line-height`.

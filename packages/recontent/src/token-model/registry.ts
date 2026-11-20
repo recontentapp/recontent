@@ -8,6 +8,10 @@ export type TokenScaleMetadata<T extends TokenType = TokenType> = TokenMetadata 
   type: T;
   keys: string[];
 };
+export type TokenGroupMetadata = TokenMetadata & {
+  path: string[];
+  layer: TokenLayer;
+};
 export type TokenEntry<T extends TokenType = TokenType> = TokenMetadata & {
   path: string[];
   $type: T;
@@ -18,6 +22,8 @@ export type TokenEntry<T extends TokenType = TokenType> = TokenMetadata & {
 };
 export type TokenDiagnostic = { path: string[]; message: string };
 export type TokenRegistry = Map<string, TokenEntry>;
+/** Metadata of the plain groups made by `tokens.group(...)`, keyed by path. */
+export type TokenGroups = Map<string, TokenGroupMetadata>;
 /** A theme's replacement for one token: a literal, or an alias (with `$value` snapshotting its target). */
 type ThemeValue = { $value: TokenTypeMap[TokenType]; alias?: string[] };
 export type ThemeOverride = Map<string, ThemeValue>;

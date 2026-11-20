@@ -64,10 +64,10 @@ const ref = defineReferenceTokens({
       750: tokens.color("#27272a"),
       800: tokens.color("#18181b"),
       900: tokens.color("#09090b"),
-      "900-10": tokens.color("#09090b1a"),
-      "900-15": tokens.color("#09090b26"),
-      "900-20": tokens.color("#09090b33"),
-      "900-50": tokens.color("#09090b80"),
+      "900-10": tokens.color("#09090b").alpha(0.1),
+      "900-15": tokens.color("#09090b").alpha(0.15),
+      "900-20": tokens.color("#09090b").alpha(0.2),
+      "900-50": tokens.color("#09090b").alpha(0.5),
     }),
     success: tokens.colorScale({
       50: tokens.color("#f0fdf4"),
@@ -274,7 +274,7 @@ const system = defineSystemTokens({
       fontFamily: ref.fontFamily.sans,
       fontSize: "48px",
       fontWeight: "semibold",
-      lineHeight: 1.2083,
+      lineHeight: "58px",
     },
     "heading-branding-page": {
       fontFamily: ref.fontFamily.sans,

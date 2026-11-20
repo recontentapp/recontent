@@ -1,4 +1,4 @@
-import type { RawToken, StampedToken, TokenScale } from "./model.js";
+import type { RawToken, StampedToken, TokenGroup, TokenScale } from "./model.js";
 
 function hasKind(value: unknown, kind: string): boolean {
   return (
@@ -14,6 +14,9 @@ export function isRawToken(value: unknown): value is RawToken {
 }
 export function isTokenScale(value: unknown): value is TokenScale {
   return hasKind(value, "scale");
+}
+export function isTokenGroup(value: unknown): value is TokenGroup {
+  return hasKind(value, "group");
 }
 export function isStampedToken(value: unknown): value is StampedToken {
   return hasKind(value, "stamped");

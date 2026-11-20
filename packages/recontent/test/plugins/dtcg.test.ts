@@ -124,6 +124,21 @@ describe("scale metadata", () => {
   });
 });
 
+test("group metadata is emitted on the group node", () => {
+  const ref = defineReferenceTokens({
+    color: tokens
+      .group({ black: tokens.color("#000000") })
+      .describe("Base colors")
+      .deprecate("Use system.color"),
+  });
+  const config = defineConfig({ tokens: { ref, system: defineSystemTokens({}), components: {} } });
+  const output = generateDtcg(config) as never as {
+    ref: { color: { $description?: string; $deprecated?: string } };
+  };
+  expect(output.ref.color.$description).toBe("Base colors");
+  expect(output.ref.color.$deprecated).toBe("Use system.color");
+});
+
 describe("em dimensions", () => {
   // DTCG only supports px and rem, so em is emitted as rem.
   test("em is emitted as rem, including inside composites and dash arrays", () => {

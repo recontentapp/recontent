@@ -34,6 +34,7 @@ function color(hex: string) {
 function config(registry: TokenRegistry, themes: Record<string, ThemeOverride> = {}): Config {
   return {
     registry,
+    groups: new Map(),
     diagnostics: [],
     themes,
     plugins: [],

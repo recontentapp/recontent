@@ -4,17 +4,25 @@ import type { LogLevel } from "../logger.js";
 import type {
   RawToken,
   StampedToken,
+  TokenGroup,
+  TokenGroupKey,
   TokenLayer,
   TokenMetadata,
   TokenScale,
 } from "../token-model/model.js";
 import type { RecontentPlugin } from "../plugins/types.js";
-import type { ThemeOverride, TokenRegistry, TokenScaleMetadata } from "../token-model/registry.js";
+import type {
+  ThemeOverride,
+  TokenGroups,
+  TokenRegistry,
+  TokenScaleMetadata,
+} from "../token-model/registry.js";
 import type { TokenType } from "../token-model/values.js";
 import { diagnoseTokenTrees } from "./diagnostics.js";
 import {
   isRawToken,
   isStampedToken,
+  isTokenGroup,
   isTokenLeaf,
   isTokenScale,
   pathKey,
@@ -36,9 +44,11 @@ type StampTree<T, Layer extends TokenLayer> =
     ? TokenScale<Key, Token, StampedToken<Token, Layer>>
     : T extends RawToken<infer U> | StampedToken<infer U, TokenLayer>
       ? StampedToken<U, Layer> & ChainableMethods<StampedToken<U, Layer>>
-      : T extends object
-        ? { [K in keyof T]: StampTree<T[K], Layer> }
-        : T;
+      : T extends { readonly _kind: "group" }
+        ? TokenGroup<{ [K in Exclude<keyof T, TokenGroupKey>]: StampTree<T[K], Layer> }>
+        : T extends object
+          ? { [K in keyof T]: StampTree<T[K], Layer> }
+          : T;
 
 function stampToken<T extends TokenType, Layer extends TokenLayer>(
   token: RawToken<T> | StampedToken<T, TokenLayer>,
@@ -111,12 +121,15 @@ function walkAndStamp<Layer extends TokenLayer>(
   }
 
   // fromEntries defines own properties, so a "__proto__" key survives to be rejected by collectEntries.
-  return Object.fromEntries(
+  const result = Object.fromEntries(
     Object.entries(input).map(([key, value]) => [
       key,
       walkAndStamp(value, [...path, key], layer, depth + 1),
     ]),
   );
+  if (!isTokenGroup(input)) return result;
+  Object.defineProperty(result, "_kind", { value: "group", enumerable: false });
+  return withScaleMethods(result, input);
 }
 
 const INVALID_NAME_CHARS = /[.{}]/;
@@ -146,6 +159,7 @@ function collectEntries(
   path: string[],
   layer: TokenLayer,
   registry: TokenRegistry,
+  groups: TokenGroups,
   scale?: TokenScaleMetadata,
   depth = 0,
 ): void {
@@ -164,7 +178,15 @@ function collectEntries(
 
     for (const [key, value] of Object.entries(node)) {
       validateTokenName(key, scalePath);
-      collectEntries(value, [...scalePath, key], scaleLayer, registry, scaleMetadata, depth + 1);
+      collectEntries(
+        value,
+        [...scalePath, key],
+        scaleLayer,
+        registry,
+        groups,
+        scaleMetadata,
+        depth + 1,
+      );
     }
     return;
   }
@@ -186,9 +208,16 @@ function collectEntries(
     return;
   }
 
+  if (isTokenGroup(node)) {
+    const metadata = metadataFields(node);
+    if (Object.keys(metadata).length > 0) {
+      groups.set(pathKey(path), { path, layer, ...metadata });
+    }
+  }
+
   for (const [key, value] of Object.entries(node)) {
     validateTokenName(key, path);
-    collectEntries(value, [...path, key], layer, registry, undefined, depth + 1);
+    collectEntries(value, [...path, key], layer, registry, groups, undefined, depth + 1);
   }
 }
 
@@ -310,12 +339,13 @@ export function defineConfig(input: DefineConfigInput): Config {
   }
 
   const registry: TokenRegistry = new Map();
+  const groups: TokenGroups = new Map();
   const diagnostics = input.tokens ? diagnoseTokenTrees(input.tokens) : [];
 
   if (input.tokens) {
     const { ref, system, components } = input.tokens;
-    if (ref) collectEntries(ref, ["ref"], "ref", registry);
-    if (system) collectEntries(system, ["system"], "system", registry);
+    if (ref) collectEntries(ref, ["ref"], "ref", registry, groups);
+    if (system) collectEntries(system, ["system"], "system", registry, groups);
     if (components) {
       for (const reserved of ["ref", "system"]) {
         if (Object.hasOwn(components, reserved)) {
@@ -324,7 +354,7 @@ export function defineConfig(input: DefineConfigInput): Config {
           );
         }
       }
-      collectEntries(components, [], "components", registry);
+      collectEntries(components, [], "components", registry, groups);
     }
   }
   const hasLayer =
@@ -335,6 +365,7 @@ export function defineConfig(input: DefineConfigInput): Config {
 
   return {
     registry,
+    groups,
     diagnostics,
     themes: input.themes ?? {},
     plugins: normalizePlugins(input.plugins),

@@ -13,6 +13,7 @@ import { themedConfig } from "../helpers/fixtures.js";
 function baseConfig(plugins: RecontentPlugin[]): Config {
   return {
     registry: new Map(),
+    groups: new Map(),
     diagnostics: [],
     themes: {},
     plugins,

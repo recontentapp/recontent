@@ -63,6 +63,27 @@ A fallback `hex` is computed for every color. CSS output: sRGB colors are writte
 (`#rrggbb`, or `#rrggbbaa` with alpha); `oklch`, `oklab`, `lab`, `lch`, `hsl` and `hwb` use their
 CSS functions (`oklch(0.55 0.2 262 / 0.9)`); other spaces use `color(display-p3 …)`.
 
+### alpha
+
+`.alpha()` returns the same color with another alpha, so a translucent variant doesn't need a
+hand-written `#rrggbbaa`:
+
+```ts twoslash
+import { defineReferenceTokens, tokens } from "recontent";
+
+const ref = defineReferenceTokens({
+  ink: {
+    solid: tokens.color("#09090b"),
+    // Also works on a token that is already in the tree.
+    faded: tokens.color("#09090b").alpha(0.1),
+  },
+});
+const overlay = ref.ink.solid.alpha(0.5);
+```
+
+The result is a new literal color: it drops the description, deprecation and extensions of the
+original and is not an alias of it. It throws unless the alpha is between 0 and 1.
+
 ## dimension
 
 ```ts twoslash

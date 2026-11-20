@@ -193,11 +193,10 @@ function sectionLines(ctx: PluginContext, section: Section, items: Item[]): stri
     if (item.section !== section) continue;
     const { entry, token } = item;
     const groupPath = pathKey(entry.path.slice(0, -1));
-    if (entry.scale?.$description !== undefined && !scales.has(groupPath)) {
+    const description = (entry.scale ?? ctx.groups.get(groupPath))?.$description;
+    if (description !== undefined && !scales.has(groupPath)) {
       scales.add(groupPath);
-      lines.push(
-        `- ${code(entry.path.slice(0, -1).join("-"))}: ${escapeText(entry.scale.$description)}`,
-      );
+      lines.push(`- ${code(entry.path.slice(0, -1).join("-"))}: ${escapeText(description)}`);
     }
     if (item.group) {
       if (token.description) lines.push(`- ${code(item.key)}: ${escapeText(token.description)}`);
@@ -247,14 +246,21 @@ function avoid(subject: string, reason?: string): string {
 const reasonText = (deprecated: true | string) =>
   typeof deprecated === "string" ? escapeText(deprecated) : undefined;
 
-function guidance(items: Item[], components: ComponentInfo[], options: DesignMdPluginOptions) {
+function guidance(
+  ctx: PluginContext,
+  items: Item[],
+  components: ComponentInfo[],
+  options: DesignMdPluginOptions,
+) {
   const lines = [
     ...(options.dos ?? []).map((text) => `- Do ${text}`),
     ...(options.donts ?? []).map((text) => `- Don't ${text}`),
   ];
   const scales = new Set<string>();
   for (const { entry, token, ref, key } of items) {
-    const scale = deprecation(entry.scale?.$deprecated);
+    const scale = deprecation(
+      (entry.scale ?? ctx.groups.get(pathKey(entry.path.slice(0, -1))))?.$deprecated,
+    );
     const scaleKey = entry.path.slice(0, -1).join("-");
     if (scale !== undefined && !scales.has(scaleKey)) {
       scales.add(scaleKey);
@@ -296,7 +302,7 @@ export function generateDesignMdFiles(
     add(section, [list, table].filter(Boolean).join("\n\n"));
   }
   add("Components", componentLines(components).join("\n"));
-  add("Do's and Don'ts", guidance(items, components, options).join("\n"));
+  add("Do's and Don'ts", guidance(ctx, items, components, options).join("\n"));
 
   const content = [frontMatter(ctx, items, options), `# ${escapeText(title)}`, ...sections].join(
     "\n\n",
