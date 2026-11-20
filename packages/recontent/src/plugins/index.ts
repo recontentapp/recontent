@@ -23,4 +23,4 @@ export { typescript, type TypeScriptPluginOptions } from "./typescript.js";
 export { typescriptNative, type TypeScriptNativePluginOptions } from "./typescript-native.js";
 export { stylex, type StylexPluginOptions } from "./stylex.js";
 export { tailwind, type TailwindPluginOptions } from "./tailwind.js";
-export { resolveValue } from "../token-model/alias.js";
+export { aliasChain, resolveValue } from "../token-model/alias.js";

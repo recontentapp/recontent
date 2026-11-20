@@ -98,6 +98,32 @@ override on any token along the way wins, so an alias to a token the theme overr
 override. Without `theme` it returns the base value. An unknown theme name throws, listing the
 themes the config defines.
 
+## aliasChain
+
+```ts
+import { aliasChain } from "recontent/plugins";
+
+aliasChain(ctx, entry, theme?): TokenEntry[]
+```
+
+Returns the path an alias takes: `entry` first, then each token its alias leads to, ending with the
+terminal (non-alias) token. Every step is the token as `theme` sees it, so a theme's override on any
+token along the way replaces its value and alias, including an override that re-points an alias to
+another token. Without `theme` it returns the base chain. A token that is not an alias gives a
+one-element chain.
+
+```ts
+const chain = aliasChain(ctx, entry, theme);
+
+// Reference the target: `static let accent = Ref.blue500`
+const target = chain[1];
+// Or emit the literal value
+const literal = chain.at(-1)!.$value;
+```
+
+It throws on an unknown theme (listing the themes the config defines), a broken alias and a
+circular alias.
+
 ## ComponentInfo
 
 `ctx.components` lets a plugin generate Storybook argTypes, Figma Code Connect stubs, MCP resources,

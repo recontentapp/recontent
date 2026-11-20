@@ -109,6 +109,10 @@ export function getThemeOverride(themes: AliasContext["themes"], themeName: stri
   return override;
 }
 
+function overrideFor(ctx: AliasContext, theme?: string): ThemeOverride | undefined {
+  return theme === undefined ? undefined : getThemeOverride(ctx.themes, theme);
+}
+
 /**
  * The value of `entry` once its alias chain is followed to the end, as `theme`
  * sees it: an override on any entry along the chain wins. Without a `theme` it
@@ -119,11 +123,17 @@ export function resolveValue(
   entry: TokenEntry,
   theme?: string,
 ): TokenEntry["$value"] {
-  return resolveEntryValue(
-    ctx.registry,
-    entry,
-    theme === undefined ? undefined : getThemeOverride(ctx.themes, theme),
-  );
+  return resolveEntryValue(ctx.registry, entry, overrideFor(ctx, theme));
+}
+
+/**
+ * `entry`, then each entry its alias chain leads to, ending at the terminal
+ * (non-alias) entry, as `theme` sees them: a theme's override on any entry
+ * along the chain replaces its value and alias. Throws on an unknown theme,
+ * a broken alias or a cycle.
+ */
+export function aliasChain(ctx: AliasContext, entry: TokenEntry, theme?: string): TokenEntry[] {
+  return [...walkAliasChain(ctx.registry, entry, undefined, overrideFor(ctx, theme))];
 }
 
 function aliasDiagnostic(

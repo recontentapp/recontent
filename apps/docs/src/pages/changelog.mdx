@@ -40,6 +40,8 @@ Release notes are published as
 - `recontent build --check` fails when generated files are missing or out of date.
 - `resolveValue(ctx, entry, theme?)` in `recontent/plugins` resolves a token's value through its
   alias chain and a theme's overrides.
+- `aliasChain(ctx, entry, theme?)` in `recontent/plugins` returns the tokens an alias passes through,
+  from the entry to its terminal token, as a theme sees them.
 - Diagnostics and errors from plugins name the plugin (and the token) they came from.
 
 ### Fixed
