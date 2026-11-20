@@ -6,7 +6,7 @@ description: "Publish a snapshot of your design system so that apps and their ag
 # inspect
 
 `inspect()` writes `recontent.json`, a snapshot of your tokens, themes and, when
-[`introspection`](/tokens/configuration#introspection) is configured, your components and types. Publish it
+[`introspection`](/config#introspection) is configured, your components and types. Publish it
 with your package, and the apps that install it can run
 [`recontent inspect --from`](/cli/inspect#headless-design-system-consumers) without your config or your source.
 
@@ -14,14 +14,8 @@ with your package, and the apps that install it can run
 // [!include ~/snippets/inspect.config.ts]
 ```
 
-Then point your `package.json` at the file, and make sure it is published:
-
-```json
-{
-  "recontent": "./dist/recontent.json",
-  "files": ["dist"]
-}
-```
+Then point the `recontent` field of your `package.json` at the file and publish it, as described in
+[Publishing your design system](/guides/publishing#2-publish-it-with-the-package).
 
 ## Options
 

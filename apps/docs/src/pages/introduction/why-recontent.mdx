@@ -39,19 +39,11 @@ system from npm. See [Coding with agents](/guides/agents).
 **Guardrails: breaking changes are caught.** [`recontent diff`](/guides/diffs) reports a breaking change
 to a token or to a prop, and `recontent build --check` keeps generated files honest. Both exit with a code CI understands.
 
-## Three token layers
+## Layers and themes
 
-Tokens live in three layers, each with its own `define*Tokens` function:
-
-| Layer                 | Function                | Holds                                                     | Example                                     |
-| --------------------- | ----------------------- | --------------------------------------------------------- | ------------------------------------------- |
-| **Reference** (`ref`) | `defineReferenceTokens` | Raw values: the palette, the spacing scale, font stacks.  | `ref.color.blue[9]` is `#2563eb`            |
-| **System** (`system`) | `defineSystemTokens`    | Meaning: what a value is _for_. Usually aliases to `ref`. | `system.color.accent` → `ref.color.blue[9]` |
-| **Components**        | `defineComponentTokens` | Decisions specific to one component.                      | `button.background` → `system.color.accent` |
-
-Code consumes the system and component layers; the reference layer is the vocabulary behind them.
-Themes override values where the _meaning_ stays (dark mode, density, brand), without touching component
-code. See [Defining tokens](/guides/defining-tokens) and [Working with themes](/guides/working-with-themes).
+Tokens live in three layers (reference, system and components) and themes override values without
+touching component code. See [Defining tokens](/guides/defining-tokens) and
+[Working with themes](/guides/working-with-themes).
 
 ## Aligned with DTCG
 

@@ -2,9 +2,9 @@
   <img src="https://github.com/recontentapp/recontent/blob/master/.github/logo.png?raw=true" alt="Recontent" width="240" />
 </p>
 
-**A design system your agents can read**
+**Design system toolchain for humans & agents**
 
-Recontent turns your tokens and components into a design system that people, agents and CI can read.
+Recontent types your design tokens, introspects your React components and serves both, from one CLI, to your team, your coding agents and your CI.
 
 - **Tokens:** Typed layers and themes, with aliases that survive the build. Dark mode, density or a rebrand override values, never component code
 - **Components:** Introspected from your own TypeScript and documented with JSDoc where they live
@@ -65,7 +65,7 @@ const dark = defineTheme(system, {
 });
 
 export default defineConfig({
-  tokens: { ref, system, components },
+  tokens: { ref, system },
   themes: { dark },
   plugins: [css({ outDir: "src/generated" })],
 });
@@ -93,7 +93,7 @@ npx recontent inspect components Button  # its exact props, defaults and usage n
 
 body {
   background: var(--system-color-background);
-  color: var(--system-color-foreground);
+  color: var(--system-color-text);
 }
 ```
 

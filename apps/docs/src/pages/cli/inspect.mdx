@@ -6,7 +6,7 @@ description: "Browse the tokens and components a project defines, for people, ag
 # inspect
 
 Prints what `recontent.config.ts` defines: its tokens, and its components and the types they use when
-[`introspection`](/tokens/configuration#introspection) is configured.
+[`introspection`](/config#introspection) is configured.
 
 ```bash
 recontent inspect [--format <format>] [--from <package|file>] [--no-cache]
@@ -58,14 +58,14 @@ row naming where it comes from.
 `--deprecated` with nothing deprecated) prints an empty result and exits `0`.
 
 `--no-cache` (for `inspect`, `inspect components` and `inspect types`) neither reads nor writes the
-[introspection cache](/tokens/configuration#cache).
+[introspection cache](/config#cache).
 
 A token is printed with its path, type, value, CSS variable and notes (alias, description,
 deprecation), and its value in each theme that overrides it. A component is printed with its
-[import statement](/tokens/configuration#import-statements), its source
+[import statement](/config#import-statements), its source
 location and a
 table of its **own** props, with the expansion of your own type aliases under the type. Props
-inherited from outside the project, such as the 260 attributes of `ButtonHTMLAttributes`, are
+inherited from outside the project, such as the 288 attributes of `ButtonHTMLAttributes`, are
 summarized on an `Also accepts:` line instead of listed; `--format json` lists their names.
 
 The markdown is compact by default, so that a component fits in a few KB:
@@ -80,8 +80,7 @@ A `Next:` line points to `--props` and `inspect types` for what was left out. `-
 
 ## Documenting components
 
-The JSDoc tags `inspect` reads (`@usage`, `@example`, `@link`, `@category`, `@deprecated`, `@experimental`) are described in
-[Documenting components](/guides/documenting-components).
+`inspect` reads the JSDoc tags described in [Documenting components](/guides/documenting-components).
 
 ## For agents
 
@@ -134,19 +133,13 @@ test "$(recontent inspect components --deprecated --format json | jq '.component
 
 ## Headless (design system consumers)
 
-How design system authors publish a snapshot is in [Publishing your design system](/guides/publishing). An app that installs `@acme/design-system` from npm has neither its `recontent.config.ts` nor its
-source. If the design system publishes a snapshot with the [`inspect()` plugin](/plugins/inspect), the app
-(and its agents) can browse its tokens, components and types anyway:
+`--from` browses a design system without its config or source, from the snapshot its author publishes
+(see [Publishing your design system](/guides/publishing)):
 
 ```bash
 recontent inspect --from @acme/design-system            # a package: reads the "recontent" field of its package.json
 recontent inspect --from ./vendor/acme/recontent.json   # a snapshot file
-recontent inspect components Button --from @acme/design-system --format json
 ```
-
-The output is the same as when you inspect the design system's own config, except that the overview names
-the source (`@acme/design-system@1.4.0`) where it names the config file. Everything is read from the
-snapshot: nothing is executed and no TypeScript program is built.
 
 - **A package or a file**: a value that starts with `.` or `/`, or ends in `.json`, is a file. Anything
   else is a package name, found by looking in `node_modules` from `--cwd` upward. The `recontent` field of
@@ -160,8 +153,5 @@ snapshot: nothing is executed and no TypeScript program is built.
 ## Cost
 
 `inspect tokens` only loads the config, so it is instant, and keeps working when `introspection` is
-misconfigured. `inspect`, `inspect components` and `inspect types` need the components: building a TypeScript
-program from the configured entry takes about two seconds for 50 components, so the result is
-[cached](/tokens/configuration#cache) in `.recontent/` and later calls skip the program
-until a source file changes. Run with `--log-level debug` to see the timings and whether the cache
-was used.
+misconfigured. The other commands need the components: see [When it runs](/guides/introspecting-components#when-it-runs)
+and the [cache](/config#cache). Run with `--log-level debug` to see the timings and whether the cache was used.

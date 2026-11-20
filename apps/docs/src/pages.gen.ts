@@ -11,6 +11,10 @@ type Page =
   | { path: '/cli'; render: 'static' }
   | { path: '/cli/init'; render: 'static' }
   | { path: '/cli/inspect'; render: 'static' }
+  | { path: '/config/composites'; render: 'static' }
+  | { path: '/config'; render: 'static' }
+  | { path: '/config/primitives'; render: 'static' }
+  | { path: '/config/scales'; render: 'static' }
   | { path: '/guides/agents'; render: 'static' }
   | { path: '/guides/defining-tokens'; render: 'static' }
   | { path: '/guides/diffs'; render: 'static' }
@@ -34,10 +38,6 @@ type Page =
   | { path: '/plugins/tailwind'; render: 'static' }
   | { path: '/plugins/typescript'; render: 'static' }
   | { path: '/plugins/vanilla-extract'; render: 'static' }
-  | { path: '/tokens/composites'; render: 'static' }
-  | { path: '/tokens/configuration'; render: 'static' }
-  | { path: '/tokens/primitives'; render: 'static' }
-  | { path: '/tokens/scales'; render: 'static' }
 
 // prettier-ignore
 declare module 'waku/router' {

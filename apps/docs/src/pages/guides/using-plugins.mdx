@@ -27,10 +27,8 @@ export default defineConfig({
 });
 ```
 
-Each plugin has its own page with its options and emitted files: [CSS](/plugins/css),
-[Tailwind](/plugins/tailwind), [vanilla-extract](/plugins/vanilla-extract),
-[StyleX](/plugins/stylex), [TypeScript](/plugins/typescript), [DTCG](/plugins/dtcg) and
-[Docs](/plugins/docs) and [designMD](/plugins/design-md).
+Each plugin has its own page with its options and emitted files, under **Plugins reference** in the
+sidebar.
 
 ## outDir
 
@@ -53,9 +51,7 @@ A build loads the config, checks the aliases, lets each plugin validate and only
 files, so an error stops it **before anything is written**. See [`build`](/cli/build#what-it-does)
 for the steps.
 
-Files whose content has not changed are not rewritten, so file watchers and HMR stay quiet. A few
-files are created once and never overwritten, because you own them afterwards (for example the
-icon map the vanilla-extract plugin generates).
+Files whose content has not changed are not rewritten, so file watchers and HMR stay quiet.
 
 ## Rebuilding while you work
 

@@ -42,10 +42,10 @@ export const sidebar: NonNullable<Config["sidebar"]> = [
     text: "Config reference",
     collapsed: true,
     items: [
-      { text: "defineConfig", link: "/tokens/configuration" },
-      { text: "Primitives", link: "/tokens/primitives" },
-      { text: "Scales", link: "/tokens/scales" },
-      { text: "Composites", link: "/tokens/composites" },
+      { text: "Configuration", link: "/config" },
+      { text: "Primitives", link: "/config/primitives" },
+      { text: "Scales", link: "/config/scales" },
+      { text: "Composites", link: "/config/composites" },
     ],
   },
   {

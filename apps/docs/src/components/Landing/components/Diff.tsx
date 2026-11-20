@@ -23,12 +23,12 @@ export function Diff() {
     <section className="lp-band">
       <div className="lp-wrap">
         <h2 className="lp-h2">
-          Rename a prop. <span className="lp-hl">CI knows</span> who it breaks.
+          Remove a prop. <span className="lp-hl">CI catches</span> it.
         </h2>
         <p className="lp-sub">
           <code>recontent diff</code> compares your tokens and your components with any git
-          revision. It tells a rename from a removal, and a prop that lost a value from one that
-          gained one.
+          revision. It flags a removed prop or a prop that lost a value, and tells a renamed token
+          from a removed one.
         </p>
         <p className="lp-more">
           <Link to="/guides/diffs" className="lp-link">

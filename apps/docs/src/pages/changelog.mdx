@@ -8,7 +8,7 @@ description: "Release notes for recontent."
 Release notes are published as
 [GitHub releases](https://github.com/recontentapp/recontent/releases).
 [`recontent`](https://www.npmjs.com/package/recontent) is released under a version tag (e.g.
-`1.0.0`).
+`0.2.0`).
 
 ## Unreleased
 
@@ -26,6 +26,14 @@ Release notes are published as
 
 ### Added
 
+- Component introspection: the `introspection` config option reads your React components' props,
+  defaults, types and JSDoc, and requires an `importPath` for the import statement.
+- `recontent inspect` browses tokens, components and types as markdown or JSON, with `--from` to browse
+  an installed design system's published snapshot.
+- `docs()` documents components (with `@usage`, `@example`, `@link`, `@category` and `@stories`) and
+  `designMD()` writes a `DESIGN.md` for agents; `inspect()` publishes the snapshot `--from` reads.
+- `recontent diff` compares components and the types their props use, besides tokens.
+- `recontent build --check` fails when generated files are missing or out of date.
 - `resolveValue(ctx, entry, theme?)` in `recontent/plugins` resolves a token's value through its
   alias chain and a theme's overrides.
 - Diagnostics and errors from plugins name the plugin (and the token) they came from.

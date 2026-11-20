@@ -34,7 +34,7 @@ recontent inspect
 ```
 
 The options (`entry`, `tsconfig`, `exclude`, `importPath`) are in the
-[configuration reference](/tokens/configuration#introspection).
+[configuration reference](/config#introspection).
 
 ## What counts as a component
 
@@ -78,7 +78,7 @@ The TypeScript program is built only when a plugin that depends on components is
 as [`docs()`](/plugins/docs) or [`designMD()`](/plugins/design-md)) or when you run `recontent inspect` or `recontent inspect components`; a
 build with token-only plugins does not touch it, and a broken `introspection` block cannot stop them.
 `recontent build --watch` rebuilds when a component file changes, within the entry's package. The
-result is [cached](/tokens/configuration#cache), so repeated calls are near instant.
+result is [cached](/config#cache), so repeated calls are near instant.
 
 ## Components only
 

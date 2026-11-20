@@ -10,6 +10,8 @@ const heroOutput = lines(`$ recontent inspect components Button
 
 Triggers an action.
 
+Import: \`import { Button } from "@acme/ds"\`
+
 Source: \`src/components/Button.tsx:21\`
 
 ### Usage
@@ -30,11 +32,15 @@ export function Hero() {
     <section className="lp-hero lp-wrap">
       <div className="lp-hero-copy">
         <h1 className="lp-h1">
-          A design system your agents can{" "}
-          <span className="lp-circled">
-            read.
-            <MarkerCircle />
+          <span className="lp-h1-line">Design system</span>
+          <span className="lp-h1-line">
+            <span className="lp-circled">
+              toolchain
+              <MarkerCircle />
+            </span>{" "}
+            for
           </span>
+          <span className="lp-h1-line">humans & agents</span>
         </h1>
         <p className="lp-lede">
           Recontent types your design tokens, introspects your React components and serves both,

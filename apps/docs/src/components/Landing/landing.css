@@ -79,10 +79,13 @@
 }
 
 .lp-h1 {
-  font-size: clamp(2.4rem, 1rem + 4.8vw, 4.75rem);
+  font-size: clamp(2.4rem, 1rem + 4.2vw, 4.25rem);
   line-height: 1.02;
   letter-spacing: -0.04em;
-  text-wrap: balance;
+}
+
+.lp-h1-line {
+  display: block;
 }
 
 .lp-h2 {
@@ -286,10 +289,6 @@
 
 .lp-code-coral {
   box-shadow: var(--system-shadow-lg-coral);
-}
-
-.lp-code-green {
-  box-shadow: var(--system-shadow-lg-green);
 }
 
 .lp-code-blue {

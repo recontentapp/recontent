@@ -8,7 +8,7 @@ description: "Compare your tokens and components against a previous revision and
 `recontent diff` compares the tokens in your working tree with the tokens at an earlier git
 revision and prints what changed. Use it in pull requests to see the effect of a token change and
 to block removals and renames that would break consumers. If your config sets
-[`introspection`](/tokens/configuration#introspection), it also compares the props of your components and the
+[`introspection`](/config#introspection), it also compares the props of your components and the
 types they use.
 
 ```bash
@@ -16,6 +16,8 @@ recontent diff main
 ```
 
 ````md
+# Tokens
+
 ## Breaking (2)
 
 - **renamed** `system.color.bg` -> `system.color.background` (color, alias -> ref.color.gray.50)

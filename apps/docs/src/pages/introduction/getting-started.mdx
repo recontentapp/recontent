@@ -34,10 +34,10 @@ The scaffolded config defines tokens and themes but no outputs. Add a plugin fro
 import { defineConfig /* ... */ } from "recontent";
 import { css } from "recontent/plugins";
 
-// ref, system, components and dark are defined above
+// ref, system and dark are defined above
 
 export default defineConfig({
-  tokens: { ref, system, components },
+  tokens: { ref, system },
   themes: { dark },
   plugins: [css({ outDir: "src/generated" })],
 });
@@ -78,7 +78,7 @@ Point Recontent at the barrel file that exports your React components:
 
 ```ts [recontent.config.ts]
 export default defineConfig({
-  tokens: { ref, system, components },
+  tokens: { ref, system },
   themes: { dark },
   introspection: { entry: "src/components/index.ts", importPath: "@acme/ds" },
   plugins: [css({ outDir: "src/generated" })],

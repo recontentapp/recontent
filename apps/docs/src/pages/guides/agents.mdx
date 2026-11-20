@@ -66,9 +66,8 @@ itself is broken (a bad alias, an introspection failure), which is something to 
 
 ## Cost
 
-`inspect tokens` only loads the config. Commands that need components build a TypeScript program from
-your entry once, then use a [cache](/tokens/configuration#cache) in `.recontent/` until a source file
-changes, so an agent calling `recontent inspect` repeatedly gets instant answers. In CI, pass `--no-cache`.
+`inspect tokens` only loads the config. Commands that need components are [cached](/config#cache), so an agent calling `recontent inspect`
+repeatedly gets instant answers.
 
 ## For scripts
 

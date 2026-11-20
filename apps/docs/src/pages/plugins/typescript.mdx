@@ -51,7 +51,7 @@ export type BaseTheme = typeof theme;
   point at, so the file reads like your config.
 - Each theme in your config is an additional constant with the same shape, named after the theme
   (`dark`), with that theme's overrides applied.
-- Each [scale](/tokens/scales) gets a key union and a constant (`RefSpacing`, `refSpacing`), named
+- Each [scale](/config/scales) gets a key union and a constant (`RefSpacing`, `refSpacing`), named
   after its layer and path.
 - All values are `as const`, so `theme.system.color.text` has a literal type.
 - Composites: `shadow`, `border` and `gradient` are CSS strings; `typography` and `transition` are

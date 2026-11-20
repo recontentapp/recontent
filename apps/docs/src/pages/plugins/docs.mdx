@@ -26,7 +26,8 @@ docs(options: DocsPluginOptions): RecontentPlugin
 | `storybook`  | `{ outDir: string; url: string; root?: string }` | none              | Embeds the stories of each component's [`@stories`](/guides/documenting-components) files. `outDir` is Storybook's build output (relative to the config file), whose `index.json` lists the stories: **build Storybook before the docs**. `url` is where that build is served, e.g. `https://ds.acme.com/storybook`. `root` is the directory Storybook runs from (relative to the config file), which the paths in `index.json` are relative to; it defaults to the config's. |
 | `color`      | `string`                                         | blue              | Accent color of the page: links, the active sidebar entry, focus rings and selections. Any CSS color, e.g. `#e5484d`. It applies to light and dark mode alike, so pick one that reads on both.                                                                                                                                                                                                                                                                                |
 
-Plugin name: `recontent:docs`.
+Plugin name: `recontent:docs`. It uses components when `introspection` is configured, and works without them
+otherwise; [`dependsOn`](/plugin-api#recontentplugin) says what happens when introspection fails.
 
 ## Emitted files
 
@@ -43,10 +44,12 @@ notice. The Reference, System and Components layers follow one another, and the 
 for each layer listing its scale groups. Choosing a theme swaps the displayed values, with a dot on those the theme
 overrides, and an alias links to the token it points to.
 
-**Components** appears when the config has an [`introspection`](/tokens/configuration#introspection)
-block. It opens on an overview of the components, grouped by `@category` with the others last, and each
+**Components** appears when the config has an [`introspection`](/config#introspection)
+block; without one the page covers the tokens only. It opens on an overview of the components, grouped by `@category` with the others last, and each
 component has a page of its own (`design.html#c-Button`). The sidebar lists them in the same order. A
-component page shows its description, a deprecation or experimental notice, a props table
+component page starts with its [import statement](/config#import-statements) and a Copy button (left out
+for a component without one, such as a library component defined outside the `importPath` root), then
+shows its description, a deprecation or experimental notice, a props table
 (name, type or allowed values, default, notes), an `Also accepts:` line for props inherited from
 libraries and its source location, followed by its `Usage`, `Examples` and `Stories` when it has
 [documented them](/guides/documenting-components). `Usage` is rendered as markdown (GitHub
@@ -80,17 +83,3 @@ matches; components are listed before tokens, and colour tokens show a swatch. T
 opened are listed first when the search is empty, and are remembered in the browser. Arrow keys move, `Enter`
 goes to the result and `Esc` closes. Every token and component also has an `id` in the page, so the URL
 hash (`design.html#c-Button`, `#t-system.color.accent`) deep-links to it.
-
-## Components
-
-Without an `introspection` block the page covers the tokens only, as for any token-only design system.
-
-Each component page starts with its [import statement](/tokens/configuration#import-statements), with a
-Copy button (left out for a component without one, such as a library component defined outside the
-`importPath` root).
-
-The output depends only on your sources and config, never on repository state, so a "generated files
-are up to date" check in CI can pass.
-
-If `introspection` is configured but fails, `docs()` fails with the error attributed to it while the other plugins
-still write their files.

@@ -10,7 +10,7 @@ type Language = "ts" | "css" | "sh";
 const grammars: Record<Language, RegExp> = {
   ts: /(\/\/.*$|\/\*.*\*\/|^\s*(?:\/\*\*?|\*).*$)|("[^"]*")|(\b(?:const|export|default|as|type|keyof|typeof|function)\b)|(\b(?:defineReferenceTokens|defineSystemTokens|defineComponentTokens|defineTheme|defineConfig|tokens|css|tailwind|typescript|dtcg|docs|designMD|inspect)\b(?!:))/g,
   // Terminal sessions: dim source lines, strings, prompt/error/bold markers, and headings.
-  sh: /(^(?:Source|Also accepts|Comparing):.*$)|("[^"]*")|(^\$|^error:|^Next:|\*\*[\w ]+\*\*)|(^#+ .*$)/g,
+  sh: /(^(?:Import|Source|Also accepts):.*$)|("[^"]*")|(^\$|^Next:|\*\*[\w ]+\*\*)|(^#+ .*$)/g,
   css: /(\/\*.*\*\/)|(#[0-9a-fA-F]{3,8}\b)|(^[.:][\w-]+|\bvar(?=\())|(--[\w-]+)/g,
 };
 const classNames = ["lp-c", "lp-s", "lp-k", "lp-f"];
@@ -56,7 +56,7 @@ export function CodePanel({
   code: Line[];
   language?: Language;
   error?: string;
-  tone?: "coral" | "green" | "blue";
+  tone?: "coral" | "blue";
 }) {
   return (
     <figure className={`lp-code${tone ? ` lp-code-${tone}` : ""}`}>

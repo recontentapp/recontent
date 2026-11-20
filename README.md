@@ -2,13 +2,16 @@
   <img src="https://github.com/recontentapp/recontent/blob/master/.github/logo.png?raw=true" alt="Recontent" width="240" />
 </p>
 
-**Design tokens that type-check**
+**Design system toolchain for humans & agents**
 
-Recontent stores all your design decisions in typed layers<br/>so that your design tokens are enforced by a tool, not by convention.
+Recontent types your design tokens, introspects your React components and serves both, from one CLI, to your team, your coding agents and your CI.
 
-- **Three layers, one source of truth:** Raw values, meaning & component decisions with aliases that survive the build
-- **Themes without rewrites:** Dark mode, density or a rebrand override values, never component code
-- **Built-in plugins & an API to extend them:** CSS modules, DTCG export, docs, Tailwind v4, StyleX, TypeScript & more
+- **Tokens:** Typed layers and themes, with aliases that survive the build. Dark mode, density or a rebrand override values, never component code
+- **Components:** Introspected from your own TypeScript and documented with JSDoc where they live
+- **Agents:** `recontent inspect` gives exact props, tokens and usage notes so agents stop guessing, `DESIGN.md` is loaded up front, and `--from` works for apps that install your design system from npm
+- **Guardrails:** `recontent diff` catches breaking token and prop changes, and `build --check` keeps generated files honest
+
+Built-in plugins & an API to extend them: CSS variables, Tailwind v4, StyleX, vanilla-extract, TypeScript, DTCG, docs & more.
 
 ## Getting started
 
@@ -62,7 +65,7 @@ const dark = defineTheme(system, {
 });
 
 export default defineConfig({
-  tokens: { ref, system, components },
+  tokens: { ref, system },
   themes: { dark },
   plugins: [css({ outDir: "src/generated" })],
 });
@@ -74,14 +77,23 @@ export default defineConfig({
 npx recontent build   # add --watch to rebuild on save
 ```
 
-4. Consume them
+4. Introspect your components
+
+Add `introspection: { entry: "src/components/index.ts", importPath: "@acme/ds" }` to `defineConfig`, then:
+
+```bash
+npx recontent inspect                    # counts, themes and component names
+npx recontent inspect components Button  # its exact props, defaults and usage notes
+```
+
+5. Consume the tokens
 
 ```css
 @import "./generated/tokens.css";
 
 body {
   background: var(--system-color-background);
-  color: var(--system-color-foreground);
+  color: var(--system-color-text);
 }
 ```
 
@@ -93,6 +105,8 @@ Good places to start:
 - [Defining tokens](https://recontent.app/guides/defining-tokens)
 - [Using plugins](https://recontent.app/guides/using-plugins)
 - [Working with themes](https://recontent.app/guides/working-with-themes)
+- [Introspecting components](https://recontent.app/guides/introspecting-components)
+- [Coding with agents](https://recontent.app/guides/agents)
 - [Catching breaking changes](https://recontent.app/guides/diffs)
 
 ## Contributing

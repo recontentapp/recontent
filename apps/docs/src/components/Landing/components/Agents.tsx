@@ -21,6 +21,8 @@ const select = lines(`$ recontent inspect components Select
 
 Picks one option from a list.
 
+Import: \`import { Select } from "@acme/ds"\`
+
 Source: \`src/components/Select.tsx:17\`
 
 | Prop | Type | Required |

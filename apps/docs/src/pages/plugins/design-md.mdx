@@ -29,7 +29,8 @@ designMD(options: DesignMdPluginOptions): RecontentPlugin
 | `dos`         | `string[]` | none              | Guidance written as `Do <item>` under "Do's and Don'ts". Write the end of the sentence: `use system tokens`. |
 | `donts`       | `string[]` | none              | Written as `Don't <item>`, before the deprecations. Write the end of the sentence.                           |
 
-Plugin name: `recontent:design-md`.
+Plugin name: `recontent:design-md`. It uses components when `introspection` is configured, and works without
+them otherwise; [`dependsOn`](/plugin-api#recontentplugin) says what happens when introspection fails.
 
 ## Emitted files
 
@@ -108,11 +109,5 @@ A section is written only when it has something to say. In the order of the spec
   deprecation notice.
 
 Tokens of a type with no section of the specification (durations, easing curves, transitions, numbers)
-aren't in the document. Components come from [`introspection`](/tokens/configuration#introspection) and
+aren't in the document. Components come from [`introspection`](/config#introspection) and
 are optional: without it, the document has no Components section.
-
-The output depends only on your sources and config, never on repository state, so a "generated files
-are up to date" check in CI can pass.
-
-If `introspection` is configured but fails, `designMD()` fails with the error attributed to it while the
-other plugins still write their files.
