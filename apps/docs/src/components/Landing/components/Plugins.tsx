@@ -91,6 +91,17 @@ const groups: { title: string; outputs: Output[] }[] = [
       },
     ],
   },
+  {
+    title: "Validation",
+    outputs: [
+      {
+        label: "Contrast",
+        fn: "contrast()",
+        to: "/plugins/contrast",
+        text: "Fail the build when text and background colors drop below WCAG contrast, in every theme.",
+      },
+    ],
+  },
 ];
 
 /** Plugins: every output, built-in or your own, goes through one API. */

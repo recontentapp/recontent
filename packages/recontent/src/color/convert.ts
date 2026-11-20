@@ -234,14 +234,22 @@ function clamp01(rgb: Vec3): Vec3 {
   return rgb.map((v) => Math.min(1, Math.max(0, v))) as Vec3;
 }
 
-function toSrgbRgb(colorSpace: ColorSpace, components: readonly Component[]): Vec3 {
+/** Gamma-encoded, gamut-clamped sRGB: the channels of the `hex` users see. */
+export function toSrgb(colorSpace: ColorSpace, components: readonly Component[]): Vec3 {
   const resolved = none0(components);
   const xyz = toXyzD65(colorSpace, resolved);
   return clamp01(xyzD65ToSrgb(xyz));
 }
 
+/** WCAG relative luminance of a gamma-encoded sRGB color, 0 (black) to 1 (white). */
+export function relativeLuminance(rgb: Vec3): number {
+  const [lr, lg, lb] = rgb.map(linSrgbChannel) as Vec3;
+  const row = LIN_SRGB_TO_XYZ[1]!;
+  return row[0] * lr + row[1] * lg + row[2] * lb;
+}
+
 export function toSrgbHex(colorSpace: ColorSpace, components: readonly Component[]): string {
-  const [r, g, b] = toSrgbRgb(colorSpace, components);
+  const [r, g, b] = toSrgb(colorSpace, components);
   const toByte = (n: number) =>
     Math.round(n * 255)
       .toString(16)

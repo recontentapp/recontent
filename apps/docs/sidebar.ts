@@ -71,6 +71,10 @@ export const sidebar: NonNullable<Config["sidebar"]> = [
           { text: "inspect", link: "/plugins/inspect" },
         ],
       },
+      {
+        text: "Validation",
+        items: [{ text: "Contrast", link: "/plugins/contrast" }],
+      },
       { text: "Writing a plugin", link: "/plugin-api" },
     ],
   },

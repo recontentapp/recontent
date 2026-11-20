@@ -26,6 +26,8 @@ Release notes are published as
 
 ### Added
 
+- `contrast()` fails the build when color pairs fall below a WCAG 2.x contrast ratio in the base
+  tokens or any theme. Rules point at groups of tokens, so new colors are covered automatically.
 - `recontent inspect search <query...>` finds tokens, components and types by name, description, usage notes or value
   (a hex color, a CSS variable) in one call.
 - Component introspection: the `introspection` config option reads your React components' props,
