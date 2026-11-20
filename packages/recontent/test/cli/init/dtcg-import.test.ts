@@ -393,7 +393,10 @@ describe("sources", () => {
     );
     expect(source).toContain(`"theme": {\n    "surface": ref.color.bg`);
     expect(stats.themes).toBe(1);
-    expect(source).toMatch(/system: \{\s+"theme": \{\s+"surface": tokens\.color\('#ffffff'\)/);
+    // The dark context's plain alias is emitted as the ref token it collapses to, not a copy of its value.
+    expect(source).toMatch(
+      /"dark": defineTheme\([\s\S]*?system: \{\s+"theme": \{\s+"surface": ref\.color\.bg/,
+    );
   });
 
   test("overrides a system alias with a literal and updates the aliases collapsed through it", () => {

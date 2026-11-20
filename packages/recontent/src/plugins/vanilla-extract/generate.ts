@@ -5,14 +5,13 @@ import {
 } from "../../token-model/composite.js";
 import { type TokenEntry, type ThemeOverride } from "../../token-model/registry.js";
 import { type TokenTypeMap } from "../../token-model/values.js";
-import { pathKey } from "../../token-model/guards.js";
 import type { OutputFile } from "../shared/context.js";
 import {
   serializeCompositeCss,
   serializeValueCss,
   type MemberResolver,
 } from "../../serialize/values.js";
-import { getEntry, resolveEntryValue, terminalEntry } from "../../token-model/alias.js";
+import { getEntry, terminalEntry, themedEntry } from "../../token-model/alias.js";
 import type { GeneratorContext } from "../shared/context.js";
 import { validateThemeNames } from "../shared/theme-source.js";
 import {
@@ -38,8 +37,7 @@ function resolveVariableReference(
   entry: TokenEntry,
   override?: ThemeOverride,
 ): string {
-  const current = terminalEntry(registry, entry, override && ((key) => override.has(key)));
-  return variableReference(current);
+  return variableReference(terminalEntry(registry, entry, override));
 }
 
 function setExpandedComposite(
@@ -50,17 +48,17 @@ function setExpandedComposite(
 ): void {
   const type = entry.$type as "typography" | "transition";
   const base = [entry.layer, ...entryPath(entry)];
-  const overridden = override?.get(pathKey(entry.path));
+  const themed = themedEntry(entry, override);
 
-  if (overridden === undefined && entry.alias) {
+  if (themed.alias) {
     const targetRef = resolveVariableReference(
       config.registry,
-      getEntry(config.registry, entry.alias),
+      getEntry(config.registry, themed.alias),
       override,
     );
     for (const { cssProperty } of expandedMembers(
       type,
-      entry.$value as TokenTypeMap[typeof type],
+      themed.$value as TokenTypeMap[typeof type],
     )) {
       setTreeValue(tree, [...base, cssProperty], {
         value: propertyAccess(targetRef, [cssProperty]),
@@ -70,7 +68,7 @@ function setExpandedComposite(
     return;
   }
 
-  const resolved = (overridden ?? entry.$value) as TokenTypeMap[typeof type];
+  const resolved = themed.$value as TokenTypeMap[typeof type];
   for (const { cssProperty, type: memberType, member } of expandedMembers(type, resolved)) {
     if (member.alias) {
       setTreeValue(tree, [...base, cssProperty], {
@@ -98,9 +96,9 @@ function setInlineComposite(
   const type = entry.$type as "shadow" | "border" | "gradient";
   const path = [entry.layer, ...entryPath(entry)];
   type InlineValue = TokenTypeMap["shadow"] | TokenTypeMap["border"] | TokenTypeMap["gradient"];
-  const overridden = override?.get(pathKey(entry.path));
+  const themed = themedEntry(entry, override);
 
-  if (overridden === undefined && entry.alias) {
+  if (themed.alias) {
     setTreeValue(tree, path, {
       value: resolveVariableReference(config.registry, entry, override),
       source: true,
@@ -108,7 +106,7 @@ function setInlineComposite(
     return;
   }
 
-  const value = (overridden ?? entry.$value) as InlineValue;
+  const value = themed.$value as InlineValue;
   const resolve: MemberResolver = (memberType, member) => {
     if (!member.alias) {
       return escapeTemplateLiteral(serializeValueCss(memberType, member.$value));
@@ -149,22 +147,15 @@ function valuesTree(config: GeneratorContext, themeName?: string): SourceTree {
       setInlineComposite(config, tree, entry, override);
       continue;
     }
-    const value =
-      entry.alias && !override?.has(pathKey(entry.path))
-        ? {
-            value: resolveVariableReference(config.registry, entry, override),
-            source: true as const,
-          }
-        : {
-            value: serializeValueCss(
-              entry.$type,
-              resolveEntryValue(
-                config.registry,
-                entry,
-                override,
-              ) as TokenTypeMap[typeof entry.$type],
-            ),
-          };
+    const themed = themedEntry(entry, override);
+    const value = themed.alias
+      ? {
+          value: resolveVariableReference(config.registry, entry, override),
+          source: true as const,
+        }
+      : {
+          value: serializeValueCss(entry.$type, themed.$value as TokenTypeMap[typeof entry.$type]),
+        };
     setTreeValue(tree, [entry.layer, ...entryPath(entry)], value);
   }
   return tree;

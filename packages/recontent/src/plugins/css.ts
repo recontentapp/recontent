@@ -8,6 +8,7 @@ import { cssVarName, serializeValueCss } from "../serialize/values.js";
 import type { GeneratorContext } from "./shared/context.js";
 import { validateThemeAttribute } from "./shared/theme-source.js";
 import { outputPlugin } from "./factory.js";
+import { themedEntry } from "../token-model/alias.js";
 
 export type CssGeneratorOptions = {
   themeAttribute?: string;
@@ -94,22 +95,6 @@ function collectAllLayerDeclarations(
   return byLayer;
 }
 
-function themeOverrideDeclarations(
-  entry: TokenEntry,
-  overridden: TokenTypeMap[typeof entry.$type],
-): Record<string, string> {
-  if (!isExpandedComposite(entry.$type)) {
-    return {
-      [cssVarName(entry.path)]: serializeValueCss(
-        entry.$type,
-        overridden as TokenTypeMap[typeof entry.$type],
-      ),
-    };
-  }
-
-  return expandedEntryDeclarations(entry, overridden);
-}
-
 export function themeSelectorFor(themeName: string, options: CssGeneratorOptions): string {
   if (options.themeSelector === "class") {
     return `.${themeName}`;
@@ -144,15 +129,12 @@ export function generateCss(config: GeneratorContext, options: CssGeneratorOptio
   // every `:root` block to override it when the theme class sits on <html>.
   for (const [themeName, override] of Object.entries(themes)) {
     const themeDeclarations: Record<string, string> = {};
-    for (const [key, overridden] of override.entries()) {
+    for (const key of override.keys()) {
       const entry = registry.get(key);
       if (!entry) {
         throw new Error(`Theme override references an unknown token path: ${key}`);
       }
-      Object.assign(
-        themeDeclarations,
-        themeOverrideDeclarations(entry, overridden as TokenTypeMap[typeof entry.$type]),
-      );
+      Object.assign(themeDeclarations, entryDeclarations(themedEntry(entry, override)));
     }
     if (Object.keys(themeDeclarations).length > 0) {
       blocks.push(formatRule(themeSelectorFor(themeName, options), themeDeclarations));

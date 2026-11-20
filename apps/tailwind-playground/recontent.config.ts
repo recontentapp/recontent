@@ -14,8 +14,10 @@ const ref = defineReferenceTokens({
       0: tokens.color("#ffffff"),
       100: tokens.color("#f4f4f5"),
       300: tokens.color("#d4d4d8"),
+      400: tokens.color("#a1a1aa"),
       500: tokens.color("#71717a"),
       700: tokens.color("#3f3f46"),
+      800: tokens.color("#27272a"),
       900: tokens.color("#18181b"),
     }),
     shadow: tokens.color("#00000026"),
@@ -91,15 +93,23 @@ const system = defineSystemTokens({
   },
 });
 
-const dark = defineTheme(system, {
-  colors: {
-    background: tokens.color("#18181b"),
-    foreground: tokens.color("#f4f4f5"),
-    mutedForeground: tokens.color("#a1a1aa"),
-    surface: tokens.color("#27272a"),
-    border: tokens.color("#3f3f46"),
+// Overrides span two layers: the ref shadow gets darker, and the system colors are remapped to
+// other ref neutrals. Aliases stay aliases, so the dark theme follows any change to `ref`.
+const dark = defineTheme(
+  { ref, system },
+  {
+    ref: { color: { shadow: tokens.color("#00000066") } },
+    system: {
+      colors: {
+        background: ref.color.neutral[900],
+        foreground: ref.color.neutral[100],
+        mutedForeground: ref.color.neutral[400],
+        surface: ref.color.neutral[800],
+        border: ref.color.neutral[700],
+      },
+    },
   },
-});
+);
 
 export default defineConfig({
   tokens: { ref, system },

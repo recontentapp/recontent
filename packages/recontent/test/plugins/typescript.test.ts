@@ -162,6 +162,14 @@ describe("same-layer aliases", () => {
     expect(themeRefBlock).not.toMatch(/"alias": themeRef\.color\.base,/);
   });
 
+  test("a theme alias references the earlier layer's const in that theme", () => {
+    const { config } = themedConfig({ layer: "system", alias: true });
+    const [file] = generate(config);
+    const start = file!.content.indexOf("const darkSystem");
+    const block = file!.content.slice(start, file!.content.indexOf("as const", start));
+    expect(block).toMatch(/"accent": darkRef\.color\.white,/);
+  });
+
   test("a same-layer alias to an overridden token inlines the override value", () => {
     const { config } = themedConfig({ layer: "ref" });
     withAlias(config, "ref.color.alias", "ref.color.black");

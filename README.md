@@ -56,11 +56,11 @@ const system = defineSystemTokens({
   },
 });
 
-// Same meaning, different values
+// Same meaning, pointing at different values
 const dark = defineTheme(system, {
   color: {
-    background: tokens.color("#18181b"),
-    text: tokens.color("#fafafa"),
+    background: ref.color.gray[900],
+    text: ref.color.gray[50],
   },
 });
 

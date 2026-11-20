@@ -44,6 +44,7 @@ exports[`golden snapshots css 1`] = `
 
 [data-theme="highContrast"] {
   --system-colors-accent: #ff0000;
+  --system-colors-surface: var(--ref-color-black);
 }"
 `;
 
@@ -716,7 +717,7 @@ exports[`golden snapshots dtcg (themed: highContrast) 1`] = `
         },
       },
       "surface": {
-        "$value": "{ref.color.white}",
+        "$value": "{ref.color.black}",
       },
     },
     "gradient": {
@@ -875,6 +876,7 @@ export const darkTheme = stylex.createTheme(vars, {
 
 export const highContrastTheme = stylex.createTheme(vars, {
   systemColorsAccent: '#ff0000',
+  systemColorsSurface: '#000000',
 });
 
 
@@ -1063,7 +1065,7 @@ const highContrastRef = {
 const highContrastSystem = {
   "colors": {
     "accent": '#ff0000',
-    "surface": highContrastRef.color.white,
+    "surface": highContrastRef.color.black,
   },
   "shadow": {
     "elevated": \`inset 0px 2px 4px 0px \${highContrastRef.color.black}, 0px 1px 2px 0px #111111\`,
@@ -1313,7 +1315,7 @@ const highContrastRef = {
 const highContrastSystem = {
   "colors": {
     "accent": '#ff0000',
-    "surface": highContrastRef.color.white,
+    "surface": highContrastRef.color.black,
   },
   "shadow": {
     "elevated": {
@@ -1614,7 +1616,7 @@ export const highContrastThemeClass = createTheme(vars, {
   "system": {
     "colors": {
       "accent": '#ff0000',
-      "surface": vars.ref.color.white,
+      "surface": vars.ref.color.black,
     },
     "shadow": {
       "elevated": \`inset 0px 2px 4px 0px \${vars.ref.color.black}, 0px 1px 2px 0px #111111\`,

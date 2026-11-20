@@ -179,6 +179,12 @@ describe("theme classes (Fix B + C)", () => {
     expect(darkBlock).not.toMatch(/"background": vars\.ref\.color\.black,/);
   });
 
+  test("a theme alias becomes a vars reference", () => {
+    const [file] = generate(themedConfig({ layer: "system", alias: true }));
+    const darkBlock = file!.content.slice(file!.content.indexOf("darkThemeClass"));
+    expect(darkBlock).toMatch(/"accent": vars\.ref\.color\.white,/);
+  });
+
   test("a shadow whose member aliases an overridden ref color keeps its template literal", () => {
     const ref = defineReferenceTokens({
       color: { black: tokens.color("#000000") },

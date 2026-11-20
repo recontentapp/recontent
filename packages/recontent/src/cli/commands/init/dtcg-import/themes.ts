@@ -1,6 +1,7 @@
 import { convertValue } from "./convert.js";
+import { followAliases, refExpression } from "./layers.js";
 import type { ConvertedToken } from "./layers.js";
-import { aliasTarget, isObject, lookupToken, sourceKey } from "./types.js";
+import { aliasTarget, containsAlias, isObject, lookupToken, sourceKey } from "./types.js";
 import type { TokenMap, Warn } from "./types.js";
 
 export type ThemeContextTokens = { modifier: string; context: string; tokens: TokenMap };
@@ -53,8 +54,9 @@ function aliasReferences(value: unknown): string[] {
  * variables already follow it. Aliases are collapsed to their final `ref`
  * token, though, so a token that reaches an overridden `system` token only
  * through such a chain would be left behind; those get an override too.
- * Overrides are literal because `defineTheme` only keeps raw values, and sit in
- * the layer of the base token.
+ * An override that is a plain alias becomes a reference to the `ref` token it
+ * collapses to, so the generated theme follows that token; any other value is
+ * written as a literal. Overrides sit in the layer of the base token.
  */
 export function buildThemes(
   base: TokenMap,
@@ -74,8 +76,30 @@ export function buildThemes(
       effective.set(key, { ...token, type: token.type ?? baseToken?.type });
     }
 
-    /** Literal override for `key`, or undefined (after reporting) when it cannot be written. */
+    /**
+     * The `ref` token a plain-alias `value` collapses to, as the base tokens do.
+     * Anything else (a partial alias, or a target that is not a `ref` token) is
+     * written as a literal instead.
+     */
+    const aliasedRef = (value: unknown, type: string): string | undefined => {
+      const reference = aliasTarget(value);
+      if (reference === undefined) return undefined;
+      const followed = followAliases(effective, reference);
+      if ("skip" in followed) return undefined;
+      const { target } = followed;
+      const isRef =
+        target.type === type &&
+        !containsAlias(target.value) &&
+        baseTokens.get(sourceKey(target.sourcePath))?.layer === "ref";
+      return isRef ? refExpression(target) : undefined;
+    };
+
+    /** Override for `key`, or undefined (after reporting) when it cannot be written. */
     const override = (key: string, value: unknown, type: string): ConvertedToken | undefined => {
+      const alias = aliasedRef(value, type);
+      if (alias !== undefined) {
+        return { token: base.get(key)!, layer: baseTokens.get(key)!.layer, expr: alias };
+      }
       let result;
       try {
         const literal = resolveLiteral(value, effective, new Set([key]));

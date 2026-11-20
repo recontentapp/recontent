@@ -184,6 +184,13 @@ describe("themes.ts", () => {
     expect(darkBlock).not.toMatch(/refColorBlack/);
   });
 
+  test("a theme alias is flattened to the target's literal, since createTheme cannot take derived values", () => {
+    const files = generateFixture(themedConfig({ layer: "system", alias: true }));
+    const themesFile = file(files, "themes.ts");
+    const darkBlock = themesFile.content.slice(themesFile.content.indexOf("darkTheme"));
+    expect(darkBlock).toMatch(/systemColorsAccent: '#ffffff',/);
+  });
+
   test("a shadow member override literal is used even though the base composite aliases a ref color", () => {
     const ref = defineReferenceTokens({
       color: { black: tokens.color("#000000") },

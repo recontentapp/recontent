@@ -279,17 +279,59 @@ test.each(["ref", "system"])("a top-level %s group in the components layer throw
   ).toThrow(new RegExp(`"${name}" would overwrite`));
 });
 
-test("defineTheme records an override whose replacement scale is built from stamped tokens", () => {
+test("defineTheme records aliases for stamped tokens and literals for raw ones", () => {
   const ref = defineReferenceTokens({
     gray: tokens.colorScale({ 100: "#f0f0f0", 900: "#101010" }),
     brand: tokens.colorScale({ 100: "#e0e0ff", 900: "#000066" }),
   });
 
   const dark = defineTheme(ref, {
-    gray: tokens.colorScale({ 100: ref.brand[900], 900: ref.brand[100] }),
+    gray: tokens.colorScale({ 100: ref.brand[900], 900: tokens.color("#222222") }),
   });
 
   expect([...dark.keys()].sort()).toEqual(["ref.gray.100", "ref.gray.900"]);
-  expect(dark.get("ref.gray.100")).toEqual(ref.brand[900].$value);
-  expect(dark.get("ref.gray.900")).toEqual(ref.brand[100].$value);
+  expect(dark.get("ref.gray.100")).toEqual({
+    $value: ref.brand[900].$value,
+    alias: ["ref", "brand", "900"],
+  });
+  expect(dark.get("ref.gray.900")).toEqual({ $value: tokens.color("#222222").$value });
+});
+
+test("defineTheme overrides several layers at once, each key mapping to its own layer's path", () => {
+  const ref = defineReferenceTokens({
+    neutral: tokens.colorScale({ 0: "#ffffff", 900: "#101010" }),
+  });
+  const system = defineSystemTokens({ colors: { background: ref.neutral[0] } });
+
+  const dark = defineTheme(
+    { ref, system },
+    {
+      ref: { neutral: tokens.colorScale({ 0: "#fafafa", 900: "#0a0a0a" }) },
+      system: { colors: { background: ref.neutral[900] } },
+    },
+  );
+
+  expect([...dark.keys()].sort()).toEqual([
+    "ref.neutral.0",
+    "ref.neutral.900",
+    "system.colors.background",
+  ]);
+  expect(dark.get("system.colors.background")?.alias).toEqual(["ref", "neutral", "900"]);
+});
+
+test("defineTheme extends other themes in order; later overrides win", () => {
+  const ref = defineReferenceTokens({
+    a: tokens.color("#000001"),
+    b: tokens.color("#000002"),
+    c: tokens.color("#000003"),
+  });
+  const first = defineTheme(ref, { a: tokens.color("#111111"), b: tokens.color("#111111") });
+  const second = defineTheme(ref, { b: tokens.color("#222222"), c: tokens.color("#222222") });
+
+  const combined = defineTheme(ref, { c: ref.a }, { extends: [first, second] });
+
+  expect(combined.get("ref.a")).toEqual(first.get("ref.a"));
+  expect(combined.get("ref.b")).toEqual(second.get("ref.b"));
+  expect(combined.get("ref.c")).toEqual({ $value: ref.a.$value, alias: ["ref", "a"] });
+  expect(first.has("ref.c")).toBe(false);
 });

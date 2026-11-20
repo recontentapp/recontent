@@ -8,7 +8,8 @@
  * value silently produces no CSS rule (verified empirically against
  * @stylexjs/babel-plugin 0.19.0) — so every theme override below is
  * flattened to a literal via `serializeValueCss`/`member.$value`, never
- * re-aliased. This is safe: CSS custom-property cascade means overriding a
+ * re-aliased. That includes overrides that alias another token in the config:
+ * they resolve to the target's value. This is safe: CSS custom-property cascade means overriding a
  * single upstream var (e.g. a ref color) already propagates to every token
  * that aliases it, without needing to redeclare the intermediate keys.
  */
@@ -32,7 +33,12 @@ import {
   serializeValueCss,
   type MemberResolver,
 } from "../serialize/values.js";
-import { CircularAliasError, getEntry, terminalEntry } from "../token-model/alias.js";
+import {
+  CircularAliasError,
+  getEntry,
+  resolveEntryValue,
+  terminalEntry,
+} from "../token-model/alias.js";
 import type { GeneratorContext } from "./shared/context.js";
 import { themeNameDiagnostics, validateThemeNames } from "./shared/theme-source.js";
 import { escapeString, escapeTemplateLiteral, quotedKey } from "../ts-source.js";
@@ -370,7 +376,8 @@ function themeOverrideLines(
     if (!entry) {
       throw new Error(`Theme override references an unknown token path: ${path}`);
     }
-    const value = override.get(path)!;
+    // `createTheme` needs literals, so an aliased override is flattened to its target's value.
+    const value = resolveEntryValue(config.registry, entry, override);
 
     if (isExpandedComposite(entry.$type)) {
       const type = entry.$type as "typography" | "transition";

@@ -211,9 +211,11 @@ export function themedConfig(options: {
   layer: "ref" | "system" | "components";
   /** The theme's name; "dark" by default. */
   name?: string;
+  /** The "system" theme aliases `ref.color.white` instead of overriding with a literal. */
+  alias?: boolean;
 }): Fixture {
   const ref = defineReferenceTokens({
-    color: { black: tokens.color("#000000") },
+    color: { black: tokens.color("#000000"), white: tokens.color("#ffffff") },
     fontFamily: { body: tokens.fontFamily("Arial") },
   });
   const system = defineSystemTokens({ colors: { accent: ref.color.black } });
@@ -223,7 +225,9 @@ export function themedConfig(options: {
   if (options.layer === "ref") {
     dark = defineTheme(ref, { color: { black: tokens.color("#111111") } });
   } else if (options.layer === "system") {
-    dark = defineTheme(system, { colors: { accent: tokens.color("#111111") } });
+    dark = defineTheme(system, {
+      colors: { accent: options.alias ? ref.color.white : tokens.color("#111111") },
+    });
   } else {
     dark = defineTheme(components, { button: { background: tokens.color("#111111") } });
   }
@@ -307,7 +311,10 @@ export function goldenConfig(): Fixture {
   });
 
   const dark = defineTheme(ref, { color: { black: tokens.color("#eeeeee") } });
-  const highContrast = defineTheme(system, { colors: { accent: tokens.color("#ff0000") } });
+  // `surface` is aliased to a ref token rather than given a literal.
+  const highContrast = defineTheme(system, {
+    colors: { accent: tokens.color("#ff0000"), surface: ref.color.black },
+  });
 
   const config = defineConfig({
     tokens: { ref, system, components },

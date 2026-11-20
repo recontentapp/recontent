@@ -8,13 +8,14 @@ type TokenTree = Record<string, unknown>;
 /**
  * A theme may replace any token subtree, but a scale replacement must retain
  * the original scale's keys and token type. This also allows constructing the
- * replacement with a fresh `tokens.*Scale()` call.
+ * replacement with a fresh `tokens.*Scale()` call. A leaf is either a raw value
+ * or a stamped token, which the theme then aliases.
  */
 type ThemeInput<T> =
   T extends TokenScale<infer Key, infer Type, infer _Value>
     ? TokenScale<Key, Type, RawToken<Type> | StampedToken<Type>>
     : T extends RawToken<infer Type> | StampedToken<infer Type, infer _Layer>
-      ? RawToken<Type>
+      ? RawToken<Type> | StampedToken<Type>
       : T extends object
         ? { [Key in keyof T]?: ThemeInput<T[Key]> }
         : never;
@@ -85,7 +86,10 @@ function collectOverrides(
     if (!target) {
       throw new Error(`Theme override at "${key}" does not match an existing token path.`);
     }
-    overrides.set(pathKey(target.path), node.$value);
+    overrides.set(
+      pathKey(target.path),
+      isStampedToken(node) ? { $value: node.$value, alias: node._path } : { $value: node.$value },
+    );
     return;
   }
 
@@ -98,13 +102,25 @@ function collectOverrides(
   }
 }
 
+/**
+ * `overrides` mirrors `tokens`: pass one layer, or `{ ref, system }` to override
+ * several. A stamped token aliases that token instead of copying its value.
+ * `extends` seeds the theme from other themes in order; later ones, then the
+ * theme's own overrides, win.
+ */
 export function defineTheme<Tokens extends TokenTree, Overrides extends ThemeInput<Tokens>>(
   tokens: Tokens,
   overrides: Overrides & ValidateThemeInput<Tokens, Overrides>,
+  options?: { extends?: ThemeOverride[] },
 ): ThemeOverride {
   const validPaths = collectTokenPaths(tokens);
   const themeOverride: ThemeOverride = new Map();
 
+  for (const base of options?.extends ?? []) {
+    for (const [key, value] of base) {
+      themeOverride.set(key, value);
+    }
+  }
   collectOverrides(overrides, [], validPaths, themeOverride);
 
   return themeOverride;

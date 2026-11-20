@@ -111,6 +111,13 @@ describe("themes", () => {
     expect(match![1]).toBe("  --system-colors-accent: #111111;");
   });
 
+  test("a theme alias emits var() instead of the target's value", () => {
+    const { config } = themedConfig({ layer: "system", alias: true });
+    const css = generateCss(config);
+    const match = css.match(/\[data-theme="dark"\] \{\n([\s\S]*?)\n\}/);
+    expect(match![1]).toBe("  --system-colors-accent: var(--ref-color-white);");
+  });
+
   test("a component-layer override produces a theme block", () => {
     const { config } = themedConfig({ layer: "components" });
     const css = generateCss(config);

@@ -23,8 +23,8 @@ const system = defineSystemTokens({
 
 const dark = defineTheme(system, {
   color: {
-    background: tokens.color("#18181b"),
-    text: tokens.color("#fafafa"),
+    background: ref.color.gray900,
+    text: ref.color.white,
   },
 });
 

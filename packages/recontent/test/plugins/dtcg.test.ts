@@ -8,7 +8,7 @@ import {
 } from "../../src/index.js";
 import { dtcg, generateDtcg, generateDtcgThemed } from "../../src/plugins/dtcg.js";
 import { runPlugins } from "../../src/plugins/runner.js";
-import { goldenConfig, refOnlyConfig } from "../helpers/fixtures.js";
+import { goldenConfig, refOnlyConfig, themedConfig } from "../helpers/fixtures.js";
 
 test("generateDtcgThemed applies overrides at non-ref layers (regression)", () => {
   const { config } = goldenConfig();
@@ -19,6 +19,14 @@ test("generateDtcgThemed applies overrides at non-ref layers (regression)", () =
     (themed as never as { system: { colors: { accent: { $value: unknown } } } }).system.colors
       .accent.$value,
   ).toMatchObject({ hex: "#ff0000" });
+});
+
+test("generateDtcgThemed emits a reference for a theme alias", () => {
+  const { config } = themedConfig({ layer: "system", alias: true });
+  const themed = generateDtcgThemed(config, "dark") as never as {
+    system: { colors: { accent: { $value: unknown } } };
+  };
+  expect(themed.system.colors.accent.$value).toBe("{ref.color.white}");
 });
 
 test("alias paths nest correctly in DTCG output", () => {

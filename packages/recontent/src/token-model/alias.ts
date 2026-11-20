@@ -35,17 +35,33 @@ export function getEntry(registry: TokenRegistry, path: string | string[]): Toke
 }
 
 /**
+ * The entry as `override` sees it: the theme's `$value` and `alias` replace the
+ * entry's own, and a literal override drops the alias.
+ */
+export function themedEntry(entry: TokenEntry, override?: ThemeOverride): TokenEntry {
+  const themed = override?.get(pathKey(entry.path));
+  if (!themed) {
+    return entry;
+  }
+  const { alias: _alias, ...rest } = entry;
+  return { ...rest, $value: themed.$value, ...(themed.alias && { alias: themed.alias }) };
+}
+
+/**
  * Yields `start`, then each entry its alias chain leads to, ending at the
- * terminal (non-alias) entry. Throws on a cycle or a missing target when the
- * walk reaches it, so a caller that stops early never sees the problem.
- * `visited` seeds the cycle check with keys that must not be revisited.
+ * terminal (non-alias) entry. With `override`, every step is the theme's view
+ * of the entry, so the walk follows the theme's aliases. Throws on a cycle or
+ * a missing target when the walk reaches it, so a caller that stops early never
+ * sees the problem. `visited` seeds the cycle check with keys that must not be
+ * revisited.
  */
 export function* walkAliasChain(
   registry: TokenRegistry,
   start: TokenEntry,
   visited = new Set<string>(),
+  override?: ThemeOverride,
 ): Generator<TokenEntry> {
-  let current = start;
+  let current = themedEntry(start, override);
   while (true) {
     const key = pathKey(current.path);
     if (visited.has(key)) {
@@ -56,48 +72,30 @@ export function* walkAliasChain(
     if (!current.alias) {
       return;
     }
-    current = getEntry(registry, current.alias);
+    current = themedEntry(getEntry(registry, current.alias), override);
   }
 }
 
-/**
- * Follows `entry.alias` until the terminal (non-alias) entry. `stopAt` lets a
- * caller halt the walk early at a given token path (e.g. a vanilla-extract
- * theme override) instead of resolving all the way to the root.
- */
+/** Follows `entry.alias` until the terminal (non-alias) entry, as `override` (when given) sees it. */
 export function terminalEntry(
   registry: TokenRegistry,
   entry: TokenEntry,
-  stopAt?: (key: string) => boolean,
+  override?: ThemeOverride,
 ): TokenEntry {
   let last = entry;
-  for (const current of walkAliasChain(registry, entry)) {
+  for (const current of walkAliasChain(registry, entry, undefined, override)) {
     last = current;
-    if (current !== entry && stopAt?.(pathKey(current.path))) {
-      break;
-    }
   }
   return last;
 }
 
-/**
- * The entry's value after following its alias chain; an override in `overrides`
- * wins at the first chain entry that has one.
- */
+/** The entry's value after following its alias chain, as `override` (when given) sees it. */
 export function resolveEntryValue(
   registry: TokenRegistry,
   entry: TokenEntry,
-  overrides?: ThemeOverride,
+  override?: ThemeOverride,
 ): TokenEntry["$value"] {
-  let last = entry;
-  for (const current of walkAliasChain(registry, entry)) {
-    const overridden = overrides?.get(pathKey(current.path));
-    if (overridden !== undefined) {
-      return overridden;
-    }
-    last = current;
-  }
-  return last.$value;
+  return terminalEntry(registry, entry, override).$value;
 }
 
 /** The named theme's overrides, or an error listing the themes the config does define. */
@@ -128,42 +126,59 @@ export function resolveValue(
   );
 }
 
+function aliasDiagnostic(
+  error: unknown,
+  entry: TokenEntry,
+  themeName?: string,
+): TokenDiagnostic | undefined {
+  const entryKey = pathKey(entry.path);
+  const where = themeName === undefined ? "" : `Theme "${themeName}": `;
+  if (error instanceof AliasTargetNotFoundError) {
+    return {
+      path: entry.path,
+      message: `${where}Broken alias at "${entryKey}": target "${error.key}" does not exist in the registry.`,
+    };
+  }
+  if (error instanceof CircularAliasError) {
+    return {
+      path: entry.path,
+      message: `${where}Circular alias at "${entryKey}": alias chain revisits "${error.key}".`,
+    };
+  }
+  return undefined;
+}
+
 export function diagnoseRegistry(
   registry: TokenRegistry,
   themes: Record<string, ThemeOverride>,
 ): TokenDiagnostic[] {
   const diagnostics: TokenDiagnostic[] = [];
 
-  for (const entry of registry.values()) {
-    if (!entry.alias) continue;
-
-    const entryKey = pathKey(entry.path);
+  function check(entry: TokenEntry, themeName?: string, override?: ThemeOverride): void {
     try {
-      for (const _ of walkAliasChain(registry, entry));
+      for (const _ of walkAliasChain(registry, entry, undefined, override));
     } catch (error) {
-      if (error instanceof AliasTargetNotFoundError) {
-        diagnostics.push({
-          path: entry.path,
-          message: `Broken alias at "${entryKey}": target "${error.key}" does not exist in the registry.`,
-        });
-      } else if (error instanceof CircularAliasError) {
-        diagnostics.push({
-          path: entry.path,
-          message: `Circular alias at "${entryKey}": alias chain revisits "${error.key}".`,
-        });
-      } else {
-        throw error;
-      }
+      const diagnostic = aliasDiagnostic(error, entry, themeName);
+      if (!diagnostic) throw error;
+      diagnostics.push(diagnostic);
     }
   }
 
+  for (const entry of registry.values()) {
+    if (entry.alias) check(entry);
+  }
+
   for (const [themeName, overrides] of Object.entries(themes)) {
-    for (const key of overrides.keys()) {
-      if (registry.has(key)) continue;
-      diagnostics.push({
-        path: key.split("."),
-        message: `Theme "${themeName}" overrides unknown token "${key}"; it matches no token in the config.`,
-      });
+    for (const [key, themed] of overrides) {
+      const entry = registry.get(key);
+      if (!entry) {
+        diagnostics.push({
+          path: key.split("."),
+          message: `Theme "${themeName}" overrides unknown token "${key}"; it matches no token in the config.`,
+        });
+      } else if (themed.alias) {
+        check(entry, themeName, overrides);
+      }
     }
   }
 

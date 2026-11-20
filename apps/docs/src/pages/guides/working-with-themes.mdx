@@ -35,8 +35,8 @@ const system = defineSystemTokens({
 
 const dark = defineTheme(system, {
   color: {
-    background: tokens.color("#18181b"),
-    text: tokens.color("#fafafa"),
+    background: ref.color.gray[900],
+    text: ref.color.gray[50],
   },
 });
 
@@ -46,6 +46,10 @@ export default defineConfig({
 });
 ```
 
+The dark theme points `background` and `text` at other `ref` tokens, so it follows the palette if
+those values change. You can also give a raw token such as `tokens.color("#18181b")` for a value
+that has no `ref` token.
+
 The key in `themes` is the theme's name. It must be a valid identifier for the targets you use:
 letters, digits, `_` and `-` (not starting with a digit or `-`) for CSS, and a valid TypeScript
 identifier for the TypeScript, vanilla-extract and StyleX outputs. Pick a name such as `dark` or
@@ -54,9 +58,11 @@ identifier for the TypeScript, vanilla-extract and StyleX outputs. Pick a name s
 ### What an override can be
 
 - **Only some tokens.** Anything you leave out keeps its base value.
-- **Raw tokens only.** Write `tokens.color("#18181b")`, not `ref.color.gray[900]`: the types reject
-  aliases in overrides. To change what an alias resolves to in a theme, override the token it
-  points at (see [How overrides resolve](#how-overrides-resolve)).
+- **A raw token or an alias.** Write `tokens.color("#18181b")` for a value of its own, or
+  `ref.color.gray[900]` to make the token an alias of that one in this theme. The alias survives
+  in the output: `var(--ref-color-gray-900)` in CSS, `{ref.color.gray.900}` in DTCG, a reference
+  to the `ref` constant in TypeScript. StyleX is the exception: it flattens aliased overrides to
+  the target's value, because `stylex.createTheme` only accepts literals.
 - **A token of the same type.** The tree is type-checked against the one you pass in: a typo in a
   path, a key that does not exist or a value of the wrong type is a compile error. A runtime check
   also rejects a path that matches no token.
@@ -76,11 +82,53 @@ const dark = defineTheme(ref, {
 });
 ```
 
+### Overriding several layers
+
+Pass the layers you want to override as an object, with an overrides object of the same shape.
+Overrides in `ref` change the palette itself, and `system` overrides can point at either the new or
+the existing `ref` tokens:
+
+```ts twoslash
+import {
+  defineConfig,
+  defineReferenceTokens,
+  defineSystemTokens,
+  defineTheme,
+  tokens,
+} from "recontent";
+
+const ref = defineReferenceTokens({
+  color: {
+    gray: tokens.colorScale({ 50: "#fafafa", 900: "#18181b" }),
+    shadow: tokens.color("#00000026"),
+  },
+});
+
+const system = defineSystemTokens({
+  color: { background: ref.color.gray[50], text: ref.color.gray[900] },
+});
+
+const dark = defineTheme(
+  { ref, system },
+  {
+    ref: { color: { shadow: tokens.color("#00000066") } },
+    system: { color: { background: ref.color.gray[900], text: ref.color.gray[50] } },
+  },
+);
+
+export default defineConfig({ tokens: { ref, system }, themes: { dark } });
+```
+
 ## How overrides resolve
 
 Tokens that _alias_ an overridden token follow it. If `system.color.accent` aliases
 `ref.color.blue[9]` and a theme overrides `ref.color.blue[9]`, `system.color.accent` changes in that
 theme with no override of its own. Overriding the system token directly changes only that token.
+
+A theme's own aliases are followed the same way: if a theme points `system.color.background` at
+`ref.color.gray[900]`, the tokens aliasing `background` resolve to `gray[900]` in that theme.
+`recontent build` reports a theme alias whose target does not exist, or one that forms a cycle with
+the base aliases.
 
 How this reaches your code depends on the plugin:
 
@@ -88,9 +136,9 @@ How this reaches your code depends on the plugin:
 | --------------- | ---------------------------------------------------------------------------------------------------------------------- |
 | CSS, Tailwind   | A `.dark { … }` block (or `[data-theme="dark"]`) that redeclares overridden variables. Aliases follow through `var()`. |
 | vanilla-extract | `darkThemeClass`, created with `createTheme` against the shared variable contract.                                     |
-| StyleX          | `darkTheme`, created with `stylex.createTheme`.                                                                        |
-| TypeScript      | A fully resolved `dark` constant, plus `themes`, `ThemeName` and `Theme` types.                                        |
-| DTCG            | A `dark.tokens.json` file with every token resolved for that theme.                                                    |
+| StyleX          | `darkTheme`, created with `stylex.createTheme`. Aliased overrides are flattened to literal values.                     |
+| TypeScript      | A `dark` constant, plus `themes`, `ThemeName` and `Theme` types. Aliases reference the theme's earlier layer.          |
+| DTCG            | A `dark.tokens.json` file with every token as that theme defines it, aliases included.                                 |
 | Docs            | A column per theme in the token tables.                                                                                |
 
 ## Which layer to override
@@ -135,5 +183,45 @@ code.
 
 Themes are not limited to light and dark. Any set of overrides is a theme, so `compact`,
 `highContrast` or `brandB` work the same way. Themes are independent: each is applied alone, on top
-of the base tokens. If you need to combine two axes (dark and compact), define the combination as
-its own theme, or scope each to a different element.
+of the base tokens.
+
+To combine two axes (dark and compact), build the combination from the themes you already have
+with `extends`:
+
+```ts twoslash
+import {
+  defineConfig,
+  defineReferenceTokens,
+  defineSystemTokens,
+  defineTheme,
+  tokens,
+} from "recontent";
+
+const ref = defineReferenceTokens({
+  color: { gray: tokens.colorScale({ 50: "#fafafa", 900: "#18181b" }) },
+  spacing: tokens.dimensionScale({ sm: "8px", md: "16px" }),
+});
+
+const system = defineSystemTokens({
+  color: { background: ref.color.gray[50] },
+  spacing: ref.spacing,
+});
+
+const dark = defineTheme(system, { color: { background: ref.color.gray[900] } });
+const compact = defineTheme(system, {
+  spacing: tokens.dimensionScale({ sm: "4px", md: "8px" }),
+});
+
+export default defineConfig({
+  tokens: { ref, system },
+  themes: {
+    dark,
+    compact,
+    darkCompact: defineTheme(system, {}, { extends: [dark, compact] }),
+  },
+});
+```
+
+`extends` takes the themes to start from, in order. Their overrides are merged, a token set by more
+than one keeps the last value, and the overrides you pass to `defineTheme` itself are applied on top.
+The result is an ordinary theme: pass `{}` as the overrides to use only the extended ones.

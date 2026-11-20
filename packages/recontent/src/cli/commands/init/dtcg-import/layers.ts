@@ -10,6 +10,35 @@ export type ConvertedToken = { token: FlatToken; layer: Layer; expr: string };
 export type SkippedToken = { token: FlatToken; reason: string };
 
 /**
+ * Follows alias -> alias chains from `reference` to the first token that is
+ * not a plain alias, which is where collapsed aliases point.
+ */
+export function followAliases(
+  tokens: TokenMap,
+  reference: string,
+): { reference: string; target: FlatToken } | { skip: string } {
+  const seen = new Set<string>();
+  let currentReference = reference;
+  let target = lookupToken(tokens, currentReference);
+  while (target) {
+    const next = aliasTarget(target.value);
+    if (next === undefined) break;
+    const key = sourceKey(target.sourcePath);
+    if (seen.has(key)) return { skip: `circular alias at "${key}"` };
+    seen.add(key);
+    currentReference = next;
+    target = lookupToken(tokens, currentReference);
+  }
+  if (!target) return { skip: `alias target "{${currentReference}}" does not exist` };
+  return { reference: currentReference, target };
+}
+
+/** The expression for a `ref` token, as written in the generated config. */
+export function refExpression(token: FlatToken): string {
+  return propertyAccess("ref", token.path);
+}
+
+/**
  * Converts every token and sorts it into a layer: literal tokens go to `ref`,
  * tokens with an alias anywhere in their value go to `system`. Aliases are
  * collapsed to the final `ref` token, or, when that token is a system
@@ -45,20 +74,9 @@ export function buildLayers(
   }
 
   function resolveAlias(reference: string, expectedType: string): Converted {
-    const seen = new Set<string>();
-    let currentReference = reference;
-    let target = lookupToken(tokens, currentReference);
-    // Follow alias -> alias chains to the first token that is not a plain alias.
-    while (target) {
-      const next = aliasTarget(target.value);
-      if (next === undefined) break;
-      const key = sourceKey(target.sourcePath);
-      if (seen.has(key)) return { skip: `circular alias at "${key}"` };
-      seen.add(key);
-      currentReference = next;
-      target = lookupToken(tokens, currentReference);
-    }
-    if (!target) return { skip: `alias target "{${currentReference}}" does not exist` };
+    const followed = followAliases(tokens, reference);
+    if ("skip" in followed) return followed;
+    const { reference: currentReference, target } = followed;
 
     if (target.type !== expectedType) {
       return {
@@ -69,7 +87,7 @@ export function buildLayers(
     if ("skip" in converted) {
       return { skip: `alias target "{${currentReference}}" was skipped: ${converted.skip}` };
     }
-    return containsAlias(target.value) ? converted : { expr: propertyAccess("ref", target.path) };
+    return containsAlias(target.value) ? converted : { expr: refExpression(target) };
   }
 
   const converted: ConvertedToken[] = [];

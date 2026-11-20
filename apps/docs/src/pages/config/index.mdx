@@ -216,16 +216,22 @@ const system = defineSystemTokens({
 ### defineTheme
 
 ```ts
-defineTheme(tokens: TokenTree, overrides: PartialTree): ThemeOverride
+defineTheme(
+  tokens: TokenTree,
+  overrides: PartialTree,
+  options?: { extends?: ThemeOverride[] },
+): ThemeOverride
 ```
 
 | Parameter   | Description                                                                              |
 | ----------- | ---------------------------------------------------------------------------------------- |
 | `tokens`    | The tree the theme applies to: the result of a layer function, or a group inside of one. |
-| `overrides` | A partial tree that mirrors `tokens`, with raw tokens at the leaves.                     |
+| `overrides` | A partial tree that mirrors `tokens`, with raw or stamped tokens at the leaves.          |
+| `options`   | `extends`: themes to start from, in order. Later themes, then `overrides`, win.          |
 
-It returns a `ThemeOverride`: a `Map` from a token's dotted path to its overriding value. Register
-it in [`themes`](#themes), where its key becomes the theme's name.
+It returns a `ThemeOverride`: a `Map` from a token's dotted path to its overriding value, and to the
+token it aliases when the override is one. Register it in [`themes`](#themes), where its key becomes
+the theme's name.
 
 ```ts twoslash
 import { defineReferenceTokens, defineTheme, tokens } from "recontent";
@@ -239,7 +245,7 @@ const dark = defineTheme(ref, { color: { background: tokens.color("#18181b") } }
 
 What the types accept:
 
-- **Leaves** must be raw tokens of the same type as the token they replace. Aliases are rejected.
+- **Leaves** must be tokens of the same type as the token they replace: a raw token for a value, or a `ref` or `system` token to alias it.
 - **Keys** must exist in `tokens`. A typo is a compile error.
 - **Scales** can be replaced as a whole, but only with the same keys and the same token type.
 

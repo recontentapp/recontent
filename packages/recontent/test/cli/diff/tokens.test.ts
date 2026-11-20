@@ -18,6 +18,10 @@ function entry(path: string[], overrides: Partial<TokenEntry> = {}): TokenEntry 
   };
 }
 
+function themed(hex: string) {
+  return { $value: color(hex) };
+}
+
 function color(hex: string) {
   return {
     colorSpace: "srgb" as const,
@@ -156,12 +160,12 @@ test("diffConfigs reports theme override added/removed/changed", () => {
     ["ref.color.black", entry(["ref", "color", "black"], { $value: color("#000000") })],
   ]);
   const baseTheme: ThemeOverride = new Map([
-    ["ref.color.removedOverride", color("#111111")],
-    ["ref.color.changedOverride", color("#222222")],
+    ["ref.color.removedOverride", themed("#111111")],
+    ["ref.color.changedOverride", themed("#222222")],
   ]);
   const headTheme: ThemeOverride = new Map([
-    ["ref.color.changedOverride", color("#333333")],
-    ["ref.color.addedOverride", color("#444444")],
+    ["ref.color.changedOverride", themed("#333333")],
+    ["ref.color.addedOverride", themed("#444444")],
   ]);
   const base = config(registry, { dark: baseTheme });
   const head = config(registry, { dark: headTheme });
@@ -303,7 +307,7 @@ test("formatDiff names the compared revision when nothing changed", () => {
 
 test("diffConfigs counts removed themes as breaking, and removed theme overrides as theme changes", () => {
   const override = (keys: string[]): ThemeOverride =>
-    new Map(keys.map((key) => [key, color("#000000")])) as ThemeOverride;
+    new Map(keys.map((key) => [key, themed("#000000")]));
   const registry: TokenRegistry = new Map();
 
   const removedTheme = diffConfigs(config(registry, { dark: override(["a"]) }), config(registry));
@@ -359,7 +363,7 @@ test("diffConfigs does not report an alias that only follows a renamed token", (
 });
 
 test("renaming a token that a theme overrides is one breaking change, not two", () => {
-  const dark = (key: string) => ({ dark: new Map([[key, color("#111111")]]) });
+  const dark = (key: string) => ({ dark: new Map([[key, themed("#111111")]]) });
   const base = config(
     new Map([["ref.color.blue", entry(["ref", "color", "blue"])]]),
     dark("ref.color.blue"),
@@ -378,7 +382,7 @@ test("renaming a token that a theme overrides is one breaking change, not two", 
 
 test("removing a token that a theme overrides is one breaking change, not two", () => {
   const base = config(new Map([["ref.color.blue", entry(["ref", "color", "blue"])]]), {
-    dark: new Map([["ref.color.blue", color("#111111")]]),
+    dark: new Map([["ref.color.blue", themed("#111111")]]),
   });
   const head = config(new Map(), { dark: new Map() });
 

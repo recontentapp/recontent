@@ -1,13 +1,9 @@
 import { pathKey } from "../token-model/guards.js";
 import { type RecontentPlugin } from "./types.js";
-import {
-  type ThemeOverride,
-  type TokenEntry,
-  type TokenRegistry,
-} from "../token-model/registry.js";
+import { type TokenRegistry } from "../token-model/registry.js";
 import type { OutputFile } from "./shared/context.js";
 import { entryToDtcgNode, setNested } from "../serialize/values.js";
-import { getThemeOverride } from "../token-model/alias.js";
+import { getThemeOverride, themedEntry } from "../token-model/alias.js";
 import type { GeneratorContext } from "./shared/context.js";
 import { outputPlugin } from "./factory.js";
 
@@ -15,24 +11,6 @@ export type DtcgOutput = Record<string, unknown>;
 
 function isConfig(input: TokenRegistry | GeneratorContext): input is GeneratorContext {
   return "registry" in input;
-}
-
-function resolveThemedEntry(entry: TokenEntry, themeOverride: ThemeOverride): TokenEntry {
-  const key = pathKey(entry.path);
-  const overridden = themeOverride.get(key);
-  if (!overridden) {
-    return entry;
-  }
-
-  return {
-    path: entry.path,
-    $type: entry.$type,
-    $value: overridden,
-    layer: entry.layer,
-    ...(entry.$description !== undefined ? { $description: entry.$description } : {}),
-    ...(entry.$deprecated !== undefined ? { $deprecated: entry.$deprecated } : {}),
-    ...(entry.$extensions !== undefined ? { $extensions: entry.$extensions } : {}),
-  };
 }
 
 function applyScaleMetadata(output: DtcgOutput, registry: TokenRegistry): void {
@@ -120,7 +98,7 @@ export function generateDtcgThemed(ctx: GeneratorContext, themeName: string): Dt
   const output: DtcgOutput = {};
 
   for (const entry of ctx.registry.values()) {
-    const resolved = resolveThemedEntry(entry, themeOverride);
+    const resolved = themedEntry(entry, themeOverride);
     setNested(output, resolved.path, entryToDtcgNode(resolved));
   }
 

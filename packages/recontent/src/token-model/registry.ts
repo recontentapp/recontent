@@ -18,4 +18,6 @@ export type TokenEntry<T extends TokenType = TokenType> = TokenMetadata & {
 };
 export type TokenDiagnostic = { path: string[]; message: string };
 export type TokenRegistry = Map<string, TokenEntry>;
-export type ThemeOverride = Map<string, TokenTypeMap[TokenType]>;
+/** A theme's replacement for one token: a literal, or an alias (with `$value` snapshotting its target). */
+type ThemeValue = { $value: TokenTypeMap[TokenType]; alias?: string[] };
+export type ThemeOverride = Map<string, ThemeValue>;

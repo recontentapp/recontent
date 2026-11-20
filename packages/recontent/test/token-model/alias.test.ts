@@ -1,6 +1,6 @@
 import { expect, test } from "@jest/globals";
-import type { TokenEntry, TokenRegistry } from "../../src/token-model/registry.js";
-import { diagnoseRegistry, terminalEntry } from "../../src/token-model/alias.js";
+import type { ThemeOverride, TokenEntry, TokenRegistry } from "../../src/token-model/registry.js";
+import { diagnoseRegistry, resolveEntryValue, terminalEntry } from "../../src/token-model/alias.js";
 
 function entry(path: string[], overrides: Partial<TokenEntry> = {}): TokenEntry {
   return {
@@ -63,8 +63,8 @@ test("diagnoseRegistry flags a theme override of a token that does not exist", (
   const registry: TokenRegistry = new Map([["ref.color.blue", entry(["ref", "color", "blue"])]]);
   const themes = {
     dark: new Map([
-      ["ref.color.blue", entry([]).$value],
-      ["ref.color.nope", entry([]).$value],
+      ["ref.color.blue", { $value: entry([]).$value }],
+      ["ref.color.nope", { $value: entry([]).$value }],
     ]),
   };
 
@@ -87,4 +87,78 @@ test.each([
   ]);
 
   expect(() => terminalEntry(registry, a)).toThrow(message);
+});
+
+const hex = (value: string) => ({
+  colorSpace: "srgb" as const,
+  components: [0, 0, 0] as [number, number, number],
+  alpha: 1,
+  hex: value,
+});
+
+test("a themed walk follows the theme's aliases and stops at its literals", () => {
+  const ref = (name: string, value: string) =>
+    entry(["ref", "color", name], { $value: hex(value) });
+  const registry: TokenRegistry = new Map([
+    ["ref.color.light", ref("light", "#ffffff")],
+    ["ref.color.dark", ref("dark", "#111111")],
+    ["ref.color.accent", ref("accent", "#ff0000")],
+    [
+      "system.color.surface",
+      entry(["system", "color", "surface"], {
+        alias: ["ref", "color", "light"],
+        layer: "system",
+        $value: hex("#ffffff"),
+      }),
+    ],
+    [
+      "system.color.card",
+      entry(["system", "color", "card"], {
+        alias: ["system", "color", "surface"],
+        layer: "system",
+        $value: hex("#ffffff"),
+      }),
+    ],
+  ]);
+  const card = registry.get("system.color.card")!;
+
+  const aliased: ThemeOverride = new Map([
+    ["system.color.surface", { $value: hex("#111111"), alias: ["ref", "color", "dark"] }],
+  ]);
+  expect(terminalEntry(registry, card, aliased).path).toEqual(["ref", "color", "dark"]);
+  expect(resolveEntryValue(registry, card, aliased)).toEqual(hex("#111111"));
+
+  // The theme overrides both ends of the chain: the alias lands on the themed value.
+  const both: ThemeOverride = new Map([
+    ["system.color.surface", { $value: hex("#111111"), alias: ["ref", "color", "dark"] }],
+    ["ref.color.dark", { $value: hex("#222222") }],
+  ]);
+  expect(resolveEntryValue(registry, card, both)).toEqual(hex("#222222"));
+
+  // A literal override ends the walk even though the base entry aliases.
+  const literal: ThemeOverride = new Map([["system.color.surface", { $value: hex("#333333") }]]);
+  expect(terminalEntry(registry, card, literal).path).toEqual(["system", "color", "surface"]);
+  expect(resolveEntryValue(registry, card, literal)).toEqual(hex("#333333"));
+});
+
+test.each([
+  [
+    "a missing target",
+    { $value: hex("#000000"), alias: ["ref", "color", "missing"] },
+    'Theme "dark": Broken alias at "ref.color.a": target "ref.color.missing" does not exist in the registry.',
+  ],
+  [
+    "a cycle through the base chain",
+    { $value: hex("#000000"), alias: ["ref", "color", "b"] },
+    'Theme "dark": Circular alias at "ref.color.a": alias chain revisits "ref.color.a".',
+  ],
+])("diagnoseRegistry reports a theme alias with %s", (_name, themed, message) => {
+  const registry: TokenRegistry = new Map([
+    ["ref.color.a", entry(["ref", "color", "a"])],
+    ["ref.color.b", entry(["ref", "color", "b"], { alias: ["ref", "color", "a"] })],
+  ]);
+
+  const diagnostics = diagnoseRegistry(registry, { dark: new Map([["ref.color.a", themed]]) });
+
+  expect(diagnostics.map((d) => d.message)).toEqual([message]);
 });
