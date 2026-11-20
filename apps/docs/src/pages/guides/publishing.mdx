@@ -1,0 +1,68 @@
+---
+title: "Publishing your design system"
+description: "Ship a snapshot of your design system so that apps and their agents can browse it, and keep generated files honest in CI."
+---
+
+# Publishing your design system
+
+An app that installs `@acme/design-system` from npm has neither its `recontent.config.ts` nor its
+source. Recontent bridges that gap with a snapshot: you publish it with the package, and the app (and
+its agents) browse your tokens, components and types with [`recontent inspect --from`](/cli/inspect#headless-design-system-consumers).
+
+## If you ship a design system
+
+### 1. Write the snapshot
+
+Add the [`inspect()` plugin](/plugins/inspect). It writes `recontent.json` with your tokens, themes and,
+when [`introspection`](/guides/introspecting-components) is configured, your components and types:
+
+```ts twoslash
+// [!include ~/snippets/inspect.config.ts]
+```
+
+### 2. Publish it with the package
+
+Point the `recontent` field of your `package.json` at the file, and make sure it is published:
+
+```json
+{
+  "recontent": "./dist/recontent.json",
+  "files": ["dist"]
+}
+```
+
+### 3. Keep it honest in CI
+
+Run [`recontent build --check`](/cli/build) so that the snapshot (and every other generated file) always matches the
+source. It writes nothing and exits `1` when a file is missing or out of date. Pair it with
+[`recontent diff`](/guides/diffs) to block breaking changes:
+
+```bash
+recontent build --check
+recontent diff origin/main --fail-on-breaking
+```
+
+### 4. Host the docs (optional)
+
+[`docs()`](/plugins/docs) writes `design.html`, a single self-contained page: host it anywhere static.
+Like every generated file, it can be committed and checked by `build --check`.
+
+## If you consume one
+
+Install the design system as usual, then:
+
+```bash
+recontent inspect --from @acme/design-system            # overview
+recontent inspect components Button --from @acme/design-system
+recontent inspect tokens system.color --from @acme/design-system --format json
+```
+
+The output is the same as inspecting the design system's own config, except that the overview names
+the source (`@acme/design-system@1.4.0`) where it names the config file. Everything is read from the
+snapshot: nothing is executed and no TypeScript program is built.
+
+Give your agents the same instruction as in [Coding with agents](/guides/agents), with `--from` added
+to each command.
+
+Components are in the snapshot only if the design system configures `introspection`. See the
+[reference](/cli/inspect#headless-design-system-consumers) for how `--from` finds a package or a file.

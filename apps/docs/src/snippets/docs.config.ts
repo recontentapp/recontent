@@ -23,13 +23,14 @@ const system = defineSystemTokens({
 
 const dark = defineTheme(system, {
   color: {
-    background: tokens.color("#18181b"),
-    text: tokens.color("#fafafa"),
+    background: ref.color.gray900,
+    text: ref.color.white,
   },
 });
 
 export default defineConfig({
-  tokens: { ref, system, components: {} },
+  tokens: { ref, system },
   themes: { dark },
-  plugins: [docs({ outDir: "docs", markdown: true, title: "Acme tokens" })],
+  introspection: { entry: "src/components/index.ts", importPath: "@acme/ds" },
+  plugins: [docs({ outDir: "docs", title: "Acme design system" })],
 });

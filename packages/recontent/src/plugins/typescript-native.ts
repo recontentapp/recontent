@@ -1,20 +1,20 @@
+import { pathKey } from "../token-model/guards.js";
 import {
-  pathKey,
   type BorderValue,
   type ColorValue,
   type DimensionValue,
   type GradientValue,
   type NumberValue,
-  type OutputFile,
-  type RecontentPlugin,
   type ShadowValue,
-  type TokenEntry,
   type TokenMember,
   type TokenType,
   type TokenTypeMap,
   type TransitionValue,
   type TypographyValue,
-} from "@recontentapp/core";
+} from "../token-model/values.js";
+import { type RecontentPlugin } from "./types.js";
+import { type TokenEntry } from "../token-model/registry.js";
+import type { OutputFile } from "./shared/context.js";
 import { createLogger } from "../logger.js";
 import {
   roundTo,
@@ -26,15 +26,17 @@ import {
   serializeFontWeightNative,
   serializeStrokeStyleNative,
 } from "../serialize/native.js";
-import { escapeString } from "./shared/ts-source.js";
+import { escapeString } from "../ts-source.js";
 import {
   generateThemeSource,
+  themeNameDiagnostics,
   type MemberLookup,
   type ThemeTargetSpec,
 } from "./shared/theme-source.js";
-import type { SourceTree, SourceValue } from "./shared/ts-source.js";
+import type { SourceTree, SourceValue } from "../ts-source.js";
 import type { GeneratorContext } from "./shared/context.js";
 import { outputPlugin } from "./factory.js";
+import { generateThemeModule } from "./shared/ts-source.js";
 
 const DEFAULT_ROOT_FONT_SIZE = 16;
 
@@ -285,22 +287,16 @@ function createNativeSpec(rootFontSize: number): ThemeTargetSpec {
 function generateTypeScriptNativeSource(config: GeneratorContext, rootFontSize: number): string {
   const logger = config.logger ?? createLogger();
   const spec = createNativeSpec(rootFontSize);
-  const body = generateThemeSource(config, spec, logger, "typescript-native");
-  const themeConstNames = ["theme", ...Object.keys(config.themes).sort()];
-
-  const lines = [
-    body,
-    `export const themes = { ${themeConstNames.join(", ")} } as const;`,
-    "export type ThemeName = keyof typeof themes;",
-    "export type Theme = (typeof themes)[ThemeName];",
-    "export type BaseTheme = typeof theme;",
-  ];
-
-  return `${lines.join("\n")}\n`;
+  return generateThemeModule(
+    config,
+    generateThemeSource(config, spec, logger, "typescript-native"),
+  );
 }
 
 export type TypeScriptNativePluginOptions = {
   outDir: string;
+  /** Defaults to `tokens.ts`. Set one when another plugin writes to the same `outDir`. */
+  filename?: string;
   rootFontSize?: number;
 };
 
@@ -309,9 +305,20 @@ export function generateTypeScriptNativeFiles(
   options: TypeScriptNativePluginOptions,
 ): OutputFile[] {
   const rootFontSize = options.rootFontSize ?? DEFAULT_ROOT_FONT_SIZE;
-  return [{ filename: "tokens.ts", content: generateTypeScriptNativeSource(config, rootFontSize) }];
+  return [
+    {
+      filename: options.filename ?? "tokens.ts",
+      content: generateTypeScriptNativeSource(config, rootFontSize),
+    },
+  ];
 }
 
 export function typescriptNative(options: TypeScriptNativePluginOptions): RecontentPlugin {
-  return outputPlugin("recontent:typescript-native", options, generateTypeScriptNativeFiles);
+  return outputPlugin(
+    "recontent:typescript-native",
+    ["tokens"],
+    options,
+    generateTypeScriptNativeFiles,
+    themeNameDiagnostics("typescript-native"),
+  );
 }

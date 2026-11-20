@@ -32,13 +32,13 @@ const system = defineSystemTokens({
 
 const dark = defineTheme(system, {
   color: {
-    background: tokens.color("#18181b"),
-    text: tokens.color("#fafafa"),
+    background: ref.color.gray[900],
+    text: ref.color.gray[50],
   },
 });
 
 export default defineConfig({
-  tokens: { ref, system, components: {} },
+  tokens: { ref, system },
   themes: { dark },
   plugins: [css({ outDir: "src/generated" })],
 });

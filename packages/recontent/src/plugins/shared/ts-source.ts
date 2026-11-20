@@ -1,16 +1,8 @@
-import type {
-  ThemeOverride,
-  TokenEntry,
-  TokenLayer,
-  TokenRegistry,
-  TokenScaleMetadata,
-} from "@recontentapp/core";
-import { pathKey } from "@recontentapp/core";
-import { walkAliasChain } from "./alias.js";
+import type { TokenLayer } from "../../token-model/model.js";
+import type { TokenScaleMetadata } from "../../token-model/registry.js";
+import { pathKey } from "../../token-model/guards.js";
+import { propertyAccess, quotedKey } from "../../ts-source.js";
 import type { GeneratorContext } from "./context.js";
-
-export type SourceValue = { value: string; source?: true };
-export type SourceTree = { [key: string]: SourceTree | SourceValue };
 
 export type ScaleExport = {
   metadata: TokenScaleMetadata;
@@ -18,107 +10,8 @@ export type ScaleExport = {
   exportName: string;
 };
 
-function isSourceValue(value: SourceTree | SourceValue): value is SourceValue {
-  return typeof (value as SourceValue).value === "string";
-}
-
-function escapeLineTerminators(value: string): string {
-  return value
-    .replace(/\r/g, "\\r")
-    .replace(/\n/g, "\\n")
-    .replace(/\u2028/g, "\\u2028")
-    .replace(/\u2029/g, "\\u2029");
-}
-
-export function escapeString(value: string): string {
-  return escapeLineTerminators(value.replace(/\\/g, "\\\\").replace(/'/g, "\\'"));
-}
-
-export function escapeTemplateLiteral(value: string): string {
-  return escapeLineTerminators(
-    value.replace(/\\/g, "\\\\").replace(/`/g, "\\`").replace(/\$\{/g, "\\${"),
-  );
-}
-
-export function isNumericKey(key: string): boolean {
-  return /^-?(?:0|[1-9]\d*)(?:\.\d+)?$/.test(key);
-}
-
-export function quotedKey(key: string): string {
-  return isNumericKey(key) ? key : JSON.stringify(key);
-}
-
-export function propertyAccess(root: string, path: readonly string[]): string {
-  return path.reduce(
-    (reference, segment) =>
-      /^[A-Za-z_$][\w$]*$/.test(segment)
-        ? `${reference}.${segment}`
-        : /^(?:0|[1-9]\d*)$/.test(segment)
-          ? `${reference}[${segment}]`
-          : `${reference}[${JSON.stringify(segment)}]`,
-    root,
-  );
-}
-
 export function entryPath(entry: { path: string[]; layer: TokenLayer }): string[] {
   return entry.layer === "components" ? entry.path : entry.path.slice(1);
-}
-
-export function resolveEntryValue(
-  registry: TokenRegistry,
-  entry: TokenEntry,
-  overrides?: ThemeOverride,
-): TokenEntry["$value"] {
-  let last = entry;
-  for (const current of walkAliasChain(registry, entry)) {
-    const overridden = overrides?.get(pathKey(current.path));
-    if (overridden !== undefined) {
-      return overridden;
-    }
-    last = current;
-  }
-  return last.$value;
-}
-
-export function setTreeValue(
-  tree: SourceTree,
-  path: readonly string[],
-  value: SourceValue | SourceTree,
-): void {
-  let current = tree;
-  for (const segment of path.slice(0, -1)) {
-    const child = current[segment];
-    if (!child || isSourceValue(child)) {
-      current[segment] = Object.create(null) as SourceTree;
-    }
-    current = current[segment] as SourceTree;
-  }
-  const key = path[path.length - 1];
-  if (!key) {
-    throw new Error("Cannot generate a token value without a path.");
-  }
-  current[key] = value;
-}
-
-export function formatTree(tree: SourceTree, indent = "", contract = false): string {
-  const entries = Object.entries(tree);
-  if (entries.length === 0) {
-    return "{}";
-  }
-
-  const lines = entries.map(([key, value]) => {
-    const keySource = JSON.stringify(key);
-    if (isSourceValue(value)) {
-      const serialized = contract
-        ? "null"
-        : value.source
-          ? value.value
-          : `'${escapeString(value.value)}'`;
-      return `${indent}  ${keySource}: ${serialized},`;
-    }
-    return `${indent}  ${keySource}: ${formatTree(value, `${indent}  `, contract)},`;
-  });
-  return `{\n${lines.join("\n")}\n${indent}}`;
 }
 
 function scaleNameSegments(scale: TokenScaleMetadata): string[] {
@@ -178,4 +71,18 @@ export function generateScaleExports(scale: ScaleExport, root = "vars"): string 
   const type = scale.metadata.keys.map(quotedKey).join(" | ");
   const doc = scaleDocComment(scale.metadata);
   return `${doc}export type ${scale.typeName} = ${type};\n\n${doc}export const ${scale.exportName} = ${propertyAccess(root, [scale.metadata.layer, ...entryPath({ path: scale.metadata.path, layer: scale.metadata.layer })])};`;
+}
+
+/** The theme source `body` followed by the scale exports and the `themes` map, the same for every TypeScript target. */
+export function generateThemeModule(config: GeneratorContext, body: string): string {
+  const themeConstNames = ["theme", ...Object.keys(config.themes).sort()];
+  const lines = [
+    body,
+    ...scaleExportsForConfig(config).map((scale) => `${generateScaleExports(scale, "theme")}\n`),
+    `export const themes = { ${themeConstNames.join(", ")} } as const;`,
+    "export type ThemeName = keyof typeof themes;",
+    "export type Theme = (typeof themes)[ThemeName];",
+    "export type BaseTheme = typeof theme;",
+  ];
+  return `${lines.join("\n")}\n`;
 }

@@ -1,0 +1,105 @@
+import path from "node:path";
+import { loadConfig } from "../config/load.js";
+import { type Config } from "../config/types.js";
+import { type Logger, type LogLevel } from "../logger.js";
+import ts from "typescript";
+import type { IntrospectionWarning } from "../introspection/components.js";
+import { introspect, watchableFiles } from "../introspection/index.js";
+import { readCache, writeCache } from "../introspection/cache.js";
+import { resolveInputs } from "../introspection/program.js";
+import { createLogger } from "../logger.js";
+import type { Introspected } from "../snapshot/snapshot.js";
+
+export type Project = {
+  config: Config;
+  logger: Logger;
+  configPath: string;
+  /** Directory containing the config file. */
+  root: string;
+};
+
+export async function loadProject(options: {
+  configPath: string;
+  logLevel?: LogLevel;
+}): Promise<Project> {
+  const config = await loadConfig(options.configPath);
+  const logger = createLogger(options.logLevel ?? config.logLevel);
+  return { config, logger, configPath: options.configPath, root: path.dirname(options.configPath) };
+}
+
+export type Components = {
+  /** Components sorted by name, and what they reference sorted by id. */
+  introspection: Introspected;
+  /** Not logged: what to report, and when, is up to the caller. */
+  warnings: IntrospectionWarning[];
+  /** Files whose change should trigger a rebuild. */
+  watch: string[];
+  /** Pass back as `oldProgram`. Absent when the cache answered. */
+  program?: ts.Program;
+};
+
+/**
+ * Introspects the components of a project whose config sets `introspection`:
+ * from the cache when nothing it was computed from has changed, else by
+ * building a TypeScript program (and writing the cache). Throws when the
+ * introspection setup is broken.
+ */
+export async function loadIntrospection(
+  project: Project,
+  options: {
+    oldProgram?: ts.Program;
+    /** Absent for `--no-cache`: neither read nor written. `version` is recontent's, since a new one may analyze differently. */
+    cache?: { version: string };
+  },
+): Promise<Components> {
+  const { config, logger, configPath, root } = project;
+  const introspection = config.introspection!;
+  const { entry, tsconfigPath } = resolveInputs(introspection, root);
+
+  const key =
+    options.cache &&
+    JSON.stringify({
+      recontent: options.cache.version,
+      typescript: ts.version,
+      config: introspection,
+      entry,
+      tsconfigPath,
+    });
+
+  const cached = key === undefined ? undefined : readCache(root, configPath, key);
+  if (cached) {
+    logger.debug("introspection: reused the cache.");
+    return {
+      introspection: cached.introspection,
+      warnings: cached.warnings,
+      watch: watchableFiles(entry, cached.files),
+    };
+  }
+
+  const result = introspect({
+    config: introspection,
+    root,
+    logger,
+    oldProgram: options.oldProgram,
+  });
+  const warnings = [...result.warnings];
+
+  const watch = watchableFiles(entry, result.files);
+  if (key !== undefined) {
+    writeCache(root, configPath, key, {
+      introspection: { components: result.components, types: result.types },
+      warnings,
+      files: result.files,
+      // Not the config's own: `.recontent` and the plugins' output are created there after this is stamped.
+      directories: [...new Set(watch.map((file) => path.dirname(file)))].filter(
+        (directory) => directory !== root,
+      ),
+    });
+  }
+  return {
+    introspection: { components: result.components, types: result.types },
+    warnings,
+    watch,
+    program: result.program,
+  };
+}

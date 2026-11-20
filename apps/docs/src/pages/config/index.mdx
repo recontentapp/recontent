@@ -1,0 +1,266 @@
+---
+title: "Configuration"
+description: "Reference for defineConfig, the define* token functions and defineTheme."
+---
+
+# Configuration
+
+A project is configured by `recontent.config.ts`. Its default export must be the result of
+`defineConfig()`; a named `config` export is accepted too.
+
+```ts twoslash
+import { defineConfig, defineReferenceTokens, defineSystemTokens, tokens } from "recontent";
+import { css } from "recontent/plugins";
+
+const ref = defineReferenceTokens({ color: { white: tokens.color("#ffffff") } });
+const system = defineSystemTokens({ color: { background: ref.color.white } });
+
+export default defineConfig({
+  tokens: { ref, system },
+  themes: {},
+  plugins: [css({ outDir: "src/generated" })],
+  logLevel: "info",
+});
+```
+
+Config files are loaded with [jiti](https://github.com/unjs/jiti), so TypeScript works with no
+build step. `recontent` and `recontent/plugins` are resolved from the config's directory, and
+`paths` aliases from a `tsconfig.json` next to it are honored. For the accepted file names, see
+[config discovery](/cli#config-discovery).
+
+## defineConfig(input)
+
+`defineConfig` validates the input and returns the object the CLI consumes.
+
+### `tokens`
+
+|          |                                                                   |
+| -------- | ----------------------------------------------------------------- |
+| Type     | `{ ref?: TokenTree; system?: TokenTree; components?: TokenTree }` |
+| Required | Yes, unless [`introspection`](#introspection) is set              |
+
+The three layers, as returned by [`defineReferenceTokens`, `defineSystemTokens` and
+`defineComponentTokens`](/guides/defining-tokens). Each layer is optional.
+
+The trees are walked once:
+
+- every token becomes a registry entry keyed by its path (`ref.color.blue.9`);
+- a name containing `.`, `{` or `}`, starting with `$` or equal to `__proto__`, `constructor` or
+  `prototype` throws;
+- a value that is not a token (a bare string, number or plain object) produces a **warning**
+  (`Unknown token value at "…". Use tokens.color(...) instead of an anonymous value.`) and is
+  ignored;
+- nesting deeper than 64 levels throws.
+
+### `introspection`
+
+|          |                                                                                                                     |
+| -------- | ------------------------------------------------------------------------------------------------------------------- |
+| Type     | `{ entry: string; tsconfig?: string; exclude?: string[]; importPath: string \| { root: string; prefix?: string } }` |
+| Required | Yes, unless [`tokens`](#tokens) is set                                                                              |
+
+Tells Recontent where your React components are, so that [`recontent inspect`](/cli/inspect) and
+plugins can read their props, and the types declared in your project that those props reference
+(interfaces, type aliases and enums, followed transitively; types from `node_modules` are not).
+`defineConfig` throws when neither `tokens` nor `introspection` is set.
+
+```ts
+export default defineConfig({
+  tokens: { ref, system, components },
+  introspection: {
+    entry: "src/components/index.ts",
+    exclude: ["ThemeProvider"],
+    importPath: "@acme/ds",
+  },
+  plugins: [docs({ outDir: "docs" })],
+});
+```
+
+| Field        | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `entry`      | Required. A barrel file, relative to the config. Every export that resolves to a React component is introspected.                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| `tsconfig`   | The tsconfig used to resolve types and path aliases, relative to the config. Default: the nearest `tsconfig.json` above `entry`. It must include `entry`: for a solution-style tsconfig, point at the project file such as `tsconfig.app.json`.                                                                                                                                                                                                                                                                                                                               |
+| `exclude`    | Export names to skip, such as `"ThemeProvider"` or `"Dialog.Root"`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| `importPath` | Required. How consumers import the components, to print an `import` statement for each, shown on each component page by [`docs()`](/plugins/docs). A module specifier (`"@acme/ds"`) gives `import { Button } from "@acme/ds"`. `{ root, prefix }` is for design systems without a barrel for consumers: the specifier is `prefix` plus the path of the file defining the component relative to `root` (relative to the config), without extension or trailing `/index`, and a `default` export is imported as a default import. See [Import statements](#import-statements). |
+
+For what counts as a component, subcomponents, inherited props, generics, warnings and components-only
+configs, see [Introspecting components](/guides/introspecting-components); for
+[when the TypeScript program is built](/guides/introspecting-components#when-it-runs), see the same guide.
+
+#### Cache
+
+The result is kept in `.recontent/cache-<hash>.json` next to the config, one file per config (the folder
+ignores itself unless it already has a `.gitignore`, so there is nothing to add to yours) and used as long as the Recontent and TypeScript versions, the
+`introspection` block, the tsconfig and every file the program read, dependencies' declarations
+included, are unchanged. `recontent inspect` called repeatedly, as agents do, is then near instant.
+
+Adding a file is detected in the directories of the project's own files, so adding `button.ts` next to
+`button/index.ts` is. It is not in the config's own directory, nor in a dependency's. Pass `--no-cache` to `build` or `inspect` to
+neither read nor write the cache, in CI for instance, or to debug introspection.
+
+#### Import statements
+
+Each component has an `import` statement, printed by `recontent inspect components <name>` so that an
+agent knows how to use it without searching your codebase, and shown on its page by `docs()`:
+
+```ts
+// Consumers import from the barrel (a package, or an alias of the entry)
+importPath: "@acme/ds"; // import { NewCard } from "@acme/ds"
+
+// No barrel for consumers: they import each component's own file
+importPath: { root: "app/javascript" };
+// app/javascript/ui/NewCard/Card.tsx, `export default` → import NewCard from "ui/NewCard/Card"
+importPath: { root: "src", prefix: "@/" };
+// src/ui/Badge/index.ts, named export → import { Badge } from "@/ui/Badge"
+```
+
+A component defined outside `root`, such as a re-exported library component, has no import statement.
+A subcomponent (`Tabs.Item`) imports its root component.
+
+### `themes`
+
+|         |                                 |
+| ------- | ------------------------------- |
+| Type    | `Record<string, ThemeOverride>` |
+| Default | `{}`                            |
+
+Named themes created with [`defineTheme`](/guides/working-with-themes). The keys are the theme
+names the plugins use in selectors and export names.
+
+### `plugins`
+
+|         |                                        |
+| ------- | -------------------------------------- |
+| Type    | `RecontentPlugin \| RecontentPlugin[]` |
+| Default | `[]`                                   |
+
+The outputs to generate: [built-in plugins](/plugins/css) or [your own](/plugin-api). Every entry
+must be an object with a `name` string, otherwise `defineConfig` throws. With no plugins,
+`recontent build` only validates and prints a warning.
+
+### `logLevel`
+
+|         |                     |
+| ------- | ------------------- |
+| Type    | `"info" \| "debug"` |
+| Default | `"info"`            |
+
+The verbosity of `recontent` for this project. `--log-level` and `$RECONTENT_LOG_LEVEL` take
+precedence, in that order. Any other value throws.
+
+## define\* functions
+
+The `define*` functions turn a plain object tree into tokens a config can use. For a walkthrough,
+see [Defining tokens](/guides/defining-tokens) and [Working with themes](/guides/working-with-themes).
+
+### Layer functions
+
+```ts
+defineReferenceTokens<T>(input: T): StampTree<T, "ref">
+defineSystemTokens<T>(input: T): StampTree<T, "system">
+defineComponentTokens<T>(input: T): StampTree<T, "components">
+```
+
+Each takes a tree of groups (plain objects) whose leaves are tokens from the
+[`tokens` factories](/config/primitives), scales, or tokens from another layer. It returns a tree
+with the same shape and typing in which every token is _stamped_ with its layer and path.
+
+| Function                | Layer        | Path prefix | Example path          |
+| ----------------------- | ------------ | ----------- | --------------------- |
+| `defineReferenceTokens` | `ref`        | `ref`       | `ref.color.blue.500`  |
+| `defineSystemTokens`    | `system`     | `system`    | `system.color.accent` |
+| `defineComponentTokens` | `components` | none        | `button.background`   |
+
+A stamped token keeps its type and value. When a token is built from another stamped token (such as
+`ref.color.blue[500]`), the result is an **alias**: it records the path it points at, and outputs
+keep the reference instead of copying the value.
+
+Passing the result to `defineConfig` is what registers the tokens, see [`tokens`](#tokens). The
+functions themselves do no registration, so calling one without using its result has no effect.
+
+#### Layer function errors
+
+The naming and depth rules listed under [`tokens`](#tokens) are checked when the config is built, not
+when a layer function is called.
+
+### Metadata methods
+
+Every stamped token and scale has three chainable methods. Each returns a new token and leaves the
+original untouched.
+
+```ts
+token.describe(description: string)
+token.deprecate(reason?: string)
+token.extend(namespace: string, data: Record<string, unknown>)
+```
+
+| Method                     | Sets                            | Notes                                                                    |
+| -------------------------- | ------------------------------- | ------------------------------------------------------------------------ |
+| `.describe(text)`          | `$description`                  |                                                                          |
+| `.deprecate(reason?)`      | `$deprecated`                   | `true` without a reason, otherwise the reason string.                    |
+| `.extend(namespace, data)` | `$extensions[namespace] = data` | Other namespaces are kept; calling it again for a namespace replaces it. |
+
+The tokens returned by the `tokens.*` factories have the same methods. On a scale, the metadata
+belongs to the scale, not to each step.
+
+```ts twoslash
+import { defineSystemTokens, tokens } from "recontent";
+
+const system = defineSystemTokens({
+  color: {
+    surface: tokens.color("#ffffff").describe("Default page background").deprecate("Use card"),
+  },
+});
+```
+
+### defineTheme
+
+```ts
+defineTheme(
+  tokens: TokenTree,
+  overrides: PartialTree,
+  options?: { extends?: ThemeOverride[] },
+): ThemeOverride
+```
+
+| Parameter   | Description                                                                              |
+| ----------- | ---------------------------------------------------------------------------------------- |
+| `tokens`    | The tree the theme applies to: the result of a layer function, or a group inside of one. |
+| `overrides` | A partial tree that mirrors `tokens`, with raw or stamped tokens at the leaves.          |
+| `options`   | `extends`: themes to start from, in order. Later themes, then `overrides`, win.          |
+
+It returns a `ThemeOverride`: a `Map` from a token's dotted path to its overriding value, and to the
+token it aliases when the override is one. Register it in [`themes`](#themes), where its key becomes
+the theme's name.
+
+```ts twoslash
+import { defineReferenceTokens, defineTheme, tokens } from "recontent";
+
+const ref = defineReferenceTokens({
+  color: { background: tokens.color("#ffffff") },
+});
+
+const dark = defineTheme(ref, { color: { background: tokens.color("#18181b") } });
+```
+
+What the types accept:
+
+- **Leaves** must be tokens of the same type as the token they replace: a raw token for a value, or a `ref` or `system` token to alias it.
+- **Keys** must exist in `tokens`. A typo is a compile error.
+- **Scales** can be replaced as a whole, but only with the same keys and the same token type.
+
+#### defineTheme errors
+
+An override at a path that matches no token throws
+`Theme override at "<path>" does not match an existing token path.`. This catches what the types
+cannot, such as an override built with a cast.
+
+## Types
+
+```ts twoslash
+import type { DefineConfigInput } from "recontent";
+
+const input: DefineConfigInput = { logLevel: "debug", plugins: [] };
+```
+
+`DefineConfigInput` is exported for code that builds configs programmatically.

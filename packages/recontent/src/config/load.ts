@@ -1,0 +1,174 @@
+import { createRequire } from "node:module";
+import fs from "node:fs";
+import os from "node:os";
+import path from "node:path";
+import { pathToFileURL } from "node:url";
+import { createJiti } from "jiti";
+import ts from "typescript";
+import type { Config } from "./types.js";
+
+const DEFAULT_CONFIG = "recontent.config.ts";
+
+export class ConfigLoadError extends Error {
+  constructor(message: string, options?: { cause?: unknown }) {
+    super(message, options);
+    this.name = "ConfigLoadError";
+  }
+}
+
+function getTsconfigAliases(cwd: string): Record<string, string> {
+  // Like tsc, the nearest tsconfig.json upward: a monorepo package often shares its root's.
+  const tsConfigPath = ts.findConfigFile(cwd, ts.sys.fileExists);
+  if (!tsConfigPath) return {};
+
+  const configFile = ts.readConfigFile(tsConfigPath, ts.sys.readFile);
+  if (configFile.error) return {};
+
+  const configDir = path.dirname(tsConfigPath);
+  // Only `paths` is read: skip walking the `include` set (its "no inputs" error is ignored).
+  const host = { ...ts.sys, readDirectory: () => [] };
+  const parsed = ts.parseJsonConfigFileContent(configFile.config, host, configDir);
+  const aliases: Record<string, string> = {};
+  const paths = parsed.options.paths ?? {};
+  // Without a baseUrl, paths are relative to the tsconfig that declares them, which may be an extended one.
+  const base = parsed.options.baseUrl ?? parsed.options.pathsBasePath ?? configDir;
+
+  for (const [key, values] of Object.entries(paths)) {
+    const pattern = key.replace(/\/\*$/, "");
+    // A bare "*" has no prefix to alias.
+    if (pattern === "" || pattern === "*") continue;
+    // Fallbacks are tried in order: the first target that exists wins.
+    const targets = values.map((value) => path.resolve(String(base), value.replace(/\/\*$/, "")));
+    const target = targets.find((candidate) => fs.existsSync(candidate)) ?? targets[0];
+    if (target) aliases[pattern] = target;
+  }
+  return aliases;
+}
+
+function getRecontentAliases(configDir: string): Record<string, string> {
+  const requireFromConfig = createRequire(
+    pathToFileURL(path.join(configDir, "__recontent_loader__.js")).href,
+  );
+  try {
+    const aliases: Record<string, string> = { recontent: requireFromConfig.resolve("recontent") };
+    try {
+      aliases["recontent/plugins"] = requireFromConfig.resolve("recontent/plugins");
+    } catch {
+      // Optional subpath — only used by configs that import plugin factories.
+    }
+    return aliases;
+  } catch (cause) {
+    throw new ConfigLoadError(
+      `Could not resolve "recontent" from "${configDir}". Install recontent before loading this config.`,
+      { cause },
+    );
+  }
+}
+
+function isConfig(value: unknown): value is Config {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    "registry" in value &&
+    value.registry instanceof Map &&
+    "themes" in value &&
+    typeof value.themes === "object" &&
+    value.themes !== null &&
+    "plugins" in value &&
+    Array.isArray(value.plugins)
+  );
+}
+
+function extractConfig(module: Record<string, unknown>): unknown {
+  if ("default" in module && module.default !== undefined) return module.default;
+  if ("config" in module && module.config !== undefined) return module.config;
+  return undefined;
+}
+
+export function resolveConfigPath(configArg: string, options?: { cwd?: string }): string {
+  // Only the current user's home: "~user" is another user's, which this does not resolve.
+  if (configArg === "~") return os.homedir();
+  if (configArg.startsWith("~/")) return path.join(os.homedir(), configArg.slice(2));
+  if (path.isAbsolute(configArg)) return configArg;
+  return path.resolve(options?.cwd ?? process.cwd(), configArg);
+}
+
+const DISCOVERABLE_CONFIG_NAMES = [
+  "recontent.config.ts",
+  "recontent.config.mts",
+  "recontent.config.js",
+  "recontent.config.mjs",
+];
+
+/**
+ * Searches upward from `cwd` for a `recontent.config.{ts,mts,js,mjs}` file,
+ * so `recontent` can be invoked from a subdirectory of a project (or the
+ * root of a monorepo) without an explicit `-c/--config`. The search stops at
+ * the filesystem root, or at the first directory that has a `package.json`
+ * but no config of its own — so it doesn't wander into an unrelated
+ * ancestor project.
+ */
+export function discoverConfigPath(cwd: string): string {
+  const searched: string[] = [];
+  let current = path.resolve(cwd);
+
+  while (true) {
+    searched.push(current);
+
+    for (const name of DISCOVERABLE_CONFIG_NAMES) {
+      const candidate = path.join(current, name);
+      if (fs.existsSync(candidate)) return candidate;
+    }
+
+    if (fs.existsSync(path.join(current, "package.json"))) break;
+
+    const parent = path.dirname(current);
+    if (parent === current) break;
+    current = parent;
+  }
+
+  throw new ConfigLoadError(
+    `Could not find a recontent.config.{ts,mts,js,mjs} file. Searched:\n${searched
+      .map((dir) => `  - ${dir}`)
+      .join("\n")}\nPass -c/--config to point at one explicitly.`,
+  );
+}
+
+export async function loadConfig(
+  configPath?: string,
+  options?: { resolveFrom?: string },
+): Promise<Config> {
+  const resolved = resolveConfigPath(configPath ?? DEFAULT_CONFIG);
+  if (!fs.statSync(resolved, { throwIfNoEntry: false })?.isFile()) {
+    throw new ConfigLoadError(`Config file not found: "${resolved}".`);
+  }
+  const configDir = path.dirname(resolved);
+
+  let module: Record<string, unknown>;
+  try {
+    const jiti = createJiti(import.meta.url, {
+      interopDefault: true,
+      // `build --watch` reloads the same path in-process; a cached module would keep serving the old tokens.
+      moduleCache: false,
+      alias: {
+        // `resolveFrom` only redirects where `recontent` is found; the config's own
+        // tsconfig `paths` always belong to the directory the config lives in.
+        ...getRecontentAliases(options?.resolveFrom ?? configDir),
+        ...getTsconfigAliases(configDir),
+      },
+    });
+    module = (await jiti.import(resolved)) as Record<string, unknown>;
+  } catch (cause) {
+    if (cause instanceof ConfigLoadError) throw cause;
+    const message = cause instanceof Error ? cause.message : "Unknown error loading config";
+    throw new ConfigLoadError(`Failed to load config at "${resolved}": ${message}`, { cause });
+  }
+
+  const config = extractConfig(module);
+  if (!isConfig(config)) {
+    throw new ConfigLoadError(
+      `Invalid config at "${resolved}". Expected the default export (or named "config" export) to be the result of defineConfig().`,
+    );
+  }
+  return config;
+}

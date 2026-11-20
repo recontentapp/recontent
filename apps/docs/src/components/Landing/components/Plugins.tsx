@@ -4,14 +4,15 @@ import { CodePanel, lines } from "./CodePanel.tsx";
 
 // Built-in plugins next to a custom one: same interface, called the same way.
 const pluginsConfig = lines(`export default defineConfig({
-  tokens: { ref, system, components },
+  tokens: { ref, system },
+  introspection: { entry: "src/components/index.ts", importPath: "@acme/ds" },
   plugins: [
     css({ outDir: "src/styles" }),
     tailwind({ outDir: "src/styles", theme: { color: system.color } }),
-    typescript({ outDir: "src/charts" }),
-    typescriptNative({ outDir: "mobile/theme" }),
     dtcg({ outDir: "design" }),
-    docs({ outDir: "public/tokens" }),
+    docs({ outDir: "public/design" }),
+    designMD({ outDir: "." }),
+    inspect({ outDir: "dist" }),
     swift({ outDir: "ios/Tokens" }), // your own
   ],
 });
@@ -24,41 +25,82 @@ const swift = (options: { outDir: string }): RecontentPlugin => ({
   ],
 });`);
 
-const builtInPlugins = [
+type Output = { label: string; fn?: string; to: string; text: string };
+
+const groups: { title: string; outputs: Output[] }[] = [
   {
-    label: "CSS variables",
-    fn: "css()",
-    to: "/plugins/css",
-    text: "Any framework, or none. One block per theme.",
+    title: "Styling",
+    outputs: [
+      {
+        label: "CSS variables",
+        fn: "css()",
+        to: "/plugins/css",
+        text: "Any framework, or none. One block per theme.",
+      },
+      {
+        label: "Tailwind v4",
+        fn: "tailwind()",
+        to: "/plugins/tailwind",
+        text: "Utilities like bg-accent and p-4 resolve to your tokens.",
+      },
+      {
+        label: "StyleX",
+        fn: "stylex()",
+        to: "/plugins/stylex",
+        text: "Typed defineVars, plus a createTheme per theme.",
+      },
+      {
+        label: "DTCG",
+        fn: "dtcg()",
+        to: "/plugins/dtcg",
+        text: "JSON for Figma through Tokens Studio, or another pipeline.",
+      },
+      {
+        label: "TypeScript",
+        fn: "typescript()",
+        to: "/plugins/typescript",
+        text: "Typed constants for charts, canvas and native code.",
+      },
+      {
+        label: "& more",
+        to: "/guides/using-plugins",
+        text: "vanilla-extract, React Native, or your own.",
+      },
+    ],
   },
   {
-    label: "Tailwind v4",
-    fn: "tailwind()",
-    to: "/plugins/tailwind",
-    text: "Utilities like bg-accent and p-4 resolve to your tokens.",
+    title: "Docs & agents",
+    outputs: [
+      {
+        label: "Docs",
+        fn: "docs()",
+        to: "/plugins/docs",
+        text: "A searchable HTML page for your team, with a page per component.",
+      },
+      {
+        label: "DESIGN.md",
+        fn: "designMD()",
+        to: "/plugins/design-md",
+        text: "Tokens and guidance that agents load up front.",
+      },
+      {
+        label: "Snapshot",
+        fn: "inspect()",
+        to: "/plugins/inspect",
+        text: "Ship your design system so apps can browse it with inspect --from.",
+      },
+    ],
   },
   {
-    label: "StyleX",
-    fn: "stylex()",
-    to: "/plugins/stylex",
-    text: "Typed defineVars, plus a createTheme per theme.",
-  },
-  {
-    label: "DTCG",
-    fn: "dtcg()",
-    to: "/plugins/dtcg",
-    text: "JSON for Figma through Tokens Studio, or another pipeline.",
-  },
-  {
-    label: "Docs",
-    fn: "docs()",
-    to: "/plugins/docs",
-    text: "An HTML and Markdown catalogue for your team and agents.",
-  },
-  {
-    label: "& more",
-    to: "/guides/using-plugins",
-    text: "TypeScript, React Native, vanilla-extract, or your own.",
+    title: "Validation",
+    outputs: [
+      {
+        label: "Contrast",
+        fn: "contrast()",
+        to: "/plugins/contrast",
+        text: "Fail the build when text and background colors drop below WCAG contrast, in every theme.",
+      },
+    ],
   },
 ];
 
@@ -74,20 +116,25 @@ export function Plugins() {
         </span>
       </h2>
       <p className="lp-sub">
-        Everything is a plugin that can be added in your config so that your design tokens can go
-        wherever you need them: stylesheets, Figma, docs, native apps & more.
+        Everything is a plugin that can be added in your config so that your tokens and components
+        can go wherever you need them: stylesheets, Figma, docs, agents, native apps & more.
       </p>
-      <ul className="lp-plugins">
-        {builtInPlugins.map((plugin) => (
-          <li key={plugin.label}>
-            <Link to={plugin.to} className="lp-output">
-              <strong>{plugin.label}</strong>
-              {plugin.fn ? <code>{plugin.fn}</code> : null}
-              <span>{plugin.text}</span>
-            </Link>
-          </li>
-        ))}
-      </ul>
+      {groups.map((group) => (
+        <div key={group.title} className="lp-group">
+          <h3 className="lp-h3">{group.title}</h3>
+          <ul className="lp-cards">
+            {group.outputs.map((output) => (
+              <li key={output.label}>
+                <Link to={output.to} className="lp-output">
+                  <strong>{output.label}</strong>
+                  {output.fn ? <code>{output.fn}</code> : null}
+                  <span>{output.text}</span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ))}
       <div className="lp-plugins-config">
         <CodePanel title="recontent.config.ts" code={pluginsConfig} tone="blue" />
       </div>

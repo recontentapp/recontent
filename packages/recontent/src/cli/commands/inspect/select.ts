@@ -1,0 +1,266 @@
+import type { ComponentInfo, TypeInfo } from "../../../introspection/model.js";
+import type { TokenType } from "../../../token-model/values.js";
+import type { DocToken } from "../../../snapshot/doc-token.js";
+
+/** Every token type; the keys are checked against `TokenType` in both directions. */
+const TOKEN_TYPES = Object.keys({
+  color: 0,
+  dimension: 0,
+  fontFamily: 0,
+  fontWeight: 0,
+  duration: 0,
+  cubicBezier: 0,
+  number: 0,
+  strokeStyle: 0,
+  shadow: 0,
+  border: 0,
+  transition: 0,
+  gradient: 0,
+  typography: 0,
+} satisfies Record<TokenType, 0>);
+
+function distance(a: string, b: string): number {
+  let previous = Array.from({ length: b.length + 1 }, (_, i) => i);
+  for (let i = 1; i <= a.length; i++) {
+    const row = [i];
+    for (let j = 1; j <= b.length; j++) {
+      row[j] = Math.min(
+        previous[j]! + 1,
+        row[j - 1]! + 1,
+        previous[j - 1]! + (a[i - 1] === b[j - 1] ? 0 : 1),
+      );
+    }
+    previous = row;
+  }
+  return previous[b.length]!;
+}
+
+/** Up to three candidates within a typo's reach of `input`, closest first. */
+export function closestMatches(input: string, candidates: Iterable<string>): string[] {
+  const needle = input.toLowerCase();
+  const limit = Math.max(2, Math.floor(needle.length * 0.3));
+  return [...new Set(candidates)]
+    .map((candidate) => ({ candidate, score: distance(needle, candidate.toLowerCase()) }))
+    .filter(({ score }) => score <= limit)
+    .sort((a, b) => a.score - b.score || a.candidate.localeCompare(b.candidate))
+    .slice(0, 3)
+    .map(({ candidate }) => candidate);
+}
+
+/** What was asked for that does not exist, with the closest things that do. */
+type SelectionError = { message: string; input: string; suggestions: string[] };
+
+export type Selection<T> = { selected: T[]; errors: SelectionError[] };
+
+function unknown(kind: string, input: string, candidates: Iterable<string>): SelectionError {
+  const suggestions = closestMatches(input, candidates);
+  const hint =
+    suggestions.length > 0 ? ` Did you mean ${suggestions.map((m) => `\`${m}\``).join(", ")}?` : "";
+  return { message: `No ${kind} matches "${input}".${hint}`, input, suggestions };
+}
+
+/** A selector names an exact item or, followed by `.`, everything beneath it. */
+function matches(selector: string, name: string): boolean {
+  return name === selector || name.startsWith(`${selector}.`);
+}
+
+/** Every token path and every path prefix (group), the things `inspect tokens` accepts. */
+function tokenSelectors(tokens: DocToken[]): Set<string> {
+  const selectors = new Set<string>();
+  for (const token of tokens) {
+    const segments = token.path.split(".");
+    for (let end = 1; end <= segments.length; end++)
+      selectors.add(segments.slice(0, end).join("."));
+  }
+  return selectors;
+}
+
+export type TokenQuery = {
+  paths: string[];
+  type?: string;
+  theme?: string;
+  deprecated?: boolean;
+};
+
+export function selectTokens(
+  tokens: DocToken[],
+  themes: string[],
+  query: TokenQuery,
+): Selection<DocToken> {
+  const errors: SelectionError[] = [];
+  if (query.theme !== undefined && !themes.includes(query.theme)) {
+    errors.push(unknown("theme", query.theme, themes));
+  }
+
+  let selected = tokens;
+  if (query.paths.length > 0) {
+    const selectors = tokenSelectors(tokens);
+    for (const path of query.paths) {
+      if (!selectors.has(path)) errors.push(unknown("token or group", path, selectors));
+    }
+    selected = tokens.filter((token) => query.paths.some((path) => matches(path, token.path)));
+  }
+  if (query.type !== undefined) {
+    if (!TOKEN_TYPES.includes(query.type))
+      errors.push(unknown("token type", query.type, TOKEN_TYPES));
+    selected = selected.filter((token) => token.type === query.type);
+  }
+  if (query.deprecated) selected = selected.filter((token) => token.deprecated);
+  return { selected, errors };
+}
+
+export function selectComponents(
+  components: ComponentInfo[],
+  query: { names: string[]; deprecated?: boolean; props?: string[] },
+): Selection<ComponentInfo> {
+  const errors: SelectionError[] = [];
+  let selected = components;
+  if (query.names.length > 0) {
+    const names = components.map((component) => component.name);
+    const selectors = new Set(names.flatMap((name) => [name, name.split(".")[0]!]));
+    for (const name of query.names) {
+      if (!selectors.has(name)) errors.push(unknown("component", name, selectors));
+    }
+    selected = components.filter((component) =>
+      query.names.some((name) => matches(name, component.name)),
+    );
+  }
+  if (query.deprecated) selected = selected.filter((component) => component.deprecated);
+
+  if (query.props?.length) {
+    if (query.names.length === 0) {
+      errors.push({
+        message: "--props needs the name of a component.",
+        input: "--props",
+        suggestions: [],
+      });
+    }
+    // Own and inherited alike: any of them can be asked for.
+    const known = new Set(
+      selected.flatMap((component) => [
+        ...component.props.map((prop) => prop.name),
+        ...component.inherits.flatMap((group) => group.props),
+      ]),
+    );
+    for (const prop of query.props) {
+      if (!known.has(prop)) errors.push(unknown("prop", prop, known));
+    }
+  }
+  return { selected, errors };
+}
+
+/** A type is asked for by its id or, when it has a twin elsewhere in the project, by its bare name. */
+export function selectTypes(
+  types: TypeInfo[],
+  query: { names: string[]; deprecated?: boolean },
+): Selection<TypeInfo> {
+  const errors: SelectionError[] = [];
+  let selected = types;
+  if (query.names.length > 0) {
+    const selectors = new Set(types.flatMap((type) => [type.id, type.name]));
+    for (const name of query.names) {
+      if (!selectors.has(name)) errors.push(unknown("type", name, selectors));
+    }
+    selected = types.filter((type) =>
+      query.names.some((name) => name === type.id || name === type.name),
+    );
+  }
+  if (query.deprecated) selected = selected.filter((type) => type.deprecated);
+  return { selected, errors };
+}
+
+export type Hit<T> = { item: T; matchedIn: string[] };
+
+export type SearchResult = {
+  tokens: Hit<DocToken>[];
+  components: Hit<ComponentInfo>[];
+  types: Hit<TypeInfo>[];
+  /** Only when nothing matched: names a typo could have meant. */
+  suggestions: string[];
+};
+
+/** What is searched, as `[label, text]`; the label of the item's own name or path comes first. */
+type Field = [label: string, text: string | undefined];
+
+function tokenFields(token: DocToken): Field[] {
+  return [
+    ["path", token.path],
+    ["css variable", token.cssVar],
+    ["alias", token.alias],
+    ["description", token.description],
+    ["deprecated", typeof token.deprecated === "string" ? token.deprecated : undefined],
+    ...Object.entries(token.values).map(
+      ([name, value]): Field => [name === "default" ? "value" : `value (${name})`, value],
+    ),
+  ];
+}
+
+function componentFields(component: ComponentInfo): Field[] {
+  return [
+    ["name", component.name],
+    ["category", component.category],
+    ["description", component.description],
+    ["usage", component.usage],
+    ["deprecated", typeof component.deprecated === "string" ? component.deprecated : undefined],
+    ...component.props.flatMap((prop): Field[] => [
+      [`prop ${prop.name}`, prop.name],
+      [`prop ${prop.name}`, prop.description],
+    ]),
+  ];
+}
+
+function typeFields(type: TypeInfo): Field[] {
+  return [
+    ["id", type.id],
+    ["description", type.description],
+    ["usage", type.usage],
+    ["deprecated", typeof type.deprecated === "string" ? type.deprecated : undefined],
+    ...(type.members ?? []).flatMap((member): Field[] => [
+      [`member ${member.name}`, member.name],
+      [`member ${member.name}`, member.description],
+    ]),
+    ...(type.values ?? []).map((value): Field => ["value", String(value)]),
+  ];
+}
+
+/** Every item with at least one field containing a query, name hits first, otherwise in the original order. */
+function search<T>(items: T[], queries: string[], fields: (item: T) => Field[]): Hit<T>[] {
+  const hits = items.flatMap((item): Hit<T>[] => {
+    const matchedIn = new Set<string>();
+    for (const [label, text] of fields(item)) {
+      const lower = text?.toLowerCase();
+      if (lower !== undefined && queries.some((query) => lower.includes(query))) {
+        matchedIn.add(label);
+      }
+    }
+    return matchedIn.size > 0 ? [{ item, matchedIn: [...matchedIn] }] : [];
+  });
+  // Each kind's first field is its own name.
+  const isNameHit = (hit: Hit<T>) => hit.matchedIn.includes(fields(hit.item)[0]![0]);
+  return [...hits.filter(isNameHit), ...hits.filter((hit) => !isNameHit(hit))];
+}
+
+/** Case-insensitive substring search over everything `inspect` shows; an item matches when any query does. */
+export function searchSnapshot(
+  snapshot: { tokens: DocToken[]; components: ComponentInfo[]; types: TypeInfo[] },
+  queries: string[],
+): SearchResult {
+  const needles = queries.map((query) => query.toLowerCase());
+  const result: SearchResult = {
+    tokens: search(snapshot.tokens, needles, tokenFields),
+    components: search(snapshot.components, needles, componentFields),
+    types: search(snapshot.types, needles, typeFields),
+    suggestions: [],
+  };
+  if (result.tokens.length + result.components.length + result.types.length === 0) {
+    const candidates = [
+      ...snapshot.tokens.flatMap((token) => token.path.split(".")),
+      ...snapshot.components.map((component) => component.name),
+      ...snapshot.types.map((type) => type.name),
+    ];
+    result.suggestions = [
+      ...new Set(queries.flatMap((query) => closestMatches(query, candidates))),
+    ];
+  }
+  return result;
+}

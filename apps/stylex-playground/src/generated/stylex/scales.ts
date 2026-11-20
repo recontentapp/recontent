@@ -10,14 +10,16 @@ export const refColorPrimary = {
   900: vars.refColorPrimary900,
 } as const;
 
-export type RefColorNeutral = 0 | 100 | 300 | 500 | 700 | 900;
+export type RefColorNeutral = 0 | 100 | 300 | 400 | 500 | 700 | 800 | 900;
 
 export const refColorNeutral = {
   0: vars.refColorNeutral0,
   100: vars.refColorNeutral100,
   300: vars.refColorNeutral300,
+  400: vars.refColorNeutral400,
   500: vars.refColorNeutral500,
   700: vars.refColorNeutral700,
+  800: vars.refColorNeutral800,
   900: vars.refColorNeutral900,
 } as const;
 

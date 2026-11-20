@@ -1,11 +1,11 @@
 ---
 title: "Getting started"
-description: "Scaffold a config from a preset, add a plugin and generate your first outputs."
+description: "Scaffold a config from a preset, generate outputs and let Recontent read your components."
 ---
 
 # Getting started
 
-This takes a few minutes and ends with CSS variables generated from a token config. It assumes
+This takes a few minutes and ends with CSS variables generated from a token config, and your components browsable with `recontent inspect`. It assumes
 `recontent` is [installed](/introduction/installation).
 
 ## 1. Scaffold a config
@@ -23,7 +23,7 @@ There are two presets:
   and motion.
 
 Already have tokens in the DTCG format? Import them with
-[`recontent init --from`](/cli/init#importing-dtcg-tokens).
+[`recontent init --dtcg`](/cli/init#importing-dtcg-tokens).
 
 ## 2. Add a plugin
 
@@ -34,10 +34,10 @@ The scaffolded config defines tokens and themes but no outputs. Add a plugin fro
 import { defineConfig /* ... */ } from "recontent";
 import { css } from "recontent/plugins";
 
-// ref, system, components and dark are defined above
+// ref, system and dark are defined above
 
 export default defineConfig({
-  tokens: { ref, system, components },
+  tokens: { ref, system },
   themes: { dark },
   plugins: [css({ outDir: "src/generated" })],
 });
@@ -72,10 +72,35 @@ Each token becomes a variable named after its path, so `system.color.background`
 `spacing`, `shadow` and `typography`. The dark theme is a `.dark` block that overrides only the tokens it
 changes: add `class="dark"` to `<html>` to switch.
 
-## 5. Keep going
+## 5. Introspect your components
+
+Point Recontent at the barrel file that exports your React components:
+
+```ts [recontent.config.ts]
+export default defineConfig({
+  tokens: { ref, system },
+  themes: { dark },
+  introspection: { entry: "src/components/index.ts", importPath: "@acme/ds" },
+  plugins: [css({ outDir: "src/generated" })],
+});
+```
+
+## 6. Inspect
+
+```bash
+recontent inspect                    # counts, themes and component names
+recontent inspect components Button  # its exact props, defaults and usage notes
+recontent inspect tokens system      # tokens with their values and CSS variables
+```
+
+This is what you, a script or a coding agent can ask at any time. See
+[Introspecting components](/guides/introspecting-components) and [Coding with agents](/guides/agents).
+
+## 7. Keep going
 
 - Edit tokens in `recontent.config.ts` and run `recontent build --watch` to rebuild on save.
 - Add more outputs: [Tailwind](/plugins/tailwind), [vanilla-extract](/plugins/vanilla-extract),
   [StyleX](/plugins/stylex), [TypeScript](/plugins/typescript), [DTCG](/plugins/dtcg).
 - Learn how tokens are structured in [Defining tokens](/guides/defining-tokens).
-- Catch breaking changes in pull requests with [`recontent diff`](/guides/diffs).
+- Write usage notes and examples with [Documenting components](/guides/documenting-components).
+- Catch breaking changes to tokens and props in pull requests with [`recontent diff`](/guides/diffs).

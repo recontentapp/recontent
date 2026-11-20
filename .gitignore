@@ -180,7 +180,8 @@ dist
 # Turborepo
 .turbo
 
-storybook-static/
-
 # Vocs
 .vocs/
+
+# Storybook
+storybook-static

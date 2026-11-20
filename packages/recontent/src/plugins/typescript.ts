@@ -1,13 +1,8 @@
-import {
-  expandedMembers,
-  isExpandedComposite,
-  type OutputFile,
-  type RecontentPlugin,
-  type TokenEntry,
-  type TokenMember,
-  type TokenType,
-  type TokenTypeMap,
-} from "@recontentapp/core";
+import { expandedMembers, isExpandedComposite } from "../token-model/composite.js";
+import { type RecontentPlugin } from "./types.js";
+import { type TokenEntry } from "../token-model/registry.js";
+import { type TokenMember, type TokenType, type TokenTypeMap } from "../token-model/values.js";
+import type { OutputFile } from "./shared/context.js";
 import { createLogger } from "../logger.js";
 import {
   serializeCompositeCss,
@@ -15,17 +10,15 @@ import {
   serializeValueCss,
   type MemberResolver,
 } from "../serialize/values.js";
-import {
-  escapeTemplateLiteral,
-  generateScaleExports,
-  scaleExportsForConfig,
-} from "./shared/ts-source.js";
+import { escapeTemplateLiteral } from "../ts-source.js";
+import { generateThemeModule } from "./shared/ts-source.js";
 import {
   generateThemeSource,
+  themeNameDiagnostics,
   type MemberLookup,
   type ThemeTargetSpec,
 } from "./shared/theme-source.js";
-import type { SourceTree, SourceValue } from "./shared/ts-source.js";
+import type { SourceTree, SourceValue } from "../ts-source.js";
 import type { GeneratorContext } from "./shared/context.js";
 import { outputPlugin } from "./factory.js";
 
@@ -117,37 +110,28 @@ const webSpec: ThemeTargetSpec = {
 
 function generateTypeScriptSource(config: GeneratorContext): string {
   const logger = config.logger ?? createLogger();
-  const body = generateThemeSource(config, webSpec, logger, "typescript");
-  const scaleExports = scaleExportsForConfig(config);
-  const themeConstNames = ["theme", ...Object.keys(config.themes).sort()];
-
-  const lines = [body];
-
-  for (const scale of scaleExports) {
-    lines.push(`${generateScaleExports(scale, "theme")}\n`);
-  }
-
-  lines.push(
-    `export const themes = { ${themeConstNames.join(", ")} } as const;`,
-    "export type ThemeName = keyof typeof themes;",
-    "export type Theme = (typeof themes)[ThemeName];",
-    "export type BaseTheme = typeof theme;",
-  );
-
-  return `${lines.join("\n")}\n`;
+  return generateThemeModule(config, generateThemeSource(config, webSpec, logger, "typescript"));
 }
 
 export type TypeScriptPluginOptions = {
   outDir: string;
+  /** Defaults to `tokens.ts`. Set one when another plugin writes to the same `outDir`. */
+  filename?: string;
 };
 
 export function generateTypeScriptFiles(
   config: GeneratorContext,
-  _options: TypeScriptPluginOptions,
+  options: TypeScriptPluginOptions,
 ): OutputFile[] {
-  return [{ filename: "tokens.ts", content: generateTypeScriptSource(config) }];
+  return [{ filename: options.filename ?? "tokens.ts", content: generateTypeScriptSource(config) }];
 }
 
 export function typescript(options: TypeScriptPluginOptions): RecontentPlugin {
-  return outputPlugin("recontent:typescript", options, generateTypeScriptFiles);
+  return outputPlugin(
+    "recontent:typescript",
+    ["tokens"],
+    options,
+    generateTypeScriptFiles,
+    themeNameDiagnostics("typescript"),
+  );
 }

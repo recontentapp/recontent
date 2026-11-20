@@ -19,8 +19,10 @@
     --ref-color-neutral-0: #ffffff;
     --ref-color-neutral-100: #f4f4f5;
     --ref-color-neutral-300: #d4d4d8;
+    --ref-color-neutral-400: #a1a1aa;
     --ref-color-neutral-500: #71717a;
     --ref-color-neutral-700: #3f3f46;
+    --ref-color-neutral-800: #27272a;
     --ref-color-neutral-900: #18181b;
     --ref-color-shadow: #00000026;
     --ref-spacing-sm: 8px;
@@ -73,11 +75,12 @@
   }
 
   .dark {
-    --system-colors-background: #18181b;
-    --system-colors-foreground: #f4f4f5;
-    --system-colors-mutedForeground: #a1a1aa;
-    --system-colors-surface: #27272a;
-    --system-colors-border: #3f3f46;
+    --ref-color-shadow: #00000066;
+    --system-colors-background: var(--ref-color-neutral-900);
+    --system-colors-foreground: var(--ref-color-neutral-100);
+    --system-colors-mutedForeground: var(--ref-color-neutral-400);
+    --system-colors-surface: var(--ref-color-neutral-800);
+    --system-colors-border: var(--ref-color-neutral-700);
   }
 }
 

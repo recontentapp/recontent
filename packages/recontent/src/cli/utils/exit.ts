@@ -7,9 +7,9 @@ import { plural } from "./format.js";
  * `process.exit()` directly, so pending async stdout/stderr writes are
  * allowed to drain before the process actually exits.
  */
-export function exitWithError(message: string): void {
+export function exitWithError(message: string, exitCode = 1): void {
   console.error(`error: ${message}`);
-  process.exitCode = 1;
+  process.exitCode = exitCode;
 }
 
 /** "2 errors, 1 warning" — the closing line of a run that reported diagnostics. */

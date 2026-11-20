@@ -1,28 +1,29 @@
+import { isCompositeType } from "../../token-model/composite.js";
+import { pathKey } from "../../token-model/guards.js";
+import { type Logger } from "../../logger.js";
+import { type PluginContext, type PluginDiagnostic } from "../types.js";
 import {
-  isCompositeType,
-  pathKey,
-  type Logger,
   type ThemeOverride,
   type TokenEntry,
-  type TokenLayer,
   type TokenRegistry,
-  type TokenType,
-  type TokenTypeMap,
-} from "@recontentapp/core";
-import { getEntry, walkAliasChain } from "./alias.js";
+} from "../../token-model/registry.js";
+import { type TokenLayer } from "../../token-model/model.js";
+import { type TokenType, type TokenTypeMap } from "../../token-model/values.js";
+import {
+  getEntry,
+  resolveEntryValue,
+  themedEntry,
+  walkAliasChain,
+} from "../../token-model/alias.js";
 import type { GeneratorContext } from "./context.js";
 import {
-  capitalize,
-  entryPath,
   formatTree,
   propertyAccess,
-  resolveEntryValue,
-  scaleExportsForConfig,
   setTreeValue,
-  type ScaleExport,
   type SourceTree,
   type SourceValue,
-} from "./ts-source.js";
+} from "../../ts-source.js";
+import { capitalize, entryPath, scaleExportsForConfig, type ScaleExport } from "./ts-source.js";
 
 type LossReporter = (tokenPath: string[], message: string) => void;
 
@@ -101,23 +102,27 @@ const JS_RESERVED_WORDS = new Set([
 ]);
 
 const IDENTIFIER_RE = /^[A-Za-z_$][\w$]*$/;
-export const CSS_IDENTIFIER_RE = /^[A-Za-z_][\w-]*$/;
 const THEME_ATTRIBUTE_RE = /^[A-Za-z][\w-]*$/;
 
-export function validateThemeNames(
-  themeNames: readonly string[],
-  target: string,
-  options?: { pattern?: RegExp; description?: string },
-): void {
-  const pattern = options?.pattern ?? IDENTIFIER_RE;
-  const description = options?.description ?? "theme names must be valid TypeScript identifiers";
+function themeNameMessage(name: string, target: string): string {
+  return `Theme name "${name}" cannot be used with the "${target}" output target: theme names must be valid TypeScript identifiers.`;
+}
+
+/** Throws on direct generator calls; plugins surface the same problem earlier through `validate`. */
+export function validateThemeNames(themeNames: readonly string[], target: string): void {
   for (const name of themeNames) {
-    if (!pattern.test(name)) {
-      throw new Error(
-        `Theme name "${name}" cannot be used with the "${target}" output target: ${description}.`,
-      );
+    if (!IDENTIFIER_RE.test(name)) {
+      throw new Error(themeNameMessage(name, target));
     }
   }
+}
+
+/** A plugin `validate` hook reporting theme names the target cannot use as identifiers. */
+export function themeNameDiagnostics(target: string): (ctx: PluginContext) => PluginDiagnostic[] {
+  return (ctx) =>
+    Object.keys(ctx.themes)
+      .filter((name) => !IDENTIFIER_RE.test(name))
+      .map((name) => ({ severity: "error", message: themeNameMessage(name, target) }));
 }
 
 export function validateThemeAttribute(themeAttribute: string, target: string): void {
@@ -204,6 +209,7 @@ function resolveAliasCandidate(
     registry,
     getEntry(registry, startAliasPath),
     new Set([pathKey(seedPath)]),
+    override,
   );
 
   for (const target of chain) {
@@ -256,12 +262,11 @@ function emitScalarEntry(
   spec: ThemeTargetSpec,
   report: LossReporter,
 ): void {
-  const overridden = override?.get(pathKey(entry.path));
+  const themed = themedEntry(entry, override);
 
   if (
-    overridden === undefined &&
-    entry.alias &&
-    emitAliasReference(tree, entry, entry.alias, registry, override, themeName)
+    themed.alias &&
+    emitAliasReference(tree, entry, themed.alias, registry, override, themeName)
   ) {
     return;
   }
@@ -280,17 +285,16 @@ function emitCompositeEntry(
   spec: ThemeTargetSpec,
   report: LossReporter,
 ): void {
-  const overridden = override?.get(pathKey(entry.path));
+  const themed = themedEntry(entry, override);
 
   if (
-    overridden === undefined &&
-    entry.alias &&
-    emitAliasReference(tree, entry, entry.alias, registry, override, themeName)
+    themed.alias &&
+    emitAliasReference(tree, entry, themed.alias, registry, override, themeName)
   ) {
     return;
   }
 
-  const resolvedValue = (overridden ?? entry.$value) as TokenTypeMap[TokenType];
+  const resolvedValue = themed.$value as TokenTypeMap[TokenType];
   const member = (memberAlias: string[]): { ref?: string; value: TokenTypeMap[TokenType] } => {
     const target = getEntry(registry, memberAlias);
     const value = resolveEntryValue(registry, target, override) as TokenTypeMap[TokenType];

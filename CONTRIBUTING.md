@@ -16,13 +16,12 @@ all welcome.
 
 This is a pnpm workspace orchestrated with Turborepo.
 
-| Path                 | What it is                                                                                 |
-| -------------------- | ------------------------------------------------------------------------------------------ |
-| `packages/recontent` | The `recontent` package published to npm: CLI, `define*` API and built-in plugins          |
-| `packages/core`      | `@recontentapp/core`: config loading, token registry, color handling and the plugin runner |
-| `apps/docs`          | The documentation site, built with Vocs                                                    |
-| `apps/*-playground`  | Example projects for the Tailwind, StyleX and vanilla-extract plugins                      |
-| `.github/workflows`  | CI (build, lint, format, typecheck, test, knip) and npm publishing                         |
+| Path                 | What it is                                                                        |
+| -------------------- | --------------------------------------------------------------------------------- |
+| `packages/recontent` | The `recontent` package published to npm: CLI, `define*` API and built-in plugins |
+| `apps/docs`          | The documentation site, built with Vocs                                           |
+| `apps/*-playground`  | Example projects for the Tailwind, StyleX and vanilla-extract plugins             |
+| `.github/workflows`  | CI (build, lint, format, typecheck, test, knip) and npm publishing                |
 
 ## Setup
 
@@ -83,9 +82,9 @@ plugin's output, update the snapshots and review the diff carefully: it is what 
 
 ## Releases
 
-Maintainers release by bumping `packages/core` and `packages/recontent` to the same version and
-publishing a GitHub release tagged with that version. The publish workflow checks that the tag
-matches and publishes both packages to npm with provenance.
+Maintainers release by bumping `packages/recontent` and publishing a GitHub release tagged with
+that version. The publish workflow checks that the tag matches and publishes the package to npm
+with provenance.
 
 ## License
 

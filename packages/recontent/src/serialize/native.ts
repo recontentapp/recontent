@@ -1,4 +1,4 @@
-import type { StrokeStyleName, TokenTypeMap } from "@recontentapp/core";
+import type { StrokeStyleName, TokenTypeMap } from "../token-model/values.js";
 import { serializeColorCss, serializeFontWeight } from "./values.js";
 
 export function roundTo(value: number, decimals: number): number {
