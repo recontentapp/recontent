@@ -5,8 +5,7 @@ description: "Generate typed vanilla-extract theme contracts from your tokens."
 
 # vanilla-extract
 
-`vanillaExtract()` generates typed [vanilla-extract](https://vanilla-extract.style/) variables for
-your tokens.
+`vanillaExtract()` generates typed [vanilla-extract](https://vanilla-extract.style/) theme contracts and theme classes from your tokens.
 
 ```ts twoslash
 // [!include ~/snippets/vanilla-extract.config.ts]
@@ -14,13 +13,11 @@ your tokens.
 
 ## Setup
 
-Add the vanilla-extract bundler plugin for your tool (for Vite, `@vanilla-extract/vite-plugin`),
-and install `@vanilla-extract/css`.
+Add the vanilla-extract plugin for your bundler (for Vite, `@vanilla-extract/vite-plugin`) and install `@vanilla-extract/css`.
 
 ## Usage
 
-Apply `themeClass` to an element, and a theme class to switch themes. Everything inside is styled
-with the variables:
+Apply `themeClass` to a root element and swap in `<name>ThemeClass` to switch themes. Style descendants with the generated `vars`:
 
 ```ts [card.css.ts]
 import { style } from "@vanilla-extract/css";
@@ -51,21 +48,21 @@ export function App({ dark }: { dark: boolean }) {
 vanillaExtract(options: VanillaExtractPluginOptions): RecontentPlugin
 ```
 
-| Option   | Type     | Default  | Description                                    |
-| -------- | -------- | -------- | ---------------------------------------------- |
-| `outDir` | `string` | required | Output directory, relative to the config file. |
+| Option   | Type     | Default  | Description                                   |
+| -------- | -------- | -------- | --------------------------------------------- |
+| `outDir` | `string` | required | Output directory relative to the config file. |
 
 Plugin name: `recontent:vanilla-extract`.
 
 ## Emitted files
 
-| File            | Content                                                                                                                                                      |
-| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `tokens.css.ts` | `vars` (the theme contract), `refVars`, `systemVars`, `componentVars`, a typed const and key union per scale, `themeClass` and `<name>ThemeClass` per theme. |
+| File            | Content                                                                                                                                                   |
+| --------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `tokens.css.ts` | `vars` (theme contract), `refVars`, `systemVars`, `componentVars`, a typed const and key union per scale, `themeClass`, and `<name>ThemeClass` per theme. |
 
 ## Diagnostics
 
-Fails the build.
+Each condition below fails the build.
 
 | When                                               |
 | -------------------------------------------------- |

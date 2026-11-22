@@ -13,6 +13,7 @@ const pluginsConfig = lines(`export default defineConfig({
     docs({ outDir: "public/design" }),
     designMD({ outDir: "." }),
     inspect({ outDir: "dist" }),
+    contrast({ pairs: [[system.color.text, system.color.surface]] }),
     swift({ outDir: "ios/Tokens" }), // your own
   ],
 });
@@ -27,87 +28,37 @@ const swift = (options: { outDir: string }): RecontentPlugin => ({
 
 type Output = { label: string; fn?: string; to: string; text: string };
 
-const groups: { title: string; outputs: Output[] }[] = [
+const outputs: Output[] = [
   {
-    title: "Styling",
-    outputs: [
-      {
-        label: "CSS variables",
-        fn: "css()",
-        to: "/plugins/css",
-        text: "Any framework, or none. One block per theme.",
-      },
-      {
-        label: "Tailwind v4",
-        fn: "tailwind()",
-        to: "/plugins/tailwind",
-        text: "Utilities like bg-accent and p-4 resolve to your tokens.",
-      },
-      {
-        label: "StyleX",
-        fn: "stylex()",
-        to: "/plugins/stylex",
-        text: "Typed defineVars, plus a createTheme per theme.",
-      },
-      {
-        label: "DTCG",
-        fn: "dtcg()",
-        to: "/plugins/dtcg",
-        text: "JSON for Figma through Tokens Studio, or another pipeline.",
-      },
-      {
-        label: "TypeScript",
-        fn: "typescript()",
-        to: "/plugins/typescript",
-        text: "Typed constants for charts, canvas and native code.",
-      },
-      {
-        label: "& more",
-        to: "/guides/using-plugins",
-        text: "vanilla-extract, React Native, or your own.",
-      },
-    ],
+    label: "CSS variables",
+    fn: "css()",
+    to: "/plugins/css",
+    text: "Works in any framework or plain CSS, with one block per theme.",
   },
   {
-    title: "Docs & agents",
-    outputs: [
-      {
-        label: "Docs",
-        fn: "docs()",
-        to: "/plugins/docs",
-        text: "A searchable HTML page for your team, with a page per component.",
-      },
-      {
-        label: "DESIGN.md",
-        fn: "designMD()",
-        to: "/plugins/design-md",
-        text: "Tokens and guidance that agents load up front.",
-      },
-      {
-        label: "Snapshot",
-        fn: "inspect()",
-        to: "/plugins/inspect",
-        text: "Ship your design system so apps can browse it with inspect --from.",
-      },
-    ],
+    label: "Tailwind v4",
+    fn: "tailwind()",
+    to: "/plugins/tailwind",
+    text: "Maps utilities like bg-accent and p-4 directly to your tokens.",
   },
   {
-    title: "Validation",
-    outputs: [
-      {
-        label: "Contrast",
-        fn: "contrast()",
-        to: "/plugins/contrast",
-        text: "Fail the build when text and background colors drop below WCAG contrast, in every theme.",
-      },
-    ],
+    label: "Docs site",
+    fn: "docs()",
+    to: "/plugins/docs",
+    text: "Builds a searchable static site with theme switching and embedded stories.",
+  },
+  {
+    label: "DESIGN.md",
+    fn: "designMD()",
+    to: "/plugins/design-md",
+    text: "Emits tokens and guidance that coding agents load up front.",
   },
 ];
 
-/** Plugins: every output, built-in or your own, goes through one API. */
+/** Plugins: config on the left, featured plugin cards with link to docs on the right. */
 export function Plugins() {
   return (
-    <section className="lp-section lp-wrap lp-centered">
+    <section className="lp-section lp-wrap">
       <h2 className="lp-h2">
         One config.{" "}
         <span className="lp-underlined">
@@ -116,14 +67,21 @@ export function Plugins() {
         </span>
       </h2>
       <p className="lp-sub">
-        Everything is a plugin that can be added in your config so that your tokens and components
-        can go wherever you need them: stylesheets, Figma, docs, agents, native apps & more.
+        Add built-in plugins in your config—or write your own—to ship tokens and components to
+        stylesheets, Figma, docs sites, coding agents, native apps, and CI.
       </p>
-      {groups.map((group) => (
-        <div key={group.title} className="lp-group">
-          <h3 className="lp-h3">{group.title}</h3>
-          <ul className="lp-cards">
-            {group.outputs.map((output) => (
+      <p className="lp-more">
+        <Link to="/plugin-api" className="lp-link">
+          Writing a plugin
+        </Link>
+      </p>
+      <div className="lp-plugins-split">
+        <div className="lp-plugins-left">
+          <CodePanel title="recontent.config.ts" code={pluginsConfig} tone="blue" />
+        </div>
+        <div className="lp-plugins-right">
+          <ul className="lp-cards lp-cards-2">
+            {outputs.map((output) => (
               <li key={output.label}>
                 <Link to={output.to} className="lp-output">
                   <strong>{output.label}</strong>
@@ -133,10 +91,12 @@ export function Plugins() {
               </li>
             ))}
           </ul>
+          <div className="lp-plugins-toggle">
+            <Link to="/guides/using-plugins" className="lp-btn">
+              Show more
+            </Link>
+          </div>
         </div>
-      ))}
-      <div className="lp-plugins-config">
-        <CodePanel title="recontent.config.ts" code={pluginsConfig} tone="blue" />
       </div>
     </section>
   );

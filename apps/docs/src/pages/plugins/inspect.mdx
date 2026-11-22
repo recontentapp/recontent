@@ -1,21 +1,17 @@
 ---
-title: "inspect"
+title: "Inspect"
 description: "Publish a snapshot of your design system so that apps and their agents can browse it with recontent inspect --from."
 ---
 
-# inspect
+# Inspect
 
-`inspect()` writes `recontent.json`, a snapshot of your tokens, themes and, when
-[`introspection`](/config#introspection) is configured, your components and types. Publish it
-with your package, and the apps that install it can run
-[`recontent inspect --from`](/cli/inspect#headless-design-system-consumers) without your config or your source.
+`inspect()` writes `recontent.json`, a snapshot of your tokens, themes, and—when you configure [`introspection`](/config#introspection)—your components and types. Publish this snapshot with your package so consuming apps can run [`recontent inspect --from`](/cli/inspect#headless-design-system-consumers) without your config file or source code.
 
 ```ts twoslash
 // [!include ~/snippets/inspect.config.ts]
 ```
 
-Then point the `recontent` field of your `package.json` at the file and publish it, as described in
-[Publishing your design system](/guides/publishing#2-publish-it-with-the-package).
+Point the `recontent` field in `package.json` at the snapshot and publish it, as described in [Publishing your design system](/guides/publishing#2-publish-it-with-the-package).
 
 ## Options
 
@@ -23,13 +19,12 @@ Then point the `recontent` field of your `package.json` at the file and publish 
 inspect(options: InspectPluginOptions): RecontentPlugin
 ```
 
-| Option     | Type     | Default            | Description                                    |
-| ---------- | -------- | ------------------ | ---------------------------------------------- |
-| `outDir`   | `string` | required           | Output directory, relative to the config file. |
-| `filename` | `string` | `"recontent.json"` | Name of the snapshot.                          |
+| Option     | Type     | Default            | Description                                   |
+| ---------- | -------- | ------------------ | --------------------------------------------- |
+| `outDir`   | `string` | required           | Output directory relative to the config file. |
+| `filename` | `string` | `"recontent.json"` | Name of the snapshot file.                    |
 
-Plugin name: `recontent:inspect`. It uses the components when `introspection` is configured, and
-works without them otherwise.
+Plugin name: `recontent:inspect`. It includes components whenever you configure `introspection` and works without them otherwise.
 
 ## Emitted files
 
@@ -37,8 +32,6 @@ works without them otherwise.
 | ---------------- | -------------------------------------------------------------------------- |
 | `recontent.json` | `{ schemaVersion, kind: "snapshot", themes, tokens, components?, types? }` |
 
-The snapshot holds the same data as [`recontent inspect --format json`](/cli/inspect#for-scripts), and
-nothing that depends on your machine. `schemaVersion` follows that output's.
+The snapshot stores the same schema as [`recontent inspect --format json`](/cli/inspect#for-scripts) with no machine-specific paths. `schemaVersion` matches that JSON output.
 
-Run [`recontent build --check`](/cli/build) in CI so that the published snapshot always matches the
-source.
+Run [`recontent build --check`](/cli/build) in CI to keep the published snapshot in sync with your source.

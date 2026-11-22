@@ -5,25 +5,20 @@ description: "Tokens made of several values: shadow, border, strokeStyle, transi
 
 # Composites
 
-A composite token groups several values that belong together. Each member can be a raw value or a
-token from another layer, which makes it an alias, so a composite can follow your palette and
-spacing.
+A composite token groups multiple values into one token. Each member accepts either a raw value or an alias to another layer, so composites follow your color and spacing tokens.
 
-| Type                          | CSS output                         |
-| ----------------------------- | ---------------------------------- |
-| [`shadow`](#shadow)           | one variable, a `box-shadow` list  |
-| [`border`](#border)           | one variable: `1px solid var(--…)` |
-| [`strokeStyle`](#strokestyle) | one variable: a style keyword      |
-| [`gradient`](#gradient)       | one variable: `linear-gradient(…)` |
-| [`transition`](#transition)   | three variables, one per member    |
-| [`typography`](#typography)   | five variables, one per member     |
+| Type                          | CSS output                              |
+| ----------------------------- | --------------------------------------- |
+| [`shadow`](#shadow)           | one CSS variable (`box-shadow` list)    |
+| [`border`](#border)           | one CSS variable (`1px solid var(--…)`) |
+| [`strokeStyle`](#strokestyle) | one CSS variable (style keyword)        |
+| [`gradient`](#gradient)       | one CSS variable (`linear-gradient(…)`) |
+| [`transition`](#transition)   | three CSS variables, one per member     |
+| [`typography`](#typography)   | five CSS variables, one per member      |
 
-`transition` and `typography` have no single CSS value, so the CSS, Tailwind, vanilla-extract and
-StyleX plugins expand them into one variable per member
-(`--system-typography-body-font-size`).
+Because `transition` and `typography` have no single CSS value, the CSS, Tailwind, vanilla-extract, and StyleX plugins emit one variable per member (`--system-typography-body-font-size`).
 
-Wherever a member takes a dimension, color or number, you can write the input of the matching
-factory (`"16px"`, `"#2563eb"`, `1.5`) or pass a token.
+Wherever a member expects a dimension, color, or number, pass either the matching factory input (`"16px"`, `"#2563eb"`, `1.5`) or a token.
 
 ## shadow
 
@@ -44,10 +39,9 @@ const layered = tokens.shadow([
 ]);
 ```
 
-One layer or an array of layers. Every layer requires `color`, `offsetX`, `offsetY`, `blur` and
-`spread`; `inset` is optional. A layer can also be an existing shadow token, which is included by reference.
+Pass one shadow layer or an array of layers. Every layer requires `color`, `offsetX`, `offsetY`, `blur`, and `spread`, while `inset` is optional. A layer can also reference an existing shadow token.
 
-CSS: `0px 4px 12px 0px #00000026`, joined with commas for several layers.
+CSS emits `0px 4px 12px 0px #00000026`, joining multiple layers with commas.
 
 ## border
 
@@ -63,7 +57,7 @@ const hairline = tokens.border({ color: "#e4e4e7", width: "1px", style: "solid" 
 | `width` | dimension                                                              | required  |
 | `style` | a `strokeStyle` name, custom `{ dashArray, lineCap }` object, or token | `"solid"` |
 
-CSS: `1px solid #e4e4e7`.
+CSS emits `1px solid #e4e4e7`.
 
 ## strokeStyle
 
@@ -74,10 +68,7 @@ tokens.strokeStyle("dashed");
 tokens.strokeStyle({ dashArray: ["4px", "2px"], lineCap: "round" });
 ```
 
-A keyword (`solid`, `dashed`, `dotted`, `double`, `groove`, `ridge`, `outset` or `inset`) or a
-custom dash: a non-empty `dashArray` of dimensions plus a `lineCap` of `round`, `butt` or `square`.
-CSS has no custom dash, so the CSS output writes `dashed` for one; the DTCG output keeps the full
-value.
+Pass a keyword (`solid`, `dashed`, `dotted`, `double`, `groove`, `ridge`, `outset`, or `inset`). Alternatively, pass a custom dash object with a non-empty `dashArray` of dimensions and `lineCap` (`round`, `butt`, or `square`). Because CSS has no custom dash syntax, CSS emits `dashed` while DTCG preserves the full object.
 
 ## transition
 
@@ -97,8 +88,7 @@ const fast = tokens.transition({
 | `delay`          | duration     | `"0ms"`  |
 | `timingFunction` | cubic bezier | required |
 
-CSS variables, for a token at `system.motion.fast`: `--system-motion-fast-transition-duration`,
-`-transition-delay` and `-transition-timing-function`.
+For `system.motion.fast`, CSS emits `--system-motion-fast-transition-duration`, `-transition-delay`, and `-transition-timing-function`.
 
 ## gradient
 
@@ -115,14 +105,13 @@ const brand = tokens.gradient({
 });
 ```
 
-| Option  | Type                              | Default    | Notes                                                                                                                        |
-| ------- | --------------------------------- | ---------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| `kind`  | `"linear" \| "radial" \| "conic"` | `"linear"` |                                                                                                                              |
-| `angle` | string                            | `"180deg"` | A number with `deg`, `grad`, `rad` or `turn`.                                                                                |
-| `stops` | at least 2                        | required   | `{ color, position }`; `position` is 0 to 1 and is clamped. A stop can also be a gradient token, whose stops are spliced in. |
+| Option  | Type                              | Default    | Notes                                                                                                       |
+| ------- | --------------------------------- | ---------- | ----------------------------------------------------------------------------------------------------------- |
+| `kind`  | `"linear" \| "radial" \| "conic"` | `"linear"` |                                                                                                             |
+| `angle` | string                            | `"180deg"` | A number with `deg`, `grad`, `rad`, or `turn`.                                                              |
+| `stops` | at least 2                        | required   | `{ color, position }` with `position` clamped to `0`–`1`. A stop can also splice in another gradient token. |
 
-CSS: `linear-gradient(90deg, #2563eb 0%, #7c3aed 100%)`, `radial-gradient(…)` or
-`conic-gradient(from 90deg, …)`.
+CSS emits `linear-gradient(90deg, #2563eb 0%, #7c3aed 100%)`, `radial-gradient(…)`, or `conic-gradient(from 90deg, …)`.
 
 ## typography
 
@@ -146,16 +135,14 @@ const heading = tokens.typography({
 | `letterSpacing` | dimension           | `"0px"`  |
 | `lineHeight`    | number or dimension | `1.4`    |
 
-A `lineHeight` written as a dimension (`"58px"`, `"1.5rem"`, `"1.2em"`) is converted to a unitless
-ratio when the token is authored, rounded to 4 decimals, so every output sees a plain number:
+When you pass `lineHeight` as a dimension (`"58px"`, `"1.5rem"`, `"1.2em"`), Recontent converts it to a unitless ratio rounded to 4 decimals so every plugin receives a plain number:
 
-| `lineHeight` | `fontSize` | Ratio                                                                       |
-| ------------ | ---------- | --------------------------------------------------------------------------- |
-| `em`         | any        | the value itself (`"1.2em"` is `1.2`)                                       |
-| `px` / `rem` | `px`/`rem` | line height divided by font size (`px` and `rem` are mixed at 16px per rem) |
-| `px` / `rem` | `em`       | an error: use a number or an `em` line height                               |
+| `lineHeight` | `fontSize` | Ratio                                                                  |
+| ------------ | ---------- | ---------------------------------------------------------------------- |
+| `em`         | any        | The value itself (`"1.2em"` becomes `1.2`).                            |
+| `px` / `rem` | `px`/`rem` | `lineHeight` divided by `fontSize` (converting `rem` at `16px`).       |
+| `px` / `rem` | `em`       | Throws an error; use a unitless number or an `em` line height instead. |
 
-An aliased `fontSize` works too: the conversion uses its resolved value.
+Aliased `fontSize` tokens work the same way because Recontent uses their resolved value.
 
-CSS variables, for a token at `system.typography.body`: `--system-typography-body-font-family`,
-`-font-size`, `-font-weight`, `-letter-spacing` and `-line-height`.
+For `system.typography.body`, CSS emits `--system-typography-body-font-family`, `-font-size`, `-font-weight`, `-letter-spacing`, and `-line-height`.

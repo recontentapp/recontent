@@ -5,15 +5,11 @@ description: "Let Recontent read your React components, their props and the type
 
 # Introspecting components
 
-Point Recontent at your components and it reads them with the TypeScript checker: props, defaults,
-subcomponents and the types your props reference. Nothing to annotate, nothing to keep in sync. What
-it finds is served by [`recontent inspect`](/cli/inspect), the [docs](/plugins/docs) and
-[designMD](/plugins/design-md) plugins, [`recontent diff`](/cli/diff) and any [plugin](/plugin-api) that
-depends on `introspection`.
+Point Recontent at your components and it reads them with the TypeScript compiler: props, defaults, subcomponents, and referenced types. You add no annotations and maintain no duplicate metadata. [`recontent inspect`](/cli/inspect), [`docs()`](/plugins/docs), [`designMD()`](/plugins/design-md), [`recontent diff`](/cli/diff), and any [plugin](/plugin-api) depending on `introspection` all consume the result.
 
-## Set it up
+## Configure introspection
 
-Add `introspection` to your config, with a barrel file that exports your components:
+Add `introspection` to your config file and point `entry` at the barrel file that exports your components:
 
 ```ts
 export default defineConfig({
@@ -27,62 +23,42 @@ export default defineConfig({
 });
 ```
 
-Then check what was found:
+Verify the introspected components with `recontent inspect`:
 
 ```bash
 recontent inspect
 ```
 
-The options (`entry`, `tsconfig`, `exclude`, `importPath`) are in the
-[configuration reference](/config#introspection).
+See the [config reference](/config#introspection) for all options (`entry`, `tsconfig`, `exclude`, `importPath`).
 
 ## What counts as a component
 
-An export is a component when its name is PascalCase and it is callable with a return type React can
-render, or a class with a `render` method. This covers plain functions, `FC`, `memo`, `forwardRef`,
-`lazy` and class components alike, because the TypeScript checker has already resolved them. Hooks,
-constants, enums, types and PascalCase helpers such as `FormatDate(date): string` are skipped.
+Recontent treats a PascalCase export as a component when it is callable and returns a React-renderable type, or when it is a class with a `render` method. Because the TypeScript compiler resolves each export, plain functions, `FC`, `memo`, `forwardRef`, `lazy`, and class components all work. Recontent skips hooks, constants, enums, types, and PascalCase helpers such as `FormatDate(date): string`.
 
-Subcomponents are reported one level deep with a dotted name: `Object.assign(Tabs, { Item })` and
-`Tabs.Item = Item` give `Tabs.Item`, and `export * as Dialog from "./dialog"` gives `Dialog.Root`,
-`Dialog.Trigger`.
+Recontent reports subcomponents one level deep with dotted names. Both `Object.assign(Tabs, { Item })` and `Tabs.Item = Item` produce `Tabs.Item`, and `export * as Dialog from "./dialog"` produces `Dialog.Root` and `Dialog.Trigger`.
 
 ## Props
 
-For each component Recontent lists the props declared in your project and, separately, the names of
-the props inherited from libraries (`ButtonHTMLAttributes` from `@types/react`, for instance). Keys you
-name with `Pick<LibraryProps, "open" | "onOpenChange">` are your component's own props, with the
-library's type and description, because choosing them is part of your API; `Omit` keeps every other
-prop inherited. A union of props types lists every member's props, and a prop is required only when
-every member requires it. Descriptions, `@default` and `@deprecated` come from [JSDoc](/guides/documenting-components);
-without `@default`, a destructuring default in the implementation is used.
+Recontent extracts detailed prop information for every component:
 
-A prop typed with one of your own aliases keeps its name in `type` (`Width`) and gets the expansion in
-`resolved` (`number | "100%" | "auto"`). Library aliases such as `MouseEventHandler<…>` are left as
-written. A generic component lists its type parameters: `Accordion<Value extends string>`.
-
-The declared types are followed transitively: interfaces, type aliases and enums of your project that
-props reference are available with `recontent inspect types`. Types from `node_modules` are not.
+- **Own vs. inherited props:** Recontent lists props declared in your project separately from props inherited from libraries (such as `ButtonHTMLAttributes` from `@types/react`).
+- **`Pick` and `Omit`:** Keys selected with `Pick<LibraryProps, "open" | "onOpenChange">` become your component's own props with their library types and descriptions. `Omit` keeps all remaining props inherited.
+- **Union prop types:** Recontent lists every union member's props and marks a prop required only when every member requires it.
+- **JSDoc and defaults:** Descriptions, `@default`, and `@deprecated` come from [JSDoc](/guides/documenting-components). Without `@default`, Recontent reads destructuring defaults from the implementation.
+- **Type aliases and generics:** Project type aliases keep their name in `type` (`Width`) and expand in `resolved` (`number | "100%" | "auto"`). Library aliases such as `MouseEventHandler<…>` stay as written, and generic components list their type parameters (`Accordion<Value extends string>`).
+- **Transitive types:** Recontent follows project interfaces, type aliases, and enums referenced by props and exposes them via `recontent inspect types`. It excludes types from `node_modules`.
 
 ## Warnings
 
-Two kinds of exports are accepted only on weak evidence and reported with a warning that names them:
-a function without types, whose return type is `any`, and a class that has a `render` method but
-does not extend `React.Component`. Add them to `exclude` if they are not components. The same goes
-for an entry that exports PascalCase values but no components at all, which is almost always a setup
-problem such as `@types/react` not resolving from the entry.
+Recontent accepts two weak-evidence exports with a warning naming them: an untyped function returning `any`, and a class with a `render` method that does not extend `React.Component`. Add them to `exclude` if they are not components. Recontent also warns when an entry exports PascalCase values but zero components—usually because `@types/react` cannot resolve from `entry`.
 
 ## When it runs
 
-The TypeScript program is built only when a plugin that depends on components is configured (such
-as [`docs()`](/plugins/docs) or [`designMD()`](/plugins/design-md)) or when you run `recontent inspect` or `recontent inspect components`; a
-build with token-only plugins does not touch it, and a broken `introspection` block cannot stop them.
-`recontent build --watch` rebuilds when a component file changes, within the entry's package. The
-result is [cached](/config#cache), so repeated calls are near instant.
+Recontent builds the TypeScript program only when a configured plugin depends on components (such as [`docs()`](/plugins/docs) or [`designMD()`](/plugins/design-md)), or when you run `recontent inspect` or `recontent inspect components`. Token-only builds skip introspection completely, so a broken `introspection` block never blocks them. `recontent build --watch` rebuilds when component files inside the entry's package change, and [caching](/config#cache) keeps repeated runs near instant.
 
 ## Components only
 
-Tokens are optional when `introspection` is set. A project can describe its components alone:
+Tokens are optional when you configure `introspection`. A project can document its components alone:
 
 ```ts
 export default defineConfig({
@@ -91,7 +67,7 @@ export default defineConfig({
 });
 ```
 
-`defineConfig` throws when neither `tokens` nor `introspection` is set.
+`defineConfig` throws when you omit both `tokens` and `introspection`.
 
 ## Next
 

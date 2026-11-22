@@ -5,8 +5,7 @@ description: "Generate a browsable design system page: tokens and components in 
 
 # Docs
 
-`docs()` writes `design.html`, a single self-contained page for your design system that your team can open
-or host. For a Markdown version aimed at repositories and agents, see [`designMD()`](/plugins/design-md).
+`docs()` writes `design.html`, a single self-contained HTML page for your design system that your team can open locally or host statically. For a Markdown summary aimed at repositories and agents, see [`designMD()`](/plugins/design-md).
 
 ```ts twoslash
 // [!include ~/snippets/docs.config.ts]
@@ -18,66 +17,56 @@ or host. For a Markdown version aimed at repositories and agents, see [`designMD
 docs(options: DocsPluginOptions): RecontentPlugin
 ```
 
-| Option       | Type                                             | Default           | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
-| ------------ | ------------------------------------------------ | ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `outDir`     | `string`                                         | required          | Output directory, relative to the config file.                                                                                                                                                                                                                                                                                                                                                                                                                                |
-| `title`      | `string`                                         | `"Design system"` | Title of the page: the header and the browser tab (`<title>`).                                                                                                                                                                                                                                                                                                                                                                                                                |
-| `gitBaseUrl` | `string`                                         | none              | Where the repository's files are browsable, e.g. `https://github.com/acme/ui/blob/main`. A component's source location links to `<gitBaseUrl>/<path>#L<line>`, the path being relative to the config file: include the config's own folder if it isn't the repository root.                                                                                                                                                                                                   |
-| `storybook`  | `{ outDir: string; url: string; root?: string }` | none              | Embeds the stories of each component's [`@stories`](/guides/documenting-components) files. `outDir` is Storybook's build output (relative to the config file), whose `index.json` lists the stories: **build Storybook before the docs**. `url` is where that build is served, e.g. `https://ds.acme.com/storybook`. `root` is the directory Storybook runs from (relative to the config file), which the paths in `index.json` are relative to; it defaults to the config's. |
-| `color`      | `string`                                         | blue              | Accent color of the page: links, the active sidebar entry, focus rings and selections. Any CSS color, e.g. `#e5484d`. It applies to light and dark mode alike, so pick one that reads on both.                                                                                                                                                                                                                                                                                |
+| Option       | Type                                             | Default           | Description                                                                                                                                                                                    |
+| ------------ | ------------------------------------------------ | ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `outDir`     | `string`                                         | required          | Output directory relative to the config file.                                                                                                                                                  |
+| `title`      | `string`                                         | `"Design system"` | Title in the page header and browser tab (`<title>`).                                                                                                                                          |
+| `gitBaseUrl` | `string`                                         | none              | Repository file base URL (for example `https://github.com/acme/ui/blob/main`). Component links resolve `<gitBaseUrl>/<path>#L<line>` relative to the config file.                              |
+| `storybook`  | `{ outDir: string; url: string; root?: string }` | none              | Embeds [`@stories`](/guides/documenting-components) tabs. Point `outDir` at Storybook's build (containing `index.json`), `url` at its hosted URL, and optional `root` at Storybook's base dir. |
+| `color`      | `string`                                         | blue              | Accent CSS color (for example `#e5484d`) for links, active sidebar entries, focus rings, and selections in both light and dark modes.                                                          |
 
-Plugin name: `recontent:docs`. It uses components when `introspection` is configured, and works without them
-otherwise; [`dependsOn`](/plugin-api#recontentplugin) says what happens when introspection fails.
+Build Storybook before running `recontent build` when you configure `storybook`.
+
+Plugin name: `recontent:docs`. It includes components whenever you configure `introspection` and still works without them; see [`dependsOn`](/plugin-api#recontentplugin) for failure behavior.
 
 ## Emitted files
 
-| File          | Content                                                                          |
-| ------------- | -------------------------------------------------------------------------------- |
-| `design.html` | A single self-contained page, with a theme switcher that swaps displayed values. |
+| File          | Content                                                                   |
+| ------------- | ------------------------------------------------------------------------- |
+| `design.html` | Single self-contained page with a theme switcher that swaps token values. |
 
 ## The page
 
-The header holds the title, two top-level tabs, a search button, the theme picker and a light/dark switch.
+The header displays the title, top-level tabs, a search trigger, the theme picker, and a light/dark switch.
 
-**Design tokens** lists every token with its type, resolved value, alias, description and deprecation
-notice. The Reference, System and Components layers follow one another, and the sidebar has a section
-for each layer listing its scale groups. Choosing a theme swaps the displayed values, with a dot on those the theme
-overrides, and an alias links to the token it points to.
+**Design tokens** lists every token with its type, resolved value, alias link, description, and deprecation notice. Layers appear in order (`Reference`, `System`, `Components`) with sidebar links for each scale group. Selecting a theme swaps displayed values and marks overridden tokens with a dot.
 
-**Components** appears when the config has an [`introspection`](/config#introspection)
-block; without one the page covers the tokens only. It opens on an overview of the components, grouped by `@category` with the others last, and each
-component has a page of its own (`design.html#c-Button`). The sidebar lists them in the same order. A
-component page starts with its header (breadcrumb, name, description and tags), then its
-[import statement](/config#import-statements) and a Copy button (left out for a component without
-one, such as a library component defined outside the `importPath` root), followed by its `Usage`,
-`Examples` and `Stories` when it has [documented them](/guides/documenting-components), and its
-`Props` table (name, type or allowed values, default, description) with an `Also accepts:` line for
-props inherited from libraries. `Usage` is rendered as markdown (GitHub
-flavored: lists, tables, code blocks, links); raw HTML in it is shown as text. Examples are tabs with syntax highlighting,
-each with a button that copies the code. Stories are tabs too, one per story, each with the live story in an
-iframe and a link to open it in Storybook. A missing or unreadable `index.json`, or a `@stories` file that has no story in
-it, is reported as a warning and the stories are left out; the build does not fail.
+**Components** appears whenever your config defines [`introspection`](/config#introspection); otherwise the page shows tokens only. It opens on a component overview grouped by `@category` (uncategorized last) with one page per component (`design.html#c-Button`). Each component page renders these sections in order:
 
-On small screens the sidebar collapses into a **Contents** list that you expand and shrink.
+- **Header:** Breadcrumb, component name, description, and a row of metadata tags.
+- **Import statement:** Copyable import snippet (omitted for library components outside `importPath.root`).
+- **Usage:** Markdown from `@usage` (lists, tables, code blocks, and links; raw HTML renders as plain text).
+- **Examples:** Syntax-highlighted tabs from `@example`, each with a Copy button.
+- **Stories:** Live Storybook iframes from `@stories`, each with an open-in-Storybook link. Missing `index.json` or empty story files emit a warning and skip the section without failing the build.
+- **Props table:** Prop names, types, allowed values, defaults, descriptions, and an `Also accepts:` line for inherited library props.
 
-A row of tags under each component name shows:
+On small screens, the sidebar collapses into an expandable **Contents** list.
 
-- `Experimental` and `Deprecated` badges (with their notes in a tooltip).
-- A `Source code ↗` link when `gitBaseUrl` is set.
-- One tag per [`@link`](/guides/documenting-components) to an external page (a Figma file, a guideline),
-  labelled with its caption and opening in a new tab.
+The tag row under each component name displays:
+
+- `Experimental` and `Deprecated` badges with their notes in tooltips.
+- A `Source code ↗` link when you configure `gitBaseUrl`.
+- One badge per external [`@link`](/guides/documenting-components) (such as Figma or guidelines), opening in a new tab.
 
 ## Light and dark mode
 
-The sun/moon button in the header switches the page between light and dark. It starts from your
-system preference and remembers your choice in the browser. It only restyles the page itself: it is
-independent of the theme picker, which swaps token values, and of the tokens' own themes.
+The sun/moon button in the header toggles the page chrome between light and dark mode. It starts from your OS preference and saves your choice in the browser. It restyles only the docs UI and stays independent of your token theme picker.
 
 ## Search
 
-`⌘K` (`Ctrl+K` elsewhere), or `/` when you are not typing, opens a palette that jumps to any token or
-component. Names that start with what you type, or contain it at the start of a word, rank above other
-matches; components are listed before tokens, and colour tokens show a swatch. The last results you
-opened are listed first when the search is empty, and are remembered in the browser. Arrow keys move, `Enter`
-goes to the result and `Esc` closes. Every token and component also has an `id` in the page, so the URL
-hash (`design.html#c-Button`, `#t-system.color.accent`) deep-links to it.
+Press `⌘K` (`Ctrl+K` on Windows/Linux), or `/` outside inputs, to open the search palette and jump to any token or component:
+
+- Prefix and word-start matches rank highest, components appear before tokens, and color tokens show a swatch.
+- When the query is empty, the palette shows recently opened items saved in your browser.
+- Navigate with arrow keys, press `Enter` to open a result, and press `Esc` to close.
+- Every token and component has a stable URL hash (`design.html#c-Button`, `#t-system.color.accent`) for deep-linking.

@@ -5,10 +5,7 @@ description: "Fail the build when text and background colors fall below a WCAG c
 
 # Contrast
 
-`contrast()` checks [WCAG 2.x](https://www.w3.org/TR/WCAG22/#contrast-minimum) contrast ratios
-between groups of color tokens, in the base tokens and in every theme. A dark theme or a brand
-override that makes text unreadable fails `recontent build` (and your CI) before any file is
-written. The plugin emits no files.
+`contrast()` validates [WCAG 2.x](https://www.w3.org/TR/WCAG22/#contrast-minimum) contrast ratios between color token groups across base tokens and every theme. If a dark theme or brand override makes text unreadable, `recontent build` fails before writing any file. This plugin emits no files.
 
 ```ts twoslash
 // [!include ~/snippets/contrast.config.ts]
@@ -20,43 +17,38 @@ written. The plugin emits no files.
 contrast(options: ContrastPluginOptions): RecontentPlugin
 ```
 
-| Option  | Type             | Default  | Description                       |
-| ------- | ---------------- | -------- | --------------------------------- |
-| `rules` | `ContrastRule[]` | required | The foreground/background checks. |
+| Option  | Type             | Default  | Description                               |
+| ------- | ---------------- | -------- | ----------------------------------------- |
+| `rules` | `ContrastRule[]` | required | Foreground and background contrast rules. |
 
-Each rule has:
+Each rule accepts these fields:
 
-| Field        | Type                   | Default   | Description                                                            |
-| ------------ | ---------------------- | --------- | ---------------------------------------------------------------------- |
-| `foreground` | `string`               | required  | A color token or a group, as a dotted key (`system.color.text`).       |
-| `background` | `string`               | required  | A color token or a group, as a dotted key.                             |
-| `min`        | `number`               | `4.5`     | Minimum contrast ratio. Use `3` for large text and UI, `7` for AAA.    |
-| `severity`   | `"error" \| "warning"` | `"error"` | An error fails the build; a warning is reported and the build goes on. |
+| Field        | Type                   | Default   | Description                                                             |
+| ------------ | ---------------------- | --------- | ----------------------------------------------------------------------- |
+| `foreground` | `string`               | required  | Dotted key for a color token or group (`system.color.text`).            |
+| `background` | `string`               | required  | Dotted key for a color token or group.                                  |
+| `min`        | `number`               | `4.5`     | Minimum contrast ratio (`3` for large text and UI, `7` for AAA).        |
+| `severity`   | `"error" \| "warning"` | `"error"` | Errors fail the build; warnings print to stderr and let the build pass. |
 
 Plugin name: `recontent:contrast`.
 
 ## Groups
 
-A key names a single token or a group (a [`tokens.group()`](/config/scales#groups) or any nested
-object). A group expands to every `color` token at or below it, and a rule checks every foreground
-against every background. A color you add under a covered group is checked without changing the
-config, so organize colors by role (`text`, `surface`, `border`) and keep the rules few.
+Each key names either one token or a group (a [`tokens.group()`](/config/scales#groups) or plain nested object). The plugin expands every group to all `color` tokens beneath it and checks every foreground against every background. Organize colors by role (`text`, `surface`, `border`) so new tokens inherit contrast checks automatically.
 
-A key that matches no color token is an error. A token on both sides of a rule isn't paired with
-itself.
+A key matching zero color tokens fails validation. The plugin skips pairing a token with itself when it appears on both sides of a rule.
 
 ## Themes
 
-Each pair is measured in the base tokens, then in every theme, following aliases and theme
-overrides. A failure names the theme:
+`contrast()` checks every pair in base tokens first, then in every theme while following aliases and theme overrides. Failures name the theme:
 
-```
+```text
 system.color.text.muted on system.color.surface.default has contrast 3.21:1 in theme "dark", below 4.5:1.
 ```
 
 ## Transparency
 
-- A **translucent foreground** is composited over the background in sRGB, as a browser renders it.
-- A **translucent background** is an error, since the page behind it is unknown.
+- **Translucent foregrounds:** The plugin composites the foreground over the background in sRGB, matching browser rendering.
+- **Translucent backgrounds:** The plugin reports an error because the surface behind the background is unknown.
 
-The ratio is compared to `min` unrounded, as WCAG requires, so `4.48:1` never passes `4.5`.
+`contrast()` compares unrounded ratios against `min` as WCAG specifies, so `4.48:1` never passes `4.5`.

@@ -1,7 +1,7 @@
 import { Agents } from "./components/Agents.tsx";
 import { Components } from "./components/Components.tsx";
-import { Diff } from "./components/Diff.tsx";
 import { FinalCta } from "./components/FinalCta.tsx";
+import { Guardrails } from "./components/Guardrails.tsx";
 import { Hero } from "./components/Hero.tsx";
 import { LandingRoot } from "./components/LandingRoot.tsx";
 import { Plugins } from "./components/Plugins.tsx";
@@ -18,7 +18,7 @@ export function Landing() {
       <Agents />
       <Components />
       <TokenLayers />
-      <Diff />
+      <Guardrails />
       <Plugins />
       <FinalCta />
     </LandingRoot>

@@ -5,88 +5,66 @@ description: "Compare the config's tokens, components and types against a previo
 
 # diff
 
-Compares the tokens and themes in your working tree with those at an earlier git revision. When the
-config sets [`introspection`](/config#introspection), it also compares the API of your components
-and of the types their props use.
+`recontent diff` compares your working tree's tokens and themes against an earlier git revision. When your config file sets [`introspection`](/config#introspection), `diff` also compares component APIs and referenced prop types.
 
 ```bash
 recontent diff [rev] [--fail-on-breaking] [--format <format>] [--no-cache]
 ```
 
-For a walkthrough with a GitHub Actions workflow, see the [Catching breaking changes](/guides/diffs) guide.
+See [Catching breaking changes](/guides/diffs) for a walkthrough and GitHub Actions workflow.
 
 ## Arguments and options
 
-| Argument / option    | Description                                                                                      |
-| -------------------- | ------------------------------------------------------------------------------------------------ |
-| `[rev]`              | The git revision to compare against. Default: `HEAD`. Must be an ancestor of `HEAD`.             |
-| `--fail-on-breaking` | Exit with code `1` when the diff has a [breaking change](/guides/diffs#what-counts-as-breaking). |
-| `--format <format>`  | `markdown` (default) or `json`.                                                                  |
-| `--no-cache`         | Do not read or write the introspection cache of the working tree. `rev` is never cached.         |
+| Argument / option    | Description                                                                                        |
+| -------------------- | -------------------------------------------------------------------------------------------------- |
+| `[rev]`              | Git revision to compare against. Defaults to `HEAD` and must be an ancestor of `HEAD`.             |
+| `--fail-on-breaking` | Exit with code `1` when the diff finds a [breaking change](/guides/diffs#what-counts-as-breaking). |
+| `--format <format>`  | Output format: `markdown` (default) or `json`.                                                     |
+| `--no-cache`         | Bypass reading and writing the working tree's introspection cache (`rev` never uses the cache).    |
 
-Uses the [global options](/cli#global-options) `-c`, `--cwd` and `--log-level`.
+Supports the [global options](/cli#global-options) `-c`, `--cwd`, and `--log-level`.
 
 ## Requirements
 
-- The config must be inside a git repository, and the repository needs at least one commit.
-- `rev` must be a valid revision and an ancestor of `HEAD`. This is enforced because diffing loads
-  and executes the config at that revision.
-- The history needed to confirm that must be present. In a shallow clone, fetch more depth first.
+- The config file must live inside a git repository with at least one commit.
+- `rev` must be a valid git revision and an ancestor of `HEAD`. Recontent enforces this because diffing executes the config file at `rev`.
+- Local git history must include `rev`. In a shallow clone, fetch full history first.
 
-The whole tree at `rev` is extracted to a temporary directory, so a config that imports other files
-loads correctly there. Nothing in your working tree or git state is changed.
+`diff` extracts the tree at `rev` into a temporary directory so local imports resolve cleanly, leaving your working tree and git state untouched.
 
 ### Components
 
-Components are compared automatically when the config in your working tree sets `introspection`. If
-the config at `rev` does not, they are skipped, with a note in the output. The reverse is not
-symmetric: if `rev` sets `introspection` and your working tree does not, every component counts as
-removed, which is breaking.
+`diff` compares components automatically when your working tree configures `introspection`. If the config at `rev` lacks `introspection`, `diff` skips component comparison and adds a note. Conversely, if `rev` configures `introspection` and your working tree removes it, every component counts as removed (breaking).
 
-To introspect `rev`, its sources must be able to resolve their dependencies (`react`, `@types/react`
-and so on). The archive has no `node_modules`, so every `node_modules` directory ignored by git in
-your working tree is symlinked into it, at the same relative path. Install dependencies before
-running `diff`. If introspecting `rev` fails, the command fails with the error: a diff that
-silently dropped components would be misleading.
+To introspect `rev`, its sources must resolve dependencies (`react`, `@types/react`). Because git archives omit `node_modules`, `diff` symlinks every gitignored `node_modules` directory from your working tree into the temporary archive at matching relative paths. Install dependencies before running `diff`. If introspecting `rev` fails, `diff` exits with that error rather than silently dropping components.
 
 Limitations:
 
-- Files ignored by git other than `node_modules` (generated code that is not committed, say) are
-  missing at `rev`.
-- Workspace packages linked through `node_modules` resolve to their working-tree version, not the
-  one at `rev`.
-- There is no rename detection: a renamed component or prop is a removal plus an addition, which is
-  still breaking.
+- Gitignored files other than `node_modules` (such as uncommitted generated files) do not exist at `rev`.
+- Workspace packages linked through `node_modules` resolve to their working-tree version rather than `rev`.
+- Components and props have no rename detection: renaming one reports a removal plus an addition, which remains breaking.
 
 ## Output
 
-The diff is written to **stdout**. In `markdown` format, a line `Comparing <config> against <rev>` is
-written to stderr, so redirecting stdout leaves just the markdown.
+`diff` writes results to **stdout**. In `markdown` mode, it prints `Comparing <config> against <rev>` to stderr so redirecting stdout captures clean markdown only.
 
-- `markdown`: `# Tokens`, `# Components` and `# Types` sections, each with **Breaking**, **Added** and
-  **Changed** subsections (tokens also get a `diff` code block, **Metadata** for deprecation/description
-  changes, and **Themes**). A section with
-  nothing in it is left out. When nothing differs, the output is
-  `No changes between the working tree and <rev>.`
-- `json`: one document with `schemaVersion`, `kind: "diff"`, `config`, `rev`, `breaking` (boolean), `counts` and the diffs
-  themselves, nested by kind:
+- `markdown`: Emits `# Tokens`, `# Components`, and `# Types` sections with **Breaking**, **Added**, and **Changed** subsections (tokens also include a `diff` block, **Metadata**, and **Themes**). Empty sections omit themselves. When nothing differs, it prints `No changes between the working tree and <rev>.`
+- `json`: Emits one JSON object containing `schemaVersion`, `kind: "diff"`, `config`, `rev`, `breaking` (boolean), `counts`, and nested diffs:
 
-  | Field        | Contents                                                                                                                                                                                |
-  | ------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-  | `counts`     | `tokens` (`added`, `removed`, `renamed`, `retyped`, `changed`, `metadata`, `breaking`), `components` and `types` (`added`, `removed`, `changed`, `breaking`), and the total `breaking`. |
-  | `tokens`     | `added`, `removed`, `renamed`, `retyped`, `changed`, `metadata` and `themes`.                                                                                                           |
-  | `components` | `added` and `removed` (the introspected components), and `changed`: `{ name, changes }` per component.                                                                                  |
-  | `types`      | The same, for project types.                                                                                                                                                            |
+  | Field        | Contents                                                                                                                                                                            |
+  | ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+  | `counts`     | `tokens` (`added`, `removed`, `renamed`, `retyped`, `changed`, `metadata`, `breaking`), `components` and `types` (`added`, `removed`, `changed`, `breaking`), and total `breaking`. |
+  | `tokens`     | `added`, `removed`, `renamed`, `retyped`, `changed`, `metadata`, and `themes`.                                                                                                      |
+  | `components` | `added`, `removed`, and `changed` (`{ name, changes }` per component).                                                                                                              |
+  | `types`      | Same structure for project types.                                                                                                                                                   |
 
-  `components`, `types` and their counts are absent when components were not compared;
-  `componentsNote` then says why. On failure with `--format json`, `recontent diff` prints
-  `{ schemaVersion, kind: "error", errors: [{ message }] }` to stdout.
+  When `diff` skips components, it omits `components`, `types`, and their counts and explains why in `componentsNote`. On errors with `--format json`, `recontent diff` prints `{ schemaVersion, kind: "error", errors: [{ message }] }` to stdout.
 
 ## Exit codes
 
-| Code | When                                                                                                     |
-| ---- | -------------------------------------------------------------------------------------------------------- |
-| `0`  | The diff was printed (even if it contains breaking changes, without `--fail-on-breaking`).               |
-| `1`  | An error, or `--fail-on-breaking` with at least one breaking change (`error: 2 breaking changes found`). |
+| Code | When                                                                                                   |
+| ---- | ------------------------------------------------------------------------------------------------------ |
+| `0`  | `diff` succeeded (including breaking changes when you omit `--fail-on-breaking`).                      |
+| `1`  | An error occurred, or `--fail-on-breaking` found breaking changes (`error: 2 breaking changes found`). |
 
 See [What counts as breaking](/guides/diffs#what-counts-as-breaking).

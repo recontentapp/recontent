@@ -15,7 +15,7 @@
   background: var(--system-color-background);
   color: var(--system-color-foreground);
   font-family: var(--system-fontFamily-body);
-  font-size: 1.0625rem;
+  font-size: var(--system-fontSize-md);
   line-height: 1.55;
   letter-spacing: 0;
   overflow-x: clip;
@@ -79,7 +79,7 @@
 }
 
 .lp-h1 {
-  font-size: clamp(2.4rem, 1rem + 4.2vw, 4.25rem);
+  font-size: clamp(2.4rem, 1rem + 4.2vw, var(--system-fontSize-3xl));
   line-height: 1.02;
   letter-spacing: -0.04em;
 }
@@ -89,7 +89,7 @@
 }
 
 .lp-h2 {
-  font-size: clamp(2rem, 1.1rem + 3.4vw, 3.5rem);
+  font-size: clamp(2rem, 1.1rem + 3.4vw, var(--system-fontSize-2xl));
   line-height: 1.06;
   letter-spacing: -0.035em;
   max-width: 20ch;
@@ -97,26 +97,26 @@
 }
 
 .lp-h2-big {
-  font-size: clamp(2.3rem, 1.2rem + 4.4vw, 4.5rem);
+  font-size: clamp(2.3rem, 1.2rem + 4.4vw, var(--system-fontSize-3xl));
   line-height: 1;
   letter-spacing: -0.04em;
 }
 
 .lp-h3 {
-  font-size: 1.4rem;
+  font-size: var(--system-fontSize-xl);
   line-height: 1.15;
   letter-spacing: -0.02em;
 }
 
 .lp-lede {
-  font-size: clamp(1.05rem, 1rem + 0.35vw, 1.25rem);
+  font-size: var(--system-fontSize-lg);
   line-height: 1.55;
   max-width: 34rem;
 }
 
 .lp-sub {
   margin-top: var(--system-spacing-sm);
-  font-size: 1.15rem;
+  font-size: var(--system-fontSize-lg);
   max-width: 36rem;
 }
 
@@ -172,36 +172,6 @@
   pointer-events: none;
 }
 
-.lp-install {
-  display: flex;
-  align-items: center;
-  gap: 0.7rem;
-  width: fit-content;
-  max-width: 100%;
-  margin-top: 1.75rem;
-  padding: 0.85rem 1.1rem;
-  background: var(--system-color-inverse);
-  color: var(--system-color-onInverse);
-  border-radius: var(--lp-wobble);
-  box-shadow: var(--system-shadow-sm-coral);
-  overflow-x: auto;
-  white-space: nowrap;
-  font-family: var(--system-fontFamily-mono);
-}
-
-.lp-install > span {
-  color: var(--system-color-accent-yellow);
-  font-weight: var(--system-fontWeight-bold);
-}
-
-.lp-root .lp-install code {
-  background: none;
-  padding: 0;
-  color: inherit;
-  font-size: clamp(0.8rem, 0.7rem + 0.5vw, 1rem);
-  font-weight: var(--system-fontWeight-semibold);
-}
-
 .lp-ctas {
   display: flex;
   flex-wrap: wrap;
@@ -209,42 +179,49 @@
   margin-top: 1.75rem;
 }
 
-.lp-root a.lp-btn {
+.lp-root :is(a, button).lp-btn {
   display: inline-block;
   padding: 0.8rem 1.4rem;
   font-family: var(--system-fontFamily-display);
-  font-size: 1rem;
+  font-size: var(--system-fontSize-md);
   font-weight: var(--system-fontWeight-black);
   letter-spacing: -0.01em;
+  line-height: 1.25;
   color: var(--system-color-foreground);
   background: var(--system-color-surface);
   border: var(--system-border-default);
   border-radius: var(--lp-wobble-2);
   box-shadow: var(--system-shadow-sm-ink);
   text-decoration: none;
+  cursor: pointer;
   transition:
     transform var(--system-motion-duration) var(--system-motion-easing),
     box-shadow var(--system-motion-duration) var(--system-motion-easing);
 }
 
-.lp-root a.lp-btn-primary {
+.lp-root :is(a, button).lp-btn-primary {
   background: var(--system-color-accent-green);
   color: var(--system-color-onAccent);
 }
 
-.lp-root a.lp-btn-dark {
+.lp-root :is(a, button).lp-btn-dark {
   background: var(--system-color-inverse);
   color: var(--system-color-onInverse);
   box-shadow: var(--system-shadow-sm-coral);
 }
 
-.lp-root a.lp-btn:hover {
+.lp-root :is(a, button).lp-btn:hover {
   transform: translate(2px, 2px) rotate(-0.6deg);
   box-shadow: var(--system-shadow-press-ink);
 }
 
-.lp-root a.lp-btn-dark:hover {
+.lp-root :is(a, button).lp-btn-dark:hover {
   box-shadow: var(--system-shadow-press-coral);
+}
+
+.lp-root button.lp-btn:focus-visible {
+  outline: var(--system-border-focus);
+  outline-offset: 3px;
 }
 
 .lp-root a.lp-link {
@@ -301,7 +278,7 @@
   color: var(--system-color-foreground);
   border-bottom: var(--system-border-default);
   font-family: var(--system-fontFamily-mono);
-  font-size: 0.85rem;
+  font-size: var(--system-fontSize-xs);
   font-weight: var(--system-fontWeight-bold);
 }
 
@@ -309,7 +286,7 @@
   padding: 1.1rem 1.25rem;
   overflow-x: auto;
   font-family: var(--system-fontFamily-mono);
-  font-size: clamp(0.74rem, 0.68rem + 0.3vw, 0.9rem);
+  font-size: var(--system-fontSize-xs);
   line-height: 1.7;
   tab-size: 2;
 }
@@ -357,7 +334,7 @@
   color: var(--system-color-foreground);
   border-top: var(--system-border-default);
   font-family: var(--system-fontFamily-mono);
-  font-size: 0.82rem;
+  font-size: var(--system-fontSize-xs);
   line-height: 1.5;
   overflow-wrap: anywhere;
 }
@@ -452,18 +429,6 @@
   margin-top: var(--system-spacing-md);
 }
 
-.lp-hero-actions {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 1.25rem 1.5rem;
-  margin-top: 1.75rem;
-}
-
-.lp-hero-actions .lp-install {
-  margin-top: 0;
-}
-
 .lp-hero-art {
   width: 100%;
   min-width: 0;
@@ -499,6 +464,46 @@
   .lp-hero-art {
     transform: rotate(1.2deg);
   }
+}
+
+.lp-pain-list {
+  display: grid;
+  gap: 0.7rem;
+  margin-top: var(--system-spacing-md);
+}
+
+.lp-pain-item {
+  position: relative;
+  padding-left: 1.35rem;
+  font-size: var(--system-fontSize-sm);
+  line-height: 1.45;
+}
+
+.lp-pain-item::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.42em;
+  width: 0.7rem;
+  height: 0.7rem;
+  border-radius: var(--system-radius-full);
+  border: var(--system-border-thin);
+}
+
+.lp-pain-dot-coral::before {
+  background: var(--system-color-accent-coral);
+}
+
+.lp-pain-dot-yellow::before {
+  background: var(--system-color-accent-yellow);
+}
+
+.lp-pain-dot-blue::before {
+  background: var(--system-color-accent-blue);
+}
+
+.lp-pain-dot-green::before {
+  background: var(--system-color-accent-green);
 }
 
 .lp-fits {
@@ -677,7 +682,7 @@
 }
 
 .lp-diff {
-  max-width: 44rem;
+  max-width: 48rem;
   margin-top: var(--system-spacing-xl);
 }
 
@@ -719,21 +724,110 @@
   margin-top: var(--system-spacing-sm);
 }
 
-.lp-steps {
-  display: grid;
-  gap: var(--system-spacing-lg);
-  max-width: 46rem;
+.lp-carousel {
   margin-top: var(--system-spacing-xl);
 }
 
-.lp-steps li {
-  min-width: 0;
+.lp-carousel-tabs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+@media (min-width: 52rem) {
+  .lp-carousel-tabs {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.lp-carousel-tab {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.35rem;
+  padding: 0.85rem 1rem 1rem;
+  text-align: left;
+  color: var(--system-color-foreground);
+  background: var(--system-color-surface);
+  border: var(--system-border-thin);
+  border-radius: var(--lp-wobble);
+  box-shadow: var(--system-shadow-press-ink);
+  overflow: hidden;
+  cursor: pointer;
+  transition:
+    transform var(--system-motion-duration) var(--system-motion-easing),
+    background var(--system-motion-duration) var(--system-motion-easing);
+}
+
+.lp-carousel-tab strong {
+  font-family: var(--system-fontFamily-display);
+  font-size: var(--system-fontSize-md);
+  font-weight: var(--system-fontWeight-black);
+}
+
+.lp-carousel-tab code {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--system-fontSize-xs);
+}
+
+.lp-carousel-tab:hover {
+  transform: translate(1px, 1px);
+}
+
+.lp-carousel-tab:focus-visible {
+  outline: var(--system-border-focus);
+  outline-offset: 3px;
+}
+
+.lp-carousel-tab.is-active {
+  background: var(--system-color-tone-yellow);
+  border: var(--system-border-default);
+  box-shadow: var(--system-shadow-sm-ink);
+}
+
+.lp-carousel-progress {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 4px;
+  background: var(--system-color-overlay);
+}
+
+.lp-carousel-progress-bar {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: var(--system-color-accent-coral);
+  transform-origin: left center;
+  animation: lp-progress 6s linear forwards;
+}
+
+.lp-carousel-progress-bar.is-paused {
+  animation-play-state: paused;
+}
+
+@keyframes lp-progress {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+.lp-carousel-panel {
+  margin-top: var(--system-spacing-md);
 }
 
 .lp-chips-title {
   font-family: var(--system-fontFamily-display);
   font-weight: var(--system-fontWeight-black);
-  font-size: 1.15rem;
+  font-size: var(--system-fontSize-lg);
   margin-bottom: var(--system-spacing-sm);
 }
 
@@ -742,20 +836,30 @@
   gap: 0.9rem;
 }
 
-.lp-chips li {
+.lp-root .lp-chips a {
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
   gap: 0.35rem 0.7rem;
   padding: 0.8rem 1rem;
+  color: var(--system-color-foreground);
+  text-decoration: none;
   background: var(--system-color-surface);
   border: var(--system-border-thin);
   border-radius: var(--lp-wobble-2);
   box-shadow: var(--system-shadow-press-ink);
+  transition:
+    transform var(--system-motion-duration) var(--system-motion-easing),
+    box-shadow var(--system-motion-duration) var(--system-motion-easing);
 }
 
-.lp-chips li span {
-  font-size: 0.95rem;
+.lp-root .lp-chips a:hover {
+  transform: translate(2px, 2px);
+  background: var(--system-color-tone-yellow);
+}
+
+.lp-chips a span {
+  font-size: var(--system-fontSize-sm);
 }
 
 .lp-cards li {
@@ -801,7 +905,7 @@
 
 .lp-output strong {
   font-family: var(--system-fontFamily-display);
-  font-size: 1.15rem;
+  font-size: var(--system-fontSize-lg);
   letter-spacing: -0.01em;
 }
 
@@ -811,14 +915,28 @@
 }
 
 .lp-output span {
-  font-size: 0.95rem;
+  font-size: var(--system-fontSize-sm);
   line-height: 1.45;
 }
 
-.lp-plugins-config {
-  max-width: 48rem;
-  margin: var(--system-spacing-2xl) auto 0;
-  text-align: left;
+.lp-plugins-split {
+  display: grid;
+  gap: var(--system-spacing-xl);
+  align-items: start;
+  margin-top: var(--system-spacing-xl);
+}
+
+.lp-plugins-left,
+.lp-plugins-right {
+  min-width: 0;
+}
+
+.lp-plugins-right .lp-cards {
+  margin-top: 0;
+}
+
+.lp-plugins-toggle {
+  margin-top: var(--system-spacing-md);
 }
 
 @media (min-width: 40rem) {
@@ -832,8 +950,13 @@
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
-  .lp-plugins-config {
-    transform: rotate(-0.6deg);
+  .lp-cards.lp-cards-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .lp-plugins-split {
+    grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+    gap: var(--system-spacing-xl);
   }
 }
 
@@ -879,9 +1002,14 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .lp-root a.lp-btn,
+  .lp-root :is(a, button).lp-btn,
   .lp-root a.lp-output,
+  .lp-carousel-tab,
   .lp-theme-toggle {
     transition: none;
+  }
+
+  .lp-carousel-progress-bar {
+    animation: none;
   }
 }

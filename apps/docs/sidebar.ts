@@ -67,8 +67,8 @@ export const sidebar: NonNullable<Config["sidebar"]> = [
         text: "Docs & agents",
         items: [
           { text: "Docs", link: "/plugins/docs" },
-          { text: "designMD", link: "/plugins/design-md" },
-          { text: "inspect", link: "/plugins/inspect" },
+          { text: "Design.md", link: "/plugins/design-md" },
+          { text: "Inspect", link: "/plugins/inspect" },
         ],
       },
       {

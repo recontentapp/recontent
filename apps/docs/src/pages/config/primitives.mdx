@@ -5,7 +5,7 @@ description: "The single-value token types and the tokens.* factories that creat
 
 # Primitives
 
-Primitive tokens hold one value. Create them with the `tokens` object:
+Primitive tokens hold a single design value. Create them with the `tokens` factories:
 
 ```ts twoslash
 import { tokens } from "recontent";
@@ -14,12 +14,9 @@ const brand = tokens.color("#2563eb");
 const gap = tokens.dimension("16px");
 ```
 
-Every factory validates its input and throws with a descriptive message if it is invalid, so a bad
-value fails when the config loads. Every token it returns also has `.describe()`, `.deprecate()` and
-`.extend()` (see [Defining tokens](/guides/defining-tokens#descriptions-and-deprecations)).
+Each factory validates its input and throws a descriptive error on invalid values when the config loads. Every returned token supports `.describe()`, `.deprecate()`, and `.extend()` (see [Defining tokens](/guides/defining-tokens#descriptions-and-deprecations)).
 
-The table below shows what each type becomes in the two most common outputs. See each
-[plugin](/plugins/css) for the rest.
+The table below shows how the two most common outputs serialize each type. See individual [plugin pages](/plugins/css) for other targets.
 
 | Type                          | CSS                             | DTCG `$value`                            |
 | ----------------------------- | ------------------------------- | ---------------------------------------- |
@@ -42,15 +39,17 @@ tokens.color("oklch(0.55 0.2 262 / 0.9)"); // CSS color function
 tokens.color({ colorSpace: "oklch", components: [0.55, 0.2, 262], alpha: 0.9 });
 ```
 
-Takes a hex string (`#rgb`, `#rgba`, `#rrggbb` or `#rrggbbaa`, starting with `#`), a CSS color
-function string (`rgb()`, `rgba()`, `hsl()`, `hsla()`, `hwb()`, `lab()`, `lch()`, `oklab()`,
-`oklch()`, or `color(<space> …)`), or an object:
+`tokens.color()` accepts three formats:
 
-| Field        | Type                                                     | Notes                                        |
-| ------------ | -------------------------------------------------------- | -------------------------------------------- |
-| `colorSpace` | one of the spaces below                                  |                                              |
-| `components` | `[number \| "none", number \| "none", number \| "none"]` | Each must be inside the range for the space. |
-| `alpha`      | `number`                                                 | Between 0 and 1. Defaults to `1`.            |
+- A hex string (`#rgb`, `#rgba`, `#rrggbb`, or `#rrggbbaa`).
+- A CSS color function (`rgb()`, `rgba()`, `hsl()`, `hsla()`, `hwb()`, `lab()`, `lch()`, `oklab()`, `oklch()`, or `color(<space> …)`).
+- A color object with these fields:
+
+| Field        | Type                                                     | Notes                                      |
+| ------------ | -------------------------------------------------------- | ------------------------------------------ |
+| `colorSpace` | one of the spaces below                                  |                                            |
+| `components` | `[number \| "none", number \| "none", number \| "none"]` | Each component must fit the space's range. |
+| `alpha`      | `number`                                                 | Between 0 and 1. Defaults to `1`.          |
 
 | Color space                                                               | Components                               |
 | ------------------------------------------------------------------------- | ---------------------------------------- |
@@ -62,14 +61,11 @@ function string (`rgb()`, `rgba()`, `hsl()`, `hsla()`, `hwb()`, `lab()`, `lch()`
 | `oklch`                                                                   | L 0 to 1, C 0 to 0.4, H 0 to 360         |
 | `xyz-d65`, `xyz-d50`                                                      | finite numbers (unbounded)               |
 
-A fallback `hex` is computed for every color. CSS output: sRGB colors are written as hex
-(`#rrggbb`, or `#rrggbbaa` with alpha); `oklch`, `oklab`, `lab`, `lch`, `hsl` and `hwb` use their
-CSS functions (`oklch(0.55 0.2 262 / 0.9)`); other spaces use `color(display-p3 …)`.
+Recontent computes a fallback `hex` for every color. The CSS plugin writes sRGB colors as hex (`#rrggbb` or `#rrggbbaa`), writes `oklch`, `oklab`, `lab`, `lch`, `hsl`, and `hwb` with their CSS functions (`oklch(0.55 0.2 262 / 0.9)`), and writes other spaces with `color(display-p3 …)`.
 
 ### alpha
 
-`.alpha()` returns the same color with another alpha, so a translucent variant doesn't need a
-hand-written `#rrggbbaa`:
+`.alpha()` returns the same color with a new alpha channel, avoiding manual `#rrggbbaa` values:
 
 ```ts twoslash
 import { defineReferenceTokens, tokens } from "recontent";
@@ -84,8 +80,7 @@ const ref = defineReferenceTokens({
 const overlay = ref.ink.solid.alpha(0.5);
 ```
 
-The result is a new literal color: it drops the description, deprecation and extensions of the
-original and is not an alias of it. It throws unless the alpha is between 0 and 1.
+`.alpha()` returns a new literal color rather than an alias, dropping the original's description, deprecation, and extensions. It throws unless `alpha` lies between `0` and `1`.
 
 ## dimension
 
@@ -97,9 +92,7 @@ tokens.dimension("1.5rem");
 tokens.dimension("-0.02em");
 ```
 
-A number followed by `px`, `rem` or `em`. DTCG only defines `px` and `rem`, so the
-[DTCG plugin](/plugins/dtcg) writes `em` as `rem` with the same number. The
-[native TypeScript output](/plugins/typescript#typescriptnative) converts every dimension to pixels.
+Pass a number followed by `px`, `rem`, or `em`. Because DTCG defines only `px` and `rem`, the [DTCG plugin](/plugins/dtcg) converts `em` to `rem` with the same numeric value. The [native TypeScript plugin](/plugins/typescript#typescriptnative) converts every dimension to pixels.
 
 ## fontFamily
 
@@ -109,9 +102,7 @@ import { tokens } from "recontent";
 tokens.fontFamily('Inter, "Segoe UI", system-ui, sans-serif');
 ```
 
-A comma-separated list of families. Surrounding quotes are removed and each family may contain only
-letters, digits, spaces, `-`, `_` and `.`. Families are written unquoted in CSS, so this restriction
-keeps a value from ending a declaration.
+Pass a comma-separated list of font families. Recontent strips surrounding quotes and restricts each family name to letters, digits, spaces, `-`, `_`, and `.`. Because CSS writes families unquoted, this check prevents CSS injection.
 
 ## fontWeight
 
@@ -122,7 +113,7 @@ tokens.fontWeight(600);
 tokens.fontWeight("semibold");
 ```
 
-A number from 1 to 1000, or a name. Names resolve to numbers:
+Pass a number from `1` to `1000` or a named weight. Names resolve to numeric weights:
 
 | Name                                       | Weight |
 | ------------------------------------------ | ------ |
@@ -147,7 +138,7 @@ tokens.duration("150ms");
 tokens.duration("0.3s");
 ```
 
-A number followed by `ms` or `s`.
+Pass a number followed by `ms` or `s`.
 
 ## cubicBezier
 
@@ -157,7 +148,7 @@ import { tokens } from "recontent";
 tokens.cubicBezier([0.4, 0, 0.2, 1]);
 ```
 
-Four finite numbers: the control points `x1, y1, x2, y2`.
+Pass four finite numbers representing the control points `x1, y1, x2, y2`.
 
 ## number
 
@@ -167,4 +158,4 @@ import { tokens } from "recontent";
 tokens.number(1.5);
 ```
 
-A finite, unitless number: a line height, an aspect ratio, an opacity.
+Pass a finite, unitless number such as a line height, aspect ratio, or opacity.

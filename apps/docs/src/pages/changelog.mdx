@@ -5,50 +5,34 @@ description: "Release notes for recontent."
 
 # Changelog
 
-Release notes are published as
-[GitHub releases](https://github.com/recontentapp/recontent/releases).
-[`recontent`](https://www.npmjs.com/package/recontent) is released under a version tag (e.g.
-`0.2.0`).
+This page tracks unreleased changes and links to published releases. We publish release notes as [GitHub releases](https://github.com/recontentapp/recontent/releases) and release [`recontent`](https://www.npmjs.com/package/recontent) under version tags (for example `0.2.0`).
 
 ## Unreleased
 
 ### Breaking changes
 
-- `PluginContext.mode` is removed. No built-in plugin read it.
-- `inspect({ fileName })` is now `inspect({ filename })`, like `tailwind({ filename })`.
-- `stylex()` and `vanillaExtract()` no longer emit a CSS reset: the `fontFamily` and
-  `placeholderColor` options are removed, as are `reset.gen.css` and `reset.gen.css.ts`. Delete the
-  generated files and the import of the reset.
-- Theme names must now be valid in every output: letters, digits, underscores and hyphens, not
-  starting with a digit or a hyphen. `defineConfig()` throws otherwise.
-- Two files emitted at the same path are an error even when they come from the same plugin, for
-  example two `css()` instances with the same `outDir`, or a `dtcg()` theme named `tokens`.
+- Removed `PluginContext.mode`. No built-in plugin read it.
+- Renamed `inspect({ fileName })` to `inspect({ filename })`, matching `tailwind({ filename })`.
+- Removed CSS reset emission from `stylex()` and `vanillaExtract()`. Both plugins drop the `fontFamily` and `placeholderColor` options and no longer emit `reset.gen.css` or `reset.gen.css.ts`. Delete the generated reset files and their imports.
+- Theme names must now work across every output: letters, digits, underscores, and hyphens, without starting with a digit or hyphen. `defineConfig()` throws otherwise.
+- Emitting two files to the same path now causes an error, even from the same plugin. For example, two `css()` instances sharing an `outDir` or a `dtcg()` theme named `tokens` fail the build.
 
 ### Added
 
-- `contrast()` fails the build when color pairs fall below a WCAG 2.x contrast ratio in the base
-  tokens or any theme. Rules point at groups of tokens, so new colors are covered automatically.
-- `recontent inspect search <query...>` finds tokens, components and types by name, description, usage notes or value
-  (a hex color, a CSS variable) in one call.
-- Component introspection: the `introspection` config option reads your React components' props,
-  defaults, types and JSDoc, and requires an `importPath` for the import statement.
-- `recontent inspect` browses tokens, components and types as markdown or JSON, with `--from` to browse
-  an installed design system's published snapshot.
-- `docs()` documents components (with `@usage`, `@example`, `@link`, `@category` and `@stories`) and
-  `designMD()` writes a `DESIGN.md` for agents; `inspect()` publishes the snapshot `--from` reads.
-- `recontent diff` compares components and the types their props use, besides tokens.
+- `contrast()` fails the build when color pairs drop below a WCAG 2.x contrast ratio in base tokens or any theme. Rules target token groups, so the check automatically covers new colors.
+- `recontent inspect search <query...>` finds tokens, components, and types by name, description, usage notes, or value (such as a hex color or CSS variable) in one call.
+- Component introspection via the `introspection` config option reads React component props, defaults, types, and JSDoc. It requires `importPath` for import statements.
+- `recontent inspect` browses tokens, components, and types as markdown or JSON. Pass `--from` to inspect an installed design system's published snapshot.
+- `docs()` documents components (with `@usage`, `@example`, `@link`, `@category`, and `@stories`), `designMD()` writes `DESIGN.md` for agents, and `inspect()` emits the snapshot that `--from` reads.
+- `recontent diff` compares components and prop types in addition to tokens.
 - `recontent build --check` fails when generated files are missing or out of date.
-- `resolveValue(ctx, entry, theme?)` in `recontent/plugins` resolves a token's value through its
-  alias chain and a theme's overrides.
-- `aliasChain(ctx, entry, theme?)` in `recontent/plugins` returns the tokens an alias passes through,
-  from the entry to its terminal token, as a theme sees them.
-- Diagnostics and errors from plugins name the plugin (and the token) they came from.
+- `resolveValue(ctx, entry, theme?)` in `recontent/plugins` resolves a token value through its alias chain and theme overrides.
+- `aliasChain(ctx, entry, theme?)` in `recontent/plugins` returns the alias chain from an entry to its terminal token for a given theme.
+- Plugin diagnostics and errors now name the plugin and token that triggered them.
 
 ### Fixed
 
-- `recontent diff` loaded the base revision's tokens through the working tree's tsconfig `paths`
-  aliases, which hid or misreported changes.
-- A theme that replaced a scale with tokens built from other tokens silently dropped the override.
-- `build --watch` kept serving the config it first loaded after edits.
-- `init --force` failed when the config already had the same content, and `init -c` refused a path
-  outside `--cwd`.
+- `recontent diff` previously loaded base revision tokens through the working tree's tsconfig `paths` aliases, hiding or misreporting changes.
+- A theme replacing a scale with tokens built from other tokens no longer drops the override.
+- `build --watch` now reloads the config file after edits instead of reusing the initial config.
+- `init --force` now succeeds when the config file already has identical content, and `init -c` accepts paths outside `--cwd`.

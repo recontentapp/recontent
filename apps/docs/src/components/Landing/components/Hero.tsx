@@ -1,7 +1,7 @@
 import { Link } from "vocs";
 import { BuddyPeekArt, MarkerCircle } from "../doodles.tsx";
 import { CodePanel, lines } from "./CodePanel.tsx";
-import { Install } from "./Install.tsx";
+import { CopyAgentPrompt } from "./CopyAgentPrompt.tsx";
 
 // Real output of `recontent inspect components Button`, without the Notes and Required columns.
 const heroOutput = lines(`$ recontent inspect components Button
@@ -43,11 +43,11 @@ export function Hero() {
           <span className="lp-h1-line">humans & agents</span>
         </h1>
         <p className="lp-lede">
-          Recontent types your design tokens, introspects your React components and serves both,
-          from one CLI, to your team, your coding agents and your CI.
+          Define typed tokens, introspect React components, and serve both from one CLI to your
+          team, coding agents, and CI.
         </p>
-        <div className="lp-hero-actions">
-          <Install />
+        <div className="lp-ctas">
+          <CopyAgentPrompt />
           <Link to="/introduction/getting-started" className="lp-btn lp-btn-primary">
             Read docs
           </Link>

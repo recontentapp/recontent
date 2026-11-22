@@ -7,6 +7,24 @@ type Brick = {
   studs: number;
 };
 
+const pains = [
+  {
+    title: "Drifting tokens",
+    text: "Values copied across CSS, Tailwind, TypeScript, and Figma fall out of sync.",
+    tone: "coral",
+  },
+  {
+    title: "Stale component docs",
+    text: "Docs sites go out of date the week after someone writes them.",
+    tone: "yellow",
+  },
+  {
+    title: "Agents that guess",
+    text: "Coding agents invent prop names and hardcode hex colors.",
+    tone: "blue",
+  },
+] as const;
+
 // The stack, foundation first: each row snaps onto the one before it.
 const stack: Brick[][] = [
   [
@@ -55,18 +73,21 @@ function LegoBrick({ brick }: { brick: Brick }) {
   );
 }
 
-/** Where it fits: the foundation brick of a codebase. */
+/** Where it fits: pain points solved alongside the foundation brick stack. */
 export function WhereItFits() {
   return (
     <section className="lp-section lp-wrap lp-fits" id="where-it-fits">
       <div>
         <h2 className="lp-h2">
-          One source of truth for <span className="lp-hl">whoever writes UI</span>
+          One source of truth. <span className="lp-hl">Zero drift.</span>
         </h2>
-        <p className="lp-sub">
-          Recontent sits at the base of your design system. Tokens and components are typed once,
-          then read the same way by designers, engineers, coding agents and CI.
-        </p>
+        <ul className="lp-pain-list">
+          {pains.map((pain) => (
+            <li key={pain.title} className={`lp-pain-item lp-pain-dot-${pain.tone}`}>
+              <strong>{pain.title}.</strong> {pain.text}
+            </li>
+          ))}
+        </ul>
         <p className="lp-more">
           <Link to="/introduction/why-recontent" className="lp-link">
             Why Recontent

@@ -5,8 +5,7 @@ description: "Browse the tokens and components a project defines, for people, ag
 
 # inspect
 
-Prints what `recontent.config.ts` defines: its tokens, and its components and the types they use when
-[`introspection`](/config#introspection) is configured.
+`recontent inspect` prints what `recontent.config.ts` defines: tokens, themes, and—when you configure [`introspection`](/config#introspection)—components and referenced types.
 
 ```bash
 recontent inspect [--format <format>] [--from <package|file>] [--no-cache]
@@ -16,13 +15,11 @@ recontent inspect types [name...] [--deprecated] [--format <format>] [--no-cache
 recontent inspect search <query...> [--format <format>] [--no-cache]
 ```
 
-Uses the [global options](/cli#global-options) `-c`, `--cwd` and `--log-level`. Every subcommand also accepts
-`--from`, to [browse an installed design system](#headless-design-system-consumers) instead of a config.
+Supports the [global options](/cli#global-options) `-c`, `--cwd`, and `--log-level`. Every subcommand also accepts `--from` to [browse an installed design system](#headless-design-system-consumers) without a config file.
 
 ## Browsing
 
-Start with the overview, then drill down. Each step prints more about less, so you never have to read
-a whole design system to find one token.
+Start with the overview, then drill down. Each command narrows the scope so you never read an entire design system for one answer.
 
 ```bash
 recontent inspect                      # counts per layer and type, themes, component names
@@ -35,119 +32,91 @@ recontent inspect types TabItem        # its members or values, and the types it
 recontent inspect search danger        # every token, component and type that mentions "danger"
 ```
 
-Every overview, even an empty one, ends with a `Next:` line that names a command to try.
+Every overview—even an empty one—ends with a `Next:` line suggesting the next command.
 
-| Command                        | Without arguments         | With arguments                                                                       |
-| ------------------------------ | ------------------------- | ------------------------------------------------------------------------------------ |
-| `inspect`                      | The overview.             | None.                                                                                |
-| `inspect tokens [path...]`     | Token groups with counts. | Each path is an exact token or a group: `system.color` includes everything under it. |
-| `inspect components [name...]` | One line per component.   | Each name is a component or a family: `Tabs` includes `Tabs.Item`.                   |
-| `inspect types [name...]`      | One line per type.        | Each name is a type, by its id or its bare name. Types it references are included.   |
-| `inspect search <query...>`    | A query is required.      | Each query is searched in tokens, components and types at once.                      |
+| Command                        | Without arguments         | With arguments                                                                  |
+| ------------------------------ | ------------------------- | ------------------------------------------------------------------------------- |
+| `inspect`                      | The overview.             | None.                                                                           |
+| `inspect tokens [path...]`     | Token groups with counts. | Each path matches one token or a group (`system.color` includes children).      |
+| `inspect components [name...]` | One line per component.   | Each name matches one component or family (`Tabs` includes `Tabs.Item`).        |
+| `inspect types [name...]`      | One line per type.        | Each name matches a type by id or bare name, including transitively used types. |
+| `inspect search <query...>`    | Requires a query.         | Searches tokens, components, and types together for every query.                |
 
 Options for `tokens`:
 
-| Option            | Description                                                                            |
-| ----------------- | -------------------------------------------------------------------------------------- |
-| `--type <type>`   | Only tokens of this type, such as `color` or `dimension`. An unknown type is an error. |
-| `--theme <theme>` | Show only this theme's column next to the default value. An unknown theme is an error. |
-| `--deprecated`    | Only deprecated tokens.                                                                |
+| Option            | Description                                                                           |
+| ----------------- | ------------------------------------------------------------------------------------- |
+| `--type <type>`   | Filter to one token type (`color`, `dimension`). Unknown types exit with an error.    |
+| `--theme <theme>` | Show one theme's column next to the default value. Unknown themes exit with an error. |
+| `--deprecated`    | Show only deprecated tokens.                                                          |
 
-`components` also takes `--props <name...>`: only those props, in full, with none of the shortening described
-below. An unknown prop name exits `2` with the closest matches, and an inherited prop (`id`, say) is a
-row naming where it comes from.
+`components` also accepts `--props <name...>` to show selected props in full without truncation. Unknown prop names exit `2` with close suggestions, and inherited props (such as `id`) show a row naming their source.
 
-`components` and `types` take `--deprecated` too. A filter that matches nothing (a valid type no token has,
-`--deprecated` with nothing deprecated) prints an empty result and exits `0`.
+`components` and `types` also accept `--deprecated`. A valid filter matching nothing prints an empty result and exits `0`.
 
-`--no-cache` (for `inspect`, `inspect components`, `inspect types` and `inspect search`) neither reads nor writes the
-[introspection cache](/config#cache).
+`--no-cache` (on `inspect`, `components`, `types`, and `search`) bypasses reading and writing the [introspection cache](/config#cache).
 
-A token is printed with its path, type, value, CSS variable and notes (alias, description,
-deprecation), and its value in each theme that overrides it. A component is printed with its
-[import statement](/config#import-statements), its source
-location and a
-table of its **own** props, with the expansion of your own type aliases under the type. Props
-inherited from outside the project, such as the 288 attributes of `ButtonHTMLAttributes`, are
-summarized on an `Also accepts:` line instead of listed; `--format json` lists their names.
+### Markdown output
 
-The markdown is compact by default, so that a component fits in a few KB:
+Default markdown output stays compact so each component fits in a few KB:
 
-- props declared by a type that several components share (a `BoxProps` of system props, say) are named on
-  the `Also accepts:` line, unless the component itself declares that type;
-- a literal union shows its first 12 values (`… 30 more`) and a long type is cut between union members;
-- `## Types` holds only the object types the shown props name; the others are listed on a `More types:`
-  line, since their values are in the props already.
+- **Tokens:** Prints path, type, value, CSS variable, notes (alias, description, deprecation), and theme overrides.
+- **Components:** Prints the [import statement](/config#import-statements), source location, and a table of **own** props with project type alias expansions.
+- **Inherited library props:** Summarizes external attributes (such as `ButtonHTMLAttributes`) on an `Also accepts:` line instead of listing hundreds of rows (`--format json` includes every name).
+- **Shared project prop types:** Lists shared prop types (such as `BoxProps`) on `Also accepts:` unless the component itself declares that type.
+- **Long unions and types:** Shows the first 12 literal union values (`… 30 more`) and truncates long unions cleanly between members. `## Types` expands referenced object types and lists remaining types on `More types:`.
 
-A `Next:` line points to `--props` and `inspect types` for what was left out. `--format json` is never shortened.
+A `Next:` hint points to `--props` and `inspect types` for truncated details. `--format json` never truncates output.
 
 ## Searching
 
-`inspect search <query...>` finds what you cannot name yet: "the danger color", "the component for tooltips",
-or which token a hardcoded `#ef4444` is. Matching is a case-insensitive substring, each argument is its own
-query, and an item matches when **any** query does.
+`inspect search <query...>` finds items when you do not know their exact names: `"danger"`, `"tooltip"`, or a hardcoded `"#ef4444"`. Matching uses case-insensitive substrings; each argument acts as a separate query, and an item matches when **any** query hits.
 
-- **Tokens** are searched by path, CSS variable (`--system-color-accent` works), alias, description,
-  deprecation text and every value, in the default and in each theme.
-- **Components** by name, category, description, usage notes, deprecation text, and the name and description
-  of their own props.
-- **Types** by id, description, usage notes, deprecation text, the name and description of their members, and their literal values.
+- **Tokens:** Searches path, CSS variable (`--system-color-accent`), alias, description, deprecation text, and every default or themed value.
+- **Components:** Searches name, category, description, usage notes, deprecation text, and own prop names and descriptions.
+- **Types:** Searches id, description, usage notes, deprecation text, member names and descriptions, and literal values.
 
-Matches in a name or path come first, the others follow in their usual order. Markdown says what matched
-in a component or type whose name did not (`· matched in usage, prop size`), and JSON adds `matchedIn` to
-every result. Nothing matching is not an error: it exits `0` and suggests the closest names.
+Name and path matches appear first. Markdown notes indirect matches (`· matched in usage, prop size`), and JSON includes `matchedIn` on each hit. Zero matches exits `0` and suggests close names.
 
-A color is matched as it is written in the output, so `#ef4444` does not find a token defined in `oklch` or `hsl`.
-Without `introspection`, only tokens are searched.
+Color searches match formatted output values, so `#ef4444` does not match an `oklch` or `hsl` token. Without `introspection`, `search` checks tokens only.
 
 ## Documenting components
 
-`inspect` reads the JSDoc tags described in [Documenting components](/guides/documenting-components).
+`inspect` reads the JSDoc tags documented in [Documenting components](/guides/documenting-components).
 
 ## For agents
 
-The output is plain markdown, which coding agents read well, and it is designed to be used without
-reading source:
+Markdown output lets coding agents use your design system accurately without reading source files:
 
-- identifiers are printed exactly as they are used: token paths, CSS variables, component and prop names;
-- the drill-down keeps each answer small, so an agent can ask for `system.color` or `Select` and nothing else;
-- an unknown path, name, type or theme exits `2` and suggests the closest matches on stderr, so a typo is
-  recoverable:
+- Prints exact identifiers as code uses them: token paths, CSS variables, component names, and prop names.
+- Keeps answers small through progressive drill-down (`system.color`, `Select`).
+- Exits `2` on unknown paths, names, types, or themes and prints suggestions on stderr so agents recover immediately:
 
   ```text
   error: No token or group matches "system.colr". Did you mean `system.color`?
   ```
 
-`recontent --help` lists the command, and `recontent inspect --help` explains the drill-down.
+`recontent --help` lists all commands, and `recontent inspect --help` summarizes the drill-down workflow.
 
 ## For scripts
 
-`--format json` prints one JSON document with the **full detail of the whole selection**, never a
-summary, so `recontent inspect tokens --format json` is every token.
+`--format json` prints one JSON document containing **full details for the entire selection**, never a summary. For example, `recontent inspect tokens --format json` returns every token.
 
-| Command              | Document                                                                                                                                                                                                           |
-| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `inspect`            | `{ schemaVersion, kind: "overview", config, tokens: { total, layers }, themes, components?, types? }`                                                                                                              |
-| `inspect tokens`     | `{ schemaVersion, kind: "tokens", tokens }`, each token with `layer`, `path`, `name`, `type`, `alias?`, `description?`, `deprecated?`, `cssVar` and `values` (`default` plus the themes that differ)               |
-| `inspect components` | `{ schemaVersion, kind: "components", components, types }`, each component as described in the [plugin API](/plugin-api#componentinfo), and `types` the [types](/plugin-api#typeinfo) they reference, transitively |
-| `inspect types`      | `{ schemaVersion, kind: "types", types }`, the selected types and, transitively, the types they reference                                                                                                          |
-| `inspect search`     | `{ schemaVersion, kind: "search", queries, tokens, components, types, suggestions? }`, each result in full detail plus `matchedIn`; `suggestions` only when nothing matched                                        |
+| Command              | Document                                                                                                                                                                            |
+| -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `inspect`            | `{ schemaVersion, kind: "overview", config, tokens: { total, layers }, themes, components?, types? }`                                                                               |
+| `inspect tokens`     | `{ schemaVersion, kind: "tokens", tokens }` with `layer`, `path`, `name`, `type`, `alias?`, `description?`, `deprecated?`, `cssVar`, and `values` (`default` plus differing themes) |
+| `inspect components` | `{ schemaVersion, kind: "components", components, types }` matching [ComponentInfo](/plugin-api#componentinfo) and transitive [TypeInfo](/plugin-api#typeinfo)                      |
+| `inspect types`      | `{ schemaVersion, kind: "types", types }` with selected types and transitive references                                                                                             |
+| `inspect search`     | `{ schemaVersion, kind: "search", queries, tokens, components, types, suggestions? }` with full hits plus `matchedIn`, and `suggestions` only on zero hits                          |
 
-`schemaVersion` is `"1"` and only changes with a breaking change to these documents.
+`schemaVersion` is `"1"` and bumps only on breaking schema changes.
 
-- **stdout** carries the result and nothing else. Logs and warnings, such as an introspection warning,
-  go to stderr. `inspect components` only warns about the components it shows, plus the warnings
-  that concern the whole project.
-- With `--theme`, every token has that theme in `values`: a theme that does not override a token
-  reads as its default, so the value is the default's.
-- Exit code `0` is success, including an empty result from `--deprecated` or an empty project.
-  Exit code `2` means the request matched nothing: an unknown path, name, type or `--theme`. Exit code
-  `1` means the project is broken: token aliases, an introspection failure, or `inspect components` in
-  a config without an `introspection` block.
-- With `--format json`, an error is also printed on stdout, so that a script never parses prose:
-  `{ schemaVersion, kind: "error", errors: [{ message, input?, suggestions? }] }`. The same text is on stderr.
-- The overview is the exception to `1`: with a broken `introspection` block it still prints the
-  tokens and exits `0`, with `components: { error }` in JSON and an `_Unavailable: …_` line in markdown.
+- **stdout** carries only the result. Logs and warnings go to stderr; `inspect components` warns only about displayed components and project-wide issues.
+- With `--theme`, every token includes that theme in `values`, falling back to its default value when not overridden.
+- Exit `0` indicates success (including empty `--deprecated` results). Exit `2` means no match for the requested path, name, type, or theme. Exit `1` means a broken project (bad aliases, failed introspection, or `inspect components` without `introspection`).
+- With `--format json`, errors also print to stdout as `{ schemaVersion, kind: "error", errors: [{ message, input?, suggestions? }] }` so scripts never parse prose.
+- The overview command is the sole exception to exit `1`: if `introspection` fails, `recontent inspect` still prints tokens and exits `0`, reporting `components: { error }` in JSON and `_Unavailable: …_` in markdown.
 
 ```bash
 # Fail CI when a deprecated component is still exported
@@ -156,25 +125,18 @@ test "$(recontent inspect components --deprecated --format json | jq '.component
 
 ## Headless (design system consumers)
 
-`--from` browses a design system without its config or source, from the snapshot its author publishes
-(see [Publishing your design system](/guides/publishing)):
+Pass `--from` to browse an installed design system from its published snapshot without its config file or source (see [Publishing your design system](/guides/publishing)):
 
 ```bash
 recontent inspect --from @acme/design-system            # a package: reads the "recontent" field of its package.json
 recontent inspect --from ./vendor/acme/recontent.json   # a snapshot file
 ```
 
-- **A package or a file**: a value that starts with `.` or `/`, or ends in `.json`, is a file. Anything
-  else is a package name, found by looking in `node_modules` from `--cwd` upward. The `recontent` field of
-  its `package.json` is resolved from the package's directory.
-- **Not with `-c/--config` or `--no-cache`**: neither means anything for a snapshot, so combining them is a
-  usage error.
-- **Components** are in the snapshot only if the design system configures `introspection`. Without them,
-  `inspect components` and `inspect types` exit `1`, and `inspect` and `inspect tokens` still work.
-- **A newer snapshot** than your `recontent` understands is an error that asks you to upgrade it.
+- **Package or file:** Values starting with `.` or `/`, or ending in `.json`, load a file. All other values resolve a package in `node_modules` walking up from `--cwd`, reading `package.json`'s `recontent` field relative to the package directory.
+- **Mutually exclusive flags:** Combining `--from` with `-c/--config` or `--no-cache` exits with a usage error.
+- **Components:** Snapshots include components only when the author configured `introspection`. Otherwise `inspect components` and `inspect types` exit `1`, while `inspect` and `inspect tokens` still work.
+- **Schema compatibility:** Opening a snapshot newer than your `recontent` version prints an upgrade error.
 
 ## Cost
 
-`inspect tokens` only loads the config, so it is instant, and keeps working when `introspection` is
-misconfigured. The other commands need the components: see [When it runs](/guides/introspecting-components#when-it-runs)
-and the [cache](/config#cache). Run with `--log-level debug` to see the timings and whether the cache was used.
+`inspect tokens` loads only the config file, runs instantly, and keeps working even if `introspection` fails. Other subcommands use component introspection; see [When it runs](/guides/introspecting-components#when-it-runs) and [Cache](/config#cache). Pass `--log-level debug` to inspect timings and cache hits.

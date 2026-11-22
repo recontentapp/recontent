@@ -5,56 +5,35 @@ description: "The problem Recontent solves, its four pillars and who it is for."
 
 # Why Recontent
 
-Recontent turns your tokens and components into a design system that people, agents and CI can read.
+Recontent turns your tokens and components into a design system that people, agents, and CI can read.
 
 ## The problem
 
-A design system's decisions end up copied into many places. Colors, spacing and type live in a CSS
-file, a Tailwind config, a constants module, a Figma library and a docs page. The API of your components
-lives in their source and in a documentation site that nobody updates. Each copy drifts. Renaming a
-token or a prop means hunting for every place that mentions it, and nothing tells you which change will
-break a consumer.
+Design system decisions drift when teams copy them across files. Colors, spacing, and typography end up duplicated across CSS, Tailwind, TypeScript constants, Figma libraries, and docs pages. Component APIs live in source code while separate documentation sites go stale. Renaming a token or prop forces a manual hunt across repositories, with no warning before a change breaks consumers.
 
-Coding agents make it worse. They write UI from memory: they invent prop names, pass values a component
-does not accept and hard-code a hex value where a token exists. Nobody notices until review.
+Coding agents make this drift worse. They write UI from memory, invent prop names, pass invalid values, and hardcode hex colors instead of using tokens. Teams often catch these mistakes only during code review.
 
 ## Four pillars
 
-**Tokens: typed layers and themes.** Your decisions live in one typed file, `recontent.config.ts`, and
-everything else is generated: CSS variables, a Tailwind theme, vanilla-extract or StyleX variables,
-TypeScript constants, DTCG files. Mistakes (a missing color step, an override of a token that does not
-exist, an alias of the wrong type) fail in the editor or at `recontent build`, not in production.
+**Tokens: typed layers and themes.** Keep design decisions in one typed config file, `recontent.config.ts`. Plugins emit CSS variables, a Tailwind theme, vanilla-extract or StyleX variables, TypeScript constants, and DTCG files. Mistakes—a missing color step, an unknown theme override, or a mismatched alias type—fail in your editor or during `recontent build`, not in production.
 
-**Components: introspected from your own TypeScript.** Point Recontent at your components and it reads
-their props, defaults and types. You document them with JSDoc where they live (`@usage`, `@example`,
-`@category`, `@deprecated`), and the documentation reaches every output. See
-[Introspecting components](/guides/introspecting-components) and
-[Documenting components](/guides/documenting-components).
+**Components: introspected from your own TypeScript.** Point Recontent at your components and it reads their props, defaults, and types. Document them with JSDoc next to the code (`@usage`, `@example`, `@category`, `@deprecated`), and every output includes that documentation. See [Introspecting components](/guides/introspecting-components) and [Documenting components](/guides/documenting-components).
 
-**Agents: the exact API, on demand.** [`recontent inspect`](/cli/inspect) gives agents the real props,
-tokens and usage notes, in small answers with recoverable errors, so they stop guessing.
-[`DESIGN.md`](/plugins/design-md) is loaded up front, and `--from` works for apps that install your design
-system from npm. See [Coding with agents](/guides/agents).
+**Agents: the exact API, on demand.** [`recontent inspect`](/cli/inspect) gives agents real props, tokens, and usage notes in compact answers with recoverable errors. Agents can also search tokens, components, and types by name or hex value with `recontent inspect search`. [`DESIGN.md`](/plugins/design-md) loads compact guidance up front, and `--from` lets consuming apps inspect an npm package. See [Coding with agents](/guides/agents).
 
-**Guardrails: breaking changes are caught.** [`recontent diff`](/guides/diffs) reports a breaking change
-to a token or to a prop, and `recontent build --check` keeps generated files honest. Both exit with a code CI understands.
+**Guardrails: CI catches regressions.** [`recontent diff`](/guides/diffs) flags breaking token and prop changes, [`contrast()`](/plugins/contrast) enforces WCAG ratios across every theme, and `recontent build --check` catches stale generated files. Each command exits with a non-zero code that CI understands.
 
 ## Layers and themes
 
-Tokens live in three layers (reference, system and components) and themes override values without
-touching component code. See [Defining tokens](/guides/defining-tokens) and
-[Working with themes](/guides/working-with-themes).
+Tokens live in three layers (`ref`, `system`, and `components`), and themes override values without touching component code. See [Defining tokens](/guides/defining-tokens) and [Working with themes](/guides/working-with-themes).
 
 ## Aligned with DTCG
 
-Token types and value shapes follow the [Design Tokens Community Group format](https://www.designtokens.org/),
-so Recontent stays interoperable: the [DTCG plugin](/plugins/dtcg) exports `.tokens.json` files for
-Figma and Tokens Studio, and [`recontent init --dtcg`](/cli/init#importing-dtcg-tokens) starts from
-files you already have.
+Token types and value shapes follow the [Design Tokens Community Group format](https://www.designtokens.org/). The [DTCG plugin](/plugins/dtcg) exports `.tokens.json` files for Figma and Tokens Studio, and [`recontent init --dtcg`](/cli/init#importing-dtcg-tokens) imports files you already have.
 
 ## Who it is for
 
-- Engineers who maintain a design system and want a single, reviewable source of truth.
+- Engineers who maintain a design system and want one reviewable source of truth.
 - Designers who work with tokens and need exports their tools understand.
 - Teams whose engineers use coding agents to write UI.
-- Teams starting a design system, who can begin from a preset instead of an empty file.
+- Teams starting a design system from a preset instead of an empty file.

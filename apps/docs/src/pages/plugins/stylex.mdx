@@ -5,8 +5,7 @@ description: "Generate StyleX variables and themes from your tokens."
 
 # StyleX
 
-`stylex()` generates [StyleX](https://stylexjs.com/) variables (`stylex.defineVars`), one StyleX
-theme per Recontent theme and typed key helpers for your scales.
+`stylex()` generates [StyleX](https://stylexjs.com/) variables (`stylex.defineVars`), one StyleX theme per Recontent theme, and typed key helpers for your scales.
 
 ```ts twoslash
 // [!include ~/snippets/stylex.config.ts]
@@ -14,9 +13,7 @@ theme per Recontent theme and typed key helpers for your scales.
 
 ## Setup
 
-Install `@stylexjs/stylex` and the StyleX plugin for your bundler. The
-[StyleX playground](https://github.com/recontentapp/recontent/tree/master/apps/stylex-playground)
-shows a working Vite setup.
+Install `@stylexjs/stylex` and the StyleX plugin for your bundler. See the [StyleX playground](https://github.com/recontentapp/recontent/tree/master/apps/stylex-playground) for a complete Vite example.
 
 ## Usage
 
@@ -40,9 +37,9 @@ export function App({ dark }: { dark: boolean }) {
 stylex(options: StylexPluginOptions): RecontentPlugin
 ```
 
-| Option   | Type     | Default  | Description                                    |
-| -------- | -------- | -------- | ---------------------------------------------- |
-| `outDir` | `string` | required | Output directory, relative to the config file. |
+| Option   | Type     | Default  | Description                                   |
+| -------- | -------- | -------- | --------------------------------------------- |
+| `outDir` | `string` | required | Output directory relative to the config file. |
 
 Plugin name: `recontent:stylex`.
 
@@ -52,18 +49,15 @@ Plugin name: `recontent:stylex`.
 | ------------------ | ----------------------------------------------------------------------- |
 | `tokens.stylex.ts` | `export const vars = stylex.defineVars({ … })`: one flat key per token. |
 | `themes.ts`        | `<name>Theme = stylex.createTheme(vars, { … })` for each theme.         |
-| `scales.ts`        | A key union and a constant per scale (`RefColorGray`, `refColorGray`).  |
+| `scales.ts`        | A key union and constant per scale (`RefColorGray`, `refColorGray`).    |
 
-StyleX variables must be flat, so a token's path is turned into a camelCase key:
-`system.color.background` becomes `systemColorBackground`, and `ref.spacing.0-5` becomes
-`refSpacing05`. Typography and transition tokens get one key per member (`systemTypographyBodyFontSize`).
+Because StyleX variables must be flat, the plugin converts each token path to camelCase: `system.color.background` becomes `systemColorBackground`, and `ref.spacing.0-5` becomes `refSpacing05`. Typography and transition tokens emit one key per member (`systemTypographyBodyFontSize`).
 
-Aliases are emitted as derived variables, so a theme that overrides a referenced token changes
-everything that follows it.
+The plugin emits aliases as derived variables, so overriding a referenced token updates every token that aliases it.
 
 ## Diagnostics
 
-Each of these fails the build.
+Each condition below fails the build.
 
 | When                                                                                                                         |
 | ---------------------------------------------------------------------------------------------------------------------------- |

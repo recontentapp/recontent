@@ -5,8 +5,7 @@ description: "Scaffold a recontent.config.ts from a preset or from existing DTCG
 
 # init
 
-Creates a `recontent.config.ts` with tokens and themes, and no plugins. Add plugins afterwards, then
-run [`recontent build`](/cli/build).
+`recontent init` creates a `recontent.config.ts` with tokens and themes and no plugins. Add plugins afterwards, then run [`recontent build`](/cli/build).
 
 ```bash
 recontent init <preset> [--force]
@@ -22,48 +21,44 @@ recontent init --dtcg <path>... [--force]
 
 ## Options
 
-| Option          | Description                                                                                 |
-| --------------- | ------------------------------------------------------------------------------------------- |
-| `[preset]`      | One of the presets above. Required unless `--dtcg` is used; the two are mutually exclusive. |
-| `--dtcg <path>` | Generate the config from DTCG tokens instead. Repeatable.                                   |
-| `--force`       | Overwrite the config file if it exists. Without it, `init` fails with exit code `1`.        |
+| Option          | Description                                                                                  |
+| --------------- | -------------------------------------------------------------------------------------------- |
+| `[preset]`      | One of the presets above. Required unless you pass `--dtcg`; the two are mutually exclusive. |
+| `--dtcg <path>` | Generate the config file from DTCG tokens instead. Pass multiple paths to merge them.        |
+| `--force`       | Overwrite an existing config file. Without `--force`, `init` exits with code `1`.            |
 
-The file is written to `-c, --config` if given, otherwise to `recontent.config.ts` in `--cwd`.
-Unlike other commands, `init` does not search for an existing config.
+`init` writes to `-c, --config` when provided, or `recontent.config.ts` in `--cwd`. Unlike other commands, `init` does not run config discovery.
 
 ## Importing DTCG tokens
 
-`--dtcg` accepts, and can be repeated for:
+Pass `--dtcg` one or more times with these inputs:
 
-- a **resolver** file (`*.resolver.json`, or any JSON with a resolver `$schema`). It must be the only
-  source;
-- one or more **token files** (`*.json`);
-- **directories**, which are searched recursively for `*.tokens.json`.
+- A **resolver** file (`*.resolver.json`, or any JSON with a resolver `$schema`). Pass it as the sole source.
+- One or more **token files** (`*.json`).
+- **Directories**, which `init` searches recursively for `*.tokens.json`.
 
-Several token files are merged in the order given; when the same token is defined twice with
-different values, the later one wins and a warning is printed.
+`init` merges multiple token files in the order you pass them. When two files define the same token with different values, the later file wins and `init` prints a warning.
 
 ```bash
 recontent init --dtcg design/tokens/
 recontent init --dtcg design/resolver.json -c packages/tokens/recontent.config.ts
 ```
 
-How the tokens are mapped:
+How `init` maps DTCG tokens:
 
-- Tokens with a **literal value** become `ref` tokens. Tokens whose value is an alias (`{color.blue}`),
-  or that contain an alias inside a composite, become `system` tokens. An alias is pointed at the
-  final reference token.
-- Group names, descriptions and deprecations are kept.
-- A missing `$type` is inferred from the value where possible, with a warning.
-- In a resolver, the default context of each modifier becomes the base tokens, and every other
-  context becomes a theme, named after the context (or `<modifier>-<context>` if there are several
-  modifiers). Plain-alias overrides reference the `ref` token they collapse to; other overrides are
-  written as literals.
+- Literal values become `ref` tokens. Aliases (`{color.blue}`) and composites containing aliases become `system` tokens pointing to the final `ref` token.
+- Group names, descriptions, and deprecations stay intact.
+- When `$type` is missing, `init` infers it from the value where possible and prints a warning.
+- In a resolver, each modifier's default context becomes the base tokens. Every other context becomes a theme named `<context>` (or `<modifier>-<context>` for multiple modifiers). Plain-alias overrides reference their target `ref` token, while other overrides emit literals.
 
-Anything Recontent cannot represent is skipped, and the command prints a warning for each:
-unsupported types (such as `string`), colors that are not hex strings or one of the supported
-[color spaces](/config/primitives#color), dimensions in units other than `px`, `rem` and `em`,
-aliases to missing tokens, and JSON pointers into other files. The final line reports how many
-tokens and themes were imported and how many entries were skipped.
+`init` skips unsupported entries and prints a warning for each:
 
-Check the generated file before building: it is plain TypeScript you are expected to edit.
+- Unsupported token types (such as `string`).
+- Colors outside hex strings and supported [color spaces](/config/primitives#color).
+- Dimensions in units other than `px`, `rem`, and `em`.
+- Aliases pointing to missing tokens.
+- JSON pointers referencing external files.
+
+The final summary line reports how many tokens and themes `init` imported and how many entries it skipped.
+
+Review the generated config file before building; it is plain TypeScript ready for you to edit.

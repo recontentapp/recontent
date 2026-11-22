@@ -17,18 +17,18 @@ const diffOutput = lines(`$ recontent diff origin/main --fail-on-breaking
 - \`Button\`
   - **prop** \`variant\`: removed value \`"ghost"\``);
 
-/** Safe changes in CI. */
-export function Diff() {
+/** CI guardrails: diff, WCAG contrast checks, and stale-output verification. */
+export function Guardrails() {
   return (
     <section className="lp-band">
       <div className="lp-wrap">
         <h2 className="lp-h2">
-          Remove a prop. <span className="lp-hl">CI catches</span> it.
+          Break a token, prop, or contrast. <span className="lp-hl">CI catches</span> it.
         </h2>
         <p className="lp-sub">
-          <code>recontent diff</code> compares your tokens and your components with any git
-          revision. It flags a removed prop or a prop that lost a value, and tells a renamed token
-          from a removed one.
+          <code>recontent diff</code> compares tokens and components against any git revision,{" "}
+          <code>contrast()</code> enforces WCAG ratios across every theme, and{" "}
+          <code>recontent build --check</code> fails when generated files go stale.
         </p>
         <p className="lp-more">
           <Link to="/guides/diffs" className="lp-link">

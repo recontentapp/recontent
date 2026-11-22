@@ -38,6 +38,18 @@ const chainCss = lines(`:root {
   --button-background: var(--system-color-accent);
 }`);
 
+const themesCode = lines(`const blue = tokens.generateColorScale({ base: "#2563eb" });
+
+const dark = defineTheme(system, {
+  color: { background: ref.color.neutral[12], accent: blue[7] },
+});
+
+const compact = defineTheme(system, {
+  spacing: { md: tokens.dimension(12, "px") },
+});
+
+const darkCompact = defineTheme(system, {}, { extends: [dark, compact] });`);
+
 // Errors are real TypeScript diagnostics from recontent, shortened to their first line.
 // A rename in the system layer is caught in every component still using the old name.
 const renameLines: Line[] = [
@@ -51,7 +63,7 @@ const renameLines: Line[] = [
   { code: "});" },
 ];
 
-/** Layers: follow one token through the chain, then rename it. */
+/** Layers: follow one token through the chain, compose themes, then rename a token. */
 export function TokenLayers() {
   return (
     <section className="lp-section lp-wrap">
@@ -60,12 +72,13 @@ export function TokenLayers() {
         <span className="lp-underlined">
           type-check.
           <Underline color="#2563eb" />
-        </span>
+        </span>{" "}
+        Themes that follow.
       </h2>
       <p className="lp-sub">
         Components read meaning, meaning reads values. Aliases stay aliases all the way into the
         output, so re-pointing <code>system.color.accent</code> moves every button with it. Themes
-        override values, never component code.
+        override values without touching component code.
       </p>
       <p className="lp-more">
         <Link to="/guides/defining-tokens" className="lp-link">
@@ -96,8 +109,16 @@ export function TokenLayers() {
       <div className="lp-chain-out">
         <CodePanel title="generated tokens.css" code={chainCss} language="css" />
         <p>
-          <strong>The chain survives the build.</strong> Each layer becomes a variable that points
-          at the one below it, so the output reads like your config.
+          <strong>Aliases survive the build.</strong> Each layer emits a CSS variable that points at
+          the one below it, so the generated stylesheet reads like your config.
+        </p>
+      </div>
+      <div className="lp-chain-out">
+        <CodePanel title="themes.ts" code={themesCode} tone="blue" />
+        <p>
+          <strong>Color scales &amp; multi-axis themes.</strong> Generate full OKLCH ramps from one
+          base color and compose dark mode, density, or brand themes with <code>extends</code>—never
+          touching component code.
         </p>
       </div>
       <div className="lp-chain-out">
@@ -108,9 +129,8 @@ export function TokenLayers() {
           tone="coral"
         />
         <p>
-          <strong>Rename a token, and the compiler finds the rest.</strong> Every component still
-          using the old name fails in your editor and at <code>recontent build</code>, not in
-          production.
+          <strong>Renames fail at compile time.</strong> Every component still referencing the old
+          name fails in your editor and during <code>recontent build</code>, not in production.
         </p>
       </div>
     </section>

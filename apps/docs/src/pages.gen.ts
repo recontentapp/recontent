@@ -29,6 +29,7 @@ type Page =
   | { path: '/introduction/installation'; render: 'static' }
   | { path: '/introduction/why-recontent'; render: 'static' }
   | { path: '/plugin-api'; render: 'static' }
+  | { path: '/plugins/contrast'; render: 'static' }
   | { path: '/plugins/css'; render: 'static' }
   | { path: '/plugins/design-md'; render: 'static' }
   | { path: '/plugins/docs'; render: 'static' }

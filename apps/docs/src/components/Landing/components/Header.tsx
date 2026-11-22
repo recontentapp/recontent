@@ -43,6 +43,9 @@ export function Header({ theme, onToggleTheme }: { theme: Theme; onToggleTheme: 
               <Link to="/introduction/getting-started">Docs</Link>
             </li>
             <li>
+              <Link to="/changelog">Changelog</Link>
+            </li>
+            <li>
               <a
                 target="_blank"
                 rel="noopener noreferrer"

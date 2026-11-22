@@ -5,30 +5,26 @@ description: "Scaffold a config from a preset, generate outputs and let Reconten
 
 # Getting started
 
-This takes a few minutes and ends with CSS variables generated from a token config, and your components browsable with `recontent inspect`. It assumes
-`recontent` is [installed](/introduction/installation).
+This guide takes a few minutes. You will generate CSS variables from a typed config file and inspect your React components with `recontent inspect`. Install [`recontent`](/introduction/installation) before you begin.
 
 ## 1. Scaffold a config
 
-[`recontent init`](/cli/init) writes a `recontent.config.ts` from a preset:
+Run [`recontent init`](/cli/init) to create `recontent.config.ts` from a preset:
 
 ```bash
 recontent init neutral
 ```
 
-There are two presets:
+Choose from two built-in presets:
 
-- `neutral`: shadcn/ui's neutral base, with OKLCH colors, radius, shadows, light and dark.
-- `material`: the Material 3 baseline, with tonal palettes, color roles, a type scale, elevation
-  and motion.
+- `neutral`: shadcn/ui's neutral base, with OKLCH colors, radius, shadows, light, and dark themes.
+- `material`: the Material 3 baseline, with tonal palettes, color roles, a type scale, elevation, and motion.
 
-Already have tokens in the DTCG format? Import them with
-[`recontent init --dtcg`](/cli/init#importing-dtcg-tokens).
+If you already have DTCG token files, import them with [`recontent init --dtcg`](/cli/init#importing-dtcg-tokens).
 
 ## 2. Add a plugin
 
-The scaffolded config defines tokens and themes but no outputs. Add a plugin from
-`recontent/plugins`:
+The scaffolded config file defines tokens and themes without any outputs. Add a plugin from `recontent/plugins`:
 
 ```ts [recontent.config.ts]
 import { defineConfig /* ... */ } from "recontent";
@@ -45,6 +41,8 @@ export default defineConfig({
 
 ## 3. Build
 
+Run `recontent build`:
+
 ```bash
 recontent build
 ```
@@ -56,7 +54,7 @@ Wrote 1 file
 
 ## 4. Use the output
 
-Import the generated file once, then use the variables:
+Import the generated stylesheet once, then reference the CSS variables:
 
 ```css
 @import "./generated/tokens.css";
@@ -67,10 +65,7 @@ body {
 }
 ```
 
-Each token becomes a variable named after its path, so `system.color.background` is
-`--system-color-background`. In `neutral`, the `system` layer has the groups `color`, `radius`,
-`spacing`, `shadow` and `typography`. The dark theme is a `.dark` block that overrides only the tokens it
-changes: add `class="dark"` to `<html>` to switch.
+Each token becomes a CSS variable named after its path, so `system.color.background` becomes `--system-color-background`. In `neutral`, the `system` layer includes `color`, `radius`, `spacing`, `shadow`, and `typography`. The dark theme emits a `.dark` block that overrides only changed tokens. Add `class="dark"` to `<html>` to switch themes.
 
 ## 5. Introspect your components
 
@@ -87,20 +82,20 @@ export default defineConfig({
 
 ## 6. Inspect
 
+Query your design system from the CLI:
+
 ```bash
 recontent inspect                    # counts, themes and component names
 recontent inspect components Button  # its exact props, defaults and usage notes
 recontent inspect tokens system      # tokens with their values and CSS variables
 ```
 
-This is what you, a script or a coding agent can ask at any time. See
-[Introspecting components](/guides/introspecting-components) and [Coding with agents](/guides/agents).
+Humans, scripts, and coding agents can run these commands at any time. See [Introspecting components](/guides/introspecting-components) and [Coding with agents](/guides/agents).
 
 ## 7. Keep going
 
 - Edit tokens in `recontent.config.ts` and run `recontent build --watch` to rebuild on save.
-- Add more outputs: [Tailwind](/plugins/tailwind), [vanilla-extract](/plugins/vanilla-extract),
-  [StyleX](/plugins/stylex), [TypeScript](/plugins/typescript), [DTCG](/plugins/dtcg).
-- Learn how tokens are structured in [Defining tokens](/guides/defining-tokens).
-- Write usage notes and examples with [Documenting components](/guides/documenting-components).
-- Catch breaking changes to tokens and props in pull requests with [`recontent diff`](/guides/diffs).
+- Add more outputs: [Tailwind](/plugins/tailwind), [vanilla-extract](/plugins/vanilla-extract), [StyleX](/plugins/stylex), [TypeScript](/plugins/typescript), and [DTCG](/plugins/dtcg).
+- Learn token structure in [Defining tokens](/guides/defining-tokens).
+- Add usage notes and examples in [Documenting components](/guides/documenting-components).
+- Catch breaking token and prop changes in pull requests with [`recontent diff`](/guides/diffs).
