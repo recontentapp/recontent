@@ -36,7 +36,7 @@ import {
 import type { SourceTree, SourceValue } from "../ts-source.js";
 import type { GeneratorContext } from "./shared/context.js";
 import { outputPlugin } from "./factory.js";
-import { generateThemeModule } from "./shared/ts-source.js";
+import { generateThemeModule, scaleExportsForConfig } from "./shared/ts-source.js";
 
 const DEFAULT_ROOT_FONT_SIZE = 16;
 
@@ -177,6 +177,24 @@ function nativeTypography(
   };
 }
 
+function firstShadowLayer(
+  value: ShadowValue,
+  member: MemberLookup,
+  visited = new Set<string>(),
+): import("../token-model/values.js").ShadowLayer | undefined {
+  const layer = value.layers[0];
+  if (!layer) return undefined;
+  if ("color" in layer) return layer;
+  if (layer.alias) {
+    const key = pathKey(layer.alias);
+    if (visited.has(key)) return undefined;
+    visited.add(key);
+    const resolved = member(layer.alias).value as ShadowValue;
+    return firstShadowLayer(resolved, member, visited);
+  }
+  return firstShadowLayer(layer.$value as ShadowValue, member, visited);
+}
+
 function nativeShadow(
   entry: TokenEntry,
   value: ShadowValue,
@@ -189,11 +207,9 @@ function nativeShadow(
       `shadow has ${value.layers.length} layers; the "typescript-native" target only supports a single shadow (using the first, dropping ${value.layers.length - 1}).`,
     );
   }
-  const layer = value.layers[0];
-  if (!layer || !("color" in layer)) {
-    throw new Error(
-      `Token "${pathKey(entry.path)}" is a shadow whose first layer aliases another shadow token, which the "typescript-native" output target does not support.`,
-    );
+  const layer = firstShadowLayer(value, member);
+  if (!layer) {
+    throw new Error(`Token "${pathKey(entry.path)}" is a shadow with no resolvable layer.`);
   }
   if (layer.inset) {
     warn(`shadow "inset" has no React Native equivalent and was dropped.`);
@@ -221,8 +237,36 @@ function nativeShadow(
   };
 }
 
+function flattenNativeGradientStops(
+  stops: GradientValue["stops"],
+  member: MemberLookup,
+  visited = new Set<string | GradientValue>(),
+): Array<{ color: TokenMember<"color">; position: TokenMember<"number"> }> {
+  const result: Array<{ color: TokenMember<"color">; position: TokenMember<"number"> }> = [];
+  for (const stop of stops) {
+    if ("color" in stop) {
+      result.push(stop);
+      continue;
+    }
+    const nested = stop.alias
+      ? (member(stop.alias).value as GradientValue)
+      : (stop.$value as GradientValue);
+    const key = stop.alias ? pathKey(stop.alias) : nested;
+    if (visited.has(key)) {
+      throw new Error("Circular gradient alias detected.");
+    }
+    visited.add(key);
+    try {
+      result.push(...flattenNativeGradientStops(nested.stops, member, visited));
+    } finally {
+      visited.delete(key);
+    }
+  }
+  return result;
+}
+
 function nativeGradient(
-  entry: TokenEntry,
+  _entry: TokenEntry,
   value: GradientValue,
   member: MemberLookup,
   rootFontSize: number,
@@ -239,12 +283,7 @@ function nativeGradient(
     );
   }
 
-  const stops = value.stops.map((stop) => {
-    if (!("color" in stop)) {
-      throw new Error(
-        `Token "${pathKey(entry.path)}" is a gradient with a stop that aliases another gradient token, which the "typescript-native" output target does not support.`,
-      );
-    }
+  const stops = flattenNativeGradientStops(value.stops, member).map((stop) => {
     const color = nativeMemberValue("color", stop.color, member, rootFontSize, warn);
     const position = nativeMemberValue("number", stop.position, member, rootFontSize, warn);
     return `{ color: ${sourceValueText(color)}, position: ${sourceValueText(position)} }`;
@@ -287,9 +326,11 @@ function createNativeSpec(rootFontSize: number): ThemeTargetSpec {
 function generateTypeScriptNativeSource(config: GeneratorContext, rootFontSize: number): string {
   const logger = config.logger ?? createLogger();
   const spec = createNativeSpec(rootFontSize);
+  const scaleExports = scaleExportsForConfig(config);
   return generateThemeModule(
     config,
-    generateThemeSource(config, spec, logger, "typescript-native"),
+    generateThemeSource(config, spec, logger, "typescript-native", scaleExports),
+    scaleExports,
   );
 }
 
@@ -300,10 +341,22 @@ export type TypeScriptNativePluginOptions = {
   rootFontSize?: number;
 };
 
+function validateRootFontSize(rootFontSize: number | undefined): string | undefined {
+  if (rootFontSize === undefined) return undefined;
+  if (!Number.isFinite(rootFontSize) || rootFontSize <= 0) {
+    return `Invalid rootFontSize: ${rootFontSize}. Expected a positive finite number.`;
+  }
+  return undefined;
+}
+
 export function generateTypeScriptNativeFiles(
   config: GeneratorContext,
   options: TypeScriptNativePluginOptions,
 ): OutputFile[] {
+  const rootFontSizeError = validateRootFontSize(options.rootFontSize);
+  if (rootFontSizeError) {
+    throw new Error(rootFontSizeError);
+  }
   const rootFontSize = options.rootFontSize ?? DEFAULT_ROOT_FONT_SIZE;
   return [
     {
@@ -314,11 +367,18 @@ export function generateTypeScriptNativeFiles(
 }
 
 export function typescriptNative(options: TypeScriptNativePluginOptions): RecontentPlugin {
+  const checkNames = themeNameDiagnostics("typescript-native");
   return outputPlugin(
     "recontent:typescript-native",
     ["tokens"],
     options,
     generateTypeScriptNativeFiles,
-    themeNameDiagnostics("typescript-native"),
+    (ctx) => {
+      const rootFontSizeError = validateRootFontSize(options.rootFontSize);
+      return [
+        ...(rootFontSizeError ? [{ severity: "error" as const, message: rootFontSizeError }] : []),
+        ...checkNames(ctx),
+      ];
+    },
   );
 }

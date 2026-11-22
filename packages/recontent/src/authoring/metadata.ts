@@ -5,7 +5,7 @@ export type ChainableMethods<Token> = {
   describe(description: string): Token & ChainableMethods<Token>;
   deprecate(reason?: string): Token & ChainableMethods<Token>;
   extend(namespace: string, value: Record<string, unknown>): Token & ChainableMethods<Token>;
-} & (Token extends { $type: "color" }
+} & (Token extends { _kind: "raw" | "stamped"; $type: "color" }
   ? {
       /** The same color with a different alpha, as a new literal without the metadata or alias. */
       alpha(value: number): RawToken<"color"> & ChainableMethods<RawToken<"color">>;

@@ -11,7 +11,7 @@ function colorList(options: { outDir: string }): RecontentPlugin {
         .filter((entry) => entry.layer === "system" && !entry.$description)
         .map((entry) => ({
           severity: "warning" as const,
-          message: `${entry.path.join(".")} has no description.`,
+          message: "Missing description.",
           path: entry.path,
         }));
     },

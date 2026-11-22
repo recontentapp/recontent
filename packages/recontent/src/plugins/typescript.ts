@@ -11,7 +11,7 @@ import {
   type MemberResolver,
 } from "../serialize/values.js";
 import { escapeTemplateLiteral } from "../ts-source.js";
-import { generateThemeModule } from "./shared/ts-source.js";
+import { generateThemeModule, scaleExportsForConfig } from "./shared/ts-source.js";
 import {
   generateThemeSource,
   themeNameDiagnostics,
@@ -62,17 +62,35 @@ function inlineComposite(
   value: TokenTypeMap["shadow"] | TokenTypeMap["border"] | TokenTypeMap["gradient"],
   lookup: MemberLookup,
 ): SourceValue {
+  const resolveGradient = (member: { alias?: string[]; $value: unknown }) =>
+    (member.alias ? lookup(member.alias).value : member.$value) as TokenTypeMap["gradient"];
   const resolve: MemberResolver = (memberType, member) => {
     if (!member.alias) {
-      return escapeTemplateLiteral(serializeValueCss(memberType, member.$value));
+      if (memberType === "shadow") {
+        return serializeCompositeCss(
+          "shadow",
+          member.$value as TokenTypeMap["shadow"],
+          resolve,
+          resolveGradient,
+        );
+      }
+      return escapeTemplateLiteral(serializeValueCss(memberType, member.$value as never));
     }
     const resolved = lookup(member.alias);
     if (resolved.ref !== undefined) {
       return `\${${resolved.ref}}`;
     }
-    return escapeTemplateLiteral(serializeValueCss(memberType, resolved.value));
+    if (memberType === "shadow") {
+      return serializeCompositeCss(
+        "shadow",
+        resolved.value as TokenTypeMap["shadow"],
+        resolve,
+        resolveGradient,
+      );
+    }
+    return escapeTemplateLiteral(serializeValueCss(memberType, resolved.value as never));
   };
-  const template = serializeCompositeCss(type, value, resolve);
+  const template = serializeCompositeCss(type, value, resolve, resolveGradient);
   return { value: `\`${template}\``, source: true };
 }
 
@@ -81,7 +99,7 @@ function expandedComposite(
   value: TokenTypeMap["typography"] | TokenTypeMap["transition"],
   lookup: MemberLookup,
 ): SourceTree {
-  const tree: SourceTree = {};
+  const tree = Object.create(null) as SourceTree;
   for (const { cssProperty, type: memberType, member } of expandedMembers(type, value)) {
     tree[cssProperty] = memberSourceValue(memberType, member, lookup);
   }
@@ -110,7 +128,12 @@ const webSpec: ThemeTargetSpec = {
 
 function generateTypeScriptSource(config: GeneratorContext): string {
   const logger = config.logger ?? createLogger();
-  return generateThemeModule(config, generateThemeSource(config, webSpec, logger, "typescript"));
+  const scaleExports = scaleExportsForConfig(config);
+  return generateThemeModule(
+    config,
+    generateThemeSource(config, webSpec, logger, "typescript", scaleExports),
+    scaleExports,
+  );
 }
 
 export type TypeScriptPluginOptions = {

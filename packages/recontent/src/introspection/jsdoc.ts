@@ -42,9 +42,24 @@ function render(parts: ts.SymbolDisplayPart[] | undefined): Rendered {
     } else if (part.kind === "link") {
       let { name, label } = link;
       label = label.trim();
-      if (!name) [name = "", label = ""] = label.split(/\s+(.*)/s, 2);
-      if (name) targets.push(name);
-      text += label || (name ? `\`${name}\`` : "");
+      if (label.startsWith("|")) {
+        label = label.slice(1).trim();
+      }
+      if (!name) {
+        const pipeIndex = label.indexOf("|");
+        if (pipeIndex !== -1) {
+          name = label.slice(0, pipeIndex).trim();
+          label = label.slice(pipeIndex + 1).trim();
+        } else {
+          [name = "", label = ""] = label.split(/\s+(.*)/s, 2);
+        }
+      }
+      if (name && /^https?:\/\//i.test(name)) {
+        text += label ? `${label} (${name})` : name;
+      } else {
+        if (name) targets.push(name);
+        text += label || (name ? `\`${name}\`` : "");
+      }
       link = undefined;
     }
   }
@@ -53,6 +68,7 @@ function render(parts: ts.SymbolDisplayPart[] | undefined): Rendered {
 
 function dedent(text: string): string {
   const lines = text
+    .replace(/\r\n/g, "\n")
     .replace(/\s+$/, "")
     .replace(/^\s*\n/, "")
     .split("\n");
@@ -110,6 +126,7 @@ function readFile(
     analysis.docFiles.add(absolute);
     return code || undefined;
   } catch {
+    analysis.missingDocFiles?.add(absolute);
     analysis.warnings.push({
       message: `${symbol.getName()}: @${tag} file ${file} not found.`,
       component,
@@ -168,10 +185,11 @@ export function jsDoc(analysis: Analysis, symbol: ts.Symbol, component?: string)
       const text = ts.displayPartsToString(candidate.text);
       const file = relativePath(text);
       const absolute = file && resolveFile(symbol, file);
-      if (absolute && fs.existsSync(absolute)) {
+      if (absolute && fs.statSync(absolute, { throwIfNoEntry: false })?.isFile()) {
         analysis.docFiles.add(absolute);
         return [absolute];
       }
+      if (absolute) analysis.missingDocFiles?.add(absolute);
       analysis.warnings.push({
         message: file
           ? `${symbol.getName()}: @stories file ${file} not found.`

@@ -39,9 +39,13 @@ function fail(input: string, reason: string): never {
   throw new Error(`Invalid CSS color: ${JSON.stringify(input)}. ${reason}`);
 }
 
+const CSS_NUMBER_RE = /^[+-]?(?:\d+\.?\d*|\.\d+)(?:e[+-]?\d+)?$/i;
+const LEGACY_COMMA_FNS = new Set(["rgb", "rgba", "hsl", "hsla"]);
+
 function parseNumber(token: string, input: string): number {
+  if (!CSS_NUMBER_RE.test(token)) fail(input, `Unexpected value "${token}".`);
   const value = Number(token);
-  if (token === "" || !Number.isFinite(value)) fail(input, `Unexpected value "${token}".`);
+  if (!Number.isFinite(value)) fail(input, `Unexpected value "${token}".`);
   return value;
 }
 
@@ -77,15 +81,26 @@ function parseAlpha(token: string | undefined, input: string): number {
 }
 
 /** Splits `a b c / d` and the legacy `a, b, c, d` into channels and an optional alpha. */
-function splitArguments(body: string, input: string): { channels: string[]; alpha?: string } {
+function splitArguments(
+  fn: string,
+  body: string,
+  input: string,
+): { channels: string[]; alpha?: string } {
   const [colorPart, alpha, ...rest] = body.split("/").map((part) => part.trim());
   if (rest.length > 0) fail(input, 'Expected at most one "/".');
-  const channels = colorPart!.includes(",")
+  const hasComma = colorPart!.includes(",");
+  if (hasComma) {
+    if (alpha !== undefined) fail(input, 'Cannot mix "," and "/" syntax.');
+    if (!LEGACY_COMMA_FNS.has(fn)) {
+      fail(input, `Comma-separated syntax is not valid for "${fn}()".`);
+    }
+  }
+  const channels = hasComma
     ? colorPart!.split(",").map((part) => part.trim())
     : colorPart!.split(/\s+/);
 
   // Legacy syntax carries alpha as a fourth comma-separated value.
-  if (alpha === undefined && colorPart!.includes(",") && channels.length === 4) {
+  if (alpha === undefined && hasComma && channels.length === 4) {
     return { channels: channels.slice(0, 3), alpha: channels[3]! };
   }
   return alpha === undefined ? { channels } : { channels, alpha };
@@ -102,7 +117,7 @@ export function parseCssColor(input: string): ParsedCssColor {
     fail(input, 'Expected a hex color or a CSS color function like "oklch(0.7 0.1 250)".');
 
   const fn = match[1]!.toLowerCase();
-  const { channels, alpha } = splitArguments(match[2]!.toLowerCase(), input);
+  const { channels, alpha } = splitArguments(fn, match[2]!.toLowerCase(), input);
 
   let space: string = fn;
   if (fn === "color") {

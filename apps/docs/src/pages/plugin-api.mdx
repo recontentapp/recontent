@@ -47,19 +47,21 @@ interface RecontentPlugin {
 
 All hooks may be `async`. Each hook runs for every plugin before the next hook starts: all
 `buildStart`s, then all `validate`s, then all `generate`s, then all `buildEnd`s. If a hook throws,
-the build fails with the error's message and exit code `1`. `buildEnd` also runs under
-`recontent build --check`, and is skipped when validation fails or `generate` throws.
+the build fails with the error's message and exit code `1`. `buildEnd` runs after emitted files
+are written to disk, and is skipped under `recontent build --check`, when validation fails, or when
+`generate` throws.
 
 ## PluginContext
 
-| Field        | Type                            | Description                                                                                                                                              |
-| ------------ | ------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `registry`   | `Map<string, TokenEntry>`       | Every token, keyed by its dotted path (`"system.color.accent"`).                                                                                         |
-| `themes`     | `Record<string, ThemeOverride>` | Each theme's overrides: a `Map` from token key to the overriding value.                                                                                  |
-| `root`       | `string`                        | Absolute path of the directory containing the config.                                                                                                    |
-| `logger`     | `Logger`                        | `info`, `warn`, `error` and `debug` methods. All write to stderr.                                                                                        |
-| `components` | `ComponentInfo[] \| undefined`  | The project's [components](#componentinfo). Only set when the plugin declares `"introspection"` or `"introspection?"` and `introspection` is configured. |
-| `types`      | `TypeInfo[] \| undefined`       | The project [types](#typeinfo) that components' props reference. Set together with `components`.                                                         |
+| Field        | Type                              | Description                                                                                                                                              |
+| ------------ | --------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `registry`   | `Map<string, TokenEntry>`         | Every token, keyed by its dotted path (`"system.color.accent"`).                                                                                         |
+| `groups`     | `Map<string, TokenGroupMetadata>` | Metadata of groups wrapped with `tokens.group(...)`, keyed by dotted path.                                                                               |
+| `themes`     | `Record<string, ThemeOverride>`   | Each theme's overrides: a `Map` from token key to the overriding value.                                                                                  |
+| `root`       | `string`                          | Absolute path of the directory containing the config.                                                                                                    |
+| `logger`     | `Logger`                          | `info`, `warn`, `error` and `debug` methods. All write to stderr.                                                                                        |
+| `components` | `ComponentInfo[] \| undefined`    | The project's [components](#componentinfo). Only set when the plugin declares `"introspection"` or `"introspection?"` and `introspection` is configured. |
+| `types`      | `TypeInfo[] \| undefined`         | The project [types](#typeinfo) that components' props reference. Set together with `components`.                                                         |
 
 A `TokenEntry` describes one token:
 
@@ -142,12 +144,13 @@ type Documentation = {
   examples?: { title?: string; code: string }[]; // @example, title from <caption>, without code fences
   usage?: string; // @usage, markdown
   links?: string[]; // components and types that {@link}s resolve to, sorted
-  externalLinks?: { title: string; url: string }[]; // @link <caption>Figma</caption> https://…, design files and guidelines outside the code
+  externalLinks?: { title?: string; url: string }[]; // @link <caption>Figma</caption> https://…, design files and guidelines outside the code
 };
 
 type ComponentInfo = Documentation & {
   name: string; // export name, "Tabs.Item" for subcomponents
   typeParameters?: { name: string; constraint?: string; default?: string }[]; // generic components
+  import?: string; // import statement generated from `introspection.importPath`
   sourceFilePath: string; // posix, relative to the config root
   line: number; // 1-based
   category?: string; // @category
@@ -163,6 +166,7 @@ type PropInfo = Documentation & {
   resolved?: string; // type with your own alias expanded: "Width" → 'number | "auto"'
   values?: (string | number | boolean)[]; // when the type is a union of literals
   references?: string[]; // ids of the project types `type` mentions
+  declaredIn?: string; // id of the shared project type that declares this prop
   required: boolean;
   defaultValue?: string;
 };
@@ -195,8 +199,9 @@ type TypeInfo = Documentation & {
 };
 ```
 
-The props type of a component itself (`ButtonProps`) is not a referenced type: its members are the
-component's `props`.
+The props type of a single component (`ButtonProps`) is not listed as a referenced type: its
+members are the component's `props`. However, prop interfaces or aliases shared by two or more
+components are collected into `ctx.types` and referenced via `prop.declaredIn`.
 
 All of these types are exported from `recontent/plugins`. See [`introspection`](/config#introspection)
 for how components and props are found.

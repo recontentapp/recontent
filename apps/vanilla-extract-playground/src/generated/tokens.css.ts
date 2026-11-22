@@ -596,7 +596,7 @@ export const themeClass = createTheme(vars, {
       "fullscreen": '96rem',
     },
     "fontFamily": {
-      "sans": '-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif',
+      "sans": '"-apple-system", BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif',
       "mono": 'SF Mono, Monaco, Consolas, monospace',
     },
     "iconScale": {

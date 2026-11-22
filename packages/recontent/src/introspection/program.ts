@@ -36,11 +36,28 @@ export function resolveInputs(
  * TypeScript treat each one as changed and defeats `oldProgram`; handing back
  * the same object for an unchanged file is what lets a watch rebuild reuse it.
  */
-const sourceFiles = new Map<string, { mtime: number; file: ts.SourceFile }>();
+const sourceFiles = new Map<string, { mtimeMs: number; size: number; file: ts.SourceFile }>();
 
 function createCachingHost(options: ts.CompilerOptions): ts.CompilerHost {
   const host = ts.createCompilerHost(options);
   const getSourceFile = host.getSourceFile.bind(host);
+  const resolutionCache = ts.createModuleResolutionCache(
+    host.getCurrentDirectory(),
+    host.getCanonicalFileName.bind(host),
+    options,
+  );
+  host.resolveModuleNames = (
+    moduleNames,
+    containingFile,
+    _reusedNames,
+    redirectedReference,
+    opts,
+  ) =>
+    moduleNames.map(
+      (name) =>
+        ts.resolveModuleName(name, containingFile, opts, host, resolutionCache, redirectedReference)
+          .resolvedModule,
+    );
   host.getSourceFile = (fileName, languageVersionOrOptions, onError, shouldCreateNewSourceFile) => {
     // The same file can be parsed differently, e.g. as ESM and as CJS, depending on who imports it.
     const parse =
@@ -53,16 +70,24 @@ function createCachingHost(options: ts.CompilerOptions): ts.CompilerHost {
       parse.impliedNodeFormat,
       options.moduleDetection,
     ].join("\0");
-    const mtime = ts.sys.getModifiedTime?.(fileName)?.getTime();
+    const stats = fs.statSync(fileName, { throwIfNoEntry: false });
     const cached = sourceFiles.get(key);
-    if (cached && !shouldCreateNewSourceFile && cached.mtime === mtime) return cached.file;
+    if (
+      cached &&
+      !shouldCreateNewSourceFile &&
+      stats &&
+      cached.mtimeMs === stats.mtimeMs &&
+      cached.size === stats.size
+    ) {
+      return cached.file;
+    }
     const file = getSourceFile(
       fileName,
       languageVersionOrOptions,
       onError,
       shouldCreateNewSourceFile,
     );
-    if (file && mtime !== undefined) sourceFiles.set(key, { mtime, file });
+    if (file && stats) sourceFiles.set(key, { mtimeMs: stats.mtimeMs, size: stats.size, file });
     return file;
   };
   return host;
@@ -106,5 +131,11 @@ export function createIntrospectionProgram(options: {
     host: createCachingHost(compilerOptions),
     oldProgram: options.oldProgram,
   });
+  // Prune entries no longer in the program so long-running watch sessions don't leak memory.
+  const active = new Set(program.getSourceFiles().map((f) => f.fileName));
+  for (const key of sourceFiles.keys()) {
+    const fileName = key.slice(0, key.indexOf("\0"));
+    if (!active.has(fileName)) sourceFiles.delete(key);
+  }
   return { program, configFiles: [tsconfigPath, ...(source.extendedSourceFiles ?? [])] };
 }

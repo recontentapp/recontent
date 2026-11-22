@@ -248,6 +248,12 @@ export function relativeLuminance(rgb: Vec3): number {
   return row[0] * lr + row[1] * lg + row[2] * lb;
 }
 
+/** WCAG relative luminance directly from XYZ-D65 Y (avoids sRGB gamut-clamping error on wide-gamut colors). */
+export function colorLuminance(colorSpace: ColorSpace, components: readonly Component[]): number {
+  const xyz = toXyzD65(colorSpace, none0(components));
+  return Math.min(1, Math.max(0, xyz[1]));
+}
+
 export function toSrgbHex(colorSpace: ColorSpace, components: readonly Component[]): string {
   const [r, g, b] = toSrgb(colorSpace, components);
   const toByte = (n: number) =>
@@ -262,8 +268,13 @@ export function toOklch(colorSpace: ColorSpace, components: readonly Component[]
   const xyz = toXyzD65(colorSpace, none0(components));
   const lms = multiplyMatrix(XYZ_TO_LMS, xyz).map(Math.cbrt) as Vec3;
   const [l, a, b] = multiplyMatrix(LMS_TO_OKLAB, lms);
+  const clampedL = Math.min(1, Math.max(0, l));
+  const c = Math.hypot(a, b);
+  if (c < 1e-6) {
+    return [clampedL, 0, 0];
+  }
   const hue = (Math.atan2(b, a) * 180) / Math.PI;
-  return [l, Math.hypot(a, b), (hue + 360) % 360];
+  return [clampedL, c, (hue + 360) % 360];
 }
 
 const GAMUT_EPSILON = 1e-4;

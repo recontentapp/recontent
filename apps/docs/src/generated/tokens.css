@@ -20,7 +20,7 @@
   --ref-color-blue-100: #d3e2ff;
   --ref-color-blue-600: #2563eb;
   --ref-fontFamily-display: Arial Black, Helvetica Neue, Arial, Segoe UI, system-ui, sans-serif;
-  --ref-fontFamily-body: system-ui, -apple-system, Segoe UI, Roboto, Helvetica Neue, Arial, sans-serif;
+  --ref-fontFamily-body: system-ui, "-apple-system", Segoe UI, Roboto, Helvetica Neue, Arial, sans-serif;
   --ref-fontFamily-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, Liberation Mono, monospace;
   --ref-fontWeight-medium: 500;
   --ref-fontWeight-semibold: 600;

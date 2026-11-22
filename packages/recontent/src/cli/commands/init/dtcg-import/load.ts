@@ -1,5 +1,7 @@
 import { readdirSync, readFileSync, statSync } from "node:fs";
+import os from "node:os";
 import path from "node:path";
+import { stableStringify } from "../../diff/tokens.js";
 import { isObject, setOwn, sourceKey } from "./types.js";
 import type { JsonObject, Warn } from "./types.js";
 
@@ -66,7 +68,7 @@ function mergeInto(
       mergeInto(existing, value, [...path, key], onConflict);
       continue;
     }
-    if (isToken(existing) && JSON.stringify(existing) !== JSON.stringify(value)) {
+    if (isToken(existing) && stableStringify(existing) !== stableStringify(value)) {
       onConflict?.([...path, key]);
     }
     setOwn(target, key, structuredClone(value));
@@ -106,9 +108,12 @@ function loadResolver(
 
   function lookup(reference: string): Entry | undefined {
     const match = /^#\/(sets|modifiers)\/([^/]+)$/.exec(reference);
-    const definition = match && (match[1] === "sets" ? sets : modifiers)[match[2]!];
-    if (!match || !isObject(definition)) return undefined;
-    return { kind: match[1] === "sets" ? "set" : "modifier", name: match[2]!, definition };
+    if (!match) return undefined;
+    const map = match[1] === "sets" ? sets : modifiers;
+    const key = match[2]!;
+    const definition = Object.hasOwn(map, key) ? map[key] : undefined;
+    if (!isObject(definition)) return undefined;
+    return { kind: match[1] === "sets" ? "set" : "modifier", name: key, definition };
   }
 
   function loadSource(source: unknown, seen: string[]): JsonObject[] {
@@ -162,7 +167,12 @@ function loadResolver(
 
     if (entry.kind === "set") {
       usedSets.add(entry.name);
-      mergeInto(base, mergeAll(loadSources(entry.definition.sources)));
+      const setDoc = mergeAll(loadSources(entry.definition.sources));
+      mergeInto(base, setDoc);
+      // Sets appearing after a modifier in resolutionOrder override that modifier's contexts too.
+      for (const context of contexts) {
+        mergeInto(context.doc, setDoc);
+      }
       return;
     }
 
@@ -199,7 +209,15 @@ function loadResolver(
  * that are merged in the order given.
  */
 export function loadSources(sources: string[], cwd: string, warn: Warn): LoadedSources {
-  const resolved = sources.map((source) => path.resolve(cwd, source));
+  const resolved = sources.map((source) => {
+    const expanded =
+      source === "~"
+        ? os.homedir()
+        : source.startsWith("~/")
+          ? path.join(os.homedir(), source.slice(2))
+          : source;
+    return path.resolve(cwd, expanded);
+  });
   const display = (file: string) => path.relative(cwd, file).split(path.sep).join("/");
 
   const files: string[] = [];

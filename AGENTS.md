@@ -1,6 +1,6 @@
 # Recontent.app
 
-Recontent is a design system toolchain which helps engineers & designers manage design tokens and bootstrap design systems faster with pre-built components.
+Recontent is a design system toolchain which helps engineers & designers.
 
 Recontent is shipped as a command line interface (CLI) which can be executed by humans, agents or CI.
 

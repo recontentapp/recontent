@@ -1,3 +1,4 @@
+import { stableStringify } from "../../diff/tokens.js";
 import { convertValue } from "./convert.js";
 import { followAliases, refExpression } from "./layers.js";
 import type { ConvertedToken } from "./layers.js";
@@ -35,6 +36,28 @@ function resolveLiteral(value: unknown, tokens: TokenMap, chain: ReadonlySet<str
   return value;
 }
 
+const THEME_NAME_RE = /^[A-Za-z_][\w-]*$/;
+
+function sanitizeThemeName(raw: string, used: Set<string>, warn: Warn): string {
+  let name = raw.replace(/[^A-Za-z0-9_-]+/g, "-").replace(/^-+|-+$/g, "");
+  if (!name || !/^[A-Za-z_]/.test(name)) {
+    name = `_${name || "theme"}`;
+  }
+  if (!THEME_NAME_RE.test(name)) {
+    name = "_theme";
+  }
+  const baseName = name;
+  let suffix = 2;
+  while (used.has(name)) {
+    name = `${baseName}-${suffix++}`;
+  }
+  used.add(name);
+  if (name !== raw) {
+    warn(`Renamed DTCG theme "${raw}" to "${name}" so it is a valid Recontent theme name.`);
+  }
+  return name;
+}
+
 function themeName(entry: ThemeContextTokens, multipleModifiers: boolean): string {
   return multipleModifiers ? `${entry.modifier}-${entry.context}` : entry.context;
 }
@@ -66,14 +89,19 @@ export function buildThemes(
 ): { themes: Theme[]; skipped: number } {
   const multipleModifiers = new Set(contexts.map((entry) => entry.modifier)).size > 1;
   const themes: Theme[] = [];
+  const usedNames = new Set<string>();
   let skipped = 0;
 
   for (const entry of contexts) {
-    const name = themeName(entry, multipleModifiers);
+    const name = sanitizeThemeName(themeName(entry, multipleModifiers), usedNames, warn);
     const effective: TokenMap = new Map(base);
     for (const [key, token] of entry.tokens) {
       const baseToken = base.get(key);
-      effective.set(key, { ...token, type: token.type ?? baseToken?.type });
+      effective.set(key, {
+        ...token,
+        path: baseToken?.path ?? token.path,
+        type: token.type ?? baseToken?.type,
+      });
     }
 
     /**
@@ -128,7 +156,7 @@ export function buildThemes(
         skipped += 1;
         continue;
       }
-      if (JSON.stringify(token.value) === JSON.stringify(baseToken.value)) continue;
+      if (stableStringify(token.value) === stableStringify(baseToken.value)) continue;
       // The base token was skipped, and already reported as such.
       if (!baseTokens.has(key)) continue;
 

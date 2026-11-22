@@ -44,11 +44,13 @@ function labToOklch([l, a, b]: Lab): Oklch {
   return [l, Math.hypot(a, b), ((Math.atan2(b, a) * 180) / Math.PI + 360) % 360];
 }
 
+function labDistance(a: Lab, b: Lab): number {
+  return Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
+}
+
 /** Euclidean distance in OKLab. */
 function distance(x: Oklch, y: Oklch): number {
-  const [l1, a1, b1] = oklchToLab(x);
-  const [l2, a2, b2] = oklchToLab(y);
-  return Math.hypot(l1 - l2, a1 - a2, b1 - b2);
+  return labDistance(oklchToLab(x), oklchToLab(y));
 }
 
 function mix(x: Oklch, y: Oklch, ratio: number): Oklch {
@@ -91,7 +93,8 @@ function transposeProgressionStart(to: number, values: number[], curve: Bezier):
 
 // --- Reference scales -----------------------------------------------------------------------
 
-type ReferenceScales = Record<string, Oklch[]>;
+type ReferenceEntry = { oklch: Oklch; lab: Lab };
+type ReferenceScales = Record<string, ReferenceEntry[]>;
 
 const referenceCache = new Map<string, ReferenceScales>();
 
@@ -106,7 +109,10 @@ function referenceScales(
     scales = Object.fromEntries(
       Object.entries(all).map(([name, scale]) => [
         name,
-        scale[appearance].map((p3) => toOklch("display-p3", p3)),
+        scale[appearance].map((p3) => {
+          const oklch = toOklch("display-p3", p3);
+          return { oklch, lab: oklchToLab(oklch) };
+        }),
       ]),
     );
     referenceCache.set(key, scales);
@@ -131,18 +137,23 @@ function scaleFromColor(
   background: Oklch,
   isGray: (scale: string) => boolean,
 ): Oklch[] {
-  const candidates: { scale: string; color: Oklch; distance: number }[] = [];
+  const sourceLab = oklchToLab(source);
+  const candidates: { scale: string; lab: Lab; distance: number }[] = [];
   for (const [name, scale] of Object.entries(scales)) {
-    for (const color of scale) {
-      candidates.push({ scale: name, color, distance: distance(source, color) });
+    for (const entry of scale) {
+      candidates.push({ scale: name, lab: entry.lab, distance: labDistance(sourceLab, entry.lab) });
     }
   }
   candidates.sort((a, b) => a.distance - b.distance);
 
   // The closest color of every scale, nearest first.
-  const closest = candidates.filter(
-    (candidate, i) => i === candidates.findIndex((other) => other.scale === candidate.scale),
-  );
+  const seenScales = new Set<string>();
+  const closest: typeof candidates = [];
+  for (const candidate of candidates) {
+    if (seenScales.has(candidate.scale)) continue;
+    seenScales.add(candidate.scale);
+    closest.push(candidate);
+  }
 
   // Grays are all extremely close to each other, so when the nearest scale is a gray the second
   // pick would say nothing about the source; skip to the nearest non-gray one.
@@ -159,7 +170,7 @@ function scaleFromColor(
   // ratio of the tangents of the angles at the source. Otherwise A alone is the base.
   const a = colorB.distance;
   const b = colorA.distance;
-  const c = distance(colorA.color, colorB.color);
+  const c = labDistance(colorA.lab, colorB.lab);
   const cosA = Math.min(1, Math.max(-1, (b ** 2 + c ** 2 - a ** 2) / (2 * b * c)));
   const cosB = Math.min(1, Math.max(-1, (a ** 2 + c ** 2 - b ** 2) / (2 * a * c)));
   const tanC1 = cosA / Math.sin(Math.acos(cosA));
@@ -169,7 +180,7 @@ function scaleFromColor(
 
   const scaleA = scales[colorA.scale]!;
   const scaleB = scales[colorB.scale]!;
-  const scale = scaleA.map((color, i) => mix(color, scaleB[i]!, ratio));
+  const scale = scaleA.map((entry, i) => mix(entry.oklch, scaleB[i]!.oklch, ratio));
 
   // Match hue and chroma to the source, using the closest step as the chroma reference.
   const baseColor = scale.reduce((best, color) =>

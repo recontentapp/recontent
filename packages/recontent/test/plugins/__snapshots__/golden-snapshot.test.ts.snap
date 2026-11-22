@@ -45,7 +45,8 @@ exports[`golden snapshots css 1`] = `
 [data-theme="highContrast"] {
   --system-colors-accent: #ff0000;
   --system-colors-surface: var(--ref-color-black);
-}"
+}
+"
 `;
 
 exports[`golden snapshots dtcg (base) 1`] = `
@@ -861,7 +862,7 @@ export const vars = stylex.defineVars({
   systemTypographyBodyFontWeight: '400',
   systemTypographyBodyLetterSpacing: '0px',
   systemTypographyBodyLineHeight: '1.4',
-  componentsButtonBackground: () => \`\${vars.refColorBlack}\`,
+  componentsButtonBackground: () => \`\${vars.systemColorsAccent}\`,
   componentsButtonBorder: () => \`\${vars.systemBorderDefault}\`,
 });
 

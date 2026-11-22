@@ -63,10 +63,11 @@ export function componentRanges(
       ];
     case "xyz-d65":
     case "xyz-d50":
+      // D65 white (#ffffff) has Z ≈ 1.08883; CSS Color 4 XYZ channels are unbounded.
       return [
-        { min: 0, max: 1 },
-        { min: 0, max: 1 },
-        { min: 0, max: 1 },
+        { min: -Infinity, max: Infinity },
+        { min: -Infinity, max: Infinity },
+        { min: -Infinity, max: Infinity },
       ];
     case "srgb":
     case "srgb-linear":

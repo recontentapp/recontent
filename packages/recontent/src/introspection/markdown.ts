@@ -100,7 +100,7 @@ function documentationLines(
   if (item.externalLinks?.length) {
     lines.push(`${heading} Links`, "");
     for (const { title, url } of item.externalLinks)
-      lines.push(`- [${escapeText(title ?? url)}](${url})`);
+      lines.push(`- [${escapeText(title ?? url)}](${url.replace(/\)/g, "%29")})`);
     lines.push("");
   }
   if (item.stories?.length) {

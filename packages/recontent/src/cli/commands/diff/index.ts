@@ -1,4 +1,4 @@
-import { promises as fsp } from "node:fs";
+import fs, { promises as fsp } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { loadConfig } from "../../../config/load.js";
@@ -49,7 +49,9 @@ async function diffAgainstRevision(options: DiffOptions): Promise<void> {
   const configDir = path.dirname(configPath);
   const gitRoot = resolveGitRoot(configDir);
 
-  const relPath = path.relative(gitRoot, configPath);
+  const canonicalGitRoot = fs.realpathSync(gitRoot);
+  const canonicalConfigPath = fs.realpathSync(configPath);
+  const relPath = path.relative(canonicalGitRoot, canonicalConfigPath);
   if (relPath.startsWith("..") || path.isAbsolute(relPath)) {
     throw new Error(`Config file "${configPath}" is outside the git repository at "${gitRoot}".`);
   }
@@ -68,6 +70,20 @@ async function diffAgainstRevision(options: DiffOptions): Promise<void> {
   }
 
   const tmpDir = await fsp.mkdtemp(path.join(os.tmpdir(), "recontent-diff-"));
+  const cleanupSync = () => {
+    try {
+      fs.rmSync(tmpDir, { recursive: true, force: true });
+    } catch {
+      // Best-effort cleanup on signal.
+    }
+  };
+  const onSignal = (signal: NodeJS.Signals) => {
+    cleanupSync();
+    process.exit(signal === "SIGINT" ? 130 : 143);
+  };
+  process.on("SIGINT", onSignal);
+  process.on("SIGTERM", onSignal);
+
   let baseConfig;
   let components: ComponentsDiff | undefined;
   let componentsNote: string | undefined;
@@ -78,9 +94,12 @@ async function diffAgainstRevision(options: DiffOptions): Promise<void> {
     // produces by default, as long as the rev itself is present, and leaves
     // no lock files or worktree to clean up.
     archiveRevision(gitRoot, rev, tmpDir);
-    // The archive holds no installed dependencies, which introspection needs to resolve types.
-    linkNodeModules(gitRoot, tmpDir);
     const tmpConfigPath = path.join(tmpDir, relPath);
+    if (!fs.existsSync(tmpConfigPath)) {
+      throw new Error(`Config file "${relPath}" did not exist at revision "${rev}".`);
+    }
+    // The archive holds no installed dependencies, which introspection needs to resolve types.
+    linkNodeModules(canonicalGitRoot, tmpDir, path.dirname(canonicalConfigPath));
     baseConfig = await loadConfig(tmpConfigPath, { resolveFrom: configDir });
 
     if (headConfig.introspection && !baseConfig.introspection) {
@@ -110,6 +129,8 @@ async function diffAgainstRevision(options: DiffOptions): Promise<void> {
       components = diffComponents(base.introspection, head);
     }
   } finally {
+    process.off("SIGINT", onSignal);
+    process.off("SIGTERM", onSignal);
     await fsp.rm(tmpDir, { recursive: true, force: true });
   }
 

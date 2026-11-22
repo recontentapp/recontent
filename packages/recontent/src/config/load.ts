@@ -16,6 +16,12 @@ export class ConfigLoadError extends Error {
   }
 }
 
+const ALIAS_PROBE_EXTENSIONS = ["", ".ts", ".tsx", ".mts", ".cts", ".js", ".jsx", ".mjs", ".cjs"];
+
+function aliasTargetExists(candidate: string): boolean {
+  return ALIAS_PROBE_EXTENSIONS.some((ext) => fs.existsSync(`${candidate}${ext}`));
+}
+
 function getTsconfigAliases(cwd: string): Record<string, string> {
   // Like tsc, the nearest tsconfig.json upward: a monorepo package often shares its root's.
   const tsConfigPath = ts.findConfigFile(cwd, ts.sys.fileExists);
@@ -39,7 +45,7 @@ function getTsconfigAliases(cwd: string): Record<string, string> {
     if (pattern === "" || pattern === "*") continue;
     // Fallbacks are tried in order: the first target that exists wins.
     const targets = values.map((value) => path.resolve(String(base), value.replace(/\/\*$/, "")));
-    const target = targets.find((candidate) => fs.existsSync(candidate)) ?? targets[0];
+    const target = targets.find(aliasTargetExists) ?? targets[0];
     if (target) aliases[pattern] = target;
   }
   return aliases;
@@ -71,6 +77,10 @@ function isConfig(value: unknown): value is Config {
     value !== null &&
     "registry" in value &&
     value.registry instanceof Map &&
+    "groups" in value &&
+    value.groups instanceof Map &&
+    "diagnostics" in value &&
+    Array.isArray(value.diagnostics) &&
     "themes" in value &&
     typeof value.themes === "object" &&
     value.themes !== null &&
@@ -117,7 +127,7 @@ export function discoverConfigPath(cwd: string): string {
 
     for (const name of DISCOVERABLE_CONFIG_NAMES) {
       const candidate = path.join(current, name);
-      if (fs.existsSync(candidate)) return candidate;
+      if (fs.statSync(candidate, { throwIfNoEntry: false })?.isFile()) return candidate;
     }
 
     if (fs.existsSync(path.join(current, "package.json"))) break;
@@ -136,9 +146,9 @@ export function discoverConfigPath(cwd: string): string {
 
 export async function loadConfig(
   configPath?: string,
-  options?: { resolveFrom?: string },
+  options?: { cwd?: string; resolveFrom?: string },
 ): Promise<Config> {
-  const resolved = resolveConfigPath(configPath ?? DEFAULT_CONFIG);
+  const resolved = resolveConfigPath(configPath ?? DEFAULT_CONFIG, { cwd: options?.cwd });
   if (!fs.statSync(resolved, { throwIfNoEntry: false })?.isFile()) {
     throw new ConfigLoadError(`Config file not found: "${resolved}".`);
   }
@@ -150,11 +160,12 @@ export async function loadConfig(
       interopDefault: true,
       // `build --watch` reloads the same path in-process; a cached module would keep serving the old tokens.
       moduleCache: false,
+      tryNative: false,
       alias: {
         // `resolveFrom` only redirects where `recontent` is found; the config's own
         // tsconfig `paths` always belong to the directory the config lives in.
-        ...getRecontentAliases(options?.resolveFrom ?? configDir),
         ...getTsconfigAliases(configDir),
+        ...getRecontentAliases(options?.resolveFrom ?? configDir),
       },
     });
     module = (await jiti.import(resolved)) as Record<string, unknown>;

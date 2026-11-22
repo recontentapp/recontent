@@ -101,7 +101,17 @@ function isWidening(base: string, head: string): boolean {
 }
 
 function sameSet(a: Literal[], b: Literal[]): boolean {
-  return a.length === b.length && a.every((value) => b.includes(value));
+  if (a.length !== b.length) return false;
+  const bSet = new Set(b);
+  return a.every((value) => bSet.has(value));
+}
+
+function literalWidensTo(values: Literal[], headType: string): boolean {
+  const headMembers = new Set(unionMembers(headType));
+  return values.every((value) => {
+    const primitive = typeof value;
+    return headMembers.has(primitive) || headMembers.has(JSON.stringify(value));
+  });
 }
 
 function diffProp(base: PropInfo, head: PropInfo): Change[] {
@@ -114,19 +124,29 @@ function diffProp(base: PropInfo, head: PropInfo): Change[] {
   }
 
   if (base.values && head.values) {
+    const baseHasNull = unionMembers(normalize(base.resolved ?? base.type)).includes("null");
+    const headHasNull = unionMembers(normalize(head.resolved ?? head.type)).includes("null");
+    if (baseHasNull !== headHasNull) {
+      const from = normalize(base.resolved ?? base.type);
+      const to = normalize(head.resolved ?? head.type);
+      push("type", baseHasNull && !headHasNull, from, to);
+    }
     if (!sameSet(base.values, head.values)) {
+      const headSet = new Set(head.values);
       push(
         "values",
-        base.values.some((value) => !head.values!.includes(value)),
+        base.values.some((value) => !headSet.has(value)),
         base.values,
         head.values,
       );
     }
   } else {
-    // A union of literals that stops being one is as unclassifiable as any other rewrite.
     const from = normalize(base.resolved ?? base.type);
     const to = normalize(head.resolved ?? head.type);
-    if (from !== to) push("type", !isWidening(from, to), from, to);
+    if (from !== to) {
+      const widened = isWidening(from, to) || (!!base.values && literalWidensTo(base.values, to));
+      push("type", !widened, from, to);
+    }
   }
 
   if (base.defaultValue !== head.defaultValue) {
@@ -164,13 +184,12 @@ function diffInherits(
   head: InheritedProps[] = [],
   ownProps: PropInfo[] = [],
 ): Change[] {
-  const headByName = new Map(head.map((entry) => [entry.name, entry]));
+  // Check against the union of all head inherited props (handles folding e.g. HTMLAttributes -> ButtonHTMLAttributes) plus own props.
+  const allHeadInherited = new Set(head.flatMap((entry) => entry.props));
   const own = new Set(ownProps.map((prop) => prop.name));
   const changes: Change[] = [];
   for (const entry of base) {
-    const kept = new Set(headByName.get(entry.name)?.props);
-    // A prop that moved to the declared ones is still there.
-    const dropped = entry.props.filter((name) => !kept.has(name) && !own.has(name));
+    const dropped = entry.props.filter((name) => !allHeadInherited.has(name) && !own.has(name));
     if (dropped.length > 0)
       changes.push({ kind: "inherits", name: entry.name, props: dropped, breaking: true });
   }
@@ -181,20 +200,31 @@ function diffTypeParameters(
   base: TypeParameterInfo[] = [],
   head: TypeParameterInfo[] = [],
 ): Change[] {
-  const baseByName = new Map(base.map((param) => [param.name, param]));
-  const headByName = new Map(head.map((param) => [param.name, param]));
-  const breaking =
-    base.some((param) => !headByName.has(param.name)) ||
-    head.some((param) => {
-      const before = baseByName.get(param.name);
-      return before ? before.constraint !== param.constraint : param.default === undefined;
-    });
-  const changed =
-    base.length !== head.length ||
-    head.some((param) => {
-      const before = baseByName.get(param.name);
-      return !before || before.constraint !== param.constraint || before.default !== param.default;
-    });
+  // Type parameters are positional in TypeScript: renaming T -> Value is non-breaking,
+  // while removing a position, tightening/changing constraints, or adding a required parameter is breaking.
+  const maxLen = Math.max(base.length, head.length);
+  let changed = base.length !== head.length;
+  let breaking = head.length < base.length;
+
+  for (let i = 0; i < maxLen; i++) {
+    const before = base[i];
+    const after = head[i];
+    if (!before && after) {
+      changed = true;
+      if (after.default === undefined) breaking = true;
+    } else if (before && after) {
+      if (
+        before.name !== after.name ||
+        before.constraint !== after.constraint ||
+        before.default !== after.default
+      ) {
+        changed = true;
+      }
+      if (before.constraint !== after.constraint) {
+        breaking = true;
+      }
+    }
+  }
   return changed ? [{ kind: "typeParameters", from: base, to: head, breaking }] : [];
 }
 
@@ -224,16 +254,17 @@ function diffType(base: TypeInfo, head: TypeInfo): Change[] {
     changes.push({ kind: "kind", from: base.kind, to: head.kind, breaking: true });
   }
 
-  // `members` and `values` carry the meaning; `definition` only matters when neither does.
+  // `members` and `values` carry the meaning; `definition` only matters when neither does (or for enum member renames).
   if (base.members && head.members) {
     changes.push(...diffProps(base.members, head.members));
-  } else if (base.values && head.values) {
+  } else if (base.values && head.values && base.kind !== "enum" && head.kind !== "enum") {
     if (!sameSet(base.values, head.values)) {
+      const headSet = new Set(head.values);
       changes.push({
         kind: "values",
         from: base.values,
         to: head.values,
-        breaking: base.values.some((value) => !head.values!.includes(value)),
+        breaking: base.values.some((value) => !headSet.has(value)),
       });
     }
   } else if (normalize(base.definition) !== normalize(head.definition)) {

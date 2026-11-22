@@ -6,6 +6,7 @@ import { jsDoc } from "./jsdoc.js";
 import {
   declaredTypeNode,
   describeMembers,
+  hasInstantiatedTypeParam,
   inSourceOrder,
   isExternal,
   literalValues,
@@ -47,9 +48,20 @@ function consider(analysis: Analysis, symbol: ts.Symbol | undefined, found: Set<
   }
 }
 
+function enclosingNamespaces(declaration: TypeDeclaration): string[] {
+  const names: string[] = [];
+  for (let current: ts.Node | undefined = declaration.parent; current; current = current.parent) {
+    if (ts.isModuleDeclaration(current) && ts.isIdentifier(current.name)) {
+      names.unshift(current.name.text);
+    }
+  }
+  return names;
+}
+
 function typeId(store: TypeStore, declaration: TypeDeclaration): string {
   const file = declaration.getSourceFile();
-  return `${declaration.name.text} (${path.relative(store.root, file.fileName).split(path.sep).join("/")})`;
+  const qualified = [...enclosingNamespaces(declaration), declaration.name.text].join(".");
+  return `${qualified} (${path.relative(store.root, file.fileName).split(path.sep).join("/")})`;
 }
 
 /**
@@ -120,8 +132,11 @@ export function referencesOfProperty(
 ): string[] {
   const node = declaredTypeNode(property);
   const found = new Set<string>();
-  if (node) referencesIn(analysis, node, found);
-  else referencesOfType(analysis, type, found);
+  if (node && !hasInstantiatedTypeParam(analysis.checker, node, type)) {
+    referencesIn(analysis, node, found);
+  } else {
+    referencesOfType(analysis, type, found);
+  }
   return [...found];
 }
 

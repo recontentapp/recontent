@@ -25,7 +25,7 @@ export default defineConfig({
 
 Config files are loaded with [jiti](https://github.com/unjs/jiti), so TypeScript works with no
 build step. `recontent` and `recontent/plugins` are resolved from the config's directory, and
-`paths` aliases from a `tsconfig.json` next to it are honored. For the accepted file names, see
+`paths` aliases from the nearest `tsconfig.json` upward are honored. For the accepted file names, see
 [config discovery](/cli#config-discovery).
 
 ## defineConfig(input)
@@ -45,11 +45,13 @@ The three layers, as returned by [`defineReferenceTokens`, `defineSystemTokens` 
 The trees are walked once:
 
 - every token becomes a registry entry keyed by its path (`ref.color.blue.9`);
-- a name containing `.`, `{` or `}`, starting with `$` or equal to `__proto__`, `constructor` or
-  `prototype` throws;
-- a value that is not a token (a bare string, number or plain object) produces a **warning**
-  (`Unknown token value at "…". Use tokens.color(...) instead of an anonymous value.`) and is
-  ignored;
+- a name that is empty, contains `.`, `{`, `}`, `:`, `;`, tabs or newlines, starts with `$`, or is
+  equal to `__proto__`, `constructor` or `prototype` throws (and `components` cannot have top-level
+  `"ref"` or `"system"` keys);
+- sibling names differing only by case produce a **warning**;
+- a value that is not a token (a bare string, number or plain object shaped like a raw color/composite)
+  produces a **warning** (`Unknown token value at "…". Use tokens.color(...) instead of an anonymous value.`)
+  and is ignored;
 - nesting deeper than 64 levels throws.
 
 ### `introspection`
@@ -95,7 +97,7 @@ ignores itself unless it already has a `.gitignore`, so there is nothing to add 
 included, are unchanged. `recontent inspect` called repeatedly, as agents do, is then near instant.
 
 Adding a file is detected in the directories of the project's own files, so adding `button.ts` next to
-`button/index.ts` is. It is not in the config's own directory, nor in a dependency's. Pass `--no-cache` to `build` or `inspect` to
+`button/index.ts` is. It is not in the config's own directory, nor in a dependency's. Pass `--no-cache` to `build`, `inspect` or `diff` to
 neither read nor write the cache, in CI for instance, or to debug introspection.
 
 #### Import statements
@@ -125,7 +127,7 @@ A subcomponent (`Tabs.Item`) imports its root component.
 | Default | `{}`                            |
 
 Named themes created with [`defineTheme`](/guides/working-with-themes). The keys are the theme
-names the plugins use in selectors and export names.
+names the plugins use in selectors and export names, and must match `/^[A-Za-z_][\w-]*$/`.
 
 ### `plugins`
 
@@ -180,13 +182,13 @@ functions themselves do no registration, so calling one without using its result
 
 #### Layer function errors
 
-The naming and depth rules listed under [`tokens`](#tokens) are checked when the config is built, not
-when a layer function is called.
+Nesting depth (> 64 levels) is checked immediately when a layer function is called; the naming rules
+listed under [`tokens`](#tokens) are checked when `defineConfig` is called.
 
 ### Metadata methods
 
-Every stamped token and scale has three chainable methods. Each returns a new token and leaves the
-original untouched.
+Every stamped token, scale and [`tokens.group()`](/config/scales#groups) has three chainable methods
+(color tokens also have `.alpha(value)`). Each returns a new value and leaves the original untouched.
 
 ```ts
 token.describe(description: string)
@@ -223,11 +225,11 @@ defineTheme(
 ): ThemeOverride
 ```
 
-| Parameter   | Description                                                                              |
-| ----------- | ---------------------------------------------------------------------------------------- |
-| `tokens`    | The tree the theme applies to: the result of a layer function, or a group inside of one. |
-| `overrides` | A partial tree that mirrors `tokens`, with raw or stamped tokens at the leaves.          |
-| `options`   | `extends`: themes to start from, in order. Later themes, then `overrides`, win.          |
+| Parameter   | Description                                                                                                  |
+| ----------- | ------------------------------------------------------------------------------------------------------------ |
+| `tokens`    | The tree the theme applies to: a layer, a group inside one, or `{ ref, system }` to override several layers. |
+| `overrides` | A partial tree that mirrors `tokens`, with raw or stamped tokens at the leaves.                              |
+| `options`   | `extends`: themes to start from, in order. Later themes, then `overrides`, win.                              |
 
 It returns a `ThemeOverride`: a `Map` from a token's dotted path to its overriding value, and to the
 token it aliases when the override is one. Register it in [`themes`](#themes), where its key becomes
@@ -263,4 +265,6 @@ import type { DefineConfigInput } from "recontent";
 const input: DefineConfigInput = { logLevel: "debug", plugins: [] };
 ```
 
-`DefineConfigInput` is exported for code that builds configs programmatically.
+`DefineConfigInput`, `Config`, `IntrospectionConfigInput`, `LogLevel`, `ThemeOverride`, `RawToken`,
+`StampedToken`, `TokenScale`, `TokenGroup` and `TokenLayer` are exported for code that builds
+configs programmatically.

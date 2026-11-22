@@ -427,7 +427,7 @@ pre { margin: 0 0 16px; padding: 12px 14px; overflow-x: auto; border-radius: 12p
   --ref-overlayWidth-md: 32rem;
   --ref-overlayWidth-lg: 48rem;
   --ref-overlayWidth-fullscreen: 96rem;
-  --ref-fontFamily-sans: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+  --ref-fontFamily-sans: "-apple-system", BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
   --ref-fontFamily-mono: SF Mono, Monaco, Consolas, monospace;
   --ref-iconScale-xs: 10px;
   --ref-iconScale-sm: 12px;
@@ -602,6 +602,7 @@ pre { margin: 0 0 16px; padding: 12px 14px; overflow-x: auto; border-radius: 12p
   --sticker-paddingY: 2px;
   --sticker-borderRadius: 4px;
 }
+
 </style>
 </head>
 <body>
@@ -1293,7 +1294,7 @@ pre { margin: 0 0 16px; padding: 12px 14px; overflow-x: auto; border-radius: 12p
     
   </div>
   <div class="row-preview"><span class="sample" style="font-family:var(--ref-fontFamily-sans)">Aa Bb Cc 123</span></div>
-  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif</code></span></div>
+  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">&quot;-apple-system&quot;, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif</code></span></div>
 </div></div>
 </section>
 <section class="group" id="g-ref-ref-fontSize">
@@ -2339,7 +2340,7 @@ pre { margin: 0 0 16px; padding: 12px 14px; overflow-x: auto; border-radius: 12p
     <a class="alias" href="#t-ref.fontFamily.sans" data-goto="t-ref.fontFamily.sans">→ ref.fontFamily.sans</a>
   </div>
   <div class="row-preview"><span class="sample" style="font-family:var(--system-typography-bodyFontFamily)">Aa Bb Cc 123</span></div>
-  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif</code></span></div>
+  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">&quot;-apple-system&quot;, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif</code></span></div>
 </div>
 <div class="row" id="t-system.typography.codeFontFamily" data-search="system.typography.codeFontFamily fontFamily System" data-kind="token" data-name="system.typography.codeFontFamily" data-meta="fontFamily · System">
   <div class="row-main">
@@ -2442,25 +2443,25 @@ sparingly: one tilted sticker per surface keeps it feeling spontaneous.</p>
   <div class="ex-tabs" role="tablist" aria-label="Examples"><button type="button" role="tab" data-ex-tab="0" aria-selected="true">Basic</button><button type="button" role="tab" data-ex-tab="1" aria-selected="false">Tilted</button><button type="button" role="tab" data-ex-tab="2" aria-selected="false">In a card</button></div>
   <div class="ex-panel code-box" role="tabpanel" data-ex-panel="0"><button type="button" class="copy" data-copy>Copy</button><pre><code><span class="tk-keyword">import</span> { Sticker } <span class="tk-keyword">from</span> <span class="tk-string">"../components"</span>;
 
-<span class="tk-keyword">export</span> <span class="tk-keyword">const</span> Basic = () =&gt; &lt;<span class="tk-tag">Sticker</span>&gt;New&lt;/Sticker&gt;;</code></pre></div>
+<span class="tk-keyword">export</span> <span class="tk-keyword">const</span> Basic = () =&gt; &lt;<span class="tk-tag">Sticker</span>&gt;New&lt;/<span class="tk-tag">Sticker</span>&gt;;</code></pre></div>
   <div class="ex-panel code-box" role="tabpanel" data-ex-panel="1" hidden><button type="button" class="copy" data-copy>Copy</button><pre><code><span class="tk-keyword">import</span> { Sticker } <span class="tk-keyword">from</span> <span class="tk-string">"../components"</span>;
 
-<span class="tk-keyword">export</span> <span class="tk-keyword">const</span> Tilted = () =&gt; &lt;<span class="tk-tag">Sticker</span> <span class="tk-attr">tilt</span>=<span class="tk-string">"left"</span>&gt;Sale&lt;/Sticker&gt;;</code></pre></div>
+<span class="tk-keyword">export</span> <span class="tk-keyword">const</span> Tilted = () =&gt; &lt;<span class="tk-tag">Sticker</span> <span class="tk-attr">tilt</span>=<span class="tk-string">"left"</span>&gt;Sale&lt;/<span class="tk-tag">Sticker</span>&gt;;</code></pre></div>
   <div class="ex-panel code-box" role="tabpanel" data-ex-panel="2" hidden><button type="button" class="copy" data-copy>Copy</button><pre><code><span class="tk-keyword">import</span> { Sticker } <span class="tk-keyword">from</span> <span class="tk-string">"../components"</span>;
 
 <span class="tk-keyword">export</span> <span class="tk-keyword">const</span> InACard = () =&gt; (
   &lt;<span class="tk-tag">div</span>&gt;
-    &lt;<span class="tk-tag">Sticker</span> <span class="tk-attr">tilt</span>=<span class="tk-string">"right"</span>&gt;Hot&lt;/Sticker&gt;
-    &lt;<span class="tk-tag">p</span>&gt;Summer collection&lt;/p&gt;
+    &lt;<span class="tk-tag">Sticker</span> <span class="tk-attr">tilt</span>=<span class="tk-string">"right"</span>&gt;Hot&lt;/<span class="tk-tag">Sticker</span>&gt;
+    &lt;<span class="tk-tag">p</span>&gt;Summer collection&lt;/<span class="tk-tag">p</span>&gt;
   &lt;/<span class="tk-tag">div</span>&gt;
 );</code></pre></div>
   </div>
   <div class="comp-section tabbed">
   <h4>Stories</h4>
   <div class="ex-tabs" role="tablist" aria-label="Stories"><button type="button" role="tab" data-ex-tab="0" aria-selected="true">Basic</button><button type="button" role="tab" data-ex-tab="1" aria-selected="false">Tilted</button><button type="button" role="tab" data-ex-tab="2" aria-selected="false">In a card</button></div>
-  <div class="ex-panel" role="tabpanel" data-ex-panel="0"><iframe class="story-frame" src="http://localhost:6006/iframe.html?id=sticker--basic&amp;viewMode=story" title="Basic" loading="lazy"></iframe><a class="story-open" href="http://localhost:6006/?path=/story/sticker--basic" target="_blank" rel="noopener">Open in Storybook ↗</a></div>
-  <div class="ex-panel" role="tabpanel" data-ex-panel="1" hidden><iframe class="story-frame" src="http://localhost:6006/iframe.html?id=sticker--tilted&amp;viewMode=story" title="Tilted" loading="lazy"></iframe><a class="story-open" href="http://localhost:6006/?path=/story/sticker--tilted" target="_blank" rel="noopener">Open in Storybook ↗</a></div>
-  <div class="ex-panel" role="tabpanel" data-ex-panel="2" hidden><iframe class="story-frame" src="http://localhost:6006/iframe.html?id=sticker--in-a-card&amp;viewMode=story" title="In a card" loading="lazy"></iframe><a class="story-open" href="http://localhost:6006/?path=/story/sticker--in-a-card" target="_blank" rel="noopener">Open in Storybook ↗</a></div>
+  <div class="ex-panel" role="tabpanel" data-ex-panel="0"><iframe class="story-frame" src="http://localhost:6006/iframe.html?id=sticker--basic&amp;viewMode=story" title="Basic" loading="lazy"></iframe><a class="story-open" href="http://localhost:6006/?path=/story/sticker--basic" target="_blank" rel="noopener noreferrer">Open in Storybook ↗</a></div>
+  <div class="ex-panel" role="tabpanel" data-ex-panel="1" hidden><iframe class="story-frame" src="http://localhost:6006/iframe.html?id=sticker--tilted&amp;viewMode=story" title="Tilted" loading="lazy"></iframe><a class="story-open" href="http://localhost:6006/?path=/story/sticker--tilted" target="_blank" rel="noopener noreferrer">Open in Storybook ↗</a></div>
+  <div class="ex-panel" role="tabpanel" data-ex-panel="2" hidden><iframe class="story-frame" src="http://localhost:6006/iframe.html?id=sticker--in-a-card&amp;viewMode=story" title="In a card" loading="lazy"></iframe><a class="story-open" href="http://localhost:6006/?path=/story/sticker--in-a-card" target="_blank" rel="noopener noreferrer">Open in Storybook ↗</a></div>
   </div>
   <div class="comp-section">
     <h4>Props</h4>
@@ -2474,7 +2475,7 @@ sparingly: one tilted sticker per surface keeps it feeling spontaneous.</p>
 </tr>
 <tr>
   <td><code class="">tilt</code></td>
-  <td class="type"><code>&quot;none&quot; |<wbr> &quot;left&quot; |<wbr> &quot;right&quot;</code></td>
+  <td class="type"><code>StickerTilt</code><code>&quot;none&quot; |<wbr> &quot;left&quot; |<wbr> &quot;right&quot;</code></td>
   <td><code>&quot;none&quot;</code></td>
   <td><p class="desc">Rotation applied to the sticker.</p></td>
 </tr></tbody>
@@ -2672,7 +2673,7 @@ sparingly: one tilted sticker per surface keeps it feeling spontaneous.</p>
   var RECENT_KEY = "recontent-docs-recent:" + location.pathname;
   var LABELS = { recent: "Recent", component: "Components", token: "Tokens" };
   var index = [];
-  var byId = {};
+  var byId = Object.create(null);
   document.querySelectorAll("[data-search]").forEach(function (el) {
     var item = {
       el: el,
@@ -2720,7 +2721,7 @@ sparingly: one tilted sticker per surface keeps it feeling spontaneous.</p>
   function search(query) {
     var q = query.trim().toLowerCase();
     var out = [];
-    var seen = {};
+    var seen = Object.create(null);
     if (!q) {
       loadRecent().forEach(function (id) {
         if (!byId[id]) return;

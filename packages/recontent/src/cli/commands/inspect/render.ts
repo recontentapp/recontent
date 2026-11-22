@@ -338,7 +338,10 @@ export function renderComponents(
         kind: "components",
         components: shown,
         types: typeClosure(
-          shown.flatMap((component) => component.references),
+          shown.flatMap((component) => [
+            ...component.references,
+            ...component.props.flatMap((prop) => (prop.declaredIn ? [prop.declaredIn] : [])),
+          ]),
           types,
         ),
       },
@@ -398,9 +401,10 @@ export function renderComponents(
     const collapsed = views.flatMap((view) => view.collapsed ?? []);
     const prop = collapsed[0]?.props[0] ?? views[0]!.props![0]?.name;
     const type = collapsed[0]?.type ?? more[0]?.id ?? direct[0]?.id;
+    const typeArg = type && /[\s()]/.test(type) ? JSON.stringify(type) : type;
     const hints = [
       ...(prop ? [`components ${first.name} --props ${prop}`] : []),
-      ...(type ? [`types ${type}`] : []),
+      ...(typeArg ? [`types ${typeArg}`] : []),
     ];
     if (hints.length > 0) sections.push(next(...hints));
   }

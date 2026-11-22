@@ -1,4 +1,5 @@
 import fs from "node:fs";
+import os from "node:os";
 import { createRequire } from "node:module";
 import path from "node:path";
 import { Argument, Command, CommanderError, Option } from "commander";
@@ -6,10 +7,10 @@ import type { LogLevel } from "../logger.js";
 import { ConfigLoadError, discoverConfigPath, resolveConfigPath } from "../config/load.js";
 import { runBuild } from "./commands/build.js";
 import { runDiff } from "./commands/diff/index.js";
-import { DIFF_FORMATS, type DiffFormat } from "./commands/diff/format.js";
+import { DIFF_FORMATS, formatDiffError, type DiffFormat } from "./commands/diff/format.js";
 import { runInit } from "./commands/init/index.js";
 import { runInspect, type InspectTarget } from "./commands/inspect/index.js";
-import { FORMATS, type Format } from "./commands/inspect/render.js";
+import { FORMATS, renderErrors, type Format } from "./commands/inspect/render.js";
 import { PRESETS, PRESET_NAMES } from "./commands/init/presets/index.js";
 import { reportError } from "./utils/exit.js";
 
@@ -32,9 +33,11 @@ program
     "--cwd <dir>",
     "Directory every relative path in this run is resolved against (default: process cwd)",
   )
-  .option(
-    "--log-level <level>",
-    "info or debug (default: $RECONTENT_LOG_LEVEL, then the config's logLevel)",
+  .addOption(
+    new Option(
+      "--log-level <level>",
+      "info or debug (default: $RECONTENT_LOG_LEVEL, then the config's logLevel)",
+    ).choices(["info", "debug"]),
   )
   .showHelpAfterError("(run with --help for usage)")
   .configureHelp({ showGlobalOptions: true })
@@ -57,10 +60,16 @@ function resolveLogLevel(explicit: string | undefined): LogLevel | undefined {
   return value;
 }
 
+function expandHome(input: string): string {
+  if (input === "~") return os.homedir();
+  if (input.startsWith("~/")) return path.join(os.homedir(), input.slice(2));
+  return input;
+}
+
 /** Resolves the global `--cwd` and `--log-level` options. */
 function resolveCwdAndLogLevel(): { cwd: string; logLevel?: LogLevel } {
   const opts = program.opts<GlobalOptions>();
-  const cwd = path.resolve(process.cwd(), opts.cwd ?? ".");
+  const cwd = path.resolve(process.cwd(), expandHome(opts.cwd ?? "."));
   if (!fs.statSync(cwd, { throwIfNoEntry: false })?.isDirectory()) {
     throw new Error(`--cwd: directory not found: "${cwd}".`);
   }
@@ -115,11 +124,11 @@ program
     if (!source) {
       return program.error("error: missing required argument 'preset' (or pass --dtcg <path>)");
     }
-    const { cwd, configPath } = resolveGlobalOptions({
+    const { cwd, configPath, logLevel } = resolveGlobalOptions({
       discover: false,
       fallback: "recontent.config.ts",
     });
-    await runInit({ cwd, configPath, force: options.force, source });
+    await runInit({ cwd, configPath, logLevel, force: options.force, source });
   });
 
 const NO_CACHE_HELP =
@@ -178,7 +187,17 @@ program
       rev: string | undefined,
       options: { failOnBreaking?: boolean; format: DiffFormat; cache: boolean },
     ) => {
-      const { cwd, configPath, logLevel } = resolveGlobalOptions();
+      let globals: ReturnType<typeof resolveGlobalOptions>;
+      try {
+        globals = resolveGlobalOptions();
+      } catch (error) {
+        if (options.format !== "json") throw error;
+        reportFatalError(error);
+        console.log(formatDiffError(error instanceof Error ? error.message : String(error)));
+        process.exitCode = 1;
+        return;
+      }
+      const { cwd, configPath, logLevel } = globals;
       await runDiff({
         cwd,
         configPath,
@@ -230,8 +249,20 @@ async function runInspectTarget(target: InspectTarget, options: InspectCliOption
         "error: option '--from <package|file>' cannot be used with option '-c, --config <path>'",
       );
     }
-    // No config to discover: the snapshot stands in for it.
-    const { cwd, logLevel } = resolveCwdAndLogLevel();
+    let resolved: ReturnType<typeof resolveCwdAndLogLevel>;
+    try {
+      // No config to discover: the snapshot stands in for it.
+      resolved = resolveCwdAndLogLevel();
+    } catch (error) {
+      if (options.format !== "json") throw error;
+      reportFatalError(error);
+      process.stdout.write(
+        `${renderErrors([{ message: error instanceof Error ? error.message : String(error) }])}\n`,
+      );
+      process.exitCode = 1;
+      return;
+    }
+    const { cwd, logLevel } = resolved;
     await runInspect({ cwd, logLevel, format: options.format, target, from: options.from });
     return;
   }
@@ -239,11 +270,20 @@ async function runInspectTarget(target: InspectTarget, options: InspectCliOption
   try {
     globals = resolveGlobalOptions();
   } catch (error) {
-    if (!(error instanceof ConfigLoadError)) throw error;
-    throw new Error(
-      `${error.message}\nTo browse an installed design system instead, pass --from <package|file>.`,
-      { cause: error },
+    const wrapped =
+      error instanceof ConfigLoadError
+        ? new Error(
+            `${error.message}\nTo browse an installed design system instead, pass --from <package|file>.`,
+            { cause: error },
+          )
+        : error;
+    if (options.format !== "json") throw wrapped;
+    reportFatalError(wrapped);
+    process.stdout.write(
+      `${renderErrors([{ message: wrapped instanceof Error ? wrapped.message : String(wrapped) }])}\n`,
     );
+    process.exitCode = 1;
+    return;
   }
   const { cwd, configPath, logLevel } = globals;
   await runInspect({
@@ -293,7 +333,7 @@ inspect
     "List components, or the props of the given components (Tabs also matches Tabs.Item)",
   )
   .option("--deprecated", "Only deprecated components")
-  .option("--props <names...>", "Only these props, in full, with none of the shortening below")
+  .option("--props <names...>", "Only these props, shown in full without shortening")
   .action(
     async (
       names: string[],

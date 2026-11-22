@@ -5,7 +5,7 @@ import type { Introspected } from "../snapshot/snapshot.js";
 import type { IntrospectionWarning } from "./components.js";
 
 /** Bumped when the shape below changes. */
-const FORMAT = 7;
+const FORMAT = 8;
 
 type FileStamp = [path: string, mtimeMs: number, size: number];
 
@@ -16,6 +16,8 @@ type CacheFile = {
   files: FileStamp[];
   /** Directories of the project's own files: adding a file bumps its directory's mtime. */
   directories: FileStamp[];
+  /** Referenced doc files that did not exist when cached; creating any of them invalidates the cache. */
+  missingFiles?: string[];
   introspection: Introspected;
   warnings: IntrospectionWarning[];
 };
@@ -44,10 +46,11 @@ export function readCache(root: string, configPath: string, key: string): Cached
   try {
     const cache = JSON.parse(fs.readFileSync(cachePath(root, configPath), "utf-8")) as CacheFile;
     if (cache.format !== FORMAT || cache.key !== key) return undefined;
-    const unchanged = [...cache.files, ...cache.directories].every(([file, mtimeMs, size]) => {
-      const current = stamp(file);
-      return current?.[1] === mtimeMs && current[2] === size;
-    });
+    const unchanged =
+      [...cache.files, ...cache.directories].every(([file, mtimeMs, size]) => {
+        const current = stamp(file);
+        return current?.[1] === mtimeMs && current[2] === size;
+      }) && (cache.missingFiles ?? []).every((file) => !fs.existsSync(file));
     return unchanged
       ? {
           introspection: cache.introspection,
@@ -68,8 +71,10 @@ export function writeCache(
   result: Pick<CacheFile, "introspection" | "warnings"> & {
     files: string[];
     directories: string[];
+    missingFiles?: string[];
   },
 ): void {
+  let temporary: string | undefined;
   try {
     const files = result.files.map(stamp);
     const directories = result.directories.map(stamp);
@@ -79,6 +84,7 @@ export function writeCache(
       key,
       files: files as FileStamp[],
       directories: directories as FileStamp[],
+      ...(result.missingFiles?.length ? { missingFiles: result.missingFiles } : {}),
       introspection: result.introspection,
       warnings: result.warnings,
     };
@@ -92,10 +98,18 @@ export function writeCache(
     } catch (error) {
       if ((error as NodeJS.ErrnoException).code !== "EEXIST") throw error;
     }
-    const temporary = `${file}.${crypto.randomBytes(6).toString("hex")}.tmp`;
+    temporary = `${file}.${crypto.randomBytes(6).toString("hex")}.tmp`;
     fs.writeFileSync(temporary, JSON.stringify(cache), { flag: "wx" });
     fs.renameSync(temporary, file);
+    temporary = undefined;
   } catch {
+    if (temporary) {
+      try {
+        fs.unlinkSync(temporary);
+      } catch {
+        // Best-effort cleanup.
+      }
+    }
     // A cache that cannot be written is a cache that is missed next time.
   }
 }

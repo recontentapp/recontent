@@ -1,9 +1,16 @@
-import { defineConfig, defineReferenceTokens, defineSystemTokens, tokens } from "recontent";
+import {
+  defineConfig,
+  defineReferenceTokens,
+  defineSystemTokens,
+  defineTheme,
+  tokens,
+} from "recontent";
 import { vanillaExtract } from "recontent/plugins";
 
 const ref = defineReferenceTokens({
   color: {
     gray: tokens.colorScale({
+      50: "#fafafa",
       500: "#71717a",
       900: "#18181b",
     }),
@@ -22,6 +29,7 @@ const ref = defineReferenceTokens({
 
 const system = defineSystemTokens({
   color: {
+    background: ref.color.gray[50],
     text: ref.color.gray[900],
     muted: ref.color.gray[500],
     accent: ref.color.blue[500],
@@ -30,8 +38,16 @@ const system = defineSystemTokens({
   fontFamily: ref.fontFamily,
 });
 
+const dark = defineTheme(system, {
+  color: {
+    background: ref.color.gray[900],
+    text: ref.color.gray[50],
+  },
+});
+
 export default defineConfig({
   tokens: { ref, system },
+  themes: { dark },
   plugins: [
     vanillaExtract({
       outDir: "src/generated",

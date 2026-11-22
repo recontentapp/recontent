@@ -11,9 +11,14 @@ import {
   serializeValueCss,
   type MemberResolver,
 } from "../../serialize/values.js";
-import { getEntry, terminalEntry, themedEntry } from "../../token-model/alias.js";
+import {
+  getEntry,
+  resolveEntryValue,
+  terminalEntry,
+  themedEntry,
+} from "../../token-model/alias.js";
 import type { GeneratorContext } from "../shared/context.js";
-import { validateThemeNames } from "../shared/theme-source.js";
+import { validateIdentifierGuards } from "../shared/theme-source.js";
 import {
   escapeTemplateLiteral,
   formatTree,
@@ -107,18 +112,30 @@ function setInlineComposite(
   }
 
   const value = themed.$value as InlineValue;
+  const resolveGradient = (member: { alias?: string[]; $value: unknown }) =>
+    (member.alias
+      ? resolveEntryValue(config.registry, getEntry(config.registry, member.alias), override)
+      : member.$value) as TokenTypeMap["gradient"];
   const resolve: MemberResolver = (memberType, member) => {
     if (!member.alias) {
       return escapeTemplateLiteral(serializeValueCss(memberType, member.$value));
     }
     return `\${${resolveVariableReference(config.registry, getEntry(config.registry, member.alias), override)}}`;
   };
-  const template = serializeCompositeCss(type, value, resolve);
+  const template = serializeCompositeCss(type, value, resolve, resolveGradient);
   setTreeValue(tree, path, { value: `\`${template}\``, source: true });
 }
 
+function emptyLayerTrees(): SourceTree {
+  const tree = Object.create(null) as SourceTree;
+  tree.ref = Object.create(null) as SourceTree;
+  tree.system = Object.create(null) as SourceTree;
+  tree.components = Object.create(null) as SourceTree;
+  return tree;
+}
+
 function contractTree(config: GeneratorContext): SourceTree {
-  const tree: SourceTree = { ref: {}, system: {}, components: {} };
+  const tree = emptyLayerTrees();
   for (const entry of config.registry.values()) {
     if (isExpandedComposite(entry.$type)) {
       const type = entry.$type as "typography" | "transition";
@@ -136,7 +153,7 @@ function contractTree(config: GeneratorContext): SourceTree {
 }
 
 function valuesTree(config: GeneratorContext, themeName?: string): SourceTree {
-  const tree: SourceTree = { ref: {}, system: {}, components: {} };
+  const tree = emptyLayerTrees();
   const override = themeName ? config.themes[themeName] : undefined;
   for (const entry of config.registry.values()) {
     if (isExpandedComposite(entry.$type)) {
@@ -161,11 +178,24 @@ function valuesTree(config: GeneratorContext, themeName?: string): SourceTree {
   return tree;
 }
 
+export const VANILLA_EXTRACT_RESERVED_EXPORTS = [
+  "vars",
+  "refVars",
+  "systemVars",
+  "componentVars",
+  "themeClass",
+] as const;
+
 function generateVanillaExtractSource(
   config: GeneratorContext,
   scaleExports: readonly ScaleExport[],
 ): string {
-  validateThemeNames(Object.keys(config.themes), "vanilla-extract");
+  validateIdentifierGuards(
+    config,
+    "vanilla-extract",
+    scaleExports,
+    VANILLA_EXTRACT_RESERVED_EXPORTS,
+  );
 
   const lines = [
     'import { createTheme, createThemeContract } from "@vanilla-extract/css";',
@@ -204,12 +234,17 @@ function generateVanillaExtractSource(
 
 export type VanillaExtractPluginOptions = {
   outDir: string;
+  /** Defaults to `tokens.css.ts`. */
+  filename?: string;
 };
 
-export function generateVanillaExtractFiles(config: GeneratorContext): OutputFile[] {
+export function generateVanillaExtractFiles(
+  config: GeneratorContext,
+  options?: VanillaExtractPluginOptions,
+): OutputFile[] {
   return [
     {
-      filename: "tokens.css.ts",
+      filename: options?.filename ?? "tokens.css.ts",
       content: generateVanillaExtractSource(config, scaleExportsForConfig(config)),
     },
   ];

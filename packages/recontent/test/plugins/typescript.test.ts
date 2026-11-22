@@ -247,4 +247,16 @@ describe("scale metadata", () => {
     expect(content).not.toMatch(/\*\/\nexport type RefPlain/);
     expect(content).toMatch(/\n\nexport type RefPlain/);
   });
+
+  test("prototype property names like toString are emitted safely without mutating Object.prototype", () => {
+    const ref = defineReferenceTokens({
+      toString: { primary: tokens.color("#112233") },
+    });
+    const [file] = generate(refOnlyConfig(ref));
+    expect(file!.content).toContain('"toString"');
+    expect(file!.content).toContain("'#112233'");
+    expect("primary" in Object.prototype.toString).toBe(false);
+    assertParses(file!.content);
+    assertTypechecks(file!.content);
+  });
 });

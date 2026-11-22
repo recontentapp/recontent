@@ -20,7 +20,7 @@ export function inspect(options: InspectPluginOptions): RecontentPlugin {
     return [
       {
         filename: options.filename ?? "recontent.json",
-        content: JSON.stringify(createSnapshot(ctx, introspected), null, 2),
+        content: `${JSON.stringify(createSnapshot(ctx, introspected), null, 2)}\n`,
       },
     ];
   });

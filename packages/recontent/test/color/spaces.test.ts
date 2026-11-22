@@ -13,9 +13,13 @@ const UNIT_SPACES = [
   "a98-rgb",
   "prophoto-rgb",
   "rec2020",
-  "xyz-d65",
-  "xyz-d50",
 ] as const;
+
+const UNBOUNDED = [
+  { min: -Infinity, max: Infinity },
+  { min: -Infinity, max: Infinity },
+  { min: -Infinity, max: Infinity },
+];
 
 test.each([
   [
@@ -35,6 +39,8 @@ test.each([
     ],
   ],
   ...UNIT_SPACES.map((space) => [space, UNIT] as const),
+  ["xyz-d65", UNBOUNDED] as const,
+  ["xyz-d50", UNBOUNDED] as const,
 ] as const)("componentRanges(%s)", (space, ranges) => {
   expect(componentRanges(space)).toEqual(ranges);
 });

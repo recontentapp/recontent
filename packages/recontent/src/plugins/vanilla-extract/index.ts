@@ -1,7 +1,11 @@
 import type { RecontentPlugin } from "../types.js";
 import { outputPlugin } from "../factory.js";
 import { themeNameDiagnostics } from "../shared/theme-source.js";
-import { generateVanillaExtractFiles, type VanillaExtractPluginOptions } from "./generate.js";
+import {
+  generateVanillaExtractFiles,
+  VANILLA_EXTRACT_RESERVED_EXPORTS,
+  type VanillaExtractPluginOptions,
+} from "./generate.js";
 
 export type { VanillaExtractPluginOptions };
 
@@ -11,6 +15,6 @@ export function vanillaExtract(options: VanillaExtractPluginOptions): RecontentP
     ["tokens"],
     options,
     generateVanillaExtractFiles,
-    themeNameDiagnostics("vanilla-extract"),
+    themeNameDiagnostics("vanilla-extract", VANILLA_EXTRACT_RESERVED_EXPORTS),
   );
 }

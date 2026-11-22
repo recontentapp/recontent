@@ -18,7 +18,7 @@ const ref = defineReferenceTokens({
 });
 
 export default defineConfig({
-  tokens: { ref, system: {} },
+  tokens: { ref },
   plugins: [
     css({ outDir: "src/generated/css" }),
     typescript({ outDir: "src/generated/ts" }),
@@ -36,8 +36,8 @@ Almost every plugin takes an `outDir`. It is relative to the directory that cont
 file (not to where you ran `recontent`), and a plugin can never write outside that directory.
 
 Two plugins may not write the same file. If they do, the build stops with an error naming both
-plugins. Give each plugin its own `outDir`; in particular `typescript()` and `typescriptNative()`
-both write `tokens.ts`, so they need different directories.
+plugins. Give each plugin its own `outDir` or `filename`; in particular `typescript()` and
+`typescriptNative()` both default to `tokens.ts`.
 
 ## Order
 
@@ -55,7 +55,8 @@ Files whose content has not changed are not rewritten, so file watchers and HMR 
 
 ## Rebuilding while you work
 
-`recontent build --watch` reruns the build whenever the config, or a file it imports, changes. Run
+`recontent build --watch` reruns the build whenever the config, a file it imports, or an
+introspected component or doc file changes. Run
 it next to your dev server in a second process (this example uses the `concurrently` package):
 
 ```json [package.json]

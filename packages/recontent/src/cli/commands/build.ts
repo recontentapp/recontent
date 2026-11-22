@@ -6,7 +6,7 @@ import type { LogLevel, Logger } from "../../logger.js";
 import type ts from "typescript";
 import { createLogger } from "../../logger.js";
 import { needsIntrospection, runPlugins } from "../../plugins/runner.js";
-import { loadIntrospection, loadProject } from "../project.js";
+import { loadIntrospection, loadProject, type Components } from "../project.js";
 import { collectLocalImports } from "../config-graph.js";
 import { diagnoseRegistry } from "../../token-model/alias.js";
 import { exitWithError, reportError, summarizeDiagnostics } from "../utils/exit.js";
@@ -34,22 +34,31 @@ export async function runBuild(options: BuildOptions): Promise<void> {
 }
 
 /** What a build leaves behind for the next one in watch mode. */
-type BuildState = { program?: ts.Program; watch?: string[] };
+type BuildState = {
+  program?: ts.Program;
+  watch?: string[];
+  introspection?: Components;
+  introspectionKey?: string;
+};
 
 async function watchBuild(options: BuildOptions): Promise<void> {
   const logger = createLogger(options.logLevel);
 
   let state: BuildState = {};
 
-  const safeBuild = async () => {
+  const safeBuild = async (introspectionDirty = true) => {
     try {
-      state = await buildOnce(options, { exitOnError: false, previous: state });
+      state = await buildOnce(options, {
+        exitOnError: false,
+        previous: state,
+        introspectionDirty,
+      });
     } catch (error) {
       reportError(error, options.logLevel === "debug");
     }
   };
 
-  await safeBuild();
+  await safeBuild(true);
 
   // Directory watches (rather than a watch on the file itself) survive an
   // editor's atomic save (write temp file, rename over the original), which
@@ -80,14 +89,36 @@ async function watchBuild(options: BuildOptions): Promise<void> {
     watchers = [];
     trackedFiles = files;
 
-    const trackedNames = new Set([...files].map((file) => path.basename(file)));
-    const directories = new Set([...files].map((file) => path.dirname(file)));
+    const namesByDir = new Map<string, Set<string>>();
+    for (const file of files) {
+      const dir = path.dirname(file);
+      let names = namesByDir.get(dir);
+      if (!names) {
+        names = new Set();
+        namesByDir.set(dir, names);
+      }
+      names.add(path.basename(file));
+    }
 
-    for (const dir of directories) {
+    for (const [dir, dirNames] of namesByDir) {
       try {
         const watcher = fs.watch(dir, (_event, filename) => {
-          if (filename && !trackedNames.has(filename.toString())) return;
+          if (closed) return;
+          if (filename && !dirNames.has(filename.toString())) return;
+          if (filename) {
+            const changedPath = path.join(dir, filename.toString());
+            if (state.watch?.includes(changedPath)) {
+              introspectionDirty = true;
+            }
+          } else {
+            introspectionDirty = true;
+          }
           scheduleBuild();
+        });
+        watcher.on("error", () => {
+          watcher.close();
+          const idx = watchers.indexOf(watcher);
+          if (idx !== -1) watchers.splice(idx, 1);
         });
         watchers.push(watcher);
       } catch {
@@ -97,20 +128,27 @@ async function watchBuild(options: BuildOptions): Promise<void> {
     }
   };
 
+  let closed = false;
+  let introspectionDirty = false;
   let building = false;
   let rerunQueued = false;
 
   const triggerBuild = () => {
+    if (closed) return;
     if (building) {
       rerunQueued = true;
       return;
     }
     building = true;
-    safeBuild()
-      .then(() => rewatch())
+    const dirty = introspectionDirty;
+    introspectionDirty = false;
+    safeBuild(dirty)
+      .then(() => {
+        if (!closed) rewatch();
+      })
       .finally(() => {
         building = false;
-        if (rerunQueued) {
+        if (!closed && rerunQueued) {
           rerunQueued = false;
           triggerBuild();
         }
@@ -119,19 +157,24 @@ async function watchBuild(options: BuildOptions): Promise<void> {
 
   let debounceTimer: NodeJS.Timeout | undefined;
   const scheduleBuild = () => {
+    if (closed) return;
     clearTimeout(debounceTimer);
     debounceTimer = setTimeout(triggerBuild, 100);
   };
 
   rewatch();
   logger.info(
-    `Watching ${trackedFiles.size} file(s) for changes (starting at ${options.configPath})...`,
+    `Watching ${trackedFiles.size} file(s) for changes (starting at ${displayPath(options.cwd, options.configPath)})...`,
   );
 
   await new Promise<void>((resolve) => {
     const shutdown = () => {
+      closed = true;
       clearTimeout(debounceTimer);
       for (const watcher of watchers) watcher.close();
+      watchers = [];
+      process.off("SIGINT", shutdown);
+      process.off("SIGTERM", shutdown);
       resolve();
     };
     process.on("SIGINT", shutdown);
@@ -141,7 +184,11 @@ async function watchBuild(options: BuildOptions): Promise<void> {
 
 async function buildOnce(
   options: BuildOptions,
-  { exitOnError, previous = {} }: { exitOnError: boolean; previous?: BuildState },
+  {
+    exitOnError,
+    previous = {},
+    introspectionDirty = true,
+  }: { exitOnError: boolean; previous?: BuildState; introspectionDirty?: boolean },
 ): Promise<BuildState> {
   const project = await loadProject({ configPath: options.configPath, logLevel: options.logLevel });
   const { config, logger, root } = project;
@@ -190,18 +237,32 @@ async function buildOnce(
   let types: TypeInfo[] | undefined;
   let introspectionError: string | undefined;
   if (wantsIntrospection) {
-    try {
-      const loaded = await loadIntrospection(project, {
-        oldProgram: state.program,
-        cache: options.cache,
-      });
-      ({ components, types } = loaded.introspection);
-      for (const warning of loaded.warnings) logger.warn(warning.message);
-      warnings += loaded.warnings.length;
-      state = { program: loaded.program ?? state.program, watch: loaded.watch };
-    } catch (error) {
-      introspectionError = error instanceof Error ? error.message : String(error);
+    const introspectionKey = JSON.stringify(config.introspection);
+    if (!introspectionDirty && state.introspection && state.introspectionKey === introspectionKey) {
+      ({ components, types } = state.introspection.introspection);
+      for (const warning of state.introspection.warnings) logger.warn(warning.message);
+      warnings += state.introspection.warnings.length;
+    } else {
+      try {
+        const loaded = await loadIntrospection(project, {
+          oldProgram: state.program,
+          cache: options.cache,
+        });
+        ({ components, types } = loaded.introspection);
+        for (const warning of loaded.warnings) logger.warn(warning.message);
+        warnings += loaded.warnings.length;
+        state = {
+          program: loaded.program ?? state.program,
+          watch: loaded.watch,
+          introspection: loaded,
+          introspectionKey,
+        };
+      } catch (error) {
+        introspectionError = error instanceof Error ? error.message : String(error);
+      }
     }
+  } else {
+    state = {};
   }
 
   const result = await runPlugins(config, {
@@ -210,6 +271,12 @@ async function buildOnce(
     components,
     types,
     introspectionError,
+    skipBuildEnd: options.check,
+    write: options.check
+      ? undefined
+      : async (files) => {
+          await writeFiles(files, configDir, options.cwd, logger);
+        },
   });
 
   let errors = 0;
@@ -243,27 +310,36 @@ async function buildOnce(
     } else {
       logger.info(`${plural(result.files.length, "file")} up to date`);
     }
-  } else {
-    await writeFiles(result.files, configDir, options.cwd, logger);
   }
   if (failed > 0) abort(failed);
   return state;
 }
 
-async function writeFiles(files: EmittedFile[], root: string, cwd: string, logger: Logger) {
+async function writeFiles(
+  files: readonly EmittedFile[],
+  root: string,
+  cwd: string,
+  logger: Logger,
+) {
+  const results = await Promise.all(
+    files.map((file) =>
+      writeOutputFile(file.path, file.content, root, { writeMode: file.writeMode }).then((res) => ({
+        file,
+        res,
+      })),
+    ),
+  );
   let written = 0;
   let skipped = 0;
-  for (const file of files) {
-    const {
-      path: outputPath,
-      written: wasWritten,
-      skipReason,
-    } = await writeOutputFile(file.path, file.content, root, { writeMode: file.writeMode });
+  for (const { file, res } of results) {
+    const { path: outputPath, written: wasWritten, skipReason } = res;
     const shownPath = displayPath(cwd, outputPath);
     if (wasWritten) {
       written += 1;
       logger.info(`Wrote ${shownPath}`);
-      logger.debug(`Wrote ${file.content.length.toLocaleString()} bytes to ${shownPath}.`);
+      logger.debug(
+        `Wrote ${Buffer.byteLength(file.content, "utf8").toLocaleString()} bytes to ${shownPath}.`,
+      );
     } else {
       skipped += 1;
       logger.info(
@@ -275,12 +351,19 @@ async function writeFiles(files: EmittedFile[], root: string, cwd: string, logge
 }
 
 /** Logs each stale or missing file and returns how many there were. */
-async function checkFiles(files: EmittedFile[], root: string, cwd: string, logger: Logger) {
+async function checkFiles(
+  files: readonly EmittedFile[],
+  root: string,
+  cwd: string,
+  logger: Logger,
+) {
+  const results = await Promise.all(
+    files.map((file) =>
+      checkOutputFile(file.path, file.content, root, { writeMode: file.writeMode }),
+    ),
+  );
   let outOfDate = 0;
-  for (const file of files) {
-    const { path: outputPath, status } = await checkOutputFile(file.path, file.content, root, {
-      writeMode: file.writeMode,
-    });
+  for (const { path: outputPath, status } of results) {
     const shownPath = displayPath(cwd, outputPath);
     if (status === "fresh") {
       logger.debug(`Up to date ${shownPath}`);

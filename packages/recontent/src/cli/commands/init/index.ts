@@ -1,5 +1,6 @@
+import fs from "node:fs";
 import path from "node:path";
-import { createLogger } from "../../../logger.js";
+import { createLogger, type LogLevel } from "../../../logger.js";
 import { exitWithError } from "../../utils/exit.js";
 import { generateConfigFromDtcg } from "./dtcg-import/index.js";
 import type { DtcgImportStats } from "./dtcg-import/index.js";
@@ -10,6 +11,7 @@ import { displayPath, writeOutputFile } from "../../utils/fs.js";
 export type InitOptions = {
   cwd: string;
   configPath: string;
+  logLevel?: LogLevel;
   force?: boolean;
   /** A preset name, or DTCG sources (resolver, token files or directories) to generate the config from. */
   source: { preset: string } | { dtcg: string[] };
@@ -22,6 +24,12 @@ function describeImport({ tokens, ref, system, themes, skipped }: DtcgImportStat
 
 export async function runInit(options: InitOptions): Promise<void> {
   const { configPath, cwd, source } = options;
+  const shownPath = displayPath(cwd, configPath);
+
+  if (!options.force && fs.existsSync(configPath)) {
+    exitWithError(`${shownPath} already exists. Use --force to overwrite.`);
+    return;
+  }
 
   let text: string;
   let imported: ReturnType<typeof generateConfigFromDtcg> | undefined;
@@ -33,8 +41,6 @@ export async function runInit(options: InitOptions): Promise<void> {
     preset = getPreset(source.preset);
     text = preset.source;
   }
-
-  const shownPath = displayPath(cwd, configPath);
 
   // `writeMode: "once"` checks existsSync() before writing — not perfectly
   // atomic, but avoids inverting control flow through a catch block. `-c` is the
@@ -51,7 +57,7 @@ export async function runInit(options: InitOptions): Promise<void> {
     return;
   }
 
-  const logger = createLogger();
+  const logger = createLogger(options.logLevel);
   if (skipReason === "unchanged") {
     logger.info(`${shownPath} is already up to date`);
   } else {

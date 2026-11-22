@@ -101,6 +101,11 @@ function validateComponentRanges(
   colorSpace: ColorValue["colorSpace"],
   components: [Component, Component, Component],
 ): void {
+  if (!Array.isArray(components) || components.length !== 3) {
+    throw new Error(
+      `Invalid components for colorSpace "${colorSpace}": expected an array of 3 components.`,
+    );
+  }
   const ranges = componentRanges(colorSpace);
   components.forEach((component, index) => {
     if (component === "none") return;
@@ -149,13 +154,28 @@ function dimension(input: string): RawToken<"dimension"> & ChainableMethods<RawT
 // Family names are emitted unquoted into CSS, so only characters that can't end a declaration are allowed.
 const FONT_FAMILY_NAME_RE = /^[\p{L}\p{N} _.-]+$/u;
 
+function stripMatchingQuotes(value: string): string {
+  if (
+    value.length >= 2 &&
+    ((value.startsWith('"') && value.endsWith('"')) ||
+      (value.startsWith("'") && value.endsWith("'")))
+  ) {
+    return value.slice(1, -1);
+  }
+  return value;
+}
+
 function fontFamily(
   input: string,
 ): RawToken<"fontFamily"> & ChainableMethods<RawToken<"fontFamily">> {
   const families = input
     .split(",")
-    .map((f) => f.trim().replace(/^['"]|['"]$/g, ""))
+    .map((f) => stripMatchingQuotes(f.trim()))
     .filter(Boolean);
+
+  if (families.length === 0) {
+    throw new Error(`Invalid fontFamily: ${JSON.stringify(input)}. Expected at least one family.`);
+  }
 
   for (const family of families) {
     if (!FONT_FAMILY_NAME_RE.test(family)) {
@@ -178,6 +198,12 @@ function fontWeight(
     return createRawToken("fontWeight", { value: input });
   }
 
+  if (typeof input !== "string" || !Object.hasOwn(FONT_WEIGHT_NUMERIC, input)) {
+    throw new Error(
+      `Invalid fontWeight: ${JSON.stringify(input)}. Expected a number (1-1000) or one of ${Object.keys(FONT_WEIGHT_NUMERIC).join(", ")}.`,
+    );
+  }
+
   return createRawToken("fontWeight", { value: FONT_WEIGHT_NUMERIC[input] });
 }
 
@@ -196,8 +222,13 @@ function duration(input: string): RawToken<"duration"> & ChainableMethods<RawTok
 function cubicBezier(
   value: [number, number, number, number],
 ): RawToken<"cubicBezier"> & ChainableMethods<RawToken<"cubicBezier">> {
-  if (value.length !== 4 || !value.every(Number.isFinite)) {
+  if (!Array.isArray(value) || value.length !== 4 || !value.every(Number.isFinite)) {
     throw new Error(`Invalid cubicBezier: ${JSON.stringify(value)}. Expected four finite numbers.`);
+  }
+  if (value[0] < 0 || value[0] > 1 || value[2] < 0 || value[2] > 1) {
+    throw new Error(
+      `Invalid cubicBezier: ${JSON.stringify(value)}. Expected x1 and x2 to be between 0 and 1.`,
+    );
   }
   return createRawToken("cubicBezier", { value });
 }
@@ -224,10 +255,14 @@ function memberFromToken<T extends TokenType>(
 }
 
 function toMember<T extends TokenType>(
+  expectedType: T,
   input: unknown,
   coerce: (raw: never) => RawToken<T>,
 ): TokenMember<T> {
   if (isStampedToken(input) || isRawToken(input)) {
+    if (input.$type !== expectedType) {
+      throw new Error(`Invalid member token type "${input.$type}": expected "${expectedType}".`);
+    }
     return memberFromToken(input as RawToken<T> | StampedToken<T>);
   }
   return { $value: coerce(input as never).$value };
@@ -271,7 +306,7 @@ function strokeStyle(
   }
 
   const dashArray = input.dashArray.map((item) =>
-    toMember(item, (raw) => dimension(raw as string)),
+    toMember("dimension", item, (raw) => dimension(raw as string)),
   );
 
   const value: StrokeStyleValue = { dashArray, lineCap: input.lineCap };
@@ -292,6 +327,9 @@ type ShadowLayerInput =
 
 function toShadowLayer(input: ShadowLayerInput): ShadowLayer | TokenMember<"shadow"> {
   if (isStampedToken(input) || isRawToken(input)) {
+    if (input.$type !== "shadow") {
+      throw new Error(`Invalid shadow layer token type "${input.$type}": expected "shadow".`);
+    }
     return memberFromToken(input);
   }
 
@@ -302,11 +340,11 @@ function toShadowLayer(input: ShadowLayerInput): ShadowLayer | TokenMember<"shad
   }
 
   return {
-    color: toMember(input.color, (raw) => color(raw as ColorInput)),
-    offsetX: toMember(input.offsetX, (raw) => dimension(raw as string)),
-    offsetY: toMember(input.offsetY, (raw) => dimension(raw as string)),
-    blur: toMember(input.blur, (raw) => dimension(raw as string)),
-    spread: toMember(input.spread, (raw) => dimension(raw as string)),
+    color: toMember("color", input.color, (raw) => color(raw as ColorInput)),
+    offsetX: toMember("dimension", input.offsetX, (raw) => dimension(raw as string)),
+    offsetY: toMember("dimension", input.offsetY, (raw) => dimension(raw as string)),
+    blur: toMember("dimension", input.blur, (raw) => dimension(raw as string)),
+    spread: toMember("dimension", input.spread, (raw) => dimension(raw as string)),
     ...(input.inset !== undefined ? { inset: input.inset } : {}),
   };
 }
@@ -335,9 +373,11 @@ function border(input: BorderInput): RawToken<"border"> & ChainableMethods<RawTo
   }
 
   const value: BorderValue = {
-    color: toMember(input.color, (raw) => color(raw as ColorInput)),
-    width: toMember(input.width, (raw) => dimension(raw as string)),
-    style: toMember(input.style ?? "solid", (raw) => strokeStyle(raw as StrokeStyleInput)),
+    color: toMember("color", input.color, (raw) => color(raw as ColorInput)),
+    width: toMember("dimension", input.width, (raw) => dimension(raw as string)),
+    style: toMember("strokeStyle", input.style ?? "solid", (raw) =>
+      strokeStyle(raw as StrokeStyleInput),
+    ),
   };
   return createRawToken("border", value);
 }
@@ -359,9 +399,9 @@ function transition(
   }
 
   const value: TransitionValue = {
-    duration: toMember(input.duration, (raw) => duration(raw as string)),
-    delay: toMember(input.delay ?? "0ms", (raw) => duration(raw as string)),
-    timingFunction: toMember(input.timingFunction, (raw) =>
+    duration: toMember("duration", input.duration, (raw) => duration(raw as string)),
+    delay: toMember("duration", input.delay ?? "0ms", (raw) => duration(raw as string)),
+    timingFunction: toMember("cubicBezier", input.timingFunction, (raw) =>
       cubicBezier(raw as [number, number, number, number]),
     ),
   };
@@ -379,8 +419,12 @@ type GradientInput = {
 };
 
 const ANGLE_RE = /^-?(?:\d+\.?\d*|\.\d+)(?:deg|grad|rad|turn)$/;
+const GRADIENT_KINDS = new Set(["linear", "radial", "conic"]);
 
 function clampPosition(position: number): number {
+  if (!Number.isFinite(position)) {
+    throw new Error(`Invalid gradient stop position: ${position}. Expected a finite number.`);
+  }
   return Math.min(1, Math.max(0, position));
 }
 
@@ -388,12 +432,19 @@ function toGradientStop(
   input: GradientStopInput | RawToken<"gradient"> | StampedToken<"gradient">,
 ): { color: TokenMember<"color">; position: TokenMember<"number"> } | TokenMember<"gradient"> {
   if (isStampedToken(input) || isRawToken(input)) {
+    if (input.$type !== "gradient") {
+      throw new Error(`Invalid gradient stop token type "${input.$type}": expected "gradient".`);
+    }
     return memberFromToken(input);
   }
 
+  if (!input || input.color === undefined || input.position === undefined) {
+    throw new Error("tokens.gradient(...) requires color and position for every stop.");
+  }
+
   return {
-    color: toMember(input.color, (raw) => color(raw as ColorInput)),
-    position: toMember(input.position, (raw) => number(clampPosition(raw as number))),
+    color: toMember("color", input.color, (raw) => color(raw as ColorInput)),
+    position: toMember("number", input.position, (raw) => number(clampPosition(raw as number))),
   };
 }
 
@@ -404,6 +455,13 @@ function gradient(
     throw new Error("tokens.gradient(...) requires at least 2 stops.");
   }
 
+  const kind = input.kind ?? "linear";
+  if (!GRADIENT_KINDS.has(kind)) {
+    throw new Error(
+      `Invalid gradient kind: ${JSON.stringify(kind)}. Expected "linear", "radial", or "conic".`,
+    );
+  }
+
   const angle = input.angle ?? "180deg";
   if (!ANGLE_RE.test(angle)) {
     throw new Error(
@@ -412,7 +470,7 @@ function gradient(
   }
 
   const value: GradientValue = {
-    kind: input.kind ?? "linear",
+    kind,
     angle,
     stops: input.stops.map(toGradientStop),
   };
@@ -443,7 +501,13 @@ function lineHeightRatio(
     );
   }
   const px = (size: DimensionValue) => (size.unit === "rem" ? size.value * REM_PX : size.value);
-  return px(lineHeight) / px(fontSize);
+  const fontSizePx = px(fontSize);
+  if (fontSizePx === 0) {
+    throw new Error(
+      `Invalid lineHeight ${JSON.stringify(input)}: cannot be converted against a fontSize of 0.`,
+    );
+  }
+  return px(lineHeight) / fontSizePx;
 }
 
 function typography(
@@ -453,8 +517,8 @@ function typography(
     throw new Error("tokens.typography(...) requires fontFamily, fontSize, and fontWeight.");
   }
 
-  const fontSize = toMember(input.fontSize, (raw) => dimension(raw as string));
-  const lineHeight = toMember(input.lineHeight ?? 1.4, (raw) =>
+  const fontSize = toMember("dimension", input.fontSize, (raw) => dimension(raw as string));
+  const lineHeight = toMember("number", input.lineHeight ?? 1.4, (raw) =>
     number(
       typeof raw === "string"
         ? roundTo(lineHeightRatio(dimension(raw).$value, fontSize.$value, raw), 4)
@@ -463,19 +527,27 @@ function typography(
   );
 
   const value: TypographyValue = {
-    fontFamily: toMember(input.fontFamily, (raw) => fontFamily(raw as string)),
+    fontFamily: toMember("fontFamily", input.fontFamily, (raw) => fontFamily(raw as string)),
     fontSize,
-    fontWeight: toMember(input.fontWeight, (raw) => fontWeight(raw as number | FontWeightName)),
-    letterSpacing: toMember(input.letterSpacing ?? "0px", (raw) => dimension(raw as string)),
+    fontWeight: toMember("fontWeight", input.fontWeight, (raw) =>
+      fontWeight(raw as number | FontWeightName),
+    ),
+    letterSpacing: toMember("dimension", input.letterSpacing ?? "0px", (raw) =>
+      dimension(raw as string),
+    ),
     lineHeight,
   };
   return createRawToken("typography", value);
 }
 
+type ChainableScaleMember<T extends TokenType> =
+  | (RawToken<T> & ChainableMethods<RawToken<T>>)
+  | (StampedToken<T> & ChainableMethods<StampedToken<T>>);
+
 type ChainableScale<
   Key extends string | number,
   T extends TokenType,
-  Value extends RawToken<T> | StampedToken<T>,
+  Value extends RawToken<T> | StampedToken<T> = ChainableScaleMember<T>,
 > = TokenScale<Key, T, Value>;
 
 function createScale<
@@ -494,27 +566,36 @@ function scaleFrom<Key extends string | number, T extends TokenType, Value>(
   type: T,
   scale: Record<Key, Value>,
   factory: (input: Exclude<Value, RawToken<T> | StampedToken<T>>) => RawToken<T>,
-): ChainableScale<Key, T, RawToken<T> | StampedToken<T>> {
+): ChainableScale<Key, T, ChainableScaleMember<T>> {
   const result = Object.fromEntries(
-    (Object.entries(scale) as Array<[string, Value]>).map(([step, input]) => [
-      step,
-      isTokenLeaf(input)
-        ? (input as RawToken<T> | StampedToken<T>)
-        : factory(input as Exclude<Value, RawToken<T> | StampedToken<T>>),
-    ]),
-  ) as Record<Key, RawToken<T> | StampedToken<T>>;
+    (Object.entries(scale) as Array<[string, Value]>).map(([step, input]) => {
+      if (isTokenLeaf(input)) {
+        if (input.$type !== type) {
+          throw new Error(
+            `Invalid scale member "${step}" of type "${input.$type}": expected "${type}".`,
+          );
+        }
+        return [step, input as unknown as ChainableScaleMember<T>];
+      }
+      return [
+        step,
+        factory(input as Exclude<Value, RawToken<T> | StampedToken<T>>) as ChainableScaleMember<T>,
+      ];
+    }),
+  ) as Record<Key, ChainableScaleMember<T>>;
   return createScale(type, result);
 }
 
 /** Groups tokens under a name and lets the group carry a description, deprecation or extensions. */
 function group<T extends object>(tree: T): TokenGroup<T> {
-  Object.defineProperty(tree, "_kind", { value: "group", enumerable: false });
-  return withScaleMethods(tree) as unknown as TokenGroup<T>;
+  const copy = Object.fromEntries(Object.entries(tree)) as T;
+  Object.defineProperty(copy, "_kind", { value: "group", enumerable: false });
+  return withScaleMethods(copy) as unknown as TokenGroup<T>;
 }
 
 function colorScale<Key extends string | number>(
   scale: Record<Key, ColorInput | RawToken<"color"> | StampedToken<"color">>,
-): ChainableScale<Key, "color", RawToken<"color"> | StampedToken<"color">> {
+): ChainableScale<Key, "color"> {
   return scaleFrom("color", scale, color);
 }
 
@@ -526,7 +607,7 @@ type GenerateColorScaleInput<Key extends string | number> = {
    * The color the scale is built around. For an accent scale it is used verbatim as step 9,
    * unless it is close to the page background.
    */
-  base: ColorInput | RawToken<"color">;
+  base: ColorInput | RawToken<"color"> | StampedToken<"color">;
   /**
    * Whether the scale sits on a white page ("light") or a near-black one ("dark").
    * Defaults to "light".
@@ -536,7 +617,7 @@ type GenerateColorScaleInput<Key extends string | number> = {
    * The opaque page color the scale sits on, which step 1 follows. Defaults to `#ffffff` for
    * "light" and `#111111` for "dark". `appearance` still chooses the reference scales.
    */
-  background?: ColorInput | RawToken<"color">;
+  background?: ColorInput | RawToken<"color"> | StampedToken<"color">;
   /**
    * Generate a gray scale (backgrounds, borders and text) tinted towards `base`, instead of
    * an accent scale. Step 9 is then not pinned to `base`.
@@ -546,8 +627,14 @@ type GenerateColorScaleInput<Key extends string | number> = {
   steps?: readonly Key[];
 };
 
-function colorValueOf(input: ColorInput | RawToken<"color">): ColorValue {
-  return isRawToken(input) ? input.$value : color(input).$value;
+function colorValueOf(input: ColorInput | RawToken<"color"> | StampedToken<"color">): ColorValue {
+  if (isTokenLeaf(input)) {
+    if (input.$type !== "color") {
+      throw new Error(`Invalid color token type "${input.$type}": expected "color".`);
+    }
+    return input.$value as ColorValue;
+  }
+  return color(input).$value;
 }
 
 /**
@@ -558,7 +645,7 @@ function colorValueOf(input: ColorInput | RawToken<"color">): ColorValue {
  */
 function generateColorScale<Key extends string | number = ScaleStep>(
   input: GenerateColorScaleInput<Key>,
-): ChainableScale<Key, "color", RawToken<"color"> | StampedToken<"color">> {
+): ChainableScale<Key, "color"> {
   const steps = (input.steps ?? DEFAULT_SCALE_STEPS) as readonly Key[];
   if (steps.length !== SCALE_STEPS) {
     throw new Error(
@@ -588,6 +675,11 @@ function generateColorScale<Key extends string | number = ScaleStep>(
   }
 
   const baseValue = colorValueOf(input.base);
+  if (baseValue.alpha < 1) {
+    throw new Error(
+      `tokens.generateColorScale(...) requires an opaque base color, received alpha ${baseValue.alpha}.`,
+    );
+  }
   const { steps: generated, baseIndex } = generateScale({
     base: toOklch(baseValue.colorSpace, baseValue.components),
     baseHex: toSrgbHex(baseValue.colorSpace, baseValue.components),
@@ -596,17 +688,27 @@ function generateColorScale<Key extends string | number = ScaleStep>(
     neutral: input.neutral ?? false,
   });
 
-  const scale = {} as Record<Key, ColorInput | RawToken<"color">>;
+  const scale = Object.create(null) as Record<
+    Key,
+    ColorInput | RawToken<"color"> | StampedToken<"color">
+  >;
   steps.forEach((step, index) => {
-    if (index === baseIndex) {
-      scale[step] = input.base;
-      return;
-    }
-    const [l, c, h] = fitOklchToSrgb(generated[index]!);
-    scale[step] = {
-      colorSpace: "oklch",
-      components: [roundTo(l, 4), floorTo(c, 4), roundTo(h, 2)],
-    };
+    const value: ColorInput | RawToken<"color"> | StampedToken<"color"> =
+      index === baseIndex
+        ? input.base
+        : (() => {
+            const [l, c, h] = fitOklchToSrgb(generated[index]!);
+            return {
+              colorSpace: "oklch" as const,
+              components: [roundTo(l, 4), floorTo(c, 4), roundTo(h, 2)] as [number, number, number],
+            };
+          })();
+    Object.defineProperty(scale, step, {
+      value,
+      enumerable: true,
+      writable: true,
+      configurable: true,
+    });
   });
   return colorScale(scale);
 }
@@ -619,37 +721,43 @@ function floorTo(value: number, digits: number): number {
 
 function dimensionScale<Key extends string | number>(
   scale: Record<Key, string | RawToken<"dimension"> | StampedToken<"dimension">>,
-): ChainableScale<Key, "dimension", RawToken<"dimension"> | StampedToken<"dimension">> {
+): ChainableScale<Key, "dimension"> {
   return scaleFrom("dimension", scale, dimension);
 }
 
 function numberScale<Key extends string | number>(
   scale: Record<Key, number | RawToken<"number"> | StampedToken<"number">>,
-): ChainableScale<Key, "number", RawToken<"number"> | StampedToken<"number">> {
+): ChainableScale<Key, "number"> {
   return scaleFrom("number", scale, number);
 }
 
 function fontFamilyScale<Key extends string | number>(
   scale: Record<Key, string | RawToken<"fontFamily"> | StampedToken<"fontFamily">>,
-): ChainableScale<Key, "fontFamily", RawToken<"fontFamily"> | StampedToken<"fontFamily">> {
+): ChainableScale<Key, "fontFamily"> {
   return scaleFrom("fontFamily", scale, fontFamily);
 }
 
 function fontWeightScale<Key extends string | number>(
   scale: Record<Key, number | FontWeightName | RawToken<"fontWeight"> | StampedToken<"fontWeight">>,
-): ChainableScale<Key, "fontWeight", RawToken<"fontWeight"> | StampedToken<"fontWeight">> {
+): ChainableScale<Key, "fontWeight"> {
   return scaleFrom("fontWeight", scale, fontWeight);
 }
 
 function durationScale<Key extends string | number>(
   scale: Record<Key, string | RawToken<"duration"> | StampedToken<"duration">>,
-): ChainableScale<Key, "duration", RawToken<"duration"> | StampedToken<"duration">> {
+): ChainableScale<Key, "duration"> {
   return scaleFrom("duration", scale, duration);
+}
+
+function strokeStyleScale<Key extends string | number>(
+  scale: Record<Key, StrokeStyleInput | RawToken<"strokeStyle"> | StampedToken<"strokeStyle">>,
+): ChainableScale<Key, "strokeStyle"> {
+  return scaleFrom("strokeStyle", scale, strokeStyle);
 }
 
 function borderScale<Key extends string | number>(
   scale: Record<Key, BorderInput | RawToken<"border"> | StampedToken<"border">>,
-): ChainableScale<Key, "border", RawToken<"border"> | StampedToken<"border">> {
+): ChainableScale<Key, "border"> {
   return scaleFrom("border", scale, border);
 }
 
@@ -658,19 +766,19 @@ function cubicBezierScale<Key extends string | number>(
     Key,
     [number, number, number, number] | RawToken<"cubicBezier"> | StampedToken<"cubicBezier">
   >,
-): ChainableScale<Key, "cubicBezier", RawToken<"cubicBezier"> | StampedToken<"cubicBezier">> {
+): ChainableScale<Key, "cubicBezier"> {
   return scaleFrom("cubicBezier", scale, cubicBezier);
 }
 
 function gradientScale<Key extends string | number>(
   scale: Record<Key, GradientInput | RawToken<"gradient"> | StampedToken<"gradient">>,
-): ChainableScale<Key, "gradient", RawToken<"gradient"> | StampedToken<"gradient">> {
+): ChainableScale<Key, "gradient"> {
   return scaleFrom("gradient", scale, gradient);
 }
 
 function transitionScale<Key extends string | number>(
   scale: Record<Key, TransitionInput | RawToken<"transition"> | StampedToken<"transition">>,
-): ChainableScale<Key, "transition", RawToken<"transition"> | StampedToken<"transition">> {
+): ChainableScale<Key, "transition"> {
   return scaleFrom("transition", scale, transition);
 }
 
@@ -679,13 +787,13 @@ function shadowScale<Key extends string | number>(
     Key,
     ShadowLayerInput | ShadowLayerInput[] | RawToken<"shadow"> | StampedToken<"shadow">
   >,
-): ChainableScale<Key, "shadow", RawToken<"shadow"> | StampedToken<"shadow">> {
+): ChainableScale<Key, "shadow"> {
   return scaleFrom("shadow", scale, shadow);
 }
 
 function typographyScale<Key extends string | number>(
   scale: Record<Key, TypographyInput | RawToken<"typography"> | StampedToken<"typography">>,
-): ChainableScale<Key, "typography", RawToken<"typography"> | StampedToken<"typography">> {
+): ChainableScale<Key, "typography"> {
   return scaleFrom("typography", scale, typography);
 }
 
@@ -704,6 +812,7 @@ export const tokens = {
   fontFamilyScale,
   fontWeightScale,
   durationScale,
+  strokeStyleScale,
   borderScale,
   cubicBezierScale,
   gradientScale,

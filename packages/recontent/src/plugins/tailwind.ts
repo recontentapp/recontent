@@ -10,10 +10,10 @@ import { type TokenType } from "../token-model/values.js";
 import type { OutputFile } from "./shared/context.js";
 import { cssVarName, serializeValueCss } from "../serialize/values.js";
 import {
+  cssOptionDiagnostics,
   formatRule,
   generateCss,
   themeSelectorFor,
-  themeSelectorWarnings,
   type CssGeneratorOptions,
 } from "./css.js";
 import { outputPlugin } from "./factory.js";
@@ -336,13 +336,15 @@ function buildTailwindMapping(
   );
 
   const themeOwners = new Map<string, string[]>();
-  const typographyLeaves: { key: string; entry: TokenEntry }[] = [];
-  for (const [namespace, group] of Object.entries(options.theme ?? {}) as [
-    ThemeNamespace,
-    unknown,
-  ][]) {
-    const spec = NAMESPACES[namespace];
-    if (!spec || group === undefined) continue;
+  const textLeaves: { key: string; entry: TokenEntry; isTypography: boolean }[] = [];
+  for (const [namespace, group] of Object.entries(options.theme ?? {}) as [string, unknown][]) {
+    if (namespace === "defaults") continue;
+    const spec = NAMESPACES[namespace as ThemeNamespace];
+    if (!spec) {
+      error(`theme: unknown namespace "${namespace}".`);
+      continue;
+    }
+    if (group === undefined) continue;
     const label = `theme.${namespace}`;
     for (const leaf of collectGroup(group)) {
       const entry = resolve(leaf, label, spec.types);
@@ -375,8 +377,8 @@ function buildTailwindMapping(
         themeDecls[`${name}--font-weight`] = typographyVar(entry, "font-weight", options.prefix);
         themeDecls[fontName!] = typographyVar(entry, "font-family", options.prefix);
         themeOwners.set(fontName!, entry.path);
-        typographyLeaves.push({ key: leaf.key.join("-"), entry });
-      } else if (SHADOW_NAMESPACES.includes(namespace)) {
+        textLeaves.push({ key: leaf.key.join("-"), entry, isTypography: true });
+      } else if (SHADOW_NAMESPACES.includes(namespace as ThemeNamespace)) {
         if (isThemeOverridden(entry, registry, overriddenKeys)) {
           themeDecls[name] = `var(${cssVarName(entry.path, options.prefix)})`;
           diagnostics.push({
@@ -389,20 +391,54 @@ function buildTailwindMapping(
         }
       } else {
         themeDecls[name] = `var(${cssVarName(entry.path, options.prefix)})`;
+        if (namespace === "text") {
+          textLeaves.push({ key: leaf.key.join("-"), entry, isTypography: false });
+        }
       }
     }
   }
 
   for (const [key, token] of Object.entries(options.theme?.defaults ?? {})) {
     const spec = DEFAULTS[key as keyof typeof DEFAULTS];
-    if (!spec || token === undefined) continue;
+    if (!spec) {
+      error(`theme.defaults: unknown default "${key}".`);
+      continue;
+    }
+    if (token === undefined) continue;
     const entry = resolve({ key: [], token }, `theme.defaults.${key}`, spec.types);
     if (entry) themeDecls[spec.name] = `var(${cssVarName(entry.path, options.prefix)})`;
   }
 
+  if (Array.isArray(options.resetDefaults)) {
+    for (const namespace of options.resetDefaults) {
+      if (!(namespace in NAMESPACES)) {
+        error(`resetDefaults: unknown namespace "${String(namespace)}".`);
+      }
+    }
+  }
+
+  if (
+    options.layer !== undefined &&
+    options.layer !== false &&
+    !CSS_LAYER_NAME_RE.test(options.layer)
+  ) {
+    error(`Invalid tailwind layer "${options.layer}": expected a CSS identifier such as "theme".`);
+  }
+
+  if (Array.isArray(options.themeVariants)) {
+    for (const name of options.themeVariants) {
+      if (!(name in themes)) {
+        diagnostics.push({
+          severity: "warning",
+          message: `themeVariants: theme "${name}" is not defined in the config.`,
+        });
+      }
+    }
+  }
+
   // Tailwind's native `text-<key>` sets both the colour (`--color-<key>`) and the size (`--text-<key>`).
   const utilityNames = new Set<string>();
-  for (const { key, entry } of typographyLeaves) {
+  for (const { key, entry, isTypography } of textLeaves) {
     const name = `text-${key}`;
     if (`--color-${key}` in themeDecls) {
       error(
@@ -411,7 +447,7 @@ function buildTailwindMapping(
       );
       continue;
     }
-    if (!options.typographyUtilities) continue;
+    if (!isTypography || !options.typographyUtilities) continue;
     if (utilityNames.has(name)) {
       error(`theme.text: duplicate utility ${name}.`, entry.path);
       continue;
@@ -440,11 +476,21 @@ function buildTailwindMapping(
     });
   }
 
+  const seenVariants = new Map<string, string>();
   for (const name of selectedThemeNames(Object.keys(themes), options)) {
-    if (BUILTIN_VARIANTS.has(kebab(name))) {
+    const variant = kebab(name);
+    const previous = seenVariants.get(variant);
+    if (previous) {
+      error(
+        `themeVariants: themes "${previous}" and "${name}" both normalize to @custom-variant ${variant}; rename one or exclude it from themeVariants.`,
+      );
+      continue;
+    }
+    seenVariants.set(variant, name);
+    if (BUILTIN_VARIANTS.has(variant)) {
       diagnostics.push({
         severity: "warning",
-        message: `themeVariants: the "${name}" theme variant replaces Tailwind's built-in ${kebab(name)}: variant; rename the theme or leave it out of themeVariants.`,
+        message: `themeVariants: the "${name}" theme variant replaces Tailwind's built-in ${variant}: variant; rename the theme or leave it out of themeVariants.`,
       });
     }
   }
@@ -475,8 +521,9 @@ function resetNamespaces(options: TailwindPluginOptions): ThemeNamespace[] {
 export function generateTailwindFiles(
   config: GeneratorContext,
   options: TailwindPluginOptions,
+  precomputed?: TailwindMapping,
 ): OutputFile[] {
-  const mapping = buildTailwindMapping(config.registry, config.themes, options);
+  const mapping = precomputed ?? buildTailwindMapping(config.registry, config.themes, options);
   const firstError = mapping.diagnostics.find((diagnostic) => diagnostic.severity === "error");
   if (firstError) {
     throw new Error(
@@ -502,7 +549,7 @@ export function generateTailwindFiles(
     blocks.push(formatRule("@theme", declarations));
   }
 
-  const base = generateCss(config, cssOptions);
+  const base = generateCss(config, cssOptions).trimEnd();
   if (base) {
     const { layer = "theme" } = options;
     if (layer !== false && !CSS_LAYER_NAME_RE.test(layer)) {
@@ -524,11 +571,20 @@ export function generateTailwindFiles(
 }
 
 export function tailwind(options: TailwindPluginOptions): RecontentPlugin {
-  return {
-    ...outputPlugin("recontent:tailwind", ["tokens"], options, generateTailwindFiles),
-    validate: (ctx: PluginContext) => [
-      ...themeSelectorWarnings(options),
-      ...buildTailwindMapping(ctx.registry, ctx.themes, options).diagnostics,
-    ],
+  const cache = new WeakMap<TokenRegistry, TailwindMapping>();
+  const getMapping = (ctx: PluginContext) => {
+    let mapping = cache.get(ctx.registry);
+    if (!mapping) {
+      mapping = buildTailwindMapping(ctx.registry, ctx.themes, options);
+      cache.set(ctx.registry, mapping);
+    }
+    return mapping;
   };
+  return outputPlugin(
+    "recontent:tailwind",
+    ["tokens"],
+    options,
+    (ctx, opts) => generateTailwindFiles(ctx, opts, getMapping(ctx)),
+    (ctx: PluginContext) => [...cssOptionDiagnostics(options), ...getMapping(ctx).diagnostics],
+  );
 }

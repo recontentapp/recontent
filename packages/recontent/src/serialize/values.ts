@@ -11,6 +11,7 @@ import type {
 } from "../token-model/values.js";
 import type { TokenEntry } from "../token-model/registry.js";
 import { FONT_WEIGHT_NUMERIC } from "../token-model/values.js";
+import { roundTo } from "./native.js";
 
 function serializeColorDtcg(value: TokenTypeMap["color"]): TokenTypeMap["color"] {
   return value;
@@ -174,10 +175,49 @@ function serializeMemberDtcg<T extends TokenType>(type: T, member: TokenMember<T
 }
 
 export type MemberResolver = (type: TokenType, member: TokenMember) => string;
+export type GradientResolver = (member: TokenMember<"gradient">) => GradientValue;
+
+const GENERIC_FONT_FAMILIES = new Set([
+  "serif",
+  "sans-serif",
+  "monospace",
+  "cursive",
+  "fantasy",
+  "system-ui",
+  "ui-serif",
+  "ui-sans-serif",
+  "ui-monospace",
+  "ui-rounded",
+  "emoji",
+  "math",
+  "fangsong",
+]);
+
+const CSS_WIDE_KEYWORDS = new Set([
+  "inherit",
+  "initial",
+  "unset",
+  "revert",
+  "revert-layer",
+  "default",
+]);
+
+function formatFontFamilyCss(family: string): string {
+  const lower = family.toLowerCase();
+  if (GENERIC_FONT_FAMILIES.has(lower)) return family;
+  // Unquoted CSS <family-name> consists of <custom-ident> tokens (no dots, leading digits, or CSS-wide keywords).
+  const isUnquotedSafe =
+    !CSS_WIDE_KEYWORDS.has(lower) &&
+    family
+      .split(/\s+/)
+      .every((part) => /^[A-Za-z_\u00A0-\uFFFF][A-Za-z0-9_\u00A0-\uFFFF-]*$/.test(part));
+  return isUnquotedSafe ? family : JSON.stringify(family);
+}
 
 function flattenGradientStops(
   stops: GradientValue["stops"],
-  visited: WeakSet<GradientValue> = new WeakSet(),
+  resolveGradient?: GradientResolver,
+  visited: Set<string | GradientValue> = new Set(),
 ): Array<{ color: TokenMember<"color">; position: TokenMember<"number"> }> {
   const result: Array<{ color: TokenMember<"color">; position: TokenMember<"number"> }> = [];
   for (const stop of stops) {
@@ -185,12 +225,17 @@ function flattenGradientStops(
       result.push(stop);
       continue;
     }
-    const nested = stop.$value as GradientValue;
-    if (visited.has(nested)) {
+    const nested = resolveGradient ? resolveGradient(stop) : (stop.$value as GradientValue);
+    const visitKey = stop.alias ? stop.alias.join(".") : nested;
+    if (visited.has(visitKey)) {
       throw new Error("Circular gradient alias detected.");
     }
-    visited.add(nested);
-    result.push(...flattenGradientStops(nested.stops, visited));
+    visited.add(visitKey);
+    try {
+      result.push(...flattenGradientStops(nested.stops, resolveGradient, visited));
+    } finally {
+      visited.delete(visitKey);
+    }
   }
   return result;
 }
@@ -199,13 +244,14 @@ function resolvePositionPercent(resolve: MemberResolver, position: TokenMember<"
   if (position.alias) {
     return `calc(${resolve("number", position)} * 100%)`;
   }
-  return `${position.$value.value * 100}%`;
+  return `${roundTo(position.$value.value * 100, 4)}%`;
 }
 
 export function serializeCompositeCss(
   type: "shadow" | "border" | "gradient",
   value: TokenTypeMap["shadow"] | TokenTypeMap["border"] | TokenTypeMap["gradient"],
   resolve: MemberResolver,
+  resolveGradient?: GradientResolver,
 ): string {
   switch (type) {
     case "shadow": {
@@ -226,7 +272,7 @@ export function serializeCompositeCss(
     }
     case "gradient": {
       const gradient = value as GradientValue;
-      const stops = flattenGradientStops(gradient.stops)
+      const stops = flattenGradientStops(gradient.stops, resolveGradient)
         .map(
           (stop) =>
             `${resolve("color", stop.color)} ${resolvePositionPercent(resolve, stop.position)}`,
@@ -250,6 +296,7 @@ export function serializeValueCss<T extends TokenType>(
   type: T,
   value: TokenTypeMap[T],
   prefix?: string,
+  resolveGradient?: GradientResolver,
 ): string {
   switch (type) {
     case "color":
@@ -259,7 +306,7 @@ export function serializeValueCss<T extends TokenType>(
       return `${v.value}${v.unit}`;
     }
     case "fontFamily":
-      return (value as TokenTypeMap["fontFamily"]).value.join(", ");
+      return (value as TokenTypeMap["fontFamily"]).value.map(formatFontFamilyCss).join(", ");
     case "fontWeight":
       return String(serializeFontWeight(value as TokenTypeMap["fontWeight"]));
     case "duration": {
@@ -280,11 +327,12 @@ export function serializeValueCss<T extends TokenType>(
       const resolve: MemberResolver = (memberType, member) =>
         member.alias
           ? `var(${cssVarName(member.alias, prefix)})`
-          : serializeValueCss(memberType, member.$value);
+          : serializeValueCss(memberType, member.$value, prefix, resolveGradient);
       return serializeCompositeCss(
         type as "shadow" | "border" | "gradient",
         value as TokenTypeMap["shadow"] | TokenTypeMap["border"] | TokenTypeMap["gradient"],
         resolve,
+        resolveGradient,
       );
     }
     case "typography":
@@ -297,8 +345,13 @@ export function serializeValueCss<T extends TokenType>(
   }
 }
 
+function escapeCssIdentSegment(segment: string): string {
+  return segment.replace(/[^A-Za-z0-9_-]/g, (ch) => `\\${ch}`);
+}
+
 export function cssVarName(path: string[], prefix?: string): string {
-  return `--${prefix ? `${prefix}-` : ""}${path.join("-")}`;
+  const escaped = path.map(escapeCssIdentSegment);
+  return `--${prefix ? `${prefix}-` : ""}${escaped.join("-")}`;
 }
 
 function dtcgAliasReference(path: string[]): string {
@@ -306,6 +359,9 @@ function dtcgAliasReference(path: string[]): string {
 }
 
 export function setNested(target: Record<string, unknown>, path: string[], value: unknown): void {
+  if (path.length === 0) {
+    throw new Error("Cannot set a nested value without a path.");
+  }
   let current = target;
   for (let i = 0; i < path.length - 1; i++) {
     const segment = path[i]!;
@@ -350,7 +406,11 @@ export function entryToDtcgNode(entry: TokenEntry): Record<string, unknown> {
     Object.assign(comRecontent, { kind: gradient.kind, angle: gradient.angle });
   }
   const userComRecontent = entry.$extensions?.["com.recontent"];
-  if (userComRecontent && typeof userComRecontent === "object") {
+  if (
+    userComRecontent &&
+    typeof userComRecontent === "object" &&
+    !Array.isArray(userComRecontent)
+  ) {
     Object.assign(comRecontent, userComRecontent);
   }
 

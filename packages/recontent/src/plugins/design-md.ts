@@ -8,10 +8,13 @@ import { code, escapeText } from "../markdown.js";
 import { serializeValueCss } from "../serialize/values.js";
 import { outputPlugin } from "./factory.js";
 import { buildToken, deprecation, type DocToken } from "../snapshot/doc-token.js";
+import { numericCompare } from "../snapshot/snapshot.js";
 import { resolveEntryValue } from "../token-model/alias.js";
 
 export type DesignMdPluginOptions = {
   outDir: string;
+  /** Defaults to `DESIGN.md`. */
+  filename?: string;
   /** Document name, used in the front matter and as the heading. Defaults to "Design system". */
   title?: string;
   /** What the design system is for. Written to the front matter and the Overview. */
@@ -76,7 +79,13 @@ function componentField(entry: TokenEntry): [component: string, field: string] {
   return [component, rest.join("-") || component];
 }
 
-const yamlKey = (key: string) => (/^[A-Za-z0-9_-]+$/.test(key) ? key : JSON.stringify(key));
+const YAML_RESERVED_RE = /^(?:true|false|null|yes|no|on|off|y|n|~)$/i;
+const YAML_NUMBER_RE = /^[+-]?(?:0|[1-9]\d*)(?:\.\d+)?$/;
+
+const yamlKey = (key: string) =>
+  /^[A-Za-z0-9_-]+$/.test(key) && !YAML_RESERVED_RE.test(key) && !YAML_NUMBER_RE.test(key)
+    ? key
+    : JSON.stringify(key);
 
 /** Typography members are resolved to values: `fontWeight` and `lineHeight` are numbers in the spec. */
 function typographyValue(ctx: PluginContext, entry: TokenEntry): string {
@@ -285,8 +294,9 @@ export function generateDesignMdFiles(
 ): OutputFile[] {
   const themes = Object.keys(ctx.themes);
   const items = [...ctx.registry.values()]
-    .sort((a, b) => pathKey(a.path).localeCompare(pathKey(b.path), undefined, { numeric: true }))
-    .map((entry) => buildItem(ctx, entry, themes));
+    .map((entry) => ({ key: pathKey(entry.path), entry }))
+    .sort((a, b) => numericCompare(a.key, b.key))
+    .map(({ entry }) => buildItem(ctx, entry, themes));
   const components = ctx.components ?? [];
   const title = options.title ?? "Design system";
 
@@ -306,7 +316,7 @@ export function generateDesignMdFiles(
   const content = [frontMatter(ctx, items, options), `# ${escapeText(title)}`, ...sections].join(
     "\n\n",
   );
-  return [{ filename: "DESIGN.md", content: `${content}\n` }];
+  return [{ filename: options.filename ?? "DESIGN.md", content: `${content}\n` }];
 }
 
 export function designMD(options: DesignMdPluginOptions): RecontentPlugin {

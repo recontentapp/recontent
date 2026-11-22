@@ -1,3 +1,4 @@
+import { compositeMembers, isCompositeType } from "./composite.js";
 import { pathKey } from "./guards.js";
 import {
   type ThemeOverride,
@@ -5,6 +6,7 @@ import {
   type TokenEntry,
   type TokenRegistry,
 } from "./registry.js";
+import type { StrokeStyleValue, TokenTypeMap } from "./values.js";
 
 /** Structural subset of `PluginContext` that alias resolution needs. */
 type AliasContext = {
@@ -158,36 +160,97 @@ function aliasDiagnostic(
   return undefined;
 }
 
+function memberAliasesOf(entry: TokenEntry): string[][] {
+  const aliases: string[][] = [];
+  if (isCompositeType(entry.$type)) {
+    for (const { member } of compositeMembers(
+      entry.$type,
+      entry.$value as TokenTypeMap[typeof entry.$type],
+    )) {
+      if (member.alias) aliases.push(member.alias);
+    }
+  } else if (entry.$type === "strokeStyle") {
+    const stroke = entry.$value as StrokeStyleValue;
+    if ("dashArray" in stroke) {
+      for (const dash of stroke.dashArray) {
+        if (dash.alias) aliases.push(dash.alias);
+      }
+    }
+  }
+  return aliases;
+}
+
 export function diagnoseRegistry(
   registry: TokenRegistry,
   themes: Record<string, ThemeOverride>,
 ): TokenDiagnostic[] {
   const diagnostics: TokenDiagnostic[] = [];
 
-  function check(entry: TokenEntry, themeName?: string, override?: ThemeOverride): void {
-    try {
-      for (const _ of walkAliasChain(registry, entry, undefined, override));
-    } catch (error) {
-      const diagnostic = aliasDiagnostic(error, entry, themeName);
-      if (!diagnostic) throw error;
-      diagnostics.push(diagnostic);
+  function checkEntry(
+    entry: TokenEntry,
+    verified: Set<string>,
+    themeName?: string,
+    override?: ThemeOverride,
+  ): void {
+    const startKey = pathKey(entry.path);
+    if (verified.has(startKey)) return;
+
+    const view = themedEntry(entry, override);
+    if (view.alias) {
+      try {
+        for (const step of walkAliasChain(registry, entry, undefined, override)) {
+          if (verified.has(pathKey(step.path))) break;
+        }
+        verified.add(startKey);
+      } catch (error) {
+        const diagnostic = aliasDiagnostic(error, entry, themeName);
+        if (!diagnostic) throw error;
+        diagnostics.push(diagnostic);
+        return;
+      }
+    } else {
+      verified.add(startKey);
+    }
+
+    const memberAliases = memberAliasesOf(view);
+    for (const memberAlias of memberAliases) {
+      try {
+        const target = getEntry(registry, memberAlias);
+        const visited = new Set<string>([startKey]);
+        for (const step of walkAliasChain(registry, target, visited, override)) {
+          // Check recursive composite member cycles (e.g. shadow layers / gradient stops).
+          const stepKey = pathKey(step.path);
+          for (const nested of memberAliasesOf(step)) {
+            const nestedKey = pathKey(nested);
+            if (nestedKey === startKey || nestedKey === stepKey) {
+              throw new CircularAliasError(nestedKey);
+            }
+          }
+        }
+      } catch (error) {
+        const diagnostic = aliasDiagnostic(error, entry, themeName);
+        if (!diagnostic) throw error;
+        diagnostics.push(diagnostic);
+      }
     }
   }
 
+  const baseVerified = new Set<string>();
   for (const entry of registry.values()) {
-    if (entry.alias) check(entry);
+    checkEntry(entry, baseVerified);
   }
 
   for (const [themeName, overrides] of Object.entries(themes)) {
-    for (const [key, themed] of overrides) {
+    const themeVerified = new Set<string>();
+    for (const [key] of overrides) {
       const entry = registry.get(key);
       if (!entry) {
         diagnostics.push({
           path: key.split("."),
           message: `Theme "${themeName}" overrides unknown token "${key}"; it matches no token in the config.`,
         });
-      } else if (themed.alias) {
-        check(entry, themeName, overrides);
+      } else {
+        checkEntry(entry, themeVerified, themeName, overrides);
       }
     }
   }

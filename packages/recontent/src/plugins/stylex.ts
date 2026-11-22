@@ -21,11 +21,7 @@ import {
 } from "../token-model/composite.js";
 import { pathKey } from "../token-model/guards.js";
 import { type RecontentPlugin } from "./types.js";
-import {
-  type ThemeOverride,
-  type TokenEntry,
-  type TokenRegistry,
-} from "../token-model/registry.js";
+import { type ThemeOverride, type TokenEntry } from "../token-model/registry.js";
 import { type TokenTypeMap } from "../token-model/values.js";
 import type { OutputFile } from "./shared/context.js";
 import {
@@ -33,18 +29,18 @@ import {
   serializeValueCss,
   type MemberResolver,
 } from "../serialize/values.js";
-import {
-  CircularAliasError,
-  getEntry,
-  resolveEntryValue,
-  terminalEntry,
-} from "../token-model/alias.js";
+import { CircularAliasError, getEntry, resolveEntryValue } from "../token-model/alias.js";
 import type { GeneratorContext } from "./shared/context.js";
-import { themeNameDiagnostics, validateThemeNames } from "./shared/theme-source.js";
+import {
+  themeNameDiagnostics,
+  validateIdentifierGuards,
+  validateThemeNames,
+} from "./shared/theme-source.js";
 import { escapeString, escapeTemplateLiteral, quotedKey } from "../ts-source.js";
 import {
   capitalize,
   entryPath,
+  scaleDocComment,
   scaleExportsForConfig,
   type ScaleExport,
 } from "./shared/ts-source.js";
@@ -127,15 +123,10 @@ function derivedTemplate(reference: string): string {
   return `() => \`\${${reference}}\``;
 }
 
-function resolveVariableReference(
-  registry: TokenRegistry,
-  keys: Map<string, string>,
-  entry: TokenEntry,
-): string {
-  const current = terminalEntry(registry, entry);
-  const flat = keys.get(pathKey(current.path));
+function resolveVariableReference(keys: Map<string, string>, target: TokenEntry): string {
+  const flat = keys.get(pathKey(target.path));
   if (!flat) {
-    throw new Error(`Missing generated StyleX key for token path: ${pathKey(current.path)}`);
+    throw new Error(`Missing generated StyleX key for token path: ${pathKey(target.path)}`);
   }
   return `vars.${flat}`;
 }
@@ -237,11 +228,9 @@ function expandedVarLines(
   const base = pathKey(entry.path);
 
   if (entry.alias) {
+    // Reference the immediate alias target so theme overrides on intermediate tokens propagate.
     const target = getEntry(config.registry, entry.alias);
-    // Walk to the terminal (non-alias) entry sharing this composite's shape,
-    // so each cssProperty references that entry's own flattened member key.
-    const current = terminalEntry(config.registry, target);
-    const targetBase = pathKey(current.path);
+    const targetBase = pathKey(target.path);
     return expandedMembers(type, entry.$value as TokenTypeMap[typeof type]).map(
       ({ cssProperty }) => {
         const flat = keys.get(`${base}.${cssProperty}`)!;
@@ -260,11 +249,7 @@ function expandedVarLines(
     ({ cssProperty, type: memberType, member }) => {
       const flat = keys.get(`${base}.${cssProperty}`)!;
       if (member.alias) {
-        const reference = resolveVariableReference(
-          config.registry,
-          keys,
-          getEntry(config.registry, member.alias),
-        );
+        const reference = resolveVariableReference(keys, getEntry(config.registry, member.alias));
         return { key: flat, expression: derivedTemplate(reference) };
       }
       return {
@@ -284,7 +269,7 @@ function inlineCompositeVarLine(
   const flat = keys.get(pathKey(entry.path))!;
 
   if (entry.alias) {
-    const reference = resolveVariableReference(config.registry, keys, entry);
+    const reference = resolveVariableReference(keys, getEntry(config.registry, entry.alias));
     return { key: flat, expression: derivedTemplate(reference) };
   }
 
@@ -292,19 +277,30 @@ function inlineCompositeVarLine(
     | TokenTypeMap["shadow"]
     | TokenTypeMap["border"]
     | TokenTypeMap["gradient"];
+  const resolveGradient = (member: { alias?: string[]; $value: unknown }) =>
+    (member.alias
+      ? resolveEntryValue(config.registry, getEntry(config.registry, member.alias))
+      : member.$value) as TokenTypeMap["gradient"];
   let hasAlias = false;
-  const resolve: MemberResolver = (memberType, member) => {
+  const detectAndResolve: MemberResolver = (memberType, member) => {
+    if (!member.alias) {
+      return serializeValueCss(memberType, member.$value);
+    }
+    hasAlias = true;
+    return `\${${resolveVariableReference(keys, getEntry(config.registry, member.alias))}}`;
+  };
+  const plain = serializeCompositeCss(type, value, detectAndResolve, resolveGradient);
+
+  if (!hasAlias) {
+    return { key: flat, expression: quoteLiteral(plain) };
+  }
+  const templateResolve: MemberResolver = (memberType, member) => {
     if (!member.alias) {
       return escapeTemplateLiteral(serializeValueCss(memberType, member.$value));
     }
-    hasAlias = true;
-    return `\${${resolveVariableReference(config.registry, keys, getEntry(config.registry, member.alias))}}`;
+    return `\${${resolveVariableReference(keys, getEntry(config.registry, member.alias))}}`;
   };
-  const template = serializeCompositeCss(type, value, resolve);
-
-  if (!hasAlias) {
-    return { key: flat, expression: quoteLiteral(template) };
-  }
+  const template = serializeCompositeCss(type, value, templateResolve, resolveGradient);
   return { key: flat, expression: `() => \`${template}\`` };
 }
 
@@ -315,7 +311,7 @@ function scalarVarLine(
 ): VarLine {
   const flat = keys.get(pathKey(entry.path))!;
   if (entry.alias) {
-    const reference = resolveVariableReference(config.registry, keys, entry);
+    const reference = resolveVariableReference(keys, getEntry(config.registry, entry.alias));
     return { key: flat, expression: derivedTemplate(reference) };
   }
   return {
@@ -389,9 +385,12 @@ function themeOverrideLines(
         if (!flat) {
           throw new Error(`Missing generated StyleX key for token path: ${path}.${cssProperty}`);
         }
+        const memberValue = member.alias
+          ? resolveEntryValue(config.registry, getEntry(config.registry, member.alias), override)
+          : member.$value;
         lines.push({
           key: flat,
-          expression: quoteLiteral(serializeValueCss(memberType, member.$value)),
+          expression: quoteLiteral(serializeValueCss(memberType, memberValue as never)),
         });
       }
       continue;
@@ -403,14 +402,31 @@ function themeOverrideLines(
       if (!flat) {
         throw new Error(`Missing generated StyleX key for token path: ${path}`);
       }
-      const resolve: MemberResolver = (memberType, member) =>
-        escapeTemplateLiteral(serializeValueCss(memberType, member.$value));
-      const template = serializeCompositeCss(
+      const resolveGradient = (member: { alias?: string[]; $value: unknown }) =>
+        (member.alias
+          ? resolveEntryValue(config.registry, getEntry(config.registry, member.alias), override)
+          : member.$value) as TokenTypeMap["gradient"];
+      const resolve: MemberResolver = (memberType, member) => {
+        const memberValue = member.alias
+          ? resolveEntryValue(config.registry, getEntry(config.registry, member.alias), override)
+          : member.$value;
+        if (memberType === "shadow") {
+          return serializeCompositeCss(
+            "shadow",
+            memberValue as TokenTypeMap["shadow"],
+            resolve,
+            resolveGradient,
+          );
+        }
+        return serializeValueCss(memberType, memberValue as never);
+      };
+      const literal = serializeCompositeCss(
         type,
         value as TokenTypeMap["shadow"] | TokenTypeMap["border"] | TokenTypeMap["gradient"],
         resolve,
+        resolveGradient,
       );
-      lines.push({ key: flat, expression: quoteLiteral(template) });
+      lines.push({ key: flat, expression: quoteLiteral(literal) });
       continue;
     }
 
@@ -463,7 +479,8 @@ function generateThemesSource(config: GeneratorContext, keys: Map<string, string
  */
 function generateScaleSource(keys: Map<string, string>, scale: ScaleExport): string {
   const type = scale.metadata.keys.map(quotedKey).join(" | ");
-  const typeDeclaration = `export type ${scale.typeName} = ${type};`;
+  const doc = scaleDocComment(scale.metadata);
+  const typeDeclaration = `${doc}export type ${scale.typeName} = ${type};`;
 
   if (isExpandedComposite(scale.metadata.type)) {
     return typeDeclaration;
@@ -478,12 +495,17 @@ function generateScaleSource(keys: Map<string, string>, scale: ScaleExport): str
     return `  ${quotedKey(key)}: vars.${flat},`;
   });
 
-  return `${typeDeclaration}\n\nexport const ${scale.exportName} = {\n${entries.join("\n")}\n} as const;`;
+  return `${typeDeclaration}\n\n${doc}export const ${scale.exportName} = {\n${entries.join("\n")}\n} as const;`;
 }
 
 function generateScalesSource(config: GeneratorContext, keys: Map<string, string>): string {
   const scaleExports = scaleExportsForConfig(config);
-  const lines = ['import { vars } from "./tokens.stylex.js";', ""];
+  validateIdentifierGuards(config, "stylex", scaleExports);
+  if (scaleExports.length === 0) {
+    return "export {};\n";
+  }
+  const needsVars = scaleExports.some((scale) => !isExpandedComposite(scale.metadata.type));
+  const lines = needsVars ? ['import { vars } from "./tokens.stylex.js";', ""] : [];
   for (const scale of scaleExports) {
     lines.push(generateScaleSource(keys, scale), "");
   }

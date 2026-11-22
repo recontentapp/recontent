@@ -1,7 +1,8 @@
-import { isRawToken, isStampedToken, isTokenScale } from "../token-model/guards.js";
+import { isRawToken, isStampedToken, isTokenGroup, isTokenScale } from "../token-model/guards.js";
 import { type TokenDiagnostic } from "../token-model/registry.js";
 import { type TokenLayer } from "../token-model/model.js";
 import { isNumericKey } from "../ts-source.js";
+import { assertWithinMaxDepth } from "./define.js";
 
 function looksLikeCompositeObject(value: Record<string, unknown>): string | null {
   if ("layers" in value || "offsetX" in value || "blur" in value) {
@@ -25,6 +26,15 @@ function looksLikeCompositeObject(value: Record<string, unknown>): string | null
   return null;
 }
 
+function containsTokenOrGroupValue(node: Record<string, unknown>): boolean {
+  for (const value of Object.values(node)) {
+    if (isRawToken(value) || isStampedToken(value) || isTokenScale(value) || isTokenGroup(value)) {
+      return true;
+    }
+  }
+  return false;
+}
+
 function tokenFactoryForValue(value: unknown): string {
   if (typeof value === "object" && value !== null && !Array.isArray(value)) {
     const composite = looksLikeCompositeObject(value as Record<string, unknown>);
@@ -45,12 +55,16 @@ function tokenFactoryForValue(value: unknown): string {
     return "tokens.dimension(...)";
   }
 
+  if (typeof value === "string" && /^-?\d*\.?\d+(?:ms|s)$/.test(value.trim())) {
+    return "tokens.duration(...)";
+  }
+
   if (typeof value === "number") {
     return "tokens.number(...)";
   }
 
-  if (Array.isArray(value)) {
-    return "tokens.fontFamily(...)";
+  if (Array.isArray(value) && value.length === 4 && value.every((v) => typeof v === "number")) {
+    return "tokens.cubicBezier(...)";
   }
 
   return "the appropriate tokens.* helper";
@@ -87,18 +101,10 @@ function checkNameCollisions(
 
   for (const [, keys] of seenByLowercase) {
     if (keys.length < 2) continue;
-    const uniqueKeys = [...new Set(keys)];
-    if (uniqueKeys.length === 1) {
-      diagnostics.push({
-        path: [...path, uniqueKeys[0]!],
-        message: `Token/group name collision at "${[...path, uniqueKeys[0]!].join(".")}": defined more than once.`,
-      });
-    } else {
-      diagnostics.push({
-        path: [...path, uniqueKeys[0]!],
-        message: `Token/group names differing only by case at "${path.join(".")}": ${uniqueKeys.join(", ")}.`,
-      });
-    }
+    diagnostics.push({
+      path: [...path, keys[0]!],
+      message: `Token/group names differing only by case at "${path.join(".")}": ${keys.join(", ")}.`,
+    });
   }
 }
 
@@ -107,7 +113,10 @@ function walk(
   path: string[],
   diagnostics: TokenDiagnostic[],
   inScale = false,
+  depth = 0,
 ): void {
+  assertWithinMaxDepth(depth, path);
+
   if (isRawToken(node) || isStampedToken(node)) {
     return;
   }
@@ -115,26 +124,29 @@ function walk(
   if (isTokenScale(node)) {
     checkNameCollisions(node, path, diagnostics);
     for (const [key, value] of Object.entries(node)) {
-      walk(value, [...path, key], diagnostics, true);
+      walk(value, [...path, key], diagnostics, true, depth + 1);
     }
     return;
   }
 
   if (typeof node === "object" && node !== null && !Array.isArray(node)) {
-    if ("colorSpace" in node || "components" in node) {
-      diagnostics.push(diagnostic(path, node, inScale));
-      return;
+    const record = node as Record<string, unknown>;
+    if (!isTokenGroup(node) && !containsTokenOrGroupValue(record)) {
+      if ("colorSpace" in record || "components" in record) {
+        diagnostics.push(diagnostic(path, record, inScale));
+        return;
+      }
+
+      if (looksLikeCompositeObject(record)) {
+        diagnostics.push(diagnostic(path, record, inScale));
+        return;
+      }
     }
 
-    if (looksLikeCompositeObject(node as Record<string, unknown>)) {
-      diagnostics.push(diagnostic(path, node, inScale));
-      return;
-    }
-
-    checkNameCollisions(node as Record<string, unknown>, path, diagnostics);
-    const childInScale = inScale || looksLikeScaleObject(node as Record<string, unknown>);
-    for (const [key, value] of Object.entries(node)) {
-      walk(value, [...path, key], diagnostics, childInScale);
+    checkNameCollisions(record, path, diagnostics);
+    const childInScale = inScale || looksLikeScaleObject(record);
+    for (const [key, value] of Object.entries(record)) {
+      walk(value, [...path, key], diagnostics, childInScale, depth + 1);
     }
     return;
   }

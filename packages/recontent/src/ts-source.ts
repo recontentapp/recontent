@@ -28,7 +28,8 @@ export function isNumericKey(key: string): boolean {
 }
 
 export function quotedKey(key: string): string {
-  return isNumericKey(key) ? key : JSON.stringify(key);
+  // Negative keys like "-1" are invalid unquoted JS/TS object property names.
+  return /^(?:0|[1-9]\d*)(?:\.\d+)?$/.test(key) ? key : JSON.stringify(key);
 }
 
 export function propertyAccess(root: string, path: readonly string[]): string {
@@ -50,7 +51,7 @@ export function setTreeValue(
 ): void {
   let current = tree;
   for (const segment of path.slice(0, -1)) {
-    const child = current[segment];
+    const child = Object.hasOwn(current, segment) ? current[segment] : undefined;
     if (!child || isSourceValue(child)) {
       current[segment] = Object.create(null) as SourceTree;
     }

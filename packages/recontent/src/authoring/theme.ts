@@ -1,7 +1,14 @@
 import { isRawToken, isStampedToken, pathKey } from "../token-model/guards.js";
-import type { RawToken, StampedToken, TokenGroupKey, TokenScale } from "../token-model/model.js";
+import type {
+  RawToken,
+  StampedToken,
+  TokenGroup,
+  TokenGroupKey,
+  TokenScale,
+} from "../token-model/model.js";
 import type { ThemeOverride } from "../token-model/registry.js";
 import type { TokenType } from "../token-model/values.js";
+import { assertWithinMaxDepth } from "./define.js";
 
 type TokenTree = Record<string, unknown>;
 
@@ -16,9 +23,13 @@ type ThemeInput<T> =
     ? TokenScale<Key, Type, RawToken<Type> | StampedToken<Type>>
     : T extends RawToken<infer Type> | StampedToken<infer Type, infer _Layer>
       ? RawToken<Type> | StampedToken<Type>
-      : T extends object
-        ? { [Key in keyof T]?: ThemeInput<T[Key]> }
-        : never;
+      : T extends { readonly _kind: "group" }
+        ?
+            | { [Key in Exclude<keyof T, TokenGroupKey>]?: ThemeInput<T[Key]> }
+            | TokenGroup<{ [Key in Exclude<keyof T, TokenGroupKey>]?: ThemeInput<T[Key]> }>
+        : T extends object
+          ? { [Key in keyof T]?: ThemeInput<T[Key]> }
+          : never;
 
 type SameKeys<Left, Right> = [Left] extends [Right]
   ? [Right] extends [Left]
@@ -52,8 +63,10 @@ type ValidateThemeInput<Template, Override> =
 function collectTokenPaths(
   node: unknown,
   relativePath: string[] = [],
+  paths: Map<string, { path: string[]; type: TokenType }> = new Map(),
+  depth = 0,
 ): Map<string, { path: string[]; type: TokenType }> {
-  const paths = new Map<string, { path: string[]; type: TokenType }>();
+  assertWithinMaxDepth(depth, relativePath);
 
   if (isRawToken(node) || isStampedToken(node)) {
     paths.set(pathKey(relativePath), {
@@ -68,9 +81,7 @@ function collectTokenPaths(
   }
 
   for (const [key, value] of Object.entries(node)) {
-    for (const [p, token] of collectTokenPaths(value, [...relativePath, key])) {
-      paths.set(p, token);
-    }
+    collectTokenPaths(value, [...relativePath, key], paths, depth + 1);
   }
 
   return paths;
@@ -81,12 +92,20 @@ function collectOverrides(
   relativePath: string[],
   validPaths: Map<string, { path: string[]; type: TokenType }>,
   overrides: ThemeOverride,
+  depth = 0,
 ): void {
+  assertWithinMaxDepth(depth, relativePath);
+
   if (isRawToken(node) || isStampedToken(node)) {
     const key = pathKey(relativePath);
     const target = validPaths.get(key);
     if (!target) {
       throw new Error(`Theme override at "${key}" does not match an existing token path.`);
+    }
+    if (node.$type !== target.type) {
+      throw new Error(
+        `Theme override at "${key}" has type "${node.$type}", expected "${target.type}".`,
+      );
     }
     overrides.set(
       pathKey(target.path),
@@ -95,12 +114,19 @@ function collectOverrides(
     return;
   }
 
-  if (typeof node !== "object" || node === null || Array.isArray(node)) {
+  if (node === undefined) {
     return;
   }
 
+  if (typeof node !== "object" || node === null || Array.isArray(node)) {
+    const key = pathKey(relativePath);
+    throw new Error(
+      `Invalid theme override at "${key}": expected a token from tokens.* or an existing stamped token.`,
+    );
+  }
+
   for (const [key, value] of Object.entries(node)) {
-    collectOverrides(value, [...relativePath, key], validPaths, overrides);
+    collectOverrides(value, [...relativePath, key], validPaths, overrides, depth + 1);
   }
 }
 

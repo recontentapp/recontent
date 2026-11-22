@@ -135,14 +135,14 @@ function generateDtcgFiles(ctx: GeneratorContext, _options: DtcgPluginOptions): 
   const files: OutputFile[] = [
     {
       filename: "tokens.tokens.json",
-      content: JSON.stringify(generateDtcg(ctx), null, 2),
+      content: `${JSON.stringify(generateDtcg(ctx), null, 2)}\n`,
     },
   ];
 
   for (const themeName of Object.keys(ctx.themes).sort()) {
     files.push({
       filename: `${themeName}.tokens.json`,
-      content: JSON.stringify(generateDtcgThemed(ctx, themeName), null, 2),
+      content: `${JSON.stringify(generateDtcgThemed(ctx, themeName), null, 2)}\n`,
     });
   }
 
@@ -172,9 +172,9 @@ function emDimensionWarnings(ctx: PluginContext): PluginDiagnostic[] {
   const sources = [
     ...[...ctx.registry.values()].map((entry) => ({ ...entry, where: "" })),
     ...Object.entries(ctx.themes).flatMap(([theme, override]) =>
-      [...override].flatMap(([key, value]) => {
+      [...override.keys()].flatMap((key) => {
         const entry = ctx.registry.get(key);
-        return entry ? [{ ...entry, ...value, where: ` in theme "${theme}"` }] : [];
+        return entry ? [{ ...themedEntry(entry, override), where: ` in theme "${theme}"` }] : [];
       }),
     ),
   ];
@@ -189,20 +189,34 @@ function emDimensionWarnings(ctx: PluginContext): PluginDiagnostic[] {
     );
 }
 
+function themeFileDiagnostics(ctx: PluginContext): PluginDiagnostic[] {
+  const diagnostics: PluginDiagnostic[] = [];
+  const seen = new Map<string, string>();
+  for (const name of Object.keys(ctx.themes)) {
+    const lower = name.toLowerCase();
+    if (lower === "tokens") {
+      diagnostics.push({
+        severity: "error",
+        message: `Theme "${name}" would write ${name}.tokens.json, colliding with tokens.tokens.json (the base tokens); rename the theme.`,
+      });
+      continue;
+    }
+    const previous = seen.get(lower);
+    if (previous) {
+      diagnostics.push({
+        severity: "error",
+        message: `Themes "${previous}" and "${name}" differ only by case and would collide on case-insensitive filesystems; rename one.`,
+      });
+    } else {
+      seen.set(lower, name);
+    }
+  }
+  return diagnostics;
+}
+
 export function dtcg(options: DtcgPluginOptions): RecontentPlugin {
-  return {
-    ...outputPlugin("recontent:dtcg", ["tokens"], options, generateDtcgFiles),
-    validate: (ctx) => [
-      // The base tokens are `tokens.tokens.json`, which a theme named "tokens" would also claim.
-      ...("tokens" in ctx.themes
-        ? [
-            {
-              severity: "error" as const,
-              message: `Theme "tokens" would write tokens.tokens.json, the file of the base tokens; rename the theme.`,
-            },
-          ]
-        : []),
-      ...emDimensionWarnings(ctx),
-    ],
-  };
+  return outputPlugin("recontent:dtcg", ["tokens"], options, generateDtcgFiles, (ctx) => [
+    ...themeFileDiagnostics(ctx),
+    ...emDimensionWarnings(ctx),
+  ]);
 }

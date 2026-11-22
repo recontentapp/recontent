@@ -5,7 +5,7 @@ import type { GeneratorContext } from "../shared/context.js";
 import type { DocToken } from "../../snapshot/doc-token.js";
 import type { DocGroup, DocsModel } from "./model.js";
 import { highlight } from "./highlight.js";
-import { renderUsage } from "./usage.js";
+import { isSafeHref, renderUsage } from "./usage.js";
 import type { Story } from "./storybook.js";
 
 const LAYER_TITLES = { ref: "Reference", system: "System", components: "Components" } as const;
@@ -25,7 +25,7 @@ function slug(value: string): string {
 /** The `components` token layer must not collide with the Components view. */
 const layerKey = (layer: keyof typeof LAYER_TITLES) =>
   layer === "components" ? "layer-components" : layer;
-const tokenId = (path: string) => `t-${path}`;
+const tokenId = (path: string) => `t-${encodeURIComponent(path)}`;
 const groupId = (layer: string, path: string) => `g-${layer}-${slug(path)}`;
 
 function previewHtml(token: DocToken): string {
@@ -243,6 +243,7 @@ const examplesId = (component: ComponentInfo) => `${componentId(component.name)}
 function storiesHtml(stories: Story[] | undefined, url: string | undefined): string {
   if (!stories?.length || !url) return "";
   const base = url.replace(/\/+$/, "");
+  if (!isSafeHref(base)) return "";
   const tabs = stories
     .map(
       ({ name }, index) =>
@@ -253,7 +254,7 @@ function storiesHtml(stories: Story[] | undefined, url: string | undefined): str
     .map(({ id, name }, index) => {
       const src = `${base}/iframe.html?id=${encodeURIComponent(id)}&viewMode=story`;
       const open = `${base}/?path=/story/${encodeURIComponent(id)}`;
-      return `<div class="ex-panel" role="tabpanel" data-ex-panel="${index}"${index === 0 ? "" : " hidden"}><iframe class="story-frame" src="${escapeHtml(src)}" title="${escapeHtml(name)}" loading="lazy"></iframe><a class="story-open" href="${escapeHtml(open)}" target="_blank" rel="noopener">Open in Storybook ↗</a></div>`;
+      return `<div class="ex-panel" role="tabpanel" data-ex-panel="${index}"${index === 0 ? "" : " hidden"}><iframe class="story-frame" src="${escapeHtml(src)}" title="${escapeHtml(name)}" loading="lazy"></iframe><a class="story-open" href="${escapeHtml(open)}" target="_blank" rel="noopener noreferrer">Open in Storybook ↗</a></div>`;
     })
     .join("\n  ");
   return `<div class="comp-section tabbed">
@@ -279,13 +280,14 @@ function statusBadgeHtml(
 /** The source code link (when `gitBaseUrl` is set), then the `@link` URLs. */
 function linkTags(component: ComponentInfo, gitBaseUrl: string | undefined): string[] {
   const links: string[] = [];
-  if (gitBaseUrl) {
+  if (gitBaseUrl && isSafeHref(gitBaseUrl)) {
     const href = `${gitBaseUrl.replace(/\/+$/, "")}/${encodeURI(component.sourceFilePath)}#L${component.line}`;
     links.push(
       `<a class="tag" href="${escapeHtml(href)}" target="_blank" rel="noopener noreferrer">Source code ↗</a>`,
     );
   }
   for (const { title, url } of component.externalLinks ?? []) {
+    if (!isSafeHref(url)) continue;
     links.push(
       `<a class="tag" href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(title ?? url)} ↗</a>`,
     );
@@ -860,7 +862,7 @@ const SCRIPT = `
   var RECENT_KEY = "recontent-docs-recent:" + location.pathname;
   var LABELS = { recent: "Recent", component: "Components", token: "Tokens" };
   var index = [];
-  var byId = {};
+  var byId = Object.create(null);
   document.querySelectorAll("[data-search]").forEach(function (el) {
     var item = {
       el: el,
@@ -908,7 +910,7 @@ const SCRIPT = `
   function search(query) {
     var q = query.trim().toLowerCase();
     var out = [];
-    var seen = {};
+    var seen = Object.create(null);
     if (!q) {
       loadRecent().forEach(function (id) {
         if (!byId[id]) return;
@@ -1159,6 +1161,7 @@ ${model.components.map((c) => componentHtml(c, gitBaseUrl, stories.get(c.name), 
 </div>`
     : "";
 
+  const safeColor = color && /^[^;{}<>\\\r\n]+$/.test(color.trim()) ? color.trim() : undefined;
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -1166,7 +1169,7 @@ ${model.components.map((c) => componentHtml(c, gitBaseUrl, stories.get(c.name), 
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>${title}</title>
 <script>${MODE_INIT}</script>
-<style>${STYLES}</style>${color ? `\n<style>:root, :root[data-mode="dark"] { --hig-accent: ${color.replace(/<\/(style)/gi, "<\\/$1")}; }</style>` : ""}
+<style>${STYLES}</style>${safeColor ? `\n<style>:root, :root[data-mode="dark"] { --hig-accent: ${safeColor}; }</style>` : ""}
 <style>
 ${tokenCss(ctx)}
 </style>

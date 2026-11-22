@@ -17,6 +17,15 @@ function resolveOutputPath(filePath: string, baseDir: string): string {
  * are rejected, and a file that already holds `content` is left untouched so
  * file watchers (HMR) don't fire for unchanged output.
  */
+async function readIfExists(filePath: string): Promise<string | undefined> {
+  try {
+    return await readFile(filePath, "utf8");
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === "ENOENT") return undefined;
+    throw error;
+  }
+}
+
 export async function writeOutputFile(
   filePath: string,
   content: string,
@@ -25,7 +34,7 @@ export async function writeOutputFile(
 ): Promise<{ path: string; written: boolean; skipReason?: "exists" | "unchanged" }> {
   const resolved = resolveOutputPath(filePath, baseDir);
 
-  const existing = await readFile(resolved, "utf8").catch(() => undefined);
+  const existing = await readIfExists(resolved);
   if (existing !== undefined && (options?.writeMode === "once" || existing === content)) {
     return {
       path: resolved,
@@ -51,7 +60,7 @@ export async function checkOutputFile(
   options?: { writeMode?: "always" | "once" },
 ): Promise<{ path: string; status: "fresh" | "stale" | "missing" }> {
   const resolved = resolveOutputPath(filePath, baseDir);
-  const existing = await readFile(resolved, "utf8").catch(() => undefined);
+  const existing = await readIfExists(resolved);
   if (existing === undefined) return { path: resolved, status: "missing" };
   const fresh = options?.writeMode === "once" || existing === content;
   return { path: resolved, status: fresh ? "fresh" : "stale" };

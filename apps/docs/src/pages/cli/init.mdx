@@ -57,7 +57,8 @@ How the tokens are mapped:
 - A missing `$type` is inferred from the value where possible, with a warning.
 - In a resolver, the default context of each modifier becomes the base tokens, and every other
   context becomes a theme, named after the context (or `<modifier>-<context>` if there are several
-  modifiers). A theme contains literal overrides for the tokens it changes.
+  modifiers). Plain-alias overrides reference the `ref` token they collapse to; other overrides are
+  written as literals.
 
 Anything Recontent cannot represent is skipped, and the command prints a warning for each:
 unsupported types (such as `string`), colors that are not hex strings or one of the supported

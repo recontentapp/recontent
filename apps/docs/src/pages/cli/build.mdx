@@ -52,17 +52,17 @@ trivially, since there is nothing to compare.
 Each problem is printed once, followed by a summary, and the exit code is `1`:
 
 ```text
-error: StyleX key collision: token paths "ref.a.bC" and "ref.aB.c" both flatten to "refABC". Rename one of these tokens to avoid an ambiguous generated key.
-error: build failed: 1 error, 0 warnings
+error: [recontent:stylex] generate failed: StyleX key collision: token paths "ref.a.bC" and "ref.aB.c" both flatten to "refABC". Rename one of these tokens to avoid an ambiguous generated key.
 ```
 
 Warnings do not fail the build.
 
 ## Watch mode
 
-`--watch` builds once, then waits. It watches the directories of the config and of every local file
-it imports, and rebuilds shortly after a change (changes are debounced, and a change during a build
-queues another one). The set of watched files is refreshed after each build.
+`--watch` builds once, then waits. It watches the directories of the config, every local file
+it imports, and introspected component and doc files, and rebuilds shortly after a change (changes
+are debounced, and a change during a build queues another one). The set of watched files is
+refreshed after each build.
 
 A failing rebuild prints its error and keeps watching, so you can fix the config and save again.
 Stop with `Ctrl+C`.
@@ -80,8 +80,8 @@ committed without rerunning `recontent build`. It cannot be combined with `--wat
   check the same way.
 
 ```text
-Stale src/generated/tokens.css
-Missing DESIGN.md
+error: Stale src/generated/tokens.css
+error: Missing DESIGN.md
 error: check failed: 2 of 7 files out of date; run `recontent build`
 ```
 

@@ -11,7 +11,7 @@ Prints what `recontent.config.ts` defines: its tokens, and its components and th
 ```bash
 recontent inspect [--format <format>] [--from <package|file>] [--no-cache]
 recontent inspect tokens [path...] [--type <type>] [--theme <theme>] [--deprecated] [--format <format>]
-recontent inspect components [name...] [--deprecated] [--format <format>] [--no-cache]
+recontent inspect components [name...] [--props <names...>] [--deprecated] [--format <format>] [--no-cache]
 recontent inspect types [name...] [--deprecated] [--format <format>] [--no-cache]
 recontent inspect search <query...> [--format <format>] [--no-cache]
 ```
@@ -60,7 +60,7 @@ row naming where it comes from.
 `components` and `types` take `--deprecated` too. A filter that matches nothing (a valid type no token has,
 `--deprecated` with nothing deprecated) prints an empty result and exits `0`.
 
-`--no-cache` (for `inspect`, `inspect components` and `inspect types`) neither reads nor writes the
+`--no-cache` (for `inspect`, `inspect components`, `inspect types` and `inspect search`) neither reads nor writes the
 [introspection cache](/config#cache).
 
 A token is printed with its path, type, value, CSS variable and notes (alias, description,
@@ -91,7 +91,7 @@ query, and an item matches when **any** query does.
   deprecation text and every value, in the default and in each theme.
 - **Components** by name, category, description, usage notes, deprecation text, and the name and description
   of their own props.
-- **Types** by id, description, usage notes, the name and description of their members, and their literal values.
+- **Types** by id, description, usage notes, deprecation text, the name and description of their members, and their literal values.
 
 Matches in a name or path come first, the others follow in their usual order. Markdown says what matched
 in a component or type whose name did not (`· matched in usage, prop size`), and JSON adds `matchedIn` to
@@ -131,8 +131,7 @@ summary, so `recontent inspect tokens --format json` is every token.
 | `inspect tokens`     | `{ schemaVersion, kind: "tokens", tokens }`, each token with `layer`, `path`, `name`, `type`, `alias?`, `description?`, `deprecated?`, `cssVar` and `values` (`default` plus the themes that differ)               |
 | `inspect components` | `{ schemaVersion, kind: "components", components, types }`, each component as described in the [plugin API](/plugin-api#componentinfo), and `types` the [types](/plugin-api#typeinfo) they reference, transitively |
 | `inspect types`      | `{ schemaVersion, kind: "types", types }`, the selected types and, transitively, the types they reference                                                                                                          |
-
-| `inspect search` | `{ schemaVersion, kind: "search", queries, tokens, components, types, suggestions? }`, each result in full detail plus `matchedIn`; `suggestions` only when nothing matched |
+| `inspect search`     | `{ schemaVersion, kind: "search", queries, tokens, components, types, suggestions? }`, each result in full detail plus `matchedIn`; `suggestions` only when nothing matched                                        |
 
 `schemaVersion` is `"1"` and only changes with a breaking change to these documents.
 

@@ -18,8 +18,14 @@
   "type": "module",
   "types": "./dist/index.d.mts",
   "exports": {
-    ".": "./dist/index.mjs",
-    "./plugins": "./dist/plugins/index.mjs"
+    ".": {
+      "types": "./dist/index.d.mts",
+      "default": "./dist/index.mjs"
+    },
+    "./plugins": {
+      "types": "./dist/plugins/index.d.mts",
+      "default": "./dist/plugins/index.mjs"
+    }
   },
   "scripts": {
     "build": "tsdown src/index.ts src/plugins/index.ts src/cli/bin.ts src/cli/main.ts",

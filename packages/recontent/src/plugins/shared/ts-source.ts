@@ -50,7 +50,7 @@ export function scaleExportsForConfig(config: GeneratorContext): ScaleExport[] {
   }));
 }
 
-function scaleDocComment(scale: TokenScaleMetadata): string {
+export function scaleDocComment(scale: TokenScaleMetadata): string {
   const lines: string[] = [];
   if (scale.$description !== undefined) {
     lines.push(...scale.$description.split(/\r?\n/));
@@ -74,11 +74,15 @@ export function generateScaleExports(scale: ScaleExport, root = "vars"): string 
 }
 
 /** The theme source `body` followed by the scale exports and the `themes` map, the same for every TypeScript target. */
-export function generateThemeModule(config: GeneratorContext, body: string): string {
+export function generateThemeModule(
+  config: GeneratorContext,
+  body: string,
+  scaleExports = scaleExportsForConfig(config),
+): string {
   const themeConstNames = ["theme", ...Object.keys(config.themes).sort()];
   const lines = [
     body,
-    ...scaleExportsForConfig(config).map((scale) => `${generateScaleExports(scale, "theme")}\n`),
+    ...scaleExports.map((scale) => `${generateScaleExports(scale, "theme")}\n`),
     `export const themes = { ${themeConstNames.join(", ")} } as const;`,
     "export type ThemeName = keyof typeof themes;",
     "export type Theme = (typeof themes)[ThemeName];",

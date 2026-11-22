@@ -1,14 +1,18 @@
 import { expandedMembers, isExpandedComposite } from "../token-model/composite.js";
 import { type PluginDiagnostic, type RecontentPlugin } from "./types.js";
-import { type TokenEntry, type TokenRegistry } from "../token-model/registry.js";
+import {
+  type ThemeOverride,
+  type TokenEntry,
+  type TokenRegistry,
+} from "../token-model/registry.js";
 import { type TokenLayer } from "../token-model/model.js";
-import { type TokenTypeMap } from "../token-model/values.js";
+import { type GradientValue, type TokenTypeMap } from "../token-model/values.js";
 import type { OutputFile } from "./shared/context.js";
-import { cssVarName, serializeValueCss } from "../serialize/values.js";
+import { cssVarName, serializeValueCss, type GradientResolver } from "../serialize/values.js";
 import type { GeneratorContext } from "./shared/context.js";
 import { validateThemeAttribute } from "./shared/theme-source.js";
 import { outputPlugin } from "./factory.js";
-import { themedEntry } from "../token-model/alias.js";
+import { getEntry, resolveEntryValue, themedEntry } from "../token-model/alias.js";
 
 export type CssGeneratorOptions = {
   themeAttribute?: string;
@@ -19,11 +23,15 @@ export type CssGeneratorOptions = {
 
 const PREFIX_RE = /^[A-Za-z][A-Za-z0-9_-]*$/;
 
-function entryCssValue(entry: TokenEntry, prefix?: string): string {
+function entryCssValue(
+  entry: TokenEntry,
+  prefix: string | undefined,
+  resolveGradient: GradientResolver,
+): string {
   if (entry.alias) {
     return `var(${cssVarName(entry.alias, prefix)})`;
   }
-  return serializeValueCss(entry.$type, entry.$value, prefix);
+  return serializeValueCss(entry.$type, entry.$value, prefix, resolveGradient);
 }
 
 function expandedEntryDeclarations(
@@ -51,9 +59,13 @@ function expandedEntryDeclarations(
   return declarations;
 }
 
-function entryDeclarations(entry: TokenEntry, prefix?: string): Record<string, string> {
+function entryDeclarations(
+  entry: TokenEntry,
+  prefix: string | undefined,
+  resolveGradient: GradientResolver,
+): Record<string, string> {
   if (!isExpandedComposite(entry.$type)) {
-    return { [cssVarName(entry.path, prefix)]: entryCssValue(entry, prefix) };
+    return { [cssVarName(entry.path, prefix)]: entryCssValue(entry, prefix, resolveGradient) };
   }
 
   return expandedEntryDeclarations(entry, entry.$value, prefix, entry.alias);
@@ -76,6 +88,13 @@ export function formatRule(
 
 type LayerDeclarations = { declarations: Record<string, string>; comments: Record<string, string> };
 
+function makeGradientResolver(registry: TokenRegistry, override?: ThemeOverride): GradientResolver {
+  return (member) =>
+    member.alias
+      ? (resolveEntryValue(registry, getEntry(registry, member.alias), override) as GradientValue)
+      : (member.$value as GradientValue);
+}
+
 function collectAllLayerDeclarations(
   registry: TokenRegistry,
   prefix?: string,
@@ -85,12 +104,28 @@ function collectAllLayerDeclarations(
     system: { declarations: {}, comments: {} },
     components: { declarations: {}, comments: {} },
   };
+  const owners = new Map<string, string>();
+  const resolveGradient = makeGradientResolver(registry);
 
   for (const entry of registry.values()) {
     const bucket = byLayer[entry.layer];
-    Object.assign(bucket.declarations, entryDeclarations(entry, prefix));
+    const decls = entryDeclarations(entry, prefix, resolveGradient);
+    const entryPathKey = entry.path.join(".");
+    for (const [varName, value] of Object.entries(decls)) {
+      const existingOwner = owners.get(varName);
+      if (existingOwner && existingOwner !== entryPathKey) {
+        throw new Error(
+          `CSS custom property collision at "${varName}": both "${existingOwner}" and "${entryPathKey}" map to it.`,
+        );
+      }
+      owners.set(varName, entryPathKey);
+      bucket.declarations[varName] = value;
+    }
     if (entry.$description) {
-      bucket.comments[cssVarName(entry.path, prefix)] = entry.$description;
+      const firstDecl = Object.keys(decls)[0];
+      if (firstDecl) {
+        bucket.comments[firstDecl] = entry.$description;
+      }
     }
   }
 
@@ -137,6 +172,7 @@ export function generateCss(config: GeneratorContext, options: CssGeneratorOptio
   // every `:root` block to override it when the theme class sits on <html>.
   for (const [themeName, override] of Object.entries(themes)) {
     const themeDeclarations: Record<string, string> = {};
+    const resolveGradient = makeGradientResolver(registry, override);
     for (const key of override.keys()) {
       const entry = registry.get(key);
       if (!entry) {
@@ -144,7 +180,7 @@ export function generateCss(config: GeneratorContext, options: CssGeneratorOptio
       }
       Object.assign(
         themeDeclarations,
-        entryDeclarations(themedEntry(entry, override), options.prefix),
+        entryDeclarations(themedEntry(entry, override), options.prefix, resolveGradient),
       );
     }
     if (Object.keys(themeDeclarations).length > 0) {
@@ -152,7 +188,7 @@ export function generateCss(config: GeneratorContext, options: CssGeneratorOptio
     }
   }
 
-  return blocks.join("\n\n");
+  return blocks.length > 0 ? `${blocks.join("\n\n")}\n` : "";
 }
 
 export type CssPluginOptions = CssGeneratorOptions & {
@@ -173,8 +209,30 @@ export function generateCssFiles(
   ];
 }
 
+/** Validates `prefix` and `themeAttribute` options, plus warns if `themeAttribute` is set with class selector. */
+export function cssOptionDiagnostics(options: CssGeneratorOptions): PluginDiagnostic[] {
+  const diagnostics: PluginDiagnostic[] = [...themeSelectorWarnings(options)];
+  if (options.prefix !== undefined && !PREFIX_RE.test(options.prefix)) {
+    diagnostics.push({
+      severity: "error",
+      message: `prefix "${options.prefix}" cannot be used for CSS variables: it must match ${PREFIX_RE}.`,
+    });
+  }
+  if (options.themeAttribute !== undefined) {
+    try {
+      validateThemeAttribute(options.themeAttribute, "css");
+    } catch (error) {
+      diagnostics.push({
+        severity: "error",
+        message: error instanceof Error ? error.message : String(error),
+      });
+    }
+  }
+  return diagnostics;
+}
+
 /** `themeAttribute` only applies to the "attribute" selector, which is not the plugins' default. */
-export function themeSelectorWarnings(options: CssGeneratorOptions): PluginDiagnostic[] {
+function themeSelectorWarnings(options: CssGeneratorOptions): PluginDiagnostic[] {
   if (options.themeAttribute === undefined || options.themeSelector === "attribute") return [];
   return [
     {
@@ -185,8 +243,7 @@ export function themeSelectorWarnings(options: CssGeneratorOptions): PluginDiagn
 }
 
 export function css(options: CssPluginOptions): RecontentPlugin {
-  return {
-    ...outputPlugin("recontent:css", ["tokens"], options, generateCssFiles),
-    validate: () => themeSelectorWarnings(options),
-  };
+  return outputPlugin("recontent:css", ["tokens"], options, generateCssFiles, () =>
+    cssOptionDiagnostics(options),
+  );
 }

@@ -53,6 +53,10 @@ export type RunPluginsOptions = {
   types?: TypeInfo[];
   /** Why `components` is missing: the plugins that depend on it fail with this message, the others still run. */
   introspectionError?: string;
+  /** Called with the generated files before `buildEnd` runs, so `buildEnd` sees the written files on disk. */
+  write?: (files: readonly EmittedFile[]) => void | Promise<void>;
+  /** When true (e.g. `build --check`), skips `buildEnd` side effects. */
+  skipBuildEnd?: boolean;
 };
 
 /** A plugin's diagnostic, tagged with the plugin that reported it. */
@@ -127,10 +131,17 @@ export async function runPlugins(
       plugin.generate!(contextFor(plugin)),
     );
     for (const file of pluginFiles) {
-      const normalized = path.posix.normalize(file.path);
+      const normalized = path.posix.normalize(file.path.replaceAll("\\", "/"));
+      const resolved = path.resolve(options.root, normalized);
+      const relToRoot = path.relative(options.root, resolved);
+      if (relToRoot.startsWith("..") || path.isAbsolute(relToRoot)) {
+        throw new Error(
+          `Plugin "${plugin.name}" attempted to emit a file outside project root: "${file.path}".`,
+        );
+      }
       // Resolved against the root so an absolute path inside it collides with its relative twin.
       // Lowercased because macOS and Windows file systems are case-insensitive.
-      const key = path.resolve(options.root, file.path).toLowerCase();
+      const key = resolved.toLowerCase();
       const ownerIndex = owners.get(key);
       if (ownerIndex !== undefined) {
         const owner = plugins[ownerIndex]!;
@@ -141,15 +152,24 @@ export async function runPlugins(
         );
       }
       owners.set(key, index);
-      files.push(file);
+      files.push(Object.freeze({ ...file, path: normalized }));
     }
   }
 
-  for (const plugin of plugins) {
-    if (plugin.buildEnd) {
-      await callHook(plugin, "buildEnd", () => plugin.buildEnd!({ ...contextFor(plugin), files }));
+  const frozenFiles = Object.freeze([...files]);
+  if (options.write) {
+    await options.write(frozenFiles);
+  }
+
+  if (!options.skipBuildEnd) {
+    for (const plugin of plugins) {
+      if (plugin.buildEnd) {
+        await callHook(plugin, "buildEnd", () =>
+          plugin.buildEnd!({ ...contextFor(plugin), files: [...frozenFiles] }),
+        );
+      }
     }
   }
 
-  return { files, diagnostics, failures };
+  return { files: [...frozenFiles], diagnostics, failures };
 }

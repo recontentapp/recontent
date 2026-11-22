@@ -51,14 +51,14 @@ describe("tokens.stylex.ts", () => {
     expect(tokensFile.content).toMatch(/refFontFamilyBody: 'Arial',/);
   });
 
-  test("a plain alias flattens directly to the terminal ref key via a derived function", () => {
+  test("a plain alias references its immediate target via a derived function so theme overrides propagate", () => {
     const files = generateFixture(aliasChainConfig());
     const tokensFile = file(files, "tokens.stylex.ts");
     // system.colors.accent -> ref.color.black
     expect(tokensFile.content).toMatch(/systemColorsAccent: \(\) => `\$\{vars\.refColorBlack\}`,/);
-    // components.button.background -> system.colors.accent -> ref.color.black (flattened, skips system)
+    // components.button.background -> system.colors.accent (preserves intermediate var for theme overrides)
     expect(tokensFile.content).toMatch(
-      /componentsButtonBackground: \(\) => `\$\{vars\.refColorBlack\}`,/,
+      /componentsButtonBackground: \(\) => `\$\{vars\.systemColorsAccent\}`,/,
     );
   });
 
@@ -348,5 +348,44 @@ describe("StyleX compile test", () => {
     } finally {
       fs.rmSync(dir, { recursive: true, force: true });
     }
+  });
+
+  test("negative scale keys are quoted in scales.ts and composite theme overrides resolve member aliases", () => {
+    const ref = defineReferenceTokens({
+      color: { shadow: tokens.color("#000000") },
+      z: tokens.numberScale({ "-1": -1, 0: 0 }),
+    });
+    const system = defineSystemTokens({
+      shadow: {
+        card: tokens.shadow({
+          color: ref.color.shadow,
+          offsetX: "0px",
+          offsetY: "2px",
+          blur: "4px",
+          spread: "0px",
+        }),
+      },
+    });
+    const dark = defineTheme(
+      { ref, system },
+      {
+        ref: { color: { shadow: tokens.color("#ffffff") } },
+        system: {
+          shadow: {
+            card: tokens.shadow({
+              color: ref.color.shadow,
+              offsetX: "0px",
+              offsetY: "4px",
+              blur: "8px",
+              spread: "0px",
+            }),
+          },
+        },
+      },
+    );
+    const config = defineConfig({ tokens: { ref, system }, themes: { dark } });
+    const files = generateStylexFiles(config);
+    expect(file(files, "scales.ts").content).toContain('"-1": vars.refZ1,');
+    expect(file(files, "themes.ts").content).toContain("0px 4px 8px 0px #ffffff");
   });
 });

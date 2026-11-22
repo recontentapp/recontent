@@ -212,6 +212,21 @@ describe("rootFontSize option", () => {
     const [file] = generate(config, { outDir: "dist-test", rootFontSize: 10 });
     expect(file!.content).toMatch(/"rem": 10,/);
   });
+
+  test("non-sRGB colors emit sRGB hex strings instead of raw CSS color functions", () => {
+    const warn = jest.spyOn(console, "error").mockImplementation(() => {});
+    const ref = defineReferenceTokens({
+      accent: tokens.color("oklch(0.6 0.2 250)"),
+      faded: tokens.color("oklch(0.6 0.2 250 / 0.5)"),
+      scale: tokens.generateColorScale({ base: "#2563eb" }),
+    });
+    const config = refOnlyConfig(ref);
+    const [file] = generate(config);
+    expect(file!.content).not.toContain("oklch(");
+    expect(file!.content).toMatch(/"accent": '#[0-9a-f]{6}',/);
+    expect(file!.content).toMatch(/"faded": '#[0-9a-f]{8}',/);
+    warn.mockRestore();
+  });
 });
 
 describe("parses and typechecks", () => {

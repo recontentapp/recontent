@@ -25,6 +25,8 @@ export type IntrospectionResult = {
   program: ts.Program;
   /** Absolute paths of everything the result was computed from: every source file of the program, dependencies' declarations included, and the tsconfig files. */
   files: string[];
+  /** Absolute paths of referenced doc files that did not exist during this run (for cache invalidation). */
+  missingFiles?: string[];
 };
 
 /**
@@ -37,6 +39,17 @@ function resolveLinks(components: ComponentInfo[], types: TypeInfo[], logger: Lo
     ...components.map((component) => component.name),
     ...types.map((type) => type.id),
   ]);
+  const byTypeName = new Map<string, string[]>();
+  for (const type of types) {
+    const list = byTypeName.get(type.name) ?? [];
+    list.push(type.id);
+    byTypeName.set(type.name, list);
+  }
+  const resolveTarget = (target: string): string | undefined => {
+    if (known.has(target)) return target;
+    const matches = byTypeName.get(target);
+    return matches?.length === 1 ? matches[0] : undefined;
+  };
   const items: (Documentation & PendingLinks)[] = [
     ...components,
     ...components.flatMap((component) => component.props),
@@ -47,15 +60,15 @@ function resolveLinks(components: ComponentInfo[], types: TypeInfo[], logger: Lo
     const { linkTargets = [], replacementTargets = [] } = item;
     delete item.linkTargets;
     delete item.replacementTargets;
+    const resolved: string[] = [];
     for (const target of linkTargets) {
-      if (!known.has(target))
-        logger.debug(`introspection: {@link ${target}} matches no component or type.`);
+      const hit = resolveTarget(target);
+      if (hit) resolved.push(hit);
+      else logger.debug(`introspection: {@link ${target}} matches no component or type.`);
     }
-    const links = [...new Set(linkTargets.filter((target) => known.has(target)))].sort((a, b) =>
-      a.localeCompare(b),
-    );
+    const links = [...new Set(resolved)].sort((a, b) => a.localeCompare(b));
     if (links.length > 0) item.links = links;
-    const replacement = replacementTargets.find((target) => known.has(target));
+    const replacement = replacementTargets.map(resolveTarget).find(Boolean);
     if (replacement) item.replacement = replacement;
   }
 }
@@ -93,6 +106,8 @@ export function introspect(options: {
     logger,
     types: createTypeStore(root),
     docFiles: new Set(),
+    missingDocFiles: new Set(),
+    ancestorsCache: new Map(),
     warnings: [],
   };
   const importOf = createImportResolver(analysis, { entry, root, importPath: config.importPath });
@@ -113,12 +128,25 @@ export function introspect(options: {
     .filter((file) => !program.isSourceFileDefaultLibrary(file))
     .map((file) => path.resolve(file.fileName));
 
+  const packageJson = ts.findConfigFile(path.dirname(entry), ts.sys.fileExists, "package.json");
+  const allFiles = [
+    ...new Set([
+      ...files,
+      ...configFiles.map((file) => path.resolve(file)),
+      ...(packageJson ? [path.resolve(packageJson)] : []),
+      ...analysis.docFiles,
+    ]),
+  ];
+
   return {
     components,
     types,
     warnings: analysis.warnings,
     program,
-    files: [...files, ...configFiles.map((file) => path.resolve(file)), ...analysis.docFiles],
+    files: allFiles,
+    ...(analysis.missingDocFiles && analysis.missingDocFiles.size > 0
+      ? { missingFiles: [...analysis.missingDocFiles] }
+      : {}),
   };
 }
 

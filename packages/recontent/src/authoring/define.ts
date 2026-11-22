@@ -41,7 +41,11 @@ function metadataFields(source: TokenMetadata): TokenMetadata {
 
 type StampTree<T, Layer extends TokenLayer> =
   T extends TokenScale<infer Key, infer Token, infer _Value>
-    ? TokenScale<Key, Token, StampedToken<Token, Layer>>
+    ? TokenScale<
+        Key,
+        Token,
+        StampedToken<Token, Layer> & ChainableMethods<StampedToken<Token, Layer>>
+      >
     : T extends RawToken<infer U> | StampedToken<infer U, TokenLayer>
       ? StampedToken<U, Layer> & ChainableMethods<StampedToken<U, Layer>>
       : T extends { readonly _kind: "group" }
@@ -92,7 +96,7 @@ function stampScale<T extends TokenType, Layer extends TokenLayer>(
 
 const MAX_TOKEN_TREE_DEPTH = 64;
 
-function assertWithinMaxDepth(depth: number, path: string[]): void {
+export function assertWithinMaxDepth(depth: number, path: string[]): void {
   if (depth > MAX_TOKEN_TREE_DEPTH) {
     throw new Error(
       `Token tree nesting exceeds ${MAX_TOKEN_TREE_DEPTH} levels at "${path.join(".")}"; check for a self-referencing object.`,
@@ -132,14 +136,19 @@ function walkAndStamp<Layer extends TokenLayer>(
   return withScaleMethods(result, input);
 }
 
-const INVALID_NAME_CHARS = /[.{}]/;
+const INVALID_NAME_CHARS = /[.{}:\t\r\n;]/;
 const RESERVED_NAMES = new Set(["__proto__", "constructor", "prototype"]);
 
 function validateTokenName(name: string, path: string[]): void {
+  if (name === "") {
+    throw new Error(
+      `Invalid token/group name "" at "${[...path, name].join(".")}": names cannot be empty.`,
+    );
+  }
   const match = name.match(INVALID_NAME_CHARS);
   if (match) {
     throw new Error(
-      `Invalid token/group name "${name}" at "${[...path, name].join(".")}": names cannot contain "${match[0]}".`,
+      `Invalid token/group name "${name}" at "${[...path, name].join(".")}": names cannot contain ${JSON.stringify(match[0])}.`,
     );
   }
   if (name.startsWith("$")) {
@@ -166,37 +175,30 @@ function collectEntries(
   assertWithinMaxDepth(depth, path);
 
   if (isTokenScale(node)) {
-    const scalePath = node._path ?? path;
-    const scaleLayer = node._layer ?? layer;
     const scaleMetadata: TokenScaleMetadata = {
-      path: [...scalePath],
-      layer: scaleLayer,
+      path: [...path],
+      layer,
       type: node.$type,
       keys: Object.keys(node),
       ...metadataFields(node),
     };
 
     for (const [key, value] of Object.entries(node)) {
-      validateTokenName(key, scalePath);
-      collectEntries(
-        value,
-        [...scalePath, key],
-        scaleLayer,
-        registry,
-        groups,
-        scaleMetadata,
-        depth + 1,
-      );
+      validateTokenName(key, path);
+      collectEntries(value, [...path, key], layer, registry, groups, scaleMetadata, depth + 1);
     }
     return;
   }
 
   if (isRawToken(node) || isStampedToken(node)) {
+    const alias = isStampedToken(node)
+      ? (node._alias ?? (pathKey(node._path) !== pathKey(path) ? node._path : undefined))
+      : undefined;
     registry.set(pathKey(path), {
       path,
       $type: node.$type,
       $value: node.$value,
-      ...(isStampedToken(node) && node._alias ? { alias: node._alias } : {}),
+      ...(alias ? { alias } : {}),
       layer,
       ...(scale ? { scale } : {}),
       ...metadataFields(node),
@@ -253,9 +255,14 @@ function normalizePlugins(
   }
   const list = Array.isArray(plugins) ? plugins : [plugins];
   for (const plugin of list) {
-    if (typeof plugin !== "object" || plugin === null || typeof plugin.name !== "string") {
+    if (
+      typeof plugin !== "object" ||
+      plugin === null ||
+      typeof plugin.name !== "string" ||
+      plugin.name.trim() === ""
+    ) {
       throw new Error(
-        "defineConfig's `plugins` must be RecontentPlugin instances (objects with at least a `name` string).",
+        "defineConfig's `plugins` must be RecontentPlugin instances (objects with a non-empty `name` string).",
       );
     }
     if (plugin.dependsOn === undefined) continue;
@@ -281,6 +288,9 @@ function normalizeIntrospection(
   introspection: IntrospectionConfigInput | undefined,
 ): IntrospectionConfigInput | undefined {
   if (introspection === undefined) return undefined;
+  if (typeof introspection !== "object" || introspection === null) {
+    throw new Error("defineConfig's `introspection` must be an object.");
+  }
   const { entry, tsconfig, exclude, importPath } = introspection;
   if (typeof entry !== "string" || entry === "") {
     throw new Error("defineConfig's `introspection.entry` must be a non-empty string.");
@@ -300,6 +310,7 @@ function normalizeIntrospection(
       : typeof importPath === "object" &&
         importPath !== null &&
         typeof importPath.root === "string" &&
+        importPath.root.trim() !== "" &&
         (importPath.prefix === undefined || typeof importPath.prefix === "string");
   if (!validImportPath) {
     throw new Error(

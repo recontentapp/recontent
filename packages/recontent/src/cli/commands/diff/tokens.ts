@@ -100,10 +100,19 @@ function findRenames(
   };
 }
 
+function fingerprintThemeValue(value: ThemeValue, renamedKeys?: Map<string, string>): string {
+  if (value.alias) {
+    const target = pathKey(value.alias);
+    return `alias:${renamedKeys?.get(target) ?? target}`;
+  }
+  return stableStringify(value.$value);
+}
+
 function diffThemeOverride(
   base: ThemeOverride,
   head: ThemeOverride,
   registries: { base: TokenRegistry; head: TokenRegistry },
+  renamedKeys: Map<string, string>,
 ): ThemeOverrideDiff {
   const added: ThemeOverrideDiff["added"] = [];
   const removed: ThemeOverrideDiff["removed"] = [];
@@ -121,7 +130,7 @@ function diffThemeOverride(
   }
   for (const [key, from] of base) {
     const to = head.get(key);
-    if (to && stableStringify(from) !== stableStringify(to)) {
+    if (to && fingerprintThemeValue(from, renamedKeys) !== fingerprintThemeValue(to)) {
       changed.push({ key, ...typeOf(key, registries.head), from, to });
     }
   }
@@ -133,6 +142,7 @@ function diffThemes(
   base: Record<string, ThemeOverride>,
   head: Record<string, ThemeOverride>,
   registries: { base: TokenRegistry; head: TokenRegistry },
+  renamedKeys: Map<string, string>,
 ): ThemeDiff {
   const baseNames = new Set(Object.keys(base));
   const headNames = new Set(Object.keys(head));
@@ -143,7 +153,7 @@ function diffThemes(
 
   for (const name of baseNames) {
     if (!headNames.has(name)) continue;
-    const themeDiff = diffThemeOverride(base[name]!, head[name]!, registries);
+    const themeDiff = diffThemeOverride(base[name]!, head[name]!, registries, renamedKeys);
     if (
       themeDiff.added.length > 0 ||
       themeDiff.removed.length > 0 ||
@@ -234,6 +244,7 @@ export function diffConfigs(base: Config, head: Config): TokenDiff {
       followTokenChanges(base.themes, renamedKeys, new Set(removed.map((e) => pathKey(e.path)))),
       head.themes,
       { base: base.registry, head: head.registry },
+      renamedKeys,
     ),
   };
 }

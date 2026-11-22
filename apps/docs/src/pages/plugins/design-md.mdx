@@ -91,19 +91,19 @@ A token goes to the group of its type:
 
 A token that is an alias of another token of the front matter is written as a reference, such as
 `"{colors.ref-color-white}"`. Anything else is written as its CSS value. Themes aren't part of the
-specification: a theme's values are in the Colors section of the document instead.
+front matter specification: overridden values appear in the **Themes** section of the document instead.
 
 ## Prose
 
 A section is written only when it has something to say. In the order of the specification:
 
 - **Overview**: your `description`, and how keys map to paths and variables.
-- **Colors**: the descriptions of color tokens and scales, gradients, and a table with the value of each
-  token a [theme](/guides/working-with-themes) overrides.
+- **Colors**: the descriptions of color tokens and scales, and gradients.
 - **Typography**: descriptions, font families and font weights.
 - **Layout**: descriptions of spacing, and dimensions that are neither spacing nor radii, such as font sizes.
 - **Elevation & Depth**: shadows.
 - **Shapes**: descriptions of radii, and borders.
+- **Themes**: a table with the value of each token a [theme](/guides/working-with-themes) overrides.
 - **Components**: one line per component, with its description.
 - **Do's and Don'ts**: your `dos` and `donts`, then each deprecated token, scale and component with its
   deprecation notice.

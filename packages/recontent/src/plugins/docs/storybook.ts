@@ -47,10 +47,17 @@ export function loadStories(
 
   const storybookRoot = path.resolve(ctx.root, storybook.root ?? ".");
   const byFile = new Map<string, Story[]>();
-  for (const { type, id, name, importPath } of entries) {
+  for (const entry of entries) {
+    if (!entry || typeof entry !== "object") continue;
+    const { type, id, name, importPath } = entry;
     if (type !== "story" || !id || !name || !importPath) continue;
     const file = posix(path.relative(ctx.root, path.resolve(storybookRoot, importPath)));
-    byFile.set(file, [...(byFile.get(file) ?? []), { id, name }]);
+    let list = byFile.get(file);
+    if (!list) {
+      list = [];
+      byFile.set(file, list);
+    }
+    list.push({ id, name });
   }
 
   for (const component of components) {

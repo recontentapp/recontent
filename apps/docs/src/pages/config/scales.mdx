@@ -12,8 +12,8 @@ and keys, which it uses to:
 - emit typed key unions and helper constants in the TypeScript, vanilla-extract and StyleX outputs
   (`RefSpacing = "sm" | "md"`);
 - check a theme override: a replacement scale must have the same keys and the same type;
-- bind a whole scale to a plugin option, such as `Box: { spacing: system.spacing }` in the
-  [vanilla-extract plugin](/plugins/vanilla-extract).
+- bind a whole scale to a plugin option, such as `theme: { spacing: system.spacing }` in the
+  [Tailwind plugin](/plugins/tailwind#namespaces).
 
 Each factory takes an object whose keys are the steps. Keys can be strings or numbers. Each value is
 either the input its [primitive](/config/primitives) or [composite](/config/composites) factory
@@ -60,23 +60,22 @@ scale, a group has no fixed type or keys, so a theme may override any of its tok
 
 ## Factories
 
-| Factory                       | Step value                         | Token type    |
-| ----------------------------- | ---------------------------------- | ------------- |
-| `tokens.colorScale()`         | what `tokens.color()` accepts      | `color`       |
-| `tokens.generateColorScale()` | _generated, see below_             | `color`       |
-| `tokens.dimensionScale()`     | what `tokens.dimension()` accepts  | `dimension`   |
-| `tokens.numberScale()`        | a number                           | `number`      |
-| `tokens.fontFamilyScale()`    | what `tokens.fontFamily()` accepts | `fontFamily`  |
-| `tokens.fontWeightScale()`    | what `tokens.fontWeight()` accepts | `fontWeight`  |
-| `tokens.durationScale()`      | what `tokens.duration()` accepts   | `duration`    |
-| `tokens.cubicBezierScale()`   | `[x1, y1, x2, y2]`                 | `cubicBezier` |
-| `tokens.borderScale()`        | what `tokens.border()` accepts     | `border`      |
-| `tokens.shadowScale()`        | what `tokens.shadow()` accepts     | `shadow`      |
-| `tokens.transitionScale()`    | what `tokens.transition()` accepts | `transition`  |
-| `tokens.gradientScale()`      | what `tokens.gradient()` accepts   | `gradient`    |
-| `tokens.typographyScale()`    | what `tokens.typography()` accepts | `typography`  |
-
-There are no scale factories for `fontFamily`, `fontWeight` or `strokeStyle`; use a plain group.
+| Factory                       | Step value                          | Token type    |
+| ----------------------------- | ----------------------------------- | ------------- |
+| `tokens.colorScale()`         | what `tokens.color()` accepts       | `color`       |
+| `tokens.generateColorScale()` | _generated, see below_              | `color`       |
+| `tokens.dimensionScale()`     | what `tokens.dimension()` accepts   | `dimension`   |
+| `tokens.numberScale()`        | a number                            | `number`      |
+| `tokens.fontFamilyScale()`    | what `tokens.fontFamily()` accepts  | `fontFamily`  |
+| `tokens.fontWeightScale()`    | what `tokens.fontWeight()` accepts  | `fontWeight`  |
+| `tokens.durationScale()`      | what `tokens.duration()` accepts    | `duration`    |
+| `tokens.strokeStyleScale()`   | what `tokens.strokeStyle()` accepts | `strokeStyle` |
+| `tokens.cubicBezierScale()`   | `[x1, y1, x2, y2]`                  | `cubicBezier` |
+| `tokens.borderScale()`        | what `tokens.border()` accepts      | `border`      |
+| `tokens.shadowScale()`        | what `tokens.shadow()` accepts      | `shadow`      |
+| `tokens.transitionScale()`    | what `tokens.transition()` accepts  | `transition`  |
+| `tokens.gradientScale()`      | what `tokens.gradient()` accepts    | `gradient`    |
+| `tokens.typographyScale()`    | what `tokens.typography()` accepts  | `typography`  |
 
 ## generateColorScale
 

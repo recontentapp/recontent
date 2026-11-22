@@ -62,24 +62,29 @@ are reported as a removal plus an addition, which is still breaking.
 A change to a component or to a type its props use is **breaking** when code that used it would
 stop type-checking:
 
-| Change                                                                          | Breaking |
-| ------------------------------------------------------------------------------- | -------- |
-| A component or type is removed                                                  | Yes      |
-| A prop (or type member) is removed                                              | Yes      |
-| A required prop is added, or an optional prop becomes required                  | Yes      |
-| A literal union loses a value, or an enum or union type loses a value           | Yes      |
-| A prop's type changes in any other way                                          | Yes      |
-| Props inherited from another type are dropped                                   | Yes      |
-| A type parameter is added without a default, removed, or its constraint changes | Yes      |
-| A type changes kind (`interface`, `type`, `enum`)                               | Yes      |
-| A component, type or optional prop is added                                     | No       |
-| A literal union gains a value                                                   | No       |
-| A required prop becomes optional                                                | No       |
-| A default value changes, or something is deprecated or no longer deprecated     | No       |
+| Change                                                                           | Breaking |
+| -------------------------------------------------------------------------------- | -------- |
+| A component or type is removed                                                   | Yes      |
+| A component's `import` statement changes                                         | Yes      |
+| A prop (or type member) is removed                                               | Yes      |
+| A required prop is added, or an optional prop becomes required                   | Yes      |
+| A literal union loses a value, or an enum or union type loses a value            | Yes      |
+| A prop's type changes in a way that is not a union widening                      | Yes      |
+| A non-object, non-union type's definition changes (or an enum member is renamed) | Yes      |
+| Props inherited from another type are dropped                                    | Yes      |
+| A type parameter is added without a default, removed, or its constraint changes  | Yes      |
+| A type changes kind (`interface`, `type`, `enum`)                                | Yes      |
+| A component, type or optional prop is added                                      | No       |
+| A union or literal union widens (gains a value or widens to a broader type)      | No       |
+| A required prop becomes optional                                                 | No       |
+| A type parameter is renamed, added with a default, or its default changes        | No       |
+| A default value changes, or something is deprecated or no longer deprecated      | No       |
 
 A change to a prop's type that cannot be classified is treated as breaking. Descriptions, line
-numbers, file moves and formatting are ignored. A type only appears in the diff while a component's
-props reference it, so removing the last prop that uses one also reports the type as removed.
+numbers and formatting are ignored (file moves are ignored too unless `importPath` uses
+`{ root, prefix }` and the move changes the component's `import` statement). A type only appears in
+the diff while a component's props reference it, so removing the last prop that uses one also
+reports the type as removed.
 
 ## Failing a build
 

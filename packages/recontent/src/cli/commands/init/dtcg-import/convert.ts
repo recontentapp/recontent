@@ -144,7 +144,7 @@ function cubicBezierArg(value: unknown): Converted {
     : skip(`unsupported cubicBezier ${describe(value)}`);
 }
 
-function strokeStyleArg(value: unknown): Converted {
+function strokeStyleArg(value: unknown, dashMember?: (dash: unknown) => Converted): Converted {
   if (typeof value === "string") {
     return STROKE_STYLES.includes(value)
       ? ok(quote(value))
@@ -156,7 +156,7 @@ function strokeStyleArg(value: unknown): Converted {
     }
     const dashes: string[] = [];
     for (const dash of value.dashArray) {
-      const converted = unitArg(dash, DIMENSION_UNITS, "dimension");
+      const converted = dashMember ? dashMember(dash) : unitArg(dash, DIMENSION_UNITS, "dimension");
       if ("skip" in converted) return converted;
       dashes.push(converted.expr);
     }
@@ -211,6 +211,9 @@ export function convertValue(type: string, value: unknown, options: ConvertOptio
   const member = (memberType: string, memberValue: unknown): Converted => {
     const reference = aliasTarget(memberValue);
     if (reference !== undefined) return options.resolveMember(reference, memberType);
+    if (memberType === "strokeStyle") {
+      return strokeStyleArg(memberValue, (dash) => member("dimension", dash));
+    }
     return PRIMITIVES[memberType]!(memberValue);
   };
 
@@ -228,6 +231,11 @@ export function convertValue(type: string, value: unknown, options: ConvertOptio
     }
     return { pairs };
   };
+
+  if (type === "strokeStyle") {
+    const converted = strokeStyleArg(value, (dash) => member("dimension", dash));
+    return "skip" in converted ? converted : ok(`tokens.strokeStyle(${converted.expr})`);
+  }
 
   const primitive = PRIMITIVES[type];
   if (primitive) {

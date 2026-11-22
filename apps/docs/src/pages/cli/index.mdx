@@ -65,10 +65,10 @@ Any other value is an error.
 
 ## Exit codes
 
-| Code | Meaning                                                                                                                                                                                                       |
-| ---- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `0`  | Success, or help and version output.                                                                                                                                                                          |
-| `1`  | Any failure: invalid usage or option value, a config that cannot be loaded, a build that reports errors, `init` on an existing file without `--force`, or `diff --fail-on-breaking` finding breaking changes. |
-| `2`  | `inspect` found nothing matching the path, name, type or theme you gave it.                                                                                                                                   |
+| Code | Meaning                                                                                                                                                                                                                                             |
+| ---- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `0`  | Success, or help and version output.                                                                                                                                                                                                                |
+| `1`  | Any failure: invalid usage or option value, a config that cannot be loaded, a build or `build --check` failure, a broken project in `inspect`, `init` on an existing file without `--force`, or `diff --fail-on-breaking` finding breaking changes. |
+| `2`  | `inspect` found nothing matching the path, name, type or theme you gave it.                                                                                                                                                                         |
 
 Warnings never change the exit code.

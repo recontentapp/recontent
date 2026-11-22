@@ -333,6 +333,20 @@ describe("components", () => {
     expect(html).not.toContain('class="callout"><span class="capsule');
   });
 
+  test("highlights inline closing JSX tags and drops unsafe javascript: URLs", () => {
+    const html = renderWith([
+      {
+        ...components[0]!,
+        examples: [{ code: "<Button>Save</Button>" }],
+        externalLinks: [{ title: "Bad", url: "javascript:alert(1)" }],
+      },
+    ]);
+    expect(html).toContain(
+      '&lt;<span class="tk-tag">Button</span>&gt;Save&lt;/<span class="tk-tag">Button</span>&gt;',
+    );
+    expect(html).not.toContain("javascript:alert");
+  });
+
   test("usage markdown is rendered, never injected as HTML", () => {
     const html = renderWith([
       {

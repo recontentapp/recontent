@@ -35,5 +35,5 @@ export const vars = stylex.defineVars({
   systemRadiusSm: () => `${vars.refRadiusSm}`,
   systemRadiusMd: () => `${vars.refRadiusMd}`,
   systemRadiusFull: () => `${vars.refRadiusFull}`,
-  systemFontFamily: '-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif',
+  systemFontFamily: '"-apple-system", BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif',
 });

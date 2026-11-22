@@ -7,6 +7,8 @@ import { loadStories, type StorybookOptions } from "./storybook.js";
 
 export type DocsPluginOptions = {
   outDir: string;
+  /** Defaults to `design.html`. */
+  filename?: string;
   /** Page title. Defaults to "Design system". */
   title?: string;
   /**
@@ -34,7 +36,7 @@ export function generateDocsFiles(ctx: PluginContext, options: DocsPluginOptions
   const storybookUrl = options.storybook?.url;
   return [
     {
-      filename: "design.html",
+      filename: options.filename ?? "design.html",
       content: renderHtml(model, ctx, { ...options, stories, storybookUrl }),
     },
   ];

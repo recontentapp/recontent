@@ -47,12 +47,12 @@ overrides, and an alias links to the token it points to.
 **Components** appears when the config has an [`introspection`](/config#introspection)
 block; without one the page covers the tokens only. It opens on an overview of the components, grouped by `@category` with the others last, and each
 component has a page of its own (`design.html#c-Button`). The sidebar lists them in the same order. A
-component page starts with its [import statement](/config#import-statements) and a Copy button (left out
-for a component without one, such as a library component defined outside the `importPath` root), then
-shows its description, a deprecation or experimental notice, a props table
-(name, type or allowed values, default, notes), an `Also accepts:` line for props inherited from
-libraries and its source location, followed by its `Usage`, `Examples` and `Stories` when it has
-[documented them](/guides/documenting-components). `Usage` is rendered as markdown (GitHub
+component page starts with its header (breadcrumb, name, description and tags), then its
+[import statement](/config#import-statements) and a Copy button (left out for a component without
+one, such as a library component defined outside the `importPath` root), followed by its `Usage`,
+`Examples` and `Stories` when it has [documented them](/guides/documenting-components), and its
+`Props` table (name, type or allowed values, default, description) with an `Also accepts:` line for
+props inherited from libraries. `Usage` is rendered as markdown (GitHub
 flavored: lists, tables, code blocks, links); raw HTML in it is shown as text. Examples are tabs with syntax highlighting,
 each with a button that copies the code. Stories are tabs too, one per story, each with the live story in an
 iframe and a link to open it in Storybook. A missing or unreadable `index.json`, or a `@stories` file that has no story in
@@ -62,12 +62,10 @@ On small screens the sidebar collapses into a **Contents** list that you expand 
 
 A row of tags under each component name shows:
 
-- `Experimental` and `Deprecated`.
-- `N examples`, a link to the examples.
+- `Experimental` and `Deprecated` badges (with their notes in a tooltip).
+- A `Source code ↗` link when `gitBaseUrl` is set.
 - One tag per [`@link`](/guides/documenting-components) to an external page (a Figma file, a guideline),
   labelled with its caption and opening in a new tab.
-- One tag per `{@link}` in its documentation. A link to another component jumps to it; a link to a type is
-  shown as plain text, since types are not rendered on the page.
 
 ## Light and dark mode
 

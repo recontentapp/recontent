@@ -39,9 +39,13 @@ function distance(a: string, b: string): number {
 export function closestMatches(input: string, candidates: Iterable<string>): string[] {
   const needle = input.toLowerCase();
   const limit = Math.max(2, Math.floor(needle.length * 0.3));
-  return [...new Set(candidates)]
-    .map((candidate) => ({ candidate, score: distance(needle, candidate.toLowerCase()) }))
-    .filter(({ score }) => score <= limit)
+  const matches: { candidate: string; score: number }[] = [];
+  for (const candidate of new Set(candidates)) {
+    if (Math.abs(needle.length - candidate.length) > limit) continue;
+    const score = distance(needle, candidate.toLowerCase());
+    if (score <= limit) matches.push({ candidate, score });
+  }
+  return matches
     .sort((a, b) => a.score - b.score || a.candidate.localeCompare(b.candidate))
     .slice(0, 3)
     .map(({ candidate }) => candidate);
@@ -134,16 +138,17 @@ export function selectComponents(
         input: "--props",
         suggestions: [],
       });
-    }
-    // Own and inherited alike: any of them can be asked for.
-    const known = new Set(
-      selected.flatMap((component) => [
-        ...component.props.map((prop) => prop.name),
-        ...component.inherits.flatMap((group) => group.props),
-      ]),
-    );
-    for (const prop of query.props) {
-      if (!known.has(prop)) errors.push(unknown("prop", prop, known));
+    } else if (errors.length === 0) {
+      // Own and inherited alike: any of them can be asked for.
+      const known = new Set(
+        selected.flatMap((component) => [
+          ...component.props.map((prop) => prop.name),
+          ...component.inherits.flatMap((group) => group.props),
+        ]),
+      );
+      for (const prop of query.props) {
+        if (!known.has(prop)) errors.push(unknown("prop", prop, known));
+      }
     }
   }
   return { selected, errors };
@@ -205,6 +210,7 @@ function componentFields(component: ComponentInfo): Field[] {
     ...component.props.flatMap((prop): Field[] => [
       [`prop ${prop.name}`, prop.name],
       [`prop ${prop.name}`, prop.description],
+      ...(prop.values ?? []).map((value): Field => [`prop ${prop.name}`, String(value)]),
     ]),
   ];
 }
@@ -225,19 +231,24 @@ function typeFields(type: TypeInfo): Field[] {
 
 /** Every item with at least one field containing a query, name hits first, otherwise in the original order. */
 function search<T>(items: T[], queries: string[], fields: (item: T) => Field[]): Hit<T>[] {
-  const hits = items.flatMap((item): Hit<T>[] => {
+  const nameHits: Hit<T>[] = [];
+  const otherHits: Hit<T>[] = [];
+  for (const item of items) {
+    const itemFields = fields(item);
     const matchedIn = new Set<string>();
-    for (const [label, text] of fields(item)) {
+    for (const [label, text] of itemFields) {
       const lower = text?.toLowerCase();
       if (lower !== undefined && queries.some((query) => lower.includes(query))) {
         matchedIn.add(label);
       }
     }
-    return matchedIn.size > 0 ? [{ item, matchedIn: [...matchedIn] }] : [];
-  });
-  // Each kind's first field is its own name.
-  const isNameHit = (hit: Hit<T>) => hit.matchedIn.includes(fields(hit.item)[0]![0]);
-  return [...hits.filter(isNameHit), ...hits.filter((hit) => !isNameHit(hit))];
+    if (matchedIn.size === 0) continue;
+    const hit: Hit<T> = { item, matchedIn: [...matchedIn] };
+    const nameLabel = itemFields[0]?.[0];
+    if (nameLabel !== undefined && matchedIn.has(nameLabel)) nameHits.push(hit);
+    else otherHits.push(hit);
+  }
+  return [...nameHits, ...otherHits];
 }
 
 /** Case-insensitive substring search over everything `inspect` shows; an item matches when any query does. */

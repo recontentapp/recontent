@@ -10,7 +10,12 @@ function specifierOf(file: string, root: string, prefix: string): string | undef
   const relative = path.relative(root, file).split(path.sep).join("/");
   if (relative.startsWith("..") || path.isAbsolute(relative)) return undefined;
   const module = relative.replace(EXTENSION, "").replace(/(?:^|\/)index$/, "");
-  return module ? `${prefix}${module}` : undefined;
+  if (!module) {
+    const trimmed = prefix.replace(/\/+$/, "");
+    return trimmed || undefined;
+  }
+  if (!prefix) return module;
+  return prefix.endsWith("/") ? `${prefix}${module}` : `${prefix}/${module}`;
 }
 
 /**

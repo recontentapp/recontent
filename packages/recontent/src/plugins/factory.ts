@@ -18,11 +18,21 @@ export function outputPlugin<Options extends { outDir: string }>(
     name,
     dependsOn,
     ...(validate ? { validate } : {}),
-    generate: (ctx) =>
-      generate(ctx, options).map((file) => ({
-        path: path.posix.join(options.outDir.replaceAll("\\", "/"), file.filename),
-        content: file.content,
-        writeMode: file.writeMode,
-      })),
+    generate: (ctx) => {
+      const outDir = path.posix.normalize(options.outDir.replaceAll("\\", "/"));
+      return generate(ctx, options).map((file) => {
+        const filename = file.filename.replaceAll("\\", "/");
+        const joined = path.posix.normalize(path.posix.join(outDir, filename));
+        const relative = path.posix.relative(outDir, joined);
+        if (relative.startsWith("..") || path.posix.isAbsolute(relative)) {
+          throw new Error(`Output filename "${file.filename}" escapes outDir "${options.outDir}".`);
+        }
+        return {
+          path: joined,
+          content: file.content,
+          writeMode: file.writeMode,
+        };
+      });
+    },
   };
 }

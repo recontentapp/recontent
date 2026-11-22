@@ -27,7 +27,7 @@ error: Broken alias at "system.color.bg": target "ref.color.white" does not exis
 ```
 
 A token points at a token that is not in the config. Add the layer that defines the target to
-`tokens` in `defineConfig`, for example `ref` (pass `{}` only for layers that are really unused).
+`tokens` in `defineConfig`, for example `ref` (unused layers can be omitted).
 
 ## Bare value instead of a token
 
@@ -44,14 +44,15 @@ A string, number or plain object that is not a token is ignored. Wrap the value 
 error: File path collision at "o/tokens.css": both plugin "recontent:css" and plugin "acme:x" emitted this file.
 ```
 
-Two different plugins write the same path, usually because they share an `outDir` and a file name.
-Give one of them its own `outDir`. The common case is `typescript()` with `typescriptNative()`,
-which both write `tokens.ts`. See [outDir](/guides/using-plugins#outdir).
+Two plugins (or two instances of the same plugin) write the same path, usually because they share
+an `outDir` and a file name. Give one of them its own `outDir` or `filename`. The common case is
+`typescript()` with `typescriptNative()`, which both default to `tokens.ts`. See
+[outDir](/guides/using-plugins#outdir).
 
 ## Theme name rejected
 
 ```text
-error: Theme name "my-dark" cannot be used with the "stylex" output target: theme names must be valid TypeScript identifiers.
+error: [recontent:stylex] Theme name "my-dark" cannot be used with the "stylex" output target: theme names must be valid TypeScript identifiers.
 ```
 
 The key in `themes` becomes a class name, a file name or an export name, so each plugin restricts
@@ -61,7 +62,7 @@ it. Use a name like `dark` or `highContrast`, which every plugin accepts. See
 ## Key collision in StyleX
 
 ```text
-error: StyleX key collision: token paths "ref.a.bC" and "ref.aB.c" both flatten to "refABC". Rename one of these tokens to avoid an ambiguous generated key.
+error: [recontent:stylex] generate failed: StyleX key collision: token paths "ref.a.bC" and "ref.aB.c" both flatten to "refABC". Rename one of these tokens to avoid an ambiguous generated key.
 ```
 
 StyleX variables are flat, so two paths that join to the same camelCase key clash. Rename one of the

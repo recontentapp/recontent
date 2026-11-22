@@ -90,6 +90,7 @@ export async function loadIntrospection(
       introspection: { components: result.components, types: result.types },
       warnings,
       files: result.files,
+      missingFiles: result.missingFiles,
       // Not the config's own: `.recontent` and the plugins' output are created there after this is stamped.
       directories: [...new Set(watch.map((file) => path.dirname(file)))].filter(
         (directory) => directory !== root,

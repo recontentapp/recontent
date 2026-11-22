@@ -7,7 +7,7 @@ const TOKENS = [
   ["string", /"(?:[^"\\\n]|\\.)*"|'(?:[^'\\\n]|\\.)*'|`(?:[^`\\]|\\[\s\S])*`/],
   ["number", /\b\d[\d_]*(?:\.\d+)?\b/],
   // `<Tag` / `</Tag`, but not generics (`Array<string>`) or comparisons (`a < b`).
-  ["tag", /(?<![\w$)\]])<\/?[A-Za-z][\w.:-]*/],
+  ["tag", /(?:<\/|(?<![\w$)\]])<)[A-Za-z][\w.:-]*/],
   // `name=` after whitespace, which in practice means a JSX attribute.
   ["attr", /(?<=\s)[A-Za-z_][\w-]*(?==[^=])/],
   [

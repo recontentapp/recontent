@@ -1,4 +1,5 @@
 import fs from "node:fs";
+import os from "node:os";
 import path from "node:path";
 import { pathKey } from "../token-model/guards.js";
 import { type ComponentInfo, type TypeInfo } from "../introspection/model.js";
@@ -24,7 +25,8 @@ export type Snapshot = {
   tokens: DocToken[];
 } & Partial<Introspected>;
 
-const numericCompare = (a: string, b: string) => a.localeCompare(b, undefined, { numeric: true });
+const numericCollator = new Intl.Collator("en", { numeric: true });
+export const numericCompare = (a: string, b: string) => numericCollator.compare(a, b);
 
 export function createSnapshot(
   config: { registry: TokenRegistry; themes: Record<string, ThemeOverride> },
@@ -36,20 +38,28 @@ export function createSnapshot(
     kind: "snapshot",
     themes,
     tokens: [...config.registry.values()]
-      .sort((a, b) => numericCompare(pathKey(a.path), pathKey(b.path)))
-      .map((entry) => buildToken(config, entry, themes)),
+      .map((entry) => ({ key: pathKey(entry.path), entry }))
+      .sort((a, b) => numericCompare(a.key, b.key))
+      .map(({ entry }) => buildToken(config, entry, themes)),
     ...(introspected ? { components: introspected.components, types: introspected.types } : {}),
   };
 }
 
-/** A path rather than a package name: it starts with `.` or `/`, or ends in `.json`. */
+/** A path rather than a package name: relative, absolute, tilde-home, or `.json`. */
 function isFilePath(from: string): boolean {
-  return from.startsWith(".") || from.startsWith("/") || from.endsWith(".json");
+  return (
+    from.startsWith(".") ||
+    from.startsWith("/") ||
+    from === "~" ||
+    from.startsWith("~/") ||
+    path.isAbsolute(from) ||
+    from.endsWith(".json")
+  );
 }
 
 /** Walks up from `cwd` like Node does, without going through the package's `exports`, which may hide package.json. */
 function findPackageDirectory(name: string, cwd: string): string | undefined {
-  for (let directory = cwd; ; directory = path.dirname(directory)) {
+  for (let directory = path.resolve(cwd); ; directory = path.dirname(directory)) {
     const candidate = path.join(directory, "node_modules", name);
     if (fs.existsSync(path.join(candidate, "package.json"))) return candidate;
     if (directory === path.dirname(directory)) return undefined;
@@ -76,7 +86,13 @@ export function readSnapshot(from: string, cwd: string): { snapshot: Snapshot; s
   let file: string;
   let source: string;
   if (isFilePath(from)) {
-    file = path.resolve(cwd, from);
+    const expanded =
+      from === "~"
+        ? os.homedir()
+        : from.startsWith("~/")
+          ? path.join(os.homedir(), from.slice(2))
+          : from;
+    file = path.resolve(cwd, expanded);
     source = from;
   } else {
     const directory = findPackageDirectory(from, cwd);
@@ -89,7 +105,7 @@ export function readSnapshot(from: string, cwd: string): { snapshot: Snapshot; s
       version?: string;
       recontent?: unknown;
     };
-    if (typeof manifest.recontent !== "string") {
+    if (typeof manifest.recontent !== "string" || manifest.recontent.trim() === "") {
       throw new Error(
         `--from: ${from} has no "recontent" field in its package.json. Ask its maintainers to add the \`inspect()\` plugin and publish the snapshot it writes.`,
       );
@@ -99,7 +115,11 @@ export function readSnapshot(from: string, cwd: string): { snapshot: Snapshot; s
   }
 
   const snapshot = readJson(file) as Partial<Snapshot> | null;
-  if (snapshot?.kind !== "snapshot" || !Array.isArray(snapshot.tokens)) {
+  if (
+    snapshot?.kind !== "snapshot" ||
+    !Array.isArray(snapshot.tokens) ||
+    !Array.isArray(snapshot.themes)
+  ) {
     throw new Error(`--from: ${file} is not a recontent snapshot.`);
   }
   if (snapshot.schemaVersion !== SCHEMA_VERSION) {

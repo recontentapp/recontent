@@ -3,15 +3,22 @@ import path from "node:path";
 import ts from "typescript";
 
 function isRelativeSpecifier(specifier: string): boolean {
-  return specifier.startsWith("./") || specifier.startsWith("../");
+  return (
+    specifier === "." ||
+    specifier === ".." ||
+    specifier.startsWith("./") ||
+    specifier.startsWith("../")
+  );
 }
 
 function collectFromNode(node: ts.Node, specifiers: Set<string>): void {
   if (ts.isImportDeclaration(node)) {
     if (node.importClause?.isTypeOnly) return;
     if (
+      !node.importClause?.name &&
       node.importClause?.namedBindings &&
       ts.isNamedImports(node.importClause.namedBindings) &&
+      node.importClause.namedBindings.elements.length > 0 &&
       node.importClause.namedBindings.elements.every((element) => element.isTypeOnly)
     ) {
       return;
@@ -64,18 +71,27 @@ function collectAllSpecifiers(source: string, fileName: string): string[] {
 }
 
 const RESOLVABLE_EXTENSIONS = [".ts", ".tsx", ".mts", ".cts", ".js", ".jsx", ".mjs", ".cjs"];
+const JS_TO_TS_EXTENSION: Record<string, string[]> = {
+  ".js": [".ts", ".tsx"],
+  ".jsx": [".tsx", ".ts"],
+  ".mjs": [".mts"],
+  ".cjs": [".cts"],
+};
 
 function resolveRelativeFile(fromFile: string, specifier: string): string | undefined {
   const base = path.resolve(path.dirname(fromFile), specifier);
-  const candidates = [base, ...RESOLVABLE_EXTENSIONS.map((ext) => `${base}${ext}`)];
+  const ext = path.extname(base);
+  const remapped =
+    JS_TO_TS_EXTENSION[ext]?.map((tsExt) => `${base.slice(0, -ext.length)}${tsExt}`) ?? [];
+  const candidates = [base, ...remapped, ...RESOLVABLE_EXTENSIONS.map((e) => `${base}${e}`)];
   for (const candidate of candidates) {
     if (fs.existsSync(candidate) && fs.statSync(candidate).isFile()) {
       return candidate;
     }
   }
   // Directory import — try index.*
-  for (const ext of RESOLVABLE_EXTENSIONS) {
-    const indexCandidate = path.join(base, `index${ext}`);
+  for (const e of RESOLVABLE_EXTENSIONS) {
+    const indexCandidate = path.join(base, `index${e}`);
     if (fs.existsSync(indexCandidate) && fs.statSync(indexCandidate).isFile()) {
       return indexCandidate;
     }

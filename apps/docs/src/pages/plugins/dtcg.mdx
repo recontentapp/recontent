@@ -43,11 +43,11 @@ The document nests tokens by path (`system` → `color` → `background`). Each 
 - **Aliases** are DTCG references: `"$value": "{ref.color.white}"`.
 - **Colors** are `{ colorSpace, components, alpha, hex }` objects.
 - **Dimensions** are `{ value, unit }`. DTCG defines only `px` and `rem`, so `em` is written as `rem`
-  with the same number.
+  with the same number and emits a build warning.
 - **Font weights** are numbers; named weights are converted.
 - **Composites** (`shadow`, `border`, `transition`, `gradient`, `typography`) use the DTCG shape. A
   single-layer shadow is an object, and several layers are an array.
-- **Scales** keep their `$description`, `$deprecated` and `$extensions` on the group.
+- **Scales and groups** (`tokens.group()`) keep their `$description`, `$deprecated` and `$extensions` on the group.
 - **Group types**: when every token below a group has the same type, and there are at least two, the
   type is set once as the group's `$type` instead of on each token. If all tokens share a type, it
   ends up at the document root, as below.

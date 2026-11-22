@@ -10,7 +10,16 @@ export type {
   TypeParameterInfo,
 } from "../introspection/model.js";
 export type { Logger } from "../logger.js";
-export type { ThemeOverride, TokenEntry, TokenRegistry } from "../token-model/registry.js";
+export type {
+  ThemeOverride,
+  ThemeValue,
+  TokenEntry,
+  TokenGroupMetadata,
+  TokenGroups,
+  TokenRegistry,
+  TokenScaleMetadata,
+} from "../token-model/registry.js";
+export type { TokenLayer } from "../token-model/model.js";
 export type { TokenType, TokenTypeMap } from "../token-model/values.js";
 export { contrast, type ContrastPluginOptions } from "./contrast.js";
 export { css, type CssPluginOptions } from "./css.js";

@@ -135,6 +135,29 @@ function diffCompositeMembers(
       });
     }
   }
+  if (type === "shadow") {
+    const fromLayers = (fromValue as TokenTypeMap["shadow"]).layers;
+    const toLayers = (toValue as TokenTypeMap["shadow"]).layers;
+    const len = Math.max(fromLayers.length, toLayers.length);
+    for (let i = 0; i < len; i++) {
+      const fl = fromLayers[i];
+      const tl = toLayers[i];
+      const fromInset = fl && "color" in fl ? Boolean(fl.inset) : undefined;
+      const toInset = tl && "color" in tl ? Boolean(tl.inset) : undefined;
+      if (fromInset !== toInset) {
+        results.push({
+          key: `layers.${i}.inset`,
+          from: String(fromInset ?? false),
+          to: String(toInset ?? false),
+        });
+      }
+    }
+  } else if (type === "gradient") {
+    const fg = fromValue as TokenTypeMap["gradient"];
+    const tg = toValue as TokenTypeMap["gradient"];
+    if (fg.kind !== tg.kind) results.push({ key: "kind", from: fg.kind, to: tg.kind });
+    if (fg.angle !== tg.angle) results.push({ key: "angle", from: fg.angle, to: tg.angle });
+  }
   return results;
 }
 
@@ -184,7 +207,7 @@ function formatTokensMarkdown(diff: TokenDiff): string {
     // A single fenced `diff` block, so GitHub/GitLab colour the -/+ lines.
     const lines = [`## Changed (${diff.changed.length})`, "", "```diff"];
     for (const { from, to } of diff.changed) {
-      if (isCompositeType(from.$type)) {
+      if (!from.alias && !to.alias && isCompositeType(from.$type)) {
         const memberChanges = diffCompositeMembers(from.$type, from.$value, to.$value);
         if (memberChanges.length > 0) {
           for (const member of memberChanges) {
@@ -206,11 +229,17 @@ function formatTokensMarkdown(diff: TokenDiff): string {
     for (const { from, to } of diff.metadata) {
       const notes: string[] = [];
       if ((from.$deprecated ?? false) !== (to.$deprecated ?? false)) {
-        notes.push(
-          to.$deprecated
-            ? `now deprecated${typeof to.$deprecated === "string" ? `: ${to.$deprecated}` : ""}`
-            : "no longer deprecated",
-        );
+        if (!to.$deprecated) {
+          notes.push("no longer deprecated");
+        } else if (from.$deprecated) {
+          notes.push(
+            `deprecation message changed${typeof to.$deprecated === "string" ? `: ${to.$deprecated}` : ""}`,
+          );
+        } else {
+          notes.push(
+            `now deprecated${typeof to.$deprecated === "string" ? `: ${to.$deprecated}` : ""}`,
+          );
+        }
       }
       if (from.$description !== to.$description) notes.push("description changed");
       lines.push(`- ${code(pathStr(to))}: ${notes.join(", ")}`);
@@ -252,8 +281,10 @@ function literals(values: Literal[]): string {
 }
 
 function describeValues(from: Literal[], to: Literal[]): string {
-  const removed = from.filter((value) => !to.includes(value));
-  const added = to.filter((value) => !from.includes(value));
+  const fromSet = new Set(from);
+  const toSet = new Set(to);
+  const removed = from.filter((value) => !toSet.has(value));
+  const added = to.filter((value) => !fromSet.has(value));
   const parts: string[] = [];
   if (removed.length > 0)
     parts.push(`removed ${removed.length === 1 ? "value" : "values"} ${literals(removed)}`);

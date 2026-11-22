@@ -109,24 +109,28 @@ export function archiveRevision(gitRoot: string, rev: string, destDir: string): 
 }
 
 /**
- * Symlinks every ignored `node_modules` of the work tree into the same relative
- * path under `destDir` (an archive of the tree), so TypeScript can resolve
- * `react` and friends there. Whole directories are linked, which keeps pnpm's
- * relative `.pnpm` links working. A directory that does not exist at the
- * archived revision, or already has a `node_modules`, is left alone.
+ * Symlinks `node_modules` directories along the ancestry from `configDir` up to
+ * `gitRoot` into the same relative paths under `destDir`, so TypeScript can
+ * resolve `react` and friends without running a repo-wide `git ls-files`.
  */
-export function linkNodeModules(gitRoot: string, destDir: string): void {
-  const listed = spawnSync(
-    "git",
-    ["ls-files", "-z", "--others", "--ignored", "--exclude-standard", "--directory"],
-    { cwd: gitRoot, encoding: "utf-8", maxBuffer: 64 * 1024 * 1024 },
-  );
-  if (listed.status !== 0) return;
-  for (const entry of listed.stdout.split("\0")) {
-    const relative = entry.replace(/\/$/, "");
-    if (!entry.endsWith("/") || path.posix.basename(relative) !== "node_modules") continue;
-    const link = path.join(destDir, relative);
-    if (!existsSync(path.dirname(link)) || existsSync(link)) continue;
-    symlinkSync(path.join(gitRoot, relative), link, "dir");
+export function linkNodeModules(gitRoot: string, destDir: string, configDir = gitRoot): void {
+  const linkType = process.platform === "win32" ? "junction" : "dir";
+  let current = path.resolve(configDir);
+  const root = path.resolve(gitRoot);
+  while (true) {
+    const nm = path.join(current, "node_modules");
+    if (existsSync(nm)) {
+      const relative = path.relative(root, nm);
+      if (!relative.startsWith("..") && !path.isAbsolute(relative)) {
+        const link = path.join(destDir, relative);
+        if (existsSync(path.dirname(link)) && !existsSync(link)) {
+          symlinkSync(nm, link, linkType);
+        }
+      }
+    }
+    if (current === root) break;
+    const parent = path.dirname(current);
+    if (parent === current) break;
+    current = parent;
   }
 }

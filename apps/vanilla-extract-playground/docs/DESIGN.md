@@ -104,24 +104,24 @@ colors:
   system-colors-textSecondary: "{colors.ref-color-secondary-500}"
   system-colors-warning: "{colors.ref-color-warning-500}"
 typography:
-  system-textScale-clickable: { fontFamily: "-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif", fontSize: "14px", fontWeight: 500, letterSpacing: "0px", lineHeight: 1.4286 }
-  system-textScale-heading-branding-page: { fontFamily: "-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif", fontSize: "32px", fontWeight: 600, letterSpacing: "0px", lineHeight: 1.25 }
-  system-textScale-heading-branding-page-l: { fontFamily: "-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif", fontSize: "48px", fontWeight: 600, letterSpacing: "0px", lineHeight: 1.2083 }
-  system-textScale-heading-page: { fontFamily: "-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif", fontSize: "22px", fontWeight: 600, letterSpacing: "0px", lineHeight: 1.3636 }
-  system-textScale-heading-page-l: { fontFamily: "-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif", fontSize: "24px", fontWeight: 700, letterSpacing: "0px", lineHeight: 1.25 }
-  system-textScale-heading-section-1: { fontFamily: "-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif", fontSize: "20px", fontWeight: 600, letterSpacing: "0px", lineHeight: 1.5 }
-  system-textScale-heading-section-2: { fontFamily: "-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif", fontSize: "18px", fontWeight: 600, letterSpacing: "0px", lineHeight: 1.3333 }
-  system-textScale-heading-section-3: { fontFamily: "-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif", fontSize: "16px", fontWeight: 600, letterSpacing: "0px", lineHeight: 1.5 }
-  system-textScale-heading-section-4: { fontFamily: "-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif", fontSize: "14px", fontWeight: 600, letterSpacing: "0px", lineHeight: 1.4286 }
-  system-textScale-paragraph-body-l: { fontFamily: "-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif", fontSize: "16px", fontWeight: 400, letterSpacing: "0px", lineHeight: 1.5 }
-  system-textScale-paragraph-body-l-strong: { fontFamily: "-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif", fontSize: "16px", fontWeight: 500, letterSpacing: "0px", lineHeight: 1.5 }
-  system-textScale-paragraph-body-m: { fontFamily: "-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif", fontSize: "14px", fontWeight: 400, letterSpacing: "0px", lineHeight: 1.4286 }
-  system-textScale-paragraph-body-m-strong: { fontFamily: "-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif", fontSize: "14px", fontWeight: 600, letterSpacing: "0px", lineHeight: 1.4286 }
-  system-textScale-paragraph-body-xl: { fontFamily: "-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif", fontSize: "18px", fontWeight: 400, letterSpacing: "0px", lineHeight: 1.3333 }
-  system-textScale-paragraph-body-xl-strong: { fontFamily: "-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif", fontSize: "18px", fontWeight: 500, letterSpacing: "0px", lineHeight: 1.3333 }
-  system-textScale-tiny-caption: { fontFamily: "-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif", fontSize: "12px", fontWeight: 500, letterSpacing: "0px", lineHeight: 1.3333 }
-  system-textScale-tiny-caption-strong: { fontFamily: "-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif", fontSize: "12px", fontWeight: 700, letterSpacing: "0px", lineHeight: 1.3333 }
-  system-textScale-tiny-subcaption: { fontFamily: "-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif", fontSize: "10px", fontWeight: 500, letterSpacing: "0px", lineHeight: 1 }
+  system-textScale-clickable: { fontFamily: "\"-apple-system\", BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif", fontSize: "14px", fontWeight: 500, letterSpacing: "0px", lineHeight: 1.4286 }
+  system-textScale-heading-branding-page: { fontFamily: "\"-apple-system\", BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif", fontSize: "32px", fontWeight: 600, letterSpacing: "0px", lineHeight: 1.25 }
+  system-textScale-heading-branding-page-l: { fontFamily: "\"-apple-system\", BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif", fontSize: "48px", fontWeight: 600, letterSpacing: "0px", lineHeight: 1.2083 }
+  system-textScale-heading-page: { fontFamily: "\"-apple-system\", BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif", fontSize: "22px", fontWeight: 600, letterSpacing: "0px", lineHeight: 1.3636 }
+  system-textScale-heading-page-l: { fontFamily: "\"-apple-system\", BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif", fontSize: "24px", fontWeight: 700, letterSpacing: "0px", lineHeight: 1.25 }
+  system-textScale-heading-section-1: { fontFamily: "\"-apple-system\", BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif", fontSize: "20px", fontWeight: 600, letterSpacing: "0px", lineHeight: 1.5 }
+  system-textScale-heading-section-2: { fontFamily: "\"-apple-system\", BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif", fontSize: "18px", fontWeight: 600, letterSpacing: "0px", lineHeight: 1.3333 }
+  system-textScale-heading-section-3: { fontFamily: "\"-apple-system\", BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif", fontSize: "16px", fontWeight: 600, letterSpacing: "0px", lineHeight: 1.5 }
+  system-textScale-heading-section-4: { fontFamily: "\"-apple-system\", BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif", fontSize: "14px", fontWeight: 600, letterSpacing: "0px", lineHeight: 1.4286 }
+  system-textScale-paragraph-body-l: { fontFamily: "\"-apple-system\", BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif", fontSize: "16px", fontWeight: 400, letterSpacing: "0px", lineHeight: 1.5 }
+  system-textScale-paragraph-body-l-strong: { fontFamily: "\"-apple-system\", BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif", fontSize: "16px", fontWeight: 500, letterSpacing: "0px", lineHeight: 1.5 }
+  system-textScale-paragraph-body-m: { fontFamily: "\"-apple-system\", BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif", fontSize: "14px", fontWeight: 400, letterSpacing: "0px", lineHeight: 1.4286 }
+  system-textScale-paragraph-body-m-strong: { fontFamily: "\"-apple-system\", BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif", fontSize: "14px", fontWeight: 600, letterSpacing: "0px", lineHeight: 1.4286 }
+  system-textScale-paragraph-body-xl: { fontFamily: "\"-apple-system\", BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif", fontSize: "18px", fontWeight: 400, letterSpacing: "0px", lineHeight: 1.3333 }
+  system-textScale-paragraph-body-xl-strong: { fontFamily: "\"-apple-system\", BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif", fontSize: "18px", fontWeight: 500, letterSpacing: "0px", lineHeight: 1.3333 }
+  system-textScale-tiny-caption: { fontFamily: "\"-apple-system\", BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif", fontSize: "12px", fontWeight: 500, letterSpacing: "0px", lineHeight: 1.3333 }
+  system-textScale-tiny-caption-strong: { fontFamily: "\"-apple-system\", BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif", fontSize: "12px", fontWeight: 700, letterSpacing: "0px", lineHeight: 1.3333 }
+  system-textScale-tiny-subcaption: { fontFamily: "\"-apple-system\", BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif", fontSize: "10px", fontWeight: 500, letterSpacing: "0px", lineHeight: 1 }
 rounded:
   ref-radius-container: "8px"
   ref-radius-element: "6px"
@@ -188,8 +188,8 @@ Keys mirror token paths and CSS variables: `system-border-default` is `system.bo
 ## Typography
 
 - `ref-fontFamily-mono`: `SF Mono, Monaco, Consolas, monospace`
-- `ref-fontFamily-sans`: `-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif`
-- `system-typography-bodyFontFamily`: `-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif`
+- `ref-fontFamily-sans`: `"-apple-system", BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif`
+- `system-typography-bodyFontFamily`: `"-apple-system", BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif`
 - `system-typography-codeFontFamily`: `SF Mono, Monaco, Consolas, monospace`
 
 ## Layout

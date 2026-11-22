@@ -253,6 +253,29 @@ test("dependsOn is optional but must be valid when given", () => {
   );
 });
 
+test("scale members keep chainable methods and plain layer objects preserve stamped aliases/scales", () => {
+  const ref = defineReferenceTokens({
+    color: { blue: tokens.colorScale({ 500: "#2563eb" }) },
+    fontSize: tokens.dimensionScale({ sm: "12px" }),
+    lineHeight: tokens.numberScale({ sm: 1.5 }),
+  });
+  const faded = ref.color.blue[500].alpha(0.5);
+  expect(faded.$value.alpha).toBe(0.5);
+
+  const config = defineConfig({
+    tokens: {
+      ref,
+      system: {
+        accent: ref.color.blue[500],
+        palette: ref.color.blue,
+      },
+    },
+  });
+  expect(config.diagnostics).toEqual([]);
+  expect(config.registry.get("system.accent")?.alias).toEqual(["ref", "color", "blue", "500"]);
+  expect(config.registry.has("system.palette.500")).toBe(true);
+});
+
 test("plugins may be given as a single plugin or as a list", () => {
   const a = { name: "acme:a", dependsOn: ["tokens" as const] };
   const b = { name: "acme:b", dependsOn: ["tokens" as const] };

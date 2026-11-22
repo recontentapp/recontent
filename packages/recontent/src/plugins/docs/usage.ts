@@ -12,7 +12,7 @@ function escapeHtml(value: string): string {
 const HIGHLIGHTED = new Set(["", "ts", "tsx", "js", "jsx", "typescript", "javascript"]);
 
 /** Relative links, or absolute ones over http(s) / mailto: anything else (`javascript:`) is left as text. */
-function isSafeHref(href: string): boolean {
+export function isSafeHref(href: string): boolean {
   // Browsers ignore whitespace and control characters inside a URL's scheme.
   const scheme = /^([a-z][a-z0-9+.-]*):/i.exec(href.replace(/[\s\p{Cc}]/gu, ""))?.[1];
   return !scheme || ["http", "https", "mailto"].includes(scheme.toLowerCase());
@@ -36,6 +36,10 @@ const markdown = new Marked({
       if (!isSafeHref(href)) return text;
       const external = /^https?:/i.test(href);
       return `<a href="${escapeHtml(href)}"${title ? ` title="${escapeHtml(title)}"` : ""}${external ? ' target="_blank" rel="noopener noreferrer"' : ""}>${text}</a>`;
+    },
+    image({ href, title, text }) {
+      if (!isSafeHref(href)) return escapeHtml(text);
+      return `<img src="${escapeHtml(href)}" alt="${escapeHtml(text)}"${title ? ` title="${escapeHtml(title)}"` : ""}>`;
     },
   },
 });

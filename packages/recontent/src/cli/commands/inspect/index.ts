@@ -74,10 +74,17 @@ async function loadLocal(
   options: Extract<InspectOptions, { configPath: string }>,
 ): Promise<Loaded | undefined> {
   const { target, format } = options;
-  const project = await loadProject({
-    configPath: options.configPath,
-    logLevel: options.logLevel,
-  });
+  let project: Awaited<ReturnType<typeof loadProject>>;
+  try {
+    project = await loadProject({
+      configPath: options.configPath,
+      logLevel: options.logLevel,
+    });
+  } catch (error) {
+    if (format !== "json") throw error;
+    fail(format, [{ message: error instanceof Error ? error.message : String(error) }]);
+    return undefined;
+  }
   const { config, logger } = project;
   const configName = displayPath(options.cwd, options.configPath);
 

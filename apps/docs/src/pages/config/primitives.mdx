@@ -38,10 +38,13 @@ import { tokens } from "recontent";
 
 tokens.color("#2563eb");
 tokens.color("#2563eb80"); // with alpha
+tokens.color("oklch(0.55 0.2 262 / 0.9)"); // CSS color function
 tokens.color({ colorSpace: "oklch", components: [0.55, 0.2, 262], alpha: 0.9 });
 ```
 
-Takes a hex string (`#rgb`, `#rgba`, `#rrggbb` or `#rrggbbaa`, with or without `#`) or an object:
+Takes a hex string (`#rgb`, `#rgba`, `#rrggbb` or `#rrggbbaa`, starting with `#`), a CSS color
+function string (`rgb()`, `rgba()`, `hsl()`, `hsla()`, `hwb()`, `lab()`, `lch()`, `oklab()`,
+`oklch()`, or `color(<space> …)`), or an object:
 
 | Field        | Type                                                     | Notes                                        |
 | ------------ | -------------------------------------------------------- | -------------------------------------------- |
@@ -57,7 +60,7 @@ Takes a hex string (`#rgb`, `#rgba`, `#rrggbb` or `#rrggbbaa`, with or without `
 | `lch`                                                                     | L 0 to 100, C 0 to 150, H 0 to 360       |
 | `oklab`                                                                   | L 0 to 1, a and b −0.4 to 0.4            |
 | `oklch`                                                                   | L 0 to 1, C 0 to 0.4, H 0 to 360         |
-| `xyz-d65`, `xyz-d50`                                                      | each 0 to 1                              |
+| `xyz-d65`, `xyz-d50`                                                      | finite numbers (unbounded)               |
 
 A fallback `hex` is computed for every color. CSS output: sRGB colors are written as hex
 (`#rrggbb`, or `#rrggbbaa` with alpha); `oklch`, `oklab`, `lab`, `lch`, `hsl` and `hwb` use their

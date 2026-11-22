@@ -43,7 +43,7 @@ function declarationOf(symbol: ts.Symbol): ts.Declaration | undefined {
   return symbol.valueDeclaration ?? symbol.declarations?.[0];
 }
 
-/** Follows `{ Item }` and `{ Item: Impl }` to the declaration of the component itself. */
+/** Follows `{ Item }`, `{ Item: Impl }`, and `Tabs.Item = Impl` to the declaration of the component itself. */
 function locate(checker: ts.TypeChecker, symbol: ts.Symbol): ts.Declaration | undefined {
   let current = symbol;
   for (let depth = 0; depth < 3; depth++) {
@@ -57,11 +57,74 @@ function locate(checker: ts.TypeChecker, symbol: ts.Symbol): ts.Declaration | un
       ts.isIdentifier(declaration.initializer)
     ) {
       next = checker.getSymbolAtLocation(declaration.initializer);
+    } else if (
+      declaration &&
+      ts.isPropertyAccessExpression(declaration) &&
+      ts.isBinaryExpression(declaration.parent) &&
+      declaration.parent.left === declaration &&
+      declaration.parent.operatorToken.kind === ts.SyntaxKind.EqualsToken &&
+      ts.isIdentifier(declaration.parent.right)
+    ) {
+      next = checker.getSymbolAtLocation(declaration.parent.right);
     }
     if (!next) return declaration;
     current = resolveAlias(checker, next);
   }
   return declarationOf(current);
+}
+
+/** Strips only `undefined` from a type (preserving `| null`). */
+function stripUndefined(checker: ts.TypeChecker, type: ts.Type): ts.Type {
+  if (!type.isUnion()) return type;
+  const withoutUndefined = type.types.filter((t) => !(t.flags & ts.TypeFlags.Undefined));
+  if (withoutUndefined.length === type.types.length) return type;
+  if (withoutUndefined.length === 1) return withoutUndefined[0]!;
+  return type;
+}
+
+/** True when `node` references a type parameter that has been instantiated away in `instantiated`. */
+export function hasInstantiatedTypeParam(
+  checker: ts.TypeChecker,
+  node: ts.TypeNode,
+  instantiated: ts.Type,
+): boolean {
+  let hasTypeParamRef = false;
+  const visit = (n: ts.Node): void => {
+    if (hasTypeParamRef) return;
+    if (ts.isTypeReferenceNode(n) && ts.isIdentifier(n.typeName)) {
+      const sym = checker.getSymbolAtLocation(n.typeName);
+      if (sym && (sym.flags & ts.SymbolFlags.TypeParameter) !== 0) {
+        hasTypeParamRef = true;
+        return;
+      }
+    }
+    ts.forEachChild(n, visit);
+  };
+  visit(node);
+  if (!hasTypeParamRef) return false;
+  // If the instantiated type still mentions the same type parameter, it wasn't instantiated (e.g. generic component).
+  const containsTypeParam = (t: ts.Type, seen = new Set<ts.Type>()): boolean => {
+    if (seen.has(t)) return false;
+    seen.add(t);
+    if (t.flags & ts.TypeFlags.TypeParameter) return true;
+    if (t.isUnionOrIntersection()) return t.types.some((m) => containsTypeParam(m, seen));
+    if (
+      t.flags & ts.TypeFlags.Object &&
+      (t as ts.ObjectType).objectFlags & ts.ObjectFlags.Reference
+    ) {
+      return checker
+        .getTypeArguments(t as ts.TypeReference)
+        .some((a) => containsTypeParam(a, seen));
+    }
+    for (const sig of t.getCallSignatures()) {
+      if (sig.getParameters().some((p) => containsTypeParam(checker.getTypeOfSymbol(p), seen))) {
+        return true;
+      }
+      if (containsTypeParam(sig.getReturnType(), seen)) return true;
+    }
+    return false;
+  };
+  return !containsTypeParam(instantiated);
 }
 
 /** The type as written on the property, not a method's return type. */
@@ -75,15 +138,21 @@ export function declaredTypeNode(symbol: ts.Symbol): ts.TypeNode | undefined {
     : undefined;
 }
 
-function typeText(checker: ts.TypeChecker, symbol: ts.Symbol, optional: boolean): string {
+function typeText(
+  checker: ts.TypeChecker,
+  symbol: ts.Symbol,
+  propType: ts.Type,
+  optional: boolean,
+  location: ts.Node,
+): string {
   const declaration = declarationOf(symbol);
   const node = declaredTypeNode(symbol);
-  if (node) {
+  if (node && !hasInstantiatedTypeParam(checker, node, propType)) {
     return oneLine(printer.printNode(ts.EmitHint.Unspecified, node, node.getSourceFile()));
   }
   const text = checker.typeToString(
-    checker.getTypeOfSymbolAtLocation(symbol, declaration ?? symbol.valueDeclaration!),
-    declaration,
+    optional ? stripUndefined(checker, propType) : propType,
+    declaration ?? location,
     ts.TypeFormatFlags.NoTruncation,
   );
   return optional ? text.replace(/ \| undefined$/, "") : text;
@@ -109,12 +178,15 @@ function resolvedText(
 ): string | undefined {
   const { checker } = analysis;
   const nonNull = checker.getNonNullableType(type);
+  const hasNull =
+    (type.flags & ts.TypeFlags.Null) !== 0 ||
+    (type.isUnion() && type.types.some((t) => (t.flags & ts.TypeFlags.Null) !== 0));
   const aliasDeclaration = nonNull.aliasSymbol?.declarations?.[0];
   const projectAlias =
     !!aliasDeclaration && !isExternal(analysis, aliasDeclaration.getSourceFile());
   const node = declaredTypeNode(symbol);
   if (!projectAlias && !(node && containsIndexedAccess(node))) return undefined;
-  const text = checker
+  let text = checker
     .typeToString(
       projectAlias || !type.aliasSymbol ? nonNull : type,
       declarationOf(symbol),
@@ -123,6 +195,9 @@ function resolvedText(
         : ts.TypeFormatFlags.NoTruncation,
     )
     .replace(/ \| undefined$/, "");
+  if (hasNull && !/\bnull\b/.test(text)) {
+    text = `${text} | null`;
+  }
   return text === declared ? undefined : text;
 }
 
@@ -169,9 +244,14 @@ export function literalValues(
 /** Union members come back in type-id order; prefer the order they were written in. */
 export function inSourceOrder(values: (string | number | boolean)[], text: string) {
   const position = (value: string | number | boolean) => {
-    const forms = typeof value === "string" ? [`"${value}"`, `'${value}'`] : [String(value)];
-    const found = forms.map((form) => text.indexOf(form)).filter((index) => index !== -1);
-    return found.length > 0 ? Math.min(...found) : Infinity;
+    if (typeof value === "string") {
+      const forms = [`"${value}"`, `'${value}'`];
+      const found = forms.map((form) => text.indexOf(form)).filter((index) => index !== -1);
+      return found.length > 0 ? Math.min(...found) : Infinity;
+    }
+    const escaped = String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const match = new RegExp(`(?<![\\w.-])${escaped}(?![\\w.])`).exec(text);
+    return match ? match.index : Infinity;
   };
   return values
     .map((value, index) => ({ value, index, at: position(value) }))
@@ -205,6 +285,14 @@ function implementationDefaults(
     }
     if (ts.isVariableDeclaration(node)) return findFunction(node.initializer, depth + 1);
     if (
+      ts.isPropertyAccessExpression(node) &&
+      ts.isBinaryExpression(node.parent) &&
+      node.parent.left === node &&
+      node.parent.operatorToken.kind === ts.SyntaxKind.EqualsToken
+    ) {
+      return findFunction(node.parent.right, depth + 1);
+    }
+    if (
       ts.isParenthesizedExpression(node) ||
       ts.isAsExpression(node) ||
       ts.isSatisfiesExpression(node) ||
@@ -229,7 +317,7 @@ function implementationDefaults(
       if (!element.initializer || element.dotDotDotToken) continue;
       const key = element.propertyName ?? element.name;
       if (ts.isIdentifier(key) || ts.isStringLiteral(key)) {
-        defaults.set(key.text, element.initializer.getText());
+        defaults.set(key.text, oneLine(element.initializer.getText()));
       }
     }
   }
@@ -282,16 +370,25 @@ function enclosingTypeDeclaration(node: ts.Node): ts.Declaration | undefined {
   return undefined;
 }
 
-function ancestorsOf(checker: ts.TypeChecker, symbol: ts.Symbol, seen = new Set<ts.Symbol>()) {
+function ancestorsOf(
+  checker: ts.TypeChecker,
+  symbol: ts.Symbol,
+  cache?: Map<ts.Symbol, Set<ts.Symbol>>,
+  seen = new Set<ts.Symbol>(),
+): Set<ts.Symbol> {
+  if (seen.size === 0 && cache?.has(symbol)) {
+    return cache.get(symbol)!;
+  }
   const declared = checker.getDeclaredTypeOfSymbol(symbol);
   if (declared.isClassOrInterface()) {
     for (const base of checker.getBaseTypes(declared)) {
       if (base.symbol && !seen.has(base.symbol)) {
         seen.add(base.symbol);
-        ancestorsOf(checker, base.symbol, seen);
+        ancestorsOf(checker, base.symbol, undefined, seen);
       }
     }
   }
+  if (cache) cache.set(symbol, seen);
   return seen;
 }
 
@@ -330,15 +427,23 @@ function groupInherited(analysis: Analysis, symbols: ts.Symbol[]): InheritedProp
 
   const all = [...origins.values()];
   const ancestors = new Map(
-    all.map((origin) => [origin, origin.symbol ? ancestorsOf(checker, origin.symbol) : new Set()]),
+    all.map((origin) => [
+      origin,
+      origin.symbol ? ancestorsOf(checker, origin.symbol, analysis.ancestorsCache) : new Set(),
+    ]),
   );
-  const isBaseOfAnother = (origin: Origin) =>
-    !!origin.symbol &&
-    all.some((other) => other !== origin && ancestors.get(other)!.has(origin.symbol!));
-
-  const roots = all.filter((origin) => !isBaseOfAnother(origin));
+  const baseOrigins = new Set<Origin>();
   for (const origin of all) {
-    if (!isBaseOfAnother(origin)) continue;
+    if (
+      origin.symbol &&
+      all.some((other) => other !== origin && ancestors.get(other)!.has(origin.symbol!))
+    ) {
+      baseOrigins.add(origin);
+    }
+  }
+
+  const roots = all.filter((origin) => !baseOrigins.has(origin));
+  for (const origin of baseOrigins) {
     const root = roots.find((candidate) => ancestors.get(candidate)!.has(origin.symbol!));
     if (root) root.props.push(...origin.props);
     else roots.push(origin);
@@ -356,7 +461,15 @@ function groupInherited(analysis: Analysis, symbols: ts.Symbol[]): InheritedProp
 type Occurrence = { symbol: ts.Symbol; type: ts.Type };
 
 /** Library wrappers that keep the keys of their first argument as they are, or narrow them. */
-const TRANSPARENT = new Set(["Partial", "Required", "Readonly", "PropsWithoutRef"]);
+const TRANSPARENT = new Set([
+  "Partial",
+  "Required",
+  "Readonly",
+  "PropsWithoutRef",
+  "PropsWithChildren",
+  "PropsWithRef",
+  "Omit",
+]);
 
 /**
  * The keys that project code picks from library types with `Pick<Lib, "a" | "b">`.
@@ -482,7 +595,13 @@ export function describeMembers(
     }
 
     const rendered = own.map(({ symbol: property, type: propType }) => {
-      const declared = typeText(checker, property, !!(property.flags & ts.SymbolFlags.Optional));
+      const declared = typeText(
+        checker,
+        property,
+        propType,
+        !!(property.flags & ts.SymbolFlags.Optional),
+        location,
+      );
       return { declared, resolved: resolvedText(analysis, property, propType, declared) };
     });
     const unique = (texts: string[]) => [...new Set(texts)].join(" | ");
@@ -566,8 +685,22 @@ export function describeComponent(
     candidate.name,
   );
 
-  const category = categoryOf(checker, symbol);
-  const { storiesFiles = [], ...doc } = jsDoc(analysis, symbol, candidate.name);
+  const locatedSymbol = (() => {
+    const name = "name" in located ? (located.name as ts.Node | undefined) : undefined;
+    if (name && typeof name === "object" && typeof name.kind === "number") {
+      const sym = checker.getSymbolAtLocation(name);
+      return sym ? resolveAlias(checker, sym) : undefined;
+    }
+    return undefined;
+  })();
+  const fallbackSymbol = locatedSymbol && locatedSymbol !== symbol ? locatedSymbol : undefined;
+  const category =
+    categoryOf(checker, symbol) ??
+    (fallbackSymbol ? categoryOf(checker, fallbackSymbol) : undefined);
+  const primaryDoc = jsDoc(analysis, symbol, candidate.name);
+  const fallbackDoc = fallbackSymbol ? jsDoc(analysis, fallbackSymbol, candidate.name) : undefined;
+  const mergedDoc = fallbackDoc ? { ...fallbackDoc, ...primaryDoc } : primaryDoc;
+  const { storiesFiles = [], ...doc } = mergedDoc;
   const stories = storiesFiles.map((file) => path.relative(root, file).split(path.sep).join("/"));
   const file = located.getSourceFile();
   const typeParameters = matches

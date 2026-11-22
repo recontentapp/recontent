@@ -64,21 +64,23 @@ The diff is written to **stdout**. In `markdown` format, a line `Comparing <conf
 written to stderr, so redirecting stdout leaves just the markdown.
 
 - `markdown`: `# Tokens`, `# Components` and `# Types` sections, each with **Breaking**, **Added** and
-  **Changed** subsections (tokens also get a `diff` code block and **Themes**). A section with
+  **Changed** subsections (tokens also get a `diff` code block, **Metadata** for deprecation/description
+  changes, and **Themes**). A section with
   nothing in it is left out. When nothing differs, the output is
   `No changes between the working tree and <rev>.`
 - `json`: one document with `schemaVersion`, `kind: "diff"`, `config`, `rev`, `breaking` (boolean), `counts` and the diffs
   themselves, nested by kind:
 
-  | Field        | Contents                                                                                                                                                                    |
-  | ------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-  | `counts`     | `tokens` (`added`, `removed`, `renamed`, `retyped`, `changed`, `breaking`), `components` and `types` (`added`, `removed`, `changed`, `breaking`), and the total `breaking`. |
-  | `tokens`     | `added`, `removed`, `renamed`, `retyped`, `changed` and `themes`.                                                                                                           |
-  | `components` | `added` and `removed` (the introspected components), and `changed`: `{ name, changes }` per component.                                                                      |
-  | `types`      | The same, for project types.                                                                                                                                                |
+  | Field        | Contents                                                                                                                                                                                |
+  | ------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+  | `counts`     | `tokens` (`added`, `removed`, `renamed`, `retyped`, `changed`, `metadata`, `breaking`), `components` and `types` (`added`, `removed`, `changed`, `breaking`), and the total `breaking`. |
+  | `tokens`     | `added`, `removed`, `renamed`, `retyped`, `changed`, `metadata` and `themes`.                                                                                                           |
+  | `components` | `added` and `removed` (the introspected components), and `changed`: `{ name, changes }` per component.                                                                                  |
+  | `types`      | The same, for project types.                                                                                                                                                            |
 
   `components`, `types` and their counts are absent when components were not compared;
-  `componentsNote` then says why.
+  `componentsNote` then says why. On failure with `--format json`, `recontent diff` prints
+  `{ schemaVersion, kind: "error", errors: [{ message }] }` to stdout.
 
 ## Exit codes
 

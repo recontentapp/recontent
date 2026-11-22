@@ -76,18 +76,21 @@ typescriptNative(options: TypeScriptNativePluginOptions): RecontentPlugin
 Plugin name: `recontent:typescript-native`. Emits `tokens.ts` with the same structure as above and
 values in the shapes React Native expects:
 
-| Token type   | Output                                                                                                                  |
-| ------------ | ----------------------------------------------------------------------------------------------------------------------- |
-| `dimension`  | A number of pixels: `1rem` becomes `16`                                                                                 |
-| `duration`   | A number of milliseconds                                                                                                |
-| `fontFamily` | The first family in the list                                                                                            |
-| `fontWeight` | A string (`"400"`)                                                                                                      |
-| `color`      | A CSS color string (non-sRGB colors are approximated, with a warning)                                                   |
-| `border`     | `{ borderColor, borderWidth, borderStyle }`                                                                             |
-| `shadow`     | `{ shadowColor, shadowOffset, shadowRadius, shadowOpacity }`                                                            |
-| `typography` | `{ fontFamily, fontSize, fontWeight, letterSpacing, lineHeight }`, with `lineHeight` in pixels (multiplier × font size) |
-| `transition` | `{ duration, delay, timingFunction }`                                                                                   |
-| `gradient`   | `{ kind, angle, stops }`                                                                                                |
+| Token type    | Output                                                                                                                  |
+| ------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `dimension`   | A number of pixels: `1rem` becomes `16`                                                                                 |
+| `duration`    | A number of milliseconds                                                                                                |
+| `number`      | A number                                                                                                                |
+| `cubicBezier` | A 4-number tuple (`[x1, y1, x2, y2]`)                                                                                   |
+| `fontFamily`  | The first family in the list                                                                                            |
+| `fontWeight`  | A string (`"400"`)                                                                                                      |
+| `strokeStyle` | `"solid"`, `"dashed"` or `"dotted"` (unsupported styles fall back with a warning)                                       |
+| `color`       | A hex color string (`#rrggbb` or `#rrggbbaa`; non-sRGB colors use their closest sRGB hex, with a warning)               |
+| `border`      | `{ borderColor, borderWidth, borderStyle }`                                                                             |
+| `shadow`      | `{ shadowColor, shadowOffset, shadowRadius, shadowOpacity }`                                                            |
+| `typography`  | `{ fontFamily, fontSize, fontWeight, letterSpacing, lineHeight }`, with `lineHeight` in pixels (multiplier × font size) |
+| `transition`  | `{ duration, delay, timingFunction }`                                                                                   |
+| `gradient`    | `{ kind, angle, stops }`                                                                                                |
 
 React Native has no equivalent for some CSS features. The plugin picks the closest value and prints a
 warning: only the first layer of a multi-layer shadow is kept, `inset` and `spread` are dropped, a
@@ -101,7 +104,7 @@ These apply to both plugins unless noted. Errors fail the build; warnings are pr
 | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | error    | A theme name is not a valid TypeScript identifier, or it collides with a generated export (`theme`, `themes`, `Theme`, `ThemeName`, `BaseTheme`…), a reserved word or another theme's exports. |
 | error    | Two scales produce the same exported name (`RefSpacing`). Rename one of them.                                                                                                                  |
-| error    | `typescriptNative()`: a shadow or gradient stop aliases another shadow or gradient token.                                                                                                      |
+| error    | `typescriptNative()`: `rootFontSize` is not a positive finite number.                                                                                                                          |
 | warning  | `typescriptNative()`: a color is not sRGB, so its closest sRGB approximation is used.                                                                                                          |
 | warning  | `typescriptNative()`: a shadow has several layers, or sets `inset` or a non-zero `spread`.                                                                                                     |
 | warning  | `typescriptNative()`: a gradient is `conic`, or a radial gradient has an `angle`.                                                                                                              |
