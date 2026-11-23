@@ -16,7 +16,11 @@ export default defineConfig({
   socials: [{ icon: "github", link: "https://github.com/recontentapp/recontent" }],
   topNav: [
     { text: "npm", link: "https://www.npmjs.com/package/recontent", external: true },
-    { text: "Changelog", link: "/changelog" },
+    {
+      text: "Changelog",
+      link: "https://github.com/recontentapp/recontent/releases",
+      external: true,
+    },
   ],
   sidebar,
   twoslash: {},

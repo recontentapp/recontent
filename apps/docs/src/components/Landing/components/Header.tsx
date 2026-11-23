@@ -43,7 +43,13 @@ export function Header({ theme, onToggleTheme }: { theme: Theme; onToggleTheme: 
               <Link to="/introduction/getting-started">Docs</Link>
             </li>
             <li>
-              <Link to="/changelog">Changelog</Link>
+              <a
+                target="_blank"
+                rel="noopener noreferrer"
+                href="https://github.com/recontentapp/recontent/releases"
+              >
+                Changelog
+              </a>
             </li>
             <li>
               <a
