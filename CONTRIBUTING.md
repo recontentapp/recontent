@@ -16,13 +16,12 @@ all welcome.
 
 This is a pnpm workspace orchestrated with Turborepo.
 
-| Path                 | What it is                                                                                 |
-| -------------------- | ------------------------------------------------------------------------------------------ |
-| `packages/recontent` | The `recontent` package published to npm: CLI, `define*` API and built-in plugins          |
-| `packages/core`      | `@recontentapp/core`: config loading, token registry, color handling and the plugin runner |
-| `apps/docs`          | The documentation site, built with Vocs                                                    |
-| `apps/*-playground`  | Example projects for the Tailwind, StyleX and vanilla-extract plugins                      |
-| `.github/workflows`  | CI (build, lint, format, typecheck, test, knip) and npm publishing                         |
+| Path                 | What it is                                                                        |
+| -------------------- | --------------------------------------------------------------------------------- |
+| `packages/recontent` | The `recontent` package published to npm: CLI, `define*` API and built-in plugins |
+| `apps/docs`          | The documentation site, built with Vocs                                           |
+| `apps/*-playground`  | Example projects for the Tailwind, StyleX and vanilla-extract plugins             |
+| `.github/workflows`  | CI (build, lint, format, typecheck, test, knip) and npm publishing                |
 
 ## Setup
 
@@ -83,9 +82,21 @@ plugin's output, update the snapshots and review the diff carefully: it is what 
 
 ## Releases
 
-Maintainers release by bumping `packages/core` and `packages/recontent` to the same version and
-publishing a GitHub release tagged with that version. The publish workflow checks that the tag
-matches and publishes both packages to npm with provenance.
+A release is a GitHub release. Publishing it runs `.github/workflows/publish.yml`, which builds
+`packages/recontent` and publishes it to npm with provenance. The tag is the version with no prefix
+(`0.2.0`), and the workflow fails if `packages/recontent/package.json` has a different version.
+
+1. Set the new version in `packages/recontent/package.json`.
+2. Run `pnpm build`, `pnpm typecheck`, `pnpm test`, `pnpm lint`, `pnpm format:check` and `pnpm knip`.
+   Commit the change with the version as the message (`0.3.0`), and merge it into `master`.
+3. Copy [.github/RELEASE_TEMPLATE.md](.github/RELEASE_TEMPLATE.md) to `release-notes.md` and fill it
+   in. Use `git log PREVIOUS..HEAD` for the changes, and delete the sections and comments that do not
+   apply.
+4. Create the release. This creates the tag and starts the publish workflow:
+
+   ```bash
+   gh release create 0.3.0 --target master --title 0.3.0 --notes-file release-notes.md
+   ```
 
 ## License
 

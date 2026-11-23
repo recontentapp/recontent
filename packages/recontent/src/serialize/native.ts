@@ -1,5 +1,5 @@
-import type { StrokeStyleName, TokenTypeMap } from "@recontentapp/core";
-import { serializeColorCss, serializeFontWeight } from "./values.js";
+import type { StrokeStyleName, TokenTypeMap } from "../token-model/values.js";
+import { serializeFontWeight } from "./values.js";
 
 export function roundTo(value: number, decimals: number): number {
   const factor = 10 ** decimals;
@@ -16,7 +16,14 @@ export function serializeDimensionNative(
 }
 
 export function serializeColorNative(value: TokenTypeMap["color"]): string {
-  return serializeColorCss(value);
+  const alpha = value.alpha ?? 1;
+  if (alpha < 1) {
+    const alphaByteHex = Math.round(Math.max(0, Math.min(1, alpha)) * 255)
+      .toString(16)
+      .padStart(2, "0");
+    return `${value.hex}${alphaByteHex}`;
+  }
+  return value.hex;
 }
 
 export function serializeDurationNative(value: TokenTypeMap["duration"]): number {

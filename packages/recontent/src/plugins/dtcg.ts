@@ -1,12 +1,21 @@
+import { pathKey } from "../token-model/guards.js";
+import { type PluginContext, type PluginDiagnostic, type RecontentPlugin } from "./types.js";
+import type {
+  DimensionValue,
+  StrokeStyleValue,
+  TokenType,
+  TokenTypeMap,
+} from "../token-model/values.js";
 import {
-  pathKey,
-  type OutputFile,
-  type RecontentPlugin,
-  type ThemeOverride,
-  type TokenEntry,
-  type TokenRegistry,
-} from "@recontentapp/core";
+  compositeMembers,
+  isCompositeType,
+  type CompositeTokenType,
+} from "../token-model/composite.js";
+import { type TokenGroups, type TokenRegistry } from "../token-model/registry.js";
+import type { TokenMetadata } from "../token-model/model.js";
+import type { OutputFile } from "./shared/context.js";
 import { entryToDtcgNode, setNested } from "../serialize/values.js";
+import { getThemeOverride, themedEntry } from "../token-model/alias.js";
 import type { GeneratorContext } from "./shared/context.js";
 import { outputPlugin } from "./factory.js";
 
@@ -16,43 +25,34 @@ function isConfig(input: TokenRegistry | GeneratorContext): input is GeneratorCo
   return "registry" in input;
 }
 
-function resolveThemedEntry(entry: TokenEntry, themeOverride: ThemeOverride): TokenEntry {
-  const key = pathKey(entry.path);
-  const overridden = themeOverride.get(key);
-  if (!overridden) {
-    return entry;
-  }
-
-  return {
-    path: entry.path,
-    $type: entry.$type,
-    $value: overridden,
-    layer: entry.layer,
-    ...(entry.$description !== undefined ? { $description: entry.$description } : {}),
-    ...(entry.$deprecated !== undefined ? { $deprecated: entry.$deprecated } : {}),
-    ...(entry.$extensions !== undefined ? { $extensions: entry.$extensions } : {}),
-  };
-}
-
-function applyScaleMetadata(output: DtcgOutput, registry: TokenRegistry): void {
+/** Writes the description, deprecation and extensions of scales and `tokens.group(...)` groups onto their DTCG groups. */
+function applyGroupMetadata(
+  output: DtcgOutput,
+  registry: TokenRegistry,
+  groups: TokenGroups | undefined,
+): void {
   const seen = new Set<string>();
+  const sources: Array<TokenMetadata & { path: string[]; layer: string }> = [];
   for (const entry of registry.values()) {
-    const scale = entry.scale;
-    if (!scale) continue;
-    const key = `${scale.layer}:${pathKey(scale.path)}`;
+    if (entry.scale) sources.push(entry.scale);
+  }
+  sources.push(...(groups?.values() ?? []));
+
+  for (const source of sources) {
+    const key = `${source.layer}:${pathKey(source.path)}`;
     if (seen.has(key)) continue;
     seen.add(key);
 
     let group: unknown = output;
-    for (const segment of scale.path) {
+    for (const segment of source.path) {
       group = (group as Record<string, unknown> | undefined)?.[segment];
     }
     if (typeof group !== "object" || group === null) continue;
 
     const node = group as Record<string, unknown>;
-    if (scale.$description !== undefined) node.$description = scale.$description;
-    if (scale.$deprecated !== undefined) node.$deprecated = scale.$deprecated;
-    if (scale.$extensions !== undefined) node.$extensions = scale.$extensions;
+    if (source.$description !== undefined) node.$description = source.$description;
+    if (source.$deprecated !== undefined) node.$deprecated = source.$deprecated;
+    if (source.$extensions !== undefined) node.$extensions = source.$extensions;
   }
 }
 
@@ -109,26 +109,21 @@ export function generateDtcg(input: TokenRegistry | GeneratorContext): DtcgOutpu
     setNested(output, entry.path, entryToDtcgNode(entry));
   }
 
-  applyScaleMetadata(output, registry);
+  applyGroupMetadata(output, registry, isConfig(input) ? input.groups : undefined);
   return hoistGroupTypes(output);
 }
 
 export function generateDtcgThemed(ctx: GeneratorContext, themeName: string): DtcgOutput {
-  const themeOverride = ctx.themes[themeName];
-  if (!themeOverride) {
-    throw new Error(
-      `Theme "${themeName}" is not defined in the config. Available themes: ${Object.keys(ctx.themes).join(", ") || "(none)"}`,
-    );
-  }
+  const themeOverride = getThemeOverride(ctx.themes, themeName);
 
   const output: DtcgOutput = {};
 
   for (const entry of ctx.registry.values()) {
-    const resolved = resolveThemedEntry(entry, themeOverride);
+    const resolved = themedEntry(entry, themeOverride);
     setNested(output, resolved.path, entryToDtcgNode(resolved));
   }
 
-  applyScaleMetadata(output, ctx.registry);
+  applyGroupMetadata(output, ctx.registry, ctx.groups);
   return hoistGroupTypes(output);
 }
 
@@ -140,20 +135,88 @@ function generateDtcgFiles(ctx: GeneratorContext, _options: DtcgPluginOptions): 
   const files: OutputFile[] = [
     {
       filename: "tokens.tokens.json",
-      content: JSON.stringify(generateDtcg(ctx), null, 2),
+      content: `${JSON.stringify(generateDtcg(ctx), null, 2)}\n`,
     },
   ];
 
   for (const themeName of Object.keys(ctx.themes).sort()) {
     files.push({
       filename: `${themeName}.tokens.json`,
-      content: JSON.stringify(generateDtcgThemed(ctx, themeName), null, 2),
+      content: `${JSON.stringify(generateDtcgThemed(ctx, themeName), null, 2)}\n`,
     });
   }
 
   return files;
 }
 
+/** Where a literal value (not an alias) is a dimension in `em`: the value itself, or the members of a composite. */
+function emDimensionLocations(type: TokenType, value: unknown): string[] {
+  const isEm = (candidate: unknown) => (candidate as DimensionValue).unit === "em";
+  if (type === "dimension") return isEm(value) ? [""] : [];
+  if (type === "strokeStyle") {
+    const stroke = value as StrokeStyleValue;
+    return "dashArray" in stroke &&
+      stroke.dashArray.some((member) => !member.alias && isEm(member.$value))
+      ? ["dashArray"]
+      : [];
+  }
+  if (!isCompositeType(type)) return [];
+  return compositeMembers(type, value as TokenTypeMap[CompositeTokenType])
+    .filter(({ type: memberType, member }) => memberType === "dimension" && !member.alias)
+    .filter(({ member }) => isEm(member.$value))
+    .map(({ key }) => key);
+}
+
+/** DTCG has no `em`, so those dimensions are exported as `rem` with the same value, which is relative to something else. */
+function emDimensionWarnings(ctx: PluginContext): PluginDiagnostic[] {
+  const sources = [
+    ...[...ctx.registry.values()].map((entry) => ({ ...entry, where: "" })),
+    ...Object.entries(ctx.themes).flatMap(([theme, override]) =>
+      [...override.keys()].flatMap((key) => {
+        const entry = ctx.registry.get(key);
+        return entry ? [{ ...themedEntry(entry, override), where: ` in theme "${theme}"` }] : [];
+      }),
+    ),
+  ];
+  return sources
+    .filter((source) => !source.alias)
+    .flatMap((source) =>
+      emDimensionLocations(source.$type, source.$value).map((location) => ({
+        severity: "warning" as const,
+        path: source.path,
+        message: `"${pathKey(source.path)}${location && `.${location}`}"${source.where} is in "em", which DTCG does not support: it is exported as "rem" with the same value. Use "rem" or "px" instead.`,
+      })),
+    );
+}
+
+function themeFileDiagnostics(ctx: PluginContext): PluginDiagnostic[] {
+  const diagnostics: PluginDiagnostic[] = [];
+  const seen = new Map<string, string>();
+  for (const name of Object.keys(ctx.themes)) {
+    const lower = name.toLowerCase();
+    if (lower === "tokens") {
+      diagnostics.push({
+        severity: "error",
+        message: `Theme "${name}" would write ${name}.tokens.json, colliding with tokens.tokens.json (the base tokens); rename the theme.`,
+      });
+      continue;
+    }
+    const previous = seen.get(lower);
+    if (previous) {
+      diagnostics.push({
+        severity: "error",
+        message: `Themes "${previous}" and "${name}" differ only by case and would collide on case-insensitive filesystems; rename one.`,
+      });
+    } else {
+      seen.set(lower, name);
+    }
+  }
+  return diagnostics;
+}
+
 export function dtcg(options: DtcgPluginOptions): RecontentPlugin {
-  return outputPlugin("recontent:dtcg", options, generateDtcgFiles);
+  return outputPlugin("recontent:dtcg", ["tokens"], options, generateDtcgFiles, (ctx) => [
+    ...themeFileDiagnostics(ctx),
+    ...emDimensionWarnings(ctx),
+  ]);
 }

@@ -40,7 +40,10 @@ export function Header({ theme, onToggleTheme }: { theme: Theme; onToggleTheme: 
         <nav aria-label="Main">
           <ul className="lp-nav">
             <li>
-              <Link to="/introduction/why-recontent">Docs</Link>
+              <Link to="/introduction/getting-started">Docs</Link>
+            </li>
+            <li>
+              <Link to="/changelog">Changelog</Link>
             </li>
             <li>
               <a

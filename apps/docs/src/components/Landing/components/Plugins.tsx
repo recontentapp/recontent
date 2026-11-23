@@ -4,14 +4,16 @@ import { CodePanel, lines } from "./CodePanel.tsx";
 
 // Built-in plugins next to a custom one: same interface, called the same way.
 const pluginsConfig = lines(`export default defineConfig({
-  tokens: { ref, system, components },
+  tokens: { ref, system },
+  introspection: { entry: "src/components/index.ts", importPath: "@acme/ds" },
   plugins: [
     css({ outDir: "src/styles" }),
     tailwind({ outDir: "src/styles", theme: { color: system.color } }),
-    typescript({ outDir: "src/charts" }),
-    typescriptNative({ outDir: "mobile/theme" }),
     dtcg({ outDir: "design" }),
-    docs({ outDir: "public/tokens" }),
+    docs({ outDir: "public/design" }),
+    designMD({ outDir: "." }),
+    inspect({ outDir: "dist" }),
+    contrast({ pairs: [[system.color.text, system.color.surface]] }),
     swift({ outDir: "ios/Tokens" }), // your own
   ],
 });
@@ -24,48 +26,39 @@ const swift = (options: { outDir: string }): RecontentPlugin => ({
   ],
 });`);
 
-const builtInPlugins = [
+type Output = { label: string; fn?: string; to: string; text: string };
+
+const outputs: Output[] = [
   {
     label: "CSS variables",
     fn: "css()",
     to: "/plugins/css",
-    text: "Any framework, or none. One block per theme.",
+    text: "Works in any framework or plain CSS, with one block per theme.",
   },
   {
     label: "Tailwind v4",
     fn: "tailwind()",
     to: "/plugins/tailwind",
-    text: "Utilities like bg-accent and p-4 resolve to your tokens.",
+    text: "Maps utilities like bg-accent and p-4 directly to your tokens.",
   },
   {
-    label: "StyleX",
-    fn: "stylex()",
-    to: "/plugins/stylex",
-    text: "Typed defineVars, plus a createTheme per theme.",
-  },
-  {
-    label: "DTCG",
-    fn: "dtcg()",
-    to: "/plugins/dtcg",
-    text: "JSON for Figma through Tokens Studio, or another pipeline.",
-  },
-  {
-    label: "Docs",
+    label: "Docs site",
     fn: "docs()",
     to: "/plugins/docs",
-    text: "An HTML and Markdown catalogue for your team and agents.",
+    text: "Builds a searchable static site with theme switching and embedded stories.",
   },
   {
-    label: "& more",
-    to: "/guides/using-plugins",
-    text: "TypeScript, React Native, vanilla-extract, or your own.",
+    label: "DESIGN.md",
+    fn: "designMD()",
+    to: "/plugins/design-md",
+    text: "Emits tokens and guidance that coding agents load up front.",
   },
 ];
 
-/** Plugins: every output, built-in or your own, goes through one API. */
+/** Plugins: config on the left, featured plugin cards with link to docs on the right. */
 export function Plugins() {
   return (
-    <section className="lp-section lp-wrap lp-centered">
+    <section className="lp-section lp-wrap">
       <h2 className="lp-h2">
         One config.{" "}
         <span className="lp-underlined">
@@ -74,22 +67,36 @@ export function Plugins() {
         </span>
       </h2>
       <p className="lp-sub">
-        Everything is a plugin that can be added in your config so that your design tokens can go
-        wherever you need them: stylesheets, Figma, docs, native apps & more.
+        Add built-in plugins in your config—or write your own—to ship tokens and components to
+        stylesheets, Figma, docs sites, coding agents, native apps, and CI.
       </p>
-      <ul className="lp-plugins">
-        {builtInPlugins.map((plugin) => (
-          <li key={plugin.label}>
-            <Link to={plugin.to} className="lp-output">
-              <strong>{plugin.label}</strong>
-              {plugin.fn ? <code>{plugin.fn}</code> : null}
-              <span>{plugin.text}</span>
+      <p className="lp-more">
+        <Link to="/plugin-api" className="lp-link">
+          Writing a plugin
+        </Link>
+      </p>
+      <div className="lp-plugins-split">
+        <div className="lp-plugins-left">
+          <CodePanel title="recontent.config.ts" code={pluginsConfig} tone="blue" />
+        </div>
+        <div className="lp-plugins-right">
+          <ul className="lp-cards lp-cards-2">
+            {outputs.map((output) => (
+              <li key={output.label}>
+                <Link to={output.to} className="lp-output">
+                  <strong>{output.label}</strong>
+                  {output.fn ? <code>{output.fn}</code> : null}
+                  <span>{output.text}</span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+          <div className="lp-plugins-toggle">
+            <Link to="/guides/using-plugins" className="lp-btn">
+              Show more
             </Link>
-          </li>
-        ))}
-      </ul>
-      <div className="lp-plugins-config">
-        <CodePanel title="recontent.config.ts" code={pluginsConfig} tone="blue" />
+          </div>
+        </div>
       </div>
     </section>
   );

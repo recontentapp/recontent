@@ -44,6 +44,15 @@ const ref = defineReferenceTokens({
     extrabold: tokens.fontWeight("extrabold"),
     black: tokens.fontWeight("black"),
   },
+  fontSize: tokens.dimensionScale({
+    xs: "0.875rem",
+    sm: "0.9375rem",
+    md: "1.0625rem",
+    lg: "1.2rem",
+    xl: "1.4rem",
+    "2xl": "3.25rem",
+    "3xl": "4.25rem",
+  }),
   spacing: tokens.dimensionScale({
     xs: "0.5rem",
     sm: "1rem",
@@ -71,7 +80,6 @@ const system = defineSystemTokens({
     overlay: ref.color.inkAlpha[8],
     onAccent: ref.color.ink,
     overlayStrong: ref.color.inkAlpha[12],
-    // The closing call-to-action band.
     callout: ref.color.yellow[300],
     accent: {
       yellow: ref.color.yellow[300],
@@ -102,6 +110,7 @@ const system = defineSystemTokens({
     mono: ref.fontFamily.mono,
   },
   fontWeight: ref.fontWeight,
+  fontSize: ref.fontSize,
   spacing: ref.spacing,
   radius: ref.radius,
   border: {
@@ -137,51 +146,52 @@ const system = defineSystemTokens({
 
 const dark = defineTheme(system, {
   color: {
-    background: tokens.color("#1b1a17"),
-    backgroundStrong: tokens.color("#2b2924"),
-    surface: tokens.color("#262420"),
-    foreground: tokens.color("#fff9e6"),
-    inverse: tokens.color("#0e0d0b"),
-    overlay: tokens.color("#fff9e61a"),
-    overlayStrong: tokens.color("#fff9e629"),
-    callout: tokens.color("#4a3a0c"),
+    background: tokens.color("#141311"),
+    backgroundStrong: tokens.color("#2a2722"),
+    surface: tokens.color("#1f1d19"),
+    foreground: tokens.color("#f7f1df"),
+    inverse: tokens.color("#0c0b09"),
+    onInverse: tokens.color("#f7f1df"),
+    overlay: tokens.color("#f7f1df14"),
+    overlayStrong: tokens.color("#f7f1df24"),
+    callout: tokens.color("#30260d"),
     tone: {
-      yellow: tokens.color("#54400a"),
-      green: tokens.color("#124a34"),
-      coral: tokens.color("#5e2417"),
-      blue: tokens.color("#1d3570"),
+      yellow: tokens.color("#382c10"),
+      green: tokens.color("#123326"),
+      coral: tokens.color("#3d1c16"),
+      blue: tokens.color("#16274d"),
     },
     error: { text: tokens.color("#ff9a85") },
   },
   border: {
-    thin: tokens.border({ color: ref.color.cream[50], width: "2px", style: "solid" }),
-    default: tokens.border({ color: ref.color.cream[50], width: "3px", style: "solid" }),
-    heavy: tokens.border({ color: ref.color.cream[50], width: "4px", style: "solid" }),
+    thin: tokens.border({ color: "#4f4a3f", width: "2px", style: "solid" }),
+    default: tokens.border({ color: "#6b6454", width: "3px", style: "solid" }),
+    heavy: tokens.border({ color: "#6b6454", width: "4px", style: "solid" }),
     focus: tokens.border({ color: "#7aa7ff", width: "3px", style: "solid" }),
   },
   shadow: {
     sm: tokens.shadowScale({
-      ink: hardShadow("4px", ref.color.lightInk),
-      yellow: hardShadow("4px", ref.color.yellow[300]),
-      green: hardShadow("4px", ref.color.green[500]),
-      coral: hardShadow("4px", ref.color.coral[500]),
-      blue: hardShadow("4px", ref.color.blue[600]),
+      ink: hardShadow("4px", "#090807"),
+      yellow: hardShadow("4px", "#c9a227"),
+      green: hardShadow("4px", "#229663"),
+      coral: hardShadow("4px", "#d94c30"),
+      blue: hardShadow("4px", "#3b73f0"),
     }),
     lg: tokens.shadowScale({
-      ink: hardShadow("6px", ref.color.lightInk),
-      green: hardShadow("6px", ref.color.green[500]),
-      coral: hardShadow("6px", ref.color.coral[500]),
-      blue: hardShadow("6px", ref.color.blue[600]),
+      ink: hardShadow("6px", "#090807"),
+      green: hardShadow("6px", "#229663"),
+      coral: hardShadow("6px", "#d94c30"),
+      blue: hardShadow("6px", "#3b73f0"),
     }),
     press: tokens.shadowScale({
-      ink: hardShadow("2px", ref.color.lightInk),
-      coral: hardShadow("2px", ref.color.coral[500]),
+      ink: hardShadow("2px", "#090807"),
+      coral: hardShadow("2px", "#d94c30"),
     }),
   },
 });
 
 export default defineConfig({
-  tokens: { ref, system, components: {} },
+  tokens: { ref, system },
   themes: { dark },
   plugins: [css({ outDir: "src/generated", themeSelector: "attribute" })],
 });

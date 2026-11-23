@@ -4,11 +4,13 @@ export type Line = { code: string; squiggle?: string };
 
 export const lines = (source: string): Line[] => source.split("\n").map((code) => ({ code }));
 
-type Language = "ts" | "css";
+type Language = "ts" | "css" | "sh";
 
 // Each capture group is colored by the class at the same position: comment, string, keyword, name.
 const grammars: Record<Language, RegExp> = {
-  ts: /(\/\/.*$|\/\*.*\*\/)|("[^"]*")|(\b(?:const|export|default|as|type|keyof|typeof)\b)|(\b(?:defineReferenceTokens|defineSystemTokens|defineComponentTokens|defineTheme|defineConfig|tokens|css|tailwind|typescript|typescriptNative|dtcg|docs)\b(?!:))/g,
+  ts: /(\/\/.*$|\/\*.*\*\/|^\s*(?:\/\*\*?|\*).*$)|("[^"]*")|(\b(?:const|export|default|as|type|keyof|typeof|function)\b)|(\b(?:defineReferenceTokens|defineSystemTokens|defineComponentTokens|defineTheme|defineConfig|tokens|css|tailwind|vanillaExtract|stylex|typescript|typescriptNative|dtcg|docs|designMD|inspect|contrast)\b(?!:))/g,
+  // Terminal sessions: dim source lines, strings, prompt/error/bold markers, and headings.
+  sh: /(^(?:Import|Source|Also accepts):.*$)|("[^"]*")|(^\$|^Next:|^error:|\*\*[\w ]+\*\*)|(^#+ .*$)/g,
   css: /(\/\*.*\*\/)|(#[0-9a-fA-F]{3,8}\b)|(^[.:][\w-]+|\bvar(?=\())|(--[\w-]+)/g,
 };
 const classNames = ["lp-c", "lp-s", "lp-k", "lp-f"];
@@ -54,7 +56,7 @@ export function CodePanel({
   code: Line[];
   language?: Language;
   error?: string;
-  tone?: "coral" | "green" | "blue";
+  tone?: "coral" | "blue";
 }) {
   return (
     <figure className={`lp-code${tone ? ` lp-code-${tone}` : ""}`}>

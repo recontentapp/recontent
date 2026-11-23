@@ -1,64 +1,39 @@
 ---
 title: "Why Recontent"
-description: "The problem Recontent solves, how tokens are layered and who it is for."
+description: "The problem Recontent solves, its four pillars and who it is for."
 ---
 
 # Why Recontent
 
+Recontent turns your tokens and components into a design system that people, agents, and CI can read.
+
 ## The problem
 
-A design system's decisions (colors, spacing, type, motion) end up copied into many places: a CSS
-file, a Tailwind config, a TypeScript constants module, a Figma library, a docs page. Each copy
-drifts. Renaming a token means hunting for every place that mentions it, and nothing tells you
-which change will break a consumer.
+Design system decisions drift when teams copy them across files. Colors, spacing, and typography end up duplicated across CSS, Tailwind, TypeScript constants, Figma libraries, and docs pages. Component APIs live in source code while separate documentation sites go stale. Renaming a token or prop forces a manual hunt across repositories, with no warning before a change breaks consumers.
 
-## One source, many outputs
+Coding agents make this drift worse. They write UI from memory, invent prop names, pass invalid values, and hardcode hex colors instead of using tokens. Teams often catch these mistakes only during code review.
 
-Recontent keeps the decisions in one typed file, `recontent.config.ts`, and treats everything else
-as generated output. Plugins turn the same token registry into CSS variables, a Tailwind theme,
-vanilla-extract or StyleX variables, TypeScript constants, DTCG files or a documentation page. Add
-an output by adding a plugin; the tokens do not change.
+## Four pillars
 
-Because the config is TypeScript, mistakes show up early: a color scale with a missing step, a
-theme override for a token that does not exist, or an alias to the wrong type fail in the editor or
-at `recontent build`, not in production.
+**Tokens: typed layers and themes.** Keep design decisions in one typed config file, `recontent.config.ts`. Plugins emit CSS variables, a Tailwind theme, vanilla-extract or StyleX variables, TypeScript constants, and DTCG files. Mistakes—a missing color step, an unknown theme override, or a mismatched alias type—fail in your editor or during `recontent build`, not in production.
 
-## Three token layers
+**Components: introspected from your own TypeScript.** Point Recontent at your components and it reads their props, defaults, and types. Document them with JSDoc next to the code (`@usage`, `@example`, `@category`, `@deprecated`), and every output includes that documentation. See [Introspecting components](/guides/introspecting-components) and [Documenting components](/guides/documenting-components).
 
-Tokens live in three layers, each with its own `define*Tokens` function:
+**Agents: the exact API, on demand.** [`recontent inspect`](/cli/inspect) gives agents real props, tokens, and usage notes in compact answers with recoverable errors. Agents can also search tokens, components, and types by name or hex value with `recontent inspect search`. [`DESIGN.md`](/plugins/design-md) loads compact guidance up front, and `--from` lets consuming apps inspect an npm package. See [Coding with agents](/guides/agents).
 
-| Layer                 | Function                | Holds                                                     | Example                                     |
-| --------------------- | ----------------------- | --------------------------------------------------------- | ------------------------------------------- |
-| **Reference** (`ref`) | `defineReferenceTokens` | Raw values: the palette, the spacing scale, font stacks.  | `ref.color.blue[9]` is `#2563eb`            |
-| **System** (`system`) | `defineSystemTokens`    | Meaning: what a value is _for_. Usually aliases to `ref`. | `system.color.accent` → `ref.color.blue[9]` |
-| **Components**        | `defineComponentTokens` | Decisions specific to one component.                      | `button.background` → `system.color.accent` |
+**Guardrails: CI catches regressions.** [`recontent diff`](/guides/diffs) flags breaking token and prop changes, [`contrast()`](/plugins/contrast) enforces WCAG ratios across every theme, and `recontent build --check` catches stale generated files. Each command exits with a non-zero code that CI understands.
 
-Code consumes the system and component layers; the reference layer is the vocabulary behind them.
-Themes override tokens where the _meaning_ stays and the _value_ changes (dark mode, density,
-brand), without touching component code. See [Defining tokens](/guides/defining-tokens) and
-[Working with themes](/guides/working-with-themes).
+## Layers and themes
+
+Tokens live in three layers (`ref`, `system`, and `components`), and themes override values without touching component code. See [Defining tokens](/guides/defining-tokens) and [Working with themes](/guides/working-with-themes).
 
 ## Aligned with DTCG
 
-Token types and value shapes follow the
-[Design Tokens Community Group format](https://www.designtokens.org/): colors carry a color space,
-dimensions have a unit, composites such as shadow and typography have fixed members. That keeps
-Recontent interoperable:
-
-- the [DTCG plugin](/plugins/dtcg) exports `.tokens.json` files for Figma, Tokens Studio and other
-  tools;
-- [`recontent init --from`](/cli/init#importing-dtcg-tokens) generates a config from DTCG files you
-  already have.
-
-## Built for humans, agents and CI
-
-Recontent is a command line tool. A person runs `recontent build --watch`, an agent runs
-`recontent build` and reads the diagnostics, and CI runs [`recontent diff`](/guides/diffs) to fail a
-pull request that removes or renames a token. Output is plain text on stdout and stderr, with
-meaningful exit codes.
+Token types and value shapes follow the [Design Tokens Community Group format](https://www.designtokens.org/). The [DTCG plugin](/plugins/dtcg) exports `.tokens.json` files for Figma and Tokens Studio, and [`recontent init --dtcg`](/cli/init#importing-dtcg-tokens) imports files you already have.
 
 ## Who it is for
 
-- Engineers who maintain a design system and want a single, reviewable source of truth.
+- Engineers who maintain a design system and want one reviewable source of truth.
 - Designers who work with tokens and need exports their tools understand.
-- Teams starting a design system, who can begin from a preset instead of an empty file.
+- Teams whose engineers use coding agents to write UI.
+- Teams starting a design system from a preset instead of an empty file.

@@ -1,28 +1,29 @@
+import { isCompositeType } from "../../token-model/composite.js";
+import { pathKey } from "../../token-model/guards.js";
+import { type Logger } from "../../logger.js";
+import { type PluginContext, type PluginDiagnostic } from "../types.js";
 import {
-  isCompositeType,
-  pathKey,
-  type Logger,
   type ThemeOverride,
   type TokenEntry,
-  type TokenLayer,
   type TokenRegistry,
-  type TokenType,
-  type TokenTypeMap,
-} from "@recontentapp/core";
-import { getEntry, walkAliasChain } from "./alias.js";
+} from "../../token-model/registry.js";
+import { type TokenLayer } from "../../token-model/model.js";
+import { type TokenType, type TokenTypeMap } from "../../token-model/values.js";
+import {
+  getEntry,
+  resolveEntryValue,
+  themedEntry,
+  walkAliasChain,
+} from "../../token-model/alias.js";
 import type { GeneratorContext } from "./context.js";
 import {
-  capitalize,
-  entryPath,
   formatTree,
   propertyAccess,
-  resolveEntryValue,
-  scaleExportsForConfig,
   setTreeValue,
-  type ScaleExport,
   type SourceTree,
   type SourceValue,
-} from "./ts-source.js";
+} from "../../ts-source.js";
+import { capitalize, entryPath, scaleExportsForConfig, type ScaleExport } from "./ts-source.js";
 
 type LossReporter = (tokenPath: string[], message: string) => void;
 
@@ -101,23 +102,30 @@ const JS_RESERVED_WORDS = new Set([
 ]);
 
 const IDENTIFIER_RE = /^[A-Za-z_$][\w$]*$/;
-export const CSS_IDENTIFIER_RE = /^[A-Za-z_][\w-]*$/;
 const THEME_ATTRIBUTE_RE = /^[A-Za-z][\w-]*$/;
 
-export function validateThemeNames(
-  themeNames: readonly string[],
-  target: string,
-  options?: { pattern?: RegExp; description?: string },
-): void {
-  const pattern = options?.pattern ?? IDENTIFIER_RE;
-  const description = options?.description ?? "theme names must be valid TypeScript identifiers";
+function themeNameMessage(name: string, target: string): string {
+  return `Theme name "${name}" cannot be used with the "${target}" output target: theme names must be valid TypeScript identifiers.`;
+}
+
+/** Throws on direct generator calls; plugins surface the same problem earlier through `validate`. */
+export function validateThemeNames(themeNames: readonly string[], target: string): void {
   for (const name of themeNames) {
-    if (!pattern.test(name)) {
-      throw new Error(
-        `Theme name "${name}" cannot be used with the "${target}" output target: ${description}.`,
-      );
+    if (!IDENTIFIER_RE.test(name)) {
+      throw new Error(themeNameMessage(name, target));
     }
   }
+}
+
+/** A plugin `validate` hook reporting theme/scale identifier errors the target cannot emit. */
+export function themeNameDiagnostics(
+  target: string,
+  extraReserved: readonly string[] = [],
+): (ctx: PluginContext) => PluginDiagnostic[] {
+  return (ctx) =>
+    collectIdentifierErrors(ctx, target, scaleExportsForConfig(ctx), extraReserved).map(
+      (message) => ({ severity: "error", message }),
+    );
 }
 
 export function validateThemeAttribute(themeAttribute: string, target: string): void {
@@ -136,40 +144,55 @@ function layerConstName(themeName: string | undefined, layer: TokenLayer): strin
   return `${themeConstName(themeName)}${capitalize(layer)}`;
 }
 
-function validateIdentifierGuards(
+function collectIdentifierErrors(
   config: GeneratorContext,
   target: string,
   scaleExports: readonly ScaleExport[],
-): void {
+  extraReserved: readonly string[] = [],
+): string[] {
+  const errors: string[] = [];
   const themeNames = Object.keys(config.themes);
-  validateThemeNames(themeNames, target);
+  for (const name of themeNames) {
+    if (!IDENTIFIER_RE.test(name)) {
+      errors.push(themeNameMessage(name, target));
+    }
+  }
 
+  const isThemeModuleTarget = target === "typescript" || target === "typescript-native";
   const reserved = new Set<string>([
-    "theme",
-    "themes",
-    "Theme",
-    "ThemeName",
-    "BaseTheme",
-    "themeRef",
-    "themeSystem",
-    "themeComponents",
+    ...(isThemeModuleTarget
+      ? [
+          "theme",
+          "themes",
+          "Theme",
+          "ThemeName",
+          "BaseTheme",
+          "themeRef",
+          "themeSystem",
+          "themeComponents",
+        ]
+      : []),
+    ...extraReserved,
     ...JS_RESERVED_WORDS,
   ]);
 
-  for (const name of themeNames) {
-    const identifiers = [
-      themeConstName(name),
-      ...LAYERS.map((layer) => layerConstName(name, layer)),
-    ];
-    for (const identifier of identifiers) {
-      if (reserved.has(identifier)) {
-        throw new Error(
-          `Theme name "${name}" cannot be used with the "${target}" output target: identifier "${identifier}" collides with a reserved export name.`,
-        );
+  if (isThemeModuleTarget) {
+    for (const name of themeNames) {
+      if (!IDENTIFIER_RE.test(name)) continue;
+      const identifiers = [
+        themeConstName(name),
+        ...LAYERS.map((layer) => layerConstName(name, layer)),
+      ];
+      for (const identifier of identifiers) {
+        if (reserved.has(identifier)) {
+          errors.push(
+            `Theme name "${name}" cannot be used with the "${target}" output target: identifier "${identifier}" collides with a reserved export name.`,
+          );
+        }
       }
-    }
-    for (const identifier of identifiers) {
-      reserved.add(identifier);
+      for (const identifier of identifiers) {
+        reserved.add(identifier);
+      }
     }
   }
 
@@ -179,13 +202,33 @@ function validateIdentifierGuards(
     const list = groups.get(scale.typeName) ?? [];
     list.push(path);
     groups.set(scale.typeName, list);
+    if (reserved.has(scale.exportName) || reserved.has(scale.typeName)) {
+      const colliding = reserved.has(scale.exportName) ? scale.exportName : scale.typeName;
+      errors.push(
+        `Scale export name "${colliding}" at "${path}" collides with a reserved export name in the "${target}" output target. Rename the scale.`,
+      );
+    }
   }
   for (const [typeName, paths] of groups) {
     if (paths.length > 1) {
-      throw new Error(
+      errors.push(
         `Scale export name "${typeName}" collides between token paths ${paths.join(" and ")} with the "${target}" output target. Rename one of these scales.`,
       );
     }
+  }
+
+  return errors;
+}
+
+export function validateIdentifierGuards(
+  config: GeneratorContext,
+  target: string,
+  scaleExports: readonly ScaleExport[],
+  extraReserved: readonly string[] = [],
+): void {
+  const errors = collectIdentifierErrors(config, target, scaleExports, extraReserved);
+  if (errors.length > 0) {
+    throw new Error(errors[0]);
   }
 }
 
@@ -204,6 +247,7 @@ function resolveAliasCandidate(
     registry,
     getEntry(registry, startAliasPath),
     new Set([pathKey(seedPath)]),
+    override,
   );
 
   for (const target of chain) {
@@ -256,12 +300,11 @@ function emitScalarEntry(
   spec: ThemeTargetSpec,
   report: LossReporter,
 ): void {
-  const overridden = override?.get(pathKey(entry.path));
+  const themed = themedEntry(entry, override);
 
   if (
-    overridden === undefined &&
-    entry.alias &&
-    emitAliasReference(tree, entry, entry.alias, registry, override, themeName)
+    themed.alias &&
+    emitAliasReference(tree, entry, themed.alias, registry, override, themeName)
   ) {
     return;
   }
@@ -280,17 +323,16 @@ function emitCompositeEntry(
   spec: ThemeTargetSpec,
   report: LossReporter,
 ): void {
-  const overridden = override?.get(pathKey(entry.path));
+  const themed = themedEntry(entry, override);
 
   if (
-    overridden === undefined &&
-    entry.alias &&
-    emitAliasReference(tree, entry, entry.alias, registry, override, themeName)
+    themed.alias &&
+    emitAliasReference(tree, entry, themed.alias, registry, override, themeName)
   ) {
     return;
   }
 
-  const resolvedValue = (overridden ?? entry.$value) as TokenTypeMap[TokenType];
+  const resolvedValue = resolveEntryValue(registry, entry, override) as TokenTypeMap[TokenType];
   const member = (memberAlias: string[]): { ref?: string; value: TokenTypeMap[TokenType] } => {
     const target = getEntry(registry, memberAlias);
     const value = resolveEntryValue(registry, target, override) as TokenTypeMap[TokenType];
@@ -319,8 +361,8 @@ export function generateThemeSource(
   spec: ThemeTargetSpec,
   logger: Logger,
   target: string,
+  scaleExports = scaleExportsForConfig(config),
 ): string {
-  const scaleExports = scaleExportsForConfig(config);
   validateIdentifierGuards(config, target, scaleExports);
 
   const warned = new Set<string>();
@@ -343,7 +385,7 @@ export function generateThemeSource(
     const override = themeName ? config.themes[themeName] : undefined;
 
     for (const layer of LAYERS) {
-      const tree: SourceTree = {};
+      const tree = Object.create(null) as SourceTree;
       for (const entry of entriesByLayer.get(layer)!) {
         if (isCompositeType(entry.$type)) {
           emitCompositeEntry(tree, entry, config.registry, override, themeName, spec, report);

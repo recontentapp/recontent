@@ -1,9 +1,10 @@
-import { Diff } from "./components/Diff.tsx";
+import { Agents } from "./components/Agents.tsx";
+import { Components } from "./components/Components.tsx";
 import { FinalCta } from "./components/FinalCta.tsx";
+import { Guardrails } from "./components/Guardrails.tsx";
 import { Hero } from "./components/Hero.tsx";
 import { LandingRoot } from "./components/LandingRoot.tsx";
 import { Plugins } from "./components/Plugins.tsx";
-import { Themes } from "./components/Themes.tsx";
 import { TokenLayers } from "./components/TokenLayers.tsx";
 import { WhereItFits } from "./components/WhereItFits.tsx";
 import "../../generated/tokens.css";
@@ -14,9 +15,10 @@ export function Landing() {
     <LandingRoot>
       <Hero />
       <WhereItFits />
+      <Agents />
+      <Components />
       <TokenLayers />
-      <Diff />
-      <Themes />
+      <Guardrails />
       <Plugins />
       <FinalCta />
     </LandingRoot>

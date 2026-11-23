@@ -1,0 +1,330 @@
+import type {
+  ComponentInfo,
+  InheritedProps,
+  PropInfo,
+  TypeInfo,
+  TypeParameterInfo,
+} from "../../../introspection/model.js";
+import type { Introspected } from "../../../snapshot/snapshot.js";
+
+type Literal = string | number | boolean;
+
+type PropChangeKind =
+  | "added"
+  | "removed"
+  | "required"
+  | "optional"
+  | "type"
+  | "values"
+  | "default"
+  | "deprecated";
+
+export type Change =
+  | {
+      kind: "prop";
+      name: string;
+      change: PropChangeKind;
+      from?: unknown;
+      to?: unknown;
+      breaking: boolean;
+    }
+  /** Props `name` used to provide that are gone, all of them when the whole entry was dropped. */
+  | { kind: "inherits"; name: string; props: string[]; breaking: true }
+  | {
+      kind: "typeParameters";
+      from?: TypeParameterInfo[];
+      to?: TypeParameterInfo[];
+      breaking: boolean;
+    }
+  | { kind: "deprecated"; from?: true | string; to?: true | string; breaking: false }
+  /** Components only: consumers have to change their import. */
+  | { kind: "import"; from?: string; to?: string; breaking: true }
+  /** Types only. */
+  | { kind: "kind"; from: TypeInfo["kind"]; to: TypeInfo["kind"]; breaking: true }
+  | { kind: "values"; from: Literal[]; to: Literal[]; breaking: boolean }
+  /** A type that has neither members nor values (a function type, say) can only be compared as written. */
+  | { kind: "definition"; from: string; to: string; breaking: true };
+
+type EntityDiff = { name: string; changes: Change[] };
+
+export type EntitiesDiff<T> = { added: T[]; removed: T[]; changed: EntityDiff[] };
+
+export type ComponentsDiff = {
+  components: EntitiesDiff<ComponentInfo>;
+  types: EntitiesDiff<TypeInfo>;
+};
+
+// Types are written by hand, so layout is not a change.
+function normalize(type: string): string {
+  return type.replace(/\s+/g, " ").trim();
+}
+
+/** The members of a union written as `A | B | C`, split where the `|` is not nested in brackets, generics or quotes. */
+function unionMembers(type: string): string[] {
+  const members: string[] = [];
+  let depth = 0;
+  let quote: string | undefined;
+  let current = "";
+  for (let i = 0; i < type.length; i++) {
+    const char = type[i]!;
+    if (quote) {
+      if (char === "\\") {
+        current += char;
+        i++;
+        current += type[i] ?? "";
+        continue;
+      }
+      if (char === quote) quote = undefined;
+    } else if (char === '"' || char === "'" || char === "`") {
+      quote = char;
+    } else if ("([{<".includes(char)) {
+      depth++;
+    } else if (")]}".includes(char) || (char === ">" && type[i - 1] !== "=")) {
+      depth--;
+    } else if (char === "|" && depth === 0) {
+      members.push(current);
+      current = "";
+      continue;
+    }
+    current += char;
+  }
+  members.push(current);
+  return members.map((member) => member.trim()).filter(Boolean);
+}
+
+/** Whether `head` accepts everything `base` does, as far as the text of a union shows: `string` -> `string | number`. */
+function isWidening(base: string, head: string): boolean {
+  // `() => A | B` is a function returning a union, not a union: not worth guessing at.
+  if (base.includes("=>") || head.includes("=>")) return false;
+  const headMembers = new Set(unionMembers(head));
+  return unionMembers(base).every((member) => headMembers.has(member));
+}
+
+function sameSet(a: Literal[], b: Literal[]): boolean {
+  if (a.length !== b.length) return false;
+  const bSet = new Set(b);
+  return a.every((value) => bSet.has(value));
+}
+
+function literalWidensTo(values: Literal[], headType: string): boolean {
+  const headMembers = new Set(unionMembers(headType));
+  return values.every((value) => {
+    const primitive = typeof value;
+    return headMembers.has(primitive) || headMembers.has(JSON.stringify(value));
+  });
+}
+
+function diffProp(base: PropInfo, head: PropInfo): Change[] {
+  const changes: Change[] = [];
+  const push = (change: PropChangeKind, breaking: boolean, from?: unknown, to?: unknown) =>
+    changes.push({ kind: "prop", name: head.name, change, from, to, breaking });
+
+  if (base.required !== head.required) {
+    push(head.required ? "required" : "optional", head.required);
+  }
+
+  if (base.values && head.values) {
+    const baseHasNull = unionMembers(normalize(base.resolved ?? base.type)).includes("null");
+    const headHasNull = unionMembers(normalize(head.resolved ?? head.type)).includes("null");
+    if (baseHasNull !== headHasNull) {
+      const from = normalize(base.resolved ?? base.type);
+      const to = normalize(head.resolved ?? head.type);
+      push("type", baseHasNull && !headHasNull, from, to);
+    }
+    if (!sameSet(base.values, head.values)) {
+      const headSet = new Set(head.values);
+      push(
+        "values",
+        base.values.some((value) => !headSet.has(value)),
+        base.values,
+        head.values,
+      );
+    }
+  } else {
+    const from = normalize(base.resolved ?? base.type);
+    const to = normalize(head.resolved ?? head.type);
+    if (from !== to) {
+      const widened = isWidening(from, to) || (!!base.values && literalWidensTo(base.values, to));
+      push("type", !widened, from, to);
+    }
+  }
+
+  if (base.defaultValue !== head.defaultValue) {
+    push("default", false, base.defaultValue, head.defaultValue);
+  }
+  if (base.deprecated !== head.deprecated) {
+    push("deprecated", false, base.deprecated, head.deprecated);
+  }
+  return changes;
+}
+
+/** Shared by component props and type members. */
+function diffProps(base: PropInfo[], head: PropInfo[]): Change[] {
+  const baseByName = new Map(base.map((prop) => [prop.name, prop]));
+  const headByName = new Map(head.map((prop) => [prop.name, prop]));
+  const changes: Change[] = [];
+
+  for (const prop of head) {
+    const before = baseByName.get(prop.name);
+    if (before) changes.push(...diffProp(before, prop));
+    else {
+      changes.push({ kind: "prop", name: prop.name, change: "added", breaking: prop.required });
+    }
+  }
+  for (const prop of base) {
+    if (!headByName.has(prop.name)) {
+      changes.push({ kind: "prop", name: prop.name, change: "removed", breaking: true });
+    }
+  }
+  return changes;
+}
+
+function diffInherits(
+  base: InheritedProps[] = [],
+  head: InheritedProps[] = [],
+  ownProps: PropInfo[] = [],
+): Change[] {
+  // Check against the union of all head inherited props (handles folding e.g. HTMLAttributes -> ButtonHTMLAttributes) plus own props.
+  const allHeadInherited = new Set(head.flatMap((entry) => entry.props));
+  const own = new Set(ownProps.map((prop) => prop.name));
+  const changes: Change[] = [];
+  for (const entry of base) {
+    const dropped = entry.props.filter((name) => !allHeadInherited.has(name) && !own.has(name));
+    if (dropped.length > 0)
+      changes.push({ kind: "inherits", name: entry.name, props: dropped, breaking: true });
+  }
+  return changes;
+}
+
+function diffTypeParameters(
+  base: TypeParameterInfo[] = [],
+  head: TypeParameterInfo[] = [],
+): Change[] {
+  // Type parameters are positional in TypeScript: renaming T -> Value is non-breaking,
+  // while removing a position, tightening/changing constraints, or adding a required parameter is breaking.
+  const maxLen = Math.max(base.length, head.length);
+  let changed = base.length !== head.length;
+  let breaking = head.length < base.length;
+
+  for (let i = 0; i < maxLen; i++) {
+    const before = base[i];
+    const after = head[i];
+    if (!before && after) {
+      changed = true;
+      if (after.default === undefined) breaking = true;
+    } else if (before && after) {
+      if (
+        before.name !== after.name ||
+        before.constraint !== after.constraint ||
+        before.default !== after.default
+      ) {
+        changed = true;
+      }
+      if (before.constraint !== after.constraint) {
+        breaking = true;
+      }
+    }
+  }
+  return changed ? [{ kind: "typeParameters", from: base, to: head, breaking }] : [];
+}
+
+function diffDeprecated(base: ComponentInfo | TypeInfo, head: ComponentInfo | TypeInfo): Change[] {
+  return base.deprecated === head.deprecated
+    ? []
+    : [{ kind: "deprecated", from: base.deprecated, to: head.deprecated, breaking: false }];
+}
+
+function diffComponent(base: ComponentInfo, head: ComponentInfo): Change[] {
+  const importChange: Change[] =
+    base.import === head.import
+      ? []
+      : [{ kind: "import", from: base.import, to: head.import, breaking: true }];
+  return [
+    ...importChange,
+    ...diffProps(base.props, head.props),
+    ...diffInherits(base.inherits, head.inherits, head.props),
+    ...diffTypeParameters(base.typeParameters, head.typeParameters),
+    ...diffDeprecated(base, head),
+  ];
+}
+
+function diffType(base: TypeInfo, head: TypeInfo): Change[] {
+  const changes: Change[] = [];
+  if (base.kind !== head.kind) {
+    changes.push({ kind: "kind", from: base.kind, to: head.kind, breaking: true });
+  }
+
+  // `members` and `values` carry the meaning; `definition` only matters when neither does (or for enum member renames).
+  if (base.members && head.members) {
+    changes.push(...diffProps(base.members, head.members));
+  } else if (base.values && head.values && base.kind !== "enum" && head.kind !== "enum") {
+    if (!sameSet(base.values, head.values)) {
+      const headSet = new Set(head.values);
+      changes.push({
+        kind: "values",
+        from: base.values,
+        to: head.values,
+        breaking: base.values.some((value) => !headSet.has(value)),
+      });
+    }
+  } else if (normalize(base.definition) !== normalize(head.definition)) {
+    changes.push({
+      kind: "definition",
+      from: base.definition,
+      to: head.definition,
+      breaking: true,
+    });
+  }
+
+  changes.push(
+    ...diffInherits(base.inherits, head.inherits, head.members),
+    ...diffTypeParameters(base.typeParameters, head.typeParameters),
+    ...diffDeprecated(base, head),
+  );
+  return changes;
+}
+
+function diffEntities<T>(
+  base: T[],
+  head: T[],
+  key: (entity: T) => string,
+  diff: (base: T, head: T) => Change[],
+): EntitiesDiff<T> {
+  const baseByKey = new Map(base.map((entity) => [key(entity), entity]));
+  const headByKey = new Map(head.map((entity) => [key(entity), entity]));
+  const changed: EntityDiff[] = [];
+  for (const [name, entity] of headByKey) {
+    const before = baseByKey.get(name);
+    if (!before) continue;
+    const changes = diff(before, entity);
+    if (changes.length > 0) changed.push({ name, changes });
+  }
+  return {
+    added: head.filter((entity) => !baseByKey.has(key(entity))),
+    removed: base.filter((entity) => !headByKey.has(key(entity))),
+    changed,
+  };
+}
+
+/** Components are matched by name, types by id, props and members by name. A rename is a removal plus an addition. */
+export function diffComponents(base: Introspected, head: Introspected): ComponentsDiff {
+  return {
+    components: diffEntities(base.components, head.components, (c) => c.name, diffComponent),
+    types: diffEntities(base.types, head.types, (t) => t.id, diffType),
+  };
+}
+
+/** Removing a component or type, and each breaking change to one that stays. */
+export function countEntityBreakingChanges(diff: EntitiesDiff<unknown>): number {
+  return (
+    diff.removed.length +
+    diff.changed.reduce(
+      (total, entity) => total + entity.changes.filter((change) => change.breaking).length,
+      0,
+    )
+  );
+}
+
+export function countComponentBreakingChanges(diff: ComponentsDiff): number {
+  return countEntityBreakingChanges(diff.components) + countEntityBreakingChanges(diff.types);
+}

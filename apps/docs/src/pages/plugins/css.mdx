@@ -1,12 +1,11 @@
 ---
 title: "CSS"
-description: "Generate CSS custom properties, with a block per theme."
+description: "Generate CSS variables, with a block per theme."
 ---
 
 # CSS
 
-`css()` writes every token as a CSS custom property, with one block per theme. It needs no runtime
-and works with any framework or none.
+`css()` emits every token as a CSS variable with one selector block per theme. It requires no runtime and works with any framework or plain CSS.
 
 ```ts twoslash
 // [!include ~/snippets/basic.config.ts]
@@ -14,13 +13,13 @@ and works with any framework or none.
 
 ## Usage
 
-With the default `themeSelector: "class"`, put the theme name on the root element's class:
+With the default `themeSelector: "class"`, add the theme name to the root element's `class` attribute:
 
 ```html
 <html class="dark"></html>
 ```
 
-With `themeSelector: "attribute"`, use the attribute instead:
+With `themeSelector: "attribute"`, set the attribute instead:
 
 ```html
 <html data-theme="dark"></html>
@@ -32,27 +31,28 @@ With `themeSelector: "attribute"`, use the attribute instead:
 css(options: CssPluginOptions): RecontentPlugin
 ```
 
-| Option           | Type                     | Default        | Description                                                                                |
-| ---------------- | ------------------------ | -------------- | ------------------------------------------------------------------------------------------ |
-| `outDir`         | `string`                 | required       | Output directory, relative to the config file.                                             |
-| `themeSelector`  | `"class" \| "attribute"` | `"class"`      | How a theme block is selected: `.dark` or `[data-theme="dark"]`.                           |
-| `themeAttribute` | `string`                 | `"data-theme"` | The attribute used when `themeSelector` is `"attribute"`. Must match `/^[A-Za-z][\w-]*$/`. |
+| Option           | Type                     | Default        | Description                                                                                           |
+| ---------------- | ------------------------ | -------------- | ----------------------------------------------------------------------------------------------------- |
+| `outDir`         | `string`                 | required       | Output directory relative to the config file.                                                         |
+| `filename`       | `string`                 | `"tokens.css"` | Name of the generated file.                                                                           |
+| `prefix`         | `string`                 | none           | Prefix for CSS variable names (`--<prefix>-ref-color-blue`). Must match `/^[A-Za-z][A-Za-z0-9_-]*$/`. |
+| `themeSelector`  | `"class" \| "attribute"` | `"class"`      | Selects theme blocks with `.dark` or `[data-theme="dark"]`.                                           |
+| `themeAttribute` | `string`                 | `"data-theme"` | Attribute name when `themeSelector` equals `"attribute"`. Must match `/^[A-Za-z][\w-]*$/`.            |
 
 Plugin name: `recontent:css`.
 
 ## Emitted files
 
-| File         | Content                                  |
-| ------------ | ---------------------------------------- |
-| `tokens.css` | All variables, then one block per theme. |
+| File                         | Content                                      |
+| ---------------------------- | -------------------------------------------- |
+| `tokens.css` (or `filename`) | All CSS variables, then one block per theme. |
 
 ## Output details
 
-`tokens.css` contains, in order:
+`tokens.css` emits blocks in this order:
 
-1. a `:root` block for the **ref** layer, then one for **system**, then one for **components**
-   (empty layers are omitted);
-2. one block per theme, containing only the variables that theme overrides.
+1. One `:root` block for `ref`, one for `system`, and one for `components`, skipping empty layers.
+2. One block per theme containing only the CSS variables that theme overrides.
 
 ```css
 :root {
@@ -66,25 +66,23 @@ Plugin name: `recontent:css`.
 }
 
 .dark {
-  --system-color-background: #18181b;
-  --system-color-text: #fafafa;
+  --system-color-background: var(--ref-color-gray-900);
+  --system-color-text: var(--ref-color-gray-50);
 }
 ```
 
-- **Names**: `--` followed by the token path joined with `-`. Component tokens have no layer
-  prefix (`--button-background`).
-- **Aliases** are `var()` references, so a theme override of a referenced token flows through.
-- **Descriptions** (`.describe()`) become a comment above the variable.
-- **Composites**: `shadow`, `border` and `gradient` are one variable; `typography` and `transition`
-  are expanded into one variable per member (`--system-typography-body-font-size`).
-  See [Composites](/tokens/composites).
-- **Theme blocks** come last, so with the same specificity as `:root` they win.
+- **Names:** `--` followed by the token path joined with `-`. Component tokens omit a layer prefix (`--button-background`).
+- **Aliases:** Emitted as `var()` references so theme overrides on referenced tokens flow through automatically.
+- **Descriptions:** `.describe()` text appears as a CSS comment above the CSS variable.
+- **Composites:** `shadow`, `border`, and `gradient` emit one CSS variable; `typography` and `transition` expand into one CSS variable per member (`--system-typography-body-font-size`). See [Composites](/config/composites).
+- **Theme blocks:** Emitted last so they override `:root` at equal specificity.
 
 ## Diagnostics
 
-Both checks fail the build.
+Errors fail the build; Recontent prints warnings to stderr.
 
-| When                                                                                                |
-| --------------------------------------------------------------------------------------------------- |
-| A theme name has characters other than letters, digits, `_` and `-`, or starts with a digit or `-`. |
-| `themeAttribute` does not match `/^[A-Za-z][\w-]*$/`.                                               |
+| Severity | When                                                                                   |
+| -------- | -------------------------------------------------------------------------------------- |
+| error    | `prefix` fails `/^[A-Za-z][A-Za-z0-9_-]*$/`.                                           |
+| error    | `themeAttribute` fails `/^[A-Za-z][\w-]*$/`.                                           |
+| warning  | You set `themeAttribute` without `themeSelector: "attribute"` (the plugin ignores it). |

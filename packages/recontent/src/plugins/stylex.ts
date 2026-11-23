@@ -8,7 +8,8 @@
  * value silently produces no CSS rule (verified empirically against
  * @stylexjs/babel-plugin 0.19.0) — so every theme override below is
  * flattened to a literal via `serializeValueCss`/`member.$value`, never
- * re-aliased. This is safe: CSS custom-property cascade means overriding a
+ * re-aliased. That includes overrides that alias another token in the config:
+ * they resolve to the target's value. This is safe: CSS custom-property cascade means overriding a
  * single upstream var (e.g. a ref color) already propagates to every token
  * that aliases it, without needing to redeclare the intermediate keys.
  */
@@ -17,36 +18,32 @@ import {
   expandedMembers,
   isCompositeType,
   isExpandedComposite,
-  isStampedToken,
-  pathKey,
-  type OutputFile,
-  type RecontentPlugin,
-  type ThemeOverride,
-  type TokenEntry,
-  type TokenRegistry,
-  type TokenTypeMap,
-  type TokenType,
-} from "@recontentapp/core";
+} from "../token-model/composite.js";
+import { pathKey } from "../token-model/guards.js";
+import { type RecontentPlugin } from "./types.js";
+import { type ThemeOverride, type TokenEntry } from "../token-model/registry.js";
+import { type TokenTypeMap } from "../token-model/values.js";
+import type { OutputFile } from "./shared/context.js";
 import {
   serializeCompositeCss,
   serializeValueCss,
   type MemberResolver,
 } from "../serialize/values.js";
-import { CircularAliasError, getEntry, terminalEntry } from "./shared/alias.js";
+import { CircularAliasError, getEntry, resolveEntryValue } from "../token-model/alias.js";
 import type { GeneratorContext } from "./shared/context.js";
-import { resetRules, type CssResetOptions } from "./shared/reset.js";
-import { validateThemeNames } from "./shared/theme-source.js";
+import {
+  themeNameDiagnostics,
+  validateIdentifierGuards,
+  validateThemeNames,
+} from "./shared/theme-source.js";
+import { escapeString, escapeTemplateLiteral, quotedKey } from "../ts-source.js";
 import {
   capitalize,
-  escapeString,
   entryPath,
-  escapeTemplateLiteral,
-  quotedKey,
-  resolveEntryValue,
+  scaleDocComment,
   scaleExportsForConfig,
   type ScaleExport,
 } from "./shared/ts-source.js";
-import type { TokenBinding } from "@recontentapp/core";
 import { outputPlugin } from "./factory.js";
 
 function sanitizeSegment(segment: string): string {
@@ -116,24 +113,6 @@ function buildKeyMap(config: GeneratorContext): Map<string, string> {
   return keys;
 }
 
-function toKebabCase(property: string): string {
-  return property.replace(/([A-Z])/g, "-$1").toLowerCase();
-}
-
-function generateCssResetStylesheet(options: CssResetOptions): string {
-  const lines: string[] = [];
-
-  for (const rule of resetRules(options)) {
-    const body = rule.declarations
-      .map(({ property, value }) => `  ${toKebabCase(property)}: ${value};`)
-      .join("\n");
-    const block = `${rule.selector} {\n${body}\n}`;
-    lines.push(rule.media ? `@media ${rule.media} {\n${block}\n}` : block);
-  }
-
-  return `${lines.join("\n\n")}\n`;
-}
-
 type VarLine = { key: string; expression: string };
 
 function quoteLiteral(value: string): string {
@@ -144,15 +123,10 @@ function derivedTemplate(reference: string): string {
   return `() => \`\${${reference}}\``;
 }
 
-function resolveVariableReference(
-  registry: TokenRegistry,
-  keys: Map<string, string>,
-  entry: TokenEntry,
-): string {
-  const current = terminalEntry(registry, entry);
-  const flat = keys.get(pathKey(current.path));
+function resolveVariableReference(keys: Map<string, string>, target: TokenEntry): string {
+  const flat = keys.get(pathKey(target.path));
   if (!flat) {
-    throw new Error(`Missing generated StyleX key for token path: ${pathKey(current.path)}`);
+    throw new Error(`Missing generated StyleX key for token path: ${pathKey(target.path)}`);
   }
   return `vars.${flat}`;
 }
@@ -254,11 +228,9 @@ function expandedVarLines(
   const base = pathKey(entry.path);
 
   if (entry.alias) {
+    // Reference the immediate alias target so theme overrides on intermediate tokens propagate.
     const target = getEntry(config.registry, entry.alias);
-    // Walk to the terminal (non-alias) entry sharing this composite's shape,
-    // so each cssProperty references that entry's own flattened member key.
-    const current = terminalEntry(config.registry, target);
-    const targetBase = pathKey(current.path);
+    const targetBase = pathKey(target.path);
     return expandedMembers(type, entry.$value as TokenTypeMap[typeof type]).map(
       ({ cssProperty }) => {
         const flat = keys.get(`${base}.${cssProperty}`)!;
@@ -277,11 +249,7 @@ function expandedVarLines(
     ({ cssProperty, type: memberType, member }) => {
       const flat = keys.get(`${base}.${cssProperty}`)!;
       if (member.alias) {
-        const reference = resolveVariableReference(
-          config.registry,
-          keys,
-          getEntry(config.registry, member.alias),
-        );
+        const reference = resolveVariableReference(keys, getEntry(config.registry, member.alias));
         return { key: flat, expression: derivedTemplate(reference) };
       }
       return {
@@ -301,7 +269,7 @@ function inlineCompositeVarLine(
   const flat = keys.get(pathKey(entry.path))!;
 
   if (entry.alias) {
-    const reference = resolveVariableReference(config.registry, keys, entry);
+    const reference = resolveVariableReference(keys, getEntry(config.registry, entry.alias));
     return { key: flat, expression: derivedTemplate(reference) };
   }
 
@@ -309,19 +277,30 @@ function inlineCompositeVarLine(
     | TokenTypeMap["shadow"]
     | TokenTypeMap["border"]
     | TokenTypeMap["gradient"];
+  const resolveGradient = (member: { alias?: string[]; $value: unknown }) =>
+    (member.alias
+      ? resolveEntryValue(config.registry, getEntry(config.registry, member.alias))
+      : member.$value) as TokenTypeMap["gradient"];
   let hasAlias = false;
-  const resolve: MemberResolver = (memberType, member) => {
+  const detectAndResolve: MemberResolver = (memberType, member) => {
+    if (!member.alias) {
+      return serializeValueCss(memberType, member.$value);
+    }
+    hasAlias = true;
+    return `\${${resolveVariableReference(keys, getEntry(config.registry, member.alias))}}`;
+  };
+  const plain = serializeCompositeCss(type, value, detectAndResolve, resolveGradient);
+
+  if (!hasAlias) {
+    return { key: flat, expression: quoteLiteral(plain) };
+  }
+  const templateResolve: MemberResolver = (memberType, member) => {
     if (!member.alias) {
       return escapeTemplateLiteral(serializeValueCss(memberType, member.$value));
     }
-    hasAlias = true;
-    return `\${${resolveVariableReference(config.registry, keys, getEntry(config.registry, member.alias))}}`;
+    return `\${${resolveVariableReference(keys, getEntry(config.registry, member.alias))}}`;
   };
-  const template = serializeCompositeCss(type, value, resolve);
-
-  if (!hasAlias) {
-    return { key: flat, expression: quoteLiteral(template) };
-  }
+  const template = serializeCompositeCss(type, value, templateResolve, resolveGradient);
   return { key: flat, expression: `() => \`${template}\`` };
 }
 
@@ -332,7 +311,7 @@ function scalarVarLine(
 ): VarLine {
   const flat = keys.get(pathKey(entry.path))!;
   if (entry.alias) {
-    const reference = resolveVariableReference(config.registry, keys, entry);
+    const reference = resolveVariableReference(keys, getEntry(config.registry, entry.alias));
     return { key: flat, expression: derivedTemplate(reference) };
   }
   return {
@@ -393,7 +372,8 @@ function themeOverrideLines(
     if (!entry) {
       throw new Error(`Theme override references an unknown token path: ${path}`);
     }
-    const value = override.get(path)!;
+    // `createTheme` needs literals, so an aliased override is flattened to its target's value.
+    const value = resolveEntryValue(config.registry, entry, override);
 
     if (isExpandedComposite(entry.$type)) {
       const type = entry.$type as "typography" | "transition";
@@ -405,9 +385,12 @@ function themeOverrideLines(
         if (!flat) {
           throw new Error(`Missing generated StyleX key for token path: ${path}.${cssProperty}`);
         }
+        const memberValue = member.alias
+          ? resolveEntryValue(config.registry, getEntry(config.registry, member.alias), override)
+          : member.$value;
         lines.push({
           key: flat,
-          expression: quoteLiteral(serializeValueCss(memberType, member.$value)),
+          expression: quoteLiteral(serializeValueCss(memberType, memberValue as never)),
         });
       }
       continue;
@@ -419,14 +402,31 @@ function themeOverrideLines(
       if (!flat) {
         throw new Error(`Missing generated StyleX key for token path: ${path}`);
       }
-      const resolve: MemberResolver = (memberType, member) =>
-        escapeTemplateLiteral(serializeValueCss(memberType, member.$value));
-      const template = serializeCompositeCss(
+      const resolveGradient = (member: { alias?: string[]; $value: unknown }) =>
+        (member.alias
+          ? resolveEntryValue(config.registry, getEntry(config.registry, member.alias), override)
+          : member.$value) as TokenTypeMap["gradient"];
+      const resolve: MemberResolver = (memberType, member) => {
+        const memberValue = member.alias
+          ? resolveEntryValue(config.registry, getEntry(config.registry, member.alias), override)
+          : member.$value;
+        if (memberType === "shadow") {
+          return serializeCompositeCss(
+            "shadow",
+            memberValue as TokenTypeMap["shadow"],
+            resolve,
+            resolveGradient,
+          );
+        }
+        return serializeValueCss(memberType, memberValue as never);
+      };
+      const literal = serializeCompositeCss(
         type,
         value as TokenTypeMap["shadow"] | TokenTypeMap["border"] | TokenTypeMap["gradient"],
         resolve,
+        resolveGradient,
       );
-      lines.push({ key: flat, expression: quoteLiteral(template) });
+      lines.push({ key: flat, expression: quoteLiteral(literal) });
       continue;
     }
 
@@ -479,7 +479,8 @@ function generateThemesSource(config: GeneratorContext, keys: Map<string, string
  */
 function generateScaleSource(keys: Map<string, string>, scale: ScaleExport): string {
   const type = scale.metadata.keys.map(quotedKey).join(" | ");
-  const typeDeclaration = `export type ${scale.typeName} = ${type};`;
+  const doc = scaleDocComment(scale.metadata);
+  const typeDeclaration = `${doc}export type ${scale.typeName} = ${type};`;
 
   if (isExpandedComposite(scale.metadata.type)) {
     return typeDeclaration;
@@ -494,84 +495,43 @@ function generateScaleSource(keys: Map<string, string>, scale: ScaleExport): str
     return `  ${quotedKey(key)}: vars.${flat},`;
   });
 
-  return `${typeDeclaration}\n\nexport const ${scale.exportName} = {\n${entries.join("\n")}\n} as const;`;
+  return `${typeDeclaration}\n\n${doc}export const ${scale.exportName} = {\n${entries.join("\n")}\n} as const;`;
 }
 
 function generateScalesSource(config: GeneratorContext, keys: Map<string, string>): string {
   const scaleExports = scaleExportsForConfig(config);
-  const lines = ['import { vars } from "./tokens.stylex.js";', ""];
+  validateIdentifierGuards(config, "stylex", scaleExports);
+  if (scaleExports.length === 0) {
+    return "export {};\n";
+  }
+  const needsVars = scaleExports.some((scale) => !isExpandedComposite(scale.metadata.type));
+  const lines = needsVars ? ['import { vars } from "./tokens.stylex.js";', ""] : [];
   for (const scale of scaleExports) {
     lines.push(generateScaleSource(keys, scale), "");
   }
   return lines.join("\n");
 }
 
-function resolveTokenBindingEntry<T extends TokenType>(
-  registry: GeneratorContext["registry"],
-  token: TokenBinding<T>,
-  expectedType: T,
-  label: string,
-): TokenEntry {
-  if (!isStampedToken(token) || token.$type !== expectedType) {
-    throw new Error(`Output "${label}" must be a ${expectedType} token.`);
-  }
-  const entry = registry.get(pathKey(token._path));
-  if (!entry) {
-    throw new Error(`Output "${label}" references a token that is not registered.`);
-  }
-  return entry;
-}
-
 export type StylexPluginOptions = {
   outDir: string;
-  fontFamily: TokenBinding<"fontFamily">;
-  placeholderColor: TokenBinding<"color">;
 };
 
-export function generateStylexFiles(
-  config: GeneratorContext,
-  options: StylexPluginOptions,
-): OutputFile[] {
+export function generateStylexFiles(config: GeneratorContext): OutputFile[] {
   const keys = buildKeyMap(config);
-
-  const fontFamilyEntry = resolveTokenBindingEntry(
-    config.registry,
-    options.fontFamily,
-    "fontFamily",
-    "fontFamily",
-  );
-  const placeholderColorEntry = resolveTokenBindingEntry(
-    config.registry,
-    options.placeholderColor,
-    "color",
-    "placeholderColor",
-  );
-
-  const fontFamilyValue = resolveEntryValue(
-    config.registry,
-    fontFamilyEntry,
-  ) as TokenTypeMap["fontFamily"];
-  const placeholderColorValue = resolveEntryValue(
-    config.registry,
-    placeholderColorEntry,
-  ) as TokenTypeMap["color"];
-  const fontFamilyCss = serializeValueCss("fontFamily", fontFamilyValue);
-  const placeholderColorCss = serializeValueCss("color", placeholderColorValue);
 
   return [
     { filename: "tokens.stylex.ts", content: generateVarsSource(config, keys) },
-    {
-      filename: "reset.gen.css",
-      content: generateCssResetStylesheet({
-        fontFamily: fontFamilyCss,
-        placeholderColor: placeholderColorCss,
-      }),
-    },
     { filename: "themes.ts", content: generateThemesSource(config, keys) },
     { filename: "scales.ts", content: generateScalesSource(config, keys) },
   ];
 }
 
 export function stylex(options: StylexPluginOptions): RecontentPlugin {
-  return outputPlugin("recontent:stylex", options, generateStylexFiles);
+  return outputPlugin(
+    "recontent:stylex",
+    ["tokens"],
+    options,
+    generateStylexFiles,
+    themeNameDiagnostics("stylex"),
+  );
 }

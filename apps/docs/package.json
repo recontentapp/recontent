@@ -10,7 +10,8 @@
     "preview": "vocs preview",
     "deploy": "wrangler deploy",
     "typecheck": "tsc --noEmit",
-    "test": "node --test"
+    "test": "node --test",
+    "style:check": "node scripts/style-check.mjs"
   },
   "devDependencies": {
     "@types/node": "24.1.0",

@@ -375,10 +375,10 @@ export const vars = createThemeContract({
     },
   },
   "components": {
-    "switch": {
-      "trackWidth": null,
-      "trackHeight": null,
-      "thumbSize": null,
+    "sticker": {
+      "paddingX": null,
+      "paddingY": null,
+      "borderRadius": null,
     },
   },
 });
@@ -596,7 +596,7 @@ export const themeClass = createTheme(vars, {
       "fullscreen": '96rem',
     },
     "fontFamily": {
-      "sans": '-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif',
+      "sans": '"-apple-system", BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif',
       "mono": 'SF Mono, Monaco, Consolas, monospace',
     },
     "iconScale": {
@@ -834,10 +834,10 @@ export const themeClass = createTheme(vars, {
     },
   },
   "components": {
-    "switch": {
-      "trackWidth": '32px',
-      "trackHeight": '18px',
-      "thumbSize": '14px',
+    "sticker": {
+      "paddingX": '8px',
+      "paddingY": '2px',
+      "borderRadius": '4px',
     },
   },
 });

@@ -4,7 +4,7 @@ import { sidebar } from "./sidebar.ts";
 export default defineConfig({
   title: "Recontent.app",
   description:
-    "Define design tokens once. Generate CSS, Tailwind, vanilla-extract, StyleX, TypeScript and DTCG.",
+    "Define typed tokens, introspect React components, and serve both from one CLI to your team, coding agents, and CI.",
   baseUrl: process.env.DOCS_BASE_URL, // set once hosting is chosen
   renderStrategy: "full-static",
   logoUrl: { light: "/logo-light.svg", dark: "/logo-dark.svg" },

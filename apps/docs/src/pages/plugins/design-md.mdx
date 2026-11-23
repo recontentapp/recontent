@@ -1,0 +1,100 @@
+---
+title: "Design.md"
+description: "Generate DESIGN.md, a short file for agents following Google's DESIGN.md format."
+---
+
+# Design.md
+
+`designMD()` writes `DESIGN.md` following Google's [DESIGN.md specification](https://github.com/google-labs-code/design.md) (`alpha`). It gives coding agents a compact file to load up front with YAML token front matter and concise usage prose. Keep it brief: agents fetch full component props on demand with `recontent inspect`. For a browsable HTML page, see [`docs()`](/plugins/docs).
+
+```ts twoslash
+// [!include ~/snippets/design-md.config.ts]
+```
+
+## Options
+
+```ts
+designMD(options: DesignMdPluginOptions): RecontentPlugin
+```
+
+| Option        | Type       | Default           | Description                                                                              |
+| ------------- | ---------- | ----------------- | ---------------------------------------------------------------------------------------- |
+| `outDir`      | `string`   | required          | Output directory relative to the config file.                                            |
+| `title`       | `string`   | `"Design system"` | Document `name` and top-level heading.                                                   |
+| `description` | `string`   | none              | Purpose of the design system. Appears in front matter and Overview.                      |
+| `dos`         | `string[]` | none              | Items rendered as `Do <item>` under "Do's and Don'ts" (for example `use system tokens`). |
+| `donts`       | `string[]` | none              | Items rendered as `Don't <item>` before deprecations. Write the predicate phrase.        |
+
+Plugin name: `recontent:design-md`. It includes components whenever you configure `introspection` and still works without them; see [`dependsOn`](/plugin-api#recontentplugin) for failure behavior.
+
+## Emitted files
+
+| File        | Content                                             |
+| ----------- | --------------------------------------------------- |
+| `DESIGN.md` | YAML token front matter followed by prose sections. |
+
+```md
+---
+version: alpha
+name: "Acme design system"
+description: "Calm, dense UI for back-office tools."
+colors:
+  ref-color-white: "#ffffff"
+  system-color-background: "{colors.ref-color-white}"
+spacing:
+  ref-spacing-4: "16px"
+components:
+  switch:
+    trackWidth: "32px"
+---
+
+# Acme design system
+
+## Overview
+
+Calm, dense UI for back-office tools.
+
+Keys mirror token paths and CSS variables: `system-color-background` is `system.color.background` (`--system-color-background`).
+
+## Colors
+
+- `system-color-background`: Page background
+
+## Components
+
+- **Button**: Triggers an action.
+
+Run `recontent inspect components <Name>` for props, usage and examples.
+```
+
+## Front matter
+
+`designMD()` writes `ref`, `system`, and `components` tokens to YAML front matter. Each key joins the token's full path with `-`, matching its CSS variable without `--`: `system-color-background` corresponds to `system.color.background` and `--system-color-background`.
+
+The plugin groups each token by type:
+
+| Group        | Tokens                                                                                                      |
+| ------------ | ----------------------------------------------------------------------------------------------------------- |
+| `colors`     | `color`                                                                                                     |
+| `typography` | `typography`, resolving `fontFamily`, `fontSize`, `fontWeight`, `lineHeight`, and `letterSpacing` to values |
+| `rounded`    | `dimension` with `radius`, `radii`, `rounded`, or `corner` in its path                                      |
+| `spacing`    | `dimension` with `spac`, `gap`, `padding`, `margin`, or `inset` in its path                                 |
+| `components` | Every token in the `components` layer as `components.<component>.<token>`                                   |
+
+When a token aliases another front matter token, `designMD()` writes a reference such as `"{colors.ref-color-white}"`. All other tokens emit their CSS values. Because themes sit outside the front matter spec, theme overrides appear in the **Themes** section below.
+
+## Prose
+
+`designMD()` omits empty sections and emits the remaining ones in specification order:
+
+- **Overview:** Your `description` plus the mapping from keys to token paths and CSS variables.
+- **Colors:** Descriptions of color tokens, color scales, and gradients.
+- **Typography:** Descriptions, font families, and font weights.
+- **Layout:** Spacing descriptions plus other dimensions such as font sizes.
+- **Elevation & Depth:** Shadow tokens.
+- **Shapes:** Radius descriptions and border tokens.
+- **Themes:** Table of overridden values for each [theme](/guides/working-with-themes).
+- **Components:** One line per component with its description.
+- **Do's and Don'ts:** Your `dos` and `donts`, followed by deprecated tokens, scales, and components with their notices.
+
+Token types without a specification section (durations, easing curves, transitions, and numbers) do not appear in `DESIGN.md`. Components require [`introspection`](/config#introspection); without it, `designMD()` omits the Components section.

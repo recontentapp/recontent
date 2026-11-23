@@ -1,39 +1,53 @@
 import { Link } from "vocs";
 import { BuddyPeekArt, MarkerCircle } from "../doodles.tsx";
-import { CodePanel, type Line } from "./CodePanel.tsx";
-import { Install } from "./Install.tsx";
+import { CodePanel, lines } from "./CodePanel.tsx";
+import { CopyAgentPrompt } from "./CopyAgentPrompt.tsx";
 
-// Errors below are real TypeScript diagnostics from recontent, shortened to their first line.
-// The hero shows a rename in the system layer, caught in every component still using the old name.
-const heroLines: Line[] = [
-  { code: "const system = defineSystemTokens({" },
-  { code: "  color: { primary: ref.color.blue[9] }, // was: accent" },
-  { code: "});" },
-  { code: "" },
-  { code: "const components = defineComponentTokens({" },
-  { code: "  button: { background: system.color.accent },", squiggle: "accent" },
-  { code: "  link: { color: system.color.accent },", squiggle: "accent" },
-  { code: "});" },
-];
+// Real output of `recontent inspect components Button`, without the Notes and Required columns.
+const heroOutput = lines(`$ recontent inspect components Button
 
-/** The claim, and an editor moment that proves it. */
+## Button
+
+Triggers an action.
+
+Import: \`import { Button } from "@acme/ds"\`
+
+Source: \`src/components/Button.tsx:21\`
+
+### Usage
+
+Prefer a link when the click only navigates.
+
+| Prop | Type | Default |
+| --- | --- | --- |
+| \`label\` | \`string\` | — |
+| \`loading\` | \`boolean\` | \`false\` |
+| \`variant\` | \`"primary" \\| "ghost"\` | \`"primary"\` |
+
+Also accepts: \`ButtonHTMLAttributes\` (288 props from @types/react)`);
+
+/** The claim, and the answer an agent gets. */
 export function Hero() {
   return (
     <section className="lp-hero lp-wrap">
       <div className="lp-hero-copy">
         <h1 className="lp-h1">
-          Design tokens that{" "}
-          <span className="lp-circled">
-            type-check.
-            <MarkerCircle />
+          <span className="lp-h1-line">Design system</span>
+          <span className="lp-h1-line">
+            <span className="lp-circled">
+              toolchain
+              <MarkerCircle />
+            </span>{" "}
+            for
           </span>
+          <span className="lp-h1-line">humans & agents</span>
         </h1>
         <p className="lp-lede">
-          Recontent stores all your design decisions in typed layers so that your design tokens are
-          enforced by a tool, not by convention.
+          Define typed tokens, introspect React components, and serve both from one CLI to your
+          team, coding agents, and CI.
         </p>
-        <div className="lp-hero-actions">
-          <Install />
+        <div className="lp-ctas">
+          <CopyAgentPrompt />
           <Link to="/introduction/getting-started" className="lp-btn lp-btn-primary">
             Read docs
           </Link>
@@ -45,12 +59,7 @@ export function Hero() {
             <BuddyPeekArt />
           </div>
           <div className="lp-peek-panel">
-            <CodePanel
-              title="recontent.config.ts"
-              code={heroLines}
-              error="Property 'accent' does not exist on type '{ primary: … }'. (2 errors)"
-              tone="coral"
-            />
+            <CodePanel code={heroOutput} language="sh" tone="coral" />
           </div>
         </div>
       </div>

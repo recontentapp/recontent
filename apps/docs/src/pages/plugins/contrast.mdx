@@ -1,0 +1,54 @@
+---
+title: "Contrast"
+description: "Fail the build when text and background colors fall below a WCAG contrast ratio, in the base tokens and every theme."
+---
+
+# Contrast
+
+`contrast()` validates [WCAG 2.x](https://www.w3.org/TR/WCAG22/#contrast-minimum) contrast ratios between color token groups across base tokens and every theme. If a dark theme or brand override makes text unreadable, `recontent build` fails before writing any file. This plugin emits no files.
+
+```ts twoslash
+// [!include ~/snippets/contrast.config.ts]
+```
+
+## Options
+
+```ts
+contrast(options: ContrastPluginOptions): RecontentPlugin
+```
+
+| Option  | Type             | Default  | Description                               |
+| ------- | ---------------- | -------- | ----------------------------------------- |
+| `rules` | `ContrastRule[]` | required | Foreground and background contrast rules. |
+
+Each rule accepts these fields:
+
+| Field        | Type                   | Default   | Description                                                             |
+| ------------ | ---------------------- | --------- | ----------------------------------------------------------------------- |
+| `foreground` | `string`               | required  | Dotted key for a color token or group (`system.color.text`).            |
+| `background` | `string`               | required  | Dotted key for a color token or group.                                  |
+| `min`        | `number`               | `4.5`     | Minimum contrast ratio (`3` for large text and UI, `7` for AAA).        |
+| `severity`   | `"error" \| "warning"` | `"error"` | Errors fail the build; warnings print to stderr and let the build pass. |
+
+Plugin name: `recontent:contrast`.
+
+## Groups
+
+Each key names either one token or a group (a [`tokens.group()`](/config/scales#groups) or plain nested object). The plugin expands every group to all `color` tokens beneath it and checks every foreground against every background. Organize colors by role (`text`, `surface`, `border`) so new tokens inherit contrast checks automatically.
+
+A key matching zero color tokens fails validation. The plugin skips pairing a token with itself when it appears on both sides of a rule.
+
+## Themes
+
+`contrast()` checks every pair in base tokens first, then in every theme while following aliases and theme overrides. Failures name the theme:
+
+```text
+system.color.text.muted on system.color.surface.default has contrast 3.21:1 in theme "dark", below 4.5:1.
+```
+
+## Transparency
+
+- **Translucent foregrounds:** The plugin composites the foreground over the background in sRGB, matching browser rendering.
+- **Translucent backgrounds:** The plugin reports an error because the surface behind the background is unknown.
+
+`contrast()` compares unrounded ratios against `min` as WCAG specifies, so `4.48:1` never passes `4.5`.

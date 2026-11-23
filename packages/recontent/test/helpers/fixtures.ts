@@ -1,4 +1,6 @@
-import type { Config, ThemeOverride, TokenBinding } from "@recontentapp/core";
+import type { Config } from "../../src/config/types.js";
+import type { ThemeOverride } from "../../src/token-model/registry.js";
+import type { TokenBinding, TokenLayer } from "../../src/token-model/model.js";
 import ts from "typescript";
 import {
   defineComponentTokens,
@@ -82,6 +84,29 @@ export function assertTypechecks(source: string, fileName = "tokens.ts"): void {
     });
     throw new Error(`Generated source failed to typecheck:\n${formatted}\n\n${source}`);
   }
+}
+
+/** A config holding only reference tokens, the shape most plugin specs need. */
+export function refOnlyConfig(ref: ReturnType<typeof defineReferenceTokens>): Config {
+  return defineConfig({ tokens: { ref, system: defineSystemTokens({}), components: {} } });
+}
+
+/**
+ * Registers `path` as an alias of `target` (both dotted), bypassing the
+ * authoring API, which cannot express cycles or dangling targets. The value is
+ * taken from `path` when it exists, else from `target`.
+ */
+export function withAlias(config: Config, path: string, target: string): Config {
+  const entry = config.registry.get(path) ?? config.registry.get(target);
+  if (!entry) throw new Error(`withAlias: neither ${path} nor ${target} is registered`);
+  const segments = path.split(".");
+  config.registry.set(path, {
+    ...entry,
+    path: segments,
+    alias: target.split("."),
+    layer: segments[0] as TokenLayer,
+  });
+  return config;
 }
 
 export type FixtureRef = {
@@ -182,9 +207,15 @@ export function scaleConfig(): Fixture {
  * The same 3-hop alias chain as aliasChainConfig(), plus a "dark" theme
  * overriding the requested layer's token in the chain.
  */
-export function themedConfig(options: { layer: "ref" | "system" | "components" }): Fixture {
+export function themedConfig(options: {
+  layer: "ref" | "system" | "components";
+  /** The theme's name; "dark" by default. */
+  name?: string;
+  /** The "system" theme aliases `ref.color.white` instead of overriding with a literal. */
+  alias?: boolean;
+}): Fixture {
   const ref = defineReferenceTokens({
-    color: { black: tokens.color("#000000") },
+    color: { black: tokens.color("#000000"), white: tokens.color("#ffffff") },
     fontFamily: { body: tokens.fontFamily("Arial") },
   });
   const system = defineSystemTokens({ colors: { accent: ref.color.black } });
@@ -194,14 +225,16 @@ export function themedConfig(options: { layer: "ref" | "system" | "components" }
   if (options.layer === "ref") {
     dark = defineTheme(ref, { color: { black: tokens.color("#111111") } });
   } else if (options.layer === "system") {
-    dark = defineTheme(system, { colors: { accent: tokens.color("#111111") } });
+    dark = defineTheme(system, {
+      colors: { accent: options.alias ? ref.color.white : tokens.color("#111111") },
+    });
   } else {
     dark = defineTheme(components, { button: { background: tokens.color("#111111") } });
   }
 
   const config = defineConfig({
     tokens: { ref, system, components },
-    themes: { dark },
+    themes: { [options.name ?? "dark"]: dark },
   });
 
   return { config, ref };
@@ -278,7 +311,10 @@ export function goldenConfig(): Fixture {
   });
 
   const dark = defineTheme(ref, { color: { black: tokens.color("#eeeeee") } });
-  const highContrast = defineTheme(system, { colors: { accent: tokens.color("#ff0000") } });
+  // `surface` is aliased to a ref token rather than given a literal.
+  const highContrast = defineTheme(system, {
+    colors: { accent: tokens.color("#ff0000"), surface: ref.color.black },
+  });
 
   const config = defineConfig({
     tokens: { ref, system, components },

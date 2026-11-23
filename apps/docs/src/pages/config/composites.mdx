@@ -1,0 +1,148 @@
+---
+title: "Composites"
+description: "Tokens made of several values: shadow, border, strokeStyle, transition, gradient and typography."
+---
+
+# Composites
+
+A composite token groups multiple values into one token. Each member accepts either a raw value or an alias to another layer, so composites follow your color and spacing tokens.
+
+| Type                          | CSS output                              |
+| ----------------------------- | --------------------------------------- |
+| [`shadow`](#shadow)           | one CSS variable (`box-shadow` list)    |
+| [`border`](#border)           | one CSS variable (`1px solid var(--…)`) |
+| [`strokeStyle`](#strokestyle) | one CSS variable (style keyword)        |
+| [`gradient`](#gradient)       | one CSS variable (`linear-gradient(…)`) |
+| [`transition`](#transition)   | three CSS variables, one per member     |
+| [`typography`](#typography)   | five CSS variables, one per member      |
+
+Because `transition` and `typography` have no single CSS value, the CSS, Tailwind, vanilla-extract, and StyleX plugins emit one variable per member (`--system-typography-body-font-size`).
+
+Wherever a member expects a dimension, color, or number, pass either the matching factory input (`"16px"`, `"#2563eb"`, `1.5`) or a token.
+
+## shadow
+
+```ts twoslash
+import { tokens } from "recontent";
+
+const card = tokens.shadow({
+  color: "#00000026",
+  offsetX: "0px",
+  offsetY: "4px",
+  blur: "12px",
+  spread: "0px",
+});
+
+const layered = tokens.shadow([
+  { color: "#0000001a", offsetX: "0px", offsetY: "1px", blur: "3px", spread: "0px" },
+  { color: "#0000001a", offsetX: "0px", offsetY: "1px", blur: "2px", spread: "-1px", inset: true },
+]);
+```
+
+Pass one shadow layer or an array of layers. Every layer requires `color`, `offsetX`, `offsetY`, `blur`, and `spread`, while `inset` is optional. A layer can also reference an existing shadow token.
+
+CSS emits `0px 4px 12px 0px #00000026`, joining multiple layers with commas.
+
+## border
+
+```ts twoslash
+import { tokens } from "recontent";
+
+const hairline = tokens.border({ color: "#e4e4e7", width: "1px", style: "solid" });
+```
+
+| Member  | Type                                                                   | Default   |
+| ------- | ---------------------------------------------------------------------- | --------- |
+| `color` | color                                                                  | required  |
+| `width` | dimension                                                              | required  |
+| `style` | a `strokeStyle` name, custom `{ dashArray, lineCap }` object, or token | `"solid"` |
+
+CSS emits `1px solid #e4e4e7`.
+
+## strokeStyle
+
+```ts twoslash
+import { tokens } from "recontent";
+
+tokens.strokeStyle("dashed");
+tokens.strokeStyle({ dashArray: ["4px", "2px"], lineCap: "round" });
+```
+
+Pass a keyword (`solid`, `dashed`, `dotted`, `double`, `groove`, `ridge`, `outset`, or `inset`). Alternatively, pass a custom dash object with a non-empty `dashArray` of dimensions and `lineCap` (`round`, `butt`, or `square`). Because CSS has no custom dash syntax, CSS emits `dashed` while DTCG preserves the full object.
+
+## transition
+
+```ts twoslash
+import { tokens } from "recontent";
+
+const fast = tokens.transition({
+  duration: "150ms",
+  delay: "0ms",
+  timingFunction: [0.4, 0, 0.2, 1],
+});
+```
+
+| Member           | Type         | Default  |
+| ---------------- | ------------ | -------- |
+| `duration`       | duration     | required |
+| `delay`          | duration     | `"0ms"`  |
+| `timingFunction` | cubic bezier | required |
+
+For `system.motion.fast`, CSS emits `--system-motion-fast-transition-duration`, `-transition-delay`, and `-transition-timing-function`.
+
+## gradient
+
+```ts twoslash
+import { tokens } from "recontent";
+
+const brand = tokens.gradient({
+  kind: "linear",
+  angle: "90deg",
+  stops: [
+    { color: "#2563eb", position: 0 },
+    { color: "#7c3aed", position: 1 },
+  ],
+});
+```
+
+| Option  | Type                              | Default    | Notes                                                                                                       |
+| ------- | --------------------------------- | ---------- | ----------------------------------------------------------------------------------------------------------- |
+| `kind`  | `"linear" \| "radial" \| "conic"` | `"linear"` |                                                                                                             |
+| `angle` | string                            | `"180deg"` | A number with `deg`, `grad`, `rad`, or `turn`.                                                              |
+| `stops` | at least 2                        | required   | `{ color, position }` with `position` clamped to `0`–`1`. A stop can also splice in another gradient token. |
+
+CSS emits `linear-gradient(90deg, #2563eb 0%, #7c3aed 100%)`, `radial-gradient(…)`, or `conic-gradient(from 90deg, …)`.
+
+## typography
+
+```ts twoslash
+import { tokens } from "recontent";
+
+const heading = tokens.typography({
+  fontFamily: "Inter, system-ui, sans-serif",
+  fontSize: "1.5rem",
+  fontWeight: 600,
+  letterSpacing: "-0.02em",
+  lineHeight: 1.25,
+});
+```
+
+| Member          | Type                | Default  |
+| --------------- | ------------------- | -------- |
+| `fontFamily`    | font family         | required |
+| `fontSize`      | dimension           | required |
+| `fontWeight`    | font weight or name | required |
+| `letterSpacing` | dimension           | `"0px"`  |
+| `lineHeight`    | number or dimension | `1.4`    |
+
+When you pass `lineHeight` as a dimension (`"58px"`, `"1.5rem"`, `"1.2em"`), Recontent converts it to a unitless ratio rounded to 4 decimals so every plugin receives a plain number:
+
+| `lineHeight` | `fontSize` | Ratio                                                                  |
+| ------------ | ---------- | ---------------------------------------------------------------------- |
+| `em`         | any        | The value itself (`"1.2em"` becomes `1.2`).                            |
+| `px` / `rem` | `px`/`rem` | `lineHeight` divided by `fontSize` (converting `rem` at `16px`).       |
+| `px` / `rem` | `em`       | Throws an error; use a unitless number or an `em` line height instead. |
+
+Aliased `fontSize` tokens work the same way because Recontent uses their resolved value.
+
+For `system.typography.body`, CSS emits `--system-typography-body-font-family`, `-font-size`, `-font-weight`, `-letter-spacing`, and `-line-height`.

@@ -5,9 +5,7 @@ description: "Write reference, system and component tokens, alias between layers
 
 # Defining tokens
 
-Tokens are declared in `recontent.config.ts` with three functions, one per layer. Each takes a
-plain object tree and returns the same tree with every token _stamped_ with its layer and path, so
-later layers can reference earlier ones with full autocomplete.
+Declare tokens in `recontent.config.ts` with three functions, one per layer. Each function accepts a plain object tree and stamps every token with its layer and path. Later layers can then reference earlier ones with full autocomplete.
 
 ## The three layers
 
@@ -47,10 +45,9 @@ const components = defineComponentTokens({
 });
 ```
 
-The `tokens.*` factories create the values; see the [Tokens reference](/tokens/primitives) for every
-type. Inside a layer, nest objects freely: every group name becomes part of the token path.
+Create values with the `tokens.*` factories; see the [Tokens reference](/config/primitives) for every type. Nest objects freely inside a layer because every group name becomes part of the token path.
 
-Token paths are prefixed by layer, except for components:
+Recontent prefixes token paths with their layer name, except in the `components` layer:
 
 | Layer      | Example path          | CSS variable            |
 | ---------- | --------------------- | ----------------------- |
@@ -60,17 +57,13 @@ Token paths are prefixed by layer, except for components:
 
 ## Aliasing across layers
 
-Using a token from `defineReferenceTokens` or `defineSystemTokens` as the value of another token
-creates an **alias**, not a copy. In the example above, `system.color.accent` points at
-`ref.color.blue[500]`:
+Pass a token from `defineReferenceTokens` or `defineSystemTokens` as another token's value to create an **alias**, not a copy. In the example above, `system.color.accent` aliases `ref.color.blue[500]`:
 
-- the CSS plugin emits `--system-color-accent: var(--ref-color-blue-500);`;
-- a [theme](/guides/working-with-themes) that overrides `ref.color.blue.500` changes every token
-  that aliases it;
-- [`recontent diff`](/guides/diffs) tells an alias change apart from a value change.
+- The CSS plugin emits `--system-color-accent: var(--ref-color-blue-500);`.
+- A [theme](/guides/working-with-themes) overriding `ref.color.blue.500` updates every token that aliases it.
+- [`recontent diff`](/guides/diffs) distinguishes an alias change from a value change.
 
-Use a raw value (`tokens.color("#ffffff")`) where a token has no reason to be shared. Composites
-alias their members the same way:
+Use a raw value (`tokens.color("#ffffff")`) when a token has no reason to reference another token. Composites alias their members the same way:
 
 ```ts twoslash
 import { defineReferenceTokens, defineSystemTokens, tokens } from "recontent";
@@ -94,12 +87,9 @@ const system = defineSystemTokens({
 
 ## Scales
 
-A scale is a group of tokens of one type with a fixed set of keys, such as a spacing ramp or a color
-palette. Create one with a `tokens.*Scale()` factory (see [Scales](/tokens/scales)). Generators use
-scale metadata to emit typed key unions and to bind whole scales to plugin options, for example
-`Box: { spacing: system.spacing }` in the [vanilla-extract plugin](/plugins/vanilla-extract).
+A scale groups tokens of one type under fixed keys, such as a spacing scale or a color scale. Create one with a `tokens.*Scale()` factory (see [Scales](/config/scales)). Plugins use scale metadata to emit typed key unions, such as `RefSpacing` in the [TypeScript plugin](/plugins/typescript).
 
-`tokens.generateColorScale()` builds a 12-step color scale from a single color:
+`tokens.generateColorScale()` builds a 12-step color scale from one base color:
 
 ```ts twoslash
 import { defineReferenceTokens, tokens } from "recontent";
@@ -113,7 +103,7 @@ const accent = ref.color.brand[9]; // your base color, used verbatim
 
 ## Descriptions and deprecations
 
-Every token and scale has three chainable methods:
+Every token and scale provides three chainable methods:
 
 ```ts twoslash
 import { defineSystemTokens, tokens } from "recontent";
@@ -127,28 +117,24 @@ const system = defineSystemTokens({
 });
 ```
 
-| Method                     | Effect                                                                              |
-| -------------------------- | ----------------------------------------------------------------------------------- |
-| `.describe(text)`          | Sets `$description`. Becomes a CSS comment, and shows in the Docs and DTCG outputs. |
-| `.deprecate(reason?)`      | Sets `$deprecated` (`true`, or your reason). Exported to DTCG and shown in docs.    |
-| `.extend(namespace, data)` | Adds `$extensions[namespace]`. Exported to DTCG.                                    |
+| Method                     | Effect                                                                         |
+| -------------------------- | ------------------------------------------------------------------------------ |
+| `.describe(text)`          | Sets `$description`. Appears as a CSS comment and in Docs and DTCG outputs.    |
+| `.deprecate(reason?)`      | Sets `$deprecated` (`true`, or your reason). Appears in DTCG and Docs outputs. |
+| `.extend(namespace, data)` | Adds `$extensions[namespace]` and exports it to DTCG.                          |
 
-Each method returns a new token, so calls chain.
+Each method returns a new token, so you can chain calls.
 
 ## Naming rules
 
-Numeric names such as `500` are fine. A few characters and names are rejected, and a bare value
-(`accent: "#2563eb"`) is ignored with a warning: see the rules in
-[`tokens`](/tokens/configuration#tokens).
+Numeric names such as `500` work cleanly. Recontent rejects a few reserved characters and names, and ignores bare values (`accent: "#2563eb"`) with a warning. See the rules in [`tokens`](/config#tokens).
 
 ## Importing existing DTCG tokens
 
-If your tokens already exist in the DTCG format, generate the config instead of writing it:
+If you already maintain DTCG token files, generate the config file instead of writing it by hand:
 
 ```bash
-recontent init --from tokens/
+recontent init --dtcg tokens/
 ```
 
-Literal tokens become `ref` tokens, tokens that reference others become `system` tokens, and each
-extra theme or modifier context becomes a theme. See
-[`init --from`](/cli/init#importing-dtcg-tokens) for the accepted inputs and what is skipped.
+Literal tokens become `ref` tokens, referencing tokens become `system` tokens, and each extra theme or modifier context becomes a theme. See [`init --dtcg`](/cli/init#importing-dtcg-tokens) for accepted inputs and skipped features.

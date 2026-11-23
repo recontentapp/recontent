@@ -1,0 +1,149 @@
+import { colorLuminance, relativeLuminance, toSrgb } from "../color/convert.js";
+import { type TokenEntry, type TokenRegistry } from "../token-model/registry.js";
+import { resolveValue } from "../token-model/alias.js";
+import { type ColorValue } from "../token-model/values.js";
+import { type PluginContext, type PluginDiagnostic, type RecontentPlugin } from "./types.js";
+
+type ContrastRule = {
+  /** A color token, or a group (every color token at or below the key), e.g. `system.color.text`. */
+  foreground: string;
+  /** A color token, or a group, as for `foreground`. */
+  background: string;
+  /** Minimum WCAG 2.x contrast ratio. Defaults to 4.5 (AA body text). */
+  min?: number;
+  /** Defaults to `"error"`, which fails the build. */
+  severity?: "error" | "warning";
+};
+
+export type ContrastPluginOptions = { rules: ContrastRule[] };
+
+const DEFAULT_MIN = 4.5;
+
+type ResolvedColor = {
+  value: ColorValue;
+  srgb: [number, number, number];
+  luminance: number;
+};
+
+function colorTokensAt(registry: TokenRegistry, key: string): TokenEntry[] {
+  const found: TokenEntry[] = [];
+  for (const [k, entry] of registry) {
+    if (entry.$type === "color" && (k === key || k.startsWith(`${key}.`))) found.push(entry);
+  }
+  return found;
+}
+
+/** The WCAG contrast ratio of `fg` rendered over an opaque `bg`, from unrounded values. */
+function contrastRatio(fg: ResolvedColor, bg: ResolvedColor): number {
+  const l1 =
+    fg.value.alpha >= 1
+      ? fg.luminance
+      : relativeLuminance([
+          fg.srgb[0] * fg.value.alpha + bg.srgb[0] * (1 - fg.value.alpha),
+          fg.srgb[1] * fg.value.alpha + bg.srgb[1] * (1 - fg.value.alpha),
+          fg.srgb[2] * fg.value.alpha + bg.srgb[2] * (1 - fg.value.alpha),
+        ]);
+  const l2 = bg.luminance;
+  return (Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05);
+}
+
+/**
+ * Checks WCAG 2.x contrast between groups of color tokens in the base tokens and every theme.
+ * A failing pair is an error unless the rule's `severity` is `"warning"`.
+ */
+export function contrast(options: ContrastPluginOptions): RecontentPlugin {
+  return {
+    name: "recontent:contrast",
+    dependsOn: ["tokens"],
+    validate(ctx: PluginContext) {
+      const diagnostics: PluginDiagnostic[] = [];
+      const themes = [undefined, ...Object.keys(ctx.themes).sort()];
+
+      const colorCache = new Map<string, ResolvedColor>();
+      const resolveCached = (entry: TokenEntry, theme: string | undefined): ResolvedColor => {
+        const cacheKey = `${theme ?? ""}\0${entry.path.join(".")}`;
+        let cached = colorCache.get(cacheKey);
+        if (!cached) {
+          const value = resolveValue(ctx, entry, theme) as ColorValue;
+          const srgb = toSrgb(value.colorSpace, value.components);
+          const luminance = colorLuminance(value.colorSpace, value.components);
+          cached = { value, srgb, luminance };
+          colorCache.set(cacheKey, cached);
+        }
+        return cached;
+      };
+
+      for (const rule of options.rules) {
+        const min = rule.min ?? DEFAULT_MIN;
+        const label = `contrast rule "${rule.foreground}" on "${rule.background}"`;
+        if (!Number.isFinite(min) || min <= 1 || min > 21) {
+          diagnostics.push({
+            severity: "error",
+            message: `The ${label} has an invalid min ratio (${rule.min}): expected a number in (1, 21].`,
+          });
+          continue;
+        }
+
+        const foregrounds = colorTokensAt(ctx.registry, rule.foreground);
+        const backgrounds = colorTokensAt(ctx.registry, rule.background);
+        const missing = [
+          ...(foregrounds.length === 0 ? [rule.foreground] : []),
+          ...(backgrounds.length === 0 ? [rule.background] : []),
+        ];
+        if (missing.length > 0) {
+          diagnostics.push({
+            severity: "error",
+            message: `The ${label} matches no color token: ${missing.map((k) => `"${k}"`).join(", ")}.`,
+          });
+          continue;
+        }
+
+        const severity = rule.severity ?? "error";
+        const reportedTranslucent = new Set<string>();
+        let checkedPairs = 0;
+
+        for (const fg of foregrounds) {
+          for (const bg of backgrounds) {
+            if (fg === bg) continue;
+            checkedPairs += 1;
+            const fgKey = fg.path.join(".");
+            const bgKey = bg.path.join(".");
+            for (const theme of themes) {
+              const where = theme === undefined ? "the base tokens" : `theme "${theme}"`;
+              const bgColor = resolveCached(bg, theme);
+              if (bgColor.value.alpha < 1) {
+                const dedupKey = `${theme ?? ""}\0${bgKey}`;
+                if (!reportedTranslucent.has(dedupKey)) {
+                  reportedTranslucent.add(dedupKey);
+                  diagnostics.push({
+                    severity,
+                    path: bg.path,
+                    message: `${bgKey} is translucent in ${where}: the background must be opaque to measure contrast against ${fgKey}.`,
+                  });
+                }
+                continue;
+              }
+              const fgColor = resolveCached(fg, theme);
+              const ratio = contrastRatio(fgColor, bgColor);
+              if (ratio < min) {
+                diagnostics.push({
+                  severity,
+                  path: fg.path,
+                  message: `${fgKey} on ${bgKey} has contrast ${ratio.toFixed(2)}:1 in ${where}, below ${min}:1.`,
+                });
+              }
+            }
+          }
+        }
+
+        if (checkedPairs === 0) {
+          diagnostics.push({
+            severity: "warning",
+            message: `The ${label} matched only the same token for foreground and background; no pairs were checked.`,
+          });
+        }
+      }
+      return diagnostics;
+    },
+  };
+}

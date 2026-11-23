@@ -1,0 +1,117 @@
+---
+title: "Scales"
+description: "Group tokens of one type into a scale, or generate a color scale from one color."
+---
+
+# Scales
+
+A scale groups tokens of one type under fixed keys, such as a spacing scale, type scale, or color scale. Unlike a plain nested object, a scale carries type and key metadata that Recontent uses to:
+
+- Emit typed key unions and helper constants in TypeScript, vanilla-extract, and StyleX outputs (`RefSpacing = "sm" | "md"`).
+- Validate theme overrides so replacement scales keep the same keys and token type.
+- Bind an entire scale to a plugin option, such as `theme: { spacing: system.spacing }` in the [Tailwind plugin](/plugins/tailwind#namespaces).
+
+Pass an object whose keys are strings or numbers. Each step accepts either a raw [primitive](/config/primitives) or [composite](/config/composites) input, or an existing token (creating an alias):
+
+```ts twoslash
+import { defineReferenceTokens, defineSystemTokens, tokens } from "recontent";
+
+const ref = defineReferenceTokens({
+  spacing: tokens.dimensionScale({
+    sm: "8px", // a raw input
+    md: tokens.dimension("16px"), // a token
+    lg: "24px",
+  }),
+});
+
+// A scale from an earlier layer becomes a scale of aliases.
+const system = defineSystemTokens({ spacing: ref.spacing });
+```
+
+Scales also support `.describe()`, `.deprecate()`, and `.extend()`, attaching metadata to the scale as a whole.
+
+## Groups
+
+Plain nested objects carry no metadata. Wrap a group in `tokens.group()` to attach descriptions, deprecations, or extensions:
+
+```ts twoslash
+import { defineReferenceTokens, tokens } from "recontent";
+
+const ref = defineReferenceTokens({
+  brand: tokens
+    .group({
+      primary: tokens.color("#2563eb"),
+      secondary: tokens.color("#7c3aed"),
+    })
+    .describe("Brand colors.")
+    .deprecate("Use system.colors instead."),
+});
+```
+
+Descriptions and deprecations appear on the group in DTCG, Docs, and `DESIGN.md` outputs. Unlike a scale, a group has no fixed type or key set, so themes can override any token inside it.
+
+## Factories
+
+| Factory                       | Step value                          | Token type    |
+| ----------------------------- | ----------------------------------- | ------------- |
+| `tokens.colorScale()`         | what `tokens.color()` accepts       | `color`       |
+| `tokens.generateColorScale()` | _generated, see below_              | `color`       |
+| `tokens.dimensionScale()`     | what `tokens.dimension()` accepts   | `dimension`   |
+| `tokens.numberScale()`        | a number                            | `number`      |
+| `tokens.fontFamilyScale()`    | what `tokens.fontFamily()` accepts  | `fontFamily`  |
+| `tokens.fontWeightScale()`    | what `tokens.fontWeight()` accepts  | `fontWeight`  |
+| `tokens.durationScale()`      | what `tokens.duration()` accepts    | `duration`    |
+| `tokens.strokeStyleScale()`   | what `tokens.strokeStyle()` accepts | `strokeStyle` |
+| `tokens.cubicBezierScale()`   | `[x1, y1, x2, y2]`                  | `cubicBezier` |
+| `tokens.borderScale()`        | what `tokens.border()` accepts      | `border`      |
+| `tokens.shadowScale()`        | what `tokens.shadow()` accepts      | `shadow`      |
+| `tokens.transitionScale()`    | what `tokens.transition()` accepts  | `transition`  |
+| `tokens.gradientScale()`      | what `tokens.gradient()` accepts    | `gradient`    |
+| `tokens.typographyScale()`    | what `tokens.typography()` accepts  | `typography`  |
+
+## generateColorScale
+
+```ts twoslash
+import { tokens } from "recontent";
+
+const brand = tokens.generateColorScale({ base: "#2563eb" });
+const neutral = tokens.generateColorScale({ base: "#71717a", neutral: true });
+const darkBrand = tokens.generateColorScale({ base: "#2563eb", appearance: "dark" });
+const named = tokens.generateColorScale({
+  base: "#2563eb",
+  steps: [
+    "bg",
+    "bgSubtle",
+    "tint",
+    "tintHover",
+    "tintActive",
+    "line",
+    "lineStrong",
+    "lineStronger",
+    "solid",
+    "solidHover",
+    "textMuted",
+    "text",
+  ],
+});
+```
+
+`generateColorScale` builds a 12-step UI color scale from one base color. It blends the two closest hand-tuned reference scales, shifts hue to match `base`, adapts the steps to the page background, fits them into the sRGB gamut, and outputs `oklch` colors.
+
+| Step  | Role                                                |
+| ----- | --------------------------------------------------- |
+| 1-2   | Backgrounds                                         |
+| 3-5   | Interactive components                              |
+| 6-8   | Borders                                             |
+| 9-10  | Solid colors (9 is your `base`, 10 its hover state) |
+| 11-12 | Text                                                |
+
+| Option       | Type                                        | Default                                         | Description                                                                                                        |
+| ------------ | ------------------------------------------- | ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| `base`       | `string \| ColorInput \| RawToken<"color">` | required                                        | Anchor color for the scale. Accent scales keep `base` verbatim at step 9 unless it sits too close to `background`. |
+| `appearance` | `"light" \| "dark"`                         | `"light"`                                       | Selects light or dark reference scales to match a white or near-black page.                                        |
+| `background` | `string \| ColorInput \| RawToken<"color">` | `#ffffff` for `"light"`, `#111111` for `"dark"` | Opaque page background that step 1 follows. Throws when alpha is below `1`.                                        |
+| `neutral`    | `boolean`                                   | `false`                                         | Builds a gray scale tinted toward `base` without pinning step 9 to `base`.                                         |
+| `steps`      | `readonly Key[]`                            | `1`-`12`                                        | Exactly 12 unique step keys, ordered from background to text.                                                      |
+
+Pair a light scale and a dark scale by overriding the scale in a [theme](/guides/working-with-themes) with matching keys.

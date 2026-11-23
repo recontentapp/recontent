@@ -1,0 +1,64 @@
+---
+title: "Documenting components"
+description: "Write JSDoc once and read it in recontent inspect, the docs page, DESIGN.md and recontent diff."
+---
+
+# Documenting components
+
+Write usage notes, examples, and deprecations next to the component code they describe. Recontent reads JSDoc comments from introspected components, props, and types, then surfaces them everywhere humans and agents inspect your API.
+
+## Tags
+
+In addition to the main description, `@deprecated`, and `@default` (or `@defaultValue`), Recontent supports these JSDoc tags:
+
+| Tag                         | Target                | Effect                                                                                                                                      |
+| --------------------------- | --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| `@example`                  | component, prop, type | Adds a titled example (`<caption>Title</caption>`) and strips outer fences. Relative paths (`./Button.basic.tsx`) inline the file verbatim. |
+| `@usage`                    | component, type       | Adds markdown guidance outside the one-line summary. Relative paths (`./Button.usage.md`) inline the file verbatim.                         |
+| `@link`                     | component, prop, type | Links an `http(s)` URL with an optional `<caption>`. Recontent warns on other schemes and renders valid links in [docs](/plugins/docs).     |
+| `@stories`                  | component             | Points to a relative Storybook file (`./Button.stories.tsx`), one per tag. Embeds stories when [`docs()`](/plugins/docs) has `storybook`.   |
+| `{@link Name}`              | anywhere in text      | References a component or type in `links`. Unmatched names stay plain text.                                                                 |
+| `@deprecated Use {@link X}` | component, prop, type | Uses the first `{@link}` as `replacement`, shown as `deprecated → X` in summaries.                                                          |
+| `@experimental`             | component, prop, type | Marks the item experimental with an optional note, shown as a callout and summary badge.                                                    |
+| `@category`                 | component             | Groups components in `inspect components` and docs navigation. Uncategorized components appear last.                                        |
+
+For props, `recontent inspect` displays one-line `@example` snippets and omits multi-line ones; `--format json` includes all examples.
+
+```tsx
+/**
+ * Triggers an action.
+ *
+ * @usage Prefer a link when the click only navigates.
+ * @link <caption>Figma</caption> https://figma.com/docs/button
+ * @example <caption>Basic</caption>
+ * <Button label="Save" />
+ * @example <caption>With an icon</caption> ./Button.icon.tsx
+ * @stories ./Button.stories.tsx
+ * @category Actions
+ */
+export function Button(props: ButtonProps) {}
+
+/** @deprecated Use {@link Button} instead. */
+export function PrimaryButton(props: ButtonProps) {}
+```
+
+## Where each tag shows up
+
+| Tag             | `recontent inspect`                   | `design.html`             | `DESIGN.md`                       | `recontent diff`                  |
+| --------------- | ------------------------------------- | ------------------------- | --------------------------------- | --------------------------------- |
+| Description     | Yes                                   | Yes                       | First paragraph, per component    | Ignored                           |
+| `@default`      | Yes, in the props table               | Yes, in the props table   | No                                | A changed default is not breaking |
+| `@deprecated`   | Yes, with the replacement             | Yes, as a notice          | Under "Do's and Don'ts"           | A new deprecation is not breaking |
+| `@experimental` | Yes                                   | Yes, as a notice          | No                                | Ignored                           |
+| `@usage`        | Yes                                   | Yes, rendered as markdown | No, points to `recontent inspect` | Ignored                           |
+| `@example`      | Yes, one-line examples only for props | Yes, as tabs              | No, points to `recontent inspect` | Ignored                           |
+| `@link`         | Yes, as a list of links               | Yes, as tags              | No                                | Ignored                           |
+| `@stories`      | Yes, as a list of files               | Yes, embedded as tabs     | No                                | Ignored                           |
+| `@category`     | Groups `inspect components`           | Groups the navigation     | No                                | Ignored                           |
+
+Examples, usage notes, links, stories, and categories count as documentation rather than API, so [`recontent diff`](/cli/diff) ignores them.
+
+## Next
+
+- Browse the result with [`recontent inspect`](/cli/inspect#browsing).
+- Hand it to [coding agents](/guides/agents).

@@ -1,6 +1,6 @@
 import { Link } from "vocs";
 import { ButtonIcon, PaletteIcon, TagIcon, Underline } from "../doodles.tsx";
-import { CodePanel, lines } from "./CodePanel.tsx";
+import { CodePanel, lines, type Line } from "./CodePanel.tsx";
 
 const chain = [
   {
@@ -38,25 +38,55 @@ const chainCss = lines(`:root {
   --button-background: var(--system-color-accent);
 }`);
 
-/** Layers: follow one token through the chain. */
+const themesCode = lines(`const blue = tokens.generateColorScale({ base: "#2563eb" });
+
+const dark = defineTheme(system, {
+  color: { background: ref.color.neutral[12], accent: blue[7] },
+});
+
+const compact = defineTheme(system, {
+  spacing: { md: tokens.dimension(12, "px") },
+});
+
+const darkCompact = defineTheme(system, {}, { extends: [dark, compact] });`);
+
+// Errors are real TypeScript diagnostics from recontent, shortened to their first line.
+// A rename in the system layer is caught in every component still using the old name.
+const renameLines: Line[] = [
+  { code: "const system = defineSystemTokens({" },
+  { code: "  color: { primary: ref.color.blue[9] }, // was: accent" },
+  { code: "});" },
+  { code: "" },
+  { code: "const components = defineComponentTokens({" },
+  { code: "  button: { background: system.color.accent },", squiggle: "accent" },
+  { code: "  link: { color: system.color.accent },", squiggle: "accent" },
+  { code: "});" },
+];
+
+/** Layers: follow one token through the chain, compose themes, then rename a token. */
 export function TokenLayers() {
   return (
     <section className="lp-section lp-wrap">
       <h2 className="lp-h2">
-        Change what a token{" "}
+        Tokens that{" "}
         <span className="lp-underlined">
-          means
+          type-check.
           <Underline color="#2563eb" />
         </span>{" "}
-        in one place.
+        Themes that follow.
       </h2>
       <p className="lp-sub">
         Components read meaning, meaning reads values. Aliases stay aliases all the way into the
-        output, so re-pointing <code>system.color.accent</code> moves every button with it.
+        output, so re-pointing <code>system.color.accent</code> moves every button with it. Themes
+        override values without touching component code.
       </p>
       <p className="lp-more">
         <Link to="/guides/defining-tokens" className="lp-link">
           Defining tokens
+        </Link>{" "}
+        ·{" "}
+        <Link to="/guides/working-with-themes" className="lp-link">
+          Working with themes
         </Link>
       </p>
       <ol className="lp-layers">
@@ -79,8 +109,28 @@ export function TokenLayers() {
       <div className="lp-chain-out">
         <CodePanel title="generated tokens.css" code={chainCss} language="css" />
         <p>
-          <strong>The chain survives the build.</strong> Each layer becomes a variable that points
-          at the one below it, so the output reads like your config.
+          <strong>Aliases survive the build.</strong> Each layer emits a CSS variable that points at
+          the one below it, so the generated stylesheet reads like your config.
+        </p>
+      </div>
+      <div className="lp-chain-out">
+        <CodePanel title="themes.ts" code={themesCode} tone="blue" />
+        <p>
+          <strong>Color scales &amp; multi-axis themes.</strong> Generate full OKLCH ramps from one
+          base color and compose dark mode, density, or brand themes with <code>extends</code>—never
+          touching component code.
+        </p>
+      </div>
+      <div className="lp-chain-out">
+        <CodePanel
+          title="recontent.config.ts"
+          code={renameLines}
+          error="Property 'accent' does not exist on type '{ primary: … }'. (2 errors)"
+          tone="coral"
+        />
+        <p>
+          <strong>Renames fail at compile time.</strong> Every component still referencing the old
+          name fails in your editor and during <code>recontent build</code>, not in production.
         </p>
       </div>
     </section>

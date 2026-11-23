@@ -1,0 +1,161 @@
+---
+title: "Primitives"
+description: "The single-value token types and the tokens.* factories that create them."
+---
+
+# Primitives
+
+Primitive tokens hold a single design value. Create them with the `tokens` factories:
+
+```ts twoslash
+import { tokens } from "recontent";
+
+const brand = tokens.color("#2563eb");
+const gap = tokens.dimension("16px");
+```
+
+Each factory validates its input and throws a descriptive error on invalid values when the config loads. Every returned token supports `.describe()`, `.deprecate()`, and `.extend()` (see [Defining tokens](/guides/defining-tokens#descriptions-and-deprecations)).
+
+The table below shows how the two most common outputs serialize each type. See individual [plugin pages](/plugins/css) for other targets.
+
+| Type                          | CSS                             | DTCG `$value`                            |
+| ----------------------------- | ------------------------------- | ---------------------------------------- |
+| [`color`](#color)             | `#2563eb`, `oklch(0.5 0.2 262)` | `{ colorSpace, components, alpha, hex }` |
+| [`dimension`](#dimension)     | `16px`                          | `{ value, unit }`                        |
+| [`fontFamily`](#fontfamily)   | `Inter, sans-serif`             | `["Inter", "sans-serif"]`                |
+| [`fontWeight`](#fontweight)   | `600`                           | `600`                                    |
+| [`duration`](#duration)       | `150ms`                         | `{ value, unit }`                        |
+| [`cubicBezier`](#cubicbezier) | `cubic-bezier(0.4, 0, 0.2, 1)`  | `[0.4, 0, 0.2, 1]`                       |
+| [`number`](#number)           | `1.5`                           | `1.5`                                    |
+
+## color
+
+```ts twoslash
+import { tokens } from "recontent";
+
+tokens.color("#2563eb");
+tokens.color("#2563eb80"); // with alpha
+tokens.color("oklch(0.55 0.2 262 / 0.9)"); // CSS color function
+tokens.color({ colorSpace: "oklch", components: [0.55, 0.2, 262], alpha: 0.9 });
+```
+
+`tokens.color()` accepts three formats:
+
+- A hex string (`#rgb`, `#rgba`, `#rrggbb`, or `#rrggbbaa`).
+- A CSS color function (`rgb()`, `rgba()`, `hsl()`, `hsla()`, `hwb()`, `lab()`, `lch()`, `oklab()`, `oklch()`, or `color(<space> …)`).
+- A color object with these fields:
+
+| Field        | Type                                                     | Notes                                      |
+| ------------ | -------------------------------------------------------- | ------------------------------------------ |
+| `colorSpace` | one of the spaces below                                  |                                            |
+| `components` | `[number \| "none", number \| "none", number \| "none"]` | Each component must fit the space's range. |
+| `alpha`      | `number`                                                 | Between 0 and 1. Defaults to `1`.          |
+
+| Color space                                                               | Components                               |
+| ------------------------------------------------------------------------- | ---------------------------------------- |
+| `srgb`, `srgb-linear`, `display-p3`, `a98-rgb`, `prophoto-rgb`, `rec2020` | each 0 to 1                              |
+| `hsl`, `hwb`                                                              | hue 0 to 360, then 0 to 100 and 0 to 100 |
+| `lab`                                                                     | L 0 to 100, a and b −125 to 125          |
+| `lch`                                                                     | L 0 to 100, C 0 to 150, H 0 to 360       |
+| `oklab`                                                                   | L 0 to 1, a and b −0.4 to 0.4            |
+| `oklch`                                                                   | L 0 to 1, C 0 to 0.4, H 0 to 360         |
+| `xyz-d65`, `xyz-d50`                                                      | finite numbers (unbounded)               |
+
+Recontent computes a fallback `hex` for every color. The CSS plugin writes sRGB colors as hex (`#rrggbb` or `#rrggbbaa`), writes `oklch`, `oklab`, `lab`, `lch`, `hsl`, and `hwb` with their CSS functions (`oklch(0.55 0.2 262 / 0.9)`), and writes other spaces with `color(display-p3 …)`.
+
+### alpha
+
+`.alpha()` returns the same color with a new alpha channel, avoiding manual `#rrggbbaa` values:
+
+```ts twoslash
+import { defineReferenceTokens, tokens } from "recontent";
+
+const ref = defineReferenceTokens({
+  ink: {
+    solid: tokens.color("#09090b"),
+    // Also works on a token that is already in the tree.
+    faded: tokens.color("#09090b").alpha(0.1),
+  },
+});
+const overlay = ref.ink.solid.alpha(0.5);
+```
+
+`.alpha()` returns a new literal color rather than an alias, dropping the original's description, deprecation, and extensions. It throws unless `alpha` lies between `0` and `1`.
+
+## dimension
+
+```ts twoslash
+import { tokens } from "recontent";
+
+tokens.dimension("16px");
+tokens.dimension("1.5rem");
+tokens.dimension("-0.02em");
+```
+
+Pass a number followed by `px`, `rem`, or `em`. Because DTCG defines only `px` and `rem`, the [DTCG plugin](/plugins/dtcg) converts `em` to `rem` with the same numeric value. The [native TypeScript plugin](/plugins/typescript#typescriptnative) converts every dimension to pixels.
+
+## fontFamily
+
+```ts twoslash
+import { tokens } from "recontent";
+
+tokens.fontFamily('Inter, "Segoe UI", system-ui, sans-serif');
+```
+
+Pass a comma-separated list of font families. Recontent strips surrounding quotes and restricts each family name to letters, digits, spaces, `-`, `_`, and `.`. Because CSS writes families unquoted, this check prevents CSS injection.
+
+## fontWeight
+
+```ts twoslash
+import { tokens } from "recontent";
+
+tokens.fontWeight(600);
+tokens.fontWeight("semibold");
+```
+
+Pass a number from `1` to `1000` or a named weight. Names resolve to numeric weights:
+
+| Name                                       | Weight |
+| ------------------------------------------ | ------ |
+| `thin`, `hairline`                         | 100    |
+| `extralight`, `extra-light`, `ultra-light` | 200    |
+| `light`                                    | 300    |
+| `book`                                     | 350    |
+| `regular`, `normal`                        | 400    |
+| `medium`                                   | 500    |
+| `semibold`, `semi-bold`, `demi-bold`       | 600    |
+| `bold`                                     | 700    |
+| `extrabold`, `extra-bold`, `ultra-bold`    | 800    |
+| `black`, `heavy`                           | 900    |
+| `extrablack`, `extra-black`, `ultra-black` | 950    |
+
+## duration
+
+```ts twoslash
+import { tokens } from "recontent";
+
+tokens.duration("150ms");
+tokens.duration("0.3s");
+```
+
+Pass a number followed by `ms` or `s`.
+
+## cubicBezier
+
+```ts twoslash
+import { tokens } from "recontent";
+
+tokens.cubicBezier([0.4, 0, 0.2, 1]);
+```
+
+Pass four finite numbers representing the control points `x1, y1, x2, y2`.
+
+## number
+
+```ts twoslash
+import { tokens } from "recontent";
+
+tokens.number(1.5);
+```
+
+Pass a finite, unitless number such as a line height, aspect ratio, or opacity.

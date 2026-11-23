@@ -5,68 +5,66 @@ description: "Global options, config discovery, output streams and exit codes of
 
 # CLI overview
 
+The `recontent` CLI scaffolds config files, builds plugin outputs, inspects tokens and components, and diffs changes against git history.
+
 ```bash
 recontent [options] <command>
 ```
 
-| Command               | Description                                                        |
-| --------------------- | ------------------------------------------------------------------ |
-| [`init`](/cli/init)   | Scaffold a `recontent.config.ts` from a preset or from DTCG files. |
-| [`build`](/cli/build) | Run the configured plugins and write their output.                 |
-| [`diff`](/cli/diff)   | Compare the config's tokens against a previous git revision.       |
+| Command                   | Description                                                                         |
+| ------------------------- | ----------------------------------------------------------------------------------- |
+| [`init`](/cli/init)       | Scaffold a `recontent.config.ts` from a preset or from DTCG files.                  |
+| [`build`](/cli/build)     | Run the configured plugins and write their output.                                  |
+| [`diff`](/cli/diff)       | Compare the config's tokens, components, and types against a previous git revision. |
+| [`inspect`](/cli/inspect) | Browse the tokens and components the project defines.                               |
 
-Running `recontent` with no arguments prints the help, like `recontent --help`.
+Running `recontent` with no arguments prints help, equivalent to `recontent --help`.
 
 ## Global options
 
-These come before or after the command name.
+Pass global options before or after the command name.
 
-| Option                | Description                                                                                                                                         |
-| --------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `-c, --config <path>` | Path to the config file. Without it, the config is [discovered](#config-discovery). For `init`, the file to create (default `recontent.config.ts`). |
-| `--cwd <dir>`         | Directory that every relative path in the run is resolved against. Default: the current directory. It must exist.                                   |
-| `--log-level <level>` | `info` or `debug`. See [Log level](#log-level).                                                                                                     |
-| `-V, --version`       | Print the version.                                                                                                                                  |
-| `-h, --help`          | Print help for the CLI or a command.                                                                                                                |
+| Option                | Description                                                                                                                                          |
+| --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `-c, --config <path>` | Path to the config file. Without it, Recontent runs [config discovery](#config-discovery). For `init`, sets the output path (`recontent.config.ts`). |
+| `--cwd <dir>`         | Base directory for relative paths. Defaults to the current directory and must exist.                                                                 |
+| `--log-level <level>` | `info` or `debug`. See [Log level](#log-level).                                                                                                      |
+| `-V, --version`       | Print the CLI version.                                                                                                                               |
+| `-h, --help`          | Print help for the CLI or a subcommand.                                                                                                              |
 
 `-c` accepts an absolute path, a path relative to `--cwd`, or a path starting with `~`.
 
 ## Config discovery
 
-Without `-c`, `recontent` looks for `recontent.config.ts`, `recontent.config.mts`,
-`recontent.config.js` and `recontent.config.mjs`, in that order, starting in `--cwd` and moving up to
-each parent directory. The search stops:
+Without `-c`, `recontent` searches for `recontent.config.ts`, `recontent.config.mts`, `recontent.config.js`, and `recontent.config.mjs` in that order, starting in `--cwd` and walking up parent directories. Discovery stops at:
 
-- at the first directory that contains one of those files (it is used), or
-- at the first directory that contains a `package.json` without a config (the project root, so an
-  unrelated config higher up is never picked), or
-- at the filesystem root.
+- The first directory containing one of those config files (Recontent loads that file).
+- The first directory containing `package.json` without a config file (prevents loading an unrelated parent config).
+- The filesystem root.
 
-If nothing is found, the error lists the directories searched.
+When discovery finds no config file, the error lists every directory it searched.
 
 ## Log level
 
-`info` is the default. `debug` adds diagnostic lines (`debug: …`) and includes the stack trace of an
-error. The level comes from, in order of precedence:
+`info` is the default. `debug` adds diagnostic lines (`debug: …`) and prints stack traces on errors. Recontent resolves the log level in this order:
 
-1. `--log-level`;
-2. the `RECONTENT_LOG_LEVEL` environment variable;
-3. `logLevel` in the [config](/tokens/configuration#loglevel).
+1. `--log-level`
+2. The `RECONTENT_LOG_LEVEL` environment variable
+3. `logLevel` in the [config file](/config#loglevel)
 
-Any other value is an error.
+Any other value causes an error.
 
 ## Output streams
 
-- **stdout** carries only a command's result: help and version text, and the output of
-  `recontent diff`. It is safe to redirect or pipe.
-- **stderr** carries everything else: progress (`Wrote …`), warnings (`warning: …`) and errors
-  (`error: …`).
+- **stdout** carries only command output: help, version, `recontent diff`, and `recontent inspect`. Pipe or redirect it safely.
+- **stderr** carries everything else: progress (`Wrote …`), warnings (`warning: …`), and errors (`error: …`).
 
 ## Exit codes
 
-| Code | Meaning                                                                                                                                                                                                       |
-| ---- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `0`  | Success, or help and version output.                                                                                                                                                                          |
-| `1`  | Any failure: invalid usage or option value, a config that cannot be loaded, a build that reports errors, `init` on an existing file without `--force`, or `diff --fail-on-breaking` finding breaking changes. |
+| Code | Meaning                                                                                                                                                                 |
+| ---- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `0`  | Success, or help and version output.                                                                                                                                    |
+| `1`  | Failure: invalid flags, unreadable config, build or `build --check` errors, broken project in `inspect`, existing file in `init` without `--force`, or `diff` failures. |
+| `2`  | `inspect` found no match for the requested path, name, type, or theme.                                                                                                  |
 
 Warnings never change the exit code.
