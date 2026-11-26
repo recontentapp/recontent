@@ -51,24 +51,17 @@ function groupOf(token: DocToken): string {
   return token.path.split(".").slice(0, -1).join(".") || token.layer;
 }
 
-/** Where the output points next, in the vocabulary of the `recontent_inspect` tool. */
-export type Hint = {
+/** Where the CLI output points next. */
+type Hint = {
   target: "overview" | "tokens" | "components" | "types" | "search";
   query?: string[];
   props?: string[];
 };
 
-/** `cli`: commands for `recontent inspect`; `tool`: arguments for the `recontent_inspect` MCP tool. */
-export type HintStyle = "cli" | "tool";
-
 const quoted = (argument: string) =>
   /[\s()]/.test(argument) ? JSON.stringify(argument) : argument;
 
-function formatHint({ target, query = [], props }: Hint, style: HintStyle): string {
-  if (style === "tool") {
-    const args = { target, ...(query.length > 0 && { query }), ...(props && { props }) };
-    return `recontent_inspect ${JSON.stringify(args)}`;
-  }
+function formatHint({ target, query = [], props }: Hint): string {
   return [
     "recontent inspect",
     ...(target === "overview" ? [] : [target]),
@@ -77,26 +70,21 @@ function formatHint({ target, query = [], props }: Hint, style: HintStyle): stri
   ].join(" ");
 }
 
-/** The `Next:` line. Without a hint, a command line points at `--help` and a tool call at nothing. */
-function next(style: HintStyle, hints: Hint[]): string | undefined {
-  if (hints.length === 0) {
-    return style === "cli" ? `Next: ${code("recontent inspect --help")}` : undefined;
-  }
-  return `Next: ${hints.map((hint) => code(formatHint(hint, style))).join(" · ")}`;
+/** The `Next:` line for CLI output; omitted when `hints` is false (e.g. MCP). */
+function next(enabled: boolean, hints: Hint[]): string | undefined {
+  if (!enabled) return undefined;
+  if (hints.length === 0) return `Next: ${code("recontent inspect --help")}`;
+  return `Next: ${hints.map((hint) => code(formatHint(hint))).join(" · ")}`;
 }
 
-const withNext = (lines: string[], style: HintStyle, hints: Hint[]): string[] => {
-  const line = next(style, hints);
+const withNext = (lines: string[], enabled: boolean, hints: Hint[]): string[] => {
+  const line = next(enabled, hints);
   return line ? [...lines, "", line] : lines;
 };
 
 const typeIds = (types: TypeInfo[]) => types.map((type) => code(type.id)).join(", ") || "_None._";
 
-export function renderOverview(
-  overview: Overview,
-  format: Format,
-  hints: HintStyle = "cli",
-): string {
+export function renderOverview(overview: Overview, format: Format, hints = true): string {
   const { tokens, themes, components, types, introspectionError } = overview;
   const layers = LAYERS.map((layer) => {
     const inLayer = tokens.filter((token) => token.layer === layer);
@@ -153,8 +141,7 @@ export function renderOverview(
   if (firstGroup) targets.push({ target: "tokens", query: [groupOf(firstGroup)] });
   if (components?.[0]) targets.push({ target: "components", query: [components[0].name] });
   if (types?.[0]) targets.push({ target: "types" });
-  // A placeholder only reads as a command line.
-  if (hints === "cli") targets.push({ target: "search", query: ["<term>"] });
+  targets.push({ target: "search", query: ["<term>"] });
   return withNext(lines, hints, targets).join("\n");
 }
 
@@ -203,10 +190,10 @@ export function renderTokens(
     themes: string[];
     summary: boolean;
     theme?: string;
-    hints?: HintStyle;
+    hints?: boolean;
   },
 ): string {
-  const { format, summary, hints = "cli" } = options;
+  const { format, summary, hints = true } = options;
   const themes = options.theme ? [options.theme] : options.themes;
   const shown = tokens.map((token) => ({
     ...token,
@@ -372,10 +359,10 @@ export function renderComponents(
     shared?: Set<string>;
     /** Only these props, in full. */
     props?: string[];
-    hints?: HintStyle;
+    hints?: boolean;
   },
 ): string {
-  const { format, summary, types, shared = new Set(), props: only, hints: style = "cli" } = options;
+  const { format, summary, types, shared = new Set(), props: only, hints = true } = options;
   if (format === "json") {
     const shown = only ? components.map((component) => narrowed(component, only)) : components;
     return JSON.stringify(
@@ -406,10 +393,10 @@ export function renderComponents(
     const first = groups[0]?.components[0];
     // A link may name a type instead.
     const link = first?.links?.find((name) => components.some((other) => other.name === name));
-    const hints: Hint[] = [];
-    if (first) hints.push({ target: "components", query: [first.name] });
-    if (link) hints.push({ target: "components", query: [link] });
-    return withNext(lines, style, hints).join("\n");
+    const nextHints: Hint[] = [];
+    if (first) nextHints.push({ target: "components", query: [first.name] });
+    if (link) nextHints.push({ target: "components", query: [link] });
+    return withNext(lines, hints, nextHints).join("\n");
   }
 
   if (components.length === 0) return "No components.";
@@ -443,10 +430,11 @@ export function renderComponents(
     const collapsed = views.flatMap((view) => view.collapsed ?? []);
     const prop = collapsed[0]?.props[0] ?? views[0]!.props![0]?.name;
     const type = collapsed[0]?.type ?? more[0]?.id ?? direct[0]?.id;
-    const hints: Hint[] = [];
-    if (prop) hints.push({ target: "components", query: [first.name], props: [prop] });
-    if (type) hints.push({ target: "types", query: [type] });
-    if (hints.length > 0) sections.push(next(style, hints)!);
+    const nextHints: Hint[] = [];
+    if (prop) nextHints.push({ target: "components", query: [first.name], props: [prop] });
+    if (type) nextHints.push({ target: "types", query: [type] });
+    const line = nextHints.length > 0 ? next(hints, nextHints) : undefined;
+    if (line) sections.push(line);
   }
   return sections.join("\n\n");
 }
@@ -473,9 +461,9 @@ function typeLine(type: TypeInfo): string {
 /** `selected` is what was asked for; `types` adds what it references, so that the detail stands on its own. */
 export function renderTypes(
   selected: TypeInfo[],
-  options: { format: Format; summary: boolean; types: TypeInfo[]; hints?: HintStyle },
+  options: { format: Format; summary: boolean; types: TypeInfo[]; hints?: boolean },
 ): string {
-  const { format, summary, types, hints = "cli" } = options;
+  const { format, summary, types, hints = true } = options;
   if (format === "json") {
     return JSON.stringify({ schemaVersion: SCHEMA_VERSION, kind: "types", types }, null, 2);
   }
@@ -499,9 +487,9 @@ export function renderTypes(
 /** What `inspect search` found, and why each component and type did. */
 export function renderSearch(
   result: SearchResult,
-  options: { format: Format; queries: string[]; themes: string[]; hints?: HintStyle },
+  options: { format: Format; queries: string[]; themes: string[]; hints?: boolean },
 ): string {
-  const { format, queries, themes, hints = "cli" } = options;
+  const { format, queries, themes, hints = true } = options;
   const { tokens, components, types, suggestions } = result;
   const total = tokens.length + components.length + types.length;
 

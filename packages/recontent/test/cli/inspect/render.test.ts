@@ -192,25 +192,25 @@ describe("renderSearch", () => {
     );
   });
 
-  test("hints for the MCP tool are arguments, and none points at --help", () => {
+  test("hints: false omits the Next line across renderers", () => {
     const hits = { components: [{ item: component("Tooltip"), matchedIn: ["name" as const] }] };
     expect(
       renderSearch(
         { tokens: [], components: hits.components, types: [], suggestions: [] },
-        { format: "markdown", queries: ["tip"], themes: [], hints: "tool" },
-      ).trimEnd(),
-    ).toMatch(/Next: `recontent_inspect \{"target":"components","query":\["Tooltip"\]\}`$/);
+        { format: "markdown", queries: ["tip"], themes: [], hints: false },
+      ),
+    ).not.toContain("Next:");
     expect(
-      renderTokens([], { format: "markdown", themes: [], summary: true, hints: "tool" }),
+      renderTokens([], { format: "markdown", themes: [], summary: true, hints: false }),
     ).not.toContain("Next:");
     expect(
       renderComponents([component("W", { props: [prop("tone")] })], {
         format: "markdown",
         summary: false,
         types: [],
-        hints: "tool",
+        hints: false,
       }),
-    ).toContain('`recontent_inspect {"target":"components","query":["W"],"props":["tone"]}`');
+    ).not.toContain("Next:");
   });
 
   test("no match says so, suggests and points at the overview", () => {

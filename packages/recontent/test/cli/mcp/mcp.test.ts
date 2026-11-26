@@ -48,12 +48,12 @@ function startServer(args: string[]) {
       waiting.set(id, resolve);
       child.stdin.write(`${JSON.stringify({ jsonrpc: "2.0", id, method, params })}\n`);
     });
-  const inspect = async (args: object) =>
-    (await request("tools/call", { name: "recontent_inspect", arguments: args })).result;
+  const call = async (name: string, toolArgs: object = {}) =>
+    (await request("tools/call", { name, arguments: toolArgs })).result;
 
   return {
     request,
-    inspect,
+    call,
     notify: (method: string) =>
       child.stdin.write(`${JSON.stringify({ jsonrpc: "2.0", method })}\n`),
     close: async () => {
@@ -76,36 +76,47 @@ describe("recontent mcp", () => {
     const init = await server.request("initialize", INITIALIZE);
     expect(init.result.serverInfo.name).toBe("recontent");
     server.notify("notifications/initialized");
-    expect((await server.request("tools/list")).result.tools[0].name).toBe("recontent_inspect");
 
-    const overview = text(await server.inspect({ target: "overview" }));
+    const { tools } = (await server.request("tools/list")).result;
+    expect(tools.map((tool: Reply) => tool.name)).toEqual([
+      "get_design_system_overview",
+      "get_tokens",
+      "list_components",
+      "get_components",
+      "get_component_types",
+      "search_design_system",
+    ]);
+
+    const overview = text(await server.call("get_design_system_overview"));
     expect(overview).toContain("# Overview");
-    // What to look at next is a tool call, not a command line.
-    expect(overview).toMatch(/Next: `recontent_inspect \{"target":"tokens","query":\["[^"]+"\]\}`/);
+    // MCP responses omit CLI Next: hints.
+    expect(overview).not.toContain("Next:");
     expect(overview).not.toContain("recontent inspect");
-    expect(text(await server.inspect({ target: "components", query: ["Button"] }))).toContain(
-      "variant",
-    );
-    const emptySearch = await server.inspect({ target: "search", query: [" "] });
+
+    expect(text(await server.call("list_components"))).toContain("`Button`");
+    expect(text(await server.call("get_components", { names: ["Button"] }))).toContain("variant");
+
+    const emptySearch = await server.call("search_design_system", { queries: [" "] });
     expect(emptySearch.isError).toBe(true);
     expect(text(emptySearch)).not.toContain("recontent inspect");
-    const typo = await server.inspect({ target: "components", query: ["Buton"] });
+
+    const typo = await server.call("get_components", { names: ["Buton"] });
     expect(typo.isError).toBe(true);
     expect(text(typo)).toContain("Button");
 
     // Tokens edited during the session show up in the next request.
     const config = path.join(dir, "recontent.config.ts");
     writeFileSync(config, readFileSync(config, "utf-8").replace("#2563eb", "#123456"));
-    expect(
-      text(await server.inspect({ target: "tokens", query: ["system.color.accent"] })),
-    ).toContain("#123456");
+    expect(text(await server.call("get_tokens", { paths: ["system.color.accent"] }))).toContain(
+      "#123456",
+    );
 
     // A config that does not load is an error to answer with, and recovers once fixed.
     const good = readFileSync(config, "utf-8");
     writeFileSync(config, "export default {");
-    expect((await server.inspect({ target: "overview" })).isError).toBe(true);
+    expect((await server.call("get_design_system_overview")).isError).toBe(true);
     writeFileSync(config, good);
-    expect(text(await server.inspect({ target: "overview" }))).toContain("# Overview");
+    expect(text(await server.call("get_design_system_overview"))).toContain("# Overview");
 
     const { code, stdout, stderr } = await server.close();
     expect(code).toBe(0);
@@ -132,15 +143,49 @@ describe("recontent mcp", () => {
 
     const server = startServer(["--from", "@acme/ds", "--cwd", app]);
     await server.request("initialize", INITIALIZE);
-    expect(text(await server.inspect({ target: "overview" }))).toContain("@acme/ds@1.0.0");
-    expect(text(await server.inspect({ target: "components", query: ["Button"] }))).toContain(
-      "variant",
-    );
+    expect(text(await server.call("get_design_system_overview"))).toContain("@acme/ds@1.0.0");
+    expect(text(await server.call("get_components", { names: ["Button"] }))).toContain("variant");
 
     writeFileSync(snapshot, readFileSync(snapshot, "utf-8").replaceAll("#2563eb", "#123456"));
-    expect(
-      text(await server.inspect({ target: "tokens", query: ["system.color.accent"] })),
-    ).toContain("#123456");
+    expect(text(await server.call("get_tokens", { paths: ["system.color.accent"] }))).toContain(
+      "#123456",
+    );
+    expect((await server.close()).code).toBe(0);
+  }, 60_000);
+
+  test("--from with a token-only snapshot omits component and type tools", async () => {
+    const dir = makeScratchDir("mcp-tokens-only");
+    const snapshot = path.join(dir, "recontent.json");
+    writeFileSync(
+      snapshot,
+      JSON.stringify({
+        schemaVersion: "1",
+        kind: "snapshot",
+        themes: [],
+        tokens: [
+          {
+            layer: "system",
+            path: "system.color.accent",
+            name: "accent",
+            type: "color",
+            cssVar: "--system-color-accent",
+            values: { default: "#2563eb" },
+          },
+        ],
+      }),
+    );
+
+    const server = startServer(["--from", snapshot, "--cwd", dir]);
+    await server.request("initialize", INITIALIZE);
+    const { tools } = (await server.request("tools/list")).result;
+    expect(tools.map((tool: Reply) => tool.name)).toEqual([
+      "get_design_system_overview",
+      "get_tokens",
+      "search_design_system",
+    ]);
+    expect(text(await server.call("get_tokens", { layer: "system", type: "color" }))).toContain(
+      "system.color.accent",
+    );
     expect((await server.close()).code).toBe(0);
   }, 60_000);
 

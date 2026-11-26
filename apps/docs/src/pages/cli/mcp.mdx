@@ -1,11 +1,11 @@
 ---
 title: "mcp"
-description: "Serve the design system to coding agents over the Model Context Protocol (MCP), with one read-only tool."
+description: "Serve the design system to coding agents over the Model Context Protocol (MCP) with read-only tools."
 ---
 
 # mcp
 
-`recontent mcp` starts a stdio [MCP](https://modelcontextprotocol.io) server that exposes the output of [`recontent inspect`](/cli/inspect) to MCP hosts such as Cursor and Claude.
+`recontent mcp` starts a stdio [MCP](https://modelcontextprotocol.io) server that exposes tokens, components, and types to MCP hosts such as Cursor and Claude.
 
 ```bash
 recontent mcp [--no-cache]
@@ -57,20 +57,22 @@ In an app that consumes a published design system, pass `--from`:
 }
 ```
 
-## Tool
+## Tools
 
-The server exposes one tool, `recontent_inspect`. It only reads, so hosts can approve calls automatically. It returns the same markdown as `recontent inspect`, with its follow-ups written as tool arguments.
+The server exposes read-only tools that return compact markdown. Hosts can approve calls automatically.
 
-| Argument     | Type       | Description                                                                                                   |
-| ------------ | ---------- | ------------------------------------------------------------------------------------------------------------- |
-| `target`     | `string`   | Required. `overview`, `tokens`, `components`, `types`, or `search`. Start with `overview`.                    |
-| `query`      | `string[]` | Token paths, component names, type names, or search terms. Required for `search`. Omit it for a summary list. |
-| `type`       | `string`   | For `tokens`: only tokens of this type.                                                                       |
-| `theme`      | `string`   | For `tokens`: show values for this theme only.                                                                |
-| `props`      | `string[]` | For `components`: show only these props in full.                                                              |
-| `deprecated` | `boolean`  | For `tokens`, `components`, and `types`: only deprecated items.                                               |
+| Tool                         | Arguments                                            | Returns                                                                          |
+| ---------------------------- | ---------------------------------------------------- | -------------------------------------------------------------------------------- |
+| `get_design_system_overview` | none                                                 | Themes, token counts by layer, component names, and type names.                  |
+| `get_tokens`                 | `paths?`, `layer?`, `type?`, `theme?`, `deprecated?` | Token groups when called with no filters, or matching tokens with values.        |
+| `list_components`            | `category?`, `deprecated?`                           | Components grouped by category, with prop counts and short descriptions.         |
+| `get_components`             | `names` (required), `props?`                         | Import, usage notes, examples, props table, and referenced types.                |
+| `get_component_types`        | `names?`, `deprecated?`                              | Summary list of project types, or full definitions for the requested type names. |
+| `search_design_system`       | `queries` (required), `scope?`                       | Substring search across tokens, components, and types.                           |
 
-A lookup that matches nothing returns a tool error that suggests the closest names, for example `Did you mean`. The agent retries with the suggestion. Invalid arguments return a tool error that names the problem.
+When `--from` reads a snapshot without components, the server omits `list_components`, `get_components`, and `get_component_types`.
+
+A lookup that matches nothing returns a tool error with the closest names, for example `Did you mean`. The agent retries with the suggestion. Invalid arguments return a tool error that names the problem.
 
 ## Reloading
 

@@ -1,6 +1,7 @@
 import type { Logger, LogLevel } from "../../../logger.js";
 import type { IntrospectionWarning } from "../../../introspection/components.js";
 import { typeClosure } from "../../../introspection/types.js";
+import type { TokenLayer } from "../../../token-model/model.js";
 import { loadIntrospection, loadProject, type Components, type Project } from "../../project.js";
 import { createSnapshot, readSnapshot, type Snapshot } from "../../../snapshot/snapshot.js";
 import { diagnoseRegistry } from "../../../token-model/alias.js";
@@ -15,17 +16,44 @@ import {
   renderTypes,
   sharedDeclarations,
   type Format,
-  type HintStyle,
   type InspectError,
 } from "./render.js";
-import { searchSnapshot, selectComponents, selectTokens, selectTypes } from "./select.js";
+import {
+  searchSnapshot,
+  selectComponents,
+  selectTokens,
+  selectTypes,
+  type SearchScope,
+} from "./select.js";
 
 export type InspectTarget =
   | { kind: "overview" }
-  | { kind: "tokens"; paths: string[]; type?: string; theme?: string; deprecated?: boolean }
-  | { kind: "components"; names: string[]; deprecated?: boolean; props?: string[] }
+  | {
+      kind: "tokens";
+      paths: string[];
+      layer?: TokenLayer;
+      type?: string;
+      theme?: string;
+      deprecated?: boolean;
+    }
+  | {
+      kind: "components";
+      names: string[];
+      category?: string;
+      deprecated?: boolean;
+      props?: string[];
+    }
   | { kind: "types"; names: string[]; deprecated?: boolean }
-  | { kind: "search"; queries: string[] };
+  | { kind: "search"; queries: string[]; scope?: SearchScope[] };
+
+/** Whether answering `target` requires component/type introspection. */
+export function needsIntrospection(target: InspectTarget): boolean {
+  if (target.kind === "tokens") return false;
+  if (target.kind === "search" && target.scope?.length) {
+    return target.scope.includes("components") || target.scope.includes("types");
+  }
+  return true;
+}
 
 export type InspectOptions = {
   cwd: string;
@@ -118,8 +146,8 @@ export function executeInspect(
   loaded: LoadedSnapshot,
   target: InspectTarget,
   format: Format,
-  /** How the output points at what to look at next: as commands, or as arguments of the MCP tool. */
-  hints: HintStyle = "cli",
+  /** Whether markdown output includes `Next:` CLI command hints. */
+  hints = true,
 ): InspectExecution {
   const { snapshot, source, sourceKind, introspectionError, warnings = [] } = loaded;
   const { tokens, themes, components, types } = snapshot;
@@ -134,7 +162,14 @@ export function executeInspect(
     relevant: (warning: IntrospectionWarning) => boolean = () => true,
   ) => ({ ok: true as const, output, warnings: warnings.filter(relevant) });
 
-  if (target.kind === "components" || target.kind === "types") {
+  const requiresComponents =
+    target.kind === "components" ||
+    target.kind === "types" ||
+    (target.kind === "search" &&
+      Boolean(target.scope?.length) &&
+      !target.scope!.includes("tokens"));
+
+  if (requiresComponents) {
     if (introspectionError !== undefined) return fail([{ message: introspectionError }], 1);
     if (!components) {
       return fail(
@@ -166,12 +201,16 @@ export function executeInspect(
         return fail([{ message: "A search needs at least one query term." }]);
       }
       const output = renderSearch(
-        searchSnapshot({ tokens, components: components ?? [], types: types ?? [] }, queries),
+        searchSnapshot(
+          { tokens, components: components ?? [], types: types ?? [] },
+          queries,
+          target.scope,
+        ),
         { format, queries, themes, hints },
       );
       const result = succeed(output);
       // Tokens are searched even when the components cannot be.
-      if (introspectionError !== undefined)
+      if (introspectionError !== undefined && needsIntrospection(target))
         result.warnings.unshift({ message: introspectionError });
       return result;
     }
@@ -179,7 +218,11 @@ export function executeInspect(
       const { selected, errors } = selectTokens(tokens, themes, target);
       if (errors.length > 0) return fail(errors);
       const summary =
-        target.paths.length === 0 && !target.type && !target.theme && !target.deprecated;
+        target.paths.length === 0 &&
+        !target.layer &&
+        !target.type &&
+        !target.theme &&
+        !target.deprecated;
       return succeed(
         renderTokens(selected, { format, themes, theme: target.theme, summary, hints }),
       );
@@ -228,7 +271,7 @@ async function loadLocalSnapshot(
   const { config, logger } = project;
   // Tokens never need a TS program; only look at components when asked.
   const { components, error } =
-    target.kind !== "tokens" && config.introspection
+    needsIntrospection(target) && config.introspection
       ? await tryIntrospection(project, { cache: options.cache })
       : {};
   return {

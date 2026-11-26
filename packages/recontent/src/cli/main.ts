@@ -376,7 +376,7 @@ program
     "after",
     `
 Communicates over JSON-RPC 2.0 on stdin/stdout; all logs go to stderr.
-Exposes one read-only tool, \`recontent_inspect\`, which returns the same markdown as \`recontent inspect\`, with its follow-ups written as tool arguments.
+Exposes read-only tools for browsing the overview, tokens, components, types, and search.
 Changes to the config, its imports, the components or the snapshot are picked up without a restart.
 
 Examples:

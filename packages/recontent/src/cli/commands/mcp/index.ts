@@ -11,6 +11,7 @@ import {
   executeInspect,
   loadCheckedProject,
   loadHeadlessSnapshot,
+  needsIntrospection,
   tryIntrospection,
   type InspectExecution,
   type InspectTarget,
@@ -126,14 +127,14 @@ function createLocalInspector(
     }
     const current = state;
     let loaded = current.tokens;
-    if (target.kind !== "tokens" && current.project.config.introspection) {
+    if (needsIntrospection(target) && current.project.config.introspection) {
       const known = current.components;
       loaded =
         known?.found && known.stamp === introspectionStamp(known.found)
           ? known.loaded
           : await loadComponents(current);
     }
-    const result = executeInspect(loaded, target, "markdown", "tool");
+    const result = executeInspect(loaded, target, "markdown", false);
     if (result.ok)
       for (const warning of result.warnings) current.project.logger.warn(warning.message);
     return result;
@@ -141,36 +142,42 @@ function createLocalInspector(
 }
 
 /** Reads the published snapshot again when its file changes. */
-function createHeadlessInspector(
-  options: Extract<McpOptions, { from: string }>,
-): (target: InspectTarget) => Promise<InspectExecution> {
+function createHeadlessInspector(options: Extract<McpOptions, { from: string }>): {
+  load: (target: InspectTarget) => Promise<InspectExecution>;
+  hasComponents: boolean;
+} {
   const { from, cwd } = options;
   // Eagerly, so that a missing package or a bad snapshot stops the server before it serves.
   let { loaded, file } = loadHeadlessSnapshot(from, cwd);
+  const hasComponents = loaded.snapshot.components !== undefined;
   let stamp = stampOf([file]);
   let broken: unknown;
 
-  return async (target) => {
-    const current = stampOf([file]);
-    if (current !== stamp || broken) {
-      stamp = current;
-      try {
-        ({ loaded, file } = loadHeadlessSnapshot(from, cwd));
-        broken = undefined;
-      } catch (error) {
-        broken = error;
-        return unavailable(error);
+  return {
+    hasComponents,
+    load: async (target) => {
+      const current = stampOf([file]);
+      if (current !== stamp || broken) {
+        stamp = current;
+        try {
+          ({ loaded, file } = loadHeadlessSnapshot(from, cwd));
+          broken = undefined;
+        } catch (error) {
+          broken = error;
+          return unavailable(error);
+        }
       }
-    }
-    return executeInspect(loaded, target, "markdown", "tool");
+      return executeInspect(loaded, target, "markdown", false);
+    },
   };
 }
 
 /** Serves the design system to a coding agent over MCP, on stdin and stdout, until stdin closes. */
 export async function runMcp(options: McpOptions): Promise<void> {
   let load: (target: InspectTarget) => Promise<InspectExecution>;
+  let hasComponents = true;
   if ("from" in options) {
-    load = createHeadlessInspector(options);
+    ({ load, hasComponents } = createHeadlessInspector(options));
   } else {
     if (!fs.statSync(options.configPath, { throwIfNoEntry: false })?.isFile()) {
       throw new Error(`Config file not found: "${options.configPath}".`);
@@ -185,7 +192,7 @@ export async function runMcp(options: McpOptions): Promise<void> {
     queue = result.catch(() => {});
     return result;
   };
-  const server = createMcpServer({ version: options.version, inspect });
+  const server = createMcpServer({ version: options.version, inspect, hasComponents });
 
   // stdout belongs to the protocol: a config that logs must not corrupt it.
   const { log, info } = console;
