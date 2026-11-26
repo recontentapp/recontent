@@ -1,9 +1,10 @@
 import type { ComponentInfo, TypeInfo } from "../../../introspection/model.js";
+import type { TokenLayer } from "../../../token-model/model.js";
 import type { TokenType } from "../../../token-model/values.js";
 import type { DocToken } from "../../../snapshot/doc-token.js";
 
 /** Every token type; the keys are checked against `TokenType` in both directions. */
-const TOKEN_TYPES = Object.keys({
+export const TOKEN_TYPES = Object.keys({
   color: 0,
   dimension: 0,
   fontFamily: 0,
@@ -17,7 +18,17 @@ const TOKEN_TYPES = Object.keys({
   transition: 0,
   gradient: 0,
   typography: 0,
-} satisfies Record<TokenType, 0>);
+} satisfies Record<TokenType, 0>) as [TokenType, ...TokenType[]];
+
+/** Every token layer; the keys are checked against `TokenLayer` in both directions. */
+export const TOKEN_LAYERS = Object.keys({
+  ref: 0,
+  system: 0,
+  components: 0,
+} satisfies Record<TokenLayer, 0>) as [TokenLayer, ...TokenLayer[]];
+
+export const SEARCH_SCOPES = ["tokens", "components", "types"] as const;
+export type SearchScope = (typeof SEARCH_SCOPES)[number];
 
 function distance(a: string, b: string): number {
   let previous = Array.from({ length: b.length + 1 }, (_, i) => i);
@@ -81,6 +92,7 @@ function tokenSelectors(tokens: DocToken[]): Set<string> {
 
 export type TokenQuery = {
   paths: string[];
+  layer?: TokenLayer;
   type?: string;
   theme?: string;
   deprecated?: boolean;
@@ -104,8 +116,11 @@ export function selectTokens(
     }
     selected = tokens.filter((token) => query.paths.some((path) => matches(path, token.path)));
   }
+  if (query.layer !== undefined) {
+    selected = selected.filter((token) => token.layer === query.layer);
+  }
   if (query.type !== undefined) {
-    if (!TOKEN_TYPES.includes(query.type))
+    if (!(TOKEN_TYPES as readonly string[]).includes(query.type))
       errors.push(unknown("token type", query.type, TOKEN_TYPES));
     selected = selected.filter((token) => token.type === query.type);
   }
@@ -115,7 +130,7 @@ export function selectTokens(
 
 export function selectComponents(
   components: ComponentInfo[],
-  query: { names: string[]; deprecated?: boolean; props?: string[] },
+  query: { names: string[]; category?: string; deprecated?: boolean; props?: string[] },
 ): Selection<ComponentInfo> {
   const errors: SelectionError[] = [];
   let selected = components;
@@ -129,12 +144,27 @@ export function selectComponents(
       query.names.some((name) => matches(name, component.name)),
     );
   }
+  if (query.category !== undefined) {
+    const categories = [
+      ...new Set(
+        components.flatMap((component) => (component.category ? [component.category] : [])),
+      ),
+    ];
+    const needle = query.category.toLowerCase();
+    const matched = categories.find((category) => category.toLowerCase() === needle);
+    if (matched === undefined) {
+      errors.push(unknown("category", query.category, categories));
+      selected = [];
+    } else {
+      selected = selected.filter((component) => component.category === matched);
+    }
+  }
   if (query.deprecated) selected = selected.filter((component) => component.deprecated);
 
   if (query.props?.length) {
     if (query.names.length === 0) {
       errors.push({
-        message: "--props needs the name of a component.",
+        message: "Showing only some props needs a component name.",
         input: "--props",
         suggestions: [],
       });
@@ -255,19 +285,23 @@ function search<T>(items: T[], queries: string[], fields: (item: T) => Field[]):
 export function searchSnapshot(
   snapshot: { tokens: DocToken[]; components: ComponentInfo[]; types: TypeInfo[] },
   queries: string[],
+  scope?: SearchScope[],
 ): SearchResult {
   const needles = queries.map((query) => query.toLowerCase());
+  const active = new Set<SearchScope>(scope?.length ? scope : SEARCH_SCOPES);
   const result: SearchResult = {
-    tokens: search(snapshot.tokens, needles, tokenFields),
-    components: search(snapshot.components, needles, componentFields),
-    types: search(snapshot.types, needles, typeFields),
+    tokens: active.has("tokens") ? search(snapshot.tokens, needles, tokenFields) : [],
+    components: active.has("components")
+      ? search(snapshot.components, needles, componentFields)
+      : [],
+    types: active.has("types") ? search(snapshot.types, needles, typeFields) : [],
     suggestions: [],
   };
   if (result.tokens.length + result.components.length + result.types.length === 0) {
     const candidates = [
-      ...snapshot.tokens.flatMap((token) => token.path.split(".")),
-      ...snapshot.components.map((component) => component.name),
-      ...snapshot.types.map((type) => type.name),
+      ...(active.has("tokens") ? snapshot.tokens.flatMap((token) => token.path.split(".")) : []),
+      ...(active.has("components") ? snapshot.components.map((component) => component.name) : []),
+      ...(active.has("types") ? snapshot.types.map((type) => type.name) : []),
     ];
     result.suggestions = [
       ...new Set(queries.flatMap((query) => closestMatches(query, candidates))),

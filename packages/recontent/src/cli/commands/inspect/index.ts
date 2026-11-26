@@ -1,13 +1,9 @@
 import type { Logger, LogLevel } from "../../../logger.js";
 import type { IntrospectionWarning } from "../../../introspection/components.js";
 import { typeClosure } from "../../../introspection/types.js";
-import { loadIntrospection, loadProject } from "../../project.js";
-import {
-  createSnapshot,
-  readSnapshot,
-  type Introspected,
-  type Snapshot,
-} from "../../../snapshot/snapshot.js";
+import type { TokenLayer } from "../../../token-model/model.js";
+import { loadIntrospection, loadProject, type Components, type Project } from "../../project.js";
+import { createSnapshot, readSnapshot, type Snapshot } from "../../../snapshot/snapshot.js";
 import { diagnoseRegistry } from "../../../token-model/alias.js";
 import { exitWithError } from "../../utils/exit.js";
 import { displayPath } from "../../utils/fs.js";
@@ -22,14 +18,42 @@ import {
   type Format,
   type InspectError,
 } from "./render.js";
-import { searchSnapshot, selectComponents, selectTokens, selectTypes } from "./select.js";
+import {
+  searchSnapshot,
+  selectComponents,
+  selectTokens,
+  selectTypes,
+  type SearchScope,
+} from "./select.js";
 
 export type InspectTarget =
   | { kind: "overview" }
-  | { kind: "tokens"; paths: string[]; type?: string; theme?: string; deprecated?: boolean }
-  | { kind: "components"; names: string[]; deprecated?: boolean; props?: string[] }
+  | {
+      kind: "tokens";
+      paths: string[];
+      layer?: TokenLayer;
+      type?: string;
+      theme?: string;
+      deprecated?: boolean;
+    }
+  | {
+      kind: "components";
+      names: string[];
+      category?: string;
+      deprecated?: boolean;
+      props?: string[];
+    }
   | { kind: "types"; names: string[]; deprecated?: boolean }
-  | { kind: "search"; queries: string[] };
+  | { kind: "search"; queries: string[]; scope?: SearchScope[] };
+
+/** Whether answering `target` requires component/type introspection. */
+export function needsIntrospection(target: InspectTarget): boolean {
+  if (target.kind === "tokens") return false;
+  if (target.kind === "search" && target.scope?.length) {
+    return target.scope.includes("components") || target.scope.includes("types");
+  }
+  return true;
+}
 
 export type InspectOptions = {
   cwd: string;
@@ -60,191 +84,227 @@ function fail(format: Format, errors: InspectError[], exitCode = 1): void {
 }
 
 /** What the selection and rendering below read: the data, where it came from, and why components are missing. */
-type Loaded = {
+export type LoadedSnapshot = {
   snapshot: Snapshot;
   source: string;
+  /** A config, or a published snapshot: the two say differently what to do when components are missing. */
+  sourceKind: "config" | "snapshot";
   introspectionError?: string;
   /** What introspecting the project had to say; none from a published snapshot. */
   warnings?: IntrospectionWarning[];
-  /** Where to report them. */
-  logger?: Logger;
 };
 
-async function loadLocal(
-  options: Extract<InspectOptions, { configPath: string }>,
-): Promise<Loaded | undefined> {
-  const { target, format } = options;
-  let project: Awaited<ReturnType<typeof loadProject>>;
-  try {
-    project = await loadProject({
-      configPath: options.configPath,
-      logLevel: options.logLevel,
-    });
-  } catch (error) {
-    if (format !== "json") throw error;
-    fail(format, [{ message: error instanceof Error ? error.message : String(error) }]);
-    return undefined;
-  }
+export type InspectExecution =
+  | { ok: true; output: string; warnings: IntrospectionWarning[] }
+  | { ok: false; errors: InspectError[]; exitCode: 1 | 2 };
+
+/**
+ * Loads a config and checks its tokens: throws when it is broken, after
+ * logging what is wrong with the tokens.
+ */
+export async function loadCheckedProject(options: {
+  configPath: string;
+  cwd: string;
+  logLevel?: LogLevel;
+}): Promise<Project> {
+  const project = await loadProject(options);
   const { config, logger } = project;
-  const configName = displayPath(options.cwd, options.configPath);
-
-  if ((target.kind === "components" || target.kind === "types") && !config.introspection) {
-    fail(format, [
-      {
-        message: `${configName} has no \`introspection\` block. Add \`introspection: { entry: "src/components/index.ts", importPath: "@acme/ds" }\` to defineConfig() to inspect components.`,
-      },
-    ]);
-    return undefined;
-  }
-
   for (const diagnostic of config.diagnostics) logger.warn(diagnostic.message);
   // Before the TS program, which is the slow part: no point waiting for it to report a token error.
   const brokenAliases = diagnoseRegistry(config.registry, config.themes);
   if (brokenAliases.length > 0) {
     for (const diagnostic of brokenAliases) logger.error(diagnostic.message);
-    fail(format, [{ message: `${brokenAliases.length} token error(s) in ${configName}` }]);
-    return undefined;
+    throw new Error(
+      `${brokenAliases.length} token error(s) in ${displayPath(options.cwd, options.configPath)}`,
+    );
   }
+  return project;
+}
 
-  // Tokens never need a TS program; only look at components when asked.
-  let introspected: Introspected | undefined;
-  let introspectionError: string | undefined;
-  let warnings: IntrospectionWarning[] | undefined;
-  if (target.kind !== "tokens" && config.introspection) {
-    try {
-      ({ introspection: introspected, warnings } = await loadIntrospection(project, {
-        cache: options.cache,
-      }));
-    } catch (error) {
-      introspectionError = error instanceof Error ? error.message : String(error);
+/** Introspection of a project whose config sets `introspection`; a failure is reported as `error`, for the overview to say. */
+export async function tryIntrospection(
+  project: Project,
+  options: Parameters<typeof loadIntrospection>[1],
+): Promise<{ components?: Components; error?: string }> {
+  try {
+    return { components: await loadIntrospection(project, options) };
+  } catch (error) {
+    return { error: error instanceof Error ? error.message : String(error) };
+  }
+}
+
+export function loadHeadlessSnapshot(
+  from: string,
+  cwd: string,
+): { loaded: LoadedSnapshot; file: string } {
+  const { snapshot, source, file } = readSnapshot(from, cwd);
+  return { loaded: { snapshot, source, sourceKind: "snapshot" }, file };
+}
+
+/** Selects and renders what `target` asks for. Pure: reporting and exit codes are the caller's. */
+export function executeInspect(
+  loaded: LoadedSnapshot,
+  target: InspectTarget,
+  format: Format,
+  /** Whether markdown output includes `Next:` CLI command hints. */
+  hints = true,
+): InspectExecution {
+  const { snapshot, source, sourceKind, introspectionError, warnings = [] } = loaded;
+  const { tokens, themes, components, types } = snapshot;
+  const fail = (errors: InspectError[], exitCode: 1 | 2 = NO_MATCH) => ({
+    ok: false as const,
+    errors,
+    exitCode,
+  });
+  // What was asked for decides which warnings matter: not the other components'.
+  const succeed = (
+    output: string,
+    relevant: (warning: IntrospectionWarning) => boolean = () => true,
+  ) => ({ ok: true as const, output, warnings: warnings.filter(relevant) });
+
+  const requiresComponents =
+    target.kind === "components" ||
+    target.kind === "types" ||
+    (target.kind === "search" &&
+      Boolean(target.scope?.length) &&
+      !target.scope!.includes("tokens"));
+
+  if (requiresComponents) {
+    if (introspectionError !== undefined) return fail([{ message: introspectionError }], 1);
+    if (!components) {
+      return fail(
+        [
+          {
+            message:
+              sourceKind === "config"
+                ? `${source} has no \`introspection\` block. Add \`introspection: { entry: "src/components/index.ts", importPath: "@acme/ds" }\` to defineConfig() to inspect components.`
+                : `${source} has no components in its snapshot. Its maintainers need \`introspection\` in their config for the \`inspect()\` plugin to include them.`,
+          },
+        ],
+        1,
+      );
     }
   }
-  // The overview is where to start, so it still shows the tokens and says what is wrong with the components.
-  if (
-    introspectionError !== undefined &&
-    (target.kind === "components" || target.kind === "types")
-  ) {
-    fail(format, [{ message: introspectionError }]);
-    return undefined;
-  }
-
-  return {
-    snapshot: createSnapshot(config, introspected),
-    source: configName,
-    introspectionError,
-    warnings,
-    logger,
-  };
-}
-
-function loadHeadless(options: Extract<InspectOptions, { from: string }>): Loaded | undefined {
-  const { target, format } = options;
-  let loaded: ReturnType<typeof readSnapshot>;
-  try {
-    loaded = readSnapshot(options.from, options.cwd);
-  } catch (error) {
-    fail(format, [{ message: error instanceof Error ? error.message : String(error) }]);
-    return undefined;
-  }
-  const { snapshot, source } = loaded;
-  if ((target.kind === "components" || target.kind === "types") && !snapshot.components) {
-    fail(format, [
-      {
-        message: `${source} has no components in its snapshot. Its maintainers need \`introspection\` in their config for the \`inspect()\` plugin to include them.`,
-      },
-    ]);
-    return undefined;
-  }
-  return { snapshot, source };
-}
-
-export async function runInspect(options: InspectOptions): Promise<void> {
-  const { target, format } = options;
-  const loaded = "from" in options ? loadHeadless(options) : await loadLocal(options);
-  if (!loaded) return;
-  const { snapshot, source, introspectionError, warnings = [], logger } = loaded;
-  const { tokens, themes, components, types } = snapshot;
-  // What was asked for decides which warnings matter: not the other components'.
-  const report = (relevant: (warning: IntrospectionWarning) => boolean) => {
-    for (const warning of warnings) if (relevant(warning)) logger?.warn(warning.message);
-  };
 
   switch (target.kind) {
     case "overview":
-      report(() => true);
-      print(
+      return succeed(
         renderOverview(
           { config: source, tokens, themes, components, types, introspectionError },
           format,
+          hints,
         ),
       );
-      return;
     case "search": {
       const queries = target.queries.map((query) => query.trim()).filter((query) => query !== "");
       if (queries.length === 0) {
-        fail(
-          format,
-          [{ message: "A search needs a query: `recontent inspect search <query...>`." }],
-          NO_MATCH,
-        );
-        return;
+        return fail([{ message: "A search needs at least one query term." }]);
       }
-      // Tokens are searched even when the components cannot be.
-      if (introspectionError !== undefined) logger?.warn(introspectionError);
-      report(() => true);
-      print(
-        renderSearch(
-          searchSnapshot({ tokens, components: components ?? [], types: types ?? [] }, queries),
-          { format, queries, themes },
+      const output = renderSearch(
+        searchSnapshot(
+          { tokens, components: components ?? [], types: types ?? [] },
+          queries,
+          target.scope,
         ),
+        { format, queries, themes, hints },
       );
-      return;
+      const result = succeed(output);
+      // Tokens are searched even when the components cannot be.
+      if (introspectionError !== undefined && needsIntrospection(target))
+        result.warnings.unshift({ message: introspectionError });
+      return result;
     }
     case "tokens": {
       const { selected, errors } = selectTokens(tokens, themes, target);
-      if (errors.length > 0) {
-        fail(format, errors, NO_MATCH);
-        return;
-      }
+      if (errors.length > 0) return fail(errors);
       const summary =
-        target.paths.length === 0 && !target.type && !target.theme && !target.deprecated;
-      print(renderTokens(selected, { format, themes, theme: target.theme, summary }));
-      return;
+        target.paths.length === 0 &&
+        !target.layer &&
+        !target.type &&
+        !target.theme &&
+        !target.deprecated;
+      return succeed(
+        renderTokens(selected, { format, themes, theme: target.theme, summary, hints }),
+      );
     }
     case "components": {
       const { selected, errors } = selectComponents(components ?? [], target);
-      if (errors.length > 0) {
-        fail(format, errors, NO_MATCH);
-        return;
-      }
-      const summary = target.names.length === 0;
+      if (errors.length > 0) return fail(errors);
       const names = new Set(selected.map((component) => component.name));
-      report(({ component }) => component === undefined || names.has(component));
-      print(
+      return succeed(
         renderComponents(selected, {
           format,
-          summary,
+          summary: target.names.length === 0,
           types: types ?? [],
           shared: sharedDeclarations(components ?? []),
           props: target.props,
+          hints,
         }),
+        ({ component }) => component === undefined || names.has(component),
       );
-      return;
     }
     case "types": {
       const { selected, errors } = selectTypes(types ?? [], target);
-      if (errors.length > 0) {
-        fail(format, errors, NO_MATCH);
-        return;
-      }
-      const summary = target.names.length === 0;
-      report(({ component }) => component === undefined);
+      if (errors.length > 0) return fail(errors);
       const closure = typeClosure(
         selected.map((type) => type.id),
         types ?? [],
       );
-      print(renderTypes(selected, { format, summary, types: closure }));
-      return;
+      return succeed(
+        renderTypes(selected, {
+          format,
+          summary: target.names.length === 0,
+          types: closure,
+          hints,
+        }),
+        ({ component }) => component === undefined,
+      );
     }
   }
+}
+
+async function loadLocalSnapshot(
+  options: Extract<InspectOptions, { configPath: string }>,
+): Promise<{ loaded: LoadedSnapshot; logger: Logger }> {
+  const { configPath, cwd, logLevel, target } = options;
+  const project = await loadCheckedProject({ configPath, cwd, logLevel });
+  const { config, logger } = project;
+  // Tokens never need a TS program; only look at components when asked.
+  const { components, error } =
+    needsIntrospection(target) && config.introspection
+      ? await tryIntrospection(project, { cache: options.cache })
+      : {};
+  return {
+    loaded: {
+      snapshot: createSnapshot(config, components?.introspection),
+      source: displayPath(cwd, configPath),
+      sourceKind: "config",
+      introspectionError: error,
+      warnings: components?.warnings,
+    },
+    logger,
+  };
+}
+
+export async function runInspect(options: InspectOptions): Promise<void> {
+  const { target, format } = options;
+  let loaded: LoadedSnapshot;
+  let logger: Logger | undefined;
+  try {
+    if ("from" in options) ({ loaded } = loadHeadlessSnapshot(options.from, options.cwd));
+    else ({ loaded, logger } = await loadLocalSnapshot(options));
+  } catch (error) {
+    // Rethrown for the CLI to report, with its causes; `--format json` reports on stdout too.
+    if (format !== "json") throw error;
+    fail(format, [{ message: error instanceof Error ? error.message : String(error) }]);
+    return;
+  }
+
+  const result = executeInspect(loaded, target, format);
+  if (!result.ok) {
+    fail(format, result.errors, result.exitCode);
+    return;
+  }
+  for (const warning of result.warnings) logger?.warn(warning.message);
+  print(result.output);
 }

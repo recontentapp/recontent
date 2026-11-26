@@ -192,6 +192,27 @@ describe("renderSearch", () => {
     );
   });
 
+  test("hints: false omits the Next line across renderers", () => {
+    const hits = { components: [{ item: component("Tooltip"), matchedIn: ["name" as const] }] };
+    expect(
+      renderSearch(
+        { tokens: [], components: hits.components, types: [], suggestions: [] },
+        { format: "markdown", queries: ["tip"], themes: [], hints: false },
+      ),
+    ).not.toContain("Next:");
+    expect(
+      renderTokens([], { format: "markdown", themes: [], summary: true, hints: false }),
+    ).not.toContain("Next:");
+    expect(
+      renderComponents([component("W", { props: [prop("tone")] })], {
+        format: "markdown",
+        summary: false,
+        types: [],
+        hints: false,
+      }),
+    ).not.toContain("Next:");
+  });
+
   test("no match says so, suggests and points at the overview", () => {
     expect(render({ suggestions: ["tooltip"] })).toBe(
       [

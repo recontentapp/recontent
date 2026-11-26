@@ -51,12 +51,40 @@ function groupOf(token: DocToken): string {
   return token.path.split(".").slice(0, -1).join(".") || token.layer;
 }
 
-const next = (...commands: string[]) =>
-  `Next: ${(commands.length > 0 ? commands : [""]).map((command) => code(`recontent inspect ${command}`.trim())).join(" · ")}`;
+/** Where the CLI output points next. */
+type Hint = {
+  target: "overview" | "tokens" | "components" | "types" | "search";
+  query?: string[];
+  props?: string[];
+};
+
+const quoted = (argument: string) =>
+  /[\s()]/.test(argument) ? JSON.stringify(argument) : argument;
+
+function formatHint({ target, query = [], props }: Hint): string {
+  return [
+    "recontent inspect",
+    ...(target === "overview" ? [] : [target]),
+    ...query.map(quoted),
+    ...(props ? ["--props", ...props.map(quoted)] : []),
+  ].join(" ");
+}
+
+/** The `Next:` line for CLI output; omitted when `hints` is false (e.g. MCP). */
+function next(enabled: boolean, hints: Hint[]): string | undefined {
+  if (!enabled) return undefined;
+  if (hints.length === 0) return `Next: ${code("recontent inspect --help")}`;
+  return `Next: ${hints.map((hint) => code(formatHint(hint))).join(" · ")}`;
+}
+
+const withNext = (lines: string[], enabled: boolean, hints: Hint[]): string[] => {
+  const line = next(enabled, hints);
+  return line ? [...lines, "", line] : lines;
+};
 
 const typeIds = (types: TypeInfo[]) => types.map((type) => code(type.id)).join(", ") || "_None._";
 
-export function renderOverview(overview: Overview, format: Format): string {
+export function renderOverview(overview: Overview, format: Format, hints = true): string {
   const { tokens, themes, components, types, introspectionError } = overview;
   const layers = LAYERS.map((layer) => {
     const inLayer = tokens.filter((token) => token.layer === layer);
@@ -108,14 +136,13 @@ export function renderOverview(overview: Overview, format: Format): string {
     lines.push("", "## Components", "", `_Unavailable: ${escapeText(introspectionError)}_`);
   }
 
-  const hints: string[] = [];
+  const targets: Hint[] = [];
   const firstGroup = tokens.find((token) => token.layer === "system") ?? tokens[0];
-  if (firstGroup) hints.push(`tokens ${groupOf(firstGroup)}`);
-  if (components?.[0]) hints.push(`components ${components[0].name}`);
-  if (types?.[0]) hints.push("types");
-  hints.push("search <term>");
-  lines.push("", hints.length > 0 ? next(...hints) : next("--help"));
-  return lines.join("\n");
+  if (firstGroup) targets.push({ target: "tokens", query: [groupOf(firstGroup)] });
+  if (components?.[0]) targets.push({ target: "components", query: [components[0].name] });
+  if (types?.[0]) targets.push({ target: "types" });
+  targets.push({ target: "search", query: ["<term>"] });
+  return withNext(lines, hints, targets).join("\n");
 }
 
 function tokenNotes(token: DocToken): string {
@@ -158,9 +185,15 @@ function tokenTable(tokens: DocToken[], themes: string[]): string[] {
 
 export function renderTokens(
   tokens: DocToken[],
-  options: { format: Format; themes: string[]; summary: boolean; theme?: string },
+  options: {
+    format: Format;
+    themes: string[];
+    summary: boolean;
+    theme?: string;
+    hints?: boolean;
+  },
 ): string {
-  const { format, summary } = options;
+  const { format, summary, hints = true } = options;
   const themes = options.theme ? [options.theme] : options.themes;
   const shown = tokens.map((token) => ({
     ...token,
@@ -207,8 +240,7 @@ export function renderTokens(
     }
     const first =
       [...groups.keys()].find((group) => group.startsWith("system.")) ?? [...groups.keys()][0];
-    lines.push("", next(first ? `tokens ${first}` : "--help"));
-    return lines.join("\n");
+    return withNext(lines, hints, first ? [{ target: "tokens", query: [first] }] : []).join("\n");
   }
 
   const lines = ["# Tokens", "", plural(shown.length, "token") + "."];
@@ -327,9 +359,10 @@ export function renderComponents(
     shared?: Set<string>;
     /** Only these props, in full. */
     props?: string[];
+    hints?: boolean;
   },
 ): string {
-  const { format, summary, types, shared = new Set(), props: only } = options;
+  const { format, summary, types, shared = new Set(), props: only, hints = true } = options;
   if (format === "json") {
     const shown = only ? components.map((component) => narrowed(component, only)) : components;
     return JSON.stringify(
@@ -360,14 +393,10 @@ export function renderComponents(
     const first = groups[0]?.components[0];
     // A link may name a type instead.
     const link = first?.links?.find((name) => components.some((other) => other.name === name));
-    lines.push(
-      "",
-      next(
-        ...(first ? [`components ${first.name}`] : ["--help"]),
-        ...(link ? [`components ${link}`] : []),
-      ),
-    );
-    return lines.join("\n");
+    const nextHints: Hint[] = [];
+    if (first) nextHints.push({ target: "components", query: [first.name] });
+    if (link) nextHints.push({ target: "components", query: [link] });
+    return withNext(lines, hints, nextHints).join("\n");
   }
 
   if (components.length === 0) return "No components.";
@@ -401,12 +430,11 @@ export function renderComponents(
     const collapsed = views.flatMap((view) => view.collapsed ?? []);
     const prop = collapsed[0]?.props[0] ?? views[0]!.props![0]?.name;
     const type = collapsed[0]?.type ?? more[0]?.id ?? direct[0]?.id;
-    const typeArg = type && /[\s()]/.test(type) ? JSON.stringify(type) : type;
-    const hints = [
-      ...(prop ? [`components ${first.name} --props ${prop}`] : []),
-      ...(typeArg ? [`types ${typeArg}`] : []),
-    ];
-    if (hints.length > 0) sections.push(next(...hints));
+    const nextHints: Hint[] = [];
+    if (prop) nextHints.push({ target: "components", query: [first.name], props: [prop] });
+    if (type) nextHints.push({ target: "types", query: [type] });
+    const line = nextHints.length > 0 ? next(hints, nextHints) : undefined;
+    if (line) sections.push(line);
   }
   return sections.join("\n\n");
 }
@@ -433,9 +461,9 @@ function typeLine(type: TypeInfo): string {
 /** `selected` is what was asked for; `types` adds what it references, so that the detail stands on its own. */
 export function renderTypes(
   selected: TypeInfo[],
-  options: { format: Format; summary: boolean; types: TypeInfo[] },
+  options: { format: Format; summary: boolean; types: TypeInfo[]; hints?: boolean },
 ): string {
-  const { format, summary, types } = options;
+  const { format, summary, types, hints = true } = options;
   if (format === "json") {
     return JSON.stringify({ schemaVersion: SCHEMA_VERSION, kind: "types", types }, null, 2);
   }
@@ -445,8 +473,11 @@ export function renderTypes(
     for (const type of selected) {
       lines.push(typeLine(type));
     }
-    lines.push("", next(selected[0] ? `types ${selected[0].name}` : "--help"));
-    return lines.join("\n");
+    return withNext(
+      lines,
+      hints,
+      selected[0] ? [{ target: "types", query: [selected[0].name] }] : [],
+    ).join("\n");
   }
 
   if (types.length === 0) return "No types.";
@@ -456,9 +487,9 @@ export function renderTypes(
 /** What `inspect search` found, and why each component and type did. */
 export function renderSearch(
   result: SearchResult,
-  options: { format: Format; queries: string[]; themes: string[] },
+  options: { format: Format; queries: string[]; themes: string[]; hints?: boolean },
 ): string {
-  const { format, queries, themes } = options;
+  const { format, queries, themes, hints = true } = options;
   const { tokens, components, types, suggestions } = result;
   const total = tokens.length + components.length + types.length;
 
@@ -482,8 +513,7 @@ export function renderSearch(
   const lines = ["# Search: " + queries.map(code).join(", "), ""];
   if (total === 0) {
     const hint = suggestions.length > 0 ? ` Did you mean ${suggestions.map(code).join(", ")}?` : "";
-    lines.push(`No matches.${hint}`, "", next());
-    return lines.join("\n");
+    return withNext([...lines, `No matches.${hint}`], hints, [{ target: "overview" }]).join("\n");
   }
 
   lines.push(`${plural(total, "match", "matches")}.`);
@@ -510,9 +540,11 @@ export function renderSearch(
   }
   const first = components[0]?.item.name;
   const firstType = types[0]?.item.name;
-  lines.push(
-    "",
-    first ? next(`components ${first}`) : firstType ? next(`types ${firstType}`) : next(),
-  );
-  return lines.join("\n");
+  return withNext(lines, hints, [
+    first
+      ? { target: "components", query: [first] }
+      : firstType
+        ? { target: "types", query: [firstType] }
+        : { target: "overview" },
+  ]).join("\n");
 }

@@ -181,6 +181,8 @@ Calm, dense UI components and tokens for the vanilla-extract playground.
 
 Keys mirror token paths and CSS variables: `system-border-default` is `system.border.default` (`--system-border-default`).
 
+Query tokens, props and types on demand with `recontent inspect` (or over MCP with `recontent mcp`).
+
 ## Colors
 
 - `system-gradients-accent`: `linear-gradient(135deg, var(--ref-color-primary-700) 0%, var(--ref-color-primary-500) 100%)`
@@ -230,6 +232,8 @@ Keys mirror token paths and CSS variables: `system-border-default` is `system.bo
 
 ## Components
 
-- **Sticker**: Playful label stuck on the corner of a card or an image.
+### Data display
+
+- **Sticker** (experimental): Playful label stuck on the corner of a card or an image.
 
 Run `recontent inspect components <Name>` for props, usage and examples.

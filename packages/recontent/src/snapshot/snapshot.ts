@@ -80,9 +80,13 @@ function readJson(file: string): unknown {
 /**
  * Reads the snapshot of a design system: `from` is a package name (its
  * package.json `recontent` field points at the snapshot) or a path to a
- * snapshot file. `source` names where it came from, for display.
+ * snapshot file. `source` names where it came from, for display; `file` is the
+ * snapshot file that was read.
  */
-export function readSnapshot(from: string, cwd: string): { snapshot: Snapshot; source: string } {
+export function readSnapshot(
+  from: string,
+  cwd: string,
+): { snapshot: Snapshot; source: string; file: string } {
   let file: string;
   let source: string;
   if (isFilePath(from)) {
@@ -129,5 +133,5 @@ export function readSnapshot(from: string, cwd: string): { snapshot: Snapshot; s
         : `--from: ${source} has an unsupported snapshot schema ${snapshot.schemaVersion}.`,
     );
   }
-  return { snapshot: snapshot as Snapshot, source };
+  return { snapshot: snapshot as Snapshot, source, file };
 }

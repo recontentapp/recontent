@@ -23,7 +23,7 @@ function ctxFor(config: ReturnType<typeof goldenConfig>["config"]): PluginContex
 
 function render(
   ctx: PluginContext,
-  options: { title?: string; description?: string; dos?: string[]; donts?: string[] } = {},
+  options: Partial<Parameters<typeof generateDesignMdFiles>[1]> = {},
 ): string {
   const files = generateDesignMdFiles(ctx, { outDir: "docs", ...options });
   expect(files.map((file) => file.filename)).toEqual(["DESIGN.md"]);
@@ -297,5 +297,102 @@ describe("components", () => {
 
   test("nothing is added when the context has no components", () => {
     expect(render(ctxFor(goldenConfig().config))).not.toContain("## Components\n");
+  });
+
+  const detailed: ComponentInfo[] = [
+    {
+      name: "Dialog",
+      sourceFilePath: "src/dialog.tsx",
+      line: 1,
+      description: "Modal window.",
+      category: "Overlays",
+      experimental: true,
+      props: [
+        { name: "open", type: "boolean", required: false },
+        { name: "modal", type: "boolean", required: false, deprecated: "Always modal." },
+        { name: "legacy", type: "boolean", required: false, deprecated: true },
+      ],
+      inherits: [],
+      references: [],
+    },
+    {
+      name: "Button",
+      sourceFilePath: "src/button.tsx",
+      line: 1,
+      category: "Actions",
+      props: [],
+      inherits: [],
+      references: [],
+    },
+    {
+      name: "Stack",
+      sourceFilePath: "src/stack.tsx",
+      line: 1,
+      props: [],
+      inherits: [],
+      references: [],
+    },
+  ];
+  const detailedCtx = { ...ctxFor(goldenConfig().config), components: detailed };
+
+  test("categories become headings, uncategorized components come last, and experimental ones say so", () => {
+    expect(render(detailedCtx)).toContain(
+      "## Components\n\n### Actions\n\n- **Button**\n\n### Overlays\n\n- **Dialog** (experimental): Modal window.\n\n- **Stack**\n\nRun",
+    );
+  });
+
+  test("deprecated props of active components are things not to use", () => {
+    const md = render(detailedCtx);
+    expect(md).toContain("- Don't use `Dialog` prop `modal`: Always modal.");
+    expect(md).toContain("- Don't use `Dialog` prop `legacy`.");
+    expect(md).not.toContain("prop `open`");
+  });
+});
+
+describe("agent discovery", () => {
+  const ctx = ctxFor(goldenConfig().config);
+  const query = (from = "") =>
+    `Query tokens, props and types on demand with \`recontent inspect${from}\` (or over MCP with \`recontent mcp${from}\`).`;
+
+  test("the overview points to the commands, with --from for a published package", () => {
+    expect(render(ctx)).toContain(query());
+    expect(render(ctx, { packageName: "@acme/ds" })).toContain(query(" --from @acme/ds"));
+  });
+
+  test("the components command follows the package name", () => {
+    const withComponents = {
+      ...ctx,
+      components: [
+        {
+          name: "Button",
+          sourceFilePath: "src/button.tsx",
+          line: 1,
+          props: [],
+          inherits: [],
+          references: [],
+        },
+      ],
+    };
+    expect(render(withComponents, { packageName: "@acme/ds" })).toContain(
+      "Run `recontent inspect components <Name> --from @acme/ds` for props",
+    );
+  });
+
+  test("a config with components only still has an overview", () => {
+    const ref = defineReferenceTokens({});
+    const empty = ctxFor(
+      defineConfig({ tokens: { ref, system: defineSystemTokens({}), components: {} } }),
+    );
+    const components = [
+      {
+        name: "Button",
+        sourceFilePath: "src/button.tsx",
+        line: 1,
+        props: [],
+        inherits: [],
+        references: [],
+      },
+    ];
+    expect(render({ ...empty, components })).toContain(`## Overview\n\n${query()}`);
   });
 });

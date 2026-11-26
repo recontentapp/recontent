@@ -49,6 +49,17 @@ recontent inspect search danger        # tokens, components and types that menti
 
 Recontent prints identifiers exactly as code uses them: token paths, CSS variables, component names, and prop names. Agents can copy them directly.
 
+## MCP server
+
+Some agent hosts only call MCP tools and cannot run shell commands. For those hosts, run [`recontent mcp`](/cli/mcp). It exposes read-only tools for the overview, tokens, components, types, and search.
+
+```bash
+recontent mcp                     # serve the local config
+recontent mcp --from @acme/ds     # serve an installed package's snapshot
+```
+
+The server reloads when the config, a component, or the snapshot changes. Prefer the CLI when the agent can run commands: it needs no client configuration.
+
 ## Recovering from mistakes
 
 When a name matches nothing, `recontent inspect` exits with code `2` and prints close matches to stderr:

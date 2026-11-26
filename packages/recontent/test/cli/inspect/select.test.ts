@@ -49,11 +49,12 @@ describe("selectTokens", () => {
     expect(select({ paths: ["ref", "system.spacing"] }).selected).toHaveLength(3);
   });
 
-  test("--type and --deprecated narrow the selection", () => {
+  test("--type, layer, and --deprecated narrow the selection", () => {
     expect(paths(select({ type: "dimension" }).selected)).toEqual([
       "system.spacing.sm",
       "system.spacing.sm-2",
     ]);
+    expect(paths(select({ layer: "ref" }).selected)).toEqual(["ref.color.brand"]);
     expect(paths(select({ deprecated: true }).selected)).toEqual(["system.color.legacy"]);
   });
 
@@ -125,9 +126,9 @@ describe("selectComponents --props", () => {
 
 describe("selectComponents", () => {
   const components = [
-    component("Button"),
-    component("Dialog.Root"),
-    component("Dialog.Trigger", { deprecated: true }),
+    component("Button", { category: "Actions" }),
+    component("Dialog.Root", { category: "Overlays" }),
+    component("Dialog.Trigger", { category: "Overlays", deprecated: true }),
     component("Tabs"),
     component("Tabs.Item"),
   ];
@@ -144,6 +145,17 @@ describe("selectComponents", () => {
     expect(names(select({ names: ["Dialog"] }).selected)).toEqual([
       "Dialog.Root",
       "Dialog.Trigger",
+    ]);
+  });
+
+  test("category matches case-insensitively and suggests on a typo", () => {
+    expect(names(select({ names: [], category: "actions" }).selected)).toEqual(["Button"]);
+    expect(select({ names: [], category: "Overlay" }).errors).toEqual([
+      {
+        message: 'No category matches "Overlay". Did you mean `Overlays`?',
+        input: "Overlay",
+        suggestions: ["Overlays"],
+      },
     ]);
   });
 
@@ -287,6 +299,15 @@ describe("searchSnapshot", () => {
     );
     expect(paths(result.tokens.map((hit) => hit.item))).toEqual(["system.tooltip", "system.a"]);
     expect(result.components.map((hit) => hit.item.name)).toEqual(["Tooltip"]);
+  });
+
+  test("scope limits search and suggestions to the requested kinds", () => {
+    const scoped = searchSnapshot(snapshot, ["tooltip"], ["tokens"]);
+    expect(scoped).toEqual({ tokens: [], components: [], types: [], suggestions: [] });
+
+    const componentsOnly = searchSnapshot(snapshot, ["tooltip"], ["components"]);
+    expect(componentsOnly.components.map((hit) => hit.item.name)).toEqual(["Tooltip"]);
+    expect(componentsOnly.types).toEqual([]);
   });
 
   test("no hit gives suggestions, and a hit does not", () => {
