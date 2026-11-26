@@ -17,13 +17,17 @@ description: "Generate DESIGN.md, a short file for agents following Google's DES
 designMD(options: DesignMdPluginOptions): RecontentPlugin
 ```
 
-| Option        | Type       | Default           | Description                                                                              |
-| ------------- | ---------- | ----------------- | ---------------------------------------------------------------------------------------- |
-| `outDir`      | `string`   | required          | Output directory relative to the config file.                                            |
-| `title`       | `string`   | `"Design system"` | Document `name` and top-level heading.                                                   |
-| `description` | `string`   | none              | Purpose of the design system. Appears in front matter and Overview.                      |
-| `dos`         | `string[]` | none              | Items rendered as `Do <item>` under "Do's and Don'ts" (for example `use system tokens`). |
-| `donts`       | `string[]` | none              | Items rendered as `Don't <item>` before deprecations. Write the predicate phrase.        |
+| Option        | Type       | Default           | Description                                                                                |
+| ------------- | ---------- | ----------------- | ------------------------------------------------------------------------------------------ |
+| `outDir`      | `string`   | required          | Output directory relative to the config file.                                              |
+| `filename`    | `string`   | `"DESIGN.md"`     | Name of the emitted file.                                                                  |
+| `title`       | `string`   | `"Design system"` | Document `name` and top-level heading.                                                     |
+| `description` | `string`   | none              | Purpose of the design system. Appears in front matter and Overview.                        |
+| `packageName` | `string`   | none              | Published package name. Adds `--from <packageName>` to the commands the document suggests. |
+| `dos`         | `string[]` | none              | Items rendered as `Do <item>` under "Do's and Don'ts" (for example `use system tokens`).   |
+| `donts`       | `string[]` | none              | Items rendered as `Don't <item>` before deprecations. Write the predicate phrase.          |
+
+Set `packageName` when you ship `DESIGN.md` inside your published package. Consumers have the package installed but not your config, so the commands need `--from`. Leave it unset for a file you commit in the design system's own repository.
 
 Plugin name: `recontent:design-md`. It includes components whenever you configure `introspection` and still works without them; see [`dependsOn`](/plugin-api#recontentplugin) for failure behavior.
 
@@ -56,15 +60,23 @@ Calm, dense UI for back-office tools.
 
 Keys mirror token paths and CSS variables: `system-color-background` is `system.color.background` (`--system-color-background`).
 
+Query tokens, props and types on demand with `recontent inspect --from @acme/ds` (or over MCP with `recontent mcp --from @acme/ds`).
+
 ## Colors
 
 - `system-color-background`: Page background
 
 ## Components
 
+### Actions
+
 - **Button**: Triggers an action.
 
-Run `recontent inspect components <Name>` for props, usage and examples.
+### Overlays
+
+- **Dialog** (experimental): Modal window.
+
+Run `recontent inspect components <Name> --from @acme/ds` for props, usage and examples.
 ```
 
 ## Front matter
@@ -87,14 +99,14 @@ When a token aliases another front matter token, `designMD()` writes a reference
 
 `designMD()` omits empty sections and emits the remaining ones in specification order:
 
-- **Overview:** Your `description` plus the mapping from keys to token paths and CSS variables.
+- **Overview:** Your `description`, the mapping from keys to token paths and CSS variables, and the commands that query the design system on demand (`recontent inspect` and [`recontent mcp`](/cli/mcp)).
 - **Colors:** Descriptions of color tokens, color scales, and gradients.
 - **Typography:** Descriptions, font families, and font weights.
 - **Layout:** Spacing descriptions plus other dimensions such as font sizes.
 - **Elevation & Depth:** Shadow tokens.
 - **Shapes:** Radius descriptions and border tokens.
 - **Themes:** Table of overridden values for each [theme](/guides/working-with-themes).
-- **Components:** One line per component with its description.
-- **Do's and Don'ts:** Your `dos` and `donts`, followed by deprecated tokens, scales, and components with their notices.
+- **Components:** One line per component with its description. Components with a `@category` appear under a heading for it, and `@experimental` components carry an `(experimental)` tag.
+- **Do's and Don'ts:** Your `dos` and `donts`, followed by deprecated tokens, scales, components, and component props with their notices.
 
 Token types without a specification section (durations, easing curves, transitions, and numbers) do not appear in `DESIGN.md`. Components require [`introspection`](/config#introspection); without it, `designMD()` omits the Components section.

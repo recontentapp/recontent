@@ -10,6 +10,7 @@ type Page =
   | { path: '/cli'; render: 'static' }
   | { path: '/cli/init'; render: 'static' }
   | { path: '/cli/inspect'; render: 'static' }
+  | { path: '/cli/mcp'; render: 'static' }
   | { path: '/config/composites'; render: 'static' }
   | { path: '/config'; render: 'static' }
   | { path: '/config/primitives'; render: 'static' }

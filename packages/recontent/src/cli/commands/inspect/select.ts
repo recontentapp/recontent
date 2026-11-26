@@ -134,7 +134,7 @@ export function selectComponents(
   if (query.props?.length) {
     if (query.names.length === 0) {
       errors.push({
-        message: "--props needs the name of a component.",
+        message: "Showing only some props needs a component name.",
         input: "--props",
         suggestions: [],
       });

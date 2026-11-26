@@ -17,6 +17,7 @@ recontent [options] <command>
 | [`build`](/cli/build)     | Run the configured plugins and write their output.                                  |
 | [`diff`](/cli/diff)       | Compare the config's tokens, components, and types against a previous git revision. |
 | [`inspect`](/cli/inspect) | Browse the tokens and components the project defines.                               |
+| [`mcp`](/cli/mcp)         | Serve the same information to coding agents over MCP.                               |
 
 Running `recontent` with no arguments prints help, equivalent to `recontent --help`.
 
@@ -56,7 +57,7 @@ Any other value causes an error.
 
 ## Output streams
 
-- **stdout** carries only command output: help, version, `recontent diff`, and `recontent inspect`. Pipe or redirect it safely.
+- **stdout** carries only command output: help, version, `recontent diff`, and `recontent inspect`. For `recontent mcp`, it carries only JSON-RPC messages. Pipe or redirect it safely.
 - **stderr** carries everything else: progress (`Wrote …`), warnings (`warning: …`), and errors (`error: …`).
 
 ## Exit codes

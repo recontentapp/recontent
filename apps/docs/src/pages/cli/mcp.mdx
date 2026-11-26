@@ -1,0 +1,92 @@
+---
+title: "mcp"
+description: "Serve the design system to coding agents over the Model Context Protocol (MCP), with one read-only tool."
+---
+
+# mcp
+
+`recontent mcp` starts a stdio [MCP](https://modelcontextprotocol.io) server that exposes the output of [`recontent inspect`](/cli/inspect) to MCP hosts such as Cursor and Claude.
+
+```bash
+recontent mcp [--no-cache]
+recontent mcp --from <package|file>
+```
+
+Supports the [global options](/cli#global-options) `-c`, `--cwd`, and `--log-level`.
+
+## Producers and consumers
+
+| Mode     | Command                                 | Reads                                                       |
+| -------- | --------------------------------------- | ----------------------------------------------------------- |
+| Producer | `recontent mcp`                         | The discovered config file, with its `introspection` block. |
+| Consumer | `recontent mcp --from @acme/ds`         | The [snapshot](/plugins/inspect) a published package ships. |
+| Consumer | `recontent mcp --from ./recontent.json` | A snapshot file. Recontent runs no project code.            |
+
+| Option                   | Description                                                                                    |
+| ------------------------ | ---------------------------------------------------------------------------------------------- |
+| `--from <package\|file>` | Serve a published snapshot instead of a config. Conflicts with `-c/--config` and `--no-cache`. |
+| `--no-cache`             | Neither read nor write the [introspection cache](/config#cache).                               |
+
+`recontent mcp` exits with code `1` before it serves in two cases. The config file is missing, or `--from` names a missing package or an invalid snapshot.
+
+## Configure a client
+
+Add the server to the `mcpServers` of your MCP host:
+
+```json
+{
+  "mcpServers": {
+    "design-system": {
+      "command": "npx",
+      "args": ["recontent", "mcp"]
+    }
+  }
+}
+```
+
+In an app that consumes a published design system, pass `--from`:
+
+```json
+{
+  "mcpServers": {
+    "design-system": {
+      "command": "npx",
+      "args": ["recontent", "mcp", "--from", "@acme/ds"]
+    }
+  }
+}
+```
+
+## Tool
+
+The server exposes one tool, `recontent_inspect`. It only reads, so hosts can approve calls automatically. It returns the same markdown as `recontent inspect`, with its follow-ups written as tool arguments.
+
+| Argument     | Type       | Description                                                                                                   |
+| ------------ | ---------- | ------------------------------------------------------------------------------------------------------------- |
+| `target`     | `string`   | Required. `overview`, `tokens`, `components`, `types`, or `search`. Start with `overview`.                    |
+| `query`      | `string[]` | Token paths, component names, type names, or search terms. Required for `search`. Omit it for a summary list. |
+| `type`       | `string`   | For `tokens`: only tokens of this type.                                                                       |
+| `theme`      | `string`   | For `tokens`: show values for this theme only.                                                                |
+| `props`      | `string[]` | For `components`: show only these props in full.                                                              |
+| `deprecated` | `boolean`  | For `tokens`, `components`, and `types`: only deprecated items.                                               |
+
+A lookup that matches nothing returns a tool error that suggests the closest names, for example `Did you mean`. The agent retries with the suggestion. Invalid arguments return a tool error that names the problem.
+
+## Reloading
+
+The server reloads what changed before it answers the next request:
+
+- A change to the config file or a file it imports reloads the tokens.
+- A change to a component file introspects the components again.
+- A change to the snapshot file reads the snapshot again.
+
+Unchanged requests answer from memory. A config that does not load while you edit it returns a tool error, and the server recovers when you fix the file.
+
+The server loads the config and components with the first `tools/call`, so the handshake never waits for TypeScript.
+
+## Output streams
+
+- **stdout** carries only JSON-RPC 2.0 messages, one per line. Recontent redirects `console.log` and `console.info` from your config file to stderr.
+- **stderr** carries logs, warnings, and errors.
+
+The server exits with code `0` when the host closes stdin, or on `SIGINT` and `SIGTERM`.

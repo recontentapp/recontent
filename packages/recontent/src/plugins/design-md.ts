@@ -5,6 +5,7 @@ import { type PluginContext, type RecontentPlugin } from "./types.js";
 import { type TokenEntry } from "../token-model/registry.js";
 import type { OutputFile } from "./shared/context.js";
 import { code, escapeText } from "../markdown.js";
+import { groupByCategory } from "../introspection/markdown.js";
 import { serializeValueCss } from "../serialize/values.js";
 import { outputPlugin } from "./factory.js";
 import { buildToken, deprecation, type DocToken } from "../snapshot/doc-token.js";
@@ -19,6 +20,12 @@ export type DesignMdPluginOptions = {
   title?: string;
   /** What the design system is for. Written to the front matter and the Overview. */
   description?: string;
+  /**
+   * The published package name (e.g. `"@acme/ds"`). When set, the commands the
+   * document suggests include `--from <packageName>`, for consumers who have the
+   * package installed but not this config.
+   */
+  packageName?: string;
   /** Written under "Do's and Don'ts" as `Do <item>`. */
   dos?: string[];
   /** Written under "Do's and Don'ts" as `Don't <item>`, before the deprecations. */
@@ -182,13 +189,30 @@ function frontMatter(ctx: PluginContext, items: Item[], options: DesignMdPluginO
   return lines.join("\n");
 }
 
-function overview(items: Item[], description: string | undefined): string | undefined {
+/** ` --from @acme/ds` when the document is for the package's consumers, else nothing. */
+function fromArgument(options: DesignMdPluginOptions): string {
+  const name = options.packageName?.trim();
+  if (!name) return "";
+  return ` --from ${/\s/.test(name) ? JSON.stringify(name) : name}`;
+}
+
+function overview(
+  items: Item[],
+  hasComponents: boolean,
+  options: DesignMdPluginOptions,
+): string | undefined {
   const example = items.find((item) => item.entry.layer === "system") ?? items[0];
   const parts: string[] = [];
-  if (description) parts.push(description);
+  if (options.description) parts.push(options.description);
   if (example) {
     parts.push(
       `Keys mirror token paths and CSS variables: ${code(example.key)} is ${code(example.token.path)} (${code(example.token.cssVar)}).`,
+    );
+  }
+  if (example || hasComponents) {
+    const from = fromArgument(options);
+    parts.push(
+      `Query tokens, props and types on demand with ${code(`recontent inspect${from}`)} (or over MCP with ${code(`recontent mcp${from}`)}).`,
     );
   }
   return parts.length > 0 ? parts.join("\n\n") : undefined;
@@ -237,14 +261,27 @@ function themeTable(items: Item[], themes: string[]): string | undefined {
   ].join("\n");
 }
 
-function componentLines(components: ComponentInfo[]): string[] {
+function componentLines(components: ComponentInfo[], options: DesignMdPluginOptions): string[] {
   const active = components.filter((component) => !component.deprecated);
   if (active.length === 0) return [];
-  const lines = active.map((component) => {
+  const bullet = (component: ComponentInfo) => {
     const summary = component.description?.split(/\r?\n\s*\n/)[0];
-    return `- **${escapeText(component.name)}**${summary ? `: ${escapeText(summary)}` : ""}`;
-  });
-  return [...lines, "", "Run `recontent inspect components <Name>` for props, usage and examples."];
+    const tag = component.experimental ? " (experimental)" : "";
+    return `- **${escapeText(component.name)}**${tag}${summary ? `: ${escapeText(summary)}` : ""}`;
+  };
+  const groups = groupByCategory(active);
+  // Headings only where the components have categories: a flat list stays flat.
+  const lines = groups.flatMap(({ category, components }) => [
+    ...(category ? [`### ${escapeText(category)}`, ""] : []),
+    ...components.map(bullet),
+    ...(category ? [""] : []),
+  ]);
+  if (lines.at(-1) === "") lines.pop();
+  return [
+    ...lines,
+    "",
+    `Run ${code(`recontent inspect components <Name>${fromArgument(options)}`)} for props, usage and examples.`,
+  ];
 }
 
 /** `reason` is Markdown: escape what comes from a token's metadata before passing it in. */
@@ -285,6 +322,16 @@ function guidance(
         : escapeText(component.deprecated);
     lines.push(avoid(code(component.name), reason));
   }
+  // Not worth an inspect round trip: an agent would write these props before looking them up.
+  for (const component of components) {
+    if (component.deprecated) continue;
+    for (const prop of component.props) {
+      if (!prop.deprecated) continue;
+      lines.push(
+        avoid(`${code(component.name)} prop ${code(prop.name)}`, reasonText(prop.deprecated)),
+      );
+    }
+  }
   return lines;
 }
 
@@ -305,12 +352,12 @@ export function generateDesignMdFiles(
     if (body) sections.push(`## ${heading}\n\n${body}`);
   };
 
-  add("Overview", overview(items, options.description));
+  add("Overview", overview(items, components.length > 0, options));
   for (const section of SECTIONS) {
     add(section, sectionLines(ctx, section, items).join("\n"));
   }
   add("Themes", themeTable(items, themes));
-  add("Components", componentLines(components).join("\n"));
+  add("Components", componentLines(components, options).join("\n"));
   add("Do's and Don'ts", guidance(ctx, items, components, options).join("\n"));
 
   const content = [frontMatter(ctx, items, options), `# ${escapeText(title)}`, ...sections].join(

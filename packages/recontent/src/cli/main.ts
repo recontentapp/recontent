@@ -10,6 +10,7 @@ import { runDiff } from "./commands/diff/index.js";
 import { DIFF_FORMATS, formatDiffError, type DiffFormat } from "./commands/diff/format.js";
 import { runInit } from "./commands/init/index.js";
 import { runInspect, type InspectTarget } from "./commands/inspect/index.js";
+import { runMcp } from "./commands/mcp/index.js";
 import { FORMATS, renderErrors, type Format } from "./commands/inspect/render.js";
 import { PRESETS, PRESET_NAMES } from "./commands/init/presets/index.js";
 import { reportError } from "./utils/exit.js";
@@ -242,57 +243,49 @@ function inspectOptions(command: Command): InspectCliOptions {
   return command.optsWithGlobals<InspectCliOptions>();
 }
 
-async function runInspectTarget(target: InspectTarget, options: InspectCliOptions): Promise<void> {
-  if (options.from !== undefined) {
+type Source = { cwd: string; logLevel?: LogLevel } & ({ from: string } | { configPath: string });
+
+/** Where `inspect` and `mcp` read the design system: a published snapshot, or the discovered config. */
+function resolveSource(from: string | undefined): Source {
+  if (from !== undefined) {
     if (program.opts<GlobalOptions>().config !== undefined) {
       return program.error(
         "error: option '--from <package|file>' cannot be used with option '-c, --config <path>'",
       );
     }
-    let resolved: ReturnType<typeof resolveCwdAndLogLevel>;
-    try {
-      // No config to discover: the snapshot stands in for it.
-      resolved = resolveCwdAndLogLevel();
-    } catch (error) {
-      if (options.format !== "json") throw error;
-      reportFatalError(error);
-      process.stdout.write(
-        `${renderErrors([{ message: error instanceof Error ? error.message : String(error) }])}\n`,
-      );
-      process.exitCode = 1;
-      return;
-    }
-    const { cwd, logLevel } = resolved;
-    await runInspect({ cwd, logLevel, format: options.format, target, from: options.from });
-    return;
+    // No config to discover: the snapshot stands in for it.
+    return { ...resolveCwdAndLogLevel(), from };
   }
-  let globals: ReturnType<typeof resolveGlobalOptions>;
   try {
-    globals = resolveGlobalOptions();
+    return resolveGlobalOptions();
   } catch (error) {
-    const wrapped =
-      error instanceof ConfigLoadError
-        ? new Error(
-            `${error.message}\nTo browse an installed design system instead, pass --from <package|file>.`,
-            { cause: error },
-          )
-        : error;
-    if (options.format !== "json") throw wrapped;
-    reportFatalError(wrapped);
+    throw error instanceof ConfigLoadError
+      ? new Error(
+          `${error.message}\nTo browse an installed design system instead, pass --from <package|file>.`,
+          { cause: error },
+        )
+      : error;
+  }
+}
+
+async function runInspectTarget(target: InspectTarget, options: InspectCliOptions): Promise<void> {
+  let source: Source;
+  try {
+    source = resolveSource(options.from);
+  } catch (error) {
+    if (options.format !== "json" || error instanceof CommanderError) throw error;
+    reportFatalError(error);
     process.stdout.write(
-      `${renderErrors([{ message: wrapped instanceof Error ? wrapped.message : String(wrapped) }])}\n`,
+      `${renderErrors([{ message: error instanceof Error ? error.message : String(error) }])}\n`,
     );
     process.exitCode = 1;
     return;
   }
-  const { cwd, configPath, logLevel } = globals;
   await runInspect({
-    cwd,
-    configPath,
-    logLevel,
+    ...source,
     format: options.format,
     target,
-    cache: cacheOption(options),
+    ...("from" in source ? {} : { cache: cacheOption(options) }),
   });
 }
 
@@ -365,6 +358,38 @@ inspect
   )
   .action(async (queries: string[], _options: object, command: Command) => {
     await runInspectTarget({ kind: "search", queries }, inspectOptions(command));
+  });
+
+program
+  .command("mcp")
+  .description(
+    "Start a stdio MCP server exposing the design system to coding agents (tokens, components and types)",
+  )
+  .addOption(
+    new Option(
+      "--from <package|file>",
+      "Serve a design system's published snapshot (a package name, or a path to recontent.json) instead of a config",
+    ).conflicts("cache"),
+  )
+  .option("--no-cache", NO_CACHE_HELP)
+  .addHelpText(
+    "after",
+    `
+Communicates over JSON-RPC 2.0 on stdin/stdout; all logs go to stderr.
+Exposes one read-only tool, \`recontent_inspect\`, which returns the same markdown as \`recontent inspect\`, with its follow-ups written as tool arguments.
+Changes to the config, its imports, the components or the snapshot are picked up without a restart.
+
+Examples:
+  recontent mcp                     Serve the local recontent.config.ts
+  recontent mcp --from @acme/ds     Serve an installed package's published snapshot`,
+  )
+  .action(async (options: { from?: string; cache: boolean }) => {
+    const source = resolveSource(options.from);
+    await runMcp({
+      ...source,
+      version: packageJson.version,
+      ...("from" in source ? {} : { cache: cacheOption(options) }),
+    });
   });
 
 function reportFatalError(error: unknown): void {

@@ -37,6 +37,7 @@ export default defineConfig({
       outDir: "docs",
       title: "Acme design system",
       description: "Calm, dense UI for back-office tools.",
+      packageName: "@acme/ds",
       dos: ["use system tokens in components"],
       donts: ["use ref tokens in components"],
     }),

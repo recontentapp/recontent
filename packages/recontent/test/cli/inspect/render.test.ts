@@ -192,6 +192,27 @@ describe("renderSearch", () => {
     );
   });
 
+  test("hints for the MCP tool are arguments, and none points at --help", () => {
+    const hits = { components: [{ item: component("Tooltip"), matchedIn: ["name" as const] }] };
+    expect(
+      renderSearch(
+        { tokens: [], components: hits.components, types: [], suggestions: [] },
+        { format: "markdown", queries: ["tip"], themes: [], hints: "tool" },
+      ).trimEnd(),
+    ).toMatch(/Next: `recontent_inspect \{"target":"components","query":\["Tooltip"\]\}`$/);
+    expect(
+      renderTokens([], { format: "markdown", themes: [], summary: true, hints: "tool" }),
+    ).not.toContain("Next:");
+    expect(
+      renderComponents([component("W", { props: [prop("tone")] })], {
+        format: "markdown",
+        summary: false,
+        types: [],
+        hints: "tool",
+      }),
+    ).toContain('`recontent_inspect {"target":"components","query":["W"],"props":["tone"]}`');
+  });
+
   test("no match says so, suggests and points at the overview", () => {
     expect(render({ suggestions: ["tooltip"] })).toBe(
       [
