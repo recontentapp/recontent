@@ -133,25 +133,62 @@ function collectOverrides(
 /**
  * `overrides` mirrors `tokens`: pass one layer, or `{ ref, system }` to override
  * several. A stamped token aliases that token instead of copying its value.
- * `extends` seeds the theme from other themes in order; later ones, then the
- * theme's own overrides, win.
  */
 export function defineTheme<Tokens extends TokenTree, Overrides extends ThemeInput<Tokens>>(
   tokens: Tokens,
   overrides: Overrides & ValidateThemeInput<Tokens, Overrides>,
-  options?: { extends?: ThemeOverride[] },
 ): ThemeOverride {
   const validPaths = collectTokenPaths(tokens);
   const themeOverride: ThemeOverride = new Map();
-
-  for (const base of options?.extends ?? []) {
-    for (const [key, value] of base) {
-      themeOverride.set(key, value);
-    }
-  }
   collectOverrides(overrides, [], validPaths, themeOverride);
-
   return themeOverride;
+}
+
+export type ThemeAxisInput = {
+  /** Name of the base/default context. Defaults to `"default"`. */
+  default?: string;
+  /** Optional description emitted on the DTCG resolver modifier. */
+  description?: string;
+  /** Non-default contexts for this axis. */
+  contexts: Record<string, ThemeOverride>;
+};
+
+export type ThemeAxisDefinition = {
+  readonly _kind: "theme-axis";
+  default: string;
+  description?: string;
+  contexts: Record<string, ThemeOverride>;
+};
+
+export function isThemeOverride(value: unknown): value is ThemeOverride {
+  return value instanceof Map;
+}
+
+export function isThemeAxisDefinition(value: unknown): value is ThemeAxisDefinition {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    (value as { _kind?: unknown })._kind === "theme-axis"
+  );
+}
+
+export function defineThemeAxis(input: ThemeAxisInput): ThemeAxisDefinition {
+  if (
+    typeof input !== "object" ||
+    input === null ||
+    typeof input.contexts !== "object" ||
+    input.contexts === null ||
+    Array.isArray(input.contexts) ||
+    isThemeOverride(input.contexts)
+  ) {
+    throw new Error("defineThemeAxis expects `{ contexts: { ... }, default?, description? }`.");
+  }
+  return {
+    _kind: "theme-axis",
+    default: input.default ?? "default",
+    ...(input.description !== undefined ? { description: input.description } : {}),
+    contexts: { ...input.contexts },
+  };
 }
 
 export type { ThemeOverride };

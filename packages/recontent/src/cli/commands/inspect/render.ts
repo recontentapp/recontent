@@ -10,9 +10,9 @@ import {
 } from "../../../introspection/markdown.js";
 import { typeClosure } from "../../../introspection/types.js";
 import { code, escapeText } from "../../../markdown.js";
-import { SCHEMA_VERSION } from "../../../snapshot/snapshot.js";
-import type { DocToken } from "../../../snapshot/doc-token.js";
-import type { Hit, SearchResult } from "./select.js";
+import { SCHEMA_VERSION, type SnapshotThemeAxis } from "../../../snapshot/snapshot.js";
+import { resolveDocTokenValue, type DocToken } from "../../../snapshot/doc-token.js";
+import { parseThemeSpec, type Hit, type SearchResult } from "./select.js";
 
 export type Format = "markdown" | "json";
 export const FORMATS: Format[] = ["markdown", "json"];
@@ -22,7 +22,7 @@ const LAYERS: TokenLayer[] = ["ref", "system", "components"];
 export type Overview = {
   config: string;
   tokens: DocToken[];
-  themes: string[];
+  themes: SnapshotThemeAxis[];
   components?: ComponentInfo[];
   types?: TypeInfo[];
   /** Why `components` is missing although the config asks for them. */
@@ -84,6 +84,27 @@ const withNext = (lines: string[], enabled: boolean, hints: Hint[]): string[] =>
 
 const typeIds = (types: TypeInfo[]) => types.map((type) => code(type.id)).join(", ") || "_None._";
 
+function formatOverviewThemes(themes: readonly SnapshotThemeAxis[]): string {
+  if (themes.length === 0) return "none";
+  if (
+    themes.length === 1 &&
+    themes[0]!.name === "theme" &&
+    themes[0]!.default === "default" &&
+    themes[0]!.description === undefined
+  ) {
+    return themes[0]!.contexts.map(code).join(", ") || "none";
+  }
+  return themes
+    .map((axis) => `${code(axis.name)} (${[axis.default, ...axis.contexts].map(code).join(", ")})`)
+    .join(", ");
+}
+
+function defaultThemeColumns(themes: readonly SnapshotThemeAxis[]): string[] {
+  if (themes.length === 0) return [];
+  if (themes.length === 1) return themes[0]!.contexts;
+  return themes.flatMap((axis) => axis.contexts.map((ctx) => `${axis.name}=${ctx}`));
+}
+
 export function renderOverview(overview: Overview, format: Format, hints = true): string {
   const { tokens, themes, components, types, introspectionError } = overview;
   const layers = LAYERS.map((layer) => {
@@ -117,7 +138,7 @@ export function renderOverview(overview: Overview, format: Format, hints = true)
     "# Overview",
     "",
     `Config: ${code(overview.config)}`,
-    `Themes: ${themes.length > 0 ? themes.map(code).join(", ") : "none"}`,
+    `Themes: ${formatOverviewThemes(themes)}`,
   ];
   lines.push("", `## Tokens (${tokens.length})`, "");
   if (tokens.length === 0) {
@@ -187,31 +208,40 @@ export function renderTokens(
   tokens: DocToken[],
   options: {
     format: Format;
-    themes: string[];
+    themes: readonly SnapshotThemeAxis[];
     summary: boolean;
     theme?: string;
     hints?: boolean;
   },
 ): string {
   const { format, summary, hints = true } = options;
-  const themes = options.theme ? [options.theme] : options.themes;
-  const shown = tokens.map((token) => ({
-    ...token,
-    values: Object.fromEntries(
-      Object.entries(token.values).filter(([name]) => name === "default" || themes.includes(name)),
-    ),
-  }));
+  const parsedTheme =
+    options.theme !== undefined ? parseThemeSpec(options.theme, options.themes).parsed : undefined;
+  const columns = parsedTheme
+    ? parsedTheme.label === "default"
+      ? []
+      : [parsedTheme.label]
+    : defaultThemeColumns(options.themes);
+
+  const shown = tokens.map((token) => {
+    if (!parsedTheme) {
+      return token;
+    }
+    const { value, overridden } = resolveDocTokenValue(
+      token,
+      options.themes,
+      parsedTheme.selection,
+    );
+    const values: Record<string, string> = { default: token.values.default ?? "" };
+    if (parsedTheme.label !== "default" && (format === "json" || overridden)) {
+      values[parsedTheme.label] = value;
+    }
+    return { ...token, values };
+  });
 
   if (format === "json") {
-    // A theme that does not override a token reads as its default, so a requested theme is always there.
-    const requested = options.theme;
-    const complete = shown.map((token) =>
-      requested && token.values[requested] === undefined && token.values.default !== undefined
-        ? { ...token, values: { ...token.values, [requested]: token.values.default } }
-        : token,
-    );
     return JSON.stringify(
-      { schemaVersion: SCHEMA_VERSION, kind: "tokens", tokens: complete },
+      { schemaVersion: SCHEMA_VERSION, kind: "tokens", tokens: shown },
       null,
       2,
     );
@@ -244,7 +274,7 @@ export function renderTokens(
   }
 
   const lines = ["# Tokens", "", plural(shown.length, "token") + "."];
-  if (shown.length > 0) lines.push("", ...tokenTable(shown, themes));
+  if (shown.length > 0) lines.push("", ...tokenTable(shown, columns));
   return lines.join("\n");
 }
 
@@ -487,9 +517,15 @@ export function renderTypes(
 /** What `inspect search` found, and why each component and type did. */
 export function renderSearch(
   result: SearchResult,
-  options: { format: Format; queries: string[]; themes: string[]; hints?: boolean },
+  options: {
+    format: Format;
+    queries: string[];
+    themes: readonly SnapshotThemeAxis[];
+    hints?: boolean;
+  },
 ): string {
   const { format, queries, themes, hints = true } = options;
+  const columns = defaultThemeColumns(themes);
   const { tokens, components, types, suggestions } = result;
   const total = tokens.length + components.length + types.length;
 
@@ -526,7 +562,7 @@ export function renderSearch(
       "",
       ...tokenTable(
         tokens.map((hit) => hit.item),
-        themes,
+        columns,
       ),
     );
   }

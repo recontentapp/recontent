@@ -11,7 +11,9 @@ export type {
 } from "../introspection/model.js";
 export type { Logger } from "../logger.js";
 export type {
+  ThemeAxis,
   ThemeOverride,
+  ThemeSelection,
   ThemeValue,
   TokenEntry,
   TokenGroupMetadata,

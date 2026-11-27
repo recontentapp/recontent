@@ -119,6 +119,28 @@ describe("themes", () => {
       'system.text on system.surface has contrast 1.11:1 in theme "dark", below 4.5:1.',
     ]);
   });
+
+  test("checks combinations of color-affecting axes while skipping non-color axes", async () => {
+    const ref = defineReferenceTokens({ gap: tokens.dimension("8px") });
+    const system = defineSystemTokens({
+      text: tokens.color("#111111"),
+      surface: tokens.color("#ffffff"),
+      spacing: ref.gap,
+    });
+    const acme = defineTheme(system, { text: tokens.color("#666666") }); // 5.74:1 on #fff (passes), 1.85:1 on #333 (fails)
+    const dark = defineTheme(system, { surface: tokens.color("#dddddd") }); // #111 on #ddd is 12.6:1 (passes), #666 on #ddd is 4.26:1 (fails!)
+    const compact = defineTheme(ref, { gap: tokens.dimension("4px") });
+
+    const config = defineConfig({
+      tokens: { ref, system },
+      themes: { brand: { acme }, mode: { dark }, density: { compact } },
+    });
+    const found = await contrast({ rules: [rule] }).validate!(ctxOf(config));
+    // Only fails in the combined `brand=acme, mode=dark` state, reported once (not duplicated by `density=compact`).
+    expect(found.map((d) => d.message)).toEqual([
+      'system.text on system.surface has contrast 4.23:1 in theme "brand=acme, mode=dark", below 4.5:1.',
+    ]);
+  });
 });
 
 describe("alpha", () => {

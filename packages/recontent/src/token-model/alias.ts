@@ -1,7 +1,9 @@
 import { compositeMembers, isCompositeType } from "./composite.js";
 import { pathKey } from "./guards.js";
 import {
+  type ThemeAxis,
   type ThemeOverride,
+  type ThemeSelection,
   type TokenDiagnostic,
   type TokenEntry,
   type TokenRegistry,
@@ -11,7 +13,7 @@ import type { StrokeStyleValue, TokenTypeMap } from "./values.js";
 /** Structural subset of `PluginContext` that alias resolution needs. */
 type AliasContext = {
   registry: TokenRegistry;
-  themes: Record<string, ThemeOverride>;
+  themes: readonly ThemeAxis[];
 };
 
 class AliasTargetNotFoundError extends Error {
@@ -100,32 +102,150 @@ export function resolveEntryValue(
   return terminalEntry(registry, entry, override).$value;
 }
 
-/** The named theme's overrides, or an error listing the themes the config does define. */
-export function getThemeOverride(themes: AliasContext["themes"], themeName: string): ThemeOverride {
-  const override = themes[themeName];
-  if (!override) {
-    throw new Error(
-      `Theme "${themeName}" is not defined in the config. Available themes: ${Object.keys(themes).join(", ") || "(none)"}`,
-    );
+/**
+ * Resolves a `ThemeSelection` against `axes` in `resolutionOrder`.
+ * Returns `undefined` when all selected contexts are defaults (or `selection` is omitted).
+ */
+function resolveThemeOverride(
+  axes: readonly ThemeAxis[],
+  selection?: ThemeSelection,
+): ThemeOverride | undefined {
+  if (selection === undefined) {
+    return undefined;
   }
-  return override;
+
+  if (typeof selection === "string") {
+    if (axes.length === 0) {
+      throw new Error(
+        `Theme "${selection}" is not defined in the config. Available themes: (none)`,
+      );
+    }
+    if (axes.length > 1) {
+      const exampleAxis = axes[0]!;
+      const exampleContext = Object.keys(exampleAxis.contexts)[0] ?? exampleAxis.default;
+      throw new Error(
+        `Cannot select theme "${selection}" as a string when multiple theme axes are configured (${axes.map((a) => a.name).join(", ")}); pass an object such as { ${exampleAxis.name}: "${exampleContext}" }.`,
+      );
+    }
+    const axis = axes[0]!;
+    if (selection === axis.default) {
+      return undefined;
+    }
+    const override = Object.hasOwn(axis.contexts, selection) ? axis.contexts[selection] : undefined;
+    if (!override) {
+      throw new Error(
+        `Theme "${selection}" is not defined in the config. Available themes: ${Object.keys(axis.contexts).join(", ") || "(none)"}`,
+      );
+    }
+    return override;
+  }
+
+  const axisByName = new Map(axes.map((axis) => [axis.name, axis]));
+  for (const [axisName, contextName] of Object.entries(selection)) {
+    const axis = axisByName.get(axisName);
+    if (!axis) {
+      throw new Error(
+        `Theme axis "${axisName}" is not defined in the config. Available axes: ${axes.map((a) => a.name).join(", ") || "(none)"}`,
+      );
+    }
+    if (contextName !== axis.default && !Object.hasOwn(axis.contexts, contextName)) {
+      throw new Error(
+        `Context "${contextName}" is not defined on theme axis "${axisName}". Available contexts: ${[axis.default, ...Object.keys(axis.contexts)].join(", ")}`,
+      );
+    }
+  }
+
+  const active: ThemeOverride[] = [];
+  for (const axis of axes) {
+    const contextName = Object.hasOwn(selection, axis.name) ? selection[axis.name] : undefined;
+    if (contextName === undefined || contextName === axis.default) continue;
+    active.push(axis.contexts[contextName]!);
+  }
+
+  if (active.length === 0) return undefined;
+  if (active.length === 1) return active[0]!;
+
+  const merged: ThemeOverride = new Map();
+  for (const override of active) {
+    for (const [key, value] of override) {
+      merged.set(key, value);
+    }
+  }
+  return merged;
 }
 
-function overrideFor(ctx: AliasContext, theme?: string): ThemeOverride | undefined {
-  return theme === undefined ? undefined : getThemeOverride(ctx.themes, theme);
+export type ThemeCombination = {
+  selection: Record<string, string>;
+  label: string;
+  override: ThemeOverride | undefined;
+};
+
+/**
+ * Enumerates the Cartesian product of `axes` in `resolutionOrder` (starting with all defaults).
+ */
+export function themeCombinations(axes: readonly ThemeAxis[]): ThemeCombination[] {
+  if (axes.length === 0) {
+    return [{ selection: {}, label: "", override: undefined }];
+  }
+
+  let combos: Array<{ selection: Record<string, string>; activeOverrides: ThemeOverride[] }> = [
+    { selection: {}, activeOverrides: [] },
+  ];
+
+  for (const axis of axes) {
+    const next: typeof combos = [];
+    const options = [axis.default, ...Object.keys(axis.contexts)];
+    for (const prev of combos) {
+      for (const contextName of options) {
+        const isDefault = contextName === axis.default;
+        next.push({
+          selection: { ...prev.selection, [axis.name]: contextName },
+          activeOverrides: isDefault
+            ? prev.activeOverrides
+            : [...prev.activeOverrides, axis.contexts[contextName]!],
+        });
+      }
+    }
+    combos = next;
+  }
+
+  const singleAxis = axes.length === 1;
+  return combos.map(({ selection, activeOverrides }) => {
+    let override: ThemeOverride | undefined;
+    if (activeOverrides.length === 1) {
+      override = activeOverrides[0]!;
+    } else if (activeOverrides.length > 1) {
+      override = new Map();
+      for (const part of activeOverrides) {
+        for (const [key, value] of part) {
+          override.set(key, value);
+        }
+      }
+    }
+    let label = "";
+    if (activeOverrides.length > 0) {
+      label = singleAxis
+        ? selection[axes[0]!.name]!
+        : axes
+            .filter((axis) => selection[axis.name] !== axis.default)
+            .map((axis) => `${axis.name}=${selection[axis.name]}`)
+            .join(", ");
+    }
+    return { selection, label, override };
+  });
 }
 
 /**
  * The value of `entry` once its alias chain is followed to the end, as `theme`
  * sees it: an override on any entry along the chain wins. Without a `theme` it
- * is the base value. Throws on an unknown theme.
+ * is the base value. Throws on an unknown theme or axis.
  */
 export function resolveValue(
   ctx: AliasContext,
   entry: TokenEntry,
-  theme?: string,
+  theme?: ThemeSelection,
 ): TokenEntry["$value"] {
-  return resolveEntryValue(ctx.registry, entry, overrideFor(ctx, theme));
+  return resolveEntryValue(ctx.registry, entry, resolveThemeOverride(ctx.themes, theme));
 }
 
 /**
@@ -134,8 +254,14 @@ export function resolveValue(
  * along the chain replaces its value and alias. Throws on an unknown theme,
  * a broken alias or a cycle.
  */
-export function aliasChain(ctx: AliasContext, entry: TokenEntry, theme?: string): TokenEntry[] {
-  return [...walkAliasChain(ctx.registry, entry, undefined, overrideFor(ctx, theme))];
+export function aliasChain(
+  ctx: AliasContext,
+  entry: TokenEntry,
+  theme?: ThemeSelection,
+): TokenEntry[] {
+  return [
+    ...walkAliasChain(ctx.registry, entry, undefined, resolveThemeOverride(ctx.themes, theme)),
+  ];
 }
 
 function aliasDiagnostic(
@@ -182,7 +308,7 @@ function memberAliasesOf(entry: TokenEntry): string[][] {
 
 export function diagnoseRegistry(
   registry: TokenRegistry,
-  themes: Record<string, ThemeOverride>,
+  axes: readonly ThemeAxis[],
 ): TokenDiagnostic[] {
   const diagnostics: TokenDiagnostic[] = [];
 
@@ -191,6 +317,7 @@ export function diagnoseRegistry(
     verified: Set<string>,
     themeName?: string,
     override?: ThemeOverride,
+    onError?: (key: string, error: unknown) => boolean,
   ): void {
     const startKey = pathKey(entry.path);
     if (verified.has(startKey)) return;
@@ -203,6 +330,7 @@ export function diagnoseRegistry(
         }
         verified.add(startKey);
       } catch (error) {
+        if (onError && !onError(startKey, error)) return;
         const diagnostic = aliasDiagnostic(error, entry, themeName);
         if (!diagnostic) throw error;
         diagnostics.push(diagnostic);
@@ -228,6 +356,7 @@ export function diagnoseRegistry(
           }
         }
       } catch (error) {
+        if (onError && !onError(startKey, error)) return;
         const diagnostic = aliasDiagnostic(error, entry, themeName);
         if (!diagnostic) throw error;
         diagnostics.push(diagnostic);
@@ -240,17 +369,66 @@ export function diagnoseRegistry(
     checkEntry(entry, baseVerified);
   }
 
-  for (const [themeName, overrides] of Object.entries(themes)) {
-    const themeVerified = new Set<string>();
-    for (const [key] of overrides) {
-      const entry = registry.get(key);
-      if (!entry) {
-        diagnostics.push({
-          path: key.split("."),
-          message: `Theme "${themeName}" overrides unknown token "${key}"; it matches no token in the config.`,
+  const singleAxis = axes.length === 1;
+  const invalidKeys = new Set<string>();
+
+  for (const axis of axes) {
+    for (const [contextName, overrides] of Object.entries(axis.contexts)) {
+      const label = singleAxis ? contextName : `${axis.name}=${contextName}`;
+      const themeVerified = new Set<string>();
+      for (const [key] of overrides) {
+        const entry = registry.get(key);
+        if (!entry) {
+          invalidKeys.add(key);
+          diagnostics.push({
+            path: key.split("."),
+            message: `Theme "${label}" overrides unknown token "${key}"; it matches no token in the config.`,
+          });
+        } else {
+          checkEntry(entry, themeVerified, label, overrides, (failedKey) => {
+            invalidKeys.add(failedKey);
+            return true;
+          });
+        }
+      }
+    }
+  }
+
+  // Cross-axis cycle detection across axes that introduce aliases.
+  const aliasingAxes = axes.filter((axis) =>
+    Object.values(axis.contexts).some((override) =>
+      [...override.entries()].some(([key, val]) => {
+        if (val.alias !== undefined) return true;
+        const entry = registry.get(key);
+        return entry !== undefined && memberAliasesOf(themedEntry(entry, override)).length > 0;
+      }),
+    ),
+  );
+
+  if (aliasingAxes.length >= 2) {
+    const seenCrossErrors = new Set<string>();
+    for (const { selection, override } of themeCombinations(aliasingAxes)) {
+      if (!override) continue;
+      const activeAxes = aliasingAxes.filter((axis) => selection[axis.name] !== axis.default);
+      if (activeAxes.length < 2) continue;
+
+      const label = activeAxes.map((axis) => `${axis.name}=${selection[axis.name]}`).join(", ");
+      const comboVerified = new Set<string>();
+      for (const [key] of override) {
+        if (invalidKeys.has(key)) continue;
+        const entry = registry.get(key);
+        if (!entry) continue;
+        checkEntry(entry, comboVerified, label, override, (failedKey, error) => {
+          const errorId =
+            error instanceof CircularAliasError
+              ? `cycle:${failedKey}:${error.key}`
+              : error instanceof AliasTargetNotFoundError
+                ? `missing:${failedKey}:${error.key}`
+                : `other:${failedKey}`;
+          if (seenCrossErrors.has(errorId)) return false;
+          seenCrossErrors.add(errorId);
+          return true;
         });
-      } else {
-        checkEntry(entry, themeVerified, themeName, overrides);
       }
     }
   }

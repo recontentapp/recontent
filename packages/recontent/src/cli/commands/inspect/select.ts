@@ -2,6 +2,7 @@ import type { ComponentInfo, TypeInfo } from "../../../introspection/model.js";
 import type { TokenLayer } from "../../../token-model/model.js";
 import type { TokenType } from "../../../token-model/values.js";
 import type { DocToken } from "../../../snapshot/doc-token.js";
+import type { SnapshotThemeAxis } from "../../../snapshot/snapshot.js";
 
 /** Every token type; the keys are checked against `TokenType` in both directions. */
 export const TOKEN_TYPES = Object.keys({
@@ -98,14 +99,128 @@ export type TokenQuery = {
   deprecated?: boolean;
 };
 
+export type ParsedThemeSpec = {
+  selection: Record<string, string>;
+  label: string;
+};
+
+export function parseThemeSpec(
+  raw: string,
+  axes: readonly SnapshotThemeAxis[],
+): { parsed?: ParsedThemeSpec; errors: SelectionError[] } {
+  const errors: SelectionError[] = [];
+  const trimmed = raw.trim();
+
+  if (axes.length === 0) {
+    errors.push(unknown("theme", trimmed, []));
+    return { errors };
+  }
+
+  if (axes.length === 1 && !trimmed.includes("=") && !trimmed.includes(",")) {
+    const axis = axes[0]!;
+    if (trimmed === axis.default || axis.contexts.includes(trimmed)) {
+      return {
+        parsed: {
+          selection: { [axis.name]: trimmed },
+          label: trimmed,
+        },
+        errors,
+      };
+    }
+    errors.push(unknown("theme", trimmed, axis.contexts));
+    return { errors };
+  }
+
+  const axisByName = new Map(axes.map((axis) => [axis.name, axis]));
+  const allPairCandidates = axes.flatMap((axis) =>
+    [axis.default, ...axis.contexts].map((ctx) => `${axis.name}=${ctx}`),
+  );
+  const parts = trimmed
+    .split(",")
+    .map((part) => part.trim())
+    .filter((part) => part !== "");
+
+  if (parts.length === 0) {
+    errors.push(unknown("theme", raw, allPairCandidates));
+    return { errors };
+  }
+
+  const selection: Record<string, string> = {};
+  for (const part of parts) {
+    const eq = part.indexOf("=");
+    if (eq < 0) {
+      // Suggest matching axis=context pairs when a bare context name is passed on multi-axis configs.
+      const exactContextAxes = axes.filter(
+        (axis) => axis.contexts.includes(part) || axis.default === part,
+      );
+      if (exactContextAxes.length > 0) {
+        const suggestions = exactContextAxes.map((axis) => `${axis.name}=${part}`);
+        errors.push({
+          message: `Theme selection "${part}" must specify an axis. Did you mean ${suggestions.map((s) => `\`${s}\``).join(", ")}?`,
+          input: part,
+          suggestions,
+        });
+      } else {
+        errors.push(unknown("theme", part, allPairCandidates));
+      }
+      continue;
+    }
+
+    const axisName = part.slice(0, eq).trim();
+    const contextName = part.slice(eq + 1).trim();
+    const axis = axisByName.get(axisName);
+    if (!axis) {
+      errors.push(
+        unknown(
+          "theme axis",
+          axisName,
+          axes.map((a) => a.name),
+        ),
+      );
+      continue;
+    }
+    if (Object.hasOwn(selection, axisName)) {
+      errors.push({
+        message: `Duplicate theme axis "${axisName}" in --theme.`,
+        input: part,
+        suggestions: [],
+      });
+      continue;
+    }
+    if (contextName !== axis.default && !axis.contexts.includes(contextName)) {
+      errors.push(
+        unknown(`context on axis "${axisName}"`, contextName, [axis.default, ...axis.contexts]),
+      );
+      continue;
+    }
+    selection[axisName] = contextName;
+  }
+
+  if (errors.length > 0) {
+    return { errors };
+  }
+
+  if (axes.length === 1) {
+    const axis = axes[0]!;
+    const ctx = selection[axis.name] ?? axis.default;
+    return { parsed: { selection: { [axis.name]: ctx }, label: ctx }, errors };
+  }
+
+  const activePairs = axes
+    .filter((axis) => selection[axis.name] !== undefined && selection[axis.name] !== axis.default)
+    .map((axis) => `${axis.name}=${selection[axis.name]}`);
+  const label = activePairs.length > 0 ? activePairs.join(",") : "default";
+  return { parsed: { selection, label }, errors };
+}
+
 export function selectTokens(
   tokens: DocToken[],
-  themes: string[],
+  themes: readonly SnapshotThemeAxis[],
   query: TokenQuery,
 ): Selection<DocToken> {
   const errors: SelectionError[] = [];
-  if (query.theme !== undefined && !themes.includes(query.theme)) {
-    errors.push(unknown("theme", query.theme, themes));
+  if (query.theme !== undefined) {
+    errors.push(...parseThemeSpec(query.theme, themes).errors);
   }
 
   let selected = tokens;

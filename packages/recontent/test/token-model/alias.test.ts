@@ -1,5 +1,10 @@
 import { expect, test } from "@jest/globals";
-import type { ThemeOverride, TokenEntry, TokenRegistry } from "../../src/token-model/registry.js";
+import type {
+  ThemeAxis,
+  ThemeOverride,
+  TokenEntry,
+  TokenRegistry,
+} from "../../src/token-model/registry.js";
 import { diagnoseRegistry, resolveEntryValue, terminalEntry } from "../../src/token-model/alias.js";
 
 function entry(path: string[], overrides: Partial<TokenEntry> = {}): TokenEntry {
@@ -12,9 +17,13 @@ function entry(path: string[], overrides: Partial<TokenEntry> = {}): TokenEntry 
   };
 }
 
+function singleAxis(contexts: Record<string, ThemeOverride>): ThemeAxis[] {
+  return [{ name: "theme", default: "default", contexts }];
+}
+
 test("diagnoseRegistry returns nothing for a registry with no aliases", () => {
   const registry: TokenRegistry = new Map([["ref.color.blue", entry(["ref", "color", "blue"])]]);
-  expect(diagnoseRegistry(registry, {})).toEqual([]);
+  expect(diagnoseRegistry(registry, [])).toEqual([]);
 });
 
 test("diagnoseRegistry returns nothing when aliases resolve", () => {
@@ -25,7 +34,7 @@ test("diagnoseRegistry returns nothing when aliases resolve", () => {
       entry(["system", "color", "primary"], { alias: ["ref", "color", "blue"], layer: "system" }),
     ],
   ]);
-  expect(diagnoseRegistry(registry, {})).toEqual([]);
+  expect(diagnoseRegistry(registry, [])).toEqual([]);
 });
 
 test("diagnoseRegistry flags a broken alias", () => {
@@ -38,7 +47,7 @@ test("diagnoseRegistry flags a broken alias", () => {
       }),
     ],
   ]);
-  const diagnostics = diagnoseRegistry(registry, {});
+  const diagnostics = diagnoseRegistry(registry, []);
   expect(diagnostics).toHaveLength(1);
   expect(diagnostics[0]!.message).toMatch(/Broken alias/);
   expect(diagnostics[0]!.message).toMatch(/ref.color.missing/);
@@ -55,18 +64,18 @@ test("diagnoseRegistry flags a circular alias chain", () => {
       entry(["system", "color", "b"], { alias: ["system", "color", "a"], layer: "system" }),
     ],
   ]);
-  const diagnostics = diagnoseRegistry(registry, {});
+  const diagnostics = diagnoseRegistry(registry, []);
   expect(diagnostics.some((d) => d.message.includes("Circular alias"))).toBe(true);
 });
 
 test("diagnoseRegistry flags a theme override of a token that does not exist", () => {
   const registry: TokenRegistry = new Map([["ref.color.blue", entry(["ref", "color", "blue"])]]);
-  const themes = {
+  const themes = singleAxis({
     dark: new Map([
       ["ref.color.blue", { $value: entry([]).$value }],
       ["ref.color.nope", { $value: entry([]).$value }],
     ]),
-  };
+  });
 
   const diagnostics = diagnoseRegistry(registry, themes);
 
@@ -158,7 +167,39 @@ test.each([
     ["ref.color.b", entry(["ref", "color", "b"], { alias: ["ref", "color", "a"] })],
   ]);
 
-  const diagnostics = diagnoseRegistry(registry, { dark: new Map([["ref.color.a", themed]]) });
+  const diagnostics = diagnoseRegistry(
+    registry,
+    singleAxis({ dark: new Map([["ref.color.a", themed]]) }),
+  );
 
   expect(diagnostics.map((d) => d.message)).toEqual([message]);
+});
+
+test("diagnoseRegistry catches cross-axis alias cycles when each axis is valid in isolation", () => {
+  const registry: TokenRegistry = new Map([
+    ["ref.color.a", entry(["ref", "color", "a"])],
+    ["ref.color.b", entry(["ref", "color", "b"])],
+  ]);
+  const axes: ThemeAxis[] = [
+    {
+      name: "brand",
+      default: "core",
+      contexts: {
+        acme: new Map([["ref.color.a", { $value: hex("#000000"), alias: ["ref", "color", "b"] }]]),
+      },
+    },
+    {
+      name: "mode",
+      default: "light",
+      contexts: {
+        dark: new Map([["ref.color.b", { $value: hex("#000000"), alias: ["ref", "color", "a"] }]]),
+      },
+    },
+  ];
+
+  const diagnostics = diagnoseRegistry(registry, axes);
+  expect(diagnostics.map((d) => d.message)).toEqual([
+    'Theme "brand=acme, mode=dark": Circular alias at "ref.color.a": alias chain revisits "ref.color.a".',
+    'Theme "brand=acme, mode=dark": Circular alias at "ref.color.b": alias chain revisits "ref.color.b".',
+  ]);
 });

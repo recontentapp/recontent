@@ -343,7 +343,30 @@ describe("sources", () => {
     expect(warnings).toEqual([]);
   });
 
-  test("prefixes the modifier when there are several, and defaults to the first context", () => {
+  test("emits flat themes when a single 'theme' modifier uses the default context name", () => {
+    const { source } = generate(
+      {
+        "r.resolver.json": resolver(
+          {
+            theme: {
+              contexts: {
+                default: [],
+                dark: [{ color: { $type: "color", bg: { $value: black } } }],
+              },
+              default: "default",
+            },
+          },
+          ["#/sets/base", "#/modifiers/theme"],
+        ),
+        "base.tokens.json": base,
+      },
+      ["r.resolver.json"],
+    );
+    expect(source).not.toContain("defineThemeAxis");
+    expect(source).toContain(`  themes: {\n    "dark": defineTheme(`);
+  });
+
+  test("emits each modifier as a theme axis in resolutionOrder, and defaults to the first context", () => {
     const { source, warnings } = generate(
       {
         "r.resolver.json": resolver(
@@ -352,6 +375,7 @@ describe("sources", () => {
               contexts: { light: [], dark: [{ color: { $type: "color", bg: { $value: black } } }] },
             },
             density: {
+              description: "Spacing scale",
               contexts: {
                 roomy: [],
                 tight: [{ space: { $type: "dimension", gap: { $value: px(2) } } }],
@@ -365,8 +389,14 @@ describe("sources", () => {
       },
       ["r.resolver.json"],
     );
-    expect(source).toContain(`"theme-dark": defineTheme(`);
-    expect(source).toContain(`"density-tight": defineTheme(`);
+    expect(source).toContain(`"theme": defineThemeAxis(`);
+    expect(source).toContain(`default: 'light',`);
+    expect(source).toContain(`"dark": defineTheme(`);
+    expect(source).toContain(`"density": defineThemeAxis(`);
+    expect(source).toContain(`default: 'roomy',`);
+    expect(source).toContain(`description: 'Spacing scale',`);
+    expect(source).toContain(`"tight": defineTheme(`);
+    expect(source.indexOf(`"theme":`)).toBeLessThan(source.indexOf(`"density":`));
     expect(warnings).toEqual([
       'Modifier "theme" has no default context; using its first context "light".',
     ]);

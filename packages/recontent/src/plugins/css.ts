@@ -1,6 +1,7 @@
 import { expandedMembers, isExpandedComposite } from "../token-model/composite.js";
 import { type PluginDiagnostic, type RecontentPlugin } from "./types.js";
 import {
+  type ThemeAxis,
   type ThemeOverride,
   type TokenEntry,
   type TokenRegistry,
@@ -132,12 +133,23 @@ function collectAllLayerDeclarations(
   return byLayer;
 }
 
-export function themeSelectorFor(themeName: string, options: CssGeneratorOptions): string {
-  if (options.themeSelector === "class") {
-    return `.${themeName}`;
+export function contextSelectorFor(
+  axis: ThemeAxis,
+  contextName: string,
+  options: CssGeneratorOptions,
+  multiAxis: boolean,
+): string {
+  if (multiAxis) {
+    return options.themeSelector === "class"
+      ? `.${axis.name}-${contextName}`
+      : `[data-${axis.name}="${contextName}"]`;
   }
-  const themeAttribute = options.themeAttribute ?? "data-theme";
-  return `[${themeAttribute}="${themeName}"]`;
+  if (options.themeSelector === "class") {
+    return `.${contextName}`;
+  }
+  const themeAttribute =
+    options.themeAttribute ?? (axis.name === "theme" ? "data-theme" : `data-${axis.name}`);
+  return `[${themeAttribute}="${contextName}"]`;
 }
 
 export function generateCss(config: GeneratorContext, options: CssGeneratorOptions = {}): string {
@@ -154,6 +166,11 @@ export function generateCss(config: GeneratorContext, options: CssGeneratorOptio
     );
   }
 
+  const selectorErrors = selectorCollisionDiagnostics(themes, options);
+  if (selectorErrors.length > 0) {
+    throw new Error(selectorErrors[0]!.message);
+  }
+
   const byLayer = collectAllLayerDeclarations(registry, options.prefix);
 
   if (Object.keys(byLayer.ref.declarations).length > 0) {
@@ -168,23 +185,28 @@ export function generateCss(config: GeneratorContext, options: CssGeneratorOptio
     blocks.push(formatRule(":root", byLayer.components.declarations, byLayer.components.comments));
   }
 
-  // Theme blocks come last: they share `:root`'s specificity, so they must follow
-  // every `:root` block to override it when the theme class sits on <html>.
-  for (const [themeName, override] of Object.entries(themes)) {
-    const themeDeclarations: Record<string, string> = {};
-    const resolveGradient = makeGradientResolver(registry, override);
-    for (const key of override.keys()) {
-      const entry = registry.get(key);
-      if (!entry) {
-        throw new Error(`Theme override references an unknown token path: ${key}`);
+  // Theme blocks come last in resolutionOrder: they share `:root`'s specificity,
+  // so later axes follow earlier ones and win on overlapping tokens.
+  const multiAxis = themes.length > 1;
+  for (const axis of themes) {
+    for (const [contextName, override] of Object.entries(axis.contexts)) {
+      const themeDeclarations: Record<string, string> = {};
+      const resolveGradient = makeGradientResolver(registry, override);
+      for (const key of override.keys()) {
+        const entry = registry.get(key);
+        if (!entry) {
+          throw new Error(`Theme override references an unknown token path: ${key}`);
+        }
+        Object.assign(
+          themeDeclarations,
+          entryDeclarations(themedEntry(entry, override), options.prefix, resolveGradient),
+        );
       }
-      Object.assign(
-        themeDeclarations,
-        entryDeclarations(themedEntry(entry, override), options.prefix, resolveGradient),
-      );
-    }
-    if (Object.keys(themeDeclarations).length > 0) {
-      blocks.push(formatRule(themeSelectorFor(themeName, options), themeDeclarations));
+      if (Object.keys(themeDeclarations).length > 0) {
+        blocks.push(
+          formatRule(contextSelectorFor(axis, contextName, options, multiAxis), themeDeclarations),
+        );
+      }
     }
   }
 
@@ -209,9 +231,37 @@ export function generateCssFiles(
   ];
 }
 
-/** Validates `prefix` and `themeAttribute` options, plus warns if `themeAttribute` is set with class selector. */
-export function cssOptionDiagnostics(options: CssGeneratorOptions): PluginDiagnostic[] {
-  const diagnostics: PluginDiagnostic[] = [...themeSelectorWarnings(options)];
+function selectorCollisionDiagnostics(
+  themes: readonly ThemeAxis[],
+  options: CssGeneratorOptions,
+): PluginDiagnostic[] {
+  if (themes.length <= 1) return [];
+  const diagnostics: PluginDiagnostic[] = [];
+  const seen = new Map<string, string>();
+  for (const axis of themes) {
+    for (const contextName of Object.keys(axis.contexts)) {
+      const selector = contextSelectorFor(axis, contextName, options, true);
+      const label = `${axis.name}=${contextName}`;
+      const previous = seen.get(selector);
+      if (previous) {
+        diagnostics.push({
+          severity: "error",
+          message: `Theme contexts "${previous}" and "${label}" both produce CSS selector "${selector}"; rename an axis or context.`,
+        });
+      } else {
+        seen.set(selector, label);
+      }
+    }
+  }
+  return diagnostics;
+}
+
+/** Validates `prefix`, `themeAttribute`, and multi-axis selector collisions. */
+export function cssOptionDiagnostics(
+  options: CssGeneratorOptions,
+  themes: readonly ThemeAxis[] = [],
+): PluginDiagnostic[] {
+  const diagnostics: PluginDiagnostic[] = [...themeSelectorWarnings(options, themes)];
   if (options.prefix !== undefined && !PREFIX_RE.test(options.prefix)) {
     diagnostics.push({
       severity: "error",
@@ -228,22 +278,42 @@ export function cssOptionDiagnostics(options: CssGeneratorOptions): PluginDiagno
       });
     }
   }
+  diagnostics.push(
+    ...selectorCollisionDiagnostics(themes, {
+      ...options,
+      themeSelector: options.themeSelector ?? "class",
+    }),
+  );
   return diagnostics;
 }
 
-/** `themeAttribute` only applies to the "attribute" selector, which is not the plugins' default. */
-function themeSelectorWarnings(options: CssGeneratorOptions): PluginDiagnostic[] {
-  if (options.themeAttribute === undefined || options.themeSelector === "attribute") return [];
-  return [
-    {
-      severity: "warning",
-      message: `\`themeAttribute\` is ignored: themes are selected by class unless you set \`themeSelector: "attribute"\`.`,
-    },
-  ];
+/** `themeAttribute` only applies to single-axis "attribute" selectors. */
+function themeSelectorWarnings(
+  options: CssGeneratorOptions,
+  themes: readonly ThemeAxis[],
+): PluginDiagnostic[] {
+  if (options.themeAttribute === undefined) return [];
+  if (options.themeSelector !== "attribute") {
+    return [
+      {
+        severity: "warning",
+        message: `\`themeAttribute\` is ignored: themes are selected by class unless you set \`themeSelector: "attribute"\`.`,
+      },
+    ];
+  }
+  if (themes.length > 1) {
+    return [
+      {
+        severity: "warning",
+        message: `\`themeAttribute\` is ignored when multiple theme axes are configured: each axis uses its own \`data-<axis>\` attribute.`,
+      },
+    ];
+  }
+  return [];
 }
 
 export function css(options: CssPluginOptions): RecontentPlugin {
-  return outputPlugin("recontent:css", ["tokens"], options, generateCssFiles, () =>
-    cssOptionDiagnostics(options),
+  return outputPlugin("recontent:css", ["tokens"], options, generateCssFiles, (ctx) =>
+    cssOptionDiagnostics(options, ctx?.themes ?? []),
   );
 }

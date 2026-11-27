@@ -230,6 +230,79 @@ Query tokens, props and types on demand with `recontent inspect` (or over MCP wi
 - `system-borderScale-thick`: `2px solid var(--ref-color-secondary-200)`
 - `system-borderScale-thin`: `1px solid var(--ref-color-secondary-200)`
 
+## Themes
+
+Theme axes apply in resolution order: `mode` → `brand` → `density`.
+
+### mode
+
+Color scheme for surfaces, text, borders, and elevation.
+
+| Token | light | dark |
+| --- | --- | --- |
+| `system-border-default` | `1px solid ref.color.secondary.200` | `1px solid ref.color.secondary.700` |
+| `system-borderScale-thick` | `2px solid ref.color.secondary.200` | `2px solid ref.color.secondary.700` |
+| `system-borderScale-thin` | `1px solid ref.color.secondary.200` | `1px solid ref.color.secondary.700` |
+| `system-colors-accent` | `#18181b` | `#fafafa` |
+| `system-colors-backgroundBody` | `#fafafa` | `#09090b` |
+| `system-colors-backgroundCard` | `#ffffff` | `#18181b` |
+| `system-colors-backgroundMuted` | `#fafafa` | `#27272a` |
+| `system-colors-backgroundSurface` | `#ffffff` | `#18181b` |
+| `system-colors-border` | `#e4e4e7` | `#3f3f46` |
+| `system-colors-borderEmphasized` | `#a1a1aa` | `#71717a` |
+| `system-colors-onAccent` | `#ffffff` | `#09090b` |
+| `system-colors-secondary-200` | `#18181b` | `#fafafa` |
+| `system-colors-skeleton` | `#e4e4e7` | `#27272a` |
+| `system-colors-textDisabled` | `#a1a1aa` | `#52525b` |
+| `system-colors-textPrimary` | `#09090b` | `#fafafa` |
+| `system-colors-textScale-accent` | `#18181b` | `#fafafa` |
+| `system-colors-textScale-disabled` | `#a1a1aa` | `#52525b` |
+| `system-colors-textScale-primary` | `#09090b` | `#fafafa` |
+| `system-colors-textScale-secondary` | `#71717a` | `#a1a1aa` |
+| `system-colors-textSecondary` | `#71717a` | `#a1a1aa` |
+| `system-elevationScale-inset` | `inset 0px 1px 2px 0px ref.color.secondary.900-10` | `inset 0px 1px 2px 0px ref.color.secondary.900-50` |
+| `system-elevationScale-lg` | `0px 0px 4px 0px ref.color.secondary.900-10, 0px 8px 40px 0px ref.color.secondary.900-15` | `0px 0px 4px 0px ref.color.secondary.900-50, 0px 8px 40px 0px ref.color.secondary.900-50` |
+| `system-elevationScale-md` | `0px 0px 3px 0px ref.color.secondary.900-10, 0px 4px 20px 0px ref.color.secondary.900-15` | `0px 0px 3px 0px ref.color.secondary.900-50, 0px 4px 20px 0px ref.color.secondary.900-50` |
+| `system-elevationScale-sm` | `0px 0px 2px 0px ref.color.secondary.900-20, 0px 2px 10px 0px ref.color.secondary.900-10` | `0px 0px 2px 0px ref.color.secondary.900-50, 0px 2px 10px 0px ref.color.secondary.900-50` |
+| `system-gradients-accent` | `linear-gradient(135deg, ref.color.primary.700 0%, ref.color.primary.500 100%)` | `linear-gradient(135deg, ref.color.secondary.50 0%, ref.color.secondary.300 100%)` |
+
+### brand
+
+Brand accent palette applied after color mode.
+
+| Token | neutral | cobalt | emerald |
+| --- | --- | --- | --- |
+| `system-colors-accent` | `#18181b` | `#2563eb` | `#15803d` |
+| `system-colors-secondary-200` | `#18181b` | `#2563eb` | `#15803d` |
+| `system-gradients-accent` | `linear-gradient(135deg, ref.color.primary.700 0%, ref.color.primary.500 100%)` | `linear-gradient(135deg, ref.color.info.700 0%, ref.color.info.500 100%)` | `linear-gradient(135deg, ref.color.success.800 0%, ref.color.success.500 100%)` |
+
+### density
+
+Layout spacing, corner radii, and component density.
+
+| Token | comfortable | compact |
+| --- | --- | --- |
+| `sticker-borderRadius` | `4px` | `2px` |
+| `sticker-paddingX` | `8px` | `4px` |
+| `sticker-paddingY` | `2px` | `1px` |
+| `system-radius-container` | `8px` | `6px` |
+| `system-radius-element` | `6px` | `4px` |
+| `system-radius-inner` | `4px` | `2px` |
+| `system-radius-page` | `12px` | `8px` |
+| `system-spacing-4` | `4px` | `3px` |
+| `system-spacing-8` | `8px` | `6px` |
+| `system-spacing-12` | `12px` | `8px` |
+| `system-spacing-16` | `16px` | `12px` |
+| `system-spacing-20` | `20px` | `14px` |
+| `system-spacing-24` | `24px` | `16px` |
+| `system-spacing-32` | `32px` | `24px` |
+| `system-spacing-40` | `40px` | `28px` |
+| `system-spacing-48` | `48px` | `32px` |
+| `system-spacing-56` | `56px` | `40px` |
+| `system-spacing-64` | `64px` | `48px` |
+| `system-spacing-72` | `72px` | `56px` |
+| `system-spacing-80` | `80px` | `64px` |
+
 ## Components
 
 ### Data display

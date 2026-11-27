@@ -366,7 +366,11 @@ function componentHtml(
 }
 
 function tokenCss(ctx: GeneratorContext): string {
-  return generateCss(ctx).replace(/<\/(style)/gi, "<\\/$1");
+  // Scope attribute selectors to `body[data-...]` so a token axis named `mode` never
+  // collides with `:root[data-mode="dark"]` (the docs UI chrome toggle on <html>).
+  return generateCss(ctx, { themeSelector: "attribute" })
+    .replace(/^(\[data-[^\]]+\])/gm, "body$1")
+    .replace(/<\/(style)/gi, "<\\/$1");
 }
 
 const STYLES = `
@@ -454,31 +458,53 @@ pre code { font-size: inherit; }
 }
 .views button[aria-selected="true"] { color: var(--hig-text); box-shadow: inset 0 -2px 0 var(--hig-text); }
 .views .n { margin-left: 6px; font-weight: 400; color: var(--hig-text-2); }
-.bar-end { display: flex; align-items: center; justify-content: flex-end; gap: 16px; }
+.bar-end { display: flex; align-items: center; justify-content: flex-end; gap: 8px; min-width: 0; }
 .search-btn {
   display: inline-flex; align-items: center; justify-content: space-between; gap: 10px;
-  width: 260px; max-width: 100%;
+  flex: 0 1 220px; min-width: 0; height: 32px;
   font: inherit; font-size: var(--hig-fs-sm); color: var(--hig-text-2);
-  padding: 6px 8px 6px 12px; background: var(--hig-bg-2); border: 1px solid var(--hig-line); border-radius: 8px; cursor: pointer;
+  padding: 0 8px 0 12px; background: var(--hig-bg-2); border: 1px solid var(--hig-line); border-radius: 8px; cursor: pointer;
 }
-kbd { font: inherit; font-size: var(--hig-fs-xs); padding: 0 6px; border-radius: 5px; background: var(--hig-bg); border: 1px solid var(--hig-line); }
-.picker { display: flex; align-items: center; gap: 8px; font-size: var(--hig-fs-sm); color: var(--hig-text-2); }
-.picker select {
-  appearance: none; -webkit-appearance: none;
+.search-btn > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+kbd { font: inherit; font-size: var(--hig-fs-xs); padding: 0 6px; border-radius: 5px; background: var(--hig-bg); border: 1px solid var(--hig-line); flex: none; }
+.theme-menu { position: relative; flex: none; }
+.theme-btn {
+  display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 10px;
   font: inherit; font-size: var(--hig-fs-sm); color: var(--hig-text);
-  padding: 5px 30px 5px 12px;
-  background: var(--hig-bg-2) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%236e6e73' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat right 11px center;
+  background: transparent; border: 1px solid var(--hig-line); border-radius: 8px; cursor: pointer; white-space: nowrap;
+}
+.theme-btn:hover, .theme-btn[aria-expanded="true"] { background: var(--hig-bg-2); }
+.theme-btn .chev { width: 10px; height: 6px; fill: none; stroke: var(--hig-text-2); stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; transition: transform 0.15s; }
+.theme-btn[aria-expanded="true"] .chev { transform: rotate(180deg); }
+.theme-btn.active .dot { display: inline-block; transform: none; }
+.theme-popover {
+  position: absolute; top: calc(100% + 8px); right: 0; z-index: 30;
+  width: min(260px, calc(100vw - 72px)); padding: 12px;
+  display: flex; flex-direction: column; gap: 10px;
+  background: var(--hig-surface); border-radius: 12px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.16), 0 0 0 1px var(--hig-line);
+}
+.theme-popover-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: var(--hig-fs-xs); font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--hig-text-2); }
+.theme-reset { font: inherit; font-size: var(--hig-fs-xs); font-weight: 500; letter-spacing: 0; text-transform: none; color: var(--hig-accent); padding: 0; border: 0; background: transparent; cursor: pointer; }
+.theme-reset:hover { text-decoration: underline; }
+.picker { display: grid; grid-template-columns: minmax(0, 1fr) minmax(120px, 1.2fr); align-items: center; gap: 10px; font-size: var(--hig-fs-sm); color: var(--hig-text-2); }
+.picker > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.picker select {
+  appearance: none; -webkit-appearance: none; width: 100%;
+  font: inherit; font-size: var(--hig-fs-sm); color: var(--hig-text);
+  padding: 5px 28px 5px 10px;
+  background: var(--hig-bg-2) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%238e8e93' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat right 10px center;
   border: 1px solid var(--hig-line); border-radius: 8px; cursor: pointer;
 }
 .mode-btn {
-  display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; padding: 0;
+  display: inline-flex; align-items: center; justify-content: center; flex: none; width: 32px; height: 32px; padding: 0;
   color: var(--hig-text-2); background: transparent; border: 1px solid var(--hig-line); border-radius: 8px; cursor: pointer;
 }
 .mode-btn:hover { color: var(--hig-text); }
 .mode-btn svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
 .mode-btn .moon, :root[data-mode="dark"] .mode-btn .sun { display: none; }
 :root[data-mode="dark"] .mode-btn .moon { display: block; }
-.mode-btn:focus-visible, .picker select:focus-visible, .views button:focus-visible, .search-btn:focus-visible, .side-toggle:focus-visible, .ex-tabs button:focus-visible, .copy:focus-visible, .comp-card:focus-visible, .crumb:focus-visible, .side a:focus-visible, .alias:focus-visible, .tag:focus-visible, .has-tip:focus-visible {
+.mode-btn:focus-visible, .theme-btn:focus-visible, .theme-reset:focus-visible, .picker select:focus-visible, .views button:focus-visible, .search-btn:focus-visible, .side-toggle:focus-visible, .ex-tabs button:focus-visible, .copy:focus-visible, .comp-card:focus-visible, .crumb:focus-visible, .side a:focus-visible, .alias:focus-visible, .tag:focus-visible, .has-tip:focus-visible {
   outline: 2px solid var(--hig-accent); outline-offset: 2px;
 }
 .layout { display: grid; grid-template-columns: 240px minmax(0, 980px); gap: 40px; justify-content: center; padding: 0 24px; }
@@ -643,7 +669,7 @@ pre { margin: 0 0 16px; padding: 12px 14px; overflow-x: auto; border-radius: 12p
 @media (max-width: 800px) {
   .bar { grid-template-columns: minmax(0, 1fr) auto; padding: 8px 16px 0; gap: 8px 16px; }
   .views { grid-column: 1 / -1; grid-row: 2; justify-content: center; min-height: 40px; }
-  .search-btn { width: auto; }
+  .search-btn { flex: none; width: auto; padding: 0 10px; }
   .search-btn kbd { display: none; }
   .group, .card, .row { scroll-margin-top: 120px; }
   .layout { grid-template-columns: minmax(0, 1fr); gap: 16px; padding: 0 16px; }
@@ -768,6 +794,10 @@ const SCRIPT = `
 
   document.addEventListener("click", function (e) {
     var from = e.target.closest ? e.target : e.target.parentElement;
+    if (themePopover && !themePopover.hidden && (!from || !from.closest(".theme-menu"))) {
+      closeThemePopover(false);
+    }
+    if (!from) return;
     var toggle = from.closest(".side-toggle");
     if (toggle) {
       var open = toggle.parentNode.classList.toggle("open");
@@ -819,23 +849,89 @@ const SCRIPT = `
     done(ok);
   }
 
-  var select = document.getElementById("theme");
+  var themeToggle = document.getElementById("theme-toggle");
+  var themePopover = document.getElementById("theme-popover");
+  var themeReset = document.getElementById("theme-reset");
+  var selects = document.querySelectorAll("select[data-axis]");
   var themed = null;
-  function applyTheme(theme) {
-    var root = document.documentElement;
-    if (theme) root.setAttribute("data-theme", theme); else root.removeAttribute("data-theme");
+  function closeThemePopover(restoreFocus) {
+    if (!themePopover || themePopover.hidden) return;
+    themePopover.hidden = true;
+    themeToggle.setAttribute("aria-expanded", "false");
+    if (restoreFocus && themeToggle.focus) themeToggle.focus({ preventScroll: true });
+  }
+  function resolveThemedValue(t) {
+    if (selects.length === 1) {
+      var v = selects[0].value;
+      if (!v) return { text: t.base, overridden: false };
+      return t.values[v] !== undefined
+        ? { text: t.values[v], overridden: t.values[v] !== t.base }
+        : { text: t.base, overridden: false };
+    }
+    var keys = Object.keys(t.values);
+    var relevant = [];
+    for (var i = 0; i < selects.length; i++) {
+      var val = selects[i].value;
+      if (!val) continue;
+      var axis = selects[i].getAttribute("data-axis");
+      var prefix = axis + "=";
+      var touches = false;
+      for (var k = 0; k < keys.length; k++) {
+        if (keys[k].indexOf(prefix) === 0 || keys[k].indexOf("," + prefix) >= 0) {
+          touches = true;
+          break;
+        }
+      }
+      if (touches) relevant.push(prefix + val);
+    }
+    if (relevant.length === 0) return { text: t.base, overridden: false };
+    var exact = t.values[relevant.join(",")];
+    if (exact !== undefined) return { text: exact, overridden: exact !== t.base };
+    var cur = t.base;
+    for (var j = 0; j < relevant.length; j++) {
+      if (t.values[relevant[j]] !== undefined) cur = t.values[relevant[j]];
+    }
+    return { text: cur, overridden: cur !== t.base };
+  }
+  function applyThemes() {
+    var anyActive = false;
+    selects.forEach(function (sel) {
+      var attr = sel.getAttribute("data-attr");
+      if (sel.value) {
+        anyActive = true;
+        document.body.setAttribute(attr, sel.value);
+      } else {
+        document.body.removeAttribute(attr);
+      }
+    });
+    if (themeToggle) themeToggle.classList.toggle("active", anyActive);
+    if (themeReset) themeReset.hidden = !anyActive;
     if (!themed) {
       themed = Array.prototype.map.call(document.querySelectorAll("[data-values]"), function (el) {
         return { el: el, base: el.textContent, values: JSON.parse(el.getAttribute("data-values")) };
       });
     }
     themed.forEach(function (t) {
-      var overridden = Boolean(theme) && t.values[theme] !== undefined;
-      t.el.textContent = overridden ? t.values[theme] : t.base;
-      t.el.parentNode.classList.toggle("overridden", overridden);
+      var res = resolveThemedValue(t);
+      t.el.textContent = res.text;
+      t.el.parentNode.classList.toggle("overridden", res.overridden);
     });
   }
-  if (select) select.addEventListener("change", function () { applyTheme(select.value); });
+  if (themeToggle) {
+    themeToggle.addEventListener("click", function () {
+      var nextOpen = themePopover.hidden;
+      themePopover.hidden = !nextOpen;
+      themeToggle.setAttribute("aria-expanded", String(nextOpen));
+      if (nextOpen && selects[0]) selects[0].focus({ preventScroll: true });
+    });
+  }
+  if (themeReset) {
+    themeReset.addEventListener("click", function () {
+      selects.forEach(function (sel) { sel.value = ""; });
+      applyThemes();
+    });
+  }
+  selects.forEach(function (sel) { sel.addEventListener("change", applyThemes); });
 
   var modeBtn = document.getElementById("mode");
   function labelMode() {
@@ -986,6 +1082,7 @@ const SCRIPT = `
 
   function openPalette() {
     if (!palette.hidden) return;
+    closeThemePopover(false);
     returnTo = document.activeElement;
     palette.hidden = false;
     input.value = "";
@@ -1030,7 +1127,8 @@ const SCRIPT = `
       e.preventDefault();
       openPalette();
     } else if (e.key === "Escape") {
-      closePalette();
+      if (themePopover && !themePopover.hidden) closeThemePopover(true);
+      else closePalette();
     }
   });
   if (!/Mac|iPhone|iPad/.test(navigator.userAgent)) {
@@ -1065,13 +1163,31 @@ export function renderHtml(
   const hasTokens = model.tokenCount > 0 || !hasComponents;
   const title = escapeHtml(model.title);
 
+  const multiAxis = model.themes.length > 1;
+  const themeAxes = model.themes
+    .map((axis) => {
+      const isImplicitSingle = !multiAxis && axis.name === "theme" && axis.default === "default";
+      const label = !multiAxis && axis.name === "theme" ? "Theme" : axis.name;
+      const defaultLabel = isImplicitSingle ? "Default" : axis.default;
+      const attrName = !multiAxis && axis.name === "theme" ? "data-theme" : `data-${axis.name}`;
+      const idAttr = !multiAxis ? ' id="theme"' : "";
+      return `<label class="picker"><span>${escapeHtml(label)}</span>
+          <select${idAttr} data-axis="${escapeHtml(axis.name)}" data-attr="${escapeHtml(attrName)}" aria-label="${escapeHtml(label)}">
+            <option value="">${escapeHtml(defaultLabel)}</option>
+            ${axis.contexts.map((c) => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join("")}
+          </select>
+        </label>`;
+    })
+    .join("\n        ");
+
   const themePicker = hasThemes
-    ? `<label class="picker">Theme
-      <select id="theme" aria-label="Theme">
-        <option value="">Default</option>
-        ${model.themes.map((t) => `<option value="${escapeHtml(t)}">${escapeHtml(t)}</option>`).join("")}
-      </select>
-    </label>`
+    ? `<div class="theme-menu">
+      <button type="button" class="theme-btn" id="theme-toggle" aria-expanded="false" aria-controls="theme-popover"><span class="dot" aria-hidden="true"></span><span>Theme</span><svg class="chev" viewBox="0 0 10 6" aria-hidden="true"><path d="M1 1l4 4 4-4"/></svg></button>
+      <div class="theme-popover" id="theme-popover" role="group" aria-label="Theme" hidden>
+        <div class="theme-popover-head"><span>${multiAxis ? "Theme axes" : "Theme"}</span><button type="button" class="theme-reset" id="theme-reset" hidden>Reset</button></div>
+        ${themeAxes}
+      </div>
+    </div>`
     : "";
 
   const viewTab = (view: string, label: string, count: number) =>

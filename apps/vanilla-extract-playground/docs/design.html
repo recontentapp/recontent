@@ -99,31 +99,53 @@ pre code { font-size: inherit; }
 }
 .views button[aria-selected="true"] { color: var(--hig-text); box-shadow: inset 0 -2px 0 var(--hig-text); }
 .views .n { margin-left: 6px; font-weight: 400; color: var(--hig-text-2); }
-.bar-end { display: flex; align-items: center; justify-content: flex-end; gap: 16px; }
+.bar-end { display: flex; align-items: center; justify-content: flex-end; gap: 8px; min-width: 0; }
 .search-btn {
   display: inline-flex; align-items: center; justify-content: space-between; gap: 10px;
-  width: 260px; max-width: 100%;
+  flex: 0 1 220px; min-width: 0; height: 32px;
   font: inherit; font-size: var(--hig-fs-sm); color: var(--hig-text-2);
-  padding: 6px 8px 6px 12px; background: var(--hig-bg-2); border: 1px solid var(--hig-line); border-radius: 8px; cursor: pointer;
+  padding: 0 8px 0 12px; background: var(--hig-bg-2); border: 1px solid var(--hig-line); border-radius: 8px; cursor: pointer;
 }
-kbd { font: inherit; font-size: var(--hig-fs-xs); padding: 0 6px; border-radius: 5px; background: var(--hig-bg); border: 1px solid var(--hig-line); }
-.picker { display: flex; align-items: center; gap: 8px; font-size: var(--hig-fs-sm); color: var(--hig-text-2); }
-.picker select {
-  appearance: none; -webkit-appearance: none;
+.search-btn > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+kbd { font: inherit; font-size: var(--hig-fs-xs); padding: 0 6px; border-radius: 5px; background: var(--hig-bg); border: 1px solid var(--hig-line); flex: none; }
+.theme-menu { position: relative; flex: none; }
+.theme-btn {
+  display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 10px;
   font: inherit; font-size: var(--hig-fs-sm); color: var(--hig-text);
-  padding: 5px 30px 5px 12px;
-  background: var(--hig-bg-2) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%236e6e73' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat right 11px center;
+  background: transparent; border: 1px solid var(--hig-line); border-radius: 8px; cursor: pointer; white-space: nowrap;
+}
+.theme-btn:hover, .theme-btn[aria-expanded="true"] { background: var(--hig-bg-2); }
+.theme-btn .chev { width: 10px; height: 6px; fill: none; stroke: var(--hig-text-2); stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; transition: transform 0.15s; }
+.theme-btn[aria-expanded="true"] .chev { transform: rotate(180deg); }
+.theme-btn.active .dot { display: inline-block; transform: none; }
+.theme-popover {
+  position: absolute; top: calc(100% + 8px); right: 0; z-index: 30;
+  width: min(260px, calc(100vw - 72px)); padding: 12px;
+  display: flex; flex-direction: column; gap: 10px;
+  background: var(--hig-surface); border-radius: 12px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.16), 0 0 0 1px var(--hig-line);
+}
+.theme-popover-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: var(--hig-fs-xs); font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--hig-text-2); }
+.theme-reset { font: inherit; font-size: var(--hig-fs-xs); font-weight: 500; letter-spacing: 0; text-transform: none; color: var(--hig-accent); padding: 0; border: 0; background: transparent; cursor: pointer; }
+.theme-reset:hover { text-decoration: underline; }
+.picker { display: grid; grid-template-columns: minmax(0, 1fr) minmax(120px, 1.2fr); align-items: center; gap: 10px; font-size: var(--hig-fs-sm); color: var(--hig-text-2); }
+.picker > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.picker select {
+  appearance: none; -webkit-appearance: none; width: 100%;
+  font: inherit; font-size: var(--hig-fs-sm); color: var(--hig-text);
+  padding: 5px 28px 5px 10px;
+  background: var(--hig-bg-2) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%238e8e93' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat right 10px center;
   border: 1px solid var(--hig-line); border-radius: 8px; cursor: pointer;
 }
 .mode-btn {
-  display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; padding: 0;
+  display: inline-flex; align-items: center; justify-content: center; flex: none; width: 32px; height: 32px; padding: 0;
   color: var(--hig-text-2); background: transparent; border: 1px solid var(--hig-line); border-radius: 8px; cursor: pointer;
 }
 .mode-btn:hover { color: var(--hig-text); }
 .mode-btn svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
 .mode-btn .moon, :root[data-mode="dark"] .mode-btn .sun { display: none; }
 :root[data-mode="dark"] .mode-btn .moon { display: block; }
-.mode-btn:focus-visible, .picker select:focus-visible, .views button:focus-visible, .search-btn:focus-visible, .side-toggle:focus-visible, .ex-tabs button:focus-visible, .copy:focus-visible, .comp-card:focus-visible, .crumb:focus-visible, .side a:focus-visible, .alias:focus-visible, .tag:focus-visible, .has-tip:focus-visible {
+.mode-btn:focus-visible, .theme-btn:focus-visible, .theme-reset:focus-visible, .picker select:focus-visible, .views button:focus-visible, .search-btn:focus-visible, .side-toggle:focus-visible, .ex-tabs button:focus-visible, .copy:focus-visible, .comp-card:focus-visible, .crumb:focus-visible, .side a:focus-visible, .alias:focus-visible, .tag:focus-visible, .has-tip:focus-visible {
   outline: 2px solid var(--hig-accent); outline-offset: 2px;
 }
 .layout { display: grid; grid-template-columns: 240px minmax(0, 980px); gap: 40px; justify-content: center; padding: 0 24px; }
@@ -288,7 +310,7 @@ pre { margin: 0 0 16px; padding: 12px 14px; overflow-x: auto; border-radius: 12p
 @media (max-width: 800px) {
   .bar { grid-template-columns: minmax(0, 1fr) auto; padding: 8px 16px 0; gap: 8px 16px; }
   .views { grid-column: 1 / -1; grid-row: 2; justify-content: center; min-height: 40px; }
-  .search-btn { width: auto; }
+  .search-btn { flex: none; width: auto; padding: 0 10px; }
   .search-btn kbd { display: none; }
   .group, .card, .row { scroll-margin-top: 120px; }
   .layout { grid-template-columns: minmax(0, 1fr); gap: 16px; padding: 0 16px; }
@@ -603,6 +625,75 @@ pre { margin: 0 0 16px; padding: 12px 14px; overflow-x: auto; border-radius: 12p
   --sticker-borderRadius: 4px;
 }
 
+body[data-mode="dark"] {
+  --system-colors-accent: var(--ref-color-secondary-50);
+  --system-colors-onAccent: var(--ref-color-secondary-900);
+  --system-colors-backgroundSurface: var(--ref-color-secondary-800);
+  --system-colors-backgroundBody: var(--ref-color-secondary-900);
+  --system-colors-backgroundCard: var(--ref-color-secondary-800);
+  --system-colors-backgroundMuted: var(--ref-color-secondary-750);
+  --system-colors-textPrimary: var(--ref-color-secondary-50);
+  --system-colors-textSecondary: var(--ref-color-secondary-400);
+  --system-colors-textDisabled: var(--ref-color-secondary-600);
+  --system-colors-border: var(--ref-color-secondary-700);
+  --system-colors-borderEmphasized: var(--ref-color-secondary-500);
+  --system-colors-skeleton: var(--ref-color-secondary-750);
+  --system-colors-secondary-200: var(--ref-color-secondary-50);
+  --system-colors-textScale-primary: var(--ref-color-secondary-50);
+  --system-colors-textScale-secondary: var(--ref-color-secondary-400);
+  --system-colors-textScale-disabled: var(--ref-color-secondary-600);
+  --system-colors-textScale-accent: var(--ref-color-secondary-50);
+  --system-elevationScale-sm: 0px 0px 2px 0px var(--ref-color-secondary-900-50), 0px 2px 10px 0px var(--ref-color-secondary-900-50);
+  --system-elevationScale-md: 0px 0px 3px 0px var(--ref-color-secondary-900-50), 0px 4px 20px 0px var(--ref-color-secondary-900-50);
+  --system-elevationScale-lg: 0px 0px 4px 0px var(--ref-color-secondary-900-50), 0px 8px 40px 0px var(--ref-color-secondary-900-50);
+  --system-elevationScale-inset: inset 0px 1px 2px 0px var(--ref-color-secondary-900-50);
+  --system-border-default: 1px solid var(--ref-color-secondary-700);
+  --system-borderScale-thin: 1px solid var(--ref-color-secondary-700);
+  --system-borderScale-thick: 2px solid var(--ref-color-secondary-700);
+  --system-gradients-accent: linear-gradient(135deg, var(--ref-color-secondary-50) 0%, var(--ref-color-secondary-300) 100%);
+}
+
+body[data-brand="cobalt"] {
+  --system-colors-accent: var(--ref-color-info-600);
+  --system-colors-onAccent: var(--ref-color-white-100);
+  --system-colors-secondary-200: var(--ref-color-info-600);
+  --system-gradients-accent: linear-gradient(135deg, var(--ref-color-info-700) 0%, var(--ref-color-info-500) 100%);
+}
+
+body[data-brand="emerald"] {
+  --system-colors-accent: var(--ref-color-success-700);
+  --system-colors-onAccent: var(--ref-color-white-100);
+  --system-colors-secondary-200: var(--ref-color-success-700);
+  --system-gradients-accent: linear-gradient(135deg, var(--ref-color-success-800) 0%, var(--ref-color-success-500) 100%);
+}
+
+body[data-density="compact"] {
+  --system-spacing-0: var(--ref-spacing-0);
+  --system-spacing-2: var(--ref-spacing-2);
+  --system-spacing-4: 3px;
+  --system-spacing-8: 6px;
+  --system-spacing-12: var(--ref-spacing-8);
+  --system-spacing-16: var(--ref-spacing-12);
+  --system-spacing-20: 14px;
+  --system-spacing-24: var(--ref-spacing-16);
+  --system-spacing-32: var(--ref-spacing-24);
+  --system-spacing-40: 28px;
+  --system-spacing-48: var(--ref-spacing-32);
+  --system-spacing-56: var(--ref-spacing-40);
+  --system-spacing-64: var(--ref-spacing-48);
+  --system-spacing-72: var(--ref-spacing-56);
+  --system-spacing-80: var(--ref-spacing-64);
+  --system-radius-none: var(--ref-radius-none);
+  --system-radius-inner: 2px;
+  --system-radius-element: var(--ref-radius-inner);
+  --system-radius-container: var(--ref-radius-element);
+  --system-radius-page: var(--ref-radius-container);
+  --system-radius-full: var(--ref-radius-full);
+  --sticker-paddingX: var(--ref-spacing-4);
+  --sticker-paddingY: 1px;
+  --sticker-borderRadius: 2px;
+}
+
 </style>
 </head>
 <body>
@@ -611,7 +702,30 @@ pre { margin: 0 0 16px; padding: 12px 14px; overflow-x: auto; border-radius: 12p
   <div class="views" role="tablist" aria-label="Sections"><button type="button" role="tab" data-view-tab="tokens" aria-selected="false">Design tokens<span class="n">202</span></button><button type="button" role="tab" data-view-tab="components" aria-selected="false">Components<span class="n">1</span></button></div>
   <div class="bar-end">
     <button type="button" class="search-btn" id="palette-open" aria-haspopup="dialog"><span>Search</span><kbd>⌘K</kbd></button>
-    
+    <div class="theme-menu">
+      <button type="button" class="theme-btn" id="theme-toggle" aria-expanded="false" aria-controls="theme-popover"><span class="dot" aria-hidden="true"></span><span>Theme</span><svg class="chev" viewBox="0 0 10 6" aria-hidden="true"><path d="M1 1l4 4 4-4"/></svg></button>
+      <div class="theme-popover" id="theme-popover" role="group" aria-label="Theme" hidden>
+        <div class="theme-popover-head"><span>Theme axes</span><button type="button" class="theme-reset" id="theme-reset" hidden>Reset</button></div>
+        <label class="picker"><span>mode</span>
+          <select data-axis="mode" data-attr="data-mode" aria-label="mode">
+            <option value="">light</option>
+            <option value="dark">dark</option>
+          </select>
+        </label>
+        <label class="picker"><span>brand</span>
+          <select data-axis="brand" data-attr="data-brand" aria-label="brand">
+            <option value="">neutral</option>
+            <option value="cobalt">cobalt</option><option value="emerald">emerald</option>
+          </select>
+        </label>
+        <label class="picker"><span>density</span>
+          <select data-axis="density" data-attr="data-density" aria-label="density">
+            <option value="">comfortable</option>
+            <option value="compact">compact</option>
+          </select>
+        </label>
+      </div>
+    </div>
     <button type="button" class="mode-btn" id="mode" aria-label="Switch to dark mode" title="Switch to dark mode"><svg class="sun" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="3"/><path d="M8 1.5v1.5M8 13v1.5M1.5 8H3M13 8h1.5M3.4 3.4l1 1M11.6 11.6l1 1M3.4 12.6l1-1M11.6 4.4l1-1"/></svg><svg class="moon" viewBox="0 0 16 16" aria-hidden="true"><path d="M13.5 9.5A5.5 5.5 0 0 1 6.5 2.5a5.5 5.5 0 1 0 7 7z"/></svg></button>
   </div>
 </header>
@@ -1664,7 +1778,7 @@ pre { margin: 0 0 16px; padding: 12px 14px; overflow-x: auto; border-radius: 12p
     
   </div>
   <div class="row-preview"><span class="tile" style="border:var(--system-border-default)"></span></div>
-  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">1px solid ref.color.secondary.200</code></span></div>
+  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val" data-values="{&quot;mode=dark&quot;:&quot;1px solid ref.color.secondary.700&quot;}">1px solid ref.color.secondary.200</code></span></div>
 </div></div>
 </section>
 <section class="group" id="g-system-system-borderScale">
@@ -1677,7 +1791,7 @@ pre { margin: 0 0 16px; padding: 12px 14px; overflow-x: auto; border-radius: 12p
     
   </div>
   <div class="row-preview"><span class="tile" style="border:var(--system-borderScale-thick)"></span></div>
-  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">2px solid ref.color.secondary.200</code></span></div>
+  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val" data-values="{&quot;mode=dark&quot;:&quot;2px solid ref.color.secondary.700&quot;}">2px solid ref.color.secondary.200</code></span></div>
 </div>
 <div class="row" id="t-system.borderScale.thin" data-search="system.borderScale.thin border System" data-kind="token" data-name="system.borderScale.thin" data-meta="border · System">
   <div class="row-main">
@@ -1685,7 +1799,7 @@ pre { margin: 0 0 16px; padding: 12px 14px; overflow-x: auto; border-radius: 12p
     
   </div>
   <div class="row-preview"><span class="tile" style="border:var(--system-borderScale-thin)"></span></div>
-  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">1px solid ref.color.secondary.200</code></span></div>
+  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val" data-values="{&quot;mode=dark&quot;:&quot;1px solid ref.color.secondary.700&quot;}">1px solid ref.color.secondary.200</code></span></div>
 </div></div>
 </section>
 <section class="group" id="g-system-system-colors">
@@ -1696,7 +1810,7 @@ pre { margin: 0 0 16px; padding: 12px 14px; overflow-x: auto; border-radius: 12p
   <div class="swatch"><span class="sw" style="background:var(--system-colors-accent)"></span></div>
   <div class="card-body">
     <div class="name"><code class="tname">system.colors.accent</code><span class="pill">color</span></div>
-    <span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">#18181b</code></span>
+    <span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val" data-values="{&quot;mode=dark&quot;:&quot;#fafafa&quot;,&quot;brand=cobalt&quot;:&quot;#2563eb&quot;,&quot;brand=emerald&quot;:&quot;#15803d&quot;}">#18181b</code></span>
     <a class="alias" href="#t-ref.color.primary.700" data-goto="t-ref.color.primary.700">→ ref.color.primary.700</a>
   </div>
 </div>
@@ -1704,7 +1818,7 @@ pre { margin: 0 0 16px; padding: 12px 14px; overflow-x: auto; border-radius: 12p
   <div class="swatch"><span class="sw" style="background:var(--system-colors-backgroundBody)"></span></div>
   <div class="card-body">
     <div class="name"><code class="tname">system.colors.backgroundBody</code><span class="pill">color</span></div>
-    <span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">#fafafa</code></span>
+    <span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val" data-values="{&quot;mode=dark&quot;:&quot;#09090b&quot;}">#fafafa</code></span>
     <a class="alias" href="#t-ref.color.secondary.50" data-goto="t-ref.color.secondary.50">→ ref.color.secondary.50</a>
   </div>
 </div>
@@ -1712,7 +1826,7 @@ pre { margin: 0 0 16px; padding: 12px 14px; overflow-x: auto; border-radius: 12p
   <div class="swatch"><span class="sw" style="background:var(--system-colors-backgroundCard)"></span></div>
   <div class="card-body">
     <div class="name"><code class="tname">system.colors.backgroundCard</code><span class="pill">color</span></div>
-    <span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">#ffffff</code></span>
+    <span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val" data-values="{&quot;mode=dark&quot;:&quot;#18181b&quot;}">#ffffff</code></span>
     <a class="alias" href="#t-ref.color.white.100" data-goto="t-ref.color.white.100">→ ref.color.white.100</a>
   </div>
 </div>
@@ -1720,7 +1834,7 @@ pre { margin: 0 0 16px; padding: 12px 14px; overflow-x: auto; border-radius: 12p
   <div class="swatch"><span class="sw" style="background:var(--system-colors-backgroundMuted)"></span></div>
   <div class="card-body">
     <div class="name"><code class="tname">system.colors.backgroundMuted</code><span class="pill">color</span></div>
-    <span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">#fafafa</code></span>
+    <span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val" data-values="{&quot;mode=dark&quot;:&quot;#27272a&quot;}">#fafafa</code></span>
     <a class="alias" href="#t-ref.color.secondary.50" data-goto="t-ref.color.secondary.50">→ ref.color.secondary.50</a>
   </div>
 </div>
@@ -1728,7 +1842,7 @@ pre { margin: 0 0 16px; padding: 12px 14px; overflow-x: auto; border-radius: 12p
   <div class="swatch"><span class="sw" style="background:var(--system-colors-backgroundSurface)"></span></div>
   <div class="card-body">
     <div class="name"><code class="tname">system.colors.backgroundSurface</code><span class="pill">color</span></div>
-    <span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">#ffffff</code></span>
+    <span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val" data-values="{&quot;mode=dark&quot;:&quot;#18181b&quot;}">#ffffff</code></span>
     <a class="alias" href="#t-ref.color.white.100" data-goto="t-ref.color.white.100">→ ref.color.white.100</a>
   </div>
 </div>
@@ -1736,7 +1850,7 @@ pre { margin: 0 0 16px; padding: 12px 14px; overflow-x: auto; border-radius: 12p
   <div class="swatch"><span class="sw" style="background:var(--system-colors-border)"></span></div>
   <div class="card-body">
     <div class="name"><code class="tname">system.colors.border</code><span class="pill">color</span></div>
-    <span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">#e4e4e7</code></span>
+    <span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val" data-values="{&quot;mode=dark&quot;:&quot;#3f3f46&quot;}">#e4e4e7</code></span>
     <a class="alias" href="#t-ref.color.secondary.200" data-goto="t-ref.color.secondary.200">→ ref.color.secondary.200</a>
   </div>
 </div>
@@ -1744,7 +1858,7 @@ pre { margin: 0 0 16px; padding: 12px 14px; overflow-x: auto; border-radius: 12p
   <div class="swatch"><span class="sw" style="background:var(--system-colors-borderEmphasized)"></span></div>
   <div class="card-body">
     <div class="name"><code class="tname">system.colors.borderEmphasized</code><span class="pill">color</span></div>
-    <span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">#a1a1aa</code></span>
+    <span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val" data-values="{&quot;mode=dark&quot;:&quot;#71717a&quot;}">#a1a1aa</code></span>
     <a class="alias" href="#t-ref.color.secondary.400" data-goto="t-ref.color.secondary.400">→ ref.color.secondary.400</a>
   </div>
 </div>
@@ -1760,7 +1874,7 @@ pre { margin: 0 0 16px; padding: 12px 14px; overflow-x: auto; border-radius: 12p
   <div class="swatch"><span class="sw" style="background:var(--system-colors-onAccent)"></span></div>
   <div class="card-body">
     <div class="name"><code class="tname">system.colors.onAccent</code><span class="pill">color</span></div>
-    <span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">#ffffff</code></span>
+    <span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val" data-values="{&quot;mode=dark&quot;:&quot;#09090b&quot;,&quot;mode=dark,brand=cobalt&quot;:&quot;#ffffff&quot;,&quot;mode=dark,brand=emerald&quot;:&quot;#ffffff&quot;}">#ffffff</code></span>
     <a class="alias" href="#t-ref.color.white.100" data-goto="t-ref.color.white.100">→ ref.color.white.100</a>
   </div>
 </div>
@@ -1792,7 +1906,7 @@ pre { margin: 0 0 16px; padding: 12px 14px; overflow-x: auto; border-radius: 12p
   <div class="swatch"><span class="sw" style="background:var(--system-colors-skeleton)"></span></div>
   <div class="card-body">
     <div class="name"><code class="tname">system.colors.skeleton</code><span class="pill">color</span></div>
-    <span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">#e4e4e7</code></span>
+    <span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val" data-values="{&quot;mode=dark&quot;:&quot;#27272a&quot;}">#e4e4e7</code></span>
     <a class="alias" href="#t-ref.color.secondary.200" data-goto="t-ref.color.secondary.200">→ ref.color.secondary.200</a>
   </div>
 </div>
@@ -1808,7 +1922,7 @@ pre { margin: 0 0 16px; padding: 12px 14px; overflow-x: auto; border-radius: 12p
   <div class="swatch"><span class="sw" style="background:var(--system-colors-textDisabled)"></span></div>
   <div class="card-body">
     <div class="name"><code class="tname">system.colors.textDisabled</code><span class="pill">color</span></div>
-    <span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">#a1a1aa</code></span>
+    <span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val" data-values="{&quot;mode=dark&quot;:&quot;#52525b&quot;}">#a1a1aa</code></span>
     <a class="alias" href="#t-ref.color.secondary.400" data-goto="t-ref.color.secondary.400">→ ref.color.secondary.400</a>
   </div>
 </div>
@@ -1816,7 +1930,7 @@ pre { margin: 0 0 16px; padding: 12px 14px; overflow-x: auto; border-radius: 12p
   <div class="swatch"><span class="sw" style="background:var(--system-colors-textPrimary)"></span></div>
   <div class="card-body">
     <div class="name"><code class="tname">system.colors.textPrimary</code><span class="pill">color</span></div>
-    <span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">#09090b</code></span>
+    <span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val" data-values="{&quot;mode=dark&quot;:&quot;#fafafa&quot;}">#09090b</code></span>
     <a class="alias" href="#t-ref.color.secondary.900" data-goto="t-ref.color.secondary.900">→ ref.color.secondary.900</a>
   </div>
 </div>
@@ -1824,7 +1938,7 @@ pre { margin: 0 0 16px; padding: 12px 14px; overflow-x: auto; border-radius: 12p
   <div class="swatch"><span class="sw" style="background:var(--system-colors-textSecondary)"></span></div>
   <div class="card-body">
     <div class="name"><code class="tname">system.colors.textSecondary</code><span class="pill">color</span></div>
-    <span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">#71717a</code></span>
+    <span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val" data-values="{&quot;mode=dark&quot;:&quot;#a1a1aa&quot;}">#71717a</code></span>
     <a class="alias" href="#t-ref.color.secondary.500" data-goto="t-ref.color.secondary.500">→ ref.color.secondary.500</a>
   </div>
 </div>
@@ -1845,7 +1959,7 @@ pre { margin: 0 0 16px; padding: 12px 14px; overflow-x: auto; border-radius: 12p
   <div class="swatch"><span class="sw" style="background:var(--system-colors-secondary-200)"></span></div>
   <div class="card-body">
     <div class="name"><code class="tname">system.colors.secondary.200</code><span class="pill">color</span></div>
-    <span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">#18181b</code></span>
+    <span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val" data-values="{&quot;mode=dark&quot;:&quot;#fafafa&quot;,&quot;brand=cobalt&quot;:&quot;#2563eb&quot;,&quot;brand=emerald&quot;:&quot;#15803d&quot;}">#18181b</code></span>
     <a class="alias" href="#t-ref.color.primary.700" data-goto="t-ref.color.primary.700">→ ref.color.primary.700</a>
   </div>
 </div></div>
@@ -1858,7 +1972,7 @@ pre { margin: 0 0 16px; padding: 12px 14px; overflow-x: auto; border-radius: 12p
   <div class="swatch"><span class="sw" style="background:var(--system-colors-textScale-accent)"></span></div>
   <div class="card-body">
     <div class="name"><code class="tname">system.colors.textScale.accent</code><span class="pill">color</span></div>
-    <span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">#18181b</code></span>
+    <span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val" data-values="{&quot;mode=dark&quot;:&quot;#fafafa&quot;}">#18181b</code></span>
     <a class="alias" href="#t-ref.color.primary.700" data-goto="t-ref.color.primary.700">→ ref.color.primary.700</a>
   </div>
 </div>
@@ -1866,7 +1980,7 @@ pre { margin: 0 0 16px; padding: 12px 14px; overflow-x: auto; border-radius: 12p
   <div class="swatch"><span class="sw" style="background:var(--system-colors-textScale-disabled)"></span></div>
   <div class="card-body">
     <div class="name"><code class="tname">system.colors.textScale.disabled</code><span class="pill">color</span></div>
-    <span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">#a1a1aa</code></span>
+    <span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val" data-values="{&quot;mode=dark&quot;:&quot;#52525b&quot;}">#a1a1aa</code></span>
     <a class="alias" href="#t-ref.color.secondary.400" data-goto="t-ref.color.secondary.400">→ ref.color.secondary.400</a>
   </div>
 </div>
@@ -1874,7 +1988,7 @@ pre { margin: 0 0 16px; padding: 12px 14px; overflow-x: auto; border-radius: 12p
   <div class="swatch"><span class="sw" style="background:var(--system-colors-textScale-primary)"></span></div>
   <div class="card-body">
     <div class="name"><code class="tname">system.colors.textScale.primary</code><span class="pill">color</span></div>
-    <span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">#09090b</code></span>
+    <span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val" data-values="{&quot;mode=dark&quot;:&quot;#fafafa&quot;}">#09090b</code></span>
     <a class="alias" href="#t-ref.color.secondary.900" data-goto="t-ref.color.secondary.900">→ ref.color.secondary.900</a>
   </div>
 </div>
@@ -1882,7 +1996,7 @@ pre { margin: 0 0 16px; padding: 12px 14px; overflow-x: auto; border-radius: 12p
   <div class="swatch"><span class="sw" style="background:var(--system-colors-textScale-secondary)"></span></div>
   <div class="card-body">
     <div class="name"><code class="tname">system.colors.textScale.secondary</code><span class="pill">color</span></div>
-    <span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">#71717a</code></span>
+    <span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val" data-values="{&quot;mode=dark&quot;:&quot;#a1a1aa&quot;}">#71717a</code></span>
     <a class="alias" href="#t-ref.color.secondary.500" data-goto="t-ref.color.secondary.500">→ ref.color.secondary.500</a>
   </div>
 </div></div>
@@ -1897,7 +2011,7 @@ pre { margin: 0 0 16px; padding: 12px 14px; overflow-x: auto; border-radius: 12p
     
   </div>
   <div class="row-preview"><span class="tile" style="box-shadow:var(--system-elevationScale-inset)"></span></div>
-  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">inset 0px 1px 2px 0px ref.color.secondary.900-10</code></span></div>
+  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val" data-values="{&quot;mode=dark&quot;:&quot;inset 0px 1px 2px 0px ref.color.secondary.900-50&quot;}">inset 0px 1px 2px 0px ref.color.secondary.900-10</code></span></div>
 </div>
 <div class="row" id="t-system.elevationScale.lg" data-search="system.elevationScale.lg shadow System" data-kind="token" data-name="system.elevationScale.lg" data-meta="shadow · System">
   <div class="row-main">
@@ -1905,7 +2019,7 @@ pre { margin: 0 0 16px; padding: 12px 14px; overflow-x: auto; border-radius: 12p
     
   </div>
   <div class="row-preview"><span class="tile" style="box-shadow:var(--system-elevationScale-lg)"></span></div>
-  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">0px 0px 4px 0px ref.color.secondary.900-10, 0px 8px 40px 0px ref.color.secondary.900-15</code></span></div>
+  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val" data-values="{&quot;mode=dark&quot;:&quot;0px 0px 4px 0px ref.color.secondary.900-50, 0px 8px 40px 0px ref.color.secondary.900-50&quot;}">0px 0px 4px 0px ref.color.secondary.900-10, 0px 8px 40px 0px ref.color.secondary.900-15</code></span></div>
 </div>
 <div class="row" id="t-system.elevationScale.md" data-search="system.elevationScale.md shadow System" data-kind="token" data-name="system.elevationScale.md" data-meta="shadow · System">
   <div class="row-main">
@@ -1913,7 +2027,7 @@ pre { margin: 0 0 16px; padding: 12px 14px; overflow-x: auto; border-radius: 12p
     
   </div>
   <div class="row-preview"><span class="tile" style="box-shadow:var(--system-elevationScale-md)"></span></div>
-  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">0px 0px 3px 0px ref.color.secondary.900-10, 0px 4px 20px 0px ref.color.secondary.900-15</code></span></div>
+  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val" data-values="{&quot;mode=dark&quot;:&quot;0px 0px 3px 0px ref.color.secondary.900-50, 0px 4px 20px 0px ref.color.secondary.900-50&quot;}">0px 0px 3px 0px ref.color.secondary.900-10, 0px 4px 20px 0px ref.color.secondary.900-15</code></span></div>
 </div>
 <div class="row" id="t-system.elevationScale.sm" data-search="system.elevationScale.sm shadow System" data-kind="token" data-name="system.elevationScale.sm" data-meta="shadow · System">
   <div class="row-main">
@@ -1921,7 +2035,7 @@ pre { margin: 0 0 16px; padding: 12px 14px; overflow-x: auto; border-radius: 12p
     
   </div>
   <div class="row-preview"><span class="tile" style="box-shadow:var(--system-elevationScale-sm)"></span></div>
-  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">0px 0px 2px 0px ref.color.secondary.900-20, 0px 2px 10px 0px ref.color.secondary.900-10</code></span></div>
+  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val" data-values="{&quot;mode=dark&quot;:&quot;0px 0px 2px 0px ref.color.secondary.900-50, 0px 2px 10px 0px ref.color.secondary.900-50&quot;}">0px 0px 2px 0px ref.color.secondary.900-20, 0px 2px 10px 0px ref.color.secondary.900-10</code></span></div>
 </div></div>
 </section>
 <section class="group" id="g-system-system-gradients">
@@ -1934,7 +2048,7 @@ pre { margin: 0 0 16px; padding: 12px 14px; overflow-x: auto; border-radius: 12p
     
   </div>
   <div class="row-preview"><span class="tile wide" style="background:var(--system-gradients-accent)"></span></div>
-  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">linear-gradient(135deg, ref.color.primary.700 0%, ref.color.primary.500 100%)</code></span></div>
+  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val" data-values="{&quot;mode=dark&quot;:&quot;linear-gradient(135deg, ref.color.secondary.50 0%, ref.color.secondary.300 100%)&quot;,&quot;brand=cobalt&quot;:&quot;linear-gradient(135deg, ref.color.info.700 0%, ref.color.info.500 100%)&quot;,&quot;brand=emerald&quot;:&quot;linear-gradient(135deg, ref.color.success.800 0%, ref.color.success.500 100%)&quot;}">linear-gradient(135deg, ref.color.primary.700 0%, ref.color.primary.500 100%)</code></span></div>
 </div></div>
 </section>
 <section class="group" id="g-system-system-motion">
@@ -1992,7 +2106,7 @@ pre { margin: 0 0 16px; padding: 12px 14px; overflow-x: auto; border-radius: 12p
     <a class="alias" href="#t-ref.radius.container" data-goto="t-ref.radius.container">→ ref.radius.container</a>
   </div>
   <div class="row-preview"><span class="dim" style="width:min(var(--system-radius-container),100%)"></span></div>
-  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">8px</code></span></div>
+  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val" data-values="{&quot;density=compact&quot;:&quot;6px&quot;}">8px</code></span></div>
 </div>
 <div class="row" id="t-system.radius.element" data-search="system.radius.element dimension System" data-kind="token" data-name="system.radius.element" data-meta="dimension · System">
   <div class="row-main">
@@ -2000,7 +2114,7 @@ pre { margin: 0 0 16px; padding: 12px 14px; overflow-x: auto; border-radius: 12p
     <a class="alias" href="#t-ref.radius.element" data-goto="t-ref.radius.element">→ ref.radius.element</a>
   </div>
   <div class="row-preview"><span class="dim" style="width:min(var(--system-radius-element),100%)"></span></div>
-  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">6px</code></span></div>
+  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val" data-values="{&quot;density=compact&quot;:&quot;4px&quot;}">6px</code></span></div>
 </div>
 <div class="row" id="t-system.radius.full" data-search="system.radius.full dimension System" data-kind="token" data-name="system.radius.full" data-meta="dimension · System">
   <div class="row-main">
@@ -2016,7 +2130,7 @@ pre { margin: 0 0 16px; padding: 12px 14px; overflow-x: auto; border-radius: 12p
     <a class="alias" href="#t-ref.radius.inner" data-goto="t-ref.radius.inner">→ ref.radius.inner</a>
   </div>
   <div class="row-preview"><span class="dim" style="width:min(var(--system-radius-inner),100%)"></span></div>
-  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">4px</code></span></div>
+  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val" data-values="{&quot;density=compact&quot;:&quot;2px&quot;}">4px</code></span></div>
 </div>
 <div class="row" id="t-system.radius.none" data-search="system.radius.none dimension System" data-kind="token" data-name="system.radius.none" data-meta="dimension · System">
   <div class="row-main">
@@ -2032,7 +2146,7 @@ pre { margin: 0 0 16px; padding: 12px 14px; overflow-x: auto; border-radius: 12p
     <a class="alias" href="#t-ref.radius.page" data-goto="t-ref.radius.page">→ ref.radius.page</a>
   </div>
   <div class="row-preview"><span class="dim" style="width:min(var(--system-radius-page),100%)"></span></div>
-  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">12px</code></span></div>
+  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val" data-values="{&quot;density=compact&quot;:&quot;8px&quot;}">12px</code></span></div>
 </div></div>
 </section>
 <section class="group" id="g-system-system-spacing">
@@ -2061,7 +2175,7 @@ pre { margin: 0 0 16px; padding: 12px 14px; overflow-x: auto; border-radius: 12p
     <a class="alias" href="#t-ref.spacing.4" data-goto="t-ref.spacing.4">→ ref.spacing.4</a>
   </div>
   <div class="row-preview"><span class="dim" style="width:min(var(--system-spacing-4),100%)"></span></div>
-  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">4px</code></span></div>
+  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val" data-values="{&quot;density=compact&quot;:&quot;3px&quot;}">4px</code></span></div>
 </div>
 <div class="row" id="t-system.spacing.8" data-search="system.spacing.8 dimension System" data-kind="token" data-name="system.spacing.8" data-meta="dimension · System">
   <div class="row-main">
@@ -2069,7 +2183,7 @@ pre { margin: 0 0 16px; padding: 12px 14px; overflow-x: auto; border-radius: 12p
     <a class="alias" href="#t-ref.spacing.8" data-goto="t-ref.spacing.8">→ ref.spacing.8</a>
   </div>
   <div class="row-preview"><span class="dim" style="width:min(var(--system-spacing-8),100%)"></span></div>
-  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">8px</code></span></div>
+  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val" data-values="{&quot;density=compact&quot;:&quot;6px&quot;}">8px</code></span></div>
 </div>
 <div class="row" id="t-system.spacing.12" data-search="system.spacing.12 dimension System" data-kind="token" data-name="system.spacing.12" data-meta="dimension · System">
   <div class="row-main">
@@ -2077,7 +2191,7 @@ pre { margin: 0 0 16px; padding: 12px 14px; overflow-x: auto; border-radius: 12p
     <a class="alias" href="#t-ref.spacing.12" data-goto="t-ref.spacing.12">→ ref.spacing.12</a>
   </div>
   <div class="row-preview"><span class="dim" style="width:min(var(--system-spacing-12),100%)"></span></div>
-  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">12px</code></span></div>
+  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val" data-values="{&quot;density=compact&quot;:&quot;8px&quot;}">12px</code></span></div>
 </div>
 <div class="row" id="t-system.spacing.16" data-search="system.spacing.16 dimension System" data-kind="token" data-name="system.spacing.16" data-meta="dimension · System">
   <div class="row-main">
@@ -2085,7 +2199,7 @@ pre { margin: 0 0 16px; padding: 12px 14px; overflow-x: auto; border-radius: 12p
     <a class="alias" href="#t-ref.spacing.16" data-goto="t-ref.spacing.16">→ ref.spacing.16</a>
   </div>
   <div class="row-preview"><span class="dim" style="width:min(var(--system-spacing-16),100%)"></span></div>
-  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">16px</code></span></div>
+  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val" data-values="{&quot;density=compact&quot;:&quot;12px&quot;}">16px</code></span></div>
 </div>
 <div class="row" id="t-system.spacing.20" data-search="system.spacing.20 dimension System" data-kind="token" data-name="system.spacing.20" data-meta="dimension · System">
   <div class="row-main">
@@ -2093,7 +2207,7 @@ pre { margin: 0 0 16px; padding: 12px 14px; overflow-x: auto; border-radius: 12p
     <a class="alias" href="#t-ref.spacing.20" data-goto="t-ref.spacing.20">→ ref.spacing.20</a>
   </div>
   <div class="row-preview"><span class="dim" style="width:min(var(--system-spacing-20),100%)"></span></div>
-  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">20px</code></span></div>
+  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val" data-values="{&quot;density=compact&quot;:&quot;14px&quot;}">20px</code></span></div>
 </div>
 <div class="row" id="t-system.spacing.24" data-search="system.spacing.24 dimension System" data-kind="token" data-name="system.spacing.24" data-meta="dimension · System">
   <div class="row-main">
@@ -2101,7 +2215,7 @@ pre { margin: 0 0 16px; padding: 12px 14px; overflow-x: auto; border-radius: 12p
     <a class="alias" href="#t-ref.spacing.24" data-goto="t-ref.spacing.24">→ ref.spacing.24</a>
   </div>
   <div class="row-preview"><span class="dim" style="width:min(var(--system-spacing-24),100%)"></span></div>
-  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">24px</code></span></div>
+  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val" data-values="{&quot;density=compact&quot;:&quot;16px&quot;}">24px</code></span></div>
 </div>
 <div class="row" id="t-system.spacing.32" data-search="system.spacing.32 dimension System" data-kind="token" data-name="system.spacing.32" data-meta="dimension · System">
   <div class="row-main">
@@ -2109,7 +2223,7 @@ pre { margin: 0 0 16px; padding: 12px 14px; overflow-x: auto; border-radius: 12p
     <a class="alias" href="#t-ref.spacing.32" data-goto="t-ref.spacing.32">→ ref.spacing.32</a>
   </div>
   <div class="row-preview"><span class="dim" style="width:min(var(--system-spacing-32),100%)"></span></div>
-  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">32px</code></span></div>
+  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val" data-values="{&quot;density=compact&quot;:&quot;24px&quot;}">32px</code></span></div>
 </div>
 <div class="row" id="t-system.spacing.40" data-search="system.spacing.40 dimension System" data-kind="token" data-name="system.spacing.40" data-meta="dimension · System">
   <div class="row-main">
@@ -2117,7 +2231,7 @@ pre { margin: 0 0 16px; padding: 12px 14px; overflow-x: auto; border-radius: 12p
     <a class="alias" href="#t-ref.spacing.40" data-goto="t-ref.spacing.40">→ ref.spacing.40</a>
   </div>
   <div class="row-preview"><span class="dim" style="width:min(var(--system-spacing-40),100%)"></span></div>
-  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">40px</code></span></div>
+  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val" data-values="{&quot;density=compact&quot;:&quot;28px&quot;}">40px</code></span></div>
 </div>
 <div class="row" id="t-system.spacing.48" data-search="system.spacing.48 dimension System" data-kind="token" data-name="system.spacing.48" data-meta="dimension · System">
   <div class="row-main">
@@ -2125,7 +2239,7 @@ pre { margin: 0 0 16px; padding: 12px 14px; overflow-x: auto; border-radius: 12p
     <a class="alias" href="#t-ref.spacing.48" data-goto="t-ref.spacing.48">→ ref.spacing.48</a>
   </div>
   <div class="row-preview"><span class="dim" style="width:min(var(--system-spacing-48),100%)"></span></div>
-  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">48px</code></span></div>
+  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val" data-values="{&quot;density=compact&quot;:&quot;32px&quot;}">48px</code></span></div>
 </div>
 <div class="row" id="t-system.spacing.56" data-search="system.spacing.56 dimension System" data-kind="token" data-name="system.spacing.56" data-meta="dimension · System">
   <div class="row-main">
@@ -2133,7 +2247,7 @@ pre { margin: 0 0 16px; padding: 12px 14px; overflow-x: auto; border-radius: 12p
     <a class="alias" href="#t-ref.spacing.56" data-goto="t-ref.spacing.56">→ ref.spacing.56</a>
   </div>
   <div class="row-preview"><span class="dim" style="width:min(var(--system-spacing-56),100%)"></span></div>
-  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">56px</code></span></div>
+  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val" data-values="{&quot;density=compact&quot;:&quot;40px&quot;}">56px</code></span></div>
 </div>
 <div class="row" id="t-system.spacing.64" data-search="system.spacing.64 dimension System" data-kind="token" data-name="system.spacing.64" data-meta="dimension · System">
   <div class="row-main">
@@ -2141,7 +2255,7 @@ pre { margin: 0 0 16px; padding: 12px 14px; overflow-x: auto; border-radius: 12p
     <a class="alias" href="#t-ref.spacing.64" data-goto="t-ref.spacing.64">→ ref.spacing.64</a>
   </div>
   <div class="row-preview"><span class="dim" style="width:min(var(--system-spacing-64),100%)"></span></div>
-  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">64px</code></span></div>
+  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val" data-values="{&quot;density=compact&quot;:&quot;48px&quot;}">64px</code></span></div>
 </div>
 <div class="row" id="t-system.spacing.72" data-search="system.spacing.72 dimension System" data-kind="token" data-name="system.spacing.72" data-meta="dimension · System">
   <div class="row-main">
@@ -2149,7 +2263,7 @@ pre { margin: 0 0 16px; padding: 12px 14px; overflow-x: auto; border-radius: 12p
     <a class="alias" href="#t-ref.spacing.72" data-goto="t-ref.spacing.72">→ ref.spacing.72</a>
   </div>
   <div class="row-preview"><span class="dim" style="width:min(var(--system-spacing-72),100%)"></span></div>
-  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">72px</code></span></div>
+  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val" data-values="{&quot;density=compact&quot;:&quot;56px&quot;}">72px</code></span></div>
 </div>
 <div class="row" id="t-system.spacing.80" data-search="system.spacing.80 dimension System" data-kind="token" data-name="system.spacing.80" data-meta="dimension · System">
   <div class="row-main">
@@ -2157,7 +2271,7 @@ pre { margin: 0 0 16px; padding: 12px 14px; overflow-x: auto; border-radius: 12p
     <a class="alias" href="#t-ref.spacing.80" data-goto="t-ref.spacing.80">→ ref.spacing.80</a>
   </div>
   <div class="row-preview"><span class="dim" style="width:min(var(--system-spacing-80),100%)"></span></div>
-  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">80px</code></span></div>
+  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val" data-values="{&quot;density=compact&quot;:&quot;64px&quot;}">80px</code></span></div>
 </div></div>
 </section>
 <section class="group" id="g-system-system-textScale">
@@ -2365,7 +2479,7 @@ pre { margin: 0 0 16px; padding: 12px 14px; overflow-x: auto; border-radius: 12p
     
   </div>
   <div class="row-preview"><span class="dim" style="width:min(var(--sticker-borderRadius),100%)"></span></div>
-  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">4px</code></span></div>
+  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val" data-values="{&quot;density=compact&quot;:&quot;2px&quot;}">4px</code></span></div>
 </div>
 <div class="row" id="t-sticker.paddingX" data-search="sticker.paddingX dimension Components" data-kind="token" data-name="sticker.paddingX" data-meta="dimension · Components">
   <div class="row-main">
@@ -2373,7 +2487,7 @@ pre { margin: 0 0 16px; padding: 12px 14px; overflow-x: auto; border-radius: 12p
     
   </div>
   <div class="row-preview"><span class="dim" style="width:min(var(--sticker-paddingX),100%)"></span></div>
-  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">8px</code></span></div>
+  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val" data-values="{&quot;density=compact&quot;:&quot;4px&quot;}">8px</code></span></div>
 </div>
 <div class="row" id="t-sticker.paddingY" data-search="sticker.paddingY dimension Components" data-kind="token" data-name="sticker.paddingY" data-meta="dimension · Components">
   <div class="row-main">
@@ -2381,7 +2495,7 @@ pre { margin: 0 0 16px; padding: 12px 14px; overflow-x: auto; border-radius: 12p
     
   </div>
   <div class="row-preview"><span class="dim" style="width:min(var(--sticker-paddingY),100%)"></span></div>
-  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val">2px</code></span></div>
+  <div class="row-value"><span class="val-wrap"><span class="dot" title="Overridden by the selected theme"></span><code class="val" data-values="{&quot;density=compact&quot;:&quot;1px&quot;}">2px</code></span></div>
 </div></div>
 </section>
 </div>
@@ -2409,7 +2523,7 @@ pre { margin: 0 0 16px; padding: 12px 14px; overflow-x: auto; border-radius: 12p
     <div class="comp-intro">
       <h2 class="title">Sticker</h2>
       <p class="lead">Playful label stuck on the corner of a card or an image.</p>
-      <div class="tags"><span class="capsule exp has-tip" tabindex="0" data-tip="The API may change while we collect feedback.">Experimental</span><a class="tag" href="https://github.com/recontentapp/recontent/blob/master/apps/vanilla-extract-playground/src/Sticker.tsx#L28" target="_blank" rel="noopener noreferrer">Source code ↗</a><a class="tag" href="https://figma.com/docs/sticker" target="_blank" rel="noopener noreferrer">Figma ↗</a></div>
+      <div class="tags"><span class="capsule exp has-tip" tabindex="0" data-tip="The API may change while we collect feedback.">Experimental</span><a class="tag" href="https://github.com/recontentapp/recontent/blob/master/apps/vanilla-extract-playground/src/Sticker.tsx#L29" target="_blank" rel="noopener noreferrer">Source code ↗</a><a class="tag" href="https://figma.com/docs/sticker" target="_blank" rel="noopener noreferrer">Figma ↗</a></div>
     </div>
   </header>
   <div class="comp-section">
@@ -2579,6 +2693,10 @@ sparingly: one tilted sticker per surface keeps it feeling spontaneous.</p>
 
   document.addEventListener("click", function (e) {
     var from = e.target.closest ? e.target : e.target.parentElement;
+    if (themePopover && !themePopover.hidden && (!from || !from.closest(".theme-menu"))) {
+      closeThemePopover(false);
+    }
+    if (!from) return;
     var toggle = from.closest(".side-toggle");
     if (toggle) {
       var open = toggle.parentNode.classList.toggle("open");
@@ -2630,23 +2748,89 @@ sparingly: one tilted sticker per surface keeps it feeling spontaneous.</p>
     done(ok);
   }
 
-  var select = document.getElementById("theme");
+  var themeToggle = document.getElementById("theme-toggle");
+  var themePopover = document.getElementById("theme-popover");
+  var themeReset = document.getElementById("theme-reset");
+  var selects = document.querySelectorAll("select[data-axis]");
   var themed = null;
-  function applyTheme(theme) {
-    var root = document.documentElement;
-    if (theme) root.setAttribute("data-theme", theme); else root.removeAttribute("data-theme");
+  function closeThemePopover(restoreFocus) {
+    if (!themePopover || themePopover.hidden) return;
+    themePopover.hidden = true;
+    themeToggle.setAttribute("aria-expanded", "false");
+    if (restoreFocus && themeToggle.focus) themeToggle.focus({ preventScroll: true });
+  }
+  function resolveThemedValue(t) {
+    if (selects.length === 1) {
+      var v = selects[0].value;
+      if (!v) return { text: t.base, overridden: false };
+      return t.values[v] !== undefined
+        ? { text: t.values[v], overridden: t.values[v] !== t.base }
+        : { text: t.base, overridden: false };
+    }
+    var keys = Object.keys(t.values);
+    var relevant = [];
+    for (var i = 0; i < selects.length; i++) {
+      var val = selects[i].value;
+      if (!val) continue;
+      var axis = selects[i].getAttribute("data-axis");
+      var prefix = axis + "=";
+      var touches = false;
+      for (var k = 0; k < keys.length; k++) {
+        if (keys[k].indexOf(prefix) === 0 || keys[k].indexOf("," + prefix) >= 0) {
+          touches = true;
+          break;
+        }
+      }
+      if (touches) relevant.push(prefix + val);
+    }
+    if (relevant.length === 0) return { text: t.base, overridden: false };
+    var exact = t.values[relevant.join(",")];
+    if (exact !== undefined) return { text: exact, overridden: exact !== t.base };
+    var cur = t.base;
+    for (var j = 0; j < relevant.length; j++) {
+      if (t.values[relevant[j]] !== undefined) cur = t.values[relevant[j]];
+    }
+    return { text: cur, overridden: cur !== t.base };
+  }
+  function applyThemes() {
+    var anyActive = false;
+    selects.forEach(function (sel) {
+      var attr = sel.getAttribute("data-attr");
+      if (sel.value) {
+        anyActive = true;
+        document.body.setAttribute(attr, sel.value);
+      } else {
+        document.body.removeAttribute(attr);
+      }
+    });
+    if (themeToggle) themeToggle.classList.toggle("active", anyActive);
+    if (themeReset) themeReset.hidden = !anyActive;
     if (!themed) {
       themed = Array.prototype.map.call(document.querySelectorAll("[data-values]"), function (el) {
         return { el: el, base: el.textContent, values: JSON.parse(el.getAttribute("data-values")) };
       });
     }
     themed.forEach(function (t) {
-      var overridden = Boolean(theme) && t.values[theme] !== undefined;
-      t.el.textContent = overridden ? t.values[theme] : t.base;
-      t.el.parentNode.classList.toggle("overridden", overridden);
+      var res = resolveThemedValue(t);
+      t.el.textContent = res.text;
+      t.el.parentNode.classList.toggle("overridden", res.overridden);
     });
   }
-  if (select) select.addEventListener("change", function () { applyTheme(select.value); });
+  if (themeToggle) {
+    themeToggle.addEventListener("click", function () {
+      var nextOpen = themePopover.hidden;
+      themePopover.hidden = !nextOpen;
+      themeToggle.setAttribute("aria-expanded", String(nextOpen));
+      if (nextOpen && selects[0]) selects[0].focus({ preventScroll: true });
+    });
+  }
+  if (themeReset) {
+    themeReset.addEventListener("click", function () {
+      selects.forEach(function (sel) { sel.value = ""; });
+      applyThemes();
+    });
+  }
+  selects.forEach(function (sel) { sel.addEventListener("change", applyThemes); });
 
   var modeBtn = document.getElementById("mode");
   function labelMode() {
@@ -2797,6 +2981,7 @@ sparingly: one tilted sticker per surface keeps it feeling spontaneous.</p>
 
   function openPalette() {
     if (!palette.hidden) return;
+    closeThemePopover(false);
     returnTo = document.activeElement;
     palette.hidden = false;
     input.value = "";
@@ -2841,7 +3026,8 @@ sparingly: one tilted sticker per surface keeps it feeling spontaneous.</p>
       e.preventDefault();
       openPalette();
     } else if (e.key === "Escape") {
-      closePalette();
+      if (themePopover && !themePopover.hidden) closeThemePopover(true);
+      else closePalette();
     }
   });
   if (!/Mac|iPhone|iPad/.test(navigator.userAgent)) {

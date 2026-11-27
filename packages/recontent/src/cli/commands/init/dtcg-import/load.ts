@@ -5,12 +5,17 @@ import { stableStringify } from "../../diff/tokens.js";
 import { isObject, setOwn, sourceKey } from "./types.js";
 import type { JsonObject, Warn } from "./types.js";
 
-/** A non-default modifier context: its tokens override or extend the base. */
-type ThemeContext = { modifier: string; context: string; doc: JsonObject };
+/** A DTCG 2025.10 resolver modifier in resolutionOrder, with its non-default contexts. */
+type LoadedModifier = {
+  name: string;
+  default: string;
+  description?: string;
+  contexts: Array<{ name: string; doc: JsonObject }>;
+};
 
 export type LoadedSources = {
   base: JsonObject;
-  contexts: ThemeContext[];
+  modifiers: LoadedModifier[];
   /** Files the config was generated from, relative to the working directory. */
   files: string[];
 };
@@ -98,18 +103,18 @@ function loadResolver(
   file: string,
   resolver: unknown,
   warn: Warn,
-): { base: JsonObject; contexts: ThemeContext[] } {
+): { base: JsonObject; modifiers: LoadedModifier[] } {
   if (!isObject(resolver) || !Array.isArray(resolver.resolutionOrder)) {
     throw new Error(`Resolver "${file}" must contain a resolutionOrder array.`);
   }
   const baseDir = path.dirname(file);
   const sets = isObject(resolver.sets) ? resolver.sets : {};
-  const modifiers = isObject(resolver.modifiers) ? resolver.modifiers : {};
+  const resolverModifiers = isObject(resolver.modifiers) ? resolver.modifiers : {};
 
   function lookup(reference: string): Entry | undefined {
     const match = /^#\/(sets|modifiers)\/([^/]+)$/.exec(reference);
     if (!match) return undefined;
-    const map = match[1] === "sets" ? sets : modifiers;
+    const map = match[1] === "sets" ? sets : resolverModifiers;
     const key = match[2]!;
     const definition = Object.hasOwn(map, key) ? map[key] : undefined;
     if (!isObject(definition)) return undefined;
@@ -147,7 +152,7 @@ function loadResolver(
   }
 
   const base: JsonObject = {};
-  const contexts: ThemeContext[] = [];
+  const modifiers: LoadedModifier[] = [];
   const usedSets = new Set<string>();
 
   (resolver.resolutionOrder as unknown[]).forEach((item, index) => {
@@ -170,8 +175,10 @@ function loadResolver(
       const setDoc = mergeAll(loadSources(entry.definition.sources));
       mergeInto(base, setDoc);
       // Sets appearing after a modifier in resolutionOrder override that modifier's contexts too.
-      for (const context of contexts) {
-        mergeInto(context.doc, setDoc);
+      for (const mod of modifiers) {
+        for (const context of mod.contexts) {
+          mergeInto(context.doc, setDoc);
+        }
       }
       return;
     }
@@ -188,10 +195,21 @@ function loadResolver(
         );
       }
     }
+    const description =
+      typeof entry.definition.description === "string" ? entry.definition.description : undefined;
+    const modContexts: Array<{ name: string; doc: JsonObject }> = [];
     for (const name of names) {
       const doc = mergeAll(loadSources(modifierContexts[name]));
       if (name === defaultName) mergeInto(base, doc);
-      else contexts.push({ modifier: entry.name, context: name, doc });
+      else modContexts.push({ name, doc });
+    }
+    if (modContexts.length > 0) {
+      modifiers.push({
+        name: entry.name,
+        default: defaultName,
+        ...(description !== undefined ? { description } : {}),
+        contexts: modContexts,
+      });
     }
   });
 
@@ -201,7 +219,7 @@ function loadResolver(
     }
   }
 
-  return { base, contexts };
+  return { base, modifiers };
 }
 
 /**
@@ -252,5 +270,5 @@ export function loadSources(sources: string[], cwd: string, warn: Warn): LoadedS
       );
     });
   }
-  return { base, contexts: [], files: files.map(display) };
+  return { base, modifiers: [], files: files.map(display) };
 }

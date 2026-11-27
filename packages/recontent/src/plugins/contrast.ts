@@ -1,6 +1,10 @@
 import { colorLuminance, relativeLuminance, toSrgb } from "../color/convert.js";
-import { type TokenEntry, type TokenRegistry } from "../token-model/registry.js";
-import { resolveValue } from "../token-model/alias.js";
+import {
+  type ThemeOverride,
+  type TokenEntry,
+  type TokenRegistry,
+} from "../token-model/registry.js";
+import { resolveEntryValue, themeCombinations } from "../token-model/alias.js";
 import { type ColorValue } from "../token-model/values.js";
 import { type PluginContext, type PluginDiagnostic, type RecontentPlugin } from "./types.js";
 
@@ -57,14 +61,35 @@ export function contrast(options: ContrastPluginOptions): RecontentPlugin {
     dependsOn: ["tokens"],
     validate(ctx: PluginContext) {
       const diagnostics: PluginDiagnostic[] = [];
-      const themes = [undefined, ...Object.keys(ctx.themes).sort()];
+      const multiAxis = ctx.themes.length > 1;
+      const colorAxes = ctx.themes.filter((axis) =>
+        Object.values(axis.contexts).some((override) =>
+          [...override.keys()].some((key) => ctx.registry.get(key)?.$type === "color"),
+        ),
+      );
+      const combinations = themeCombinations(colorAxes).map((combo, index) => {
+        if (!combo.override) {
+          return { id: String(index), where: "the base tokens", override: undefined };
+        }
+        const label = multiAxis
+          ? colorAxes
+              .filter((axis) => combo.selection[axis.name] !== axis.default)
+              .map((axis) => `${axis.name}=${combo.selection[axis.name]}`)
+              .join(", ")
+          : combo.selection[colorAxes[0]!.name]!;
+        return { id: String(index), where: `theme "${label}"`, override: combo.override };
+      });
 
       const colorCache = new Map<string, ResolvedColor>();
-      const resolveCached = (entry: TokenEntry, theme: string | undefined): ResolvedColor => {
-        const cacheKey = `${theme ?? ""}\0${entry.path.join(".")}`;
+      const resolveCached = (
+        entry: TokenEntry,
+        comboId: string,
+        override: ThemeOverride | undefined,
+      ): ResolvedColor => {
+        const cacheKey = `${comboId}\0${entry.path.join(".")}`;
         let cached = colorCache.get(cacheKey);
         if (!cached) {
-          const value = resolveValue(ctx, entry, theme) as ColorValue;
+          const value = resolveEntryValue(ctx.registry, entry, override) as ColorValue;
           const srgb = toSrgb(value.colorSpace, value.components);
           const luminance = colorLuminance(value.colorSpace, value.components);
           cached = { value, srgb, luminance };
@@ -108,11 +133,10 @@ export function contrast(options: ContrastPluginOptions): RecontentPlugin {
             checkedPairs += 1;
             const fgKey = fg.path.join(".");
             const bgKey = bg.path.join(".");
-            for (const theme of themes) {
-              const where = theme === undefined ? "the base tokens" : `theme "${theme}"`;
-              const bgColor = resolveCached(bg, theme);
+            for (const { id, where, override } of combinations) {
+              const bgColor = resolveCached(bg, id, override);
               if (bgColor.value.alpha < 1) {
-                const dedupKey = `${theme ?? ""}\0${bgKey}`;
+                const dedupKey = `${id}\0${bgKey}`;
                 if (!reportedTranslucent.has(dedupKey)) {
                   reportedTranslucent.add(dedupKey);
                   diagnostics.push({
@@ -123,7 +147,7 @@ export function contrast(options: ContrastPluginOptions): RecontentPlugin {
                 }
                 continue;
               }
-              const fgColor = resolveCached(fg, theme);
+              const fgColor = resolveCached(fg, id, override);
               const ratio = contrastRatio(fgColor, bgColor);
               if (ratio < min) {
                 diagnostics.push({

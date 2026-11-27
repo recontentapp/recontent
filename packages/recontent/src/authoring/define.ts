@@ -12,6 +12,7 @@ import type {
 } from "../token-model/model.js";
 import type { RecontentPlugin } from "../plugins/types.js";
 import type {
+  ThemeAxis,
   ThemeOverride,
   TokenGroups,
   TokenRegistry,
@@ -19,6 +20,7 @@ import type {
 } from "../token-model/registry.js";
 import type { TokenType } from "../token-model/values.js";
 import { diagnoseTokenTrees } from "./diagnostics.js";
+import { isThemeAxisDefinition, isThemeOverride, type ThemeAxisDefinition } from "./theme.js";
 import {
   isRawToken,
   isStampedToken,
@@ -235,13 +237,17 @@ export function defineComponentTokens<T extends TokenTree>(input: T): StampTree<
   return walkAndStamp(input, [], "components") as StampTree<T, "components">;
 }
 
+export type DefineThemesInput =
+  | Record<string, ThemeOverride>
+  | Record<string, Record<string, ThemeOverride> | ThemeAxisDefinition>;
+
 export type DefineConfigInput = {
   tokens?: {
     ref?: TokenTree;
     system?: TokenTree;
     components?: TokenTree;
   };
-  themes?: Record<string, ThemeOverride>;
+  themes?: DefineThemesInput;
   plugins?: RecontentPlugin | RecontentPlugin[];
   logLevel?: LogLevel;
   introspection?: IntrospectionConfigInput;
@@ -340,14 +346,117 @@ function normalizeLogLevel(logLevel: LogLevel | undefined): LogLevel {
 /** Safe as a file name, a CSS class or attribute value, and a path segment, for every output. */
 const THEME_NAME_RE = /^[A-Za-z_][\w-]*$/;
 
-export function defineConfig(input: DefineConfigInput): Config {
-  for (const name of Object.keys(input.themes ?? {})) {
-    if (!THEME_NAME_RE.test(name)) {
+function validateThemeIdentifier(
+  name: string,
+  kind: "theme" | "theme axis" | "context" | "default context",
+  axisName?: string,
+): void {
+  const scope = axisName ? ` on theme axis "${axisName}"` : "";
+  const pluralKind =
+    kind === "theme" ? "theme names" : kind === "theme axis" ? "axis names" : "context names";
+  if (!THEME_NAME_RE.test(name)) {
+    throw new Error(
+      `Invalid ${kind} name "${name}"${scope}: ${pluralKind} must contain only letters, digits, underscores, and hyphens, and cannot start with a digit or hyphen.`,
+    );
+  }
+  if (RESERVED_NAMES.has(name)) {
+    throw new Error(`Invalid ${kind} name "${name}"${scope}: "${name}" is a reserved name.`);
+  }
+}
+
+function normalizeThemes(input?: DefineThemesInput): ThemeAxis[] {
+  if (input === undefined) return [];
+  if (typeof input !== "object" || input === null || Array.isArray(input)) {
+    throw new Error("defineConfig's `themes` must be an object.");
+  }
+
+  const entries = Object.entries(input);
+  if (entries.length === 0) return [];
+
+  const flatCount = entries.filter(([, value]) => isThemeOverride(value)).length;
+  const axisObjectCount = entries.filter(
+    ([, value]) =>
+      isThemeAxisDefinition(value) ||
+      (typeof value === "object" &&
+        value !== null &&
+        !Array.isArray(value) &&
+        !isThemeOverride(value)),
+  ).length;
+
+  if (flatCount > 0 && axisObjectCount > 0) {
+    throw new Error(
+      "Cannot mix flat themes and theme axes in defineConfig's `themes`. Move flat themes into an axis (e.g. `mode: { ... }`).",
+    );
+  }
+
+  if (flatCount === entries.length) {
+    const contexts: Record<string, ThemeOverride> = {};
+    for (const [name, value] of entries) {
+      validateThemeIdentifier(name, "theme");
+      if (name === "default") {
+        throw new Error(
+          'Theme "default" is reserved for the base tokens; choose another theme name (or set a custom `default` with defineThemeAxis()).',
+        );
+      }
+      contexts[name] = value as ThemeOverride;
+    }
+    return [{ name: "theme", default: "default", contexts }];
+  }
+
+  const axes: ThemeAxis[] = [];
+  for (const [axisName, rawAxis] of entries) {
+    validateThemeIdentifier(axisName, "theme axis");
+    if (
+      !isThemeAxisDefinition(rawAxis) &&
+      (typeof rawAxis !== "object" || rawAxis === null || Array.isArray(rawAxis))
+    ) {
       throw new Error(
-        `Invalid theme name "${name}": theme names must contain only letters, digits, underscores, and hyphens, and cannot start with a digit or hyphen.`,
+        `Invalid theme "${axisName}": expected a ThemeOverride from defineTheme() or a theme axis.`,
       );
     }
+
+    const defaultName = isThemeAxisDefinition(rawAxis) ? rawAxis.default : "default";
+    const description = isThemeAxisDefinition(rawAxis) ? rawAxis.description : undefined;
+    const rawContexts = isThemeAxisDefinition(rawAxis)
+      ? rawAxis.contexts
+      : (rawAxis as Record<string, unknown>);
+
+    validateThemeIdentifier(defaultName, "default context", axisName);
+
+    const contextEntries = Object.entries(rawContexts);
+    if (contextEntries.length === 0) {
+      throw new Error(`Theme axis "${axisName}" must define at least one non-default context.`);
+    }
+
+    const contexts: Record<string, ThemeOverride> = {};
+    for (const [ctxName, override] of contextEntries) {
+      validateThemeIdentifier(ctxName, "context", axisName);
+      if (ctxName === defaultName) {
+        throw new Error(
+          `Theme axis "${axisName}" cannot use "${defaultName}" as both its default and a context name.`,
+        );
+      }
+      if (!isThemeOverride(override)) {
+        throw new Error(
+          `Invalid context "${ctxName}" on theme axis "${axisName}": expected a ThemeOverride from defineTheme().`,
+        );
+      }
+      contexts[ctxName] = override;
+    }
+
+    axes.push({
+      name: axisName,
+      default: defaultName,
+      ...(description !== undefined ? { description } : {}),
+      contexts,
+    });
   }
+
+  return axes;
+}
+
+export function defineConfig(input: DefineConfigInput): Config {
+  const themes = normalizeThemes(input.themes);
 
   const registry: TokenRegistry = new Map();
   const groups: TokenGroups = new Map();
@@ -378,7 +487,7 @@ export function defineConfig(input: DefineConfigInput): Config {
     registry,
     groups,
     diagnostics,
-    themes: input.themes ?? {},
+    themes,
     plugins: normalizePlugins(input.plugins),
     logLevel: normalizeLogLevel(input.logLevel),
     introspection: normalizeIntrospection(input.introspection),

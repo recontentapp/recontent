@@ -83,3 +83,59 @@ test.each([
     'Theme "nope" is not defined in the config. Available themes: dark, repointed',
   );
 });
+
+test("resolveValue and aliasChain merge multi-axis selections in resolutionOrder", () => {
+  const ref = defineReferenceTokens({
+    color: {
+      brand: tokens.color("#2563eb"),
+      alt: tokens.color("#7c3aed"),
+      surface: tokens.color("#ffffff"),
+    },
+  });
+  const system = defineSystemTokens({
+    color: {
+      accent: ref.color.brand,
+      clash: ref.color.surface,
+    },
+  });
+  const acme = defineTheme(
+    { ref, system },
+    {
+      ref: { color: { alt: tokens.color("#db2777") } },
+      system: { color: { clash: tokens.color("#111111") } },
+    },
+  );
+  const dark = defineTheme(system, {
+    color: {
+      accent: ref.color.alt,
+      clash: tokens.color("#222222"),
+    },
+  });
+  const config = defineConfig({
+    tokens: { ref, system },
+    themes: { brand: { acme }, mode: { dark } },
+  });
+
+  const accent = config.registry.get("system.color.accent")!;
+  const clash = config.registry.get("system.color.clash")!;
+
+  // Cross-axis alias propagation: mode=dark points accent -> ref.color.alt, which brand=acme overrides.
+  expect(hexOf(resolveValue(config, accent, { mode: "dark" }))).toBe("#7c3aed");
+  expect(hexOf(resolveValue(config, accent, { brand: "acme", mode: "dark" }))).toBe("#db2777");
+  expect(pathsOf(aliasChain(config, accent, { brand: "acme", mode: "dark" }))).toEqual([
+    "system.color.accent",
+    "ref.color.alt",
+  ]);
+
+  // Later axis (`mode`) wins over earlier axis (`brand`) on conflicting keys.
+  expect(hexOf(resolveValue(config, clash, { brand: "acme" }))).toBe("#111111");
+  expect(hexOf(resolveValue(config, clash, { brand: "acme", mode: "dark" }))).toBe("#222222");
+
+  // Default context is a valid no-op.
+  expect(hexOf(resolveValue(config, clash, { brand: "default", mode: "default" }))).toBe("#ffffff");
+
+  // String shorthand is rejected when multiple axes exist.
+  expect(() => resolveValue(config, accent, "dark")).toThrow(/multiple theme axes/);
+  expect(() => resolveValue(config, accent, { nope: "dark" })).toThrow(/Theme axis "nope"/);
+  expect(() => resolveValue(config, accent, { mode: "nope" })).toThrow(/Context "nope"/);
+});

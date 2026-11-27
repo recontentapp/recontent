@@ -82,8 +82,7 @@ function isConfig(value: unknown): value is Config {
     "diagnostics" in value &&
     Array.isArray(value.diagnostics) &&
     "themes" in value &&
-    typeof value.themes === "object" &&
-    value.themes !== null &&
+    Array.isArray(value.themes) &&
     "plugins" in value &&
     Array.isArray(value.plugins)
   );

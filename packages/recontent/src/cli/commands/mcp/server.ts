@@ -35,7 +35,9 @@ const tokensInputSchema = z.strictObject({
     .string()
     .min(1)
     .optional()
-    .describe("Show values for this theme only (in addition to default)."),
+    .describe(
+      'Show values for this theme or axis selection only (e.g. "dark" for single-axis or "brand=acme,mode=dark" for multi-axis), in addition to default.',
+    ),
   deprecated: z.boolean().optional().describe("When true, return only deprecated tokens."),
 });
 

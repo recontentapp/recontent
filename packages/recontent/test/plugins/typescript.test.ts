@@ -1,8 +1,12 @@
+import ts from "typescript";
 import { describe, expect, test } from "@jest/globals";
 import {
+  defineComponentTokens,
   defineConfig,
   defineReferenceTokens,
   defineSystemTokens,
+  defineTheme,
+  defineThemeAxis,
   tokens,
 } from "../../src/index.js";
 import {
@@ -224,6 +228,62 @@ describe("parses and typechecks", () => {
       assertParses(file!.content);
       assertTypechecks(file!.content);
     }
+  });
+
+  test("multi-axis resolveTheme typechecks strictly and resolves cross-axis aliases in resolutionOrder", () => {
+    const ref = defineReferenceTokens({
+      color: {
+        brand: tokens.color("#2563eb"),
+        alt: tokens.color("#7c3aed"),
+        bg: tokens.color("#ffffff"),
+      },
+    });
+    const system = defineSystemTokens({
+      accent: ref.color.brand,
+      surface: ref.color.bg,
+    });
+    const components = defineComponentTokens({
+      button: { bg: system.accent },
+    });
+    const acme = defineTheme(
+      { ref, system },
+      {
+        ref: { color: { alt: tokens.color("#db2777") } },
+        system: { surface: tokens.color("#f5f5f5") },
+      },
+    );
+    const dark = defineTheme(system, {
+      accent: ref.color.alt,
+      surface: tokens.color("#111111"),
+    });
+    const config = defineConfig({
+      tokens: { ref, system, components },
+      themes: {
+        brand: defineThemeAxis({ default: "core", contexts: { acme } }),
+        mode: defineThemeAxis({ default: "light", contexts: { dark } }),
+      },
+    });
+
+    const [file] = generate(config);
+    assertParses(file!.content);
+    assertTypechecks(
+      `${file!.content}\nconst resolved: Theme = resolveTheme({ brand: "acme", mode: "dark" });\nvoid resolved;\n`,
+    );
+
+    const cjs = ts.transpileModule(file!.content, {
+      compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
+    }).outputText;
+    const exportsObj: Record<string, any> = {};
+    new Function("exports", cjs)(exportsObj);
+
+    expect(exportsObj.resolveTheme().components.button.bg).toBe("#2563eb");
+    // mode=dark aliases system.accent -> ref.color.alt, which brand=acme overrides to #db2777.
+    expect(exportsObj.resolveTheme({ brand: "acme", mode: "dark" }).components.button.bg).toBe(
+      "#db2777",
+    );
+    // Later axis (`mode`) wins on system.surface.
+    expect(exportsObj.resolveTheme({ brand: "acme" }).system.surface).toBe("#f5f5f5");
+    expect(exportsObj.resolveTheme({ brand: "acme", mode: "dark" }).system.surface).toBe("#111111");
   });
 });
 

@@ -73,13 +73,24 @@ export function generateScaleExports(scale: ScaleExport, root = "vars"): string 
   return `${doc}export type ${scale.typeName} = ${type};\n\n${doc}export const ${scale.exportName} = ${propertyAccess(root, [scale.metadata.layer, ...entryPath({ path: scale.metadata.path, layer: scale.metadata.layer })])};`;
 }
 
-/** The theme source `body` followed by the scale exports and the `themes` map, the same for every TypeScript target. */
+/** The theme source `body` followed by the scale exports and the `themes` map (or `resolveTheme` types for multi-axis). */
 export function generateThemeModule(
   config: GeneratorContext,
   body: string,
   scaleExports = scaleExportsForConfig(config),
 ): string {
-  const themeConstNames = ["theme", ...Object.keys(config.themes).sort()];
+  if (config.themes.length > 1) {
+    const lines = [
+      body,
+      ...scaleExports.map((scale) => `${generateScaleExports(scale, "theme")}\n`),
+      "export type Theme = ReturnType<typeof resolveTheme>;",
+      "export type BaseTheme = typeof theme;",
+    ];
+    return `${lines.join("\n")}\n`;
+  }
+
+  const singleAxis = config.themes[0];
+  const themeConstNames = ["theme", ...(singleAxis ? Object.keys(singleAxis.contexts).sort() : [])];
   const lines = [
     body,
     ...scaleExports.map((scale) => `${generateScaleExports(scale, "theme")}\n`),

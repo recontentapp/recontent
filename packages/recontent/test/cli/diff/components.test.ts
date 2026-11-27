@@ -58,7 +58,7 @@ const emptyTokens = {
   retyped: [],
   changed: [],
   metadata: [],
-  themes: { addedThemes: [], removedThemes: [], changedThemes: {} },
+  themes: { addedAxes: [], removedAxes: [], changedAxes: {} },
 };
 
 describe("components", () => {

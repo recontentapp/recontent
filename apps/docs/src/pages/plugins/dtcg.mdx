@@ -25,12 +25,11 @@ Plugin name: `recontent:dtcg`.
 
 ## Emitted files
 
-| File                  | Content                                             |
-| --------------------- | --------------------------------------------------- |
-| `tokens.tokens.json`  | Base tokens as a nested DTCG document.              |
-| `<theme>.tokens.json` | One file per theme with all tokens resolved for it. |
-
-Do not name a theme `tokens`, because its output file collides with `tokens.tokens.json`.
+| File                           | Content                                                                                    |
+| ------------------------------ | ------------------------------------------------------------------------------------------ |
+| `tokens.tokens.json`           | Base tokens as a nested DTCG document.                                                     |
+| `tokens.resolver.json`         | DTCG 2025.10 Resolver (`sets`, `modifiers`, `resolutionOrder`), emitted when themes exist. |
+| `themes/<context>.tokens.json` | Delta overrides per context (or `themes/<axis>-<context>.tokens.json` when multiple axes). |
 
 ## Format
 

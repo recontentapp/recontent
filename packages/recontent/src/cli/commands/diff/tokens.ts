@@ -1,5 +1,6 @@
 import type { Config } from "../../../config/types.js";
 import type {
+  ThemeAxis,
   ThemeOverride,
   ThemeValue,
   TokenEntry,
@@ -15,10 +16,18 @@ type ThemeOverrideDiff = {
   changed: { key: string; type?: TokenType; from: ThemeValue; to: ThemeValue }[];
 };
 
+type AxisContextDiff = {
+  defaultChanged?: { from: string; to: string };
+  addedContexts: string[];
+  removedContexts: string[];
+  changedContexts: Record<string, ThemeOverrideDiff>;
+};
+
 type ThemeDiff = {
-  addedThemes: string[];
-  removedThemes: string[];
-  changedThemes: Record<string, ThemeOverrideDiff>;
+  addedAxes: string[];
+  removedAxes: string[];
+  changedAxes: Record<string, AxisContextDiff>;
+  orderChanged?: { from: string[]; to: string[] };
 };
 
 export type TokenDiff = {
@@ -139,50 +148,97 @@ function diffThemeOverride(
 }
 
 function diffThemes(
-  base: Record<string, ThemeOverride>,
-  head: Record<string, ThemeOverride>,
+  base: readonly ThemeAxis[],
+  head: readonly ThemeAxis[],
   registries: { base: TokenRegistry; head: TokenRegistry },
   renamedKeys: Map<string, string>,
 ): ThemeDiff {
-  const baseNames = new Set(Object.keys(base));
-  const headNames = new Set(Object.keys(head));
+  const baseByName = new Map(base.map((axis) => [axis.name, axis]));
+  const headByName = new Map(head.map((axis) => [axis.name, axis]));
 
-  const addedThemes = [...headNames].filter((name) => !baseNames.has(name));
-  const removedThemes = [...baseNames].filter((name) => !headNames.has(name));
-  const changedThemes: Record<string, ThemeOverrideDiff> = {};
+  const addedAxes = head.filter((axis) => !baseByName.has(axis.name)).map((axis) => axis.name);
+  const removedAxes = base.filter((axis) => !headByName.has(axis.name)).map((axis) => axis.name);
+  const changedAxes: Record<string, AxisContextDiff> = {};
 
-  for (const name of baseNames) {
-    if (!headNames.has(name)) continue;
-    const themeDiff = diffThemeOverride(base[name]!, head[name]!, registries, renamedKeys);
+  for (const baseAxis of base) {
+    const headAxis = headByName.get(baseAxis.name);
+    if (!headAxis) continue;
+
+    const baseCtxNames = new Set(Object.keys(baseAxis.contexts));
+    const headCtxNames = new Set(Object.keys(headAxis.contexts));
+
+    const addedContexts = [...headCtxNames].filter((name) => !baseCtxNames.has(name));
+    const removedContexts = [...baseCtxNames].filter((name) => !headCtxNames.has(name));
+    const changedContexts: Record<string, ThemeOverrideDiff> = {};
+
+    for (const name of baseCtxNames) {
+      if (!headCtxNames.has(name)) continue;
+      const ctxDiff = diffThemeOverride(
+        baseAxis.contexts[name]!,
+        headAxis.contexts[name]!,
+        registries,
+        renamedKeys,
+      );
+      if (ctxDiff.added.length > 0 || ctxDiff.removed.length > 0 || ctxDiff.changed.length > 0) {
+        changedContexts[name] = ctxDiff;
+      }
+    }
+
+    const defaultChanged =
+      baseAxis.default !== headAxis.default
+        ? { from: baseAxis.default, to: headAxis.default }
+        : undefined;
+
     if (
-      themeDiff.added.length > 0 ||
-      themeDiff.removed.length > 0 ||
-      themeDiff.changed.length > 0
+      defaultChanged !== undefined ||
+      addedContexts.length > 0 ||
+      removedContexts.length > 0 ||
+      Object.keys(changedContexts).length > 0
     ) {
-      changedThemes[name] = themeDiff;
+      changedAxes[baseAxis.name] = {
+        ...(defaultChanged ? { defaultChanged } : {}),
+        addedContexts,
+        removedContexts,
+        changedContexts,
+      };
     }
   }
 
-  return { addedThemes, removedThemes, changedThemes };
+  const sharedBaseOrder = base.map((axis) => axis.name).filter((name) => headByName.has(name));
+  const sharedHeadOrder = head.map((axis) => axis.name).filter((name) => baseByName.has(name));
+  const orderChanged =
+    sharedBaseOrder.join("\0") !== sharedHeadOrder.join("\0")
+      ? { from: sharedBaseOrder, to: sharedHeadOrder }
+      : undefined;
+
+  return {
+    addedAxes,
+    removedAxes,
+    changedAxes,
+    ...(orderChanged ? { orderChanged } : {}),
+  };
 }
 
 // An override of a renamed token follows the rename, and an override of a removed token goes with
 // it, so neither is also reported as a removed override.
 function followTokenChanges(
-  themes: Record<string, ThemeOverride>,
+  themes: readonly ThemeAxis[],
   renamedKeys: Map<string, string>,
   removedKeys: Set<string>,
-): Record<string, ThemeOverride> {
-  return Object.fromEntries(
-    Object.entries(themes).map(([name, overrides]) => [
-      name,
-      new Map(
-        [...overrides]
-          .filter(([key]) => !removedKeys.has(key))
-          .map(([key, value]) => [renamedKeys.get(key) ?? key, value]),
-      ),
-    ]),
-  );
+): ThemeAxis[] {
+  return themes.map((axis) => ({
+    ...axis,
+    contexts: Object.fromEntries(
+      Object.entries(axis.contexts).map(([name, overrides]) => [
+        name,
+        new Map(
+          [...overrides]
+            .filter(([key]) => !removedKeys.has(key))
+            .map(([key, value]) => [renamedKeys.get(key) ?? key, value]),
+        ),
+      ]),
+    ),
+  }));
 }
 
 export function diffConfigs(base: Config, head: Config): TokenDiff {
@@ -249,13 +305,18 @@ export function diffConfigs(base: Config, head: Config): TokenDiff {
   };
 }
 
-/** Removing a token or a theme breaks consumers that reference it. A dropped override only falls back to the base value. */
+/** Removing a token, a theme axis, or a theme context breaks consumers that reference it. */
 export function countTokenBreakingChanges(diff: TokenDiff): number {
+  const removedContextsCount = Object.values(diff.themes.changedAxes).reduce(
+    (sum, axis) => sum + axis.removedContexts.length,
+    0,
+  );
   return (
     diff.removed.length +
     diff.renamed.length +
     diff.retyped.length +
-    diff.themes.removedThemes.length
+    diff.themes.removedAxes.length +
+    removedContextsCount
   );
 }
 

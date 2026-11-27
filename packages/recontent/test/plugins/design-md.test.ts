@@ -159,6 +159,24 @@ describe("DESIGN.md prose", () => {
     expect(md).not.toContain("| Token |");
   });
 
+  test("multi-axis themes render one subsection per axis and state resolutionOrder", () => {
+    const ref = defineReferenceTokens({
+      color: { brand: tokens.color("#2563eb") },
+      space: { md: tokens.dimension("16px") },
+    });
+    const acme = defineTheme(ref, { color: { brand: tokens.color("#7c3aed") } });
+    const compact = defineTheme(ref, { space: { md: tokens.dimension("12px") } });
+    const md = renderConfig(
+      defineConfig({
+        tokens: { ref, system: defineSystemTokens({}), components: {} },
+        themes: { brand: { acme }, density: { compact } },
+      }),
+    );
+    expect(md).toContain("Theme axes apply in resolution order: `brand` → `density`.");
+    expect(md).toContain("### brand\n\n| Token | default | acme |");
+    expect(md).toContain("### density\n\n| Token | default | compact |");
+  });
+
   test("deprecations are listed as things not to use", () => {
     expect(md).toContain(
       "- Don't use `{components.button.background}`: Use system.colors.surface instead.",

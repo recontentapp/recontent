@@ -2,11 +2,13 @@ import { describe, expect, test } from "@jest/globals";
 import type { ComponentInfo, PropInfo } from "../../../src/introspection/model.js";
 import {
   renderComponents,
+  renderOverview,
   renderSearch,
   renderTokens,
   sharedDeclarations,
 } from "../../../src/cli/commands/inspect/render.js";
 import type { DocToken } from "../../../src/snapshot/doc-token.js";
+import type { SnapshotThemeAxis } from "../../../src/snapshot/snapshot.js";
 import { component, prop, token, typeInfo } from "../../helpers/inspect-model.js";
 
 describe("renderComponents", () => {
@@ -126,6 +128,9 @@ describe("renderComponents, compactly", () => {
 });
 
 describe("renderTokens", () => {
+  const singleAxis: SnapshotThemeAxis[] = [
+    { name: "theme", default: "default", contexts: ["dark"] },
+  ];
   const tokens = [
     token("system.color.accent", "color", { values: { default: "#fff", dark: "#000" } }),
     token("system.color.surface", "color", { values: { default: "#eee" } }),
@@ -133,13 +138,51 @@ describe("renderTokens", () => {
 
   test("with --theme, json holds that theme for every token, falling back to the default", () => {
     const { tokens: shown } = JSON.parse(
-      renderTokens(tokens, { format: "json", themes: ["dark"], theme: "dark", summary: false }),
+      renderTokens(tokens, { format: "json", themes: singleAxis, theme: "dark", summary: false }),
     );
 
     expect(shown.map((t: DocToken) => t.values)).toEqual([
       { default: "#fff", dark: "#000" },
       { default: "#eee", dark: "#eee" },
     ]);
+  });
+
+  test("resolves multi-axis --theme selections in resolutionOrder and formats multi-axis overview", () => {
+    const multiAxis: SnapshotThemeAxis[] = [
+      { name: "brand", default: "core", contexts: ["acme"] },
+      { name: "mode", default: "light", contexts: ["dark"] },
+    ];
+    const multiTokens = [
+      token("system.color.accent", "color", {
+        values: { default: "#111", "brand=acme": "#f00", "mode=dark": "#00f" },
+      }),
+      token("system.color.brandOnly", "color", {
+        values: { default: "#222", "brand=acme": "#0f0" },
+      }),
+    ];
+
+    const { tokens: shown } = JSON.parse(
+      renderTokens(multiTokens, {
+        format: "json",
+        themes: multiAxis,
+        theme: "brand=acme,mode=dark",
+        summary: false,
+      }),
+    );
+    expect(shown.map((t: DocToken) => t.values)).toEqual([
+      { default: "#111", "brand=acme,mode=dark": "#00f" },
+      { default: "#222", "brand=acme,mode=dark": "#0f0" },
+    ]);
+
+    const overview = renderOverview(
+      {
+        config: "recontent.config.ts",
+        tokens: multiTokens,
+        themes: multiAxis,
+      },
+      "markdown",
+    );
+    expect(overview).toContain("Themes: `brand` (`core`, `acme`), `mode` (`light`, `dark`)");
   });
 
   test("a summary of no tokens still ends with a Next hint", () => {
@@ -150,10 +193,13 @@ describe("renderTokens", () => {
 });
 
 describe("renderSearch", () => {
+  const singleAxis: SnapshotThemeAxis[] = [
+    { name: "theme", default: "default", contexts: ["dark"] },
+  ];
   const render = (result: Partial<Parameters<typeof renderSearch>[0]>) =>
     renderSearch(
       { tokens: [], components: [], types: [], suggestions: [], ...result },
-      { format: "markdown", queries: ["tooltip", "#ef4444"], themes: ["dark"] },
+      { format: "markdown", queries: ["tooltip", "#ef4444"], themes: singleAxis },
     );
 
   test("sections list what matched, and why when the name did not", () => {

@@ -4,6 +4,7 @@ import {
   defineReferenceTokens,
   defineSystemTokens,
   defineTheme,
+  defineThemeAxis,
   tokens,
 } from "../../src/index.js";
 import { generateVanillaExtractFiles } from "../../src/plugins/vanilla-extract/generate.js";
@@ -67,13 +68,13 @@ describe("contract", () => {
 });
 
 describe("base themeClass", () => {
-  test("an aliased scalar emits the unquoted reference vars.ref.color.black, and a multi-hop alias resolves to the terminal var", () => {
+  test("an aliased scalar emits its immediate target reference so intermediate overrides cascade", () => {
     const config = aliasChainConfig();
     const [file] = generate(config);
     const start = file!.content.indexOf("export const themeClass");
-    const base = file!.content.slice(start, file!.content.indexOf("export const", start + 1));
+    const base = file!.content.slice(start);
     expect(base).toMatch(/"accent": vars\.ref\.color\.black,/);
-    expect(base).toMatch(/"background": vars\.ref\.color\.black,/);
+    expect(base).toMatch(/"background": vars\.system\.colors\.accent,/);
   });
 
   test("an inline shadow with an aliased member emits a template literal", () => {
@@ -141,8 +142,8 @@ describe("base themeClass", () => {
   });
 });
 
-describe("theme classes (Fix B + C)", () => {
-  test("one <name>ThemeClass per theme, exported in Object.keys(...).sort() order", () => {
+describe("additive theme classes", () => {
+  test("one <name>ThemeClass style({ vars }) per theme, exported in sorted order", () => {
     const ref = defineReferenceTokens({
       color: { black: tokens.color("#000000") },
     });
@@ -154,42 +155,37 @@ describe("theme classes (Fix B + C)", () => {
       themes: { bravo, alpha },
     });
     const [file] = generate({ config });
-    expect(file!.content).toMatch(/export const alphaThemeClass = createTheme/);
-    expect(file!.content).toMatch(/export const bravoThemeClass = createTheme/);
+    expect(file!.content).toMatch(/export const alphaThemeClass = style\(\{/);
+    expect(file!.content).toMatch(/export const bravoThemeClass = style\(\{/);
     expect(file!.content.indexOf("alphaThemeClass")).toBeLessThan(
       file!.content.indexOf("bravoThemeClass"),
     );
   });
 
-  test("a directly overridden ref token is a literal in that theme's tree, while a system token aliasing it still emits vars.ref.color.black", () => {
+  test("a single-axis theme class sets only the overridden contract var (untouched aliases cascade from themeClass)", () => {
     const config = themedConfig({ layer: "ref" });
     const [file] = generate(config);
     const darkBlock = file!.content.slice(file!.content.indexOf("darkThemeClass"));
-    expect(darkBlock).toMatch(/"black": '#111111',/);
-    expect(darkBlock).toMatch(/"accent": vars\.ref\.color\.black,/);
-    expect(darkBlock).not.toMatch(/"accent": '#111111',/);
+    expect(darkBlock).toMatch(/\[vars\.ref\.color\.black\]: '#111111',/);
+    expect(darkBlock).not.toMatch(/vars\.system\.colors\.accent/);
+    expect(darkBlock).not.toMatch(/vars\.components\.button\.background/);
   });
 
-  test("a directly overridden system token is a literal, and a component token aliasing it references vars.system.…", () => {
-    const config = themedConfig({ layer: "system" });
-    const [file] = generate(config);
-    const darkBlock = file!.content.slice(file!.content.indexOf("darkThemeClass"));
-    expect(darkBlock).toMatch(/"accent": '#111111',/);
-    expect(darkBlock).toMatch(/"background": vars\.system\.colors\.accent,/);
-    expect(darkBlock).not.toMatch(/"background": vars\.ref\.color\.black,/);
+  test("a directly overridden system token sets only vars.system.…, and a theme alias emits a vars reference", () => {
+    const literalFile = generate(themedConfig({ layer: "system" }))[0]!;
+    const literalDark = literalFile.content.slice(literalFile.content.indexOf("darkThemeClass"));
+    expect(literalDark).toMatch(/\[vars\.system\.colors\.accent\]: '#111111',/);
+    expect(literalDark).not.toMatch(/vars\.components/);
+
+    const aliasFile = generate(themedConfig({ layer: "system", alias: true }))[0]!;
+    const aliasDark = aliasFile.content.slice(aliasFile.content.indexOf("darkThemeClass"));
+    expect(aliasDark).toMatch(/\[vars\.system\.colors\.accent\]: vars\.ref\.color\.white,/);
   });
 
-  test("a theme alias becomes a vars reference", () => {
-    const [file] = generate(themedConfig({ layer: "system", alias: true }));
-    const darkBlock = file!.content.slice(file!.content.indexOf("darkThemeClass"));
-    expect(darkBlock).toMatch(/"accent": vars\.ref\.color\.white,/);
-  });
-
-  test("a shadow whose member aliases an overridden ref color keeps its template literal", () => {
+  test("an overridden inline shadow with an aliased member emits a template literal in style({ vars })", () => {
     const ref = defineReferenceTokens({
       color: { black: tokens.color("#000000") },
     });
-    const dark = defineTheme(ref, { color: { black: tokens.color("#111111") } });
     const system = defineSystemTokens({
       shadow: {
         card: tokens.shadow({
@@ -201,16 +197,29 @@ describe("theme classes (Fix B + C)", () => {
         }),
       },
     });
+    const dark = defineTheme(system, {
+      shadow: {
+        card: tokens.shadow({
+          color: ref.color.black,
+          offsetX: "0px",
+          offsetY: "4px",
+          blur: "8px",
+          spread: "0px",
+        }),
+      },
+    });
     const config = defineConfig({
       tokens: { ref, system, components: {} },
       themes: { dark },
     });
     const [file] = generate({ config });
     const darkBlock = file!.content.slice(file!.content.indexOf("darkThemeClass"));
-    expect(darkBlock).toMatch(/"card": `0px 2px 4px 0px \$\{vars\.ref\.color\.black\}`,/);
+    expect(darkBlock).toMatch(
+      /\[vars\.system\.shadow\.card\]: `0px 4px 8px 0px \$\{vars\.ref\.color\.black\}`,/,
+    );
   });
 
-  test("an override whose value is 0 is applied (Fix C)", () => {
+  test("an override whose value is 0 is applied", () => {
     const ref = defineReferenceTokens({
       spacing: { none: tokens.dimension("4px") },
     });
@@ -221,25 +230,31 @@ describe("theme classes (Fix B + C)", () => {
     });
     const [file] = generate({ config });
     const darkBlock = file!.content.slice(file!.content.indexOf("darkThemeClass"));
-    expect(darkBlock).toMatch(/"none": '0px',/);
+    expect(darkBlock).toMatch(/\[vars\.ref\.spacing\.none\]: '0px',/);
   });
 
-  test("a theme overriding one scale member replaces only that member", () => {
+  test("multi-axis themes emit one <axis>Themes map per axis in resolutionOrder with default mapped to empty string", () => {
     const ref = defineReferenceTokens({
-      spacing: tokens.dimensionScale({ 0: "0px", 1: "4px", 2: "8px" }),
+      color: { primary: tokens.color("#2563eb"), bg: tokens.color("#ffffff") },
     });
-    const dark = defineTheme(ref, {
-      spacing: tokens.dimensionScale({ 0: "0px", 1: "100px", 2: "8px" }),
-    });
+    const acme = defineTheme(ref, { color: { primary: tokens.color("#7c3aed") } });
+    const dark = defineTheme(ref, { color: { bg: tokens.color("#111111") } });
     const config = defineConfig({
-      tokens: { ref, system: defineSystemTokens({}), components: {} },
-      themes: { dark },
+      tokens: { ref },
+      themes: {
+        brand: defineThemeAxis({ default: "core", contexts: { acme } }),
+        mode: defineThemeAxis({ default: "light", contexts: { dark } }),
+      },
     });
     const [file] = generate({ config });
-    const darkBlock = file!.content.slice(file!.content.indexOf("darkThemeClass"));
-    expect(darkBlock).toMatch(/"1": '100px',/);
-    expect(darkBlock).toMatch(/"0": '0px',/);
-    expect(darkBlock).toMatch(/"2": '8px',/);
+    assertParses(file!.content);
+    expect(file!.content).toMatch(
+      /export const brandThemes = \{\s*"core": '',\s*"acme": style\(\{/,
+    );
+    expect(file!.content).toMatch(
+      /export const modeThemes = \{\s*"light": '',\s*"dark": style\(\{/,
+    );
+    expect(file!.content.indexOf("brandThemes")).toBeLessThan(file!.content.indexOf("modeThemes"));
   });
 });
 

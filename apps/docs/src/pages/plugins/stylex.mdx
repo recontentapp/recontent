@@ -37,23 +37,24 @@ export function App({ dark }: { dark: boolean }) {
 stylex(options: StylexPluginOptions): RecontentPlugin
 ```
 
-| Option   | Type     | Default  | Description                                   |
-| -------- | -------- | -------- | --------------------------------------------- |
-| `outDir` | `string` | required | Output directory relative to the config file. |
+| Option            | Type     | Default  | Description                                                          |
+| ----------------- | -------- | -------- | -------------------------------------------------------------------- |
+| `outDir`          | `string` | required | Output directory relative to the config file.                        |
+| `maxCombinations` | `number` | `64`     | Maximum multi-axis theme combinations materialized into `themes.ts`. |
 
 Plugin name: `recontent:stylex`.
 
 ## Emitted files
 
-| File               | Content                                                                 |
-| ------------------ | ----------------------------------------------------------------------- |
-| `tokens.stylex.ts` | `export const vars = stylex.defineVars({ … })`: one flat key per token. |
-| `themes.ts`        | `<name>Theme = stylex.createTheme(vars, { … })` for each theme.         |
-| `scales.ts`        | A key union and constant per scale (`RefColorGray`, `refColorGray`).    |
+| File               | Content                                                                                                          |
+| ------------------ | ---------------------------------------------------------------------------------------------------------------- |
+| `tokens.stylex.ts` | `export const vars = stylex.defineVars({ … })`: one flat key per token.                                          |
+| `themes.ts`        | `<name>Theme = stylex.createTheme(vars, { … })` (single axis) or `getTheme(selection: ThemeSelection)` (N axes). |
+| `scales.ts`        | A key union and constant per scale (`RefColorGray`, `refColorGray`).                                             |
 
 Because StyleX variables must be flat, the plugin converts each token path to camelCase: `system.color.background` becomes `systemColorBackground`, and `ref.spacing.0-5` becomes `refSpacing05`. Typography and transition tokens emit one key per member (`systemTypographyBodyFontSize`).
 
-The plugin emits aliases as derived variables, so overriding a referenced token updates every token that aliases it.
+The plugin emits aliases as derived variables, so overriding a referenced token updates every token that aliases it. Because StyleX `createTheme` overrides on one `VarGroup` are mutually exclusive, multi-axis setups materialize non-base combinations up front and expose a typed `getTheme({ brand, mode })` lookup.
 
 ## Diagnostics
 
@@ -62,4 +63,5 @@ Each condition below fails the build.
 | When                                                                                                                         |
 | ---------------------------------------------------------------------------------------------------------------------------- |
 | Two tokens flatten to the same key: `StyleX key collision: token paths "…" and "…" both flatten to "…"`. Rename one of them. |
-| A theme name is not a valid TypeScript identifier (`my-dark`).                                                               |
+| A single-axis theme name is not a valid TypeScript identifier (`my-dark`).                                                   |
+| Multi-axis combination count exceeds `maxCombinations` (default `64`).                                                       |

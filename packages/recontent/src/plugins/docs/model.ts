@@ -3,7 +3,11 @@ import { type ComponentInfo } from "../../introspection/model.js";
 import { type PluginContext } from "../types.js";
 import { type TokenLayer } from "../../token-model/model.js";
 import { buildToken, deprecation, type DocToken } from "../../snapshot/doc-token.js";
-import { numericCompare } from "../../snapshot/snapshot.js";
+import {
+  numericCompare,
+  toSnapshotThemes,
+  type SnapshotThemeAxis,
+} from "../../snapshot/snapshot.js";
 
 const DOC_LAYERS: TokenLayer[] = ["ref", "system", "components"];
 
@@ -19,14 +23,14 @@ type DocLayer = { layer: TokenLayer; groups: DocGroup[] };
 
 export type DocsModel = {
   title: string;
-  themes: string[];
+  themes: SnapshotThemeAxis[];
   tokenCount: number;
   layers: DocLayer[];
   components: ComponentInfo[];
 };
 
 export function buildDocsModel(ctx: PluginContext, title: string): DocsModel {
-  const themes = Object.keys(ctx.themes);
+  const themes = toSnapshotThemes(ctx.themes);
   const entries = [...ctx.registry.values()]
     .map((entry) => ({ key: pathKey(entry.path), entry }))
     .sort((a, b) => numericCompare(a.key, b.key));
@@ -51,7 +55,7 @@ export function buildDocsModel(ctx: PluginContext, title: string): DocsModel {
         ...(deprecated !== undefined ? { deprecated } : {}),
       };
     }
-    group.tokens.push(buildToken(ctx, entry, themes));
+    group.tokens.push(buildToken(ctx, entry));
   }
 
   const layers: DocLayer[] = DOC_LAYERS.map((layer) => ({

@@ -47,7 +47,8 @@ export type BaseTheme = typeof theme;
 ```
 
 - `theme` holds base tokens nested by layer and path. Aliases reference their target token directly so the file mirrors your config.
-- Each configured theme exports a matching constant (`dark`) with its overrides applied.
+- With a single theme axis, each configured theme exports a matching constant (`dark`) plus `themes`, `ThemeName`, and `Theme`.
+- With multiple theme axes, the module exports `theme`, `ThemeSelection`, `resolveTheme(selection?: ThemeSelection)`, `Theme`, and `BaseTheme`, resolving overrides layer-by-layer without combinatorial code growth.
 - Each [scale](/config/scales) exports a key union and constant (`RefSpacing`, `refSpacing`) named after its layer and path.
 - Every export uses `as const`, giving `theme.system.color.text` a literal type.
 - Composites: `shadow`, `border`, and `gradient` emit CSS strings; `typography` and `transition` emit objects keyed by CSS property (`fontSize`, `transitionDuration`…).

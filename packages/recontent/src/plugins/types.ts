@@ -1,4 +1,4 @@
-import type { TokenGroups, TokenRegistry, ThemeOverride } from "../token-model/registry.js";
+import type { TokenGroups, TokenRegistry, ThemeAxis } from "../token-model/registry.js";
 import type { Logger } from "../logger.js";
 import type { ComponentInfo, TypeInfo } from "../introspection/model.js";
 
@@ -20,7 +20,7 @@ export type PluginDiagnostic = {
 export type PluginContext = {
   registry: TokenRegistry;
   groups: TokenGroups;
-  themes: Record<string, ThemeOverride>;
+  themes: ThemeAxis[];
   /** Absolute path to the directory containing recontent.config.ts. */
   root: string;
   logger: Logger;

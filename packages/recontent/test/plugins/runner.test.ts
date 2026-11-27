@@ -15,7 +15,7 @@ function baseConfig(plugins: RecontentPlugin[]): Config {
     registry: new Map(),
     groups: new Map(),
     diagnostics: [],
-    themes: {},
+    themes: [],
     plugins,
     logLevel: "info",
   };

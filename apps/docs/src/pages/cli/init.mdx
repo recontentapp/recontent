@@ -49,7 +49,7 @@ How `init` maps DTCG tokens:
 - Literal values become `ref` tokens. Aliases (`{color.blue}`) and composites containing aliases become `system` tokens pointing to the final `ref` token.
 - Group names, descriptions, and deprecations stay intact.
 - When `$type` is missing, `init` infers it from the value where possible and prints a warning.
-- In a resolver, each modifier's default context becomes the base tokens. Every other context becomes a theme named `<context>` (or `<modifier>-<context>` for multiple modifiers). Plain-alias overrides reference their target `ref` token, while other overrides emit literals.
+- In a resolver, each modifier's default context merges into the base tokens. Modifiers preserve their axis names, `default`, `description`, non-default contexts, and `resolutionOrder`, using `defineThemeAxis` when needed. Plain-alias overrides reference their target `ref` token, while other overrides emit literals.
 
 `init` skips unsupported entries and prints a warning for each:
 

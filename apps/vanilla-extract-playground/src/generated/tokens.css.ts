@@ -1,4 +1,4 @@
-import { createTheme, createThemeContract } from "@vanilla-extract/css";
+import { createTheme, createThemeContract, style } from "@vanilla-extract/css";
 
 export const vars = createThemeContract({
   "ref": {
@@ -841,3 +841,88 @@ export const themeClass = createTheme(vars, {
     },
   },
 });
+
+export const modeThemes = {
+  "light": '',
+  "dark": style({
+    vars: {
+      [vars.system.colors.accent]: vars.ref.color.secondary[50],
+      [vars.system.colors.onAccent]: vars.ref.color.secondary[900],
+      [vars.system.colors.backgroundSurface]: vars.ref.color.secondary[800],
+      [vars.system.colors.backgroundBody]: vars.ref.color.secondary[900],
+      [vars.system.colors.backgroundCard]: vars.ref.color.secondary[800],
+      [vars.system.colors.backgroundMuted]: vars.ref.color.secondary[750],
+      [vars.system.colors.textPrimary]: vars.ref.color.secondary[50],
+      [vars.system.colors.textSecondary]: vars.ref.color.secondary[400],
+      [vars.system.colors.textDisabled]: vars.ref.color.secondary[600],
+      [vars.system.colors.border]: vars.ref.color.secondary[700],
+      [vars.system.colors.borderEmphasized]: vars.ref.color.secondary[500],
+      [vars.system.colors.skeleton]: vars.ref.color.secondary[750],
+      [vars.system.colors.secondary[200]]: vars.ref.color.secondary[50],
+      [vars.system.colors.textScale.primary]: vars.ref.color.secondary[50],
+      [vars.system.colors.textScale.secondary]: vars.ref.color.secondary[400],
+      [vars.system.colors.textScale.disabled]: vars.ref.color.secondary[600],
+      [vars.system.colors.textScale.accent]: vars.ref.color.secondary[50],
+      [vars.system.elevationScale.sm]: `0px 0px 2px 0px ${vars.ref.color.secondary["900-50"]}, 0px 2px 10px 0px ${vars.ref.color.secondary["900-50"]}`,
+      [vars.system.elevationScale.md]: `0px 0px 3px 0px ${vars.ref.color.secondary["900-50"]}, 0px 4px 20px 0px ${vars.ref.color.secondary["900-50"]}`,
+      [vars.system.elevationScale.lg]: `0px 0px 4px 0px ${vars.ref.color.secondary["900-50"]}, 0px 8px 40px 0px ${vars.ref.color.secondary["900-50"]}`,
+      [vars.system.elevationScale.inset]: `inset 0px 1px 2px 0px ${vars.ref.color.secondary["900-50"]}`,
+      [vars.system.border.default]: `1px solid ${vars.ref.color.secondary[700]}`,
+      [vars.system.borderScale.thin]: `1px solid ${vars.ref.color.secondary[700]}`,
+      [vars.system.borderScale.thick]: `2px solid ${vars.ref.color.secondary[700]}`,
+      [vars.system.gradients.accent]: `linear-gradient(135deg, ${vars.ref.color.secondary[50]} 0%, ${vars.ref.color.secondary[300]} 100%)`,
+    },
+  }),
+} as const;
+
+export const brandThemes = {
+  "neutral": '',
+  "cobalt": style({
+    vars: {
+      [vars.system.colors.accent]: vars.ref.color.info[600],
+      [vars.system.colors.onAccent]: vars.ref.color.white[100],
+      [vars.system.colors.secondary[200]]: vars.ref.color.info[600],
+      [vars.system.gradients.accent]: `linear-gradient(135deg, ${vars.ref.color.info[700]} 0%, ${vars.ref.color.info[500]} 100%)`,
+    },
+  }),
+  "emerald": style({
+    vars: {
+      [vars.system.colors.accent]: vars.ref.color.success[700],
+      [vars.system.colors.onAccent]: vars.ref.color.white[100],
+      [vars.system.colors.secondary[200]]: vars.ref.color.success[700],
+      [vars.system.gradients.accent]: `linear-gradient(135deg, ${vars.ref.color.success[800]} 0%, ${vars.ref.color.success[500]} 100%)`,
+    },
+  }),
+} as const;
+
+export const densityThemes = {
+  "comfortable": '',
+  "compact": style({
+    vars: {
+      [vars.system.spacing[0]]: vars.ref.spacing[0],
+      [vars.system.spacing[2]]: vars.ref.spacing[2],
+      [vars.system.spacing[4]]: '3px',
+      [vars.system.spacing[8]]: '6px',
+      [vars.system.spacing[12]]: vars.ref.spacing[8],
+      [vars.system.spacing[16]]: vars.ref.spacing[12],
+      [vars.system.spacing[20]]: '14px',
+      [vars.system.spacing[24]]: vars.ref.spacing[16],
+      [vars.system.spacing[32]]: vars.ref.spacing[24],
+      [vars.system.spacing[40]]: '28px',
+      [vars.system.spacing[48]]: vars.ref.spacing[32],
+      [vars.system.spacing[56]]: vars.ref.spacing[40],
+      [vars.system.spacing[64]]: vars.ref.spacing[48],
+      [vars.system.spacing[72]]: vars.ref.spacing[56],
+      [vars.system.spacing[80]]: vars.ref.spacing[64],
+      [vars.system.radius.none]: vars.ref.radius.none,
+      [vars.system.radius.inner]: '2px',
+      [vars.system.radius.element]: vars.ref.radius.inner,
+      [vars.system.radius.container]: vars.ref.radius.element,
+      [vars.system.radius.page]: vars.ref.radius.container,
+      [vars.system.radius.full]: vars.ref.radius.full,
+      [vars.components.sticker.paddingX]: vars.ref.spacing[4],
+      [vars.components.sticker.paddingY]: '1px',
+      [vars.components.sticker.borderRadius]: '2px',
+    },
+  }),
+} as const;

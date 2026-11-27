@@ -4,7 +4,7 @@ import { generateTypeScriptFiles } from "../../src/plugins/typescript.js";
 import { generateTypeScriptNativeFiles } from "../../src/plugins/typescript-native.js";
 import { generateStylexFiles } from "../../src/plugins/stylex.js";
 import { generateVanillaExtractFiles } from "../../src/plugins/vanilla-extract/generate.js";
-import { generateDtcg, generateDtcgThemed } from "../../src/plugins/dtcg.js";
+import { generateDtcgFiles } from "../../src/plugins/dtcg.js";
 import { goldenConfig } from "../helpers/fixtures.js";
 import type { OutputFile } from "../../src/plugins/shared/context.js";
 
@@ -47,18 +47,8 @@ describe("golden snapshots", () => {
     expect(joinFiles(generateVanillaExtractFiles(config))).toMatchSnapshot();
   });
 
-  test("dtcg (base)", () => {
+  test("dtcg", () => {
     const { config } = goldenConfig();
-    expect(generateDtcg(config)).toMatchSnapshot();
-  });
-
-  test("dtcg (themed: dark)", () => {
-    const { config } = goldenConfig();
-    expect(generateDtcgThemed(config, "dark")).toMatchSnapshot();
-  });
-
-  test("dtcg (themed: highContrast)", () => {
-    const { config } = goldenConfig();
-    expect(generateDtcgThemed(config, "highContrast")).toMatchSnapshot();
+    expect(joinFiles(generateDtcgFiles(config, { outDir: "dist-test" }))).toMatchSnapshot();
   });
 });

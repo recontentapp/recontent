@@ -38,16 +38,16 @@ The revision defaults to `HEAD`, so running `recontent diff` with no arguments s
 
 A change counts as **breaking** when existing code using a token stops working:
 
-| Change                                                   | Breaking |
-| -------------------------------------------------------- | -------- |
-| Removing a token                                         | Yes      |
-| Renaming a token (same type and value, new path)         | Yes      |
-| Changing a token's type (`dimension` to `number`)        | Yes      |
-| Removing a theme                                         | Yes      |
-| Adding a token                                           | No       |
-| Deprecating a token or editing its description           | No       |
-| Changing a token's value or alias                        | No       |
-| Adding a theme or adding, editing, or dropping overrides | No       |
+| Change                                                                    | Breaking |
+| ------------------------------------------------------------------------- | -------- |
+| Removing a token                                                          | Yes      |
+| Renaming a token (same type and value, new path)                          | Yes      |
+| Changing a token's type (`dimension` to `number`)                         | Yes      |
+| Removing a theme axis or theme context                                    | Yes      |
+| Adding a token                                                            | No       |
+| Deprecating a token or editing its description                            | No       |
+| Changing a token's value or alias                                         | No       |
+| Adding a theme axis/context, reordering axes, or changing theme overrides | No       |
 
 Recontent detects renames by pairing one removed token with one added token that shares the same type and value (or alias). When several tokens share a value, Recontent reports an ambiguous removal and addition instead, which still counts as breaking.
 

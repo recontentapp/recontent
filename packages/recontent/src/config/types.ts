@@ -2,7 +2,7 @@ import type { IntrospectionConfigInput } from "../introspection/model.js";
 import type { LogLevel } from "../logger.js";
 import type { RecontentPlugin } from "../plugins/types.js";
 import type {
-  ThemeOverride,
+  ThemeAxis,
   TokenDiagnostic,
   TokenGroups,
   TokenRegistry,
@@ -12,7 +12,7 @@ export type Config = {
   registry: TokenRegistry;
   groups: TokenGroups;
   diagnostics: TokenDiagnostic[];
-  themes: Record<string, ThemeOverride>;
+  themes: ThemeAxis[];
   plugins: RecontentPlugin[];
   logLevel: LogLevel;
   introspection?: IntrospectionConfigInput;

@@ -219,8 +219,12 @@ async function buildOnce(
     return state;
   }
 
+  const contextCount = config.themes.reduce(
+    (sum, axis) => sum + Object.keys(axis.contexts).length,
+    0,
+  );
   logger.debug(
-    `Loaded build config with ${config.plugins.length} plugin(s), ${config.registry.size} token(s), and ${Object.keys(config.themes).length} theme(s).`,
+    `Loaded build config with ${config.plugins.length} plugin(s), ${config.registry.size} token(s), and ${contextCount} theme context(s) across ${config.themes.length} axis/axes.`,
   );
 
   const configDir = root;
