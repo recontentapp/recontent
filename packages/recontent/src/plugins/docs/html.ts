@@ -366,9 +366,11 @@ function componentHtml(
 }
 
 function tokenCss(ctx: GeneratorContext): string {
-  // Scope attribute selectors to `body[data-...]` so a token axis named `mode` never
-  // collides with `:root[data-mode="dark"]` (the docs UI chrome toggle on <html>).
+  // Scope both `:root` and `[data-...]` to `body` so a token axis named `mode` never
+  // collides with `:root[data-mode="dark"]` (the docs UI chrome toggle on <html>), and
+  // `var(--ref-...)` aliases resolve on `<body>` where `data-<axis>` is toggled.
   return generateCss(ctx, { themeSelector: "attribute" })
+    .replace(/^:root\b/gm, "body")
     .replace(/^(\[data-[^\]]+\])/gm, "body$1")
     .replace(/<\/(style)/gi, "<\\/$1");
 }
@@ -868,21 +870,20 @@ const SCRIPT = `
         ? { text: t.values[v], overridden: t.values[v] !== t.base }
         : { text: t.base, overridden: false };
     }
-    var keys = Object.keys(t.values);
+    var keyParts = Object.keys(t.values).map(function (k) { return k.split(","); });
     var relevant = [];
     for (var i = 0; i < selects.length; i++) {
       var val = selects[i].value;
       if (!val) continue;
-      var axis = selects[i].getAttribute("data-axis");
-      var prefix = axis + "=";
+      var pair = selects[i].getAttribute("data-axis") + "=" + val;
       var touches = false;
-      for (var k = 0; k < keys.length; k++) {
-        if (keys[k].indexOf(prefix) === 0 || keys[k].indexOf("," + prefix) >= 0) {
+      for (var k = 0; k < keyParts.length; k++) {
+        if (keyParts[k].indexOf(pair) >= 0) {
           touches = true;
           break;
         }
       }
-      if (touches) relevant.push(prefix + val);
+      if (touches) relevant.push(pair);
     }
     if (relevant.length === 0) return { text: t.base, overridden: false };
     var exact = t.values[relevant.join(",")];

@@ -400,8 +400,27 @@ test("diffConfigs counts removed axes and contexts as breaking, and tracks defau
     to: "day",
   });
   const md = formatDiff({ tokens: reorderedAxes });
-  expect(md).toContain("**resolution order**: `brand` -> `mode` -> `mode` -> `brand`");
+  expect(md).toContain("**resolution order**: `brand`, `mode` -> `mode`, `brand`");
   expect(md).toContain("**default**: `light` -> `day`");
+
+  // Adding the first flat theme names the theme context rather than the implicit "theme" axis.
+  const firstFlatTheme = diffConfigs(config(registry), config(registry, { dark: override(["a"]) }));
+  expect(formatDiff({ tokens: firstFlatTheme })).toContain("- `dark`: added");
+
+  // Multi-axis config with an axis named "theme" keeps the axis qualifier even when only it changes.
+  const multiNamedTheme = diffConfigs(
+    config(registry, [
+      { name: "theme", default: "default", contexts: { dark: override(["a"]) } },
+      { name: "density", default: "normal", contexts: { compact: override(["b"]) } },
+    ]),
+    config(registry, [
+      { name: "theme", default: "default", contexts: { highContrast: override(["a"]) } },
+      { name: "density", default: "normal", contexts: { compact: override(["b"]) } },
+    ]),
+  );
+  const multiMd = formatDiff({ tokens: multiNamedTheme });
+  expect(multiMd).toContain("**removed theme context** `theme=dark`");
+  expect(multiMd).toContain("- axis `theme`");
 });
 
 test("diffConfigs does not report an alias that only follows a renamed token", () => {

@@ -1,10 +1,12 @@
 import { colorLuminance, relativeLuminance, toSrgb } from "../color/convert.js";
+import { pathKey } from "../token-model/guards.js";
 import {
+  type ThemeAxis,
   type ThemeOverride,
   type TokenEntry,
   type TokenRegistry,
 } from "../token-model/registry.js";
-import { resolveEntryValue, themeCombinations } from "../token-model/alias.js";
+import { resolveEntryValue, themeCombinations, themedEntry } from "../token-model/alias.js";
 import { type ColorValue } from "../token-model/values.js";
 import { type PluginContext, type PluginDiagnostic, type RecontentPlugin } from "./types.js";
 
@@ -51,6 +53,53 @@ function contrastRatio(fg: ResolvedColor, bg: ResolvedColor): number {
   return (Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05);
 }
 
+/** Axes that override `entry` or any token reachable through its alias chains. */
+function relevantAxesForColor(
+  entry: TokenEntry,
+  registry: TokenRegistry,
+  axes: readonly ThemeAxis[],
+): Set<ThemeAxis> {
+  const startKey = pathKey(entry.path);
+  const visited = new Set<string>([startKey]);
+  const queue = [startKey];
+
+  while (queue.length > 0) {
+    const key = queue.shift()!;
+    const regEntry = registry.get(key);
+    if (!regEntry) continue;
+
+    const views = [regEntry];
+    for (const axis of axes) {
+      for (const ov of Object.values(axis.contexts)) {
+        if (ov.has(key)) views.push(themedEntry(regEntry, ov));
+      }
+    }
+    for (const view of views) {
+      if (view.alias) {
+        const target = pathKey(view.alias);
+        if (!visited.has(target)) {
+          visited.add(target);
+          queue.push(target);
+        }
+      }
+    }
+  }
+
+  const relevant = new Set<ThemeAxis>();
+  for (const axis of axes) {
+    const touched = Object.values(axis.contexts).some((ov) => {
+      for (const k of visited) {
+        if (ov.has(k)) return true;
+      }
+      return false;
+    });
+    if (touched) relevant.add(axis);
+  }
+  return relevant;
+}
+
+type ComboSpec = { id: string; where: string; override: ThemeOverride | undefined };
+
 /**
  * Checks WCAG 2.x contrast between groups of color tokens in the base tokens and every theme.
  * A failing pair is an error unless the rule's `severity` is `"warning"`.
@@ -62,23 +111,42 @@ export function contrast(options: ContrastPluginOptions): RecontentPlugin {
     validate(ctx: PluginContext) {
       const diagnostics: PluginDiagnostic[] = [];
       const multiAxis = ctx.themes.length > 1;
-      const colorAxes = ctx.themes.filter((axis) =>
-        Object.values(axis.contexts).some((override) =>
-          [...override.keys()].some((key) => ctx.registry.get(key)?.$type === "color"),
-        ),
-      );
-      const combinations = themeCombinations(colorAxes).map((combo, index) => {
-        if (!combo.override) {
-          return { id: String(index), where: "the base tokens", override: undefined };
+
+      const tokenAxesCache = new Map<string, Set<ThemeAxis>>();
+      const axesForToken = (entry: TokenEntry): Set<ThemeAxis> => {
+        const key = pathKey(entry.path);
+        let axes = tokenAxesCache.get(key);
+        if (!axes) {
+          axes = relevantAxesForColor(entry, ctx.registry, ctx.themes);
+          tokenAxesCache.set(key, axes);
         }
-        const label = multiAxis
-          ? colorAxes
-              .filter((axis) => combo.selection[axis.name] !== axis.default)
-              .map((axis) => `${axis.name}=${combo.selection[axis.name]}`)
-              .join(", ")
-          : combo.selection[colorAxes[0]!.name]!;
-        return { id: String(index), where: `theme "${label}"`, override: combo.override };
-      });
+        return axes;
+      };
+
+      const comboCache = new Map<string, ComboSpec[]>();
+      const combosForPair = (fg: TokenEntry, bg: TokenEntry): ComboSpec[] => {
+        const fgAxes = axesForToken(fg);
+        const bgAxes = axesForToken(bg);
+        const pairAxes = ctx.themes.filter((axis) => fgAxes.has(axis) || bgAxes.has(axis));
+        const subsetKey = pairAxes.map((a) => a.name).join("\0");
+        let cached = comboCache.get(subsetKey);
+        if (!cached) {
+          cached = themeCombinations(pairAxes).map((combo) => {
+            if (!combo.override) {
+              return { id: "", where: "the base tokens", override: undefined };
+            }
+            const label = multiAxis
+              ? pairAxes
+                  .filter((axis) => combo.selection[axis.name] !== axis.default)
+                  .map((axis) => `${axis.name}=${combo.selection[axis.name]}`)
+                  .join(", ")
+              : combo.selection[pairAxes[0]!.name]!;
+            return { id: label, where: `theme "${label}"`, override: combo.override };
+          });
+          comboCache.set(subsetKey, cached);
+        }
+        return cached;
+      };
 
       const colorCache = new Map<string, ResolvedColor>();
       const resolveCached = (
@@ -133,7 +201,7 @@ export function contrast(options: ContrastPluginOptions): RecontentPlugin {
             checkedPairs += 1;
             const fgKey = fg.path.join(".");
             const bgKey = bg.path.join(".");
-            for (const { id, where, override } of combinations) {
+            for (const { id, where, override } of combosForPair(fg, bg)) {
               const bgColor = resolveCached(bg, id, override);
               if (bgColor.value.alpha < 1) {
                 const dedupKey = `${id}\0${bgKey}`;

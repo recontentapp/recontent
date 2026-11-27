@@ -86,8 +86,9 @@ describe("design.html", () => {
   });
 
   test("embeds token CSS so previews can resolve var(--…)", () => {
+    expect(html).toContain("body {\n  --ref-color-black:");
     expect(html).toContain("--system-colors-accent: var(--ref-color-black);");
-    expect(html).toContain('[data-theme="dark"]');
+    expect(html).toContain('body[data-theme="dark"]');
     expect(html).toContain("var(--system-shadow-elevated)");
   });
 

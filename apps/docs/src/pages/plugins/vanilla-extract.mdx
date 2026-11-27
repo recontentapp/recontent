@@ -17,7 +17,7 @@ Add the vanilla-extract plugin for your bundler (for Vite, `@vanilla-extract/vit
 
 ## Usage
 
-Apply `themeClass` to a root element and compose `<name>ThemeClass` alongside it to override tokens additively (or `${brandThemes[brand]} ${modeThemes[mode]}` when multiple axes are configured). Style descendants with the generated `vars`:
+Apply `themeClass` to a root element and compose `<name>ThemeClass` alongside it on the same element to override tokens additively (or `${brandThemes[brand]} ${modeThemes[mode]}` when multiple axes are configured). Composing on the same element ensures `ref` overrides propagate to aliased `system` and `components` variables. Style descendants with the generated `vars`:
 
 ```ts [card.css.ts]
 import { style } from "@vanilla-extract/css";

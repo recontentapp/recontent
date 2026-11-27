@@ -175,6 +175,22 @@ describe("DESIGN.md prose", () => {
     expect(md).toContain("Theme axes apply in resolution order: `brand` → `density`.");
     expect(md).toContain("### brand\n\n| Token | default | acme |");
     expect(md).toContain("### density\n\n| Token | default | compact |");
+
+    // Cross-axis interaction overrides (when combining axes diverges from last-axis-wins) appear in Combined overrides.
+    const ref2 = defineReferenceTokens({
+      color: { brand: tokens.color("#2563eb"), alt: tokens.color("#0ea5e9") },
+    });
+    const system2 = defineSystemTokens({ accent: ref2.color.brand });
+    const acme2 = defineTheme(ref2, { color: { alt: tokens.color("#db2777") } });
+    const dark2 = defineTheme(system2, { accent: ref2.color.alt });
+    const combinedMd = renderConfig(
+      defineConfig({
+        tokens: { ref: ref2, system: system2, components: {} },
+        themes: { brand: { acme: acme2 }, mode: { dark: dark2 } },
+      }),
+    );
+    expect(combinedMd).toContain("### Combined overrides");
+    expect(combinedMd).toContain("| `system-accent` | `brand=acme, mode=dark` | `#db2777` |");
   });
 
   test("deprecations are listed as things not to use", () => {

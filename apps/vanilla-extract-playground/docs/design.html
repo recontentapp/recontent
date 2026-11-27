@@ -338,7 +338,7 @@ pre { margin: 0 0 16px; padding: 12px 14px; overflow-x: auto; border-radius: 12p
 </style>
 <style>:root, :root[data-mode="dark"] { --hig-accent: #2563eb; }</style>
 <style>
-:root {
+body {
   --ref-color-danger-50: #fef2f2;
   --ref-color-danger-100: #fee2e2;
   --ref-color-danger-200: #fecaca;
@@ -461,7 +461,7 @@ pre { margin: 0 0 16px; padding: 12px 14px; overflow-x: auto; border-radius: 12p
   --ref-iconScale-4xl: 36px;
 }
 
-:root {
+body {
   --system-colors-accent: var(--ref-color-primary-700);
   --system-colors-onAccent: var(--ref-color-white-100);
   --system-colors-backgroundSurface: var(--ref-color-white-100);
@@ -619,7 +619,7 @@ pre { margin: 0 0 16px; padding: 12px 14px; overflow-x: auto; border-radius: 12p
   --system-gradients-accent: linear-gradient(135deg, var(--ref-color-primary-700) 0%, var(--ref-color-primary-500) 100%);
 }
 
-:root {
+body {
   --sticker-paddingX: 8px;
   --sticker-paddingY: 2px;
   --sticker-borderRadius: 4px;
@@ -2767,21 +2767,20 @@ sparingly: one tilted sticker per surface keeps it feeling spontaneous.</p>
         ? { text: t.values[v], overridden: t.values[v] !== t.base }
         : { text: t.base, overridden: false };
     }
-    var keys = Object.keys(t.values);
+    var keyParts = Object.keys(t.values).map(function (k) { return k.split(","); });
     var relevant = [];
     for (var i = 0; i < selects.length; i++) {
       var val = selects[i].value;
       if (!val) continue;
-      var axis = selects[i].getAttribute("data-axis");
-      var prefix = axis + "=";
+      var pair = selects[i].getAttribute("data-axis") + "=" + val;
       var touches = false;
-      for (var k = 0; k < keys.length; k++) {
-        if (keys[k].indexOf(prefix) === 0 || keys[k].indexOf("," + prefix) >= 0) {
+      for (var k = 0; k < keyParts.length; k++) {
+        if (keyParts[k].indexOf(pair) >= 0) {
           touches = true;
           break;
         }
       }
-      if (touches) relevant.push(prefix + val);
+      if (touches) relevant.push(pair);
     }
     if (relevant.length === 0) return { text: t.base, overridden: false };
     var exact = t.values[relevant.join(",")];

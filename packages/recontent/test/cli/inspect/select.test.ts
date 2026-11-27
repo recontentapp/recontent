@@ -2,6 +2,7 @@ import { describe, expect, test } from "@jest/globals";
 import type { ComponentInfo, TypeInfo } from "../../../src/introspection/model.js";
 import {
   closestMatches,
+  parseThemeSpec,
   searchSnapshot,
   selectComponents,
   selectTokens,
@@ -98,6 +99,19 @@ describe("selectTokens", () => {
     expect(select({ theme: "drak" }).errors[0]?.message).toContain("Did you mean `dark`?");
     expect(select({ theme: "dark" }).errors).toEqual([]);
     expect(select({ theme: "default" }).errors).toEqual([]);
+
+    const customDefault: SnapshotThemeAxis[] = [
+      { name: "mode", default: "light", contexts: ["dark"] },
+    ];
+    expect(parseThemeSpec("light", customDefault)).toEqual({
+      parsed: { selection: { mode: "light" }, label: "default" },
+      errors: [],
+    });
+    expect(parseThemeSpec("mode=light", customDefault)).toEqual({
+      parsed: { selection: { mode: "light" }, label: "default" },
+      errors: [],
+    });
+    expect(parseThemeSpec("ligt", customDefault).errors[0]?.suggestions).toContain("light");
   });
 
   test("validates multi-axis axis=context pairs and suggests on bare or mistyped input", () => {

@@ -429,6 +429,40 @@ describe("sources", () => {
     );
   });
 
+  test("propagates a later modifier's default context into earlier modifiers' contexts", () => {
+    const red = { colorSpace: "srgb", components: [1, 0, 0], alpha: 1, hex: "#ff0000" };
+    const blue = { colorSpace: "srgb", components: [0, 0, 1], alpha: 1, hex: "#0000ff" };
+    const { source } = generate(
+      {
+        "r.resolver.json": resolver(
+          {
+            brand: {
+              default: "core",
+              contexts: {
+                core: [],
+                acme: [{ color: { $type: "color", bg: { $value: red } } }],
+              },
+            },
+            mode: {
+              default: "light",
+              contexts: {
+                light: [{ color: { $type: "color", bg: { $value: blue } } }],
+                dark: [{ color: { $type: "color", bg: { $value: black } } }],
+              },
+            },
+          },
+          ["#/sets/base", "#/modifiers/brand", "#/modifiers/mode"],
+        ),
+        "base.tokens.json": base,
+      },
+      ["r.resolver.json"],
+    );
+    // mode.light (default) appears after brand in resolutionOrder and sets bg to #0000ff,
+    // so brand.acme cannot override bg back to #ff0000 when mode is at its default.
+    expect(source).toContain(`"bg": tokens.color('#0000ff')`);
+    expect(source).not.toContain("#ff0000");
+  });
+
   test("overrides a system alias with a literal and updates the aliases collapsed through it", () => {
     const { source } = generate(
       {

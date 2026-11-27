@@ -26,6 +26,7 @@ import {
   resolveEntryValue,
   themeCombinations,
   themedEntry,
+  type ThemeCombination,
 } from "../token-model/alias.js";
 import type { SnapshotThemeAxis } from "./snapshot.js";
 
@@ -141,9 +142,51 @@ function relevantAxesForToken(
     }
   }
 
-  return axes.filter((axis) =>
-    Object.values(axis.contexts).some((ov) => [...ov.keys()].some((k) => visited.has(k))),
-  );
+  const relevant: ThemeAxis[] = [];
+  for (const axis of axes) {
+    const matchingContexts: Record<string, ThemeOverride> = {};
+    let hasMatch = false;
+    for (const [contextName, ov] of Object.entries(axis.contexts)) {
+      for (const k of visited) {
+        if (ov.has(k)) {
+          matchingContexts[contextName] = ov;
+          hasMatch = true;
+          break;
+        }
+      }
+    }
+    if (hasMatch) {
+      relevant.push({
+        name: axis.name,
+        default: axis.default,
+        ...(axis.description !== undefined ? { description: axis.description } : {}),
+        contexts: matchingContexts,
+      });
+    }
+  }
+  return relevant;
+}
+
+const combinationCache = new WeakMap<readonly ThemeAxis[], Map<string, ThemeCombination[]>>();
+
+function cachedCombinations(
+  allAxes: readonly ThemeAxis[],
+  subset: readonly ThemeAxis[],
+): ThemeCombination[] {
+  let byKey = combinationCache.get(allAxes);
+  if (!byKey) {
+    byKey = new Map();
+    combinationCache.set(allAxes, byKey);
+  }
+  const cacheKey = subset
+    .map((axis) => `${axis.name}:${Object.keys(axis.contexts).join(",")}`)
+    .join("|");
+  let combos = byKey.get(cacheKey);
+  if (!combos) {
+    combos = themeCombinations(subset);
+    byKey.set(cacheKey, combos);
+  }
+  return combos;
 }
 
 /**
@@ -170,15 +213,15 @@ export function resolveDocTokenValue(
       : { value: defaultValue, overridden: false };
   }
 
-  const valueKeys = Object.keys(token.values);
+  const valueKeyParts = Object.keys(token.values).map((k) => k.split(","));
   const relevantActive: string[] = [];
   for (const axis of axes) {
     const ctxName = selection[axis.name];
     if (!ctxName || ctxName === axis.default) continue;
-    const prefix = `${axis.name}=`;
-    const touchesAxis = valueKeys.some((k) => k.startsWith(prefix) || k.includes(`,${prefix}`));
-    if (touchesAxis) {
-      relevantActive.push(`${axis.name}=${ctxName}`);
+    const pair = `${axis.name}=${ctxName}`;
+    const touchesPair = valueKeyParts.some((parts) => parts.includes(pair));
+    if (touchesPair) {
+      relevantActive.push(pair);
     }
   }
 
@@ -235,7 +278,7 @@ export function buildToken(ctx: GeneratorContext, entry: TokenEntry): DocToken {
     }
 
     if (relevantAxes.length >= 2) {
-      for (const combo of themeCombinations(relevantAxes)) {
+      for (const combo of cachedCombinations(ctx.themes, relevantAxes)) {
         if (!combo.override) continue;
         const activePairs = relevantAxes
           .filter((axis) => combo.selection[axis.name] !== axis.default)

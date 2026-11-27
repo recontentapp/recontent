@@ -11,6 +11,7 @@ import {
   dtcg,
   generateDtcg,
   generateDtcgDelta,
+  generateDtcgFiles,
   generateDtcgResolver,
 } from "../../src/plugins/dtcg.js";
 import { runPlugins } from "../../src/plugins/runner.js";
@@ -317,5 +318,8 @@ describe("DTCG 2025.10 resolver & delta files", () => {
     const crossResult = await runPlugins(crossAxisClash, { root: "/project", logger });
     expect(crossResult.files).toEqual([]);
     expect(crossResult.diagnostics[0]?.message).toContain("both write themes/a-b-c.tokens.json");
+    expect(() => generateDtcgFiles(crossAxisClash)).toThrow(
+      /both write themes\/a-b-c\.tokens\.json/,
+    );
   });
 });

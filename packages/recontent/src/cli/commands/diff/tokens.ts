@@ -30,6 +30,17 @@ type ThemeDiff = {
   orderChanged?: { from: string[]; to: string[] };
 };
 
+export type ThemeDiffMeta = {
+  implicitSingle: boolean;
+  addedAxisContexts: Record<string, string[]>;
+};
+
+const themeDiffMetaMap = new WeakMap<ThemeDiff, ThemeDiffMeta>();
+
+export function themeDiffMeta(diff: ThemeDiff): ThemeDiffMeta | undefined {
+  return themeDiffMetaMap.get(diff);
+}
+
 export type TokenDiff = {
   added: TokenEntry[];
   removed: TokenEntry[];
@@ -211,12 +222,25 @@ function diffThemes(
       ? { from: sharedBaseOrder, to: sharedHeadOrder }
       : undefined;
 
-  return {
+  const result: ThemeDiff = {
     addedAxes,
     removedAxes,
     changedAxes,
     ...(orderChanged ? { orderChanged } : {}),
   };
+
+  const isImplicitConfig = (axes: readonly ThemeAxis[]) =>
+    axes.length === 0 ||
+    (axes.length === 1 && axes[0]!.name === "theme" && axes[0]!.default === "default");
+  const addedAxisContexts = Object.fromEntries(
+    addedAxes.map((axisName) => [axisName, Object.keys(headByName.get(axisName)!.contexts)]),
+  );
+  themeDiffMetaMap.set(result, {
+    implicitSingle: isImplicitConfig(base) && isImplicitConfig(head),
+    addedAxisContexts,
+  });
+
+  return result;
 }
 
 // An override of a renamed token follows the rename, and an override of a removed token goes with

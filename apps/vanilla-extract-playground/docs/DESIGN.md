@@ -303,6 +303,13 @@ Layout spacing, corner radii, and component density.
 | `system-spacing-72` | `72px` | `56px` |
 | `system-spacing-80` | `80px` | `64px` |
 
+### Combined overrides
+
+| Token | Combination | Value |
+| --- | --- | --- |
+| `system-colors-onAccent` | `mode=dark, brand=cobalt` | `#ffffff` |
+| `system-colors-onAccent` | `mode=dark, brand=emerald` | `#ffffff` |
+
 ## Components
 
 ### Data display

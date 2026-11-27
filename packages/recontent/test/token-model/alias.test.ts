@@ -203,3 +203,30 @@ test("diagnoseRegistry catches cross-axis alias cycles when each axis is valid i
     'Theme "brand=acme, mode=dark": Circular alias at "ref.color.b": alias chain revisits "ref.color.b".',
   ]);
 });
+
+test("diagnoseRegistry catches cycles between base composite member aliases and themed overrides", () => {
+  const borderValue = {
+    color: { $value: hex("#000000"), alias: ["ref", "color", "a"] },
+    width: { $value: { value: 1, unit: "px" as const } },
+    style: { $value: { style: "solid" as const } },
+  };
+  const registry: TokenRegistry = new Map([
+    [
+      "system.border.card",
+      { path: ["system", "border", "card"], $type: "border", $value: borderValue, layer: "system" },
+    ],
+    ["ref.color.a", entry(["ref", "color", "a"])],
+  ]);
+
+  const diagnostics = diagnoseRegistry(
+    registry,
+    singleAxis({
+      dark: new Map([
+        ["ref.color.a", { $value: hex("#000000"), alias: ["system", "border", "card"] }],
+      ]),
+    }),
+  );
+  expect(diagnostics.map((d) => d.message)).toEqual([
+    'Theme "dark": Circular alias at "system.border.card": alias chain revisits "system.border.card".',
+  ]);
+});

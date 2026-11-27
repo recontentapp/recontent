@@ -141,6 +141,28 @@ describe("themes", () => {
       'system.text on system.surface has contrast 4.23:1 in theme "brand=acme, mode=dark", below 4.5:1.',
     ]);
   });
+
+  test("unrelated color axes do not duplicate diagnostics for a failing pair", async () => {
+    const system = defineSystemTokens({
+      text: tokens.color("#000000"),
+      surface: tokens.color("#ffffff"),
+      accent: tokens.color("#2563eb"),
+    });
+    const dark = defineTheme(system, { text: tokens.color("#888888") });
+    const red = defineTheme(system, { accent: tokens.color("#dc2626") });
+    const green = defineTheme(system, { accent: tokens.color("#16a34a") });
+    const config = defineConfig({
+      tokens: { ref: defineReferenceTokens({}), system },
+      themes: {
+        mode: { dark },
+        accent: { red, green },
+      },
+    });
+    const found = await contrast({ rules: [rule] }).validate!(ctxOf(config));
+    expect(found.map((d) => d.message)).toEqual([
+      'system.text on system.surface has contrast 3.54:1 in theme "mode=dark", below 4.5:1.',
+    ]);
+  });
 });
 
 describe("alpha", () => {

@@ -193,6 +193,11 @@ export function generateDtcgFiles(
     return files;
   }
 
+  const fileErrors = themeFileDiagnostics(ctx);
+  if (fileErrors.length > 0) {
+    throw new Error(fileErrors[0]!.message);
+  }
+
   files.push({
     filename: "tokens.resolver.json",
     content: `${JSON.stringify(generateDtcgResolver(ctx), null, 2)}\n`,
@@ -256,7 +261,7 @@ function emDimensionWarnings(ctx: PluginContext): PluginDiagnostic[] {
     );
 }
 
-function themeFileDiagnostics(ctx: PluginContext): PluginDiagnostic[] {
+function themeFileDiagnostics(ctx: Pick<GeneratorContext, "themes">): PluginDiagnostic[] {
   const diagnostics: PluginDiagnostic[] = [];
   const multiAxis = ctx.themes.length > 1;
   const seen = new Map<string, { stem: string; label: string }>();

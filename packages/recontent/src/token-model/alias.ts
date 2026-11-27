@@ -365,8 +365,12 @@ export function diagnoseRegistry(
   }
 
   const baseVerified = new Set<string>();
+  const baseMemberEntries: TokenEntry[] = [];
   for (const entry of registry.values()) {
     checkEntry(entry, baseVerified);
+    if (memberAliasesOf(entry).length > 0) {
+      baseMemberEntries.push(entry);
+    }
   }
 
   const singleAxis = axes.length === 1;
@@ -391,6 +395,15 @@ export function diagnoseRegistry(
           });
         }
       }
+      // Also re-check base composite/strokeStyle entries whose member aliases may now cycle through an override.
+      for (const entry of baseMemberEntries) {
+        const key = pathKey(entry.path);
+        if (overrides.has(key) || invalidKeys.has(key)) continue;
+        checkEntry(entry, themeVerified, label, overrides, (failedKey) => {
+          invalidKeys.add(failedKey);
+          return true;
+        });
+      }
     }
   }
 
@@ -405,7 +418,7 @@ export function diagnoseRegistry(
     ),
   );
 
-  if (aliasingAxes.length >= 2) {
+  if (aliasingAxes.length >= 2 && hasUnionAliasCycle(registry, aliasingAxes, invalidKeys)) {
     const seenCrossErrors = new Set<string>();
     for (const { selection, override } of themeCombinations(aliasingAxes)) {
       if (!override) continue;
@@ -414,24 +427,100 @@ export function diagnoseRegistry(
 
       const label = activeAxes.map((axis) => `${axis.name}=${selection[axis.name]}`).join(", ");
       const comboVerified = new Set<string>();
+      const onError = (failedKey: string, error: unknown) => {
+        const errorId =
+          error instanceof CircularAliasError
+            ? `cycle:${failedKey}:${error.key}`
+            : error instanceof AliasTargetNotFoundError
+              ? `missing:${failedKey}:${error.key}`
+              : `other:${failedKey}`;
+        if (seenCrossErrors.has(errorId)) return false;
+        seenCrossErrors.add(errorId);
+        return true;
+      };
       for (const [key] of override) {
         if (invalidKeys.has(key)) continue;
         const entry = registry.get(key);
         if (!entry) continue;
-        checkEntry(entry, comboVerified, label, override, (failedKey, error) => {
-          const errorId =
-            error instanceof CircularAliasError
-              ? `cycle:${failedKey}:${error.key}`
-              : error instanceof AliasTargetNotFoundError
-                ? `missing:${failedKey}:${error.key}`
-                : `other:${failedKey}`;
-          if (seenCrossErrors.has(errorId)) return false;
-          seenCrossErrors.add(errorId);
-          return true;
-        });
+        checkEntry(entry, comboVerified, label, override, onError);
+      }
+      for (const entry of baseMemberEntries) {
+        const key = pathKey(entry.path);
+        if (override.has(key) || invalidKeys.has(key)) continue;
+        checkEntry(entry, comboVerified, label, override, onError);
       }
     }
   }
 
   return diagnostics;
+}
+
+/**
+ * O(V + E) cycle pre-check over the union of base and theme alias edges.
+ * If the union graph is a DAG, no cross-axis combination can form a cycle.
+ */
+function hasUnionAliasCycle(
+  registry: TokenRegistry,
+  axes: readonly ThemeAxis[],
+  invalidKeys: ReadonlySet<string>,
+): boolean {
+  const adj = new Map<string, Set<string>>();
+  const addEdge = (from: string, to: string) => {
+    let edges = adj.get(from);
+    if (!edges) {
+      edges = new Set();
+      adj.set(from, edges);
+    }
+    edges.add(to);
+  };
+
+  for (const [key, entry] of registry) {
+    if (invalidKeys.has(key)) continue;
+    if (entry.alias) addEdge(key, pathKey(entry.alias));
+    for (const m of memberAliasesOf(entry)) addEdge(key, pathKey(m));
+  }
+  for (const axis of axes) {
+    for (const override of Object.values(axis.contexts)) {
+      for (const [key, val] of override) {
+        if (invalidKeys.has(key)) continue;
+        if (val.alias) {
+          addEdge(key, pathKey(val.alias));
+        } else {
+          const entry = registry.get(key);
+          if (entry) {
+            for (const m of memberAliasesOf(themedEntry(entry, override))) {
+              addEdge(key, pathKey(m));
+            }
+          }
+        }
+      }
+    }
+  }
+
+  // 0 = unvisited, 1 = visiting, 2 = done
+  const state = new Map<string, number>();
+  for (const start of adj.keys()) {
+    if (state.get(start) !== undefined) continue;
+    const stack: Array<{ node: string; iter: Iterator<string> }> = [
+      { node: start, iter: (adj.get(start) ?? []).values() },
+    ];
+    state.set(start, 1);
+    while (stack.length > 0) {
+      const top = stack[stack.length - 1]!;
+      const next = top.iter.next();
+      if (next.done) {
+        state.set(top.node, 2);
+        stack.pop();
+        continue;
+      }
+      const target = next.value;
+      const targetState = state.get(target);
+      if (targetState === 1) return true;
+      if (targetState === undefined) {
+        state.set(target, 1);
+        stack.push({ node: target, iter: (adj.get(target) ?? []).values() });
+      }
+    }
+  }
+  return false;
 }

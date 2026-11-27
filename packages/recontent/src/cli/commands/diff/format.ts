@@ -24,7 +24,12 @@ import {
   type ComponentsDiff,
   type EntitiesDiff,
 } from "./components.js";
-import { countTokenBreakingChanges, stableStringify, type TokenDiff } from "./tokens.js";
+import {
+  countTokenBreakingChanges,
+  stableStringify,
+  themeDiffMeta,
+  type TokenDiff,
+} from "./tokens.js";
 
 type Diff = {
   tokens: TokenDiff;
@@ -173,6 +178,8 @@ export type DiffFormat = "markdown" | "json";
 export const DIFF_FORMATS: readonly DiffFormat[] = ["markdown", "json"];
 
 function isImplicitSingleThemeDiff(themes: TokenDiff["themes"]): boolean {
+  const meta = themeDiffMeta(themes);
+  if (meta !== undefined) return meta.implicitSingle;
   const allAxisNames = new Set([
     ...themes.addedAxes,
     ...themes.removedAxes,
@@ -289,11 +296,20 @@ function formatTokensMarkdown(diff: TokenDiff): string {
     if (diff.themes.orderChanged) {
       const { from, to } = diff.themes.orderChanged;
       lines.push(
-        `- **resolution order**: ${from.map(code).join(" -> ")} -> ${to.map(code).join(" -> ")}`,
+        `- **resolution order**: ${from.map(code).join(", ")} -> ${to.map(code).join(", ")}`,
       );
     }
+    const addedAxisContexts = themeDiffMeta(diff.themes)?.addedAxisContexts;
     for (const axisName of diff.themes.addedAxes) {
-      lines.push(implicitSingle ? `- ${code(axisName)}: added` : `- axis ${code(axisName)}: added`);
+      if (implicitSingle && addedAxisContexts?.[axisName]?.length) {
+        for (const ctxName of addedAxisContexts[axisName]!) {
+          lines.push(`- ${code(ctxName)}: added`);
+        }
+      } else {
+        lines.push(
+          implicitSingle ? `- ${code(axisName)}: added` : `- axis ${code(axisName)}: added`,
+        );
+      }
     }
     for (const [axisName, axisDiff] of nonBreakingAxes) {
       if (implicitSingle) {

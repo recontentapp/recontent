@@ -122,12 +122,12 @@ export function parseThemeSpec(
       return {
         parsed: {
           selection: { [axis.name]: trimmed },
-          label: trimmed,
+          label: trimmed === axis.default ? "default" : trimmed,
         },
         errors,
       };
     }
-    errors.push(unknown("theme", trimmed, axis.contexts));
+    errors.push(unknown("theme", trimmed, [axis.default, ...axis.contexts]));
     return { errors };
   }
 
@@ -203,7 +203,13 @@ export function parseThemeSpec(
   if (axes.length === 1) {
     const axis = axes[0]!;
     const ctx = selection[axis.name] ?? axis.default;
-    return { parsed: { selection: { [axis.name]: ctx }, label: ctx }, errors };
+    return {
+      parsed: {
+        selection: { [axis.name]: ctx },
+        label: ctx === axis.default ? "default" : ctx,
+      },
+      errors,
+    };
   }
 
   const activePairs = axes

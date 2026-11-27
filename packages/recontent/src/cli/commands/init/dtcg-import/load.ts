@@ -200,8 +200,17 @@ function loadResolver(
     const modContexts: Array<{ name: string; doc: JsonObject }> = [];
     for (const name of names) {
       const doc = mergeAll(loadSources(modifierContexts[name]));
-      if (name === defaultName) mergeInto(base, doc);
-      else modContexts.push({ name, doc });
+      if (name === defaultName) {
+        mergeInto(base, doc);
+        // A later modifier's default context also overrides earlier modifiers' contexts.
+        for (const mod of modifiers) {
+          for (const context of mod.contexts) {
+            mergeInto(context.doc, doc);
+          }
+        }
+      } else {
+        modContexts.push({ name, doc });
+      }
     }
     if (modContexts.length > 0) {
       modifiers.push({

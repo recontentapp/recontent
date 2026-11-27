@@ -298,6 +298,25 @@ function themeTable(items: Item[], axes: readonly ThemeAxis[]): string | undefin
     );
   }
 
+  const combinedRows: string[][] = [];
+  for (const item of items) {
+    for (const [key, val] of Object.entries(item.token.values)) {
+      if (!key.includes(",")) continue;
+      combinedRows.push([code(item.key), code(key.replaceAll(",", ", ")), code(val)]);
+    }
+  }
+  if (combinedRows.length > 0) {
+    axisBlocks.push(
+      [
+        "### Combined overrides",
+        "",
+        "| Token | Combination | Value |",
+        "| --- | --- | --- |",
+        ...combinedRows.map((row) => `| ${row.join(" | ")} |`),
+      ].join("\n"),
+    );
+  }
+
   if (axisBlocks.length === 0) return undefined;
   return [
     `Theme axes apply in resolution order: ${axes.map((axis) => code(axis.name)).join(" → ")}.`,

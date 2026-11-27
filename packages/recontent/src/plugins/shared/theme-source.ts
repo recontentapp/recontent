@@ -525,11 +525,12 @@ function analyzeReachable(
   entry: TokenEntry,
   registry: TokenRegistry,
   axes: readonly ThemeAxis[],
-): { relevantAxes: ThemeAxis[]; hasSameLayerDep: boolean } {
+): { relevantAxes: ThemeAxis[]; hasInlinedDep: boolean } {
   const startKey = pathKey(entry.path);
   const visited = new Set<string>([startKey]);
   const queue = [startKey];
-  let hasSameLayerDep = false;
+  const entryLayerIndex = LAYER_INDEX[entry.layer];
+  let hasInlinedDep = false;
 
   while (queue.length > 0) {
     const key = queue.shift()!;
@@ -546,8 +547,8 @@ function analyzeReachable(
     for (const view of candidates) {
       for (const targetKey of directReferencesOf(view)) {
         const targetEntry = registry.get(targetKey);
-        if (targetEntry && targetEntry.layer === entry.layer) {
-          hasSameLayerDep = true;
+        if (targetEntry && LAYER_INDEX[targetEntry.layer] >= entryLayerIndex) {
+          hasInlinedDep = true;
         }
         if (!visited.has(targetKey)) {
           visited.add(targetKey);
@@ -558,9 +559,14 @@ function analyzeReachable(
   }
 
   const relevantAxes = axes.filter((axis) =>
-    Object.values(axis.contexts).some((ov) => [...ov.keys()].some((k) => visited.has(k))),
+    Object.values(axis.contexts).some((ov) => {
+      for (const k of visited) {
+        if (ov.has(k)) return true;
+      }
+      return false;
+    }),
   );
-  return { relevantAxes, hasSameLayerDep };
+  return { relevantAxes, hasInlinedDep };
 }
 
 function foldComboValues(
@@ -642,7 +648,7 @@ function emitMultiAxisEntry(
   report: LossReporter,
 ): void {
   const entryKey = pathKey(entry.path);
-  const { relevantAxes, hasSameLayerDep } = analyzeReachable(entry, registry, axes);
+  const { relevantAxes, hasInlinedDep } = analyzeReachable(entry, registry, axes);
 
   if (relevantAxes.length === 0) {
     setTreeValue(
@@ -653,8 +659,8 @@ function emitMultiAxisEntry(
     return;
   }
 
-  // Fast linear path O(overrides) when there are no same-layer alias chains or composite derived fields.
-  if (!hasSameLayerDep && !isCompositeType(entry.$type)) {
+  // Fast linear path O(overrides) when there are no inlined alias chains or composite/strokeStyle derived fields.
+  if (!hasInlinedDep && !isCompositeType(entry.$type) && entry.$type !== "strokeStyle") {
     const directAxes = relevantAxes.filter((axis) =>
       Object.values(axis.contexts).some((ov) => ov.has(entryKey)),
     );
@@ -688,8 +694,16 @@ function emitMultiAxisEntry(
   setTreeValue(tree, entryPath(entry), mergeComboNodes(relevantAxes, combos));
 }
 
-function usesIdentifier(source: string, name: string): boolean {
-  return new RegExp(`\\b${name}\\b`).test(source);
+function treeUsesParam(tree: SourceTree, name: "ref" | "system" | "selection"): boolean {
+  const re = new RegExp(`(?<![.\\w$'"])${name}(?:\\.|\\[)`);
+  for (const value of Object.values(tree)) {
+    if (isSourceValueNode(value)) {
+      if (value.source && re.test(value.value)) return true;
+    } else if (treeUsesParam(value, name)) {
+      return true;
+    }
+  }
+  return false;
 }
 
 export function generateThemeSource(
@@ -772,16 +786,21 @@ export function generateThemeSource(
 
   lines.push("export type ThemeSelection = {", ...selectionFields, "};", "");
 
+  const layerTrees = {
+    ref: Object.create(null) as SourceTree,
+    system: Object.create(null) as SourceTree,
+    components: Object.create(null) as SourceTree,
+  };
   const layerBodies: Record<TokenLayer, string> = { ref: "", system: "", components: "" };
   for (const layer of LAYERS) {
-    const tree = Object.create(null) as SourceTree;
+    const tree = layerTrees[layer];
     for (const entry of entriesByLayer.get(layer)!) {
       emitMultiAxisEntry(tree, entry, config.registry, config.themes, spec, report);
     }
     layerBodies[layer] = formatTree(tree, "  ");
   }
 
-  const refSelParam = usesIdentifier(layerBodies.ref, "selection") ? "selection" : "_selection";
+  const refSelParam = treeUsesParam(layerTrees.ref, "selection") ? "selection" : "_selection";
   lines.push(
     `function buildRef(${refSelParam}: ThemeSelection) {`,
     `  return ${layerBodies.ref} as const;`,
@@ -789,8 +808,8 @@ export function generateThemeSource(
     "",
   );
 
-  const sysRefParam = usesIdentifier(layerBodies.system, "ref") ? "ref" : "_ref";
-  const sysSelParam = usesIdentifier(layerBodies.system, "selection") ? "selection" : "_selection";
+  const sysRefParam = treeUsesParam(layerTrees.system, "ref") ? "ref" : "_ref";
+  const sysSelParam = treeUsesParam(layerTrees.system, "selection") ? "selection" : "_selection";
   lines.push(
     `function buildSystem(${sysRefParam}: ReturnType<typeof buildRef>, ${sysSelParam}: ThemeSelection) {`,
     `  return ${layerBodies.system} as const;`,
@@ -798,9 +817,9 @@ export function generateThemeSource(
     "",
   );
 
-  const compRefParam = usesIdentifier(layerBodies.components, "ref") ? "ref" : "_ref";
-  const compSysParam = usesIdentifier(layerBodies.components, "system") ? "system" : "_system";
-  const compSelParam = usesIdentifier(layerBodies.components, "selection")
+  const compRefParam = treeUsesParam(layerTrees.components, "ref") ? "ref" : "_ref";
+  const compSysParam = treeUsesParam(layerTrees.components, "system") ? "system" : "_system";
+  const compSelParam = treeUsesParam(layerTrees.components, "selection")
     ? "selection"
     : "_selection";
   lines.push(

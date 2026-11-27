@@ -285,6 +285,52 @@ describe("parses and typechecks", () => {
     expect(exportsObj.resolveTheme({ brand: "acme" }).system.surface).toBe("#f5f5f5");
     expect(exportsObj.resolveTheme({ brand: "acme", mode: "dark" }).system.surface).toBe("#111111");
   });
+
+  test("multi-axis resolves strokeStyle dashArray aliases and upward cross-layer aliases without unused params", () => {
+    const ref = defineReferenceTokens({
+      dash: tokens.dimension("4px"),
+      selection: tokens.color("#000000"),
+    });
+    const system = defineSystemTokens({
+      stroke: tokens.strokeStyle({ dashArray: [ref.dash, "2px"], lineCap: "round" }),
+      base: tokens.color("#111111"),
+    });
+    // Upward alias: ref token aliasing a system token overridden by an axis.
+    const refWithUpward = defineReferenceTokens({
+      dash: tokens.dimension("4px"),
+      mirrored: system.base,
+    });
+    const compact = defineTheme(refWithUpward, { dash: tokens.dimension("2px") });
+    const dark = defineTheme(system, { base: tokens.color("#222222") });
+    const config = defineConfig({
+      tokens: { ref: refWithUpward, system, components: {} },
+      themes: { density: { compact }, mode: { dark } },
+    });
+
+    const [file] = generate(config);
+    assertParses(file!.content);
+    assertTypechecks(file!.content);
+
+    const cjs = ts.transpileModule(file!.content, {
+      compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
+    }).outputText;
+    const exportsObj: Record<string, any> = {};
+    new Function("exports", cjs)(exportsObj);
+
+    expect(exportsObj.resolveTheme().system.stroke).toBe("dashed");
+    expect(exportsObj.resolveTheme({ mode: "dark" }).ref.mirrored).toBe("#222222");
+
+    // A token named `selection` must not trick `buildRef` into leaving an unused `selection` param.
+    const staticConfig = defineConfig({
+      tokens: { ref, system: defineSystemTokens({ a: ref.selection }), components: {} },
+      themes: {
+        a: { a1: defineTheme(system, {}) },
+        b: { b1: defineTheme(system, {}) },
+      },
+    });
+    const [staticFile] = generate(staticConfig);
+    expect(staticFile!.content).toContain("function buildRef(_selection: ThemeSelection)");
+  });
 });
 
 describe("scale metadata", () => {
