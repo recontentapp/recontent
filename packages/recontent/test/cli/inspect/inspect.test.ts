@@ -232,15 +232,15 @@ describe("recontent inspect", () => {
       const overview = json([], dir);
       expect(overview.status).toBe(0);
       expect(overview.data).toMatchObject({
-        schemaVersion: "1",
+        schemaVersion: "2",
         kind: "overview",
-        themes: ["dark"],
+        themes: [{ name: "theme", default: "default", contexts: ["dark"] }],
         components: ["Button", "Legacy"],
       });
       expect(overview.data.tokens.total).toBe(7);
 
       const tokens = json(["tokens"], dir);
-      expect(tokens.data).toMatchObject({ schemaVersion: "1", kind: "tokens" });
+      expect(tokens.data).toMatchObject({ schemaVersion: "2", kind: "tokens" });
       expect(tokens.data.tokens).toHaveLength(7);
       expect(tokens.data.tokens[0]).toHaveProperty("cssVar");
       expect(
@@ -251,7 +251,7 @@ describe("recontent inspect", () => {
       });
 
       const components = json(["components"], dir);
-      expect(components.data).toMatchObject({ schemaVersion: "1", kind: "components" });
+      expect(components.data).toMatchObject({ schemaVersion: "2", kind: "components" });
       expect(components.data.components.map((c: any) => c.name)).toEqual(["Button", "Legacy"]);
       expect(components.data.components[0].props.map((p: any) => p.name)).toEqual([
         "icon",
@@ -268,7 +268,7 @@ describe("recontent inspect", () => {
 
       const types = json(["types"], dir);
       expect(types.status).toBe(0);
-      expect(types.data).toMatchObject({ schemaVersion: "1", kind: "types" });
+      expect(types.data).toMatchObject({ schemaVersion: "2", kind: "types" });
       expect(types.data.types.map((t: any) => t.id)).toEqual([
         "ButtonSize",
         "IconName",
@@ -328,7 +328,7 @@ describe("recontent inspect", () => {
 
       expect(result.status).toBe(0);
       const data = JSON.parse(result.stdout);
-      expect(data).toMatchObject({ schemaVersion: "1", kind: "search", queries: ["accent"] });
+      expect(data).toMatchObject({ schemaVersion: "2", kind: "search", queries: ["accent"] });
       expect(data.tokens[0]).toMatchObject({
         path: "system.color.accent",
         matchedIn: ["path", "css variable", "description"],
@@ -374,7 +374,7 @@ describe("recontent inspect", () => {
       expect(result.status).toBe(2);
       expect(result.stderr).toContain("Did you mean `system.color`?");
       expect(JSON.parse(result.stdout)).toEqual({
-        schemaVersion: "1",
+        schemaVersion: "2",
         kind: "error",
         errors: [
           {

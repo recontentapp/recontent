@@ -24,7 +24,12 @@ import {
   type ComponentsDiff,
   type EntitiesDiff,
 } from "./components.js";
-import { countTokenBreakingChanges, stableStringify, type TokenDiff } from "./tokens.js";
+import {
+  countTokenBreakingChanges,
+  stableStringify,
+  themeDiffMeta,
+  type TokenDiff,
+} from "./tokens.js";
 
 type Diff = {
   tokens: TokenDiff;
@@ -166,15 +171,29 @@ function formatChangedLine(path: string, from: string, to: string): string[] {
 }
 
 /** Versions the `--format json` documents of `recontent diff`, independently of the snapshot's. */
-const DIFF_SCHEMA_VERSION = "1";
+const DIFF_SCHEMA_VERSION = "2";
 
 export type DiffFormat = "markdown" | "json";
 
 export const DIFF_FORMATS: readonly DiffFormat[] = ["markdown", "json"];
 
+function isImplicitSingleThemeDiff(themes: TokenDiff["themes"]): boolean {
+  const meta = themeDiffMeta(themes);
+  if (meta !== undefined) return meta.implicitSingle;
+  const allAxisNames = new Set([
+    ...themes.addedAxes,
+    ...themes.removedAxes,
+    ...Object.keys(themes.changedAxes),
+  ]);
+  if (allAxisNames.size === 0) return true;
+  if (allAxisNames.size > 1 || !allAxisNames.has("theme")) return false;
+  return themes.changedAxes.theme?.defaultChanged === undefined && !themes.orderChanged;
+}
+
 function formatTokensMarkdown(diff: TokenDiff): string {
   const sections: string[] = [];
   const breakingCount = countTokenBreakingChanges(diff);
+  const implicitSingle = isImplicitSingleThemeDiff(diff.themes);
 
   if (breakingCount > 0) {
     const lines = [`## Breaking (${breakingCount})`, ""];
@@ -189,8 +208,21 @@ function formatTokensMarkdown(diff: TokenDiff): string {
     for (const entry of diff.removed) {
       lines.push(`- **removed** ${code(pathStr(entry))} (${describeEntry(entry)})`);
     }
-    for (const name of diff.themes.removedThemes) {
-      lines.push(`- **removed theme** ${code(name)}`);
+    for (const axisName of diff.themes.removedAxes) {
+      lines.push(
+        implicitSingle
+          ? `- **removed themes** (${code(axisName)})`
+          : `- **removed theme axis** ${code(axisName)}`,
+      );
+    }
+    for (const [axisName, axisDiff] of Object.entries(diff.themes.changedAxes)) {
+      for (const ctxName of axisDiff.removedContexts) {
+        lines.push(
+          implicitSingle
+            ? `- **removed theme** ${code(ctxName)}`
+            : `- **removed theme context** ${code(`${axisName}=${ctxName}`)}`,
+        );
+      }
     }
     sections.push(lines.join("\n"));
   }
@@ -247,25 +279,81 @@ function formatTokensMarkdown(diff: TokenDiff): string {
     sections.push(lines.join("\n"));
   }
 
-  // Removed themes are listed under Breaking.
-  const themeCount = diff.themes.addedThemes.length + Object.keys(diff.themes.changedThemes).length;
-  if (themeCount > 0) {
+  // Removed axes and removed contexts are listed under Breaking.
+  const nonBreakingAxes = Object.entries(diff.themes.changedAxes).filter(
+    ([, axisDiff]) =>
+      axisDiff.defaultChanged !== undefined ||
+      axisDiff.addedContexts.length > 0 ||
+      Object.keys(axisDiff.changedContexts).length > 0,
+  );
+  const hasThemeSection =
+    diff.themes.orderChanged !== undefined ||
+    diff.themes.addedAxes.length > 0 ||
+    nonBreakingAxes.length > 0;
+
+  if (hasThemeSection) {
     const lines = ["## Themes", ""];
-    for (const name of diff.themes.addedThemes) {
-      lines.push(`- ${code(name)}: added`);
+    if (diff.themes.orderChanged) {
+      const { from, to } = diff.themes.orderChanged;
+      lines.push(
+        `- **resolution order**: ${from.map(code).join(", ")} -> ${to.map(code).join(", ")}`,
+      );
     }
-    for (const [name, themeDiff] of Object.entries(diff.themes.changedThemes)) {
-      lines.push(`- ${code(name)}`);
-      for (const { key, type, value } of themeDiff.added) {
-        lines.push(`  - **added** ${code(key)}: ${formatThemeValue(type, value)}`);
-      }
-      for (const { key, type, value } of themeDiff.removed) {
-        lines.push(`  - **removed** ${code(key)} (was ${formatThemeValue(type, value)})`);
-      }
-      for (const { key, type, from, to } of themeDiff.changed) {
+    const addedAxisContexts = themeDiffMeta(diff.themes)?.addedAxisContexts;
+    for (const axisName of diff.themes.addedAxes) {
+      if (implicitSingle && addedAxisContexts?.[axisName]?.length) {
+        for (const ctxName of addedAxisContexts[axisName]!) {
+          lines.push(`- ${code(ctxName)}: added`);
+        }
+      } else {
         lines.push(
-          `  - **changed** ${code(key)}: ${formatThemeValue(type, from)} -> ${formatThemeValue(type, to)}`,
+          implicitSingle ? `- ${code(axisName)}: added` : `- axis ${code(axisName)}: added`,
         );
+      }
+    }
+    for (const [axisName, axisDiff] of nonBreakingAxes) {
+      if (implicitSingle) {
+        for (const ctxName of axisDiff.addedContexts) {
+          lines.push(`- ${code(ctxName)}: added`);
+        }
+        for (const [ctxName, ovDiff] of Object.entries(axisDiff.changedContexts)) {
+          lines.push(`- ${code(ctxName)}`);
+          for (const { key, type, value } of ovDiff.added) {
+            lines.push(`  - **added** ${code(key)}: ${formatThemeValue(type, value)}`);
+          }
+          for (const { key, type, value } of ovDiff.removed) {
+            lines.push(`  - **removed** ${code(key)} (was ${formatThemeValue(type, value)})`);
+          }
+          for (const { key, type, from, to } of ovDiff.changed) {
+            lines.push(
+              `  - **changed** ${code(key)}: ${formatThemeValue(type, from)} -> ${formatThemeValue(type, to)}`,
+            );
+          }
+        }
+      } else {
+        lines.push(`- axis ${code(axisName)}`);
+        if (axisDiff.defaultChanged) {
+          lines.push(
+            `  - **default**: ${code(axisDiff.defaultChanged.from)} -> ${code(axisDiff.defaultChanged.to)}`,
+          );
+        }
+        for (const ctxName of axisDiff.addedContexts) {
+          lines.push(`  - **added context** ${code(ctxName)}`);
+        }
+        for (const [ctxName, ovDiff] of Object.entries(axisDiff.changedContexts)) {
+          lines.push(`  - ${code(ctxName)}`);
+          for (const { key, type, value } of ovDiff.added) {
+            lines.push(`    - **added** ${code(key)}: ${formatThemeValue(type, value)}`);
+          }
+          for (const { key, type, value } of ovDiff.removed) {
+            lines.push(`    - **removed** ${code(key)} (was ${formatThemeValue(type, value)})`);
+          }
+          for (const { key, type, from, to } of ovDiff.changed) {
+            lines.push(
+              `    - **changed** ${code(key)}: ${formatThemeValue(type, from)} -> ${formatThemeValue(type, to)}`,
+            );
+          }
+        }
       }
     }
     sections.push(lines.join("\n"));

@@ -20,8 +20,8 @@ import {
   isExpandedComposite,
 } from "../token-model/composite.js";
 import { pathKey } from "../token-model/guards.js";
-import { type RecontentPlugin } from "./types.js";
-import { type ThemeOverride, type TokenEntry } from "../token-model/registry.js";
+import { type PluginDiagnostic, type RecontentPlugin } from "./types.js";
+import { type ThemeAxis, type ThemeOverride, type TokenEntry } from "../token-model/registry.js";
 import { type TokenTypeMap } from "../token-model/values.js";
 import type { OutputFile } from "./shared/context.js";
 import {
@@ -29,14 +29,19 @@ import {
   serializeValueCss,
   type MemberResolver,
 } from "../serialize/values.js";
-import { CircularAliasError, getEntry, resolveEntryValue } from "../token-model/alias.js";
+import {
+  CircularAliasError,
+  getEntry,
+  resolveEntryValue,
+  themeCombinations,
+} from "../token-model/alias.js";
 import type { GeneratorContext } from "./shared/context.js";
 import {
   themeNameDiagnostics,
   validateIdentifierGuards,
   validateThemeNames,
 } from "./shared/theme-source.js";
-import { escapeString, escapeTemplateLiteral, quotedKey } from "../ts-source.js";
+import { escapeString, escapeTemplateLiteral, propertyAccess, quotedKey } from "../ts-source.js";
 import {
   capitalize,
   entryPath,
@@ -445,12 +450,63 @@ function themeOverrideLines(
   return lines;
 }
 
-function generateThemesSource(config: GeneratorContext, keys: Map<string, string>): string {
-  const themeNames = Object.keys(config.themes).sort();
-  if (themeNames.length === 0) {
+const DEFAULT_MAX_COMBINATIONS = 64;
+
+function stylexCombinationError(
+  themes: readonly ThemeAxis[],
+  maxCombinations: number,
+): string | undefined {
+  if (!Number.isInteger(maxCombinations) || maxCombinations < 1) {
+    return `Invalid stylex maxCombinations (${maxCombinations}): expected a positive integer.`;
+  }
+  if (themes.length <= 1) return undefined;
+  const total = themes.reduce((acc, axis) => acc * (1 + Object.keys(axis.contexts).length), 1);
+  if (total <= maxCombinations) return undefined;
+  const breakdown = themes
+    .map((axis) => `${axis.name} (${1 + Object.keys(axis.contexts).length})`)
+    .join(" × ");
+  return `Multi-axis StyleX output requires materializing ${total} theme combinations (${breakdown}), exceeding maxCombinations (${maxCombinations}). StyleX createTheme() overrides on a single VarGroup are mutually exclusive; raise \`maxCombinations\` in stylex() options or reduce theme axes.`;
+}
+
+function generateThemesSource(
+  config: GeneratorContext,
+  keys: Map<string, string>,
+  maxCombinations = DEFAULT_MAX_COMBINATIONS,
+): string {
+  if (config.themes.length === 0) {
     return "export {};\n";
   }
-  validateThemeNames(themeNames, "stylex");
+
+  if (config.themes.length === 1) {
+    const axis = config.themes[0]!;
+    const themeNames = Object.keys(axis.contexts).sort();
+    if (themeNames.length === 0) {
+      return "export {};\n";
+    }
+    validateThemeNames(themeNames, "stylex");
+
+    const lines = [
+      'import * as stylex from "@stylexjs/stylex";',
+      'import { vars } from "./tokens.stylex.js";',
+      "",
+    ];
+
+    for (const themeName of themeNames) {
+      const override = axis.contexts[themeName]!;
+      const tokenLines = themeOverrideLines(config, keys, override);
+      lines.push(
+        `export const ${themeName}Theme = stylex.createTheme(vars, ${formatVarLines(tokenLines)});`,
+        "",
+      );
+    }
+
+    return lines.join("\n");
+  }
+
+  const comboError = stylexCombinationError(config.themes, maxCombinations);
+  if (comboError) {
+    throw new Error(comboError);
+  }
 
   const lines = [
     'import * as stylex from "@stylexjs/stylex";',
@@ -458,14 +514,51 @@ function generateThemesSource(config: GeneratorContext, keys: Map<string, string
     "",
   ];
 
-  for (const themeName of themeNames) {
-    const override = config.themes[themeName]!;
-    const tokenLines = themeOverrideLines(config, keys, override);
-    lines.push(
-      `export const ${themeName}Theme = stylex.createTheme(vars, ${formatVarLines(tokenLines)});`,
-      "",
-    );
+  const nonDefaultCombos = themeCombinations(config.themes).filter(
+    (combo) => combo.override !== undefined,
+  );
+
+  const mapEntries: string[] = [];
+  for (const [index, combo] of nonDefaultCombos.entries()) {
+    const varName = `_theme${index}`;
+    const tokenLines = themeOverrideLines(config, keys, combo.override!);
+    lines.push(`const ${varName} = stylex.createTheme(vars, ${formatVarLines(tokenLines)});`, "");
+    const comboKey = config.themes.map((axis) => combo.selection[axis.name]!).join("|");
+    mapEntries.push(`  ${JSON.stringify(comboKey)}: ${varName},`);
   }
+
+  const selectionFields = config.themes.map((axis) => {
+    const prop = /^[A-Za-z_$][\w$]*$/.test(axis.name) ? axis.name : JSON.stringify(axis.name);
+    const union = [axis.default, ...Object.keys(axis.contexts)]
+      .map((name) => JSON.stringify(name))
+      .join(" | ");
+    return `  ${prop}?: ${union};`;
+  });
+
+  const keyParts = config.themes
+    .map(
+      (axis) =>
+        `\${${propertyAccess("selection", [axis.name])} ?? ${JSON.stringify(axis.default)}}`,
+    )
+    .join("|");
+
+  lines.push(
+    "export type ThemeSelection = {",
+    ...selectionFields,
+    "};",
+    "",
+    "const combinations = {",
+    ...mapEntries,
+    "} as const;",
+    "",
+    "export function getTheme(",
+    "  selection: ThemeSelection = {},",
+    "): (typeof combinations)[keyof typeof combinations] | undefined {",
+    `  const key = \`${keyParts}\`;`,
+    "  return (combinations as Record<string, (typeof combinations)[keyof typeof combinations] | undefined>)[key];",
+    "}",
+    "",
+  );
 
   return lines.join("\n");
 }
@@ -514,24 +607,42 @@ function generateScalesSource(config: GeneratorContext, keys: Map<string, string
 
 export type StylexPluginOptions = {
   outDir: string;
+  /** Maximum number of multi-axis theme combinations to materialize (default: 64). */
+  maxCombinations?: number;
 };
 
-export function generateStylexFiles(config: GeneratorContext): OutputFile[] {
+export function generateStylexFiles(
+  config: GeneratorContext,
+  options?: Partial<StylexPluginOptions>,
+): OutputFile[] {
   const keys = buildKeyMap(config);
 
   return [
     { filename: "tokens.stylex.ts", content: generateVarsSource(config, keys) },
-    { filename: "themes.ts", content: generateThemesSource(config, keys) },
+    {
+      filename: "themes.ts",
+      content: generateThemesSource(config, keys, options?.maxCombinations),
+    },
     { filename: "scales.ts", content: generateScalesSource(config, keys) },
   ];
 }
 
 export function stylex(options: StylexPluginOptions): RecontentPlugin {
+  const checkNames = themeNameDiagnostics("stylex");
   return outputPlugin(
     "recontent:stylex",
     ["tokens"],
     options,
     generateStylexFiles,
-    themeNameDiagnostics("stylex"),
+    (ctx): PluginDiagnostic[] => {
+      const comboError = stylexCombinationError(
+        ctx.themes,
+        options.maxCombinations ?? DEFAULT_MAX_COMBINATIONS,
+      );
+      return [
+        ...checkNames(ctx),
+        ...(comboError ? [{ severity: "error" as const, message: comboError }] : []),
+      ];
+    },
   );
 }

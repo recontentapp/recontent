@@ -28,11 +28,13 @@ Utilities resolve to your tokens (`bg-accent`, `p-4`, `font-sans`) based on the 
 
 ### Theme variants
 
-With `themeVariants` enabled, each theme gets a variant so `dark:bg-surface` applies whenever the theme class or attribute is active:
+With `themeVariants` enabled, each theme context gets a variant so `dark:bg-surface` applies whenever the theme class or attribute is active:
 
 ```css
 @custom-variant dark (&:where(.dark, .dark *));
 ```
+
+When multiple axes are configured, variants include the axis prefix (`mode-dark`, `density-compact`) so you can stack them natively (`mode-dark:density-compact:p-2`).
 
 ## Options
 

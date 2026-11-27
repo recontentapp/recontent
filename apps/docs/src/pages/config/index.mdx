@@ -106,12 +106,12 @@ Components defined outside `root` (such as re-exported library components) omit 
 
 ### `themes`
 
-|         |                                 |
-| ------- | ------------------------------- |
-| Type    | `Record<string, ThemeOverride>` |
-| Default | `{}`                            |
+|         |                                                                                                         |
+| ------- | ------------------------------------------------------------------------------------------------------- |
+| Type    | `Record<string, ThemeOverride> \| Record<string, Record<string, ThemeOverride> \| ThemeAxisDefinition>` |
+| Default | `{}` (normalized to `ThemeAxis[]` on `Config.themes`)                                                   |
 
-Named themes from [`defineTheme`](/guides/working-with-themes). Plugins use the keys in selectors and export names, and every key must match `/^[A-Za-z_][\w-]*$/`.
+Pass a flat `{ dark, highContrast }` map for a single implicit `"theme"` axis, or nest orthogonal axes (`{ brand: { acme }, mode: { dark }, density: { compact } }`) in `resolutionOrder`—see [Working with themes](/guides/working-with-themes). Axis, default, and context names must match `/^[A-Za-z_][\w-]*$/`, and each axis must define at least one non-default context.
 
 ### `plugins`
 
@@ -187,32 +187,37 @@ const system = defineSystemTokens({
 });
 ```
 
-### defineTheme
+### defineTheme & defineThemeAxis
 
 ```ts
 defineTheme(
   tokens: TokenTree,
   overrides: PartialTree,
-  options?: { extends?: ThemeOverride[] },
 ): ThemeOverride
+
+defineThemeAxis(input: {
+  default?: string;
+  description?: string;
+  contexts: Record<string, ThemeOverride>;
+}): ThemeAxisDefinition
 ```
 
-| Parameter   | Description                                                                                              |
-| ----------- | -------------------------------------------------------------------------------------------------------- |
-| `tokens`    | Target token tree: a layer, a group inside a layer, or `{ ref, system }` to override multiple layers.    |
-| `overrides` | Partial tree mirroring `tokens`, with raw or stamped tokens at the leaves.                               |
-| `options`   | `extends`: base themes to merge in order. Later themes override earlier ones, and `overrides` wins last. |
+| Parameter   | Description                                                                                           |
+| ----------- | ----------------------------------------------------------------------------------------------------- |
+| `tokens`    | Target token tree: a layer, a group inside a layer, or `{ ref, system }` to override multiple layers. |
+| `overrides` | Partial tree mirroring `tokens`, with raw or stamped tokens at the leaves.                            |
 
-`defineTheme` returns a `ThemeOverride` mapping dotted token paths to their overriding values (and alias targets). Register it in [`themes`](#themes), where its key sets the theme name.
+`defineTheme` returns a `ThemeOverride` mapping dotted token paths to their overriding values (and alias targets). Register it in [`themes`](#themes) directly (`themes: { dark }`) or inside an axis (`themes: { mode: defineThemeAxis({ default: "light", contexts: { dark } }) }`).
 
 ```ts twoslash
-import { defineReferenceTokens, defineTheme, tokens } from "recontent";
+import { defineReferenceTokens, defineTheme, defineThemeAxis, tokens } from "recontent";
 
 const ref = defineReferenceTokens({
   color: { background: tokens.color("#ffffff") },
 });
 
 const dark = defineTheme(ref, { color: { background: tokens.color("#18181b") } });
+const mode = defineThemeAxis({ default: "light", contexts: { dark } });
 ```
 
 TypeScript enforces these rules on `overrides`:
@@ -233,4 +238,4 @@ import type { DefineConfigInput } from "recontent";
 const input: DefineConfigInput = { logLevel: "debug", plugins: [] };
 ```
 
-Recontent exports `DefineConfigInput`, `Config`, `IntrospectionConfigInput`, `LogLevel`, `ThemeOverride`, `RawToken`, `StampedToken`, `TokenScale`, `TokenGroup`, and `TokenLayer` for programmatic config generation.
+Recontent exports `DefineConfigInput`, `DefineThemesInput`, `Config`, `IntrospectionConfigInput`, `LogLevel`, `ThemeOverride`, `ThemeAxis`, `ThemeAxisInput`, `ThemeAxisDefinition`, `ThemeSelection`, `RawToken`, `StampedToken`, `TokenScale`, `TokenGroup`, and `TokenLayer` for programmatic config generation.

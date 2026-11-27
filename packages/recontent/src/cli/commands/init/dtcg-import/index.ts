@@ -49,23 +49,28 @@ export function generateConfigFromDtcg({ sources, cwd }: DtcgImportOptions): Dtc
   const convertedByKey = new Map<string, ConvertedToken>(
     converted.map((entry) => [sourceKey(entry.token.sourcePath), entry]),
   );
-  const contexts = loaded.contexts.map(({ modifier, context, doc }) => ({
-    modifier,
-    context,
-    tokens: flattenDocument(doc, warn),
+  const modifiers = loaded.modifiers.map((mod) => ({
+    name: mod.name,
+    default: mod.default,
+    ...(mod.description !== undefined ? { description: mod.description } : {}),
+    contexts: mod.contexts.map(({ name, doc }) => ({
+      name,
+      tokens: flattenDocument(doc, warn),
+    })),
   }));
-  const { themes, skipped: skippedOverrides } = buildThemes(base, convertedByKey, contexts, warn);
+  const { axes, skipped: skippedOverrides } = buildThemes(base, convertedByKey, modifiers, warn);
+  const themeCount = axes.reduce((sum, axis) => sum + axis.contexts.length, 0);
 
   const ref = converted.filter((entry) => entry.layer === "ref");
   const system = converted.filter((entry) => entry.layer === "system");
 
   return {
-    source: emitConfig({ files: loaded.files, ref, system, themes }),
+    source: emitConfig({ files: loaded.files, ref, system, axes }),
     stats: {
       tokens: converted.length,
       ref: ref.length,
       system: system.length,
-      themes: themes.length,
+      themes: themeCount,
       skipped: skipped.length + skippedOverrides,
     },
     warnings,

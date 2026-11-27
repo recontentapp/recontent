@@ -1,3 +1,4 @@
+import ts from "typescript";
 import { describe, expect, jest, test } from "@jest/globals";
 import {
   defineConfig,
@@ -263,5 +264,45 @@ type TextStyle = {
 const style: TextStyle = { fontWeight: theme.ref.typography.base.fontWeight };
 `;
     assertTypechecks(`${file!.content}\n${rnShim}`);
+  });
+
+  test("multi-axis resolveTheme recomputes derived typography lineHeight across interacting axes and typechecks", () => {
+    const ref = defineReferenceTokens({
+      size: tokens.dimension("16px"),
+      leading: tokens.number(1.5),
+    });
+    const system = defineSystemTokens({
+      body: tokens.typography({
+        fontFamily: "Inter",
+        fontSize: ref.size,
+        fontWeight: "bold",
+        lineHeight: ref.leading,
+      }),
+    });
+    const compact = defineTheme(ref, { size: tokens.dimension("12px") });
+    const relaxed = defineTheme(ref, { leading: tokens.number(2) });
+    const config = defineConfig({
+      tokens: { ref, system },
+      themes: { density: { compact }, reading: { relaxed } },
+    });
+
+    const [file] = generate(config);
+    assertParses(file!.content);
+    assertTypechecks(
+      `${file!.content}\ntype Weight = "700" | "400";\nconst w: Weight = resolveTheme({ density: "compact" }).system.body.fontWeight;\nvoid w;\n`,
+    );
+
+    const cjs = ts.transpileModule(file!.content, {
+      compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
+    }).outputText;
+    const exportsObj: Record<string, any> = {};
+    new Function("exports", cjs)(exportsObj);
+
+    expect(exportsObj.resolveTheme().system.body.lineHeight).toBe(24);
+    expect(exportsObj.resolveTheme({ density: "compact" }).system.body.lineHeight).toBe(18);
+    expect(exportsObj.resolveTheme({ reading: "relaxed" }).system.body.lineHeight).toBe(32);
+    expect(
+      exportsObj.resolveTheme({ density: "compact", reading: "relaxed" }).system.body.lineHeight,
+    ).toBe(24);
   });
 });

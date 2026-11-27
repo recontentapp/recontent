@@ -111,6 +111,27 @@ function compare(source: TokenMap, doc: Tokens): number {
   return compared;
 }
 
+function mergeDocs(...docs: Tokens[]): Tokens {
+  const result: Tokens = {};
+  for (const doc of docs) {
+    for (const [key, value] of Object.entries(doc)) {
+      if (key === "$schema") continue;
+      const existing = result[key];
+      if (
+        isObject(value) &&
+        isObject(existing) &&
+        !("$value" in value) &&
+        !("$value" in existing)
+      ) {
+        result[key] = mergeDocs(existing, value);
+      } else {
+        result[key] = value;
+      }
+    }
+  }
+  return result;
+}
+
 test("keeps the resolved values of every supported token, in every theme", () => {
   const dir = makeScratchDir("init-from-roundtrip");
   copyFixture("dtcg", dir);
@@ -121,20 +142,52 @@ test("keeps the resolved values of every supported token, in every theme", () =>
     .replace(/\n\}\);\n$/, '\n  plugins: [dtcg({ outDir: "out" })],\n});\n');
   writeFileSync(path.join(dir, "build.config.ts"), withPlugin);
   expect(runCli(["--cwd", dir, "build", "-c", "build.config.ts"]).status).toBe(0);
-  const read = (name: string) =>
-    JSON.parse(readFileSync(path.join(dir, "out", name), "utf-8")) as Tokens;
 
   const loaded = loadSources([resolver], dir, () => {});
-  const base = flattenDocument(loaded.base, () => {});
-  expect(compare(base, read("tokens.tokens.json"))).toBe(30);
+  const outLoaded = loadSources(["out/tokens.resolver.json"], dir, () => {});
 
-  for (const { modifier, context, doc } of loaded.contexts) {
-    const effective: TokenMap = new Map(base);
-    for (const [key, token] of flattenDocument(doc, () => {})) {
-      effective.set(key, { ...token, type: token.type ?? base.get(key)?.type });
+  expect(
+    outLoaded.modifiers.map((mod) => ({
+      name: mod.name,
+      default: mod.default,
+      contexts: mod.contexts.map((c) => c.name),
+    })),
+  ).toEqual(
+    loaded.modifiers.map((mod) => ({
+      name: mod.name,
+      default: mod.default,
+      contexts: mod.contexts.map((c) => c.name),
+    })),
+  );
+
+  const base = flattenDocument(loaded.base, () => {});
+  expect(compare(base, outLoaded.base)).toBe(30);
+
+  for (let i = 0; i < loaded.modifiers.length; i++) {
+    const mod = loaded.modifiers[i]!;
+    const outMod = outLoaded.modifiers[i]!;
+    for (let j = 0; j < mod.contexts.length; j++) {
+      const context = mod.contexts[j]!;
+      const outContext = outMod.contexts[j]!;
+      const effective: TokenMap = new Map(base);
+      for (const [key, token] of flattenDocument(context.doc, () => {})) {
+        effective.set(key, { ...token, type: token.type ?? base.get(key)?.type });
+      }
+      // theme.extra only exists in dark and is reported as skipped.
+      expect(compare(effective, mergeDocs(outLoaded.base, outContext.doc))).toBe(30);
     }
-    const name = `${modifier}-${context}`;
-    // theme.extra only exists in dark and is reported as skipped.
-    expect(compare(effective, read(`${name}.tokens.json`))).toBe(30);
   }
+
+  // Combined multi-modifier resolution in resolutionOrder (theme=dark + density=compact).
+  const combinedSource: TokenMap = new Map(base);
+  const combinedOutDocs: Tokens[] = [outLoaded.base];
+  for (let i = 0; i < loaded.modifiers.length; i++) {
+    const context = loaded.modifiers[i]!.contexts[0]!;
+    const outContext = outLoaded.modifiers[i]!.contexts[0]!;
+    for (const [key, token] of flattenDocument(context.doc, () => {})) {
+      combinedSource.set(key, { ...token, type: token.type ?? base.get(key)?.type });
+    }
+    combinedOutDocs.push(outContext.doc);
+  }
+  expect(compare(combinedSource, mergeDocs(...combinedOutDocs))).toBe(30);
 });

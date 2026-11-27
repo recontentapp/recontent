@@ -3,14 +3,21 @@ import os from "node:os";
 import path from "node:path";
 import { pathKey } from "../token-model/guards.js";
 import { type ComponentInfo, type TypeInfo } from "../introspection/model.js";
-import { type ThemeOverride, type TokenRegistry } from "../token-model/registry.js";
+import { type ThemeAxis, type TokenRegistry } from "../token-model/registry.js";
 import { buildToken, type DocToken } from "./doc-token.js";
 
 /** Shared by the snapshot and every `recontent inspect --format json` output. */
-export const SCHEMA_VERSION = "1";
+export const SCHEMA_VERSION = "2";
 
 /** What introspecting a project's components yields. */
 export type Introspected = { components: ComponentInfo[]; types: TypeInfo[] };
+
+export type SnapshotThemeAxis = {
+  name: string;
+  default: string;
+  description?: string;
+  contexts: string[];
+};
 
 /**
  * Everything `recontent inspect` knows, in a portable form: a design system
@@ -21,26 +28,34 @@ export type Introspected = { components: ComponentInfo[]; types: TypeInfo[] };
 export type Snapshot = {
   schemaVersion: string;
   kind: "snapshot";
-  themes: string[];
+  themes: SnapshotThemeAxis[];
   tokens: DocToken[];
 } & Partial<Introspected>;
 
 const numericCollator = new Intl.Collator("en", { numeric: true });
 export const numericCompare = (a: string, b: string) => numericCollator.compare(a, b);
 
+export function toSnapshotThemes(axes: readonly ThemeAxis[]): SnapshotThemeAxis[] {
+  return axes.map((axis) => ({
+    name: axis.name,
+    default: axis.default,
+    ...(axis.description !== undefined ? { description: axis.description } : {}),
+    contexts: Object.keys(axis.contexts),
+  }));
+}
+
 export function createSnapshot(
-  config: { registry: TokenRegistry; themes: Record<string, ThemeOverride> },
+  config: { registry: TokenRegistry; themes: ThemeAxis[] },
   introspected?: Introspected,
 ): Snapshot {
-  const themes = Object.keys(config.themes);
   return {
     schemaVersion: SCHEMA_VERSION,
     kind: "snapshot",
-    themes,
+    themes: toSnapshotThemes(config.themes),
     tokens: [...config.registry.values()]
       .map((entry) => ({ key: pathKey(entry.path), entry }))
       .sort((a, b) => numericCompare(a.key, b.key))
-      .map(({ entry }) => buildToken(config, entry, themes)),
+      .map(({ entry }) => buildToken(config, entry)),
     ...(introspected ? { components: introspected.components, types: introspected.types } : {}),
   };
 }
@@ -132,6 +147,18 @@ export function readSnapshot(
         ? `--from: ${source} has a snapshot (schema ${snapshot.schemaVersion}) newer than this recontent understands (schema ${SCHEMA_VERSION}). Upgrade recontent.`
         : `--from: ${source} has an unsupported snapshot schema ${snapshot.schemaVersion}.`,
     );
+  }
+  const validAxes = snapshot.themes.every(
+    (axis): axis is SnapshotThemeAxis =>
+      typeof axis === "object" &&
+      axis !== null &&
+      typeof (axis as SnapshotThemeAxis).name === "string" &&
+      typeof (axis as SnapshotThemeAxis).default === "string" &&
+      Array.isArray((axis as SnapshotThemeAxis).contexts) &&
+      (axis as SnapshotThemeAxis).contexts.every((c) => typeof c === "string"),
+  );
+  if (!validAxes) {
+    throw new Error(`--from: ${file} is not a recontent snapshot.`);
   }
   return { snapshot: snapshot as Snapshot, source, file };
 }

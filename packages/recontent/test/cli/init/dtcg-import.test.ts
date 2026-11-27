@@ -343,7 +343,30 @@ describe("sources", () => {
     expect(warnings).toEqual([]);
   });
 
-  test("prefixes the modifier when there are several, and defaults to the first context", () => {
+  test("emits flat themes when a single 'theme' modifier uses the default context name", () => {
+    const { source } = generate(
+      {
+        "r.resolver.json": resolver(
+          {
+            theme: {
+              contexts: {
+                default: [],
+                dark: [{ color: { $type: "color", bg: { $value: black } } }],
+              },
+              default: "default",
+            },
+          },
+          ["#/sets/base", "#/modifiers/theme"],
+        ),
+        "base.tokens.json": base,
+      },
+      ["r.resolver.json"],
+    );
+    expect(source).not.toContain("defineThemeAxis");
+    expect(source).toContain(`  themes: {\n    "dark": defineTheme(`);
+  });
+
+  test("emits each modifier as a theme axis in resolutionOrder, and defaults to the first context", () => {
     const { source, warnings } = generate(
       {
         "r.resolver.json": resolver(
@@ -352,6 +375,7 @@ describe("sources", () => {
               contexts: { light: [], dark: [{ color: { $type: "color", bg: { $value: black } } }] },
             },
             density: {
+              description: "Spacing scale",
               contexts: {
                 roomy: [],
                 tight: [{ space: { $type: "dimension", gap: { $value: px(2) } } }],
@@ -365,8 +389,14 @@ describe("sources", () => {
       },
       ["r.resolver.json"],
     );
-    expect(source).toContain(`"theme-dark": defineTheme(`);
-    expect(source).toContain(`"density-tight": defineTheme(`);
+    expect(source).toContain(`"theme": defineThemeAxis(`);
+    expect(source).toContain(`default: 'light',`);
+    expect(source).toContain(`"dark": defineTheme(`);
+    expect(source).toContain(`"density": defineThemeAxis(`);
+    expect(source).toContain(`default: 'roomy',`);
+    expect(source).toContain(`description: 'Spacing scale',`);
+    expect(source).toContain(`"tight": defineTheme(`);
+    expect(source.indexOf(`"theme":`)).toBeLessThan(source.indexOf(`"density":`));
     expect(warnings).toEqual([
       'Modifier "theme" has no default context; using its first context "light".',
     ]);
@@ -397,6 +427,40 @@ describe("sources", () => {
     expect(source).toMatch(
       /"dark": defineTheme\([\s\S]*?system: \{\s+"theme": \{\s+"surface": ref\.color\.bg/,
     );
+  });
+
+  test("propagates a later modifier's default context into earlier modifiers' contexts", () => {
+    const red = { colorSpace: "srgb", components: [1, 0, 0], alpha: 1, hex: "#ff0000" };
+    const blue = { colorSpace: "srgb", components: [0, 0, 1], alpha: 1, hex: "#0000ff" };
+    const { source } = generate(
+      {
+        "r.resolver.json": resolver(
+          {
+            brand: {
+              default: "core",
+              contexts: {
+                core: [],
+                acme: [{ color: { $type: "color", bg: { $value: red } } }],
+              },
+            },
+            mode: {
+              default: "light",
+              contexts: {
+                light: [{ color: { $type: "color", bg: { $value: blue } } }],
+                dark: [{ color: { $type: "color", bg: { $value: black } } }],
+              },
+            },
+          },
+          ["#/sets/base", "#/modifiers/brand", "#/modifiers/mode"],
+        ),
+        "base.tokens.json": base,
+      },
+      ["r.resolver.json"],
+    );
+    // mode.light (default) appears after brand in resolutionOrder and sets bg to #0000ff,
+    // so brand.acme cannot override bg back to #ff0000 when mode is at its default.
+    expect(source).toContain(`"bg": tokens.color('#0000ff')`);
+    expect(source).not.toContain("#ff0000");
   });
 
   test("overrides a system alias with a literal and updates the aliases collapsed through it", () => {

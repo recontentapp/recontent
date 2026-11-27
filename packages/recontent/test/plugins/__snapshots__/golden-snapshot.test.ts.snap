@@ -49,63 +49,58 @@ exports[`golden snapshots css 1`] = `
 "
 `;
 
-exports[`golden snapshots dtcg (base) 1`] = `
+exports[`golden snapshots dtcg 1`] = `
+"// ---- tokens.tokens.json ----
 {
-  "button": {
-    "background": {
-      "$deprecated": "Use system.colors.surface instead.",
-      "$description": "Primary accent color.",
-      "$type": "color",
-      "$value": "{system.colors.accent}",
-    },
-    "border": {
-      "$type": "border",
-      "$value": "{system.border.default}",
-    },
-  },
   "ref": {
     "color": {
-      "$type": "color",
       "black": {
         "$value": {
-          "alpha": 1,
           "colorSpace": "srgb",
           "components": [
             0,
             0,
-            0,
+            0
           ],
-          "hex": "#000000",
-        },
+          "alpha": 1,
+          "hex": "#000000"
+        }
       },
       "white": {
         "$value": {
-          "alpha": 1,
           "colorSpace": "srgb",
           "components": [
             1,
             1,
-            1,
+            1
           ],
-          "hex": "#ffffff",
-        },
+          "alpha": 1,
+          "hex": "#ffffff"
+        }
       },
+      "$type": "color"
     },
     "fontFamily": {
       "body": {
         "$type": "fontFamily",
         "$value": [
-          "Arial",
-        ],
-      },
+          "Arial"
+        ]
+      }
+    },
+    "weight": {
+      "brand": {
+        "$type": "fontWeight",
+        "$value": 500
+      }
     },
     "motion": {
       "duration": {
         "$type": "duration",
         "$value": {
-          "unit": "ms",
           "value": 200,
-        },
+          "unit": "ms"
+        }
       },
       "easing": {
         "$type": "cubicBezier",
@@ -113,177 +108,171 @@ exports[`golden snapshots dtcg (base) 1`] = `
           0.4,
           0,
           0.2,
-          1,
-        ],
-      },
-    },
-    "palette": {
-      "$type": "color",
-      "100": {
-        "$value": {
-          "alpha": 1,
-          "colorSpace": "srgb",
-          "components": [
-            0.06666666666666667,
-            0.06666666666666667,
-            0.06666666666666667,
-          ],
-          "hex": "#111111",
-        },
-      },
-      "200": {
-        "$value": {
-          "alpha": 1,
-          "colorSpace": "srgb",
-          "components": [
-            0.13333333333333333,
-            0.13333333333333333,
-            0.13333333333333333,
-          ],
-          "hex": "#222222",
-        },
-      },
+          1
+        ]
+      }
     },
     "spacing": {
-      "$type": "dimension",
       "0": {
         "$value": {
-          "unit": "px",
           "value": 0,
-        },
+          "unit": "px"
+        }
       },
       "1": {
         "$value": {
-          "unit": "px",
           "value": 4,
-        },
+          "unit": "px"
+        }
       },
       "2": {
         "$value": {
-          "unit": "px",
           "value": 8,
-        },
+          "unit": "px"
+        }
       },
+      "$type": "dimension"
     },
-    "weight": {
-      "brand": {
-        "$type": "fontWeight",
-        "$value": 500,
+    "palette": {
+      "100": {
+        "$value": {
+          "colorSpace": "srgb",
+          "components": [
+            0.06666666666666667,
+            0.06666666666666667,
+            0.06666666666666667
+          ],
+          "alpha": 1,
+          "hex": "#111111"
+        }
       },
-    },
+      "200": {
+        "$value": {
+          "colorSpace": "srgb",
+          "components": [
+            0.13333333333333333,
+            0.13333333333333333,
+            0.13333333333333333
+          ],
+          "alpha": 1,
+          "hex": "#222222"
+        }
+      },
+      "$type": "color"
+    }
   },
   "system": {
-    "border": {
-      "default": {
-        "$type": "border",
-        "$value": {
-          "color": "{ref.color.black}",
-          "style": "solid",
-          "width": {
-            "unit": "px",
-            "value": 1,
-          },
-        },
-      },
-    },
     "colors": {
-      "$type": "color",
       "accent": {
-        "$description": "Primary accent color.",
         "$value": "{ref.color.black}",
+        "$description": "Primary accent color."
       },
       "surface": {
-        "$value": "{ref.color.white}",
+        "$value": "{ref.color.white}"
       },
-    },
-    "gradient": {
-      "accent": {
-        "$extensions": {
-          "com.recontent": {
-            "angle": "90deg",
-            "kind": "linear",
-          },
-        },
-        "$type": "gradient",
-        "$value": [
-          {
-            "color": "{ref.color.black}",
-            "position": 0,
-          },
-          {
-            "color": "{ref.color.white}",
-            "position": 1,
-          },
-        ],
-      },
+      "$type": "color"
     },
     "shadow": {
       "elevated": {
         "$type": "shadow",
         "$value": [
           {
-            "blur": {
-              "unit": "px",
-              "value": 4,
-            },
             "color": "{ref.color.black}",
-            "inset": true,
             "offsetX": {
-              "unit": "px",
               "value": 0,
+              "unit": "px"
             },
             "offsetY": {
-              "unit": "px",
               "value": 2,
+              "unit": "px"
+            },
+            "blur": {
+              "value": 4,
+              "unit": "px"
             },
             "spread": {
-              "unit": "px",
               "value": 0,
+              "unit": "px"
             },
+            "inset": true
           },
           {
-            "blur": {
-              "unit": "px",
-              "value": 2,
-            },
             "color": {
-              "alpha": 1,
               "colorSpace": "srgb",
               "components": [
                 0.06666666666666667,
                 0.06666666666666667,
-                0.06666666666666667,
+                0.06666666666666667
               ],
-              "hex": "#111111",
+              "alpha": 1,
+              "hex": "#111111"
             },
             "offsetX": {
-              "unit": "px",
               "value": 0,
+              "unit": "px"
             },
             "offsetY": {
-              "unit": "px",
               "value": 1,
+              "unit": "px"
+            },
+            "blur": {
+              "value": 2,
+              "unit": "px"
             },
             "spread": {
-              "unit": "px",
               "value": 0,
-            },
+              "unit": "px"
+            }
+          }
+        ]
+      }
+    },
+    "border": {
+      "default": {
+        "$type": "border",
+        "$value": {
+          "color": "{ref.color.black}",
+          "width": {
+            "value": 1,
+            "unit": "px"
           },
-        ],
-      },
+          "style": "solid"
+        }
+      }
     },
     "transition": {
       "standard": {
         "$type": "transition",
         "$value": {
-          "delay": {
-            "unit": "ms",
-            "value": 0,
-          },
           "duration": "{ref.motion.duration}",
-          "timingFunction": "{ref.motion.easing}",
-        },
-      },
+          "delay": {
+            "value": 0,
+            "unit": "ms"
+          },
+          "timingFunction": "{ref.motion.easing}"
+        }
+      }
+    },
+    "gradient": {
+      "accent": {
+        "$type": "gradient",
+        "$value": [
+          {
+            "color": "{ref.color.black}",
+            "position": 0
+          },
+          {
+            "color": "{ref.color.white}",
+            "position": 1
+          }
+        ],
+        "$extensions": {
+          "com.recontent": {
+            "kind": "linear",
+            "angle": "90deg"
+          }
+        }
+      }
     },
     "typography": {
       "body": {
@@ -291,545 +280,122 @@ exports[`golden snapshots dtcg (base) 1`] = `
         "$value": {
           "fontFamily": "{ref.fontFamily.body}",
           "fontSize": {
-            "unit": "px",
             "value": 16,
+            "unit": "px"
           },
           "fontWeight": 400,
           "letterSpacing": {
-            "unit": "px",
             "value": 0,
+            "unit": "px"
           },
-          "lineHeight": 1.4,
-        },
-      },
-    },
+          "lineHeight": 1.4
+        }
+      }
+    }
   },
+  "button": {
+    "background": {
+      "$type": "color",
+      "$value": "{system.colors.accent}",
+      "$description": "Primary accent color.",
+      "$deprecated": "Use system.colors.surface instead."
+    },
+    "border": {
+      "$type": "border",
+      "$value": "{system.border.default}"
+    }
+  }
 }
-`;
 
-exports[`golden snapshots dtcg (themed: dark) 1`] = `
-{
-  "button": {
-    "background": {
-      "$deprecated": "Use system.colors.surface instead.",
-      "$description": "Primary accent color.",
-      "$type": "color",
-      "$value": "{system.colors.accent}",
-    },
-    "border": {
-      "$type": "border",
-      "$value": "{system.border.default}",
-    },
-  },
-  "ref": {
-    "color": {
-      "$type": "color",
-      "black": {
-        "$value": {
-          "alpha": 1,
-          "colorSpace": "srgb",
-          "components": [
-            0.9333333333333333,
-            0.9333333333333333,
-            0.9333333333333333,
-          ],
-          "hex": "#eeeeee",
-        },
-      },
-      "white": {
-        "$value": {
-          "alpha": 1,
-          "colorSpace": "srgb",
-          "components": [
-            1,
-            1,
-            1,
-          ],
-          "hex": "#ffffff",
-        },
-      },
-    },
-    "fontFamily": {
-      "body": {
-        "$type": "fontFamily",
-        "$value": [
-          "Arial",
-        ],
-      },
-    },
-    "motion": {
-      "duration": {
-        "$type": "duration",
-        "$value": {
-          "unit": "ms",
-          "value": 200,
-        },
-      },
-      "easing": {
-        "$type": "cubicBezier",
-        "$value": [
-          0.4,
-          0,
-          0.2,
-          1,
-        ],
-      },
-    },
-    "palette": {
-      "$type": "color",
-      "100": {
-        "$value": {
-          "alpha": 1,
-          "colorSpace": "srgb",
-          "components": [
-            0.06666666666666667,
-            0.06666666666666667,
-            0.06666666666666667,
-          ],
-          "hex": "#111111",
-        },
-      },
-      "200": {
-        "$value": {
-          "alpha": 1,
-          "colorSpace": "srgb",
-          "components": [
-            0.13333333333333333,
-            0.13333333333333333,
-            0.13333333333333333,
-          ],
-          "hex": "#222222",
-        },
-      },
-    },
-    "spacing": {
-      "$type": "dimension",
-      "0": {
-        "$value": {
-          "unit": "px",
-          "value": 0,
-        },
-      },
-      "1": {
-        "$value": {
-          "unit": "px",
-          "value": 4,
-        },
-      },
-      "2": {
-        "$value": {
-          "unit": "px",
-          "value": 8,
-        },
-      },
-    },
-    "weight": {
-      "brand": {
-        "$type": "fontWeight",
-        "$value": 500,
-      },
-    },
-  },
-  "system": {
-    "border": {
-      "default": {
-        "$type": "border",
-        "$value": {
-          "color": "{ref.color.black}",
-          "style": "solid",
-          "width": {
-            "unit": "px",
-            "value": 1,
-          },
-        },
-      },
-    },
-    "colors": {
-      "$type": "color",
-      "accent": {
-        "$description": "Primary accent color.",
-        "$value": "{ref.color.black}",
-      },
-      "surface": {
-        "$value": "{ref.color.white}",
-      },
-    },
-    "gradient": {
-      "accent": {
-        "$extensions": {
-          "com.recontent": {
-            "angle": "90deg",
-            "kind": "linear",
-          },
-        },
-        "$type": "gradient",
-        "$value": [
-          {
-            "color": "{ref.color.black}",
-            "position": 0,
-          },
-          {
-            "color": "{ref.color.white}",
-            "position": 1,
-          },
-        ],
-      },
-    },
-    "shadow": {
-      "elevated": {
-        "$type": "shadow",
-        "$value": [
-          {
-            "blur": {
-              "unit": "px",
-              "value": 4,
-            },
-            "color": "{ref.color.black}",
-            "inset": true,
-            "offsetX": {
-              "unit": "px",
-              "value": 0,
-            },
-            "offsetY": {
-              "unit": "px",
-              "value": 2,
-            },
-            "spread": {
-              "unit": "px",
-              "value": 0,
-            },
-          },
-          {
-            "blur": {
-              "unit": "px",
-              "value": 2,
-            },
-            "color": {
-              "alpha": 1,
-              "colorSpace": "srgb",
-              "components": [
-                0.06666666666666667,
-                0.06666666666666667,
-                0.06666666666666667,
-              ],
-              "hex": "#111111",
-            },
-            "offsetX": {
-              "unit": "px",
-              "value": 0,
-            },
-            "offsetY": {
-              "unit": "px",
-              "value": 1,
-            },
-            "spread": {
-              "unit": "px",
-              "value": 0,
-            },
-          },
-        ],
-      },
-    },
-    "transition": {
-      "standard": {
-        "$type": "transition",
-        "$value": {
-          "delay": {
-            "unit": "ms",
-            "value": 0,
-          },
-          "duration": "{ref.motion.duration}",
-          "timingFunction": "{ref.motion.easing}",
-        },
-      },
-    },
-    "typography": {
-      "body": {
-        "$type": "typography",
-        "$value": {
-          "fontFamily": "{ref.fontFamily.body}",
-          "fontSize": {
-            "unit": "px",
-            "value": 16,
-          },
-          "fontWeight": 400,
-          "letterSpacing": {
-            "unit": "px",
-            "value": 0,
-          },
-          "lineHeight": 1.4,
-        },
-      },
-    },
-  },
-}
-`;
 
-exports[`golden snapshots dtcg (themed: highContrast) 1`] = `
+// ---- tokens.resolver.json ----
 {
-  "button": {
-    "background": {
-      "$deprecated": "Use system.colors.surface instead.",
-      "$description": "Primary accent color.",
-      "$type": "color",
-      "$value": "{system.colors.accent}",
-    },
-    "border": {
-      "$type": "border",
-      "$value": "{system.border.default}",
-    },
+  "$schema": "https://www.designtokens.org/schemas/2025.10/resolver.json",
+  "version": "2025.10",
+  "sets": {
+    "base": {
+      "sources": [
+        {
+          "$ref": "./tokens.tokens.json"
+        }
+      ]
+    }
   },
+  "modifiers": {
+    "theme": {
+      "default": "default",
+      "contexts": {
+        "default": [],
+        "dark": [
+          {
+            "$ref": "./themes/dark.tokens.json"
+          }
+        ],
+        "highContrast": [
+          {
+            "$ref": "./themes/highContrast.tokens.json"
+          }
+        ]
+      }
+    }
+  },
+  "resolutionOrder": [
+    {
+      "$ref": "#/sets/base"
+    },
+    {
+      "$ref": "#/modifiers/theme"
+    }
+  ]
+}
+
+
+// ---- themes/dark.tokens.json ----
+{
   "ref": {
     "color": {
-      "$type": "color",
       "black": {
+        "$type": "color",
         "$value": {
-          "alpha": 1,
           "colorSpace": "srgb",
           "components": [
-            0,
-            0,
-            0,
+            0.9333333333333333,
+            0.9333333333333333,
+            0.9333333333333333
           ],
-          "hex": "#000000",
-        },
-      },
-      "white": {
-        "$value": {
           "alpha": 1,
-          "colorSpace": "srgb",
-          "components": [
-            1,
-            1,
-            1,
-          ],
-          "hex": "#ffffff",
-        },
-      },
-    },
-    "fontFamily": {
-      "body": {
-        "$type": "fontFamily",
-        "$value": [
-          "Arial",
-        ],
-      },
-    },
-    "motion": {
-      "duration": {
-        "$type": "duration",
-        "$value": {
-          "unit": "ms",
-          "value": 200,
-        },
-      },
-      "easing": {
-        "$type": "cubicBezier",
-        "$value": [
-          0.4,
-          0,
-          0.2,
-          1,
-        ],
-      },
-    },
-    "palette": {
-      "$type": "color",
-      "100": {
-        "$value": {
-          "alpha": 1,
-          "colorSpace": "srgb",
-          "components": [
-            0.06666666666666667,
-            0.06666666666666667,
-            0.06666666666666667,
-          ],
-          "hex": "#111111",
-        },
-      },
-      "200": {
-        "$value": {
-          "alpha": 1,
-          "colorSpace": "srgb",
-          "components": [
-            0.13333333333333333,
-            0.13333333333333333,
-            0.13333333333333333,
-          ],
-          "hex": "#222222",
-        },
-      },
-    },
-    "spacing": {
-      "$type": "dimension",
-      "0": {
-        "$value": {
-          "unit": "px",
-          "value": 0,
-        },
-      },
-      "1": {
-        "$value": {
-          "unit": "px",
-          "value": 4,
-        },
-      },
-      "2": {
-        "$value": {
-          "unit": "px",
-          "value": 8,
-        },
-      },
-    },
-    "weight": {
-      "brand": {
-        "$type": "fontWeight",
-        "$value": 500,
-      },
-    },
-  },
+          "hex": "#eeeeee"
+        }
+      }
+    }
+  }
+}
+
+
+// ---- themes/highContrast.tokens.json ----
+{
   "system": {
-    "border": {
-      "default": {
-        "$type": "border",
-        "$value": {
-          "color": "{ref.color.black}",
-          "style": "solid",
-          "width": {
-            "unit": "px",
-            "value": 1,
-          },
-        },
-      },
-    },
     "colors": {
-      "$type": "color",
       "accent": {
-        "$description": "Primary accent color.",
         "$value": {
-          "alpha": 1,
           "colorSpace": "srgb",
           "components": [
             1,
             0,
-            0,
+            0
           ],
-          "hex": "#ff0000",
-        },
+          "alpha": 1,
+          "hex": "#ff0000"
+        }
       },
       "surface": {
-        "$value": "{ref.color.black}",
-      },
-    },
-    "gradient": {
-      "accent": {
-        "$extensions": {
-          "com.recontent": {
-            "angle": "90deg",
-            "kind": "linear",
-          },
-        },
-        "$type": "gradient",
-        "$value": [
-          {
-            "color": "{ref.color.black}",
-            "position": 0,
-          },
-          {
-            "color": "{ref.color.white}",
-            "position": 1,
-          },
-        ],
-      },
-    },
-    "shadow": {
-      "elevated": {
-        "$type": "shadow",
-        "$value": [
-          {
-            "blur": {
-              "unit": "px",
-              "value": 4,
-            },
-            "color": "{ref.color.black}",
-            "inset": true,
-            "offsetX": {
-              "unit": "px",
-              "value": 0,
-            },
-            "offsetY": {
-              "unit": "px",
-              "value": 2,
-            },
-            "spread": {
-              "unit": "px",
-              "value": 0,
-            },
-          },
-          {
-            "blur": {
-              "unit": "px",
-              "value": 2,
-            },
-            "color": {
-              "alpha": 1,
-              "colorSpace": "srgb",
-              "components": [
-                0.06666666666666667,
-                0.06666666666666667,
-                0.06666666666666667,
-              ],
-              "hex": "#111111",
-            },
-            "offsetX": {
-              "unit": "px",
-              "value": 0,
-            },
-            "offsetY": {
-              "unit": "px",
-              "value": 1,
-            },
-            "spread": {
-              "unit": "px",
-              "value": 0,
-            },
-          },
-        ],
-      },
-    },
-    "transition": {
-      "standard": {
-        "$type": "transition",
-        "$value": {
-          "delay": {
-            "unit": "ms",
-            "value": 0,
-          },
-          "duration": "{ref.motion.duration}",
-          "timingFunction": "{ref.motion.easing}",
-        },
-      },
-    },
-    "typography": {
-      "body": {
-        "$type": "typography",
-        "$value": {
-          "fontFamily": "{ref.fontFamily.body}",
-          "fontSize": {
-            "unit": "px",
-            "value": 16,
-          },
-          "fontWeight": 400,
-          "letterSpacing": {
-            "unit": "px",
-            "value": 0,
-          },
-          "lineHeight": 1.4,
-        },
-      },
-    },
+        "$value": "{ref.color.black}"
+      }
+    }
   },
+  "$type": "color"
 }
+"
 `;
 
 exports[`golden snapshots stylex 1`] = `
@@ -1387,7 +953,7 @@ export type BaseTheme = typeof theme;
 
 exports[`golden snapshots vanilla-extract 1`] = `
 "// ---- tokens.css.ts ----
-import { createTheme, createThemeContract } from "@vanilla-extract/css";
+import { createTheme, createThemeContract, style } from "@vanilla-extract/css";
 
 export const vars = createThemeContract({
   "ref": {
@@ -1525,139 +1091,22 @@ export const themeClass = createTheme(vars, {
   },
   "components": {
     "button": {
-      "background": vars.ref.color.black,
-      "border": vars.system.border.default,
-    },
-  },
-});
-
-export const darkThemeClass = createTheme(vars, {
-  "ref": {
-    "color": {
-      "black": '#eeeeee',
-      "white": '#ffffff',
-    },
-    "fontFamily": {
-      "body": 'Arial',
-    },
-    "weight": {
-      "brand": '500',
-    },
-    "motion": {
-      "duration": '200ms',
-      "easing": 'cubic-bezier(0.4, 0, 0.2, 1)',
-    },
-    "spacing": {
-      "0": '0px',
-      "1": '4px',
-      "2": '8px',
-    },
-    "palette": {
-      "100": '#111111',
-      "200": '#222222',
-    },
-  },
-  "system": {
-    "colors": {
-      "accent": vars.ref.color.black,
-      "surface": vars.ref.color.white,
-    },
-    "shadow": {
-      "elevated": \`inset 0px 2px 4px 0px \${vars.ref.color.black}, 0px 1px 2px 0px #111111\`,
-    },
-    "border": {
-      "default": \`1px solid \${vars.ref.color.black}\`,
-    },
-    "transition": {
-      "standard": {
-        "transitionDuration": vars.ref.motion.duration,
-        "transitionDelay": '0ms',
-        "transitionTimingFunction": vars.ref.motion.easing,
-      },
-    },
-    "gradient": {
-      "accent": \`linear-gradient(90deg, \${vars.ref.color.black} 0%, \${vars.ref.color.white} 100%)\`,
-    },
-    "typography": {
-      "body": {
-        "fontFamily": vars.ref.fontFamily.body,
-        "fontSize": '16px',
-        "fontWeight": '400',
-        "letterSpacing": '0px',
-        "lineHeight": '1.4',
-      },
-    },
-  },
-  "components": {
-    "button": {
-      "background": vars.ref.color.black,
-      "border": vars.system.border.default,
-    },
-  },
-});
-
-export const highContrastThemeClass = createTheme(vars, {
-  "ref": {
-    "color": {
-      "black": '#000000',
-      "white": '#ffffff',
-    },
-    "fontFamily": {
-      "body": 'Arial',
-    },
-    "weight": {
-      "brand": '500',
-    },
-    "motion": {
-      "duration": '200ms',
-      "easing": 'cubic-bezier(0.4, 0, 0.2, 1)',
-    },
-    "spacing": {
-      "0": '0px',
-      "1": '4px',
-      "2": '8px',
-    },
-    "palette": {
-      "100": '#111111',
-      "200": '#222222',
-    },
-  },
-  "system": {
-    "colors": {
-      "accent": '#ff0000',
-      "surface": vars.ref.color.black,
-    },
-    "shadow": {
-      "elevated": \`inset 0px 2px 4px 0px \${vars.ref.color.black}, 0px 1px 2px 0px #111111\`,
-    },
-    "border": {
-      "default": \`1px solid \${vars.ref.color.black}\`,
-    },
-    "transition": {
-      "standard": {
-        "transitionDuration": vars.ref.motion.duration,
-        "transitionDelay": '0ms',
-        "transitionTimingFunction": vars.ref.motion.easing,
-      },
-    },
-    "gradient": {
-      "accent": \`linear-gradient(90deg, \${vars.ref.color.black} 0%, \${vars.ref.color.white} 100%)\`,
-    },
-    "typography": {
-      "body": {
-        "fontFamily": vars.ref.fontFamily.body,
-        "fontSize": '16px',
-        "fontWeight": '400',
-        "letterSpacing": '0px',
-        "lineHeight": '1.4',
-      },
-    },
-  },
-  "components": {
-    "button": {
       "background": vars.system.colors.accent,
       "border": vars.system.border.default,
     },
+  },
+});
+
+export const darkThemeClass = style({
+  vars: {
+    [vars.ref.color.black]: '#eeeeee',
+  },
+});
+
+export const highContrastThemeClass = style({
+  vars: {
+    [vars.system.colors.accent]: '#ff0000',
+    [vars.system.colors.surface]: vars.ref.color.black,
   },
 });
 "

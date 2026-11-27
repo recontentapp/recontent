@@ -2,6 +2,7 @@ import fs from "node:fs";
 import { createRequire } from "node:module";
 import os from "node:os";
 import path from "node:path";
+import ts from "typescript";
 import { describe, expect, test } from "@jest/globals";
 import * as babel from "@babel/core";
 import {
@@ -9,9 +10,10 @@ import {
   defineReferenceTokens,
   defineSystemTokens,
   defineTheme,
+  defineThemeAxis,
   tokens,
 } from "../../src/index.js";
-import { generateStylexFiles } from "../../src/plugins/stylex.js";
+import { generateStylexFiles, stylex } from "../../src/plugins/stylex.js";
 import {
   assertParses,
   assertTypechecks,
@@ -387,5 +389,63 @@ describe("StyleX compile test", () => {
     const files = generateStylexFiles(config);
     expect(file(files, "scales.ts").content).toContain('"-1": vars.refZ1,');
     expect(file(files, "themes.ts").content).toContain("0px 4px 8px 0px #ffffff");
+  });
+
+  test("multi-axis themes materialize combinations, compile through @stylexjs/babel-plugin, and enforce maxCombinations", () => {
+    const ref = defineReferenceTokens({
+      color: { brand: tokens.color("#2563eb"), bg: tokens.color("#ffffff") },
+    });
+    const system = defineSystemTokens({
+      accent: ref.color.brand,
+      surface: ref.color.bg,
+    });
+    const acme = defineTheme(ref, { color: { brand: tokens.color("#7c3aed") } });
+    const dark = defineTheme(ref, { color: { bg: tokens.color("#111111") } });
+    const config = defineConfig({
+      tokens: { ref, system },
+      themes: {
+        brand: defineThemeAxis({ default: "core", contexts: { acme } }),
+        mode: defineThemeAxis({ default: "light", contexts: { dark } }),
+      },
+    });
+
+    const files = generateStylexFiles(config);
+    const themesSource = file(files, "themes.ts").content;
+    assertParses(themesSource, "themes.ts");
+    expect(themesSource).toContain("export type ThemeSelection = {");
+    expect(themesSource).toContain("export function getTheme(");
+    expect(themesSource).toContain('"acme|dark": _theme2');
+
+    // Strip TS type syntax for Babel's JS-only StyleX transform and verify real CSS rules.
+    const jsThemes = ts.transpileModule(themesSource, {
+      compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ESNext },
+    }).outputText;
+
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "recontent-stylex-multi-"));
+    try {
+      fs.writeFileSync(path.join(dir, "tokens.stylex.js"), file(files, "tokens.stylex.ts").content);
+      fs.writeFileSync(path.join(dir, "themes.js"), jsThemes);
+
+      const tokensResult = compile(path.join(dir, "tokens.stylex.js"));
+      const themesResult = compile(path.join(dir, "themes.js"));
+      expect(themesResult.rules).toHaveLength(3);
+
+      const css = stylexBabelPlugin.processStylexRules([
+        ...tokensResult.rules,
+        ...themesResult.rules,
+      ]);
+      expect(css).toContain("#7c3aed");
+      expect(css).toContain("#111111");
+    } finally {
+      fs.rmSync(dir, { recursive: true, force: true });
+    }
+
+    const diagnostics = stylex({ outDir: "out", maxCombinations: 2 }).validate!(config as never);
+    expect(diagnostics).toEqual([
+      expect.objectContaining({
+        severity: "error",
+        message: expect.stringContaining("exceeding maxCombinations (2)"),
+      }),
+    ]);
   });
 });

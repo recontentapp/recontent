@@ -2,6 +2,7 @@ import { describe, expect, test } from "@jest/globals";
 import type { ComponentInfo, TypeInfo } from "../../../src/introspection/model.js";
 import {
   closestMatches,
+  parseThemeSpec,
   searchSnapshot,
   selectComponents,
   selectTokens,
@@ -9,6 +10,7 @@ import {
 } from "../../../src/cli/commands/inspect/select.js";
 import { typeClosure } from "../../../src/introspection/types.js";
 import type { DocToken } from "../../../src/snapshot/doc-token.js";
+import type { SnapshotThemeAxis } from "../../../src/snapshot/snapshot.js";
 import { component, prop, token, typeInfo } from "../../helpers/inspect-model.js";
 
 const tokens = [
@@ -22,8 +24,10 @@ const tokens = [
 
 const paths = (selected: DocToken[]) => selected.map((t) => t.path);
 
+const singleAxis: SnapshotThemeAxis[] = [{ name: "theme", default: "default", contexts: ["dark"] }];
+
 describe("selectTokens", () => {
-  const select = (query: Partial<Parameters<typeof selectTokens>[2]>, themes = ["dark"]) =>
+  const select = (query: Partial<Parameters<typeof selectTokens>[2]>, themes = singleAxis) =>
     selectTokens(tokens, themes, { paths: [], ...query });
 
   test("without a selector everything is selected", () => {
@@ -94,6 +98,41 @@ describe("selectTokens", () => {
   test("an unknown theme is an error, a known one is not", () => {
     expect(select({ theme: "drak" }).errors[0]?.message).toContain("Did you mean `dark`?");
     expect(select({ theme: "dark" }).errors).toEqual([]);
+    expect(select({ theme: "default" }).errors).toEqual([]);
+
+    const customDefault: SnapshotThemeAxis[] = [
+      { name: "mode", default: "light", contexts: ["dark"] },
+    ];
+    expect(parseThemeSpec("light", customDefault)).toEqual({
+      parsed: { selection: { mode: "light" }, label: "default" },
+      errors: [],
+    });
+    expect(parseThemeSpec("mode=light", customDefault)).toEqual({
+      parsed: { selection: { mode: "light" }, label: "default" },
+      errors: [],
+    });
+    expect(parseThemeSpec("ligt", customDefault).errors[0]?.suggestions).toContain("light");
+  });
+
+  test("validates multi-axis axis=context pairs and suggests on bare or mistyped input", () => {
+    const multiAxis: SnapshotThemeAxis[] = [
+      { name: "brand", default: "core", contexts: ["acme"] },
+      { name: "mode", default: "light", contexts: ["dark"] },
+    ];
+    expect(select({ theme: "brand=acme,mode=dark" }, multiAxis).errors).toEqual([]);
+    expect(select({ theme: "mode=light" }, multiAxis).errors).toEqual([]);
+    expect(select({ theme: "dark" }, multiAxis).errors[0]?.message).toContain(
+      "Did you mean `mode=dark`?",
+    );
+    expect(select({ theme: "brnad=acme" }, multiAxis).errors[0]?.message).toContain(
+      "Did you mean `brand`?",
+    );
+    expect(select({ theme: "mode=drak" }, multiAxis).errors[0]?.message).toContain(
+      'No context on axis "mode" matches "drak". Did you mean `dark`?',
+    );
+    expect(select({ theme: "mode=dark,mode=light" }, multiAxis).errors[0]?.message).toContain(
+      'Duplicate theme axis "mode"',
+    );
   });
 });
 

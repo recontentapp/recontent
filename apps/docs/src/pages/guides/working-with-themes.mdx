@@ -110,14 +110,16 @@ Recontent follows a theme's own aliases the same way. If a theme points `system.
 
 Each plugin emits themes in its native format:
 
-| Output          | How a plugin emits themes                                                                                         |
-| --------------- | ----------------------------------------------------------------------------------------------------------------- |
-| CSS, Tailwind   | Emits a `.dark { … }` (or `[data-theme="dark"]`) block redeclaring overridden CSS variables. Aliases use `var()`. |
-| vanilla-extract | Emits `darkThemeClass` via `createTheme` against the shared variable contract.                                    |
-| StyleX          | Emits `darkTheme` via `stylex.createTheme`, flattening aliased overrides to literal values.                       |
-| TypeScript      | Emits a `dark` constant plus `themes`, `ThemeName`, and `Theme` types. Aliases reference earlier layers.          |
-| DTCG            | Emits `dark.tokens.json` with every token in that theme, keeping aliases intact.                                  |
-| Docs            | Adds a theme switcher that swaps displayed values and highlights overridden tokens.                               |
+| Output          | Single-axis (`themes: { dark }`)                                                 | Multi-axis (`themes: { brand, mode, density }`)                                                     |
+| --------------- | -------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| CSS, Tailwind   | `.dark { … }` (or `[data-theme="dark"]`) + `@custom-variant dark`.               | `.mode-dark`, `.density-compact` (or `[data-mode="dark"]`) in `resolutionOrder` + stacked variants. |
+| vanilla-extract | Base `themeClass` + additive `darkThemeClass = style({ vars })`.                 | Base `themeClass` + per-axis maps (`brandThemes`, `modeThemes`) in `resolutionOrder`.               |
+| StyleX          | `darkTheme = stylex.createTheme(vars, { … })`.                                   | Materialized combinations behind `getTheme(selection: ThemeSelection)`.                             |
+| TypeScript      | `dark` constant plus `themes`, `ThemeName`, and `Theme`.                         | Base `theme` plus `resolveTheme(selection: ThemeSelection)` and `Theme`.                            |
+| DTCG            | `tokens.resolver.json` + `tokens.tokens.json` + `themes/dark.tokens.json` delta. | `tokens.resolver.json` + `tokens.tokens.json` + `themes/<axis>-<context>.tokens.json` deltas.       |
+| Contrast        | Checks base tokens and every theme.                                              | Checks the Cartesian product of color-affecting axes, skipping non-color axes like `density`.       |
+| Docs            | Header theme popover swapping values and highlighting overrides.                 | Header theme popover with a selector per axis, updating live across any combination.                |
+| DESIGN.md       | Single `## Themes` table.                                                        | One `### <axis>` table per axis plus a `resolutionOrder` note.                                      |
 
 ## Which layer to override
 
@@ -134,7 +136,7 @@ For CSS and Tailwind, theme blocks default to a class selector. Add the class to
 <html class="dark"></html>
 ```
 
-To use an attribute selector instead, set `themeSelector: "attribute"` on the plugin. The attribute defaults to `data-theme`, and you can customize it with `themeAttribute`:
+To use an attribute selector instead, set `themeSelector: "attribute"` on the plugin. For a single axis, the attribute defaults to `data-theme` (or `data-<axis>` for a named axis), and you can customize it with `themeAttribute`:
 
 ```ts
 css({ outDir: "src/generated", themeSelector: "attribute", themeAttribute: "data-mode" });
@@ -144,15 +146,15 @@ css({ outDir: "src/generated", themeSelector: "attribute", themeAttribute: "data
 <html data-mode="dark"></html>
 ```
 
-Tailwind also generates a `@custom-variant` per theme, so you can write `dark:bg-surface`. See the [Tailwind plugin](/plugins/tailwind#theme-variants).
+Tailwind also generates a `@custom-variant` per context, so you can write `dark:bg-surface` (or stack `mode-dark:density-compact:p-2` with multiple axes). See the [Tailwind plugin](/plugins/tailwind#theme-variants).
+
+For vanilla-extract, `themeClass` defines the base contract and theme classes apply partial overrides on top—compose them together (``className={`${themeClass} ${dark ? darkThemeClass : ""}`}``).
 
 To follow a user's OS preference, set the class or attribute from `matchMedia("(prefers-color-scheme: dark)")` in your app. Recontent omits `@media` rules so theme selection stays under your control.
 
-## Density, brand and other axes
+## Orthogonal axes (brand, mode, density)
 
-Themes handle more than light and dark modes. Any set of overrides forms a theme, including `compact`, `highContrast`, or `brandB`. Each theme applies independently on top of the base tokens.
-
-To combine two axes such as dark and compact, compose existing themes with `extends`:
+Design systems often vary along independent dimensions—for example **brand** (`acme`, `globex`), **color mode** (`dark`, `highContrast`), and **density** (`compact`). Instead of manually declaring every combination (`acmeDarkCompact`, …), group themes by axis in `defineConfig`:
 
 ```ts twoslash
 import {
@@ -160,19 +162,24 @@ import {
   defineReferenceTokens,
   defineSystemTokens,
   defineTheme,
+  defineThemeAxis,
   tokens,
 } from "recontent";
 
 const ref = defineReferenceTokens({
-  color: { gray: tokens.colorScale({ 50: "#fafafa", 900: "#18181b" }) },
+  color: {
+    brand: tokens.color("#2563eb"),
+    gray: tokens.colorScale({ 50: "#fafafa", 900: "#18181b" }),
+  },
   spacing: tokens.dimensionScale({ sm: "8px", md: "16px" }),
 });
 
 const system = defineSystemTokens({
-  color: { background: ref.color.gray[50] },
+  color: { accent: ref.color.brand, background: ref.color.gray[50] },
   spacing: ref.spacing,
 });
 
+const acme = defineTheme(ref, { color: { brand: tokens.color("#7c3aed") } });
 const dark = defineTheme(system, { color: { background: ref.color.gray[900] } });
 const compact = defineTheme(system, {
   spacing: tokens.dimensionScale({ sm: "4px", md: "8px" }),
@@ -181,11 +188,13 @@ const compact = defineTheme(system, {
 export default defineConfig({
   tokens: { ref, system },
   themes: {
-    dark,
-    compact,
-    darkCompact: defineTheme(system, {}, { extends: [dark, compact] }),
+    brand: defineThemeAxis({ default: "core", description: "Brand identity", contexts: { acme } }),
+    mode: defineThemeAxis({ default: "light", contexts: { dark } }),
+    density: { compact },
   },
 });
 ```
 
-`extends` merges the listed themes in order. When multiple themes override the same token, the last one wins, and overrides passed to `defineTheme` itself apply on top. Pass `{}` as the overrides object to reuse only the extended themes.
+- **Plain objects or `defineThemeAxis`.** An axis can be a plain `{ context: theme }` object (default context `"default"`) or a `defineThemeAxis({ default, description, contexts })` call when you want a named default context or DTCG modifier description.
+- **Resolution order.** Axes apply in the object key order of `themes` (matching DTCG 2025.10 `resolutionOrder`). When two active axes override the same token, the later axis wins across CSS, vanilla-extract, TypeScript, StyleX, Contrast, and DTCG resolvers.
+- **Composing in HTML/CSS.** Add one class or `data-<axis>` attribute per active axis: `<html class="brand-acme mode-dark density-compact">` or `<html data-brand="acme" data-mode="dark" data-density="compact">`.

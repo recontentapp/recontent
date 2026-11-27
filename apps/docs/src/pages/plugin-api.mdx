@@ -57,7 +57,7 @@ Every hook can return a `Promise`. Recontent runs each phase across all plugins 
 | ------------ | --------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
 | `registry`   | `Map<string, TokenEntry>`         | Every token keyed by its dotted path (`"system.color.accent"`).                                                                           |
 | `groups`     | `Map<string, TokenGroupMetadata>` | Metadata for groups wrapped with `tokens.group(...)`, keyed by dotted path.                                                               |
-| `themes`     | `Record<string, ThemeOverride>`   | Each theme's overrides as a `Map` from token path to overriding value.                                                                    |
+| `themes`     | `ThemeAxis[]`                     | Orthogonal theme axes ordered by `resolutionOrder` (`{ name, default, description?, contexts }`).                                         |
 | `root`       | `string`                          | Absolute path of the directory containing the config file.                                                                                |
 | `logger`     | `Logger`                          | `info`, `warn`, `error`, and `debug` methods writing to stderr.                                                                           |
 | `components` | `ComponentInfo[] \| undefined`    | Project [components](#componentinfo). Present only when the plugin declares `"introspection"` or `"introspection?"` and it is configured. |
@@ -90,22 +90,22 @@ Values always use structured objects, never raw strings:
 ## resolveValue
 
 ```ts
-import { resolveValue } from "recontent/plugins";
+import { resolveValue, type ThemeSelection } from "recontent/plugins";
 
-resolveValue(ctx, entry, theme?): TokenEntry["$value"]
+resolveValue(ctx, entry, theme?: ThemeSelection): TokenEntry["$value"]
 ```
 
-Returns `entry`'s resolved value for a given `theme`. It walks the alias chain to the end and applies any theme override encountered along the way. Without `theme`, it returns the base value. An unknown theme name throws and lists the available themes.
+Returns `entry`'s resolved value for a given `theme` (`ThemeSelection = string | Record<string, string>`). Pass a context name string when one axis is configured (for example `"dark"`), or an `{ [axis]: context }` map for multi-axis configs (for example `{ brand: "acme", mode: "dark" }`). Active axes merge in `ctx.themes` (`resolutionOrder`) order and walk the alias chain to the end. Without `theme`, it returns the base value. Unknown axes or contexts throw with available choices.
 
 ## aliasChain
 
 ```ts
-import { aliasChain } from "recontent/plugins";
+import { aliasChain, type ThemeSelection } from "recontent/plugins";
 
-aliasChain(ctx, entry, theme?): TokenEntry[]
+aliasChain(ctx, entry, theme?: ThemeSelection): TokenEntry[]
 ```
 
-Returns the sequence of tokens an alias follows, starting with `entry` and ending at the terminal non-alias token. Each step reflects `theme`'s overrides, including overrides that retarget an alias. Without `theme`, it returns the base chain. Non-alias tokens return a single-element array.
+Returns the sequence of tokens an alias follows, starting with `entry` and ending at the terminal non-alias token. Each step reflects `theme`'s overrides across active axes in `resolutionOrder`, including overrides that retarget an alias. Without `theme`, it returns the base chain. Non-alias tokens return a single-element array.
 
 ```ts
 const chain = aliasChain(ctx, entry, theme);
@@ -116,7 +116,7 @@ const target = chain[1];
 const literal = chain.at(-1)!.$value;
 ```
 
-`aliasChain` throws on an unknown theme (listing configured themes), a broken alias, or a circular alias.
+`aliasChain` throws on an unknown theme or axis, a broken alias, or a circular alias.
 
 ## ComponentInfo
 

@@ -40,10 +40,11 @@ A key matching zero color tokens fails validation. The plugin skips pairing a to
 
 ## Themes
 
-`contrast()` checks every pair in base tokens first, then in every theme while following aliases and theme overrides. Failures name the theme:
+`contrast()` checks every pair in base tokens first, then across every combination of color-affecting theme axes in `resolutionOrder`. It skips axes such as `density` that override no color tokens. Failures name the theme or axis combination:
 
 ```text
 system.color.text.muted on system.color.surface.default has contrast 3.21:1 in theme "dark", below 4.5:1.
+system.color.text.muted on system.color.surface.default has contrast 3.21:1 in theme "brand=acme, mode=dark", below 4.5:1.
 ```
 
 ## Transparency

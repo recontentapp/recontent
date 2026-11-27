@@ -1,4 +1,5 @@
 import type { HTMLAttributes, ReactNode } from "react";
+import { sticker } from "./Sticker.css";
 
 type StickerTilt = "none" | "left" | "right";
 
@@ -27,7 +28,12 @@ export interface StickerProps extends HTMLAttributes<HTMLSpanElement> {
  */
 export function Sticker({ tilt = "none", className, children, ...props }: StickerProps) {
   return (
-    <span {...props} data-slot="sticker" data-tilt={tilt} className={className}>
+    <span
+      {...props}
+      data-slot="sticker"
+      data-tilt={tilt}
+      className={className ? `${sticker} ${className}` : sticker}
+    >
       {children}
     </span>
   );

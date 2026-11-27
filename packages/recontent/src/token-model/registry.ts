@@ -27,3 +27,14 @@ export type TokenGroups = Map<string, TokenGroupMetadata>;
 /** A theme's replacement for one token: a literal, or an alias (with `$value` snapshotting its target). */
 export type ThemeValue = { $value: TokenTypeMap[TokenType]; alias?: string[] };
 export type ThemeOverride = Map<string, ThemeValue>;
+
+/** One orthogonal axis of variation (maps 1:1 to a DTCG 2025.10 Resolver modifier). */
+export type ThemeAxis = {
+  name: string;
+  default: string;
+  description?: string;
+  contexts: Record<string, ThemeOverride>;
+};
+
+/** Selects active context(s): a context name when 1 axis exists, or `{ [axis]: context }`. */
+export type ThemeSelection = string | Record<string, string>;

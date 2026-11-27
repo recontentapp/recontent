@@ -370,7 +370,7 @@ describe("themes", () => {
     });
     const config = defineConfig({
       tokens: { ref: fixture.ref, system: fixture.system, components: {} },
-      themes: { dark: fixture.config.themes.dark!, highContrast },
+      themes: { dark: fixture.config.themes[0]!.contexts.dark!, highContrast },
     });
     const css = render({}, { ...fixture, config });
     expect(css).toContain("@custom-variant dark (&:where(.dark, .dark *));");
@@ -381,6 +381,22 @@ describe("themes", () => {
     const listed = render({ themeVariants: ["highContrast"] }, { ...fixture, config });
     expect(listed).not.toContain("@custom-variant dark");
     expect(listed).toContain("@custom-variant high-contrast");
+  });
+
+  test("multi-axis themes emit axis-prefixed @custom-variant rules for stacking", () => {
+    const fixture = build();
+    const compact = defineTheme(fixture.system, {
+      spacing: tokens.dimensionScale({ sm: "2px", md: "4px" }),
+    });
+    const config = defineConfig({
+      tokens: { ref: fixture.ref, system: fixture.system, components: {} },
+      themes: { mode: { dark: fixture.config.themes[0]!.contexts.dark! }, density: { compact } },
+    });
+    const css = render({}, { ...fixture, config });
+    expect(css).toContain("@custom-variant mode-dark (&:where(.mode-dark, .mode-dark *));");
+    expect(css).toContain(
+      "@custom-variant density-compact (&:where(.density-compact, .density-compact *));",
+    );
   });
 });
 
@@ -427,7 +443,7 @@ describe("validate()", () => {
     const print = defineTheme(fixture.system, { colors: { accent: tokens.color("#000000") } });
     const config = defineConfig({
       tokens: { ref: fixture.ref, system: fixture.system, components: {} },
-      themes: { dark: fixture.config.themes.dark!, print },
+      themes: { dark: fixture.config.themes[0]!.contexts.dark!, print },
     });
     const result = diagnose({}, { ...fixture, config });
     expect(result).toHaveLength(1);

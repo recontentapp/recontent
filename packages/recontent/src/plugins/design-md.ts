@@ -2,7 +2,7 @@ import { expandedMembers } from "../token-model/composite.js";
 import { pathKey } from "../token-model/guards.js";
 import { type ComponentInfo } from "../introspection/model.js";
 import { type PluginContext, type RecontentPlugin } from "./types.js";
-import { type TokenEntry } from "../token-model/registry.js";
+import { type ThemeAxis, type TokenEntry } from "../token-model/registry.js";
 import type { OutputFile } from "./shared/context.js";
 import { code, escapeText } from "../markdown.js";
 import { groupByCategory } from "../introspection/markdown.js";
@@ -119,7 +119,7 @@ type Item = {
   ref?: string;
 };
 
-function buildItem(ctx: PluginContext, entry: TokenEntry, themes: string[]): Item {
+function buildItem(ctx: PluginContext, entry: TokenEntry): Item {
   const { group, section } = classify(entry);
   const key = entry.path.join("-");
   let ref: string | undefined;
@@ -131,7 +131,7 @@ function buildItem(ctx: PluginContext, entry: TokenEntry, themes: string[]): Ite
   }
   return {
     entry,
-    token: buildToken(ctx, entry, themes),
+    token: buildToken(ctx, entry),
     ...(group ? { group } : {}),
     ...(section ? { section } : {}),
     key,
@@ -242,22 +242,86 @@ function sectionLines(ctx: PluginContext, section: Section, items: Item[]): stri
 }
 
 /** The tokens a theme overrides, with the value each theme gives them. */
-function themeTable(items: Item[], themes: string[]): string | undefined {
-  const overridden = items.filter((item) => Object.keys(item.token.values).length > 1);
-  const columns = themes.filter((theme) => overridden.some((item) => item.token.values[theme]));
-  if (columns.length === 0) return undefined;
-  const header = ["Token", "default", ...columns.map((theme) => escapeText(theme))];
-  const rows = overridden.map((item) => [
-    code(item.key),
-    code(item.token.values.default ?? ""),
-    ...columns.map((theme) => (item.token.values[theme] ? code(item.token.values[theme]) : "—")),
-  ]);
+function themeTable(items: Item[], axes: readonly ThemeAxis[]): string | undefined {
+  if (axes.length === 0) return undefined;
+
+  if (axes.length === 1) {
+    const axis = axes[0]!;
+    const contextNames = Object.keys(axis.contexts);
+    const overridden = items.filter((item) => Object.keys(item.token.values).length > 1);
+    const columns = contextNames.filter((ctx) => overridden.some((item) => item.token.values[ctx]));
+    if (columns.length === 0) return undefined;
+    const header = ["Token", escapeText(axis.default), ...columns.map((ctx) => escapeText(ctx))];
+    const rows = overridden.map((item) => [
+      code(item.key),
+      code(item.token.values.default ?? ""),
+      ...columns.map((ctx) => (item.token.values[ctx] ? code(item.token.values[ctx]!) : "—")),
+    ]);
+    return [
+      "Themes override these tokens:",
+      "",
+      `| ${header.join(" | ")} |`,
+      `| ${header.map(() => "---").join(" | ")} |`,
+      ...rows.map((row) => `| ${row.join(" | ")} |`),
+    ].join("\n");
+  }
+
+  const axisBlocks: string[] = [];
+  for (const axis of axes) {
+    const contextNames = Object.keys(axis.contexts);
+    const valueKey = (ctx: string) => `${axis.name}=${ctx}`;
+    const overridden = items.filter((item) =>
+      contextNames.some((ctx) => item.token.values[valueKey(ctx)] !== undefined),
+    );
+    const columns = contextNames.filter((ctx) =>
+      overridden.some((item) => item.token.values[valueKey(ctx)] !== undefined),
+    );
+    if (columns.length === 0) continue;
+    const header = ["Token", escapeText(axis.default), ...columns.map((ctx) => escapeText(ctx))];
+    const rows = overridden.map((item) => [
+      code(item.key),
+      code(item.token.values.default ?? ""),
+      ...columns.map((ctx) => {
+        const val = item.token.values[valueKey(ctx)];
+        return val ? code(val) : "—";
+      }),
+    ]);
+    axisBlocks.push(
+      [
+        `### ${escapeText(axis.name)}`,
+        ...(axis.description ? ["", escapeText(axis.description)] : []),
+        "",
+        `| ${header.join(" | ")} |`,
+        `| ${header.map(() => "---").join(" | ")} |`,
+        ...rows.map((row) => `| ${row.join(" | ")} |`),
+      ].join("\n"),
+    );
+  }
+
+  const combinedRows: string[][] = [];
+  for (const item of items) {
+    for (const [key, val] of Object.entries(item.token.values)) {
+      if (!key.includes(",")) continue;
+      combinedRows.push([code(item.key), code(key.replaceAll(",", ", ")), code(val)]);
+    }
+  }
+  if (combinedRows.length > 0) {
+    axisBlocks.push(
+      [
+        "### Combined overrides",
+        "",
+        "| Token | Combination | Value |",
+        "| --- | --- | --- |",
+        ...combinedRows.map((row) => `| ${row.join(" | ")} |`),
+      ].join("\n"),
+    );
+  }
+
+  if (axisBlocks.length === 0) return undefined;
   return [
-    `Themes override these tokens:`,
+    `Theme axes apply in resolution order: ${axes.map((axis) => code(axis.name)).join(" → ")}.`,
     "",
-    `| ${header.join(" | ")} |`,
-    `| ${header.map(() => "---").join(" | ")} |`,
-    ...rows.map((row) => `| ${row.join(" | ")} |`),
+    axisBlocks.join("\n\n"),
   ].join("\n");
 }
 
@@ -339,11 +403,10 @@ export function generateDesignMdFiles(
   ctx: PluginContext,
   options: DesignMdPluginOptions,
 ): OutputFile[] {
-  const themes = Object.keys(ctx.themes);
   const items = [...ctx.registry.values()]
     .map((entry) => ({ key: pathKey(entry.path), entry }))
     .sort((a, b) => numericCompare(a.key, b.key))
-    .map(({ entry }) => buildItem(ctx, entry, themes));
+    .map(({ entry }) => buildItem(ctx, entry));
   const components = ctx.components ?? [];
   const title = options.title ?? "Design system";
 
@@ -356,7 +419,7 @@ export function generateDesignMdFiles(
   for (const section of SECTIONS) {
     add(section, sectionLines(ctx, section, items).join("\n"));
   }
-  add("Themes", themeTable(items, themes));
+  add("Themes", themeTable(items, ctx.themes));
   add("Components", componentLines(components, options).join("\n"));
   add("Do's and Don'ts", guidance(ctx, items, components, options).join("\n"));
 

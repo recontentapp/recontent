@@ -17,7 +17,7 @@ Add the vanilla-extract plugin for your bundler (for Vite, `@vanilla-extract/vit
 
 ## Usage
 
-Apply `themeClass` to a root element and swap in `<name>ThemeClass` to switch themes. Style descendants with the generated `vars`:
+Apply `themeClass` to a root element and compose `<name>ThemeClass` alongside it on the same element to override tokens additively (or `${brandThemes[brand]} ${modeThemes[mode]}` when multiple axes are configured). Composing on the same element ensures `ref` overrides propagate to aliased `system` and `components` variables. Style descendants with the generated `vars`:
 
 ```ts [card.css.ts]
 import { style } from "@vanilla-extract/css";
@@ -35,7 +35,7 @@ import { card } from "./card.css";
 
 export function App({ dark }: { dark: boolean }) {
   return (
-    <main className={dark ? darkThemeClass : themeClass}>
+    <main className={dark ? `${themeClass} ${darkThemeClass}` : themeClass}>
       <div className={card}>…</div>
     </main>
   );
@@ -48,22 +48,23 @@ export function App({ dark }: { dark: boolean }) {
 vanillaExtract(options: VanillaExtractPluginOptions): RecontentPlugin
 ```
 
-| Option   | Type     | Default  | Description                                   |
-| -------- | -------- | -------- | --------------------------------------------- |
-| `outDir` | `string` | required | Output directory relative to the config file. |
+| Option     | Type     | Default           | Description                                   |
+| ---------- | -------- | ----------------- | --------------------------------------------- |
+| `outDir`   | `string` | required          | Output directory relative to the config file. |
+| `filename` | `string` | `"tokens.css.ts"` | Name of the generated file.                   |
 
 Plugin name: `recontent:vanilla-extract`.
 
 ## Emitted files
 
-| File            | Content                                                                                                                                                   |
-| --------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `tokens.css.ts` | `vars` (theme contract), `refVars`, `systemVars`, `componentVars`, a typed const and key union per scale, `themeClass`, and `<name>ThemeClass` per theme. |
+| File            | Content                                                                                                                                                                                                   |
+| --------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `tokens.css.ts` | `vars` (theme contract), `refVars`, `systemVars`, `componentVars`, scale exports, base `themeClass`, and additive `style({ vars })` classes (`<name>ThemeClass` for one axis or `<axis>Themes` per axis). |
 
 ## Diagnostics
 
 Each condition below fails the build.
 
-| When                                               |
-| -------------------------------------------------- |
-| A theme name is not a valid TypeScript identifier. |
+| When                                                                      |
+| ------------------------------------------------------------------------- |
+| A single-axis theme name or multi-axis name is not a valid TS identifier. |

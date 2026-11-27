@@ -1,6 +1,7 @@
 import { expect, test } from "@jest/globals";
 import type { Config } from "../../../src/config/types.js";
 import type {
+  ThemeAxis,
   ThemeOverride,
   ThemeValue,
   TokenEntry,
@@ -32,12 +33,20 @@ function color(hex: string) {
   };
 }
 
-function config(registry: TokenRegistry, themes: Record<string, ThemeOverride> = {}): Config {
+function config(
+  registry: TokenRegistry,
+  themes: Record<string, ThemeOverride> | ThemeAxis[] = [],
+): Config {
+  const normalizedThemes: ThemeAxis[] = Array.isArray(themes)
+    ? themes
+    : Object.keys(themes).length === 0
+      ? []
+      : [{ name: "theme", default: "default", contexts: themes }];
   return {
     registry,
     groups: new Map(),
     diagnostics: [],
-    themes,
+    themes: normalizedThemes,
     plugins: [],
     logLevel: "info",
   };
@@ -172,10 +181,10 @@ test("diffConfigs reports theme override added/removed/changed", () => {
   const base = config(registry, { dark: baseTheme });
   const head = config(registry, { dark: headTheme });
   const diff = diffConfigs(base, head);
-  expect(diff.themes.changedThemes.dark).toBeDefined();
-  expect(diff.themes.changedThemes.dark!.added).toHaveLength(1);
-  expect(diff.themes.changedThemes.dark!.removed).toHaveLength(1);
-  expect(diff.themes.changedThemes.dark!.changed).toHaveLength(1);
+  expect(diff.themes.changedAxes.theme?.changedContexts.dark).toBeDefined();
+  expect(diff.themes.changedAxes.theme!.changedContexts.dark!.added).toHaveLength(1);
+  expect(diff.themes.changedAxes.theme!.changedContexts.dark!.removed).toHaveLength(1);
+  expect(diff.themes.changedAxes.theme!.changedContexts.dark!.changed).toHaveLength(1);
 });
 
 test("formatDiff lists the overrides that changed in a theme, with their values", () => {
@@ -345,29 +354,73 @@ test("formatDiff names the compared revision when nothing changed", () => {
   ).toBe("No changes between the working tree and origin/main.");
 });
 
-test("diffConfigs counts removed themes as breaking, and removed theme overrides as theme changes", () => {
+test("diffConfigs counts removed axes and contexts as breaking, and tracks default and order changes", () => {
   const override = (keys: string[]): ThemeOverride =>
     new Map(keys.map((key) => [key, themed("#000000")]));
   const registry: TokenRegistry = new Map();
 
-  const removedTheme = diffConfigs(config(registry, { dark: override(["a"]) }), config(registry));
-  expect(removedTheme.themes.removedThemes).toEqual(["dark"]);
-  expect(hasBreakingChanges(removedTheme)).toBe(true);
-  expect(formatDiff({ tokens: removedTheme })).toContain("**removed theme** `dark`");
+  const removedAxis = diffConfigs(config(registry, { dark: override(["a"]) }), config(registry));
+  expect(removedAxis.themes.removedAxes).toEqual(["theme"]);
+  expect(hasBreakingChanges(removedAxis)).toBe(true);
+  expect(formatDiff({ tokens: removedAxis })).toContain("**removed themes**");
+
+  const removedContext = diffConfigs(
+    config(registry, { dark: override(["a"]), light: override(["a"]) }),
+    config(registry, { dark: override(["a"]) }),
+  );
+  expect(removedContext.themes.changedAxes.theme!.removedContexts).toEqual(["light"]);
+  expect(hasBreakingChanges(removedContext)).toBe(true);
+  expect(formatDiff({ tokens: removedContext })).toContain("**removed theme** `light`");
 
   const removedOverride = diffConfigs(
     config(registry, { dark: override(["a", "b"]) }),
     config(registry, { dark: override(["a"]) }),
   );
-  expect(removedOverride.themes.changedThemes.dark!.removed).toHaveLength(1);
+  expect(removedOverride.themes.changedAxes.theme!.changedContexts.dark!.removed).toHaveLength(1);
   expect(hasBreakingChanges(removedOverride)).toBe(false);
   expect(formatDiff({ tokens: removedOverride })).toContain("**removed** `b`");
 
-  const addedOverride = diffConfigs(
-    config(registry, { dark: override(["a"]) }),
-    config(registry, { dark: override(["a", "b"]) }),
+  const reorderedAxes = diffConfigs(
+    config(registry, [
+      { name: "brand", default: "core", contexts: { acme: override(["a"]) } },
+      { name: "mode", default: "light", contexts: { dark: override(["a"]) } },
+    ]),
+    config(registry, [
+      { name: "mode", default: "day", contexts: { dark: override(["a"]) } },
+      { name: "brand", default: "core", contexts: { acme: override(["a"]) } },
+    ]),
   );
-  expect(hasBreakingChanges(addedOverride)).toBe(false);
+  expect(hasBreakingChanges(reorderedAxes)).toBe(false);
+  expect(reorderedAxes.themes.orderChanged).toEqual({
+    from: ["brand", "mode"],
+    to: ["mode", "brand"],
+  });
+  expect(reorderedAxes.themes.changedAxes.mode?.defaultChanged).toEqual({
+    from: "light",
+    to: "day",
+  });
+  const md = formatDiff({ tokens: reorderedAxes });
+  expect(md).toContain("**resolution order**: `brand`, `mode` -> `mode`, `brand`");
+  expect(md).toContain("**default**: `light` -> `day`");
+
+  // Adding the first flat theme names the theme context rather than the implicit "theme" axis.
+  const firstFlatTheme = diffConfigs(config(registry), config(registry, { dark: override(["a"]) }));
+  expect(formatDiff({ tokens: firstFlatTheme })).toContain("- `dark`: added");
+
+  // Multi-axis config with an axis named "theme" keeps the axis qualifier even when only it changes.
+  const multiNamedTheme = diffConfigs(
+    config(registry, [
+      { name: "theme", default: "default", contexts: { dark: override(["a"]) } },
+      { name: "density", default: "normal", contexts: { compact: override(["b"]) } },
+    ]),
+    config(registry, [
+      { name: "theme", default: "default", contexts: { highContrast: override(["a"]) } },
+      { name: "density", default: "normal", contexts: { compact: override(["b"]) } },
+    ]),
+  );
+  const multiMd = formatDiff({ tokens: multiNamedTheme });
+  expect(multiMd).toContain("**removed theme context** `theme=dark`");
+  expect(multiMd).toContain("- axis `theme`");
 });
 
 test("diffConfigs does not report an alias that only follows a renamed token", () => {
@@ -416,7 +469,7 @@ test("renaming a token that a theme overrides is one breaking change, not two", 
   const diff = diffConfigs(base, head);
 
   expect(diff.renamed).toHaveLength(1);
-  expect(diff.themes.changedThemes).toEqual({});
+  expect(diff.themes.changedAxes).toEqual({});
   expect(countBreakingChanges({ tokens: diff })).toBe(1);
 });
 
@@ -429,7 +482,7 @@ test("removing a token that a theme overrides is one breaking change, not two", 
   const diff = diffConfigs(base, head);
 
   expect(diff.removed).toHaveLength(1);
-  expect(diff.themes.changedThemes).toEqual({});
+  expect(diff.themes.changedAxes).toEqual({});
   expect(countBreakingChanges({ tokens: diff })).toBe(1);
 });
 

@@ -31,7 +31,11 @@ test.each<[string, (outDir: string) => RecontentPlugin, string[]]>([
   ["typescriptNative", (outDir) => typescriptNative({ outDir }), ["tokens.ts"]],
   ["stylex", (outDir) => stylex({ outDir }), ["tokens.stylex.ts", "themes.ts", "scales.ts"]],
   ["vanillaExtract", (outDir) => vanillaExtract({ outDir }), ["tokens.css.ts"]],
-  ["dtcg", (outDir) => dtcg({ outDir }), ["tokens.tokens.json", "dark.tokens.json"]],
+  [
+    "dtcg",
+    (outDir) => dtcg({ outDir }),
+    ["tokens.tokens.json", "tokens.resolver.json", "themes/dark.tokens.json"],
+  ],
   ["docs", (outDir) => docs({ outDir }), ["design.html"]],
   ["designMD", (outDir) => designMD({ outDir }), ["DESIGN.md"]],
   ["tailwind", (outDir) => tailwind({ outDir }), ["tailwind.css"]],

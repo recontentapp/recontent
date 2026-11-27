@@ -1,19 +1,15 @@
 import { isStampedToken, pathKey } from "../token-model/guards.js";
 import { type PluginContext, type PluginDiagnostic, type RecontentPlugin } from "./types.js";
 import { type ScaleBinding, type TokenBinding } from "../token-model/model.js";
-import {
-  type TokenEntry,
-  type ThemeOverride,
-  type TokenRegistry,
-} from "../token-model/registry.js";
+import { type TokenEntry, type ThemeAxis, type TokenRegistry } from "../token-model/registry.js";
 import { type TokenType } from "../token-model/values.js";
 import type { OutputFile } from "./shared/context.js";
 import { cssVarName, serializeValueCss } from "../serialize/values.js";
 import {
+  contextSelectorFor,
   cssOptionDiagnostics,
   formatRule,
   generateCss,
-  themeSelectorFor,
   type CssGeneratorOptions,
 } from "./css.js";
 import { outputPlugin } from "./factory.js";
@@ -278,12 +274,41 @@ function typographyVar(entry: TokenEntry, varSuffix: string, prefix?: string): s
   return `var(${cssVarName([...entry.path, varSuffix], prefix)})`;
 }
 
-function selectedThemeNames(themeNames: string[], options: TailwindPluginOptions): string[] {
+type ThemeVariantSpec = {
+  rawName: string;
+  variant: string;
+  selector: string;
+};
+
+function collectThemeVariants(
+  themes: readonly ThemeAxis[],
+  cssOptions: CssGeneratorOptions,
+): ThemeVariantSpec[] {
+  const multiAxis = themes.length > 1;
+  return themes.flatMap((axis) =>
+    Object.keys(axis.contexts).map((contextName) => {
+      const rawName = multiAxis ? `${axis.name}-${contextName}` : contextName;
+      return {
+        rawName,
+        variant: kebab(rawName),
+        selector: contextSelectorFor(axis, contextName, cssOptions, multiAxis),
+      };
+    }),
+  );
+}
+
+function selectedVariants(
+  variants: ThemeVariantSpec[],
+  options: TailwindPluginOptions,
+): ThemeVariantSpec[] {
   const { themeVariants = true } = options;
   if (themeVariants === false) return [];
   return Array.isArray(themeVariants)
-    ? themeNames.filter((name) => themeVariants.includes(name))
-    : themeNames;
+    ? variants.filter(
+        ({ rawName, variant }) =>
+          themeVariants.includes(rawName) || themeVariants.includes(variant),
+      )
+    : variants;
 }
 
 /** True when a theme overrides the token or anything in its alias chain. */
@@ -304,7 +329,7 @@ function isThemeOverridden(
 
 function buildTailwindMapping(
   registry: TokenRegistry,
-  themes: Record<string, ThemeOverride>,
+  themes: readonly ThemeAxis[],
   options: TailwindPluginOptions,
 ): TailwindMapping {
   const themeDecls: Record<string, string> = {};
@@ -332,7 +357,9 @@ function buildTailwindMapping(
   };
 
   const overriddenKeys = new Set(
-    Object.values(themes).flatMap((override) => [...override.entries()].map(([key]) => key)),
+    themes.flatMap((axis) =>
+      Object.values(axis.contexts).flatMap((override) => [...override.keys()]),
+    ),
   );
 
   const themeOwners = new Map<string, string[]>();
@@ -425,9 +452,25 @@ function buildTailwindMapping(
     error(`Invalid tailwind layer "${options.layer}": expected a CSS identifier such as "theme".`);
   }
 
+  const cssOptions: CssGeneratorOptions = {
+    ...options,
+    themeSelector: options.themeSelector ?? "class",
+  };
+  const allVariants = collectThemeVariants(themes, cssOptions);
+  const knownVariantNames = new Set(allVariants.flatMap((v) => [v.rawName, v.variant]));
+
   if (Array.isArray(options.themeVariants)) {
+    const seenRequested = new Set<string>();
     for (const name of options.themeVariants) {
-      if (!(name in themes)) {
+      if (seenRequested.has(name)) {
+        diagnostics.push({
+          severity: "warning",
+          message: `themeVariants: duplicate variant "${name}".`,
+        });
+        continue;
+      }
+      seenRequested.add(name);
+      if (!knownVariantNames.has(name)) {
         diagnostics.push({
           severity: "warning",
           message: `themeVariants: theme "${name}" is not defined in the config.`,
@@ -477,20 +520,19 @@ function buildTailwindMapping(
   }
 
   const seenVariants = new Map<string, string>();
-  for (const name of selectedThemeNames(Object.keys(themes), options)) {
-    const variant = kebab(name);
+  for (const { rawName, variant } of selectedVariants(allVariants, options)) {
     const previous = seenVariants.get(variant);
     if (previous) {
       error(
-        `themeVariants: themes "${previous}" and "${name}" both normalize to @custom-variant ${variant}; rename one or exclude it from themeVariants.`,
+        `themeVariants: themes "${previous}" and "${rawName}" both normalize to @custom-variant ${variant}; rename one or exclude it from themeVariants.`,
       );
       continue;
     }
-    seenVariants.set(variant, name);
+    seenVariants.set(variant, rawName);
     if (BUILTIN_VARIANTS.has(variant)) {
       diagnostics.push({
         severity: "warning",
-        message: `themeVariants: the "${name}" theme variant replaces Tailwind's built-in ${variant}: variant; rename the theme or leave it out of themeVariants.`,
+        message: `themeVariants: the "${rawName}" theme variant replaces Tailwind's built-in ${variant}: variant; rename the theme or leave it out of themeVariants.`,
       });
     }
   }
@@ -499,14 +541,13 @@ function buildTailwindMapping(
 }
 
 function themeVariantRules(
-  themeNames: string[],
+  themes: readonly ThemeAxis[],
   options: TailwindPluginOptions,
   cssOptions: CssGeneratorOptions,
 ): string[] {
-  return selectedThemeNames(themeNames, options).map((name) => {
-    const selector = themeSelectorFor(name, cssOptions);
-    return `@custom-variant ${kebab(name)} (&:where(${selector}, ${selector} *));`;
-  });
+  return selectedVariants(collectThemeVariants(themes, cssOptions), options).map(
+    ({ variant, selector }) => `@custom-variant ${variant} (&:where(${selector}, ${selector} *));`,
+  );
 }
 
 function resetNamespaces(options: TailwindPluginOptions): ThemeNamespace[] {
@@ -537,7 +578,7 @@ export function generateTailwindFiles(
   };
   const blocks: string[] = ['/* Generated by recontent. Import after `@import "tailwindcss";` */'];
 
-  blocks.push(...themeVariantRules(Object.keys(config.themes), options, cssOptions));
+  blocks.push(...themeVariantRules(config.themes, options, cssOptions));
 
   const reset = resetNamespaces(options);
   if (options.resetDefaults === "all") {
@@ -585,6 +626,9 @@ export function tailwind(options: TailwindPluginOptions): RecontentPlugin {
     ["tokens"],
     options,
     (ctx, opts) => generateTailwindFiles(ctx, opts, getMapping(ctx)),
-    (ctx: PluginContext) => [...cssOptionDiagnostics(options), ...getMapping(ctx).diagnostics],
+    (ctx: PluginContext) => [
+      ...cssOptionDiagnostics(options, ctx?.themes ?? []),
+      ...getMapping(ctx).diagnostics,
+    ],
   );
 }

@@ -4,6 +4,7 @@ import {
   defineReferenceTokens,
   defineSystemTokens,
   defineTheme,
+  defineThemeAxis,
   tokens,
 } from "../../src/index.js";
 import { css } from "../../src/plugins/index.js";
@@ -385,19 +386,75 @@ test("defineTheme overrides several layers at once, each key mapping to its own 
   expect(dark.get("system.colors.background")?.alias).toEqual(["ref", "neutral", "900"]);
 });
 
-test("defineTheme extends other themes in order; later overrides win", () => {
+test("defineConfig normalizes flat themes and multi-axis themes in resolutionOrder", () => {
   const ref = defineReferenceTokens({
     a: tokens.color("#000001"),
     b: tokens.color("#000002"),
-    c: tokens.color("#000003"),
   });
-  const first = defineTheme(ref, { a: tokens.color("#111111"), b: tokens.color("#111111") });
-  const second = defineTheme(ref, { b: tokens.color("#222222"), c: tokens.color("#222222") });
+  const dark = defineTheme(ref, { a: tokens.color("#111111") });
+  const acme = defineTheme(ref, { b: tokens.color("#222222") });
 
-  const combined = defineTheme(ref, { c: ref.a }, { extends: [first, second] });
+  const flat = defineConfig({ tokens: { ref }, themes: { dark } });
+  expect(flat.themes).toEqual([{ name: "theme", default: "default", contexts: { dark } }]);
 
-  expect(combined.get("ref.a")).toEqual(first.get("ref.a"));
-  expect(combined.get("ref.b")).toEqual(second.get("ref.b"));
-  expect(combined.get("ref.c")).toEqual({ $value: ref.a.$value, alias: ["ref", "a"] });
-  expect(first.has("ref.c")).toBe(false);
+  const multi = defineConfig({
+    tokens: { ref },
+    themes: {
+      brand: defineThemeAxis({ default: "core", description: "Brand", contexts: { acme } }),
+      mode: { dark },
+    },
+  });
+  expect(multi.themes).toEqual([
+    { name: "brand", default: "core", description: "Brand", contexts: { acme } },
+    { name: "mode", default: "default", contexts: { dark } },
+  ]);
+});
+
+test("defineConfig rejects invalid theme axis configurations", () => {
+  const ref = defineReferenceTokens({ a: tokens.color("#000001") });
+  const dark = defineTheme(ref, { a: tokens.color("#111111") });
+
+  // Mixed flat and axis
+  expect(() =>
+    defineConfig({
+      tokens: { ref },
+      themes: { dark, mode: { dark } } as never,
+    }),
+  ).toThrow(/Cannot mix flat themes and theme axes/);
+
+  // Empty axis
+  expect(() =>
+    defineConfig({
+      tokens: { ref },
+      themes: { mode: {} },
+    }),
+  ).toThrow(/must define at least one non-default context/);
+
+  // Default context also in contexts
+  expect(() =>
+    defineConfig({
+      tokens: { ref },
+      themes: { default: dark },
+    }),
+  ).toThrow(/reserved for the base tokens/);
+  expect(() =>
+    defineConfig({
+      tokens: { ref },
+      themes: { mode: defineThemeAxis({ default: "light", contexts: { light: dark } }) },
+    }),
+  ).toThrow(/both its default and a context name/);
+
+  // Invalid axis, default, or context name
+  expect(() => defineConfig({ tokens: { ref }, themes: { "1bad": { dark } } })).toThrow(
+    /Invalid theme axis name/,
+  );
+  expect(() =>
+    defineConfig({
+      tokens: { ref },
+      themes: { mode: defineThemeAxis({ default: "1bad", contexts: { dark } }) },
+    }),
+  ).toThrow(/Invalid default context name/);
+  expect(() => defineConfig({ tokens: { ref }, themes: { mode: { "bad name": dark } } })).toThrow(
+    /Invalid context name/,
+  );
 });

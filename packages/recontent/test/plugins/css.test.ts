@@ -319,3 +319,55 @@ describe("themeAttribute without the attribute selector", () => {
     expect(css({ outDir: "out" }).validate!(ctx)).toEqual([]);
   });
 });
+
+describe("multi-axis themes", () => {
+  test("emits class and attribute selectors per axis in resolutionOrder", () => {
+    const ref = defineReferenceTokens({
+      color: { black: tokens.color("#000000") },
+      spacing: { md: tokens.dimension("16px") },
+    });
+    const dark = defineTheme(ref, { color: { black: tokens.color("#111111") } });
+    const compact = defineTheme(ref, { spacing: { md: tokens.dimension("8px") } });
+    const config = defineConfig({
+      tokens: { ref },
+      themes: { mode: { dark }, density: { compact } },
+    });
+
+    const byAttr = generateCss(config, { themeSelector: "attribute" });
+    expect(byAttr.indexOf('[data-mode="dark"]')).toBeGreaterThan(0);
+    expect(byAttr.indexOf('[data-density="compact"]')).toBeGreaterThan(
+      byAttr.indexOf('[data-mode="dark"]'),
+    );
+
+    const byClass = generateCss(config, { themeSelector: "class" });
+    expect(byClass).toContain(".mode-dark {");
+    expect(byClass).toContain(".density-compact {");
+  });
+
+  test("warns on themeAttribute with multiple axes and errors on colliding multi-axis class selectors", () => {
+    const ref = defineReferenceTokens({ color: { black: tokens.color("#000000") } });
+    const ov = defineTheme(ref, { color: { black: tokens.color("#111111") } });
+
+    const multi = defineConfig({
+      tokens: { ref },
+      themes: { mode: { dark: ov }, density: { compact: ov } },
+    });
+    const warnings = css({
+      outDir: "out",
+      themeSelector: "attribute",
+      themeAttribute: "data-custom",
+    }).validate!(multi as never);
+    expect(warnings).toEqual([
+      expect.objectContaining({
+        severity: "warning",
+        message: expect.stringContaining("data-<axis>"),
+      }),
+    ]);
+
+    const clash = defineConfig({ tokens: { ref }, themes: { "a-b": { c: ov }, a: { "b-c": ov } } });
+    const errors = css({ outDir: "out" }).validate!(clash as never);
+    expect(errors).toEqual([
+      expect.objectContaining({ severity: "error", message: expect.stringContaining('".a-b-c"') }),
+    ]);
+  });
+});

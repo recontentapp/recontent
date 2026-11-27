@@ -11,11 +11,15 @@ import {
   isCompositeType,
   type CompositeTokenType,
 } from "../token-model/composite.js";
-import { type TokenGroups, type TokenRegistry } from "../token-model/registry.js";
+import {
+  type ThemeOverride,
+  type TokenGroups,
+  type TokenRegistry,
+} from "../token-model/registry.js";
 import type { TokenMetadata } from "../token-model/model.js";
 import type { OutputFile } from "./shared/context.js";
 import { entryToDtcgNode, setNested } from "../serialize/values.js";
-import { getThemeOverride, themedEntry } from "../token-model/alias.js";
+import { themedEntry } from "../token-model/alias.js";
 import type { GeneratorContext } from "./shared/context.js";
 import { outputPlugin } from "./factory.js";
 
@@ -113,25 +117,71 @@ export function generateDtcg(input: TokenRegistry | GeneratorContext): DtcgOutpu
   return hoistGroupTypes(output);
 }
 
-export function generateDtcgThemed(ctx: GeneratorContext, themeName: string): DtcgOutput {
-  const themeOverride = getThemeOverride(ctx.themes, themeName);
-
-  const output: DtcgOutput = {};
-
-  for (const entry of ctx.registry.values()) {
-    const resolved = themedEntry(entry, themeOverride);
-    setNested(output, resolved.path, entryToDtcgNode(resolved));
+export function generateDtcgDelta(registry: TokenRegistry, override: ThemeOverride): DtcgOutput {
+  for (const key of override.keys()) {
+    if (!registry.has(key)) {
+      throw new Error(`Theme override references an unknown token path: ${key}`);
+    }
   }
 
-  applyGroupMetadata(output, ctx.registry, ctx.groups);
+  const output: DtcgOutput = {};
+  for (const entry of registry.values()) {
+    if (!override.has(pathKey(entry.path))) continue;
+    const resolved = themedEntry(entry, override);
+    const deltaEntry = {
+      path: resolved.path,
+      $type: resolved.$type,
+      $value: resolved.$value,
+      layer: resolved.layer,
+      ...(resolved.alias ? { alias: resolved.alias } : {}),
+    };
+    setNested(output, deltaEntry.path, entryToDtcgNode(deltaEntry));
+  }
+
   return hoistGroupTypes(output);
+}
+
+export function generateDtcgResolver(ctx: GeneratorContext): DtcgOutput {
+  const multiAxis = ctx.themes.length > 1;
+  const modifiers: Record<string, unknown> = {};
+
+  for (const axis of ctx.themes) {
+    const contexts: Record<string, unknown[]> = {
+      [axis.default]: [],
+    };
+    for (const contextName of Object.keys(axis.contexts)) {
+      const stem = multiAxis ? `${axis.name}-${contextName}` : contextName;
+      contexts[contextName] = [{ $ref: `./themes/${stem}.tokens.json` }];
+    }
+    modifiers[axis.name] = {
+      ...(axis.description !== undefined ? { description: axis.description } : {}),
+      default: axis.default,
+      contexts,
+    };
+  }
+
+  return {
+    $schema: "https://www.designtokens.org/schemas/2025.10/resolver.json",
+    version: "2025.10",
+    sets: {
+      base: { sources: [{ $ref: "./tokens.tokens.json" }] },
+    },
+    modifiers,
+    resolutionOrder: [
+      { $ref: "#/sets/base" },
+      ...ctx.themes.map((axis) => ({ $ref: `#/modifiers/${axis.name}` })),
+    ],
+  };
 }
 
 export type DtcgPluginOptions = {
   outDir: string;
 };
 
-function generateDtcgFiles(ctx: GeneratorContext, _options: DtcgPluginOptions): OutputFile[] {
+export function generateDtcgFiles(
+  ctx: GeneratorContext,
+  _options: DtcgPluginOptions = { outDir: "" },
+): OutputFile[] {
   const files: OutputFile[] = [
     {
       filename: "tokens.tokens.json",
@@ -139,11 +189,29 @@ function generateDtcgFiles(ctx: GeneratorContext, _options: DtcgPluginOptions): 
     },
   ];
 
-  for (const themeName of Object.keys(ctx.themes).sort()) {
-    files.push({
-      filename: `${themeName}.tokens.json`,
-      content: `${JSON.stringify(generateDtcgThemed(ctx, themeName), null, 2)}\n`,
-    });
+  if (ctx.themes.length === 0) {
+    return files;
+  }
+
+  const fileErrors = themeFileDiagnostics(ctx);
+  if (fileErrors.length > 0) {
+    throw new Error(fileErrors[0]!.message);
+  }
+
+  files.push({
+    filename: "tokens.resolver.json",
+    content: `${JSON.stringify(generateDtcgResolver(ctx), null, 2)}\n`,
+  });
+
+  const multiAxis = ctx.themes.length > 1;
+  for (const axis of ctx.themes) {
+    for (const [contextName, override] of Object.entries(axis.contexts)) {
+      const stem = multiAxis ? `${axis.name}-${contextName}` : contextName;
+      files.push({
+        filename: `themes/${stem}.tokens.json`,
+        content: `${JSON.stringify(generateDtcgDelta(ctx.registry, override), null, 2)}\n`,
+      });
+    }
   }
 
   return files;
@@ -169,12 +237,16 @@ function emDimensionLocations(type: TokenType, value: unknown): string[] {
 
 /** DTCG has no `em`, so those dimensions are exported as `rem` with the same value, which is relative to something else. */
 function emDimensionWarnings(ctx: PluginContext): PluginDiagnostic[] {
+  const multiAxis = ctx.themes.length > 1;
   const sources = [
     ...[...ctx.registry.values()].map((entry) => ({ ...entry, where: "" })),
-    ...Object.entries(ctx.themes).flatMap(([theme, override]) =>
-      [...override.keys()].flatMap((key) => {
-        const entry = ctx.registry.get(key);
-        return entry ? [{ ...themedEntry(entry, override), where: ` in theme "${theme}"` }] : [];
+    ...ctx.themes.flatMap((axis) =>
+      Object.entries(axis.contexts).flatMap(([contextName, override]) => {
+        const label = multiAxis ? `${axis.name}=${contextName}` : contextName;
+        return [...override.keys()].flatMap((key) => {
+          const entry = ctx.registry.get(key);
+          return entry ? [{ ...themedEntry(entry, override), where: ` in theme "${label}"` }] : [];
+        });
       }),
     ),
   ];
@@ -189,26 +261,28 @@ function emDimensionWarnings(ctx: PluginContext): PluginDiagnostic[] {
     );
 }
 
-function themeFileDiagnostics(ctx: PluginContext): PluginDiagnostic[] {
+function themeFileDiagnostics(ctx: Pick<GeneratorContext, "themes">): PluginDiagnostic[] {
   const diagnostics: PluginDiagnostic[] = [];
-  const seen = new Map<string, string>();
-  for (const name of Object.keys(ctx.themes)) {
-    const lower = name.toLowerCase();
-    if (lower === "tokens") {
-      diagnostics.push({
-        severity: "error",
-        message: `Theme "${name}" would write ${name}.tokens.json, colliding with tokens.tokens.json (the base tokens); rename the theme.`,
-      });
-      continue;
-    }
-    const previous = seen.get(lower);
-    if (previous) {
-      diagnostics.push({
-        severity: "error",
-        message: `Themes "${previous}" and "${name}" differ only by case and would collide on case-insensitive filesystems; rename one.`,
-      });
-    } else {
-      seen.set(lower, name);
+  const multiAxis = ctx.themes.length > 1;
+  const seen = new Map<string, { stem: string; label: string }>();
+
+  for (const axis of ctx.themes) {
+    for (const contextName of Object.keys(axis.contexts)) {
+      const stem = multiAxis ? `${axis.name}-${contextName}` : contextName;
+      const label = multiAxis ? `${axis.name}=${contextName}` : contextName;
+      const lower = stem.toLowerCase();
+      const previous = seen.get(lower);
+      if (previous) {
+        diagnostics.push({
+          severity: "error",
+          message:
+            previous.stem === stem
+              ? `Themes "${previous.label}" and "${label}" both write themes/${stem}.tokens.json; rename an axis or context.`
+              : `Themes "${previous.label}" and "${label}" differ only by case (themes/${previous.stem}.tokens.json vs themes/${stem}.tokens.json) and would collide on case-insensitive filesystems; rename one.`,
+        });
+      } else {
+        seen.set(lower, { stem, label });
+      }
     }
   }
   return diagnostics;

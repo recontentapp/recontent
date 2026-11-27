@@ -6,6 +6,8 @@ import {
   defineConfig,
   defineReferenceTokens,
   defineSystemTokens,
+  defineTheme,
+  defineThemeAxis,
   tokens,
 } from "../../src/index.js";
 import { generateDocsFiles, type DocsPluginOptions } from "../../src/plugins/docs/index.js";
@@ -75,15 +77,18 @@ describe("design.html", () => {
     expect(html).not.toContain('<div data-view="components"');
   });
 
-  test("lists the default option and each theme in the picker", () => {
+  test("lists the default option and each theme inside the theme popover", () => {
+    expect(html).toContain('id="theme-toggle"');
+    expect(html).toContain('id="theme-popover"');
     expect(html).toContain('<option value="">Default</option>');
     expect(html).toContain('<option value="dark">dark</option>');
     expect(html).toContain('<option value="highContrast">highContrast</option>');
   });
 
   test("embeds token CSS so previews can resolve var(--…)", () => {
+    expect(html).toContain("body {\n  --ref-color-black:");
     expect(html).toContain("--system-colors-accent: var(--ref-color-black);");
-    expect(html).toContain('[data-theme="dark"]');
+    expect(html).toContain('body[data-theme="dark"]');
     expect(html).toContain("var(--system-shadow-elevated)");
   });
 
@@ -163,7 +168,33 @@ describe("design.html", () => {
     });
     const output = render(config);
     expect(output).not.toContain('id="theme"');
+    expect(output).not.toContain('id="theme-toggle"');
+    expect(output).not.toContain('id="theme-popover"');
     expect(output).toContain("No system tokens defined.");
+  });
+
+  test("renders one select per axis inside the theme popover for multi-axis themes, scoped to body[data-<axis>]", () => {
+    const ref = defineReferenceTokens({
+      color: { brand: tokens.color("#2563eb"), bg: tokens.color("#ffffff") },
+    });
+    const acme = defineTheme(ref, { color: { brand: tokens.color("#7c3aed") } });
+    const dark = defineTheme(ref, { color: { bg: tokens.color("#111111") } });
+    const multi = defineConfig({
+      tokens: { ref, system: defineSystemTokens({}), components: {} },
+      themes: {
+        brand: defineThemeAxis({ default: "core", contexts: { acme } }),
+        mode: defineThemeAxis({ default: "light", contexts: { dark } }),
+      },
+    });
+    const output = render(multi);
+    expect(output).toContain('id="theme-toggle"');
+    expect(output).toContain('id="theme-popover"');
+    expect(output).toContain("Theme axes");
+    expect(output).toContain('data-axis="brand" data-attr="data-brand"');
+    expect(output).toContain('<option value="">core</option>');
+    expect(output).toContain('data-axis="mode" data-attr="data-mode"');
+    expect(output).toContain('<option value="">light</option>');
+    expect(output).toContain('body[data-mode="dark"]');
   });
 });
 

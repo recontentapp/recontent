@@ -159,7 +159,7 @@ describe("recontent mcp", () => {
     writeFileSync(
       snapshot,
       JSON.stringify({
-        schemaVersion: "1",
+        schemaVersion: "2",
         kind: "snapshot",
         themes: [],
         tokens: [

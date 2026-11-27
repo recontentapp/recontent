@@ -3,9 +3,11 @@ import {
   defineReferenceTokens,
   defineComponentTokens,
   defineSystemTokens,
+  defineTheme,
+  defineThemeAxis,
   tokens,
 } from "recontent";
-import { designMD, docs, vanillaExtract } from "recontent/plugins";
+import { contrast, designMD, docs, vanillaExtract } from "recontent/plugins";
 
 const ref = defineReferenceTokens({
   color: {
@@ -402,11 +404,212 @@ const components = defineComponentTokens({
   },
 });
 
+const dark = defineTheme(system, {
+  colors: {
+    accent: ref.color.secondary[50],
+    onAccent: ref.color.secondary[900],
+    backgroundSurface: ref.color.secondary[800],
+    backgroundBody: ref.color.secondary[900],
+    backgroundCard: ref.color.secondary[800],
+    backgroundMuted: ref.color.secondary[750],
+    textPrimary: ref.color.secondary[50],
+    textSecondary: ref.color.secondary[400],
+    textDisabled: ref.color.secondary[600],
+    border: ref.color.secondary[700],
+    borderEmphasized: ref.color.secondary[500],
+    skeleton: ref.color.secondary[750],
+    secondary: tokens.colorScale({ 200: ref.color.secondary[50] }),
+    textScale: tokens.colorScale({
+      primary: ref.color.secondary[50],
+      secondary: ref.color.secondary[400],
+      disabled: ref.color.secondary[600],
+      accent: ref.color.secondary[50],
+    }),
+  },
+  elevationScale: tokens.shadowScale({
+    sm: [
+      {
+        color: ref.color.secondary["900-50"],
+        offsetX: "0px",
+        offsetY: "0px",
+        blur: "2px",
+        spread: "0px",
+      },
+      {
+        color: ref.color.secondary["900-50"],
+        offsetX: "0px",
+        offsetY: "2px",
+        blur: "10px",
+        spread: "0px",
+      },
+    ],
+    md: [
+      {
+        color: ref.color.secondary["900-50"],
+        offsetX: "0px",
+        offsetY: "0px",
+        blur: "3px",
+        spread: "0px",
+      },
+      {
+        color: ref.color.secondary["900-50"],
+        offsetX: "0px",
+        offsetY: "4px",
+        blur: "20px",
+        spread: "0px",
+      },
+    ],
+    lg: [
+      {
+        color: ref.color.secondary["900-50"],
+        offsetX: "0px",
+        offsetY: "0px",
+        blur: "4px",
+        spread: "0px",
+      },
+      {
+        color: ref.color.secondary["900-50"],
+        offsetX: "0px",
+        offsetY: "8px",
+        blur: "40px",
+        spread: "0px",
+      },
+    ],
+    inset: {
+      color: ref.color.secondary["900-50"],
+      offsetX: "0px",
+      offsetY: "1px",
+      blur: "2px",
+      spread: "0px",
+      inset: true,
+    },
+  }),
+  border: {
+    default: tokens.border({
+      color: ref.color.secondary[700],
+      width: "1px",
+    }),
+  },
+  borderScale: tokens.borderScale({
+    thin: { color: ref.color.secondary[700], width: "1px" },
+    thick: { color: ref.color.secondary[700], width: "2px" },
+  }),
+  gradients: {
+    accent: tokens.gradient({
+      angle: "135deg",
+      stops: [
+        { color: ref.color.secondary[50], position: 0 },
+        { color: ref.color.secondary[300], position: 1 },
+      ],
+    }),
+  },
+});
+
+const cobalt = defineTheme(system, {
+  colors: {
+    accent: ref.color.info[600],
+    onAccent: ref.color.white[100],
+    secondary: tokens.colorScale({ 200: ref.color.info[600] }),
+  },
+  gradients: {
+    accent: tokens.gradient({
+      angle: "135deg",
+      stops: [
+        { color: ref.color.info[700], position: 0 },
+        { color: ref.color.info[500], position: 1 },
+      ],
+    }),
+  },
+});
+
+const emerald = defineTheme(system, {
+  colors: {
+    accent: ref.color.success[700],
+    onAccent: ref.color.white[100],
+    secondary: tokens.colorScale({ 200: ref.color.success[700] }),
+  },
+  gradients: {
+    accent: tokens.gradient({
+      angle: "135deg",
+      stops: [
+        { color: ref.color.success[800], position: 0 },
+        { color: ref.color.success[500], position: 1 },
+      ],
+    }),
+  },
+});
+
+const compact = defineTheme(
+  { system, components },
+  {
+    system: {
+      spacing: tokens.dimensionScale({
+        0: ref.spacing[0],
+        2: ref.spacing[2],
+        4: "3px",
+        8: "6px",
+        12: ref.spacing[8],
+        16: ref.spacing[12],
+        20: "14px",
+        24: ref.spacing[16],
+        32: ref.spacing[24],
+        40: "28px",
+        48: ref.spacing[32],
+        56: ref.spacing[40],
+        64: ref.spacing[48],
+        72: ref.spacing[56],
+        80: ref.spacing[64],
+      }),
+      radius: tokens.dimensionScale({
+        none: ref.radius.none,
+        inner: "2px",
+        element: ref.radius.inner,
+        container: ref.radius.element,
+        page: ref.radius.container,
+        full: ref.radius.full,
+      }),
+    },
+    components: {
+      sticker: {
+        paddingX: ref.spacing[4],
+        paddingY: tokens.dimension("1px"),
+        borderRadius: tokens.dimension("2px"),
+      },
+    },
+  },
+);
+
 export default defineConfig({
   introspection: { entry: "src/components.ts", importPath: { root: "src" } },
   tokens: { ref, system, components },
-  themes: {},
+  themes: {
+    mode: defineThemeAxis({
+      default: "light",
+      description: "Color scheme for surfaces, text, borders, and elevation.",
+      contexts: { dark },
+    }),
+    brand: defineThemeAxis({
+      default: "neutral",
+      description: "Brand accent palette applied after color mode.",
+      contexts: { cobalt, emerald },
+    }),
+    density: defineThemeAxis({
+      default: "comfortable",
+      description: "Layout spacing, corner radii, and component density.",
+      contexts: { compact },
+    }),
+  },
   plugins: [
+    contrast({
+      rules: [
+        { foreground: "system.colors.textPrimary", background: "system.colors.backgroundBody" },
+        { foreground: "system.colors.textPrimary", background: "system.colors.backgroundCard" },
+        { foreground: "system.colors.textSecondary", background: "system.colors.backgroundBody" },
+        { foreground: "system.colors.textSecondary", background: "system.colors.backgroundCard" },
+        { foreground: "system.colors.textSecondary", background: "system.colors.backgroundMuted" },
+        { foreground: "system.colors.onAccent", background: "system.colors.accent" },
+      ],
+    }),
     docs({
       outDir: "docs",
       color: "#2563eb",

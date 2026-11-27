@@ -48,7 +48,10 @@ const compact = defineTheme(system, {
   spacing: { md: tokens.dimension(12, "px") },
 });
 
-const darkCompact = defineTheme(system, {}, { extends: [dark, compact] });`);
+export default defineConfig({
+  tokens: { ref, system },
+  themes: { mode: { dark }, density: { compact } },
+});`);
 
 // Errors are real TypeScript diagnostics from recontent, shortened to their first line.
 // A rename in the system layer is caught in every component still using the old name.
@@ -116,9 +119,9 @@ export function TokenLayers() {
       <div className="lp-chain-out">
         <CodePanel title="themes.ts" code={themesCode} tone="blue" />
         <p>
-          <strong>Color scales &amp; multi-axis themes.</strong> Generate full OKLCH ramps from one
-          base color and compose dark mode, density, or brand themes with <code>extends</code>—never
-          touching component code.
+          <strong>Color scales &amp; orthogonal theme axes.</strong> Generate full OKLCH ramps from
+          one base color and combine independent axes like mode, density, or brand—never touching
+          component code.
         </p>
       </div>
       <div className="lp-chain-out">

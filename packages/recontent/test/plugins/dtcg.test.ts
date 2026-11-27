@@ -4,29 +4,38 @@ import {
   defineReferenceTokens,
   defineSystemTokens,
   defineTheme,
+  defineThemeAxis,
   tokens,
 } from "../../src/index.js";
-import { dtcg, generateDtcg, generateDtcgThemed } from "../../src/plugins/dtcg.js";
+import {
+  dtcg,
+  generateDtcg,
+  generateDtcgDelta,
+  generateDtcgFiles,
+  generateDtcgResolver,
+} from "../../src/plugins/dtcg.js";
 import { runPlugins } from "../../src/plugins/runner.js";
 import { goldenConfig, refOnlyConfig, themedConfig } from "../helpers/fixtures.js";
 
-test("generateDtcgThemed applies overrides at non-ref layers (regression)", () => {
+test("generateDtcgDelta emits only overridden entries, including at non-ref layers", () => {
   const { config } = goldenConfig();
-  const base = generateDtcg(config);
-  const themed = generateDtcgThemed(config, "highContrast");
-  expect(themed).not.toEqual(base);
-  expect(
-    (themed as never as { system: { colors: { accent: { $value: unknown } } } }).system.colors
-      .accent.$value,
-  ).toMatchObject({ hex: "#ff0000" });
+  const highContrast = config.themes[0]!.contexts.highContrast!;
+  const delta = generateDtcgDelta(config.registry, highContrast) as never as {
+    ref?: unknown;
+    system: { colors: { accent: { $value: unknown }; surface: { $value: unknown } } };
+  };
+  expect(delta.ref).toBeUndefined();
+  expect(delta.system.colors.accent.$value).toMatchObject({ hex: "#ff0000" });
+  expect(delta.system.colors.surface.$value).toBe("{ref.color.black}");
 });
 
-test("generateDtcgThemed emits a reference for a theme alias", () => {
+test("generateDtcgDelta emits a reference for a theme alias", () => {
   const { config } = themedConfig({ layer: "system", alias: true });
-  const themed = generateDtcgThemed(config, "dark") as never as {
+  const dark = config.themes[0]!.contexts.dark!;
+  const delta = generateDtcgDelta(config.registry, dark) as never as {
     system: { colors: { accent: { $value: unknown } } };
   };
-  expect(themed.system.colors.accent.$value).toBe("{ref.color.white}");
+  expect(delta.system.colors.accent.$value).toBe("{ref.color.white}");
 });
 
 test("alias paths nest correctly in DTCG output", () => {
@@ -127,12 +136,14 @@ describe("scale metadata", () => {
     expect(output.ref.plain.$deprecated).toBeUndefined();
   });
 
-  test("scale metadata is emitted in themed output too", () => {
-    const output = generateDtcgThemed(scaleMetadataConfig(), "dark") as never as {
-      ref: { spacing: Group };
+  test("delta output omits untouched scales and base-only metadata", () => {
+    const cfg = scaleMetadataConfig();
+    const dark = cfg.themes[0]!.contexts.dark!;
+    const output = generateDtcgDelta(cfg.registry, dark) as never as {
+      ref: { spacing?: Group; plain: Group };
     };
-    expect(output.ref.spacing.$description).toBe("Spacing scale");
-    expect(output.ref.spacing.$deprecated).toBe("Use system.spacing");
+    expect(output.ref.spacing).toBeUndefined();
+    expect(output.ref.plain.$description).toBeUndefined();
   });
 });
 
@@ -198,7 +209,7 @@ describe("em dimensions", () => {
       }),
       dash: tokens.strokeStyle({ dashArray: ["0.5em", "2px"], lineCap: "round" }),
     });
-    const ctx = { ...refOnlyConfig(ref), themes: {} } as never;
+    const ctx = { ...refOnlyConfig(ref), themes: [] } as never;
 
     const warnings = dtcg({ outDir: "out" }).validate!(ctx) as {
       severity: string;
@@ -214,23 +225,101 @@ describe("em dimensions", () => {
   });
 });
 
-test('a theme named "tokens" is reported before it can collide with the base file', async () => {
-  const ref = defineReferenceTokens({ color: { black: tokens.color("#000000") } });
-  const config = defineConfig({
-    tokens: { ref },
-    themes: { tokens: defineTheme(ref, { color: { black: tokens.color("#111111") } }) },
-    plugins: dtcg({ outDir: "out" }),
+describe("DTCG 2025.10 resolver & delta files", () => {
+  test("omits tokens.resolver.json when no themes are configured", async () => {
+    const ref = defineReferenceTokens({ color: { black: tokens.color("#000000") } });
+    const config = defineConfig({ tokens: { ref }, plugins: dtcg({ outDir: "out" }) });
+    const logger = { info() {}, warn() {}, error() {}, debug() {} };
+    const result = await runPlugins(config, { root: "/project", logger });
+    expect(result.files.map((f) => f.path)).toEqual(["out/tokens.tokens.json"]);
   });
-  const logger = { info() {}, warn() {}, error() {}, debug() {} };
 
-  const result = await runPlugins(config, { root: "/project", logger });
+  test("emits tokens.resolver.json and delta-only files for multi-axis themes", async () => {
+    const ref = defineReferenceTokens({
+      color: { white: tokens.color("#ffffff"), black: tokens.color("#000000") },
+      spacing: { md: tokens.dimension("16px") },
+    });
+    const system = defineSystemTokens({ bg: ref.color.white });
+    const dark = defineTheme(system, { bg: ref.color.black });
+    const compact = defineTheme(ref, { spacing: { md: tokens.dimension("8px") } });
+    const config = defineConfig({
+      tokens: { ref, system },
+      themes: {
+        mode: defineThemeAxis({ default: "light", description: "Color mode", contexts: { dark } }),
+        density: { compact },
+      },
+      plugins: dtcg({ outDir: "out" }),
+    });
+    const logger = { info() {}, warn() {}, error() {}, debug() {} };
+    const result = await runPlugins(config, { root: "/project", logger });
 
-  expect(result.files).toEqual([]);
-  expect(result.diagnostics).toEqual([
-    expect.objectContaining({
-      plugin: "recontent:dtcg",
-      severity: "error",
-      message: expect.stringContaining('Theme "tokens" would write tokens.tokens.json'),
-    }),
-  ]);
+    expect(result.files.map((f) => f.path)).toEqual([
+      "out/tokens.tokens.json",
+      "out/tokens.resolver.json",
+      "out/themes/mode-dark.tokens.json",
+      "out/themes/density-compact.tokens.json",
+    ]);
+
+    const resolver = generateDtcgResolver(config);
+    expect(resolver).toEqual({
+      $schema: "https://www.designtokens.org/schemas/2025.10/resolver.json",
+      version: "2025.10",
+      sets: { base: { sources: [{ $ref: "./tokens.tokens.json" }] } },
+      modifiers: {
+        mode: {
+          description: "Color mode",
+          default: "light",
+          contexts: {
+            light: [],
+            dark: [{ $ref: "./themes/mode-dark.tokens.json" }],
+          },
+        },
+        density: {
+          default: "default",
+          contexts: {
+            default: [],
+            compact: [{ $ref: "./themes/density-compact.tokens.json" }],
+          },
+        },
+      },
+      resolutionOrder: [
+        { $ref: "#/sets/base" },
+        { $ref: "#/modifiers/mode" },
+        { $ref: "#/modifiers/density" },
+      ],
+    });
+
+    // Delta contains only the overridden token, not untouched base tokens.
+    const darkDelta = generateDtcgDelta(config.registry, dark);
+    expect(darkDelta).toEqual({
+      system: { bg: { $type: "color", $value: "{ref.color.black}" } },
+    });
+  });
+
+  test("reports case-insensitive or cross-axis delta filename collisions", async () => {
+    const ref = defineReferenceTokens({ color: { black: tokens.color("#000000") } });
+    const ov = defineTheme(ref, { color: { black: tokens.color("#111111") } });
+    const logger = { info() {}, warn() {}, error() {}, debug() {} };
+
+    const caseClash = defineConfig({
+      tokens: { ref },
+      themes: { dark: ov, Dark: ov },
+      plugins: dtcg({ outDir: "out" }),
+    });
+    const caseResult = await runPlugins(caseClash, { root: "/project", logger });
+    expect(caseResult.files).toEqual([]);
+    expect(caseResult.diagnostics[0]?.message).toMatch(/differ only by case/);
+
+    const crossAxisClash = defineConfig({
+      tokens: { ref },
+      themes: { "a-b": { c: ov }, a: { "b-c": ov } },
+      plugins: dtcg({ outDir: "out" }),
+    });
+    const crossResult = await runPlugins(crossAxisClash, { root: "/project", logger });
+    expect(crossResult.files).toEqual([]);
+    expect(crossResult.diagnostics[0]?.message).toContain("both write themes/a-b-c.tokens.json");
+    expect(() => generateDtcgFiles(crossAxisClash)).toThrow(
+      /both write themes\/a-b-c\.tokens\.json/,
+    );
+  });
 });

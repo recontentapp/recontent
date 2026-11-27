@@ -308,7 +308,10 @@ inspect
   .command("tokens [path...]")
   .description("List token groups, or the tokens at or under the given dotted paths")
   .option("--type <type>", "Only tokens of this type (e.g. color)")
-  .option("--theme <theme>", "Show values for this theme only")
+  .option(
+    "--theme <theme>",
+    "Show values for this theme or axis selection only (e.g. dark or brand=acme,mode=dark)",
+  )
   .option("--deprecated", "Only deprecated tokens")
   .action(
     async (

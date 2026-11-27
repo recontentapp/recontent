@@ -116,7 +116,7 @@ describe("recontent inspect --from", () => {
     const snapshot = path.join(app, "node_modules/@acme/ds/dist/recontent.json");
     writeFileSync(
       snapshot,
-      readFileSync(snapshot, "utf-8").replace('"schemaVersion": "1"', '"schemaVersion": "2"'),
+      readFileSync(snapshot, "utf-8").replace('"schemaVersion": "2"', '"schemaVersion": "3"'),
     );
     const newer = from("@acme/ds");
     expect(newer.status).toBe(1);

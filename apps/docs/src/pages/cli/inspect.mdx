@@ -44,11 +44,11 @@ Every overview—even an empty one—ends with a `Next:` line suggesting the nex
 
 Options for `tokens`:
 
-| Option            | Description                                                                           |
-| ----------------- | ------------------------------------------------------------------------------------- |
-| `--type <type>`   | Filter to one token type (`color`, `dimension`). Unknown types exit with an error.    |
-| `--theme <theme>` | Show one theme's column next to the default value. Unknown themes exit with an error. |
-| `--deprecated`    | Show only deprecated tokens.                                                          |
+| Option            | Description                                                                                                                       |
+| ----------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| `--type <type>`   | Filter to one token type (`color`, `dimension`). Unknown types exit with an error.                                                |
+| `--theme <theme>` | Show one theme or axis selection (`dark` or `brand=acme,mode=dark`) next to the default value. Unknown themes exit with an error. |
+| `--deprecated`    | Show only deprecated tokens.                                                                                                      |
 
 `components` also accepts `--props <name...>` to show selected props in full without truncation. Unknown prop names exit `2` with close suggestions, and inherited props (such as `id`) show a row naming their source.
 
@@ -102,15 +102,15 @@ Markdown output lets coding agents use your design system accurately without rea
 
 `--format json` prints one JSON document containing **full details for the entire selection**, never a summary. For example, `recontent inspect tokens --format json` returns every token.
 
-| Command              | Document                                                                                                                                                                            |
-| -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `inspect`            | `{ schemaVersion, kind: "overview", config, tokens: { total, layers }, themes, components?, types? }`                                                                               |
-| `inspect tokens`     | `{ schemaVersion, kind: "tokens", tokens }` with `layer`, `path`, `name`, `type`, `alias?`, `description?`, `deprecated?`, `cssVar`, and `values` (`default` plus differing themes) |
-| `inspect components` | `{ schemaVersion, kind: "components", components, types }` matching [ComponentInfo](/plugin-api#componentinfo) and transitive [TypeInfo](/plugin-api#typeinfo)                      |
-| `inspect types`      | `{ schemaVersion, kind: "types", types }` with selected types and transitive references                                                                                             |
-| `inspect search`     | `{ schemaVersion, kind: "search", queries, tokens, components, types, suggestions? }` with full hits plus `matchedIn`, and `suggestions` only on zero hits                          |
+| Command              | Document                                                                                                                                                                             |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `inspect`            | `{ schemaVersion, kind: "overview", config, tokens: { total, layers }, themes, components?, types? }` where `themes` is an array of `{ name, default, description?, contexts }` axes |
+| `inspect tokens`     | `{ schemaVersion, kind: "tokens", tokens }` with `layer`, `path`, `name`, `type`, `alias?`, `description?`, `deprecated?`, `cssVar`, and `values` (`default` plus differing themes)  |
+| `inspect components` | `{ schemaVersion, kind: "components", components, types }` matching [ComponentInfo](/plugin-api#componentinfo) and transitive [TypeInfo](/plugin-api#typeinfo)                       |
+| `inspect types`      | `{ schemaVersion, kind: "types", types }` with selected types and transitive references                                                                                              |
+| `inspect search`     | `{ schemaVersion, kind: "search", queries, tokens, components, types, suggestions? }` with full hits plus `matchedIn`, and `suggestions` only on zero hits                           |
 
-`schemaVersion` is `"1"` and bumps only on breaking schema changes.
+`schemaVersion` is `"2"` and bumps only on breaking schema changes.
 
 - **stdout** carries only the result. Logs and warnings go to stderr; `inspect components` warns only about displayed components and project-wide issues.
 - With `--theme`, every token includes that theme in `values`, falling back to its default value when not overridden.
