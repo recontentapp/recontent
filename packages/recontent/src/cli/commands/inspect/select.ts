@@ -341,9 +341,10 @@ function tokenFields(token: DocToken): Field[] {
     ["alias", token.alias],
     ["description", token.description],
     ["deprecated", typeof token.deprecated === "string" ? token.deprecated : undefined],
-    ...Object.entries(token.values).map(
-      ([name, value]): Field => [name === "default" ? "value" : `value (${name})`, value],
-    ),
+    ...Object.entries(token.values).map(([name, value]): Field => [
+      name === "default" ? "value" : `value (${name})`,
+      value,
+    ]),
   ];
 }
 

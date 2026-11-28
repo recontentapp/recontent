@@ -147,14 +147,15 @@ function typeText(
 ): string {
   const declaration = declarationOf(symbol);
   const node = declaredTypeNode(symbol);
-  if (node && !hasInstantiatedTypeParam(checker, node, propType)) {
-    return oneLine(printer.printNode(ts.EmitHint.Unspecified, node, node.getSourceFile()));
-  }
-  const text = checker.typeToString(
-    optional ? stripUndefined(checker, propType) : propType,
-    declaration ?? location,
-    ts.TypeFormatFlags.NoTruncation,
-  );
+  const text =
+    node && !hasInstantiatedTypeParam(checker, node, propType)
+      ? oneLine(printer.printNode(ts.EmitHint.Unspecified, node, node.getSourceFile()))
+      : checker.typeToString(
+          optional ? stripUndefined(checker, propType) : propType,
+          declaration ?? location,
+          ts.TypeFormatFlags.NoTruncation,
+        );
+  // `foo?: T | undefined` (explicit under exactOptionalPropertyTypes) reads as `T`.
   return optional ? text.replace(/ \| undefined$/, "") : text;
 }
 

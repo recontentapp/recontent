@@ -428,11 +428,10 @@ export function renderComponents(
 
   if (components.length === 0) return "No components.";
   const typeFiles = new Map(types.map((type) => [type.id, type.sourceFilePath]));
-  const views = components.map(
-    (component): ComponentView =>
-      only
-        ? { props: onlyProps(component, only), hideInherits: true }
-        : compactView(component, shared, typeFiles),
+  const views = components.map((component): ComponentView =>
+    only
+      ? { props: onlyProps(component, only), hideInherits: true }
+      : compactView(component, shared, typeFiles),
   );
   const sections = components.map((component, index) =>
     renderComponentMarkdown(component, 2, views[index]),

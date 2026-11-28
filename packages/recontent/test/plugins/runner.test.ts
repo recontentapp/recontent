@@ -70,13 +70,11 @@ test.each([
     /File path collision/,
   ],
 ])("%s emitting the same file path throws", async (_name, names, paths, message) => {
-  const plugins = names.map(
-    (name, index): RecontentPlugin => ({
-      name,
-      dependsOn: ["tokens"],
-      generate: () => [{ path: paths[index]!, content: String(index) }],
-    }),
-  );
+  const plugins = names.map((name, index): RecontentPlugin => ({
+    name,
+    dependsOn: ["tokens"],
+    generate: () => [{ path: paths[index]!, content: String(index) }],
+  }));
   await expect(runPlugins(baseConfig(plugins), runOptions)).rejects.toThrow(message);
 });
 
