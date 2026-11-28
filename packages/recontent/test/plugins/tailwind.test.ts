@@ -1,3 +1,4 @@
+import { execFileSync } from "node:child_process";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { describe, expect, test } from "@jest/globals";
@@ -484,7 +485,6 @@ describe("validate()", () => {
 
 describe("real Tailwind compile", () => {
   test("utilities and the dark variant resolve against the generated stylesheet", async () => {
-    const { compile } = await import("@tailwindcss/node");
     const { system } = build();
     // Must live under a node_modules dir so `@import "tailwindcss"` resolves. Hoisted installs
     // (e.g. CI) may not have a package-local one, so create it.
@@ -506,11 +506,7 @@ describe("real Tailwind compile", () => {
         }),
       );
       const source = '@import "tailwindcss";\n@import "./tailwind.css";';
-      const compiler = await compile(source, {
-        base: dir,
-        onDependency: () => {},
-      });
-      const out = compiler.build([
+      const candidates = [
         "bg-accent",
         "p-md",
         "rounded-full",
@@ -525,7 +521,20 @@ describe("real Tailwind compile", () => {
         "shadow-card",
         "ring-2",
         "dark:bg-accent",
-      ]);
+      ];
+      // Compiled in a plain Node process: @tailwindcss/node registers module hooks, which Jest
+      // refuses to run inside its sandbox.
+      const out = execFileSync(
+        process.execPath,
+        [
+          "--input-type=module",
+          "-e",
+          `import { compile } from "@tailwindcss/node";
+const compiler = await compile(${JSON.stringify(source)}, { base: ${JSON.stringify(dir)}, onDependency() {} });
+process.stdout.write(compiler.build(${JSON.stringify(candidates)}));`,
+        ],
+        { cwd: dir, encoding: "utf8" },
+      );
       expect(out).toContain("background-color: var(--system-colors-accent)");
       expect(out).toContain("var(--system-spacing-md)");
       expect(out).toContain("var(--system-radius-full)");

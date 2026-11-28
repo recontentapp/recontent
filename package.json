@@ -13,11 +13,11 @@
     "prepare": "lefthook install"
   },
   "devDependencies": {
-    "knip": "6.31.0",
-    "lefthook": "2.1.10",
-    "oxfmt": "0.59.0",
-    "oxlint": "1.74.0",
-    "turbo": "2.10.5",
+    "knip": "6.48.0",
+    "lefthook": "2.2.4",
+    "oxfmt": "0.80.0",
+    "oxlint": "1.95.0",
+    "turbo": "2.11.13",
     "typescript": "npm:@typescript/typescript6@6.0.2"
   },
   "packageManager": "pnpm@12.14.0"

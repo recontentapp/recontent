@@ -24,9 +24,8 @@ type ThemeInput<T> =
     : T extends RawToken<infer Type> | StampedToken<infer Type, infer _Layer>
       ? RawToken<Type> | StampedToken<Type>
       : T extends { readonly _kind: "group" }
-        ?
-            | { [Key in Exclude<keyof T, TokenGroupKey>]?: ThemeInput<T[Key]> }
-            | TokenGroup<{ [Key in Exclude<keyof T, TokenGroupKey>]?: ThemeInput<T[Key]> }>
+        ? | { [Key in Exclude<keyof T, TokenGroupKey>]?: ThemeInput<T[Key]> }
+          | TokenGroup<{ [Key in Exclude<keyof T, TokenGroupKey>]?: ThemeInput<T[Key]> }>
         : T extends object
           ? { [Key in keyof T]?: ThemeInput<T[Key]> }
           : never;

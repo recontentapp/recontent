@@ -6,6 +6,7 @@
       "ignoreDependencies": [
         "@base-ui/react",
         "@stylexjs/stylex",
+        "@tailwindcss/node",
         "@types/react",
         "class-variance-authority",
         "react",

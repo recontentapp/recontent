@@ -14,17 +14,17 @@
     "style:check": "node scripts/style-check.mjs"
   },
   "devDependencies": {
-    "@types/node": "24.1.0",
-    "@types/react": "19.3.0",
+    "@types/node": "24.19.4",
+    "@types/react": "19.3.3",
     "@typescript/native": "npm:typescript@7.0.2",
-    "react": "19.3.0",
-    "react-dom": "19.3.0",
-    "react-server-dom-webpack": "19.3.0",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "react-server-dom-webpack": "19.3.1",
     "recontent": "workspace:*",
     "typescript": "6.0.3",
-    "vite": "8.3.4",
-    "vocs": "2.10.2",
-    "waku": "1.0.0-rc.3",
-    "wrangler": "4.151.3"
+    "vite": "8.4.0",
+    "vocs": "2.14.1",
+    "waku": "1.0.0-rc.5",
+    "wrangler": "4.169.0"
   }
 }
