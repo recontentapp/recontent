@@ -23,7 +23,6 @@ export type ThemeAxisEmit = {
 
 class ResolveError extends Error {}
 
-/** Substitutes every alias in `value` with the value it points to. */
 function resolveLiteral(value: unknown, tokens: TokenMap, chain: ReadonlySet<string>): unknown {
   const reference = aliasTarget(value);
   if (reference !== undefined) {
@@ -137,7 +136,6 @@ export function buildThemes(
         return isRef ? refExpression(target) : undefined;
       };
 
-      /** Override for `key`, or undefined (after reporting) when it cannot be written. */
       const override = (key: string, value: unknown, type: string): ConvertedToken | undefined => {
         const alias = aliasedRef(value, type);
         if (alias !== undefined) {

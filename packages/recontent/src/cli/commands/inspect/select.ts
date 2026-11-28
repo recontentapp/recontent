@@ -63,7 +63,6 @@ export function closestMatches(input: string, candidates: Iterable<string>): str
     .map(({ candidate }) => candidate);
 }
 
-/** What was asked for that does not exist, with the closest things that do. */
 type SelectionError = { message: string; input: string; suggestions: string[] };
 
 export type Selection<T> = { selected: T[]; errors: SelectionError[] };
@@ -75,12 +74,10 @@ function unknown(kind: string, input: string, candidates: Iterable<string>): Sel
   return { message: `No ${kind} matches "${input}".${hint}`, input, suggestions };
 }
 
-/** A selector names an exact item or, followed by `.`, everything beneath it. */
 function matches(selector: string, name: string): boolean {
   return name === selector || name.startsWith(`${selector}.`);
 }
 
-/** Every token path and every path prefix (group), the things `inspect tokens` accepts. */
 function tokenSelectors(tokens: DocToken[]): Set<string> {
   const selectors = new Set<string>();
   for (const token of tokens) {
@@ -290,7 +287,6 @@ export function selectComponents(
         suggestions: [],
       });
     } else if (errors.length === 0) {
-      // Own and inherited alike: any of them can be asked for.
       const known = new Set(
         selected.flatMap((component) => [
           ...component.props.map((prop) => prop.name),

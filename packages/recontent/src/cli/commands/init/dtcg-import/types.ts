@@ -20,7 +20,6 @@ export function setOwn(target: JsonObject, key: string, value: unknown): void {
   });
 }
 
-/** A token read out of a DTCG document, before conversion. */
 export type FlatToken = {
   /** Original DTCG path, `$root` kept as-is. Aliases address tokens by this. */
   sourcePath: string[];
@@ -45,7 +44,6 @@ export function aliasTarget(value: unknown): string | undefined {
   return ALIAS_RE.exec(value)?.[1];
 }
 
-/** Whether an alias appears anywhere inside `value`, at the top or in a composite member. */
 export function containsAlias(value: unknown): boolean {
   if (typeof value === "string") return ALIAS_RE.test(value);
   if (Array.isArray(value)) return value.some(containsAlias);

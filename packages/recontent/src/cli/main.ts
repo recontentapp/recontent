@@ -78,7 +78,6 @@ function expandHome(input: string): string {
   return input;
 }
 
-/** Resolves the global `--cwd` and `--log-level` options. */
 function resolveCwdAndLogLevel(): { cwd: string; logLevel?: LogLevel } {
   const opts = program.opts<GlobalOptions>();
   const cwd = path.resolve(process.cwd(), expandHome(opts.cwd ?? "."));
@@ -415,7 +414,6 @@ function resolveSource(from: string | undefined): Source {
         "error: option '--from <package|file>' cannot be used with option '-c, --config <path>'",
       );
     }
-    // No config to discover: the snapshot stands in for it.
     return { ...resolveCwdAndLogLevel(), from };
   }
   try {

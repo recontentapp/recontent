@@ -38,7 +38,6 @@ function isTypeDeclaration(node: ts.Declaration): node is TypeDeclaration {
   );
 }
 
-/** Collects the project type `symbol` names, if it is one, into `found`. */
 function consider(analysis: Analysis, symbol: ts.Symbol | undefined, found: Set<string>): void {
   if (!symbol) return;
   const target = resolveAlias(analysis.checker, symbol);

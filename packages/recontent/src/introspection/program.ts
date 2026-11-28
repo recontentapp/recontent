@@ -7,7 +7,6 @@ function formatDiagnostic(diagnostic: ts.Diagnostic): string {
   return ts.flattenDiagnosticMessageText(diagnostic.messageText, "\n");
 }
 
-/** The two files an introspection starts from, resolved from the config. */
 export function resolveInputs(
   config: IntrospectionConfigInput,
   root: string,

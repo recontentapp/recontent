@@ -46,7 +46,6 @@ export type InspectTarget =
   | { kind: "types"; names: string[]; deprecated?: boolean }
   | { kind: "search"; queries: string[]; scope?: SearchScope[] };
 
-/** Whether answering `target` requires component/type introspection. */
 export function needsIntrospection(target: InspectTarget): boolean {
   if (target.kind === "tokens") return false;
   if (target.kind === "search" && target.scope?.length) {
@@ -83,7 +82,6 @@ function fail(format: Format, errors: InspectError[], exitCode = 1): void {
   if (format === "json") print(renderErrors(errors));
 }
 
-/** What the selection and rendering below read: the data, where it came from, and why components are missing. */
 export type LoadedSnapshot = {
   snapshot: Snapshot;
   source: string;
@@ -269,7 +267,6 @@ async function loadLocalSnapshot(
   const { configPath, cwd, logLevel, target } = options;
   const project = await loadCheckedProject({ configPath, cwd, logLevel });
   const { config, logger } = project;
-  // Tokens never need a TS program; only look at components when asked.
   const { components, error } =
     needsIntrospection(target) && config.introspection
       ? await tryIntrospection(project, { cache: options.cache })

@@ -9,7 +9,6 @@ import { buildToken, type DocToken } from "./doc-token.js";
 /** Shared by the snapshot and every `recontent inspect --format json` output. */
 export const SCHEMA_VERSION = "2";
 
-/** What introspecting a project's components yields. */
 export type Introspected = { components: ComponentInfo[]; types: TypeInfo[] };
 
 export type SnapshotThemeAxis = {

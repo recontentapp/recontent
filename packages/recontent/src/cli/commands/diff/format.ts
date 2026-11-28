@@ -33,7 +33,6 @@ import {
 
 type Diff = {
   tokens: TokenDiff;
-  /** Absent when components were not compared. */
   components?: ComponentsDiff;
   /** Why they were not, when that is worth telling. */
   componentsNote?: string;
@@ -502,7 +501,6 @@ function formatDiffMarkdown(diff: Diff, rev: string): string {
 export type DiffContext = {
   /** Config path, relative to the git root. */
   config: string;
-  /** The revision the config was compared against. */
   rev: string;
 };
 
@@ -559,7 +557,6 @@ export function formatDiff(
   return format === "json" ? formatDiffJson(diff, context) : formatDiffMarkdown(diff, context.rev);
 }
 
-/** What `--format json` prints on stdout when the diff could not be computed. */
 export function formatDiffError(message: string): string {
   return JSON.stringify(
     { schemaVersion: DIFF_SCHEMA_VERSION, kind: "error", errors: [{ message }] },

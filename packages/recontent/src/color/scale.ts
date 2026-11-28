@@ -31,8 +31,6 @@ export type GeneratedScale = {
   baseIndex: number | undefined;
 };
 
-// --- Color math -----------------------------------------------------------------------------
-
 type Lab = [number, number, number];
 
 function oklchToLab([l, c, h]: Oklch): Lab {
@@ -48,7 +46,6 @@ function labDistance(a: Lab, b: Lab): number {
   return Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
 }
 
-/** Euclidean distance in OKLab. */
 function distance(x: Oklch, y: Oklch): number {
   return labDistance(oklchToLab(x), oklchToLab(y));
 }
@@ -91,8 +88,6 @@ function transposeProgressionStart(to: number, values: number[], curve: Bezier):
   return values.map((n, i) => n - diff * bezier(curve, 1 - i / last));
 }
 
-// --- Reference scales -----------------------------------------------------------------------
-
 type ReferenceEntry = { oklch: Oklch; lab: Lab };
 type ReferenceScales = Record<string, ReferenceEntry[]>;
 
@@ -128,8 +123,6 @@ function allScales(appearance: Appearance): ReferenceScales {
   return { ...grayScales(appearance), ...referenceScales(COLORED_SCALES, appearance, "colored") };
 }
 
-// --- Generation -----------------------------------------------------------------------------
-
 /** Chooses and blends the reference scales closest to `source`, then moves it onto `background`. */
 function scaleFromColor(
   source: Oklch,
@@ -146,7 +139,6 @@ function scaleFromColor(
   }
   candidates.sort((a, b) => a.distance - b.distance);
 
-  // The closest color of every scale, nearest first.
   const seenScales = new Set<string>();
   const closest: typeof candidates = [];
   for (const candidate of candidates) {

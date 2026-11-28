@@ -329,7 +329,6 @@ export function diffConfigs(base: Config, head: Config): TokenDiff {
   };
 }
 
-/** Removing a token, a theme axis, or a theme context breaks consumers that reference it. */
 export function countTokenBreakingChanges(diff: TokenDiff): number {
   const removedContextsCount = Object.values(diff.themes.changedAxes).reduce(
     (sum, axis) => sum + axis.removedContexts.length,

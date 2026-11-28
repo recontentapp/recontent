@@ -277,7 +277,6 @@ function statusBadgeHtml(
     : `<span class="${cls}">${label}</span>`;
 }
 
-/** The source code link (when `gitBaseUrl` is set), then the `@link` URLs. */
 function linkTags(component: ComponentInfo, gitBaseUrl: string | undefined): string[] {
   const links: string[] = [];
   if (gitBaseUrl && isSafeHref(gitBaseUrl)) {

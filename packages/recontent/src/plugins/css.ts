@@ -256,7 +256,6 @@ function selectorCollisionDiagnostics(
   return diagnostics;
 }
 
-/** Validates `prefix`, `themeAttribute`, and multi-axis selector collisions. */
 export function cssOptionDiagnostics(
   options: CssGeneratorOptions,
   themes: readonly ThemeAxis[] = [],

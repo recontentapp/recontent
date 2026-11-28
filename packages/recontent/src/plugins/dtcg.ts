@@ -29,7 +29,6 @@ function isConfig(input: TokenRegistry | GeneratorContext): input is GeneratorCo
   return "registry" in input;
 }
 
-/** Writes the description, deprecation and extensions of scales and `tokens.group(...)` groups onto their DTCG groups. */
 function applyGroupMetadata(
   output: DtcgOutput,
   registry: TokenRegistry,

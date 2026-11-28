@@ -366,7 +366,6 @@ function emitScalarEntry(
     return;
   }
 
-  // Resolves to the override when there is one, else follows the alias chain.
   const value = resolveEntryValue(registry, entry, override) as TokenTypeMap[TokenType];
   setTreeValue(tree, entryPath(entry), spec.scalar(entry.$type, value, report, entry.path));
 }

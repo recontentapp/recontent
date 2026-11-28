@@ -11,12 +11,6 @@ function resolveOutputPath(filePath: string, baseDir: string): string {
   return resolved;
 }
 
-/**
- * Writes `content` to `filePath`, resolved against the explicit `baseDir`
- * (never `process.cwd()` — callers own that decision). Paths outside `baseDir`
- * are rejected, and a file that already holds `content` is left untouched so
- * file watchers (HMR) don't fire for unchanged output.
- */
 async function readIfExists(filePath: string): Promise<string | undefined> {
   try {
     return await readFile(filePath, "utf8");
@@ -26,6 +20,12 @@ async function readIfExists(filePath: string): Promise<string | undefined> {
   }
 }
 
+/**
+ * Writes `content` to `filePath`, resolved against the explicit `baseDir`
+ * (never `process.cwd()` — callers own that decision). Paths outside `baseDir`
+ * are rejected, and a file that already holds `content` is left untouched so
+ * file watchers (HMR) don't fire for unchanged output.
+ */
 export async function writeOutputFile(
   filePath: string,
   content: string,

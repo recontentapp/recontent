@@ -33,7 +33,6 @@ export type McpOptions = {
   | { from: string }
 );
 
-/** Changes whenever one of the files is edited, created or deleted. */
 function stampOf(files: Iterable<string>): string {
   return [...files]
     .map((file) => {
@@ -51,14 +50,11 @@ const unavailable = (error: unknown): InspectExecution => ({
   exitCode: 1,
 });
 
-/** What the snapshot of a project was made from, to tell when it is out of date. */
 type LocalState = {
   project: Project;
-  /** The config and what it imports. */
   configFiles: string[];
   configStamp: string;
   tokens: LoadedSnapshot;
-  /** Once introspected, and the files it depends on. */
   components?: { loaded: LoadedSnapshot; found?: Components; stamp?: string };
   program?: ts.Program;
 };
@@ -172,7 +168,6 @@ function createHeadlessInspector(options: Extract<McpOptions, { from: string }>)
   };
 }
 
-/** Serves the design system to a coding agent over MCP, on stdin and stdout, until stdin closes. */
 export async function runMcp(options: McpOptions): Promise<void> {
   let load: (target: InspectTarget) => Promise<InspectExecution>;
   let hasComponents = true;
