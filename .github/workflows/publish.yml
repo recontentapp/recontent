@@ -46,3 +46,8 @@ jobs:
       # Skips versions already on npm, so a partially failed run can be re-run
       - name: Publish to npm
         run: pnpm publish --recursive --provenance --access public --no-git-checks
+
+      - name: Trigger Cloudflare deploy
+        env:
+          CLOUDFLARE_DEPLOY_HOOK: ${{ secrets.CLOUDFLARE_DEPLOY_HOOK }}
+        run: curl --fail --silent --show-error --request POST "$CLOUDFLARE_DEPLOY_HOOK" > /dev/null
