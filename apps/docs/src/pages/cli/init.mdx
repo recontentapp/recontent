@@ -1,16 +1,37 @@
 ---
 title: "init"
-description: "Scaffold a recontent.config.ts from a preset or from existing DTCG tokens."
+description: "Scaffold a recontent.config.ts and configure coding agents (skills, instructions, and MCP) for your design system."
 ---
 
 # init
 
-`recontent init` creates a `recontent.config.ts` with tokens and themes and no plugins. Add plugins afterwards, then run [`recontent build`](/cli/build).
+`recontent init` scaffolds `recontent.config.ts` from a preset or DTCG tokens, and configures coding agents (Agent Skill, `AGENTS.md` / `CLAUDE.md`, and MCP configs).
 
 ```bash
-recontent init <preset> [--force]
+# Interactive wizard (in a TTY)
+recontent init
+
+# Authoring: scaffold config and configure agents
+recontent init --preset <neutral|material> [--skill] [--mcp <client>] [--agents-md] [--claude-md]
 recontent init --dtcg <path>... [--force]
+
+# Existing project or consumer: configure agents only
+recontent init --skill
+recontent init --from <package|file> --mcp <client> --agents-md
+
+# Non-interactive defaults
+recontent init -y
+recontent init --from <package|file> -y
 ```
+
+## Interactive mode
+
+Running `recontent init` with no action flags in an interactive terminal launches a guided wizard:
+
+1. **Project source** — skipped if `recontent.config.ts` already exists or you pass `--from`. Otherwise choose between authoring a design system (from a preset or DTCG tokens) or consuming a published design system (`--from`).
+2. **Agent transport** — choose **CLI (`recontent inspect`)** (recommended, no client config needed), **MCP server (`recontent mcp`)**, or **Skip**.
+3. **MCP clients** _(when you choose MCP)_ — select from Claude Code (`.mcp.json`), Cursor (`.cursor/mcp.json`), and VS Code (`.vscode/mcp.json`).
+4. **Agent guidance** — generate a project-local Agent Skill in `.agents/skills/recontent/SKILL.md` and/or `.claude/skills/recontent/SKILL.md`, plus managed sections in `AGENTS.md` and `CLAUDE.md`, tailored to the chosen transport.
 
 ## Presets
 
@@ -21,13 +42,29 @@ recontent init --dtcg <path>... [--force]
 
 ## Options
 
-| Option          | Description                                                                                  |
-| --------------- | -------------------------------------------------------------------------------------------- |
-| `[preset]`      | One of the presets above. Required unless you pass `--dtcg`; the two are mutually exclusive. |
-| `--dtcg <path>` | Generate the config file from DTCG tokens instead. Pass multiple paths to merge them.        |
-| `--force`       | Overwrite an existing config file. Without `--force`, `init` exits with code `1`.            |
+| Option                   | Description                                                                                                                                                        |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `--preset <name>`        | Scaffold `recontent.config.ts` from a built-in preset (`neutral`, `material`). Mutually exclusive with `--dtcg` and `--from`.                                      |
+| `--dtcg <path>`          | Generate `recontent.config.ts` from DTCG tokens instead of a preset. Pass multiple paths to merge them.                                                            |
+| `--force`                | Overwrite an existing config file. Without `--force`, `init` exits with code `1`.                                                                                  |
+| `--from <package\|file>` | Configure agent integrations for a published design system snapshot. Mutually exclusive with `--preset`, `--dtcg`, and `-c`.                                       |
+| `--skill [target]`       | Write a project-local Agent Skill to `agents` (`.agents/skills/recontent/SKILL.md`), `claude` (`.claude/skills/recontent/SKILL.md`), or `all` (default: `agents`). |
+| `--mcp <client>`         | Configure MCP server for `claude`, `cursor`, `vscode`, or `all` (repeatable or comma-separated). Switches agent mode to MCP.                                       |
+| `--agents-md`            | Add or update the managed Recontent section (`<!-- recontent:start -->` ... `<!-- recontent:end -->`) in `AGENTS.md`.                                              |
+| `--claude-md`            | Add or update the managed Recontent section in `CLAUDE.md`.                                                                                                        |
+| `--design-md <path>`     | Path to `DESIGN.md` referenced by generated agent files. Auto-detected (`DESIGN.md`, then `docs/DESIGN.md`) when omitted.                                          |
+| `-y, --yes`              | Skip interactive prompts and accept defaults (`--preset neutral` if no config exists and no `--from`, plus `--skill`).                                             |
 
-`init` writes to `-c, --config` when provided, or `recontent.config.ts` in `--cwd`. Unlike other commands, `init` does not run config discovery.
+`init` writes the config to `-c, --config` when provided, or `recontent.config.ts` in `--cwd`. Unlike other commands, `init` does not run config discovery.
+
+## Agent mode (CLI vs. MCP)
+
+Generated skills and instruction blocks never mix CLI and MCP workflows:
+
+- Passing `--mcp <client>` selects **MCP mode**: `init` writes the client JSON configs and tailors `--skill`, `--agents-md`, and `--claude-md` to the `recontent` MCP tools.
+- Omitting `--mcp` selects **CLI mode**: `init` tailors `--skill`, `--agents-md`, and `--claude-md` to `recontent inspect` (appending `--from <pkg>` in consumer mode).
+
+Re-running `recontent init` updates managed blocks in `AGENTS.md` / `CLAUDE.md` in place and merges only the `"recontent"` server entry into existing MCP JSON files without disturbing other servers.
 
 ## Importing DTCG tokens
 

@@ -2,13 +2,18 @@ import fs from "node:fs";
 import os from "node:os";
 import { createRequire } from "node:module";
 import path from "node:path";
-import { Argument, Command, CommanderError, Option } from "commander";
+import { Command, CommanderError, Option } from "commander";
 import type { LogLevel } from "../logger.js";
 import { ConfigLoadError, discoverConfigPath, resolveConfigPath } from "../config/load.js";
+import { isSnapshotFilePath, readSnapshot } from "../snapshot/snapshot.js";
 import { runBuild } from "./commands/build.js";
 import { runDiff } from "./commands/diff/index.js";
 import { DIFF_FORMATS, formatDiffError, type DiffFormat } from "./commands/diff/format.js";
-import { runInit } from "./commands/init/index.js";
+import { runInit, type InitOptions } from "./commands/init/index.js";
+import type { InstructionFile, McpClient, SkillTarget } from "./commands/init/agents/index.js";
+import { parseMcpClients } from "./commands/init/agents/mcp.js";
+import { parseSkillTargets } from "./commands/init/agents/skill.js";
+import { promptInitPlan } from "./commands/init/prompts.js";
 import { runInspect, type InspectTarget } from "./commands/inspect/index.js";
 import { runMcp } from "./commands/mcp/index.js";
 import { FORMATS, renderErrors, type Format } from "./commands/inspect/render.js";
@@ -99,37 +104,163 @@ function resolveGlobalOptions({
   return { cwd, configPath, logLevel };
 }
 
+type InitCliOptions = {
+  preset?: string;
+  dtcg?: string[];
+  force?: boolean;
+  from?: string;
+  skill?: boolean | string;
+  mcp?: string[];
+  agentsMd?: boolean;
+  claudeMd?: boolean;
+  designMd?: string;
+  yes?: boolean;
+};
+
 program
   .command("init")
-  .description("Scaffold a recontent.config.ts from a design-system preset")
-  .addArgument(
-    new Argument("[preset]", "Design system preset to start from (omit with --dtcg)").choices(
-      PRESET_NAMES,
-    ),
+  .description("Scaffold a recontent.config.ts and configure coding agents for your design system")
+  .addOption(
+    new Option("--preset <name>", "Design system preset to start from").choices(PRESET_NAMES),
   )
-  .addHelpText(
-    "after",
-    `\nPresets:\n${PRESETS.map((preset) => `  ${preset.name.padEnd(16)}${preset.description}`).join("\n")}`,
-  )
-  .option("--force", "Overwrite an existing config file")
   .option(
     "--dtcg <path>",
     "Generate the config from DTCG tokens instead of a preset: a *.resolver.json, a *.tokens.json/*.json file, or a directory (repeatable)",
     (file: string, previous: string[] = []) => [...previous, file],
   )
-  .action(async (preset: string | undefined, options: { force?: boolean; dtcg?: string[] }) => {
-    if (preset && options.dtcg) {
-      return program.error("error: the preset argument and --dtcg are mutually exclusive");
+  .option("--force", "Overwrite an existing config file")
+  .option(
+    "--from <package|file>",
+    "Configure agent integrations for a published design system snapshot",
+  )
+  .option(
+    "--skill [target]",
+    "Write a project-local Agent Skill (agents, claude, or all; comma-separated; default: agents)",
+  )
+  .option(
+    "--mcp <client>",
+    "Configure MCP server for a client (claude, cursor, vscode, or all; repeatable or comma-separated)",
+    (client: string, previous: string[] = []) => [...previous, client],
+  )
+  .option("--agents-md", "Add or update the Recontent section in AGENTS.md")
+  .option("--claude-md", "Add or update the Recontent section in CLAUDE.md")
+  .option(
+    "--design-md <path>",
+    "Path to DESIGN.md referenced by generated agent files (auto-detected if omitted)",
+  )
+  .option("-y, --yes", "Skip interactive prompts and accept defaults")
+  .addHelpText(
+    "after",
+    `\nPresets:\n${PRESETS.map((preset) => `  ${preset.name.padEnd(16)}${preset.description}`).join("\n")}`,
+  )
+  .action(async (options: InitCliOptions) => {
+    if (options.preset && options.dtcg) {
+      return program.error("error: --preset and --dtcg are mutually exclusive");
     }
-    const source = options.dtcg ? { dtcg: options.dtcg } : preset ? { preset } : undefined;
-    if (!source) {
-      return program.error("error: missing required argument 'preset' (or pass --dtcg <path>)");
+    if (options.from !== undefined && (options.preset || options.dtcg)) {
+      return program.error("error: --from cannot be used with --preset or --dtcg");
     }
+    if (options.from !== undefined && program.opts<GlobalOptions>().config !== undefined) {
+      return program.error(
+        "error: option '--from <package|file>' cannot be used with option '-c, --config <path>'",
+      );
+    }
+
+    let skillTargets: SkillTarget[] | undefined;
+    if (options.skill !== undefined) {
+      try {
+        skillTargets = parseSkillTargets(options.skill);
+      } catch (error) {
+        return program.error(`error: ${error instanceof Error ? error.message : String(error)}`);
+      }
+    }
+
+    let mcpClients: McpClient[] | undefined;
+    if (options.mcp) {
+      try {
+        mcpClients = parseMcpClients(options.mcp);
+      } catch (error) {
+        return program.error(`error: ${error instanceof Error ? error.message : String(error)}`);
+      }
+    }
+
+    const instructions: InstructionFile[] = [];
+    if (options.agentsMd) instructions.push("AGENTS.md");
+    if (options.claudeMd) instructions.push("CLAUDE.md");
+
+    const hasSourceFlag = Boolean(options.preset || options.dtcg);
+    const hasAgentFlag = Boolean(skillTargets?.length || mcpClients?.length || instructions.length);
+    const hasActionFlag = hasSourceFlag || hasAgentFlag;
+
     const { cwd, configPath, logLevel } = resolveGlobalOptions({
       discover: false,
       fallback: "recontent.config.ts",
     });
-    await runInit({ cwd, configPath, logLevel, force: options.force, source });
+
+    if (!hasActionFlag && !options.yes) {
+      if (!process.stdin.isTTY || !process.stdout.isTTY) {
+        return program.error(
+          "error: interactive init requires a TTY. Pass flags instead (e.g. --preset neutral, --dtcg <path>, --from <pkg>, --skill, --mcp <client>, or -y).",
+        );
+      }
+
+      if (options.from !== undefined && isSnapshotFilePath(options.from)) {
+        readSnapshot(options.from, cwd);
+      }
+
+      const plan = await promptInitPlan({
+        cwd,
+        configPath,
+        configExists: fs.existsSync(configPath),
+        from: options.from,
+        designMdPath: options.designMd,
+        version: packageJson.version,
+      });
+      if (plan === "cancelled") return;
+
+      await runInit({ cwd, configPath, logLevel, force: options.force, ...plan });
+      return;
+    }
+
+    let source: InitOptions["source"] = options.dtcg
+      ? { dtcg: options.dtcg }
+      : options.preset
+        ? { preset: options.preset }
+        : undefined;
+
+    let agents: InitOptions["agents"];
+    if (hasAgentFlag) {
+      agents = {
+        mode: mcpClients && mcpClients.length > 0 ? "mcp" : "cli",
+        skills: skillTargets,
+        mcp: mcpClients,
+        instructions: instructions.length > 0 ? instructions : undefined,
+        designMdPath: options.designMd,
+      };
+    }
+
+    if (options.yes) {
+      if (!source && options.from === undefined && !fs.existsSync(configPath)) {
+        source = { preset: "neutral" };
+      }
+      if (!agents) {
+        agents = {
+          mode: "cli",
+          skills: ["agents"],
+          designMdPath: options.designMd,
+        };
+      }
+    }
+
+    await runInit({
+      cwd,
+      configPath,
+      logLevel,
+      force: options.force,
+      source,
+      from: options.from,
+      agents,
+    });
   });
 
 const NO_CACHE_HELP =

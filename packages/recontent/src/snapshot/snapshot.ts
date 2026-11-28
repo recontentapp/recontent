@@ -61,7 +61,7 @@ export function createSnapshot(
 }
 
 /** A path rather than a package name: relative, absolute, tilde-home, or `.json`. */
-function isFilePath(from: string): boolean {
+export function isSnapshotFilePath(from: string): boolean {
   return (
     from.startsWith(".") ||
     from.startsWith("/") ||
@@ -104,7 +104,7 @@ export function readSnapshot(
 ): { snapshot: Snapshot; source: string; file: string } {
   let file: string;
   let source: string;
-  if (isFilePath(from)) {
+  if (isSnapshotFilePath(from)) {
     const expanded =
       from === "~"
         ? os.homedir()

@@ -1,0 +1,64 @@
+{
+  "$schema": "https://www.designtokens.org/schemas/2025.10/format.json",
+  "color": {
+    "$type": "color",
+    "white": {
+      "$value": { "colorSpace": "srgb", "components": [1, 1, 1], "alpha": 1, "hex": "#ffffff" }
+    },
+    "black": {
+      "$value": { "colorSpace": "srgb", "components": [0, 0, 0], "hex": "#000000" }
+    },
+    "scrim": {
+      "$description": "Translucent overlay.",
+      "$value": {
+        "colorSpace": "srgb",
+        "components": [0.047058823529411764, 0.047058823529411764, 0.050980392156862744],
+        "alpha": 0.2,
+        "hex": "#0c0c0d"
+      }
+    },
+    "brand": {
+      "$root": {
+        "$value": { "colorSpace": "hsl", "components": [217, 91, 60], "alpha": 1 }
+      },
+      "dark": {
+        "$value": { "colorSpace": "oklch", "components": [0.45, 0.18, 262] }
+      }
+    },
+    "legacy": { "$value": "#ff8800" },
+    "broken": {
+      "$value": { "colorSpace": "hsl", "components": [217, 191, 60] }
+    }
+  },
+  "space": {
+    "$type": "dimension",
+    "100": { "$value": { "value": 4, "unit": "px" } },
+    "200": { "$value": { "value": 0.5, "unit": "rem" } },
+    "tracking": { "$value": { "value": 0.02, "unit": "em" } }
+  },
+  "font": {
+    "family": {
+      "$type": "fontFamily",
+      "sans": { "$value": ["Inter", "system-ui", "sans-serif"] },
+      "mono": { "$value": "ui-monospace, monospace" }
+    },
+    "weight": {
+      "$type": "fontWeight",
+      "regular": { "$value": 400 },
+      "strong": { "$value": "semibold" }
+    }
+  },
+  "motion": {
+    "fast": { "$type": "duration", "$value": { "value": 150, "unit": "ms" } },
+    "ease": { "$type": "cubicBezier", "$value": [0.4, 0, 0.2, 1] }
+  },
+  "ratio": { "$type": "number", "$value": 1.5 },
+  "inferred": {
+    "radius": { "$value": { "value": 8, "unit": "px" } }
+  },
+  "misc": {
+    "label": { "$type": "string", "$value": "hello" },
+    "fluid": { "$type": "dimension", "$value": { "value": 5, "unit": "vw" } },
+    "custom": { "$type": "custom-thing", "$value": { "x": 1 } }
+  }
+}

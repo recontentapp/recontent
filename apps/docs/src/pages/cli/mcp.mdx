@@ -31,14 +31,24 @@ Supports the [global options](/cli#global-options) `-c`, `--cwd`, and `--log-lev
 
 ## Configure a client
 
-Add the server to the `mcpServers` of your MCP host:
+Run [`recontent init --mcp <client>`](/cli/init) to write the project-local MCP configuration for Claude Code (`.mcp.json`), Cursor (`.cursor/mcp.json`), or VS Code (`.vscode/mcp.json`):
+
+```bash
+recontent init --mcp claude          # writes .mcp.json
+recontent init --mcp cursor,vscode   # writes .cursor/mcp.json and .vscode/mcp.json
+recontent init --from @acme/ds --mcp claude
+```
+
+Recontent preserves existing servers in those files and adds or updates only the `"recontent"` entry.
+
+To configure an MCP host manually, add the server to its `mcpServers` (or `servers` in VS Code):
 
 ```json
 {
   "mcpServers": {
-    "design-system": {
+    "recontent": {
       "command": "npx",
-      "args": ["recontent", "mcp"]
+      "args": ["-y", "recontent", "mcp"]
     }
   }
 }
@@ -49,9 +59,9 @@ In an app that consumes a published design system, pass `--from`:
 ```json
 {
   "mcpServers": {
-    "design-system": {
+    "recontent": {
       "command": "npx",
-      "args": ["recontent", "mcp", "--from", "@acme/ds"]
+      "args": ["-y", "recontent", "mcp", "--from", "@acme/ds"]
     }
   }
 }

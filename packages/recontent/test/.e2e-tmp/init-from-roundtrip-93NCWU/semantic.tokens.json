@@ -1,0 +1,73 @@
+{
+  "$schema": "https://www.designtokens.org/schemas/2025.10/format.json",
+  "surface": {
+    "$type": "color",
+    "page": { "$value": "{color.white}" },
+    "card": { "$description": "Card background.", "$value": "{surface.page}" },
+    "accent": { "$deprecated": "Use color.brand.", "$value": "{color.brand}" },
+    "ghost": { "$value": "{color.missing}" }
+  },
+  "text": {
+    "body": {
+      "$type": "typography",
+      "$value": {
+        "fontFamily": "{font.family.sans}",
+        "fontSize": "{space.200}",
+        "fontWeight": "{font.weight.regular}",
+        "letterSpacing": "{space.tracking}",
+        "lineHeight": "{ratio}",
+        "WebkitFontSmoothing": "antialiased"
+      }
+    },
+    "label": { "$type": "typography", "$value": "{text.body}" },
+    "code": {
+      "$type": "typography",
+      "$value": {
+        "fontFamily": "{font.family.mono}",
+        "fontSize": { "value": 14, "unit": "px" },
+        "fontWeight": 500,
+        "letterSpacing": 0,
+        "lineHeight": 1.4
+      }
+    }
+  },
+  "elevation": {
+    "card": {
+      "$type": "shadow",
+      "$value": [
+        {
+          "color": "{color.scrim}",
+          "offsetX": { "value": 0, "unit": "px" },
+          "offsetY": "{space.100}",
+          "blur": { "value": 8, "unit": "px" },
+          "spread": { "value": 0, "unit": "px" }
+        },
+        {
+          "color": { "colorSpace": "srgb", "components": [0, 0, 0], "alpha": 0.1 },
+          "offsetX": { "value": 0, "unit": "px" },
+          "offsetY": { "value": 1, "unit": "px" },
+          "blur": { "value": 2, "unit": "px" },
+          "spread": { "value": 0, "unit": "px" },
+          "inset": true
+        }
+      ]
+    },
+    "raised": { "$type": "shadow", "$value": "{elevation.card}" }
+  },
+  "transition": {
+    "hover": {
+      "$type": "transition",
+      "$value": {
+        "duration": "{motion.fast}",
+        "delay": "{motion.fast}",
+        "timingFunction": "{motion.ease}"
+      }
+    }
+  },
+  "border": {
+    "default": {
+      "$type": "border",
+      "$value": { "color": "{color.black}", "width": "{space.100}", "style": "dashed" }
+    }
+  }
+}

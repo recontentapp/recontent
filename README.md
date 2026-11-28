@@ -20,8 +20,11 @@ Built-in plugins & an API to extend them: CSS variables, Tailwind v4, StyleX, va
 ```bash
 npm install --save-dev recontent
 
+# Interactive setup (config + coding agents)
+npx recontent init
+
 # Scaffolds `recontent.config.ts` from a preset
-npx recontent init neutral
+npx recontent init --preset neutral
 
 # Starts from DTCG tokens
 npx recontent init --dtcg <path>
