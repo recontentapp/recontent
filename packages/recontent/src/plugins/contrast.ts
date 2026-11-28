@@ -53,7 +53,6 @@ function contrastRatio(fg: ResolvedColor, bg: ResolvedColor): number {
   return (Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05);
 }
 
-/** Axes that override `entry` or any token reachable through its alias chains. */
 function relevantAxesForColor(
   entry: TokenEntry,
   registry: TokenRegistry,

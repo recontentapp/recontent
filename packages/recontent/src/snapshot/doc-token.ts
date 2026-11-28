@@ -189,9 +189,6 @@ function cachedCombinations(
   return combos;
 }
 
-/**
- * Resolves a `DocToken`'s displayed value for `selection` across single-axis or multi-axis snapshots.
- */
 export function resolveDocTokenValue(
   token: DocToken,
   axes: readonly SnapshotThemeAxis[],

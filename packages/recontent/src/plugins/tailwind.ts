@@ -58,7 +58,6 @@ type TailwindThemeOptions = {
   insetShadow?: TokenGroup<"shadow">;
   dropShadow?: TokenGroup<"shadow">;
   textShadow?: TokenGroup<"shadow">;
-  /** `duration-*`. */
   duration?: TokenGroup<"duration">;
   /** Single tokens for Tailwind's `--default-*` theme keys. */
   defaults?: {

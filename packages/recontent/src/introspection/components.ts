@@ -85,12 +85,6 @@ function isReactClass(checker: ts.TypeChecker, type: ts.Type): boolean {
   );
 }
 
-/**
- * The signatures through which `type` is rendered: call signatures returning
- * something React can render, or construct signatures of classes with `render`.
- * Works the same for plain functions, `FC`, `memo`, `forwardRef`, `lazy` and
- * classes, because the checker has already resolved all of them.
- */
 const NON_PROPS_PRIMITIVE_FLAGS =
   ts.TypeFlags.StringLike |
   ts.TypeFlags.NumberLike |
@@ -121,6 +115,12 @@ function isObjectRenderPart(checker: ts.TypeChecker, part: ts.Type): boolean {
   return false;
 }
 
+/**
+ * The signatures through which `type` is rendered: call signatures returning
+ * something React can render, or construct signatures of classes with `render`.
+ * Works the same for plain functions, `FC`, `memo`, `forwardRef`, `lazy` and
+ * classes, because the checker has already resolved all of them.
+ */
 function componentSignatures(analysis: Analysis, type: ts.Type): Match[] {
   const { checker, reactNode } = analysis;
   const matches: Match[] = [];
@@ -186,7 +186,6 @@ export function findComponents(
       return;
     }
     const symbol = resolveAlias(checker, exported);
-    // Type-only exports have no value to render.
     if (!(symbol.flags & ts.SymbolFlags.Value)) return;
 
     if (!nested) valueExports += 1;

@@ -33,7 +33,6 @@ export async function runBuild(options: BuildOptions): Promise<void> {
   await buildOnce(options, { exitOnError: true });
 }
 
-/** What a build leaves behind for the next one in watch mode. */
 type BuildState = {
   program?: ts.Program;
   watch?: string[];
@@ -354,7 +353,6 @@ async function writeFiles(
   logger.info(`Wrote ${plural(written, "file")}${skipped > 0 ? ` (${skipped} skipped)` : ""}`);
 }
 
-/** Logs each stale or missing file and returns how many there were. */
 async function checkFiles(
   files: readonly EmittedFile[],
   root: string,

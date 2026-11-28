@@ -14,26 +14,47 @@ Recontent solves this in two layers:
 
 ## Configure agents
 
-Configure [`introspection`](/guides/introspecting-components) so Recontent reads your components, and add `designMD()`:
+Run [`recontent init`](/cli/init) to configure coding agents interactively, or pass flags directly:
+
+```bash
+# Interactive wizard
+recontent init
+
+# CLI mode (recommended): writes .agents/skills/recontent/SKILL.md and AGENTS.md
+recontent init --skill --agents-md
+
+# MCP mode: configures Cursor and tailors the skill to MCP tools
+recontent init --mcp cursor --skill
+
+# Consuming a published design system package
+recontent init --from @acme/ds --skill
+```
+
+If you also want an up-front design system summary, configure [`introspection`](/guides/introspecting-components) and add `designMD()`:
 
 ```ts twoslash
 // [!include ~/snippets/design-md.config.ts]
 ```
 
-Run `recontent build` to emit `DESIGN.md` in Google's [DESIGN.md format](https://github.com/google-labs-code/design.md).
+Run `recontent build` to emit `DESIGN.md` in Google's [DESIGN.md format](https://github.com/google-labs-code/design.md). `recontent init` auto-detects `DESIGN.md` and `docs/DESIGN.md` (or pass `--design-md <path>`).
 
-Then add these instructions to your `AGENTS.md` or `CLAUDE.md` (adjust the path to match `designMD()`):
+For reference, here is the managed block `recontent init --agents-md` writes for CLI mode:
 
-```md
+````md
 ## Design system
 
-- Read `docs/DESIGN.md` before writing UI.
-- Before using a component, run `recontent inspect components <Name>` for its exact props, and read its usage notes.
-- Use design tokens from `recontent inspect tokens`, never raw colors, sizes or font stacks.
-- Search before hardcoding a value: `recontent inspect search "#ef4444"` or `search danger` finds the token or component that already exists.
-- If a command fails with "Did you mean", use the suggestion.
-- Do not edit generated files. Run `recontent build` instead.
+Use Recontent as the source of truth for this project's design system. Do not guess component props, token names, or raw CSS values. Read `docs/DESIGN.md` first.
+
+```bash
+recontent inspect                    # overview: themes, token layers, component names
+recontent inspect components <Name>  # exact import, props, defaults, and usage notes
+recontent inspect tokens <group>     # token values, CSS variables, and theme overrides
+recontent inspect types <Name>       # project TypeScript types referenced by props
+recontent inspect search <query>     # search by keyword, CSS variable, or raw value
 ```
+
+Do not edit generated files directly; run `recontent build` instead.
+````
 
 ## The loop
 

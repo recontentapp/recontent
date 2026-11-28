@@ -488,7 +488,6 @@ type TypographyInput = {
 
 const REM_PX = 16;
 
-/** The unitless ratio a dimension line height stands for, relative to the font size. */
 function lineHeightRatio(
   lineHeight: DimensionValue,
   fontSize: DimensionValue,

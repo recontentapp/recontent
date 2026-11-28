@@ -27,7 +27,6 @@ export type DtcgImportResult = {
   warnings: string[];
 };
 
-/** Generates the text of a `recontent.config.ts` from DTCG token files or a DTCG resolver. */
 export function generateConfigFromDtcg({ sources, cwd }: DtcgImportOptions): DtcgImportResult {
   const warnings: string[] = [];
   const reported = new Set<string>();

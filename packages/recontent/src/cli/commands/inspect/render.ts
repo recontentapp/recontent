@@ -51,7 +51,6 @@ function groupOf(token: DocToken): string {
   return token.path.split(".").slice(0, -1).join(".") || token.layer;
 }
 
-/** Where the CLI output points next. */
 type Hint = {
   target: "overview" | "tokens" | "components" | "types" | "search";
   query?: string[];
@@ -289,7 +288,6 @@ function shorten(text: string, max = 100): string {
   return `${head.replace(/[,;:\s]+$/, "")}…`;
 }
 
-/** `## Types`, then each type under its own heading. */
 function renderTypesSection(types: TypeInfo[]): string {
   return ["## Types", ...types.map((type) => renderTypeMarkdown(type, 3))].join("\n\n");
 }
@@ -383,7 +381,6 @@ export function renderComponents(
   options: {
     format: Format;
     summary: boolean;
-    /** Every project type, for what the components reference to be found. */
     types: TypeInfo[];
     /** See `sharedDeclarations`, over all components, not only the selected ones. */
     shared?: Set<string>;
@@ -514,7 +511,6 @@ export function renderTypes(
   return renderTypesSection(types);
 }
 
-/** What `inspect search` found, and why each component and type did. */
 export function renderSearch(
   result: SearchResult,
   options: {

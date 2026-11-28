@@ -109,6 +109,15 @@ const DISCOVERABLE_CONFIG_NAMES = [
   "recontent.config.mjs",
 ];
 
+/** Looks for a `recontent.config.{ts,mts,js,mjs}` file in `directory` only (no upward walk). */
+export function findConfigInDirectory(directory: string): string | undefined {
+  for (const name of DISCOVERABLE_CONFIG_NAMES) {
+    const candidate = path.join(directory, name);
+    if (fs.statSync(candidate, { throwIfNoEntry: false })?.isFile()) return candidate;
+  }
+  return undefined;
+}
+
 /**
  * Searches upward from `cwd` for a `recontent.config.{ts,mts,js,mjs}` file,
  * so `recontent` can be invoked from a subdirectory of a project (or the
@@ -124,10 +133,8 @@ export function discoverConfigPath(cwd: string): string {
   while (true) {
     searched.push(current);
 
-    for (const name of DISCOVERABLE_CONFIG_NAMES) {
-      const candidate = path.join(current, name);
-      if (fs.statSync(candidate, { throwIfNoEntry: false })?.isFile()) return candidate;
-    }
+    const found = findConfigInDirectory(current);
+    if (found) return found;
 
     if (fs.existsSync(path.join(current, "package.json"))) break;
 

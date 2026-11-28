@@ -33,7 +33,6 @@ export function followAliases(
   return { reference: currentReference, target };
 }
 
-/** The expression for a `ref` token, as written in the generated config. */
 export function refExpression(token: FlatToken): string {
   return propertyAccess("ref", token.path);
 }

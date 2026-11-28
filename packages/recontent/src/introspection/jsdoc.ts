@@ -78,7 +78,6 @@ function dedent(text: string): string {
   return lines.map((line) => line.slice(indent)).join("\n");
 }
 
-/** A `./relative` path, and only that. */
 function relativePath(text: string): string | undefined {
   return /^\s*(\.\.?\/\S*)\s*$/.exec(text)?.[1];
 }

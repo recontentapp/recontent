@@ -207,7 +207,6 @@ function objectFields(
 export function convertValue(type: string, value: unknown, options: ConvertOptions): Converted {
   if (containsJsonPointer(value)) return skip("uses a $ref JSON pointer, which is not supported");
 
-  /** A member that is either an alias or a literal of `memberType`. */
   const member = (memberType: string, memberValue: unknown): Converted => {
     const reference = aliasTarget(memberValue);
     if (reference !== undefined) return options.resolveMember(reference, memberType);
@@ -217,7 +216,6 @@ export function convertValue(type: string, value: unknown, options: ConvertOptio
     return PRIMITIVES[memberType]!(memberValue);
   };
 
-  /** Converts every `[key, memberType]` of `fields`, in order, into `key: expr` pairs. */
   const members = (
     fields: Record<string, unknown>,
     spec: Array<[string, string]>,

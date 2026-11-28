@@ -9,7 +9,6 @@ import { buildToken, type DocToken } from "./doc-token.js";
 /** Shared by the snapshot and every `recontent inspect --format json` output. */
 export const SCHEMA_VERSION = "2";
 
-/** What introspecting a project's components yields. */
 export type Introspected = { components: ComponentInfo[]; types: TypeInfo[] };
 
 export type SnapshotThemeAxis = {
@@ -61,7 +60,7 @@ export function createSnapshot(
 }
 
 /** A path rather than a package name: relative, absolute, tilde-home, or `.json`. */
-function isFilePath(from: string): boolean {
+export function isSnapshotFilePath(from: string): boolean {
   return (
     from.startsWith(".") ||
     from.startsWith("/") ||
@@ -104,7 +103,7 @@ export function readSnapshot(
 ): { snapshot: Snapshot; source: string; file: string } {
   let file: string;
   let source: string;
-  if (isFilePath(from)) {
+  if (isSnapshotFilePath(from)) {
     const expanded =
       from === "~"
         ? os.homedir()

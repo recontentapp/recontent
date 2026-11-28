@@ -158,7 +158,6 @@ function diffProp(base: PropInfo, head: PropInfo): Change[] {
   return changes;
 }
 
-/** Shared by component props and type members. */
 function diffProps(base: PropInfo[], head: PropInfo[]): Change[] {
   const baseByName = new Map(base.map((prop) => [prop.name, prop]));
   const headByName = new Map(head.map((prop) => [prop.name, prop]));
@@ -314,7 +313,6 @@ export function diffComponents(base: Introspected, head: Introspected): Componen
   };
 }
 
-/** Removing a component or type, and each breaking change to one that stays. */
 export function countEntityBreakingChanges(diff: EntitiesDiff<unknown>): number {
   return (
     diff.removed.length +

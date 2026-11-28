@@ -88,11 +88,6 @@ async function diffAgainstRevision(options: DiffOptions): Promise<void> {
   let components: ComponentsDiff | undefined;
   let componentsNote: string | undefined;
   try {
-    // Reproduce the whole tree at `rev` (not just the config file) so a
-    // config that imports a sibling file, or a shared preset, can still be
-    // loaded — `git archive` works on the shallow clones `actions/checkout`
-    // produces by default, as long as the rev itself is present, and leaves
-    // no lock files or worktree to clean up.
     archiveRevision(gitRoot, rev, tmpDir);
     const tmpConfigPath = path.join(tmpDir, relPath);
     if (!fs.existsSync(tmpConfigPath)) {

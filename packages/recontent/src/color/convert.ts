@@ -22,7 +22,6 @@ function multiplyMatrix(A: readonly Vec3[], b: Vec3): Vec3 {
   ];
 }
 
-// --- sRGB <-> linear-light sRGB ---
 function linSrgbChannel(val: number): number {
   const sign = val < 0 ? -1 : 1;
   const abs = Math.abs(val);
@@ -51,14 +50,12 @@ const XYZ_TO_LIN_SRGB: Vec3[] = [
   [0.05563007969699366, -0.20397695888897652, 1.0569715142428786],
 ];
 
-// --- Display P3 ---
 const LIN_P3_TO_XYZ: Vec3[] = [
   [0.4865709486482162, 0.26566769316909306, 0.19821728523436247],
   [0.2289745640697488, 0.6917385218365064, 0.079286914093745],
   [0.0, 0.04511338185890264, 1.043944368900976],
 ];
 
-// --- a98-rgb ---
 function linA98Channel(val: number): number {
   const sign = val < 0 ? -1 : 1;
   return sign * Math.pow(Math.abs(val), 563 / 256);
@@ -68,7 +65,6 @@ const LIN_A98RGB_TO_XYZ: Vec3[] = [
   [0.29734497525053605, 0.6273635662554661, 0.07529145849399788],
   [0.02703136138641234, 0.07068885253582723, 0.9913375368376388],
 ];
-// --- ProPhoto RGB (D50) ---
 const PROPHOTO_ET2 = 16 / 512;
 function linProPhotoChannel(val: number): number {
   const sign = val < 0 ? -1 : 1;
@@ -80,7 +76,6 @@ const LIN_PROPHOTO_TO_XYZ_D50: Vec3[] = [
   [0.2880711282292934, 0.7118432178101014, 0.00008565396060525902],
   [0.0, 0.0, 0.8251046025104601],
 ];
-// --- Rec2020 ---
 const REC2020_ALPHA = 1.09929682680944;
 const REC2020_BETA = 0.018053968510807;
 function linRec2020Channel(val: number): number {
@@ -102,7 +97,6 @@ const D50_TO_D65: Vec3[] = [
   [0.0123140016883199, -0.0205019519333514, 1.3300365726973367],
 ];
 
-// --- Lab / LCH (D50) ---
 const LAB_WHITE: Vec3 = [0.3457 / 0.3585, 1.0, (1.0 - 0.3457 - 0.3585) / 0.3585];
 const LAB_EPSILON = 216 / 24389;
 const LAB_KAPPA = 24389 / 27;
@@ -126,7 +120,6 @@ function lchToLab(lch: Vec3): Vec3 {
   ];
 }
 
-// --- OKLab / OKLCH (via D65 XYZ) ---
 const LMS_TO_XYZ: Vec3[] = [
   [1.2268798758459243, -0.5578149944602171, 0.2813910456659647],
   [-0.0405757452148008, 1.112286803280317, -0.0717110580655164],
@@ -164,7 +157,6 @@ function oklchToOklab(oklch: Vec3): Vec3 {
   ];
 }
 
-// --- HSL / HWB (sRGB gamut) ---
 function hslToSrgb(hsl: Vec3): Vec3 {
   const h = ((hsl[0] % 360) + 360) % 360;
   const s = hsl[1] / 100;

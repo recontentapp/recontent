@@ -231,10 +231,6 @@ function loadResolver(
   return { base, modifiers };
 }
 
-/**
- * Reads DTCG sources: a single resolver file, or token files / directories
- * that are merged in the order given.
- */
 export function loadSources(sources: string[], cwd: string, warn: Warn): LoadedSources {
   const resolved = sources.map((source) => {
     const expanded =

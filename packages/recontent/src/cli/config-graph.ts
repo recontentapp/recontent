@@ -62,7 +62,6 @@ function collectFromNode(node: ts.Node, specifiers: Set<string>): void {
   ts.forEachChild(node, (child) => collectFromNode(child, specifiers));
 }
 
-/** Collects every static/dynamic import & require specifier in a source file. */
 function collectAllSpecifiers(source: string, fileName: string): string[] {
   const sourceFile = ts.createSourceFile(fileName, source, ts.ScriptTarget.ESNext, true);
   const specifiers = new Set<string>();
@@ -89,7 +88,6 @@ function resolveRelativeFile(fromFile: string, specifier: string): string | unde
       return candidate;
     }
   }
-  // Directory import — try index.*
   for (const e of RESOLVABLE_EXTENSIONS) {
     const indexCandidate = path.join(base, `index${e}`);
     if (fs.existsSync(indexCandidate) && fs.statSync(indexCandidate).isFile()) {

@@ -31,7 +31,6 @@ export function groupByCategory(
     .map(([category, inGroup]) => ({ ...(category ? { category } : {}), components: inGroup }));
 }
 
-/** "53 props" */
 export function propCount({ props }: { props: unknown[] }): string {
   return `${props.length} ${props.length === 1 ? "prop" : "props"}`;
 }
@@ -116,7 +115,6 @@ function documentationLines(
   return lines;
 }
 
-/** `Source: src/button.tsx:12` */
 function sourceLine(component: ComponentInfo | TypeInfo): string {
   return `Source: ${code(`${component.sourceFilePath}:${component.line}`)}`;
 }
@@ -158,7 +156,6 @@ function renderPropsTable(props: PropInfo[], brevity?: Brevity): string[] {
   return lines;
 }
 
-/** Heading, description and deprecation, source, usage and examples: what both components and types start with. */
 function headerLines(item: ComponentInfo | TypeInfo, headingLevel: number): string[] {
   const lines = [`${"#".repeat(headingLevel)} ${escapeText(displayName(item))}`, ""];
   if (item.description) lines.push(escapeText(item.description), "");
@@ -190,7 +187,6 @@ export type ComponentView = {
   props?: PropInfo[];
   collapsed?: CollapsedProps[];
   brevity?: Brevity;
-  /** Leaves out the "Also accepts" line. */
   hideInherits?: boolean;
 };
 
@@ -212,7 +208,6 @@ export function renderComponentMarkdown(
   return lines.join("\n").trimEnd();
 }
 
-/** Members as a table, literal unions as their values, anything else as its declaration. */
 export function renderTypeMarkdown(type: TypeInfo, headingLevel: number): string {
   const lines = headerLines(type, headingLevel);
   if (type.members?.length) {

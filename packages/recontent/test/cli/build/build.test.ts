@@ -23,7 +23,7 @@ describe("recontent build", () => {
 
   test("warns, and still exits 0, when the config has no plugins", () => {
     const dir = makeScratchDir("build-no-plugins");
-    expect(runCli(["--cwd", dir, "init", "neutral"]).status).toBe(0);
+    expect(runCli(["--cwd", dir, "init", "--preset", "neutral"]).status).toBe(0);
 
     const result = runCli(["--cwd", dir, "build"]);
 

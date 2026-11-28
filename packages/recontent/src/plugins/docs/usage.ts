@@ -44,7 +44,6 @@ const markdown = new Marked({
   },
 });
 
-/** Renders a component's `@usage` markdown (GFM) as HTML. */
 export function renderUsage(text: string): string {
   return markdown.parse(text, { async: false });
 }

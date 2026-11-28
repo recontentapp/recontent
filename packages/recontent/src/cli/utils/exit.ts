@@ -12,7 +12,6 @@ export function exitWithError(message: string, exitCode = 1): void {
   process.exitCode = exitCode;
 }
 
-/** "2 errors, 1 warning" — the closing line of a run that reported diagnostics. */
 export function summarizeDiagnostics(errors: number, warnings: number): string {
   return [plural(errors, "error"), plural(warnings, "warning")].join(", ");
 }

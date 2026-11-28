@@ -189,7 +189,6 @@ function frontMatter(ctx: PluginContext, items: Item[], options: DesignMdPluginO
   return lines.join("\n");
 }
 
-/** ` --from @acme/ds` when the document is for the package's consumers, else nothing. */
 function fromArgument(options: DesignMdPluginOptions): string {
   const name = options.packageName?.trim();
   if (!name) return "";
@@ -241,7 +240,6 @@ function sectionLines(ctx: PluginContext, section: Section, items: Item[]): stri
   return lines;
 }
 
-/** The tokens a theme overrides, with the value each theme gives them. */
 function themeTable(items: Item[], axes: readonly ThemeAxis[]): string | undefined {
   if (axes.length === 0) return undefined;
 

@@ -9,9 +9,9 @@ export function FinalCta() {
         <div className="lp-final-copy">
           <h2 className="lp-h2 lp-h2-big">Start in minutes, not weeks.</h2>
           <p className="lp-lede">
-            Start from a preset with <code>recontent init neutral</code> or{" "}
-            <code>recontent init material</code>—or import existing Figma and Tokens Studio files
-            with <code>recontent init --dtcg tokens/</code>.
+            Start from a preset with <code>recontent init --preset neutral</code> or{" "}
+            <code>recontent init --preset material</code>—or import existing Figma and Tokens Studio
+            files with <code>recontent init --dtcg tokens/</code>.
           </p>
           <div className="lp-ctas">
             <CopyAgentPrompt />

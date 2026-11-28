@@ -64,7 +64,6 @@ function axisSource(axis: ThemeAxisEmit): string {
   return `    ${JSON.stringify(axis.name)}: defineThemeAxis({\n${fields.join("\n")}\n    }),`;
 }
 
-/** Renders the `recontent.config.ts` text for the converted tokens and themes. */
 export function emitConfig({ files, ref, system, axes }: EmitInput): string {
   const refSource = formatTree(buildTree(ref, true));
   const systemSource = formatTree(buildTree(system, true));

@@ -108,10 +108,6 @@ function inferFromValue(value: unknown): string | undefined {
   return undefined;
 }
 
-/**
- * Fills in `type` for tokens that have none: from the value's shape, or, for
- * an alias, from the token it points to.
- */
 export function inferMissingTypes(tokens: TokenMap, warn: Warn): void {
   function typeOf(token: FlatToken, seen: Set<FlatToken>): string | undefined {
     if (token.type !== undefined) return token.type;

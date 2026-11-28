@@ -59,7 +59,6 @@ export type RunPluginsOptions = {
   skipBuildEnd?: boolean;
 };
 
-/** A plugin's diagnostic, tagged with the plugin that reported it. */
 type RunDiagnostic = PluginDiagnostic & { plugin: string };
 
 export type RunPluginsResult = {

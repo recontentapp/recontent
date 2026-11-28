@@ -660,7 +660,6 @@ export function describeComponent(
   const located = declaration ?? declarationOf(symbol);
   if (!located) throw new Error(`Cannot find the declaration of ${candidate.name}.`);
 
-  // Props are the first parameter of whatever signature renders the component.
   const propsTypes = new Set<ts.Type>();
   for (const { signature } of matches) {
     const parameter = signature.parameters[0];
