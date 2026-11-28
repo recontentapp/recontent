@@ -185,3 +185,6 @@ dist
 
 # Storybook
 storybook-static
+
+# E2E test scratch directories
+.e2e-tmp/
