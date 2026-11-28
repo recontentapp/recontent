@@ -53,6 +53,6 @@ recontent inspect tokens system.color --from @acme/design-system --format json
 
 The output matches inspecting the design system's config file, except the overview shows the package name (`@acme/design-system@1.4.0`) instead of a config path. Recontent reads everything from the snapshot without executing code or building a TypeScript program.
 
-Give your agents the same instructions from [Coding with agents](/guides/agents), adding `--from` to each command.
+Run `recontent init --from @acme/design-system --skill` (or add `--mcp <client>` / `--agents-md`) to configure coding agents for the published snapshot automatically. See [Coding with agents](/guides/agents) and [`recontent init`](/cli/init).
 
 Snapshots include components only when the design system configures `introspection`. See the [reference](/cli/inspect#headless-design-system-consumers) for how `--from` resolves a package or file.

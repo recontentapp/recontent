@@ -1,7 +1,12 @@
 import fs from "node:fs";
 import path from "node:path";
 import { writeOutputFile } from "../../../utils/fs.js";
-import type { AgentFileResult, AgentMode } from "./index.js";
+import {
+  formatShellArg,
+  type AgentFileResult,
+  type AgentMode,
+  type PlannedAgentWrite,
+} from "./index.js";
 
 export type SkillTarget = "agents" | "claude";
 
@@ -26,63 +31,72 @@ export const SKILL_TARGETS: Record<SkillTarget, SkillTargetSpec> = {
 
 export const SKILL_TARGET_NAMES: readonly SkillTarget[] = ["agents", "claude"];
 
-export function parseSkillTargets(value: boolean | string): SkillTarget[] {
-  if (value === true) return ["agents"];
-  if (value === false) return [];
-
+export function parseSkillTargets(
+  value: boolean | string | ReadonlyArray<boolean | string>,
+): SkillTarget[] {
+  const entries: ReadonlyArray<boolean | string> = Array.isArray(value) ? value : [value];
   const result: SkillTarget[] = [];
   const seen = new Set<SkillTarget>();
 
-  const rawItems = value
-    .split(",")
-    .map((item) => item.trim().toLowerCase())
-    .filter((item) => item.length > 0);
-
-  if (rawItems.length === 0) {
-    throw new Error(
-      `Invalid --skill value. Expected one or more of: ${SKILL_TARGET_NAMES.join(", ")}, all.`,
-    );
-  }
-
-  for (const item of rawItems) {
-    if (item === "all") {
-      for (const target of SKILL_TARGET_NAMES) {
-        if (!seen.has(target)) {
-          seen.add(target);
-          result.push(target);
-        }
-      }
-      continue;
-    }
-
-    if (!Object.hasOwn(SKILL_TARGETS, item)) {
-      throw new Error(
-        `Unknown skill target "${item}". Available targets: ${SKILL_TARGET_NAMES.join(", ")}, all.`,
-      );
-    }
-
-    const target = item as SkillTarget;
+  const addTarget = (target: SkillTarget) => {
     if (!seen.has(target)) {
       seen.add(target);
       result.push(target);
+    }
+  };
+
+  for (const entry of entries) {
+    if (entry === true) {
+      addTarget("agents");
+      continue;
+    }
+    if (entry === false) continue;
+
+    const rawItems = entry
+      .split(",")
+      .map((item) => item.trim().toLowerCase())
+      .filter((item) => item.length > 0);
+
+    if (rawItems.length === 0) {
+      throw new Error(
+        `Invalid --skill value. Expected one or more of: ${SKILL_TARGET_NAMES.join(", ")}, all.`,
+      );
+    }
+
+    for (const item of rawItems) {
+      if (item === "all") {
+        for (const target of SKILL_TARGET_NAMES) addTarget(target);
+        continue;
+      }
+
+      if (!Object.hasOwn(SKILL_TARGETS, item)) {
+        throw new Error(
+          `Unknown skill target "${item}". Available targets: ${SKILL_TARGET_NAMES.join(", ")}, all.`,
+        );
+      }
+
+      addTarget(item as SkillTarget);
     }
   }
 
   return result;
 }
 
-function formatShellArg(value: string): string {
-  return /\s|["'$`\\]/.test(value) ? JSON.stringify(value) : value;
-}
-
 export function renderProjectSkill(options: {
   mode: AgentMode;
   from?: string;
+  config?: string;
   designMdPath?: string;
 }): string {
-  const { mode, from, designMdPath } = options;
+  const { mode, from, config, designMdPath } = options;
   const isConsumer = from !== undefined;
-  const fromSuffix = isConsumer ? ` --from ${formatShellArg(from)}` : "";
+  const targetSuffix = isConsumer
+    ? ` --from ${formatShellArg(from)}`
+    : config !== undefined
+      ? ` -c ${formatShellArg(config)}`
+      : "";
+  const buildCmd =
+    config !== undefined ? `recontent build -c ${formatShellArg(config)}` : "recontent build";
 
   const lines: string[] = [
     "---",
@@ -110,22 +124,22 @@ export function renderProjectSkill(options: {
       "Query only what you need using `recontent inspect`:",
       "",
       "```bash",
-      `recontent inspect${fromSuffix}                          # overview: themes, token layers, component names`,
-      `recontent inspect components <Name>${fromSuffix}        # exact import, props, defaults, and usage notes`,
-      `recontent inspect tokens <group>${fromSuffix}           # token values, CSS variables, and theme overrides`,
-      `recontent inspect types <Name>${fromSuffix}             # project TypeScript types referenced by props`,
-      `recontent inspect search <query>${fromSuffix}           # search by keyword, CSS variable, or raw value`,
+      `recontent inspect${targetSuffix}                          # overview: themes, token layers, component names`,
+      `recontent inspect components <Name>${targetSuffix}        # exact import, props, defaults, and usage notes`,
+      `recontent inspect tokens <group>${targetSuffix}           # token values, CSS variables, and theme overrides`,
+      `recontent inspect types <Name>${targetSuffix}             # project TypeScript types referenced by props`,
+      `recontent inspect search <query>${targetSuffix}           # search by keyword, CSS variable, or raw value`,
       "```",
       "",
       "## Rules",
       "",
-      `- Before using a component, run \`recontent inspect components <Name>${fromSuffix}\` and follow its usage notes.`,
-      `- Use design tokens from \`recontent inspect tokens${fromSuffix}\` instead of raw colors, sizes, or font stacks.`,
-      `- Search before hardcoding a value: \`recontent inspect search "<value>"${fromSuffix}\` finds existing tokens or components.`,
+      `- Before using a component, run \`recontent inspect components <Name>${targetSuffix}\` and follow its usage notes.`,
+      `- Use design tokens from \`recontent inspect tokens${targetSuffix}\` instead of raw colors, sizes, or font stacks.`,
+      `- Search before hardcoding a value: \`recontent inspect search "<value>"${targetSuffix}\` finds existing tokens or components.`,
     );
 
     if (!isConsumer) {
-      lines.push("- Do not edit generated files directly; run `recontent build` instead.");
+      lines.push(`- Do not edit generated files directly; run \`${buildCmd}\` instead.`);
     }
 
     lines.push(
@@ -156,7 +170,7 @@ export function renderProjectSkill(options: {
     );
 
     if (!isConsumer) {
-      lines.push("- Do not edit generated files directly; run `recontent build` instead.");
+      lines.push(`- Do not edit generated files directly; run \`${buildCmd}\` instead.`);
     }
 
     lines.push(
@@ -171,18 +185,32 @@ export function renderProjectSkill(options: {
   return `${lines.join("\n")}\n`;
 }
 
+export function prepareProjectSkill(
+  cwd: string,
+  options: { mode: AgentMode; from?: string; config?: string; designMdPath?: string },
+  target: SkillTarget = "agents",
+): PlannedAgentWrite {
+  const skillPath = SKILL_TARGETS[target].path;
+  return {
+    filePath: skillPath,
+    content: renderProjectSkill(options),
+    existed: fs.existsSync(path.join(cwd, skillPath)),
+  };
+}
+
 export async function writeProjectSkill(
   cwd: string,
-  options: { mode: AgentMode; from?: string; designMdPath?: string },
+  options: { mode: AgentMode; from?: string; config?: string; designMdPath?: string },
   target: SkillTarget = "agents",
 ): Promise<AgentFileResult> {
-  const skillPath = SKILL_TARGETS[target].path;
-  const fullPath = path.join(cwd, skillPath);
-  const existed = fs.existsSync(fullPath);
-  const content = renderProjectSkill(options);
-  const { path: writtenPath, skipReason } = await writeOutputFile(skillPath, content, cwd);
+  const planned = prepareProjectSkill(cwd, options, target);
+  const { path: writtenPath, skipReason } = await writeOutputFile(
+    planned.filePath,
+    planned.content,
+    cwd,
+  );
   return {
     path: writtenPath,
-    status: skipReason === "unchanged" ? "unchanged" : existed ? "updated" : "created",
+    status: skipReason === "unchanged" ? "unchanged" : planned.existed ? "updated" : "created",
   };
 }

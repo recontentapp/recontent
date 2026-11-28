@@ -4,7 +4,12 @@ import { createRequire } from "node:module";
 import path from "node:path";
 import { Command, CommanderError, Option } from "commander";
 import type { LogLevel } from "../logger.js";
-import { ConfigLoadError, discoverConfigPath, resolveConfigPath } from "../config/load.js";
+import {
+  ConfigLoadError,
+  discoverConfigPath,
+  findConfigInDirectory,
+  resolveConfigPath,
+} from "../config/load.js";
 import { isSnapshotFilePath, readSnapshot } from "../snapshot/snapshot.js";
 import { runBuild } from "./commands/build.js";
 import { runDiff } from "./commands/diff/index.js";
@@ -13,12 +18,13 @@ import { runInit, type InitOptions } from "./commands/init/index.js";
 import type { InstructionFile, McpClient, SkillTarget } from "./commands/init/agents/index.js";
 import { parseMcpClients } from "./commands/init/agents/mcp.js";
 import { parseSkillTargets } from "./commands/init/agents/skill.js";
-import { promptInitPlan } from "./commands/init/prompts.js";
+import { finishInitPrompt, promptInitPlan } from "./commands/init/prompts.js";
 import { runInspect, type InspectTarget } from "./commands/inspect/index.js";
 import { runMcp } from "./commands/mcp/index.js";
 import { FORMATS, renderErrors, type Format } from "./commands/inspect/render.js";
 import { PRESETS, PRESET_NAMES } from "./commands/init/presets/index.js";
 import { reportError } from "./utils/exit.js";
+import { displayPath } from "./utils/fs.js";
 
 const require = createRequire(import.meta.url);
 const packageJson = require("../../package.json") as { version: string };
@@ -109,7 +115,7 @@ type InitCliOptions = {
   dtcg?: string[];
   force?: boolean;
   from?: string;
-  skill?: boolean | string;
+  skill?: boolean | string | Array<boolean | string>;
   mcp?: string[];
   agentsMd?: boolean;
   claudeMd?: boolean;
@@ -135,7 +141,13 @@ program
   )
   .option(
     "--skill [target]",
-    "Write a project-local Agent Skill (agents, claude, or all; comma-separated; default: agents)",
+    "Write a project-local Agent Skill (agents, claude, or all; repeatable or comma-separated; default: agents)",
+    (target: string, previous?: boolean | Array<boolean | string>) =>
+      Array.isArray(previous)
+        ? [...previous, target]
+        : previous !== undefined
+          ? [previous, target]
+          : [target],
   )
   .option(
     "--mcp <client>",
@@ -157,10 +169,21 @@ program
     if (options.preset && options.dtcg) {
       return program.error("error: --preset and --dtcg are mutually exclusive");
     }
-    if (options.from !== undefined && (options.preset || options.dtcg)) {
+
+    let from: string | undefined;
+    if (options.from !== undefined) {
+      from = options.from.trim();
+      if (from.length === 0) {
+        return program.error("error: --from must be a non-empty package name or snapshot path");
+      }
+    }
+
+    if (from !== undefined && (options.preset || options.dtcg)) {
       return program.error("error: --from cannot be used with --preset or --dtcg");
     }
-    if (options.from !== undefined && program.opts<GlobalOptions>().config !== undefined) {
+
+    const explicitConfig = program.opts<GlobalOptions>().config;
+    if (from !== undefined && explicitConfig !== undefined) {
       return program.error(
         "error: option '--from <package|file>' cannot be used with option '-c, --config <path>'",
       );
@@ -196,6 +219,17 @@ program
       discover: false,
       fallback: "recontent.config.ts",
     });
+    const configArg = explicitConfig !== undefined ? displayPath(cwd, configPath) : undefined;
+    const existingConfigPath =
+      explicitConfig !== undefined
+        ? fs.existsSync(configPath)
+          ? configPath
+          : undefined
+        : findConfigInDirectory(cwd);
+
+    if (from !== undefined && isSnapshotFilePath(from)) {
+      readSnapshot(from, cwd);
+    }
 
     if (!hasActionFlag && !options.yes) {
       if (!process.stdin.isTTY || !process.stdout.isTTY) {
@@ -204,21 +238,17 @@ program
         );
       }
 
-      if (options.from !== undefined && isSnapshotFilePath(options.from)) {
-        readSnapshot(options.from, cwd);
-      }
-
       const plan = await promptInitPlan({
         cwd,
-        configPath,
-        configExists: fs.existsSync(configPath),
-        from: options.from,
+        existingConfigPath: options.force ? undefined : existingConfigPath,
+        from,
         designMdPath: options.designMd,
         version: packageJson.version,
       });
       if (plan === "cancelled") return;
 
-      await runInit({ cwd, configPath, logLevel, force: options.force, ...plan });
+      await runInit({ cwd, configPath, configArg, logLevel, force: options.force, ...plan });
+      if (!process.exitCode) finishInitPrompt();
       return;
     }
 
@@ -240,7 +270,7 @@ program
     }
 
     if (options.yes) {
-      if (!source && options.from === undefined && !fs.existsSync(configPath)) {
+      if (!source && from === undefined && (!existingConfigPath || options.force)) {
         source = { preset: "neutral" };
       }
       if (!agents) {
@@ -255,10 +285,11 @@ program
     await runInit({
       cwd,
       configPath,
+      configArg,
       logLevel,
       force: options.force,
       source,
-      from: options.from,
+      from,
       agents,
     });
   });

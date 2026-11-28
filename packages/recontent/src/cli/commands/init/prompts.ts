@@ -1,3 +1,6 @@
+import fs from "node:fs";
+import os from "node:os";
+import path from "node:path";
 import { styleText } from "node:util";
 import * as p from "@clack/prompts";
 import { isSnapshotFilePath, readSnapshot } from "../../../snapshot/snapshot.js";
@@ -48,16 +51,26 @@ export type InitPlan = {
 
 type PromptContext = {
   cwd: string;
-  configPath: string;
-  configExists: boolean;
+  /** Existing config file in `cwd` (skipped when `--force` is passed). */
+  existingConfigPath?: string;
   from?: string;
   designMdPath?: string;
   version: string;
 };
 
-function cancel(): "cancelled" {
-  p.cancel("Setup cancelled — nothing was changed.");
+function expandHome(input: string): string {
+  if (input === "~") return os.homedir();
+  if (input.startsWith("~/")) return path.join(os.homedir(), input.slice(2));
+  return input;
+}
+
+function cancel(message = "Setup cancelled — nothing was changed."): "cancelled" {
+  p.cancel(message);
   return "cancelled";
+}
+
+export function finishInitPrompt(): void {
+  p.outro("Done.");
 }
 
 export async function promptInitPlan(context: PromptContext): Promise<InitPlan | "cancelled"> {
@@ -67,9 +80,9 @@ export async function promptInitPlan(context: PromptContext): Promise<InitPlan |
   let from = context.from;
 
   if (from === undefined) {
-    if (context.configExists) {
+    if (context.existingConfigPath) {
       p.log.info(
-        `Found ${displayPath(context.cwd, context.configPath)} — keeping your existing config and jumping straight to agent setup.`,
+        `Found ${displayPath(context.cwd, context.existingConfigPath)} — keeping your existing config and jumping straight to agent setup.`,
       );
     } else {
       const usage = await p.select({
@@ -111,10 +124,17 @@ export async function promptInitPlan(context: PromptContext): Promise<InitPlan |
           const dtcgPath = await p.text({
             message: "Where do your DTCG tokens live?",
             placeholder: "tokens/ or design.resolver.json",
-            validate: (value) =>
-              value && value.trim().length > 0
-                ? undefined
-                : "Enter a path to a resolver, token file, or directory",
+            validate: (value) => {
+              const trimmed = value?.trim() ?? "";
+              if (trimmed.length === 0) {
+                return "Enter a path to a resolver, token file, or directory";
+              }
+              const resolved = path.resolve(context.cwd, expandHome(trimmed));
+              if (!fs.existsSync(resolved)) {
+                return `DTCG source "${trimmed}" does not exist.`;
+              }
+              return undefined;
+            },
           });
           if (p.isCancel(dtcgPath)) return cancel();
           source = { dtcg: [dtcgPath.trim()] };
@@ -146,25 +166,33 @@ export async function promptInitPlan(context: PromptContext): Promise<InitPlan |
     }
   }
 
+  const transportOptions: Array<{
+    value: "cli" | "mcp" | "skip";
+    label: string;
+    hint: string;
+  }> = [
+    {
+      value: "cli",
+      label: "CLI (recontent inspect)",
+      hint: "Recommended — works out of the box, no server config",
+    },
+    {
+      value: "mcp",
+      label: "MCP server (recontent mcp)",
+      hint: "Tool calls for Claude Code, Cursor, or VS Code",
+    },
+  ];
+  if (source !== undefined) {
+    transportOptions.push({
+      value: "skip",
+      label: "Skip for now",
+      hint: "You can always run `recontent init` again later",
+    });
+  }
+
   const transport = await p.select({
     message: "How should coding agents explore your design system?",
-    options: [
-      {
-        value: "cli" as const,
-        label: "CLI (recontent inspect)",
-        hint: "Recommended — works out of the box, no server config",
-      },
-      {
-        value: "mcp" as const,
-        label: "MCP server (recontent mcp)",
-        hint: "Tool calls for Claude Code, Cursor, or VS Code",
-      },
-      {
-        value: "skip" as const,
-        label: "Skip for now",
-        hint: "You can always run `recontent init` again later",
-      },
-    ],
+    options: transportOptions,
   });
   if (p.isCancel(transport)) return cancel();
 
@@ -208,7 +236,7 @@ export async function promptInitPlan(context: PromptContext): Promise<InitPlan |
         },
       ],
       initialValues: ["skill:agents" as const],
-      required: false,
+      required: source === undefined && transport === "cli",
     });
     if (p.isCancel(guidance)) return cancel();
 
@@ -228,7 +256,9 @@ export async function promptInitPlan(context: PromptContext): Promise<InitPlan |
     }
   }
 
-  p.outro("All set — writing your files...");
+  if (!source && !agents) {
+    return cancel("Nothing selected — no files were changed.");
+  }
 
   return { source, from, agents };
 }

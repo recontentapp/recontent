@@ -2,9 +2,14 @@ import fs from "node:fs";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { writeOutputFile } from "../../../utils/fs.js";
-import type { AgentFileResult } from "./index.js";
+import type { AgentFileResult, PlannedAgentWrite } from "./index.js";
 
 export type McpClient = "claude" | "cursor" | "vscode";
+
+type McpEntryOptions = {
+  from?: string;
+  config?: string;
+};
 
 type McpServerEntry =
   | { command: string; args: string[] }
@@ -16,13 +21,13 @@ type McpClientSpec = {
   path: string;
   rootKey: "mcpServers" | "servers";
   detectPaths: readonly string[];
-  buildEntry: (from?: string) => McpServerEntry;
+  buildEntry: (options: McpEntryOptions) => McpServerEntry;
 };
 
-function buildMcpArgs(from?: string): string[] {
-  return from === undefined
-    ? ["-y", "recontent", "mcp"]
-    : ["-y", "recontent", "mcp", "--from", from];
+function buildMcpArgs({ from, config }: McpEntryOptions): string[] {
+  if (from !== undefined) return ["-y", "recontent", "mcp", "--from", from];
+  if (config !== undefined) return ["-y", "recontent", "mcp", "-c", config];
+  return ["-y", "recontent", "mcp"];
 }
 
 export const MCP_CLIENTS: Record<McpClient, McpClientSpec> = {
@@ -32,7 +37,7 @@ export const MCP_CLIENTS: Record<McpClient, McpClientSpec> = {
     path: ".mcp.json",
     rootKey: "mcpServers",
     detectPaths: [".mcp.json", ".claude", "CLAUDE.md"],
-    buildEntry: (from) => ({ command: "npx", args: buildMcpArgs(from) }),
+    buildEntry: (options) => ({ command: "npx", args: buildMcpArgs(options) }),
   },
   cursor: {
     id: "cursor",
@@ -40,7 +45,7 @@ export const MCP_CLIENTS: Record<McpClient, McpClientSpec> = {
     path: ".cursor/mcp.json",
     rootKey: "mcpServers",
     detectPaths: [".cursor/mcp.json", ".cursor"],
-    buildEntry: (from) => ({ command: "npx", args: buildMcpArgs(from) }),
+    buildEntry: (options) => ({ command: "npx", args: buildMcpArgs(options) }),
   },
   vscode: {
     id: "vscode",
@@ -48,7 +53,7 @@ export const MCP_CLIENTS: Record<McpClient, McpClientSpec> = {
     path: ".vscode/mcp.json",
     rootKey: "servers",
     detectPaths: [".vscode/mcp.json", ".vscode"],
-    buildEntry: (from) => ({ type: "stdio", command: "npx", args: buildMcpArgs(from) }),
+    buildEntry: (options) => ({ type: "stdio", command: "npx", args: buildMcpArgs(options) }),
   },
 };
 
@@ -106,11 +111,11 @@ export function detectMcpClients(cwd: string): McpClient[] {
   );
 }
 
-export async function writeMcpConfig(
+export async function prepareMcpConfig(
   cwd: string,
   client: McpClient,
-  options: { from?: string } = {},
-): Promise<AgentFileResult> {
+  options: McpEntryOptions = {},
+): Promise<PlannedAgentWrite> {
   const spec = MCP_CLIENTS[client];
   const target = path.join(cwd, spec.path);
 
@@ -152,7 +157,7 @@ export async function writeMcpConfig(
 
   const servers: Record<string, unknown> = {
     ...existingServers,
-    recontent: spec.buildEntry(options.from),
+    recontent: spec.buildEntry(options),
   };
 
   const next = {
@@ -160,11 +165,26 @@ export async function writeMcpConfig(
     [spec.rootKey]: servers,
   };
 
-  const content = `${JSON.stringify(next, null, 2)}\n`;
-  const { path: writtenPath, skipReason } = await writeOutputFile(spec.path, content, cwd);
+  return {
+    filePath: spec.path,
+    content: `${JSON.stringify(next, null, 2)}\n`,
+    existed: existingText !== undefined,
+  };
+}
+
+export async function writeMcpConfig(
+  cwd: string,
+  client: McpClient,
+  options: McpEntryOptions = {},
+): Promise<AgentFileResult> {
+  const planned = await prepareMcpConfig(cwd, client, options);
+  const { path: writtenPath, skipReason } = await writeOutputFile(
+    planned.filePath,
+    planned.content,
+    cwd,
+  );
   return {
     path: writtenPath,
-    status:
-      skipReason === "unchanged" ? "unchanged" : existingText !== undefined ? "updated" : "created",
+    status: skipReason === "unchanged" ? "unchanged" : planned.existed ? "updated" : "created",
   };
 }

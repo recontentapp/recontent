@@ -34,6 +34,13 @@ describe("renderProjectSkill & writeProjectSkill", () => {
     expect(consumer).toContain("recontent inspect components <Name> --from @acme/ds");
     expect(consumer).not.toContain("recontent build");
     expect(consumer).not.toContain("DESIGN.md");
+
+    const quoted = renderProjectSkill({ mode: "cli", from: "./$HOME/design(v2)/it's.json" });
+    expect(quoted).toContain("recontent inspect --from './$HOME/design(v2)/it'\\''s.json'");
+
+    const customConfig = renderProjectSkill({ mode: "cli", config: "tokens.config.ts" });
+    expect(customConfig).toContain("recontent inspect -c tokens.config.ts");
+    expect(customConfig).toContain("recontent build -c tokens.config.ts");
   });
 
   test("renders MCP mode without CLI inspect commands", () => {
@@ -56,6 +63,8 @@ describe("renderProjectSkill & writeProjectSkill", () => {
     expect(parseSkillTargets(true)).toEqual(["agents"]);
     expect(parseSkillTargets("claude")).toEqual(["claude"]);
     expect(parseSkillTargets("agents,claude")).toEqual(["agents", "claude"]);
+    expect(parseSkillTargets(["agents", "claude"])).toEqual(["agents", "claude"]);
+    expect(parseSkillTargets([true, "claude"])).toEqual(["agents", "claude"]);
     expect(parseSkillTargets("all")).toEqual(["agents", "claude"]);
     expect(() => parseSkillTargets("cursor")).toThrow(/Unknown skill target "cursor"/);
 
@@ -103,11 +112,11 @@ describe("parseMcpClients & writeMcpConfig", () => {
     const claudeAgain = await writeMcpConfig(dir, "claude", { from: "@acme/ds" });
     expect(claudeAgain.status).toBe("unchanged");
 
-    const cursor = await writeMcpConfig(dir, "cursor");
+    const cursor = await writeMcpConfig(dir, "cursor", { config: "tokens.config.ts" });
     expect(cursor.status).toBe("created");
     expect(JSON.parse(readFileSync(cursor.path, "utf-8"))).toEqual({
       mcpServers: {
-        recontent: { command: "npx", args: ["-y", "recontent", "mcp"] },
+        recontent: { command: "npx", args: ["-y", "recontent", "mcp", "-c", "tokens.config.ts"] },
       },
     });
 

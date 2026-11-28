@@ -156,10 +156,89 @@ describe("recontent init agent onboarding", () => {
       "utf-8",
     );
     expect(skill).toContain("recontent inspect --from @acme/ds");
+
+    const mjsDir = makeScratchDir("init-yes-existing-mjs");
+    writeFileSync(path.join(mjsDir, "recontent.config.mjs"), "export default {};\n");
+    const mjsResult = runCli(["--cwd", mjsDir, "init", "-y"]);
+    expect(mjsResult.status).toBe(0);
+    expect(existsSync(path.join(mjsDir, "recontent.config.ts"))).toBe(false);
+    expect(existsSync(path.join(mjsDir, ".agents/skills/recontent/SKILL.md"))).toBe(true);
+
+    writeFileSync(path.join(producerDir, "recontent.config.ts"), "// stale\n");
+    const forced = runCli(["--cwd", producerDir, "init", "-y", "--force"]);
+    expect(forced.status).toBe(0);
+    expect(readFileSync(path.join(producerDir, "recontent.config.ts"), "utf-8")).toContain(
+      "defineConfig(",
+    );
   });
 
-  test("validates incompatible flags and invalid --mcp client", () => {
+  test("propagates -c to MCP configs, skills, and instructions, and supports repeatable --skill", () => {
+    const dir = makeScratchDir("init-custom-config-agents");
+    const result = runCli([
+      "--cwd",
+      dir,
+      "init",
+      "--preset",
+      "neutral",
+      "-c",
+      "tokens.config.ts",
+      "--mcp",
+      "claude",
+      "--skill",
+      "agents",
+      "--skill",
+      "claude",
+      "--agents-md",
+    ]);
+
+    expect(result.status).toBe(0);
+    expect(result.stderr).toContain("recontent build -c tokens.config.ts");
+    expect(result.stderr).toContain("reload your MCP client");
+
+    const mcp = JSON.parse(readFileSync(path.join(dir, ".mcp.json"), "utf-8"));
+    expect(mcp.mcpServers.recontent.args).toEqual([
+      "-y",
+      "recontent",
+      "mcp",
+      "-c",
+      "tokens.config.ts",
+    ]);
+    expect(readFileSync(path.join(dir, ".agents/skills/recontent/SKILL.md"), "utf-8")).toContain(
+      "recontent build -c tokens.config.ts",
+    );
+    expect(existsSync(path.join(dir, ".claude/skills/recontent/SKILL.md"))).toBe(true);
+    expect(readFileSync(path.join(dir, "AGENTS.md"), "utf-8")).toContain(
+      "recontent build -c tokens.config.ts",
+    );
+  });
+
+  test("writes nothing when agent validation fails alongside config scaffolding", () => {
+    const dir = makeScratchDir("init-atomic-failure");
+    writeFileSync(path.join(dir, ".mcp.json"), "{ invalid json\n");
+
+    const result = runCli([
+      "--cwd",
+      dir,
+      "init",
+      "--preset",
+      "neutral",
+      "--mcp",
+      "claude",
+      "--skill",
+    ]);
+
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain("Could not parse existing .mcp.json");
+    expect(existsSync(path.join(dir, "recontent.config.ts"))).toBe(false);
+    expect(existsSync(path.join(dir, ".agents/skills/recontent/SKILL.md"))).toBe(false);
+  });
+
+  test("validates incompatible flags, empty --from, and invalid --mcp client", () => {
     const dir = makeScratchDir("init-flag-errors");
+
+    const emptyFrom = runCli(["--cwd", dir, "init", "--from", "   ", "--skill"]);
+    expect(emptyFrom.status).toBe(1);
+    expect(emptyFrom.stderr).toContain("--from");
 
     const fromWithPreset = runCli([
       "--cwd",

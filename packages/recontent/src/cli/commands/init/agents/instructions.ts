@@ -1,25 +1,33 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { writeOutputFile } from "../../../utils/fs.js";
-import type { AgentFileResult, AgentMode } from "./index.js";
+import {
+  formatShellArg,
+  type AgentFileResult,
+  type AgentMode,
+  type PlannedAgentWrite,
+} from "./index.js";
 
 export type InstructionFile = "AGENTS.md" | "CLAUDE.md";
 
 const START_MARKER = "<!-- recontent:start -->";
 const END_MARKER = "<!-- recontent:end -->";
 
-function formatShellArg(value: string): string {
-  return /\s|["'$`\\]/.test(value) ? JSON.stringify(value) : value;
-}
-
 export function renderInstructionsBlock(options: {
   mode: AgentMode;
   from?: string;
+  config?: string;
   designMdPath?: string;
 }): string {
-  const { mode, from, designMdPath } = options;
+  const { mode, from, config, designMdPath } = options;
   const isConsumer = from !== undefined;
-  const fromSuffix = isConsumer ? ` --from ${formatShellArg(from)}` : "";
+  const targetSuffix = isConsumer
+    ? ` --from ${formatShellArg(from)}`
+    : config !== undefined
+      ? ` -c ${formatShellArg(config)}`
+      : "";
+  const buildCmd =
+    config !== undefined ? `recontent build -c ${formatShellArg(config)}` : "recontent build";
   const intro =
     mode === "cli"
       ? "Use Recontent as the source of truth for this project's design system. Do not guess component props, token names, or raw CSS values."
@@ -36,11 +44,11 @@ export function renderInstructionsBlock(options: {
   if (mode === "cli") {
     lines.push(
       "```bash",
-      `recontent inspect${fromSuffix}                    # overview: themes, token layers, component names`,
-      `recontent inspect components <Name>${fromSuffix}  # exact import, props, defaults, and usage notes`,
-      `recontent inspect tokens <group>${fromSuffix}     # token values, CSS variables, and theme overrides`,
-      `recontent inspect types <Name>${fromSuffix}       # project TypeScript types referenced by props`,
-      `recontent inspect search <query>${fromSuffix}     # search by keyword, CSS variable, or raw value`,
+      `recontent inspect${targetSuffix}                    # overview: themes, token layers, component names`,
+      `recontent inspect components <Name>${targetSuffix}  # exact import, props, defaults, and usage notes`,
+      `recontent inspect tokens <group>${targetSuffix}     # token values, CSS variables, and theme overrides`,
+      `recontent inspect types <Name>${targetSuffix}       # project TypeScript types referenced by props`,
+      `recontent inspect search <query>${targetSuffix}     # search by keyword, CSS variable, or raw value`,
       "```",
     );
   } else {
@@ -54,7 +62,7 @@ export function renderInstructionsBlock(options: {
   }
 
   if (!isConsumer) {
-    lines.push("", "Do not edit generated files directly; run `recontent build` instead.");
+    lines.push("", `Do not edit generated files directly; run \`${buildCmd}\` instead.`);
   }
 
   lines.push(END_MARKER);
@@ -93,11 +101,11 @@ export function upsertManagedBlock(existing: string | undefined, block: string):
   return combined.endsWith("\n") ? combined : `${combined}\n`;
 }
 
-export async function writeInstructionsFile(
+export async function prepareInstructionsFile(
   cwd: string,
   filename: InstructionFile,
-  options: { mode: AgentMode; from?: string; designMdPath?: string },
-): Promise<AgentFileResult> {
+  options: { mode: AgentMode; from?: string; config?: string; designMdPath?: string },
+): Promise<PlannedAgentWrite> {
   const target = path.join(cwd, filename);
   let existing: string | undefined;
   try {
@@ -115,10 +123,22 @@ export async function writeInstructionsFile(
     throw new Error(`${filename}: ${detail}`, { cause: error });
   }
 
-  const { path: writtenPath, skipReason } = await writeOutputFile(filename, content, cwd);
+  return { filePath: filename, content, existed: existing !== undefined };
+}
+
+export async function writeInstructionsFile(
+  cwd: string,
+  filename: InstructionFile,
+  options: { mode: AgentMode; from?: string; config?: string; designMdPath?: string },
+): Promise<AgentFileResult> {
+  const planned = await prepareInstructionsFile(cwd, filename, options);
+  const { path: writtenPath, skipReason } = await writeOutputFile(
+    planned.filePath,
+    planned.content,
+    cwd,
+  );
   return {
     path: writtenPath,
-    status:
-      skipReason === "unchanged" ? "unchanged" : existing !== undefined ? "updated" : "created",
+    status: skipReason === "unchanged" ? "unchanged" : planned.existed ? "updated" : "created",
   };
 }
